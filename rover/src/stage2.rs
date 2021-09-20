@@ -299,13 +299,28 @@ fn define_rover_item(env: &mut Environment) -> (ItemId, ItemId) {
             ],
         },
     );
+
+    let zero = env.next_id();
+    env.define(zero, Item::Value(Value::I32(0)));
+    let one = env.next_id();
+    env.define(one, Item::Value(Value::I32(1)));
+    let core = env.next_id();
+    env.mark_as_module(core);
+    env.define(
+        core,
+        Item::Defining {
+            base: god_type,
+            definitions: vec![(format!("zero"), zero), (format!("one"), one)],
+        },
+    );
+
     let rover = env.next_id();
     env.mark_as_module(rover);
     env.define(
         rover,
         Item::Defining {
             base: god_type,
-            definitions: vec![(format!("lang"), lang)],
+            definitions: vec![(format!("lang"), lang), (format!("core"), core)],
         },
     );
     (rover, god_type)

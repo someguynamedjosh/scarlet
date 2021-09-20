@@ -8,7 +8,7 @@
 		},
 		{
 			"name": "keyword.operator",
-			"match": "\\b(::|.|:)\\b"
+			"match": "\\b(::|\\.|:)\\b"
 		},
 		{
 			"name": "keyword.control",
