@@ -1,4 +1,4 @@
-use crate::stage2::{self, Item, ItemId, Value};
+use crate::stage2::{self, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements};
 use std::fmt::{self, Debug, Formatter};
 
 pub fn ingest(from: stage2::Environment) -> Result<Environment, String> {
@@ -74,23 +74,22 @@ impl Environment {
         }
     }
 
-    fn existing_value_item(&self, value: &Value) -> Option<ItemId> {
+    fn existing_item(&self, def: &Item) -> Option<ItemId> {
         for (index, item) in self.items.iter().enumerate() {
-            if let Item::Value(candidate) = &item.base {
-                if candidate == value {
-                    return Some(ItemId(index));
-                }
+            if &item.base == def {
+                return Some(ItemId(index));
             }
         }
         None
     }
 
     fn god_type(&self) -> ItemId {
-        self.existing_value_item(&Value::GodType).unwrap()
+        self.existing_item(&Item::GodType).unwrap()
     }
 
     fn i32_type(&self) -> ItemId {
-        self.existing_value_item(&Value::I32Type).unwrap()
+        self.existing_item(&Item::PrimitiveType(PrimitiveType::I32))
+            .unwrap()
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (ItemId, &Item, &Option<ItemId>)> {
@@ -141,7 +140,12 @@ impl Environment {
             }
             Item::Public(..) => todo!(),
             Item::Replacing { .. } => todo!(),
-            Item::Value(..) | Item::Variable { .. } | Item::InductiveValue { .. } => (),
+            Item::GodType
+            | Item::InductiveType(..)
+            | Item::InductiveValue { .. }
+            | Item::PrimitiveType(..)
+            | Item::PrimitiveValue(..)
+            | Item::Variable { .. } => (),
         }
         // Don't todoify this, some code relies on catching errors.
         Err(format!("failed to find a member named ident{{{}}}", name))
@@ -175,79 +179,95 @@ impl Environment {
                 let base = *base;
                 self.resolve_variable(base)
             }
-            Item::Value(..) => todo!("nice error"),
+            Item::GodType
+            | Item::InductiveType(..)
+            | Item::InductiveValue { .. }
+            | Item::PrimitiveType(..)
+            | Item::PrimitiveValue(..) => todo!("nice error"),
             Item::Variable { selff, .. } => Ok(*selff),
         }
+    }
+
+    fn compute_type_after_replacing(
+        &mut self,
+        base: ItemId,
+        replacements: Replacements,
+    ) -> Result<ItemId, String> {
+        let unreplaced_type = self.compute_type(base)?;
+        let mut ids_to_replace = Vec::new();
+        for (id, _) in replacements {
+            ids_to_replace.push(self.resolve_variable(id)?)
+        }
+        let def = &self.items[unreplaced_type.0].base;
+        let res = match def {
+            Item::FromType { base, vars } => {
+                let mut vars_after_reps = vars.clone();
+                for index in (0..vars_after_reps.len()).rev() {
+                    if ids_to_replace
+                        .iter()
+                        .any(|id| *id == vars_after_reps[index])
+                    {
+                        vars_after_reps.remove(index);
+                    }
+                }
+                if vars_after_reps.len() == 0 {
+                    *base
+                } else if &vars_after_reps == vars {
+                    unreplaced_type
+                } else {
+                    let base = *base;
+                    self.insert(Item::FromType {
+                        base,
+                        vars: vars_after_reps,
+                    })
+                }
+            }
+            _ => unreplaced_type,
+        };
+        Ok(res)
     }
 
     fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
         assert!(of.0 < self.items.len());
         let item = &self.items[of.0];
         let typee = match &item.base {
+            Item::Defining { base, .. } => {
+                let base = *base;
+                self.compute_type(base)?
+            }
+            // TODO: This is not always correct.
+            Item::FromType { .. } => self.god_type(),
+            Item::GodType { .. } => self.god_type(),
+            // TODO: This is not always correct. Need to finalize how inductive
+            // types can depend on vars.
+            Item::InductiveType(id) => self.god_type(),
+            Item::InductiveValue { typee, .. } => *typee,
+            Item::Item(id) => {
+                let id = *id;
+                self.compute_type(id)?;
+                self.items[id.0].typee.unwrap()
+            }
             Item::Member { base, name } => {
                 let base = *base;
                 let name = name.clone();
                 let member = self.get_member(base, &name)?;
                 self.compute_type(member)?
             }
-            Item::Item(id) => {
-                let id = *id;
-                self.compute_type(id)?;
-                self.items[id.0].typee.unwrap()
+            Item::PrimitiveType(..) => self.god_type(),
+            Item::PrimitiveValue(pv) => match pv {
+                PrimitiveValue::I32(..) => self.i32_type(),
+            },
+            Item::Public(..) => todo!(),
+            Item::Replacing { base, replacements } => {
+                let base = *base;
+                let replacements = replacements.clone();
+                self.compute_type_after_replacing(base, replacements)?
             }
             Item::Variable { typee, selff } => {
                 let base = *typee;
                 let vars = vec![*selff];
                 self.insert(Item::FromType { base, vars })
             }
-            Item::Value(val) => match val {
-                Value::GodType | Value::I32Type | Value::InductiveType(..) => self.god_type(),
-                Value::I32(..) => self.i32_type(),
-                Value::InductiveValue { typee, .. } => *typee,
-            },
-            Item::Defining { base, .. } => {
-                let base = *base;
-                self.compute_type(base)?
-            }
-            Item::Replacing { base, replacements } => {
-                // TODO: This is not correct.
-                let base = *base;
-                let replacements = replacements.clone();
-                let unreplaced_type = self.compute_type(base)?;
-                let mut ids_to_replace = Vec::new();
-                for (id, _) in replacements {
-                    ids_to_replace.push(self.resolve_variable(id)?)
-                }
-                let def = &self.items[unreplaced_type.0].base;
-                match def {
-                    Item::FromType { base, vars } => {
-                        let mut vars_after_reps = vars.clone();
-                        for index in (0..vars_after_reps.len()).rev() {
-                            if ids_to_replace
-                                .iter()
-                                .any(|id| *id == vars_after_reps[index])
-                            {
-                                vars_after_reps.remove(index);
-                            }
-                        }
-                        if vars_after_reps.len() == 0 {
-                            *base
-                        } else if &vars_after_reps == vars {
-                            unreplaced_type
-                        } else {
-                            let base = *base;
-                            self.insert(Item::FromType {
-                                base,
-                                vars: vars_after_reps,
-                            })
-                        }
-                    }
-                    _ => unreplaced_type,
-                }
-            }
-            Item::InductiveValue { typee, .. } => *typee,
-            Item::FromType { .. } => self.god_type(),
-            Item::Public(..) => todo!(),
         };
         self.set_type(of, typee);
         Ok(typee)

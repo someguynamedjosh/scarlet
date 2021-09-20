@@ -77,8 +77,8 @@ pub struct Construct {
     pub body: ConstructBody,
 }
 
-const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the"];
-const TEXT_CONSTRUCTS: &[&str] = &["identifier"];
+const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32"];
+const TEXT_CONSTRUCTS: &[&str] = &["identifier", "i32"];
 const ALIASES: &[(&str, &str)] = &[
     ("T", "Type"),
     ("F", "From"),

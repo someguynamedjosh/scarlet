@@ -12,7 +12,7 @@
 		},
 		{
 			"name": "keyword.control",
-			"match": "(replacing|defining|Type|recording|any|the)[ \\r\\n\\t]*\\{"
+			"match": "(replacing|defining|Type|recording|any|the|i32|integer|int)[ \\r\\n\\t]*\\{"
 		},
 		{
 			"name": "invalid.illegal",

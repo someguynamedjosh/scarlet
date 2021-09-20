@@ -222,7 +222,7 @@ fn process_type(
     let ctx = Context::Type(into);
     let self_def = (format!("Self"), into);
     let definitions = process_definitions(statements, vec![self_def], env, ctx, parents)?;
-    env.define(type_item, Item::Value(Value::InductiveType(into)));
+    env.define(type_item, Item::InductiveType(into));
     Ok(Item::Defining {
         base: type_item,
         definitions,
@@ -251,6 +251,11 @@ fn process_root_construct(
             Item::Variable { selff, typee }
         }
         "the" => todo!(),
+        "i32" => {
+            let val = root.expect_text("i32")?;
+            let val: i32 = val.parse().unwrap();
+            Item::PrimitiveValue(PrimitiveValue::I32(val))
+        }
         _ => todo!("nice error, unexpected {} construct", root.label),
     })
 }
@@ -284,9 +289,9 @@ fn process_expr(
 
 fn define_rover_item(env: &mut Environment) -> (ItemId, ItemId) {
     let god_type = env.next_id();
-    env.define(god_type, Item::Value(Value::GodType));
+    env.define(god_type, Item::GodType);
     let i32_type = env.next_id();
-    env.define(i32_type, Item::Value(Value::I32Type));
+    env.define(i32_type, Item::PrimitiveType(PrimitiveType::I32));
     let lang = env.next_id();
     env.mark_as_module(lang);
     env.define(
@@ -300,17 +305,13 @@ fn define_rover_item(env: &mut Environment) -> (ItemId, ItemId) {
         },
     );
 
-    let zero = env.next_id();
-    env.define(zero, Item::Value(Value::I32(0)));
-    let one = env.next_id();
-    env.define(one, Item::Value(Value::I32(1)));
     let core = env.next_id();
     env.mark_as_module(core);
     env.define(
         core,
         Item::Defining {
             base: god_type,
-            definitions: vec![(format!("zero"), zero), (format!("one"), one)],
+            definitions: vec![],
         },
     );
 
@@ -392,26 +393,13 @@ fn process_replacements(
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum Value {
-    GodType,
-    I32Type,
-    I32(i32),
-    InductiveType(ItemId),
-    InductiveValue {
-        typee: ItemId,
-        variant: String,
-        data: (),
-    },
+pub enum PrimitiveType {
+    I32,
 }
 
-impl Value {
-    pub fn typ(&self) -> Self {
-        match self {
-            Self::GodType | Self::I32Type | Self::InductiveType(..) => Self::GodType,
-            Self::I32(..) => Self::I32Type,
-            Self::InductiveValue { typee, .. } => Self::InductiveType(*typee),
-        }
-    }
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum PrimitiveValue {
+    I32(i32),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -494,43 +482,53 @@ pub type Replacements = Vec<(ItemId, ItemId)>;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
-    Item(ItemId),
-    Variable {
-        selff: ItemId,
-        typee: ItemId,
-    },
-    Value(Value),
-    Member {
+    Defining {
         base: ItemId,
-        name: String,
+        definitions: Definitions,
     },
     FromType {
         base: ItemId,
         vars: Vec<ItemId>,
     },
+    GodType,
+    InductiveType(ItemId),
     InductiveValue {
         typee: ItemId,
         variant_name: String,
         records: Vec<ItemId>,
     },
-    Public(ItemId),
-    Defining {
+    Item(ItemId),
+    Member {
         base: ItemId,
-        definitions: Definitions,
+        name: String,
     },
+    PrimitiveType(PrimitiveType),
+    PrimitiveValue(PrimitiveValue),
+    Public(ItemId),
     Replacing {
         base: ItemId,
         replacements: Replacements,
+    },
+    Variable {
+        selff: ItemId,
+        typee: ItemId,
     },
 }
 
 impl Debug for Item {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Item(id) => write!(f, "{:?}", id),
-            Self::Variable { selff, typee } => write!(f, "any{{{:?}}} at {:?}", typee, selff),
-            Self::Value(value) => write!(f, "{:?}", value),
-            Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
+            Self::Defining { base, definitions } => {
+                let gap = if f.alternate() { "\n" } else { "" };
+                write!(f, "{:?} {}defining{{", base, gap)?;
+                for (name, def) in definitions {
+                    if f.alternate() {
+                        write!(f, "\n    ")?;
+                    }
+                    write!(f, "{} is {:?} ", name, def)?;
+                }
+                write!(f, "{}}}", gap)
+            }
             Self::FromType { base, vars } => {
                 write!(f, "{:?} From{{", base)?;
                 if vars.len() > 0 {
@@ -541,6 +539,8 @@ impl Debug for Item {
                 }
                 write!(f, "}}")
             }
+            Self::GodType => write!(f, "TYPE"),
+            Self::InductiveType(id) => write!(f, "InductiveType({:?})", id),
             Self::InductiveValue {
                 typee,
                 variant_name,
@@ -558,18 +558,11 @@ impl Debug for Item {
                 }
                 write!(f, "]")
             }
+            Self::Item(id) => write!(f, "{:?}", id),
+            Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
             Self::Public(item) => write!(f, "public {:?}", item),
-            Self::Defining { base, definitions } => {
-                let gap = if f.alternate() { "\n" } else { "" };
-                write!(f, "{:?} {}defining{{", base, gap)?;
-                for (name, def) in definitions {
-                    if f.alternate() {
-                        write!(f, "\n    ")?;
-                    }
-                    write!(f, "{} is {:?} ", name, def)?;
-                }
-                write!(f, "{}}}", gap)
-            }
+            Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
+            Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
             Self::Replacing { base, replacements } => {
                 let gap = if f.alternate() { "\n" } else { "" };
                 write!(f, "{:?} {}replacing{{", base, gap)?;
@@ -581,6 +574,7 @@ impl Debug for Item {
                 }
                 write!(f, "{}}}", gap)
             }
+            Self::Variable { selff, typee } => write!(f, "any{{{:?}}} at {:?}", typee, selff),
         }
     }
 }

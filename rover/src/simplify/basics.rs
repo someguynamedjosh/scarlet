@@ -1,5 +1,5 @@
 use crate::{
-    stage2::{Item, ItemId, Value},
+    stage2::{Item, ItemId},
     stage3::Environment,
 };
 use std::collections::HashMap;
@@ -47,7 +47,9 @@ fn mark_used_items(used_by: &Item, used: &mut [bool]) {
                 used[var.0] = true;
             }
         }
+        Item::GodType => (),
         Item::Item(id) => used[id.0] = true,
+        Item::InductiveType(id) => used[id.0] = true,
         Item::InductiveValue { typee, records, .. } => {
             used[typee.0] = true;
             for record in records {
@@ -55,6 +57,7 @@ fn mark_used_items(used_by: &Item, used: &mut [bool]) {
             }
         }
         Item::Member { base, .. } => used[base.0] = true,
+        Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
         Item::Public(id) => used[id.0] = true,
         Item::Replacing { base, replacements } => {
             used[base.0] = true;
@@ -63,10 +66,6 @@ fn mark_used_items(used_by: &Item, used: &mut [bool]) {
                 used[value.0] = true;
             }
         }
-        Item::Value(val) => match val {
-            Value::InductiveType(id) => used[id.0] = true,
-            _ => (),
-        },
         Item::Variable { selff, typee } => {
             used[selff.0] = true;
             used[typee.0] = true;

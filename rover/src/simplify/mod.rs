@@ -1,10 +1,11 @@
 use crate::{
-    stage2::{Item, ItemId, Value},
+    stage2::{Item, ItemId},
     stage3::Environment,
 };
 use std::collections::HashMap;
 
 mod basics;
+mod reduce;
 
 pub fn simplify(env: Environment) -> Environment {
     let mut env = env;
@@ -32,12 +33,14 @@ fn apply_replacements(env: &mut Environment, replacements: &HashMap<ItemId, Item
                     apply_replacements_to(def, replacements);
                 }
             }
+            Item::GodType => (),
             Item::FromType { base, vars } => {
                 apply_replacements_to(base, replacements);
                 for var in vars {
                     apply_replacements_to(var, replacements);
                 }
             }
+            Item::InductiveType(id) => apply_replacements_to(id, replacements),
             Item::InductiveValue { typee, records, .. } => {
                 apply_replacements_to(typee, replacements);
                 for record in records {
@@ -46,6 +49,7 @@ fn apply_replacements(env: &mut Environment, replacements: &HashMap<ItemId, Item
             }
             Item::Item(id) => apply_replacements_to(id, replacements),
             Item::Member { base, .. } => apply_replacements_to(base, replacements),
+            Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
             Item::Public(id) => apply_replacements_to(id, replacements),
             Item::Replacing {
                 base,
@@ -57,10 +61,6 @@ fn apply_replacements(env: &mut Environment, replacements: &HashMap<ItemId, Item
                     apply_replacements_to(value, replacements);
                 }
             }
-            Item::Value(val) => match val {
-                Value::InductiveType(id) => apply_replacements_to(id, replacements),
-                _ => (),
-            },
             Item::Variable { selff, typee, .. } => {
                 apply_replacements_to(selff, replacements);
                 apply_replacements_to(typee, replacements);

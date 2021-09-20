@@ -1,7 +1,5 @@
 TYPE is rover::lang::TYPE
 I32 is rover::lang::Integer32
-zero is rover::core::zero
-one is rover::core::one
 
 var is any{I32}
 
@@ -17,8 +15,8 @@ y is Point::new::y
 
 point is Point::new 
 replacing{
-   x with zero
-   y with one
+   x with i32{5}
+   y with i32{6}
 }
 
 # asdf asdf asfd 0123
