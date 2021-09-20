@@ -1,4 +1,6 @@
-use crate::stage2::{self, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements};
+use crate::stage2::structure::{
+    self as stage2, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements,
+};
 use std::{
     collections::HashSet,
     fmt::{self, Debug, Formatter},

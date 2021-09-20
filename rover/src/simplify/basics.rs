@@ -1,5 +1,5 @@
 use crate::{
-    stage2::{Item, ItemId},
+    stage2::structure::{Item, ItemId},
     stage3::Environment,
 };
 use std::collections::HashMap;
