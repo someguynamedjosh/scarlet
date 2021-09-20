@@ -1,7 +1,9 @@
 mod parse;
 // mod simplify;
 mod stage2;
+mod stage3;
 // mod stage4;
+mod util;
 
 fn main() {
     const INPUT: &'static str = include_str!("test.rer");
@@ -12,8 +14,8 @@ fn main() {
     }
     let (environment, file_id) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
-    // let environment = stage4::ingest(environment).unwrap();
-    // println!("{:#?}", environment);
+    let environment = stage3::ingest(&environment).unwrap();
+    println!("{:#?}", environment);
     // let environment = simplify::simplify(environment);
     // println!("{:#?}", environment);
 }

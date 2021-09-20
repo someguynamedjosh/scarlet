@@ -3,10 +3,6 @@ use crate::{
     stage2::structure::{Definitions, Environment, ItemId},
 };
 
-pub(super) fn indented(source: &str) -> String {
-    source.replace("\n", "\n    ")
-}
-
 pub(super) struct UnprocessedItem {
     pub id: ItemId,
     pub public: bool,

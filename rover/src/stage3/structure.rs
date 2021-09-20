@@ -1,29 +1,11 @@
-use crate::util::indented;
 use std::fmt::{self, Debug, Formatter};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PrimitiveType {
-    I32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PrimitiveValue {
-    I32(i32),
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ItemId(pub(crate) usize);
-
-impl Debug for ItemId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "id{{{}}}", self.0)
-    }
-}
+use crate::{stage2::structure::{Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements}, util::indented};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
     pub modules: Vec<ItemId>,
-    pub(crate) items: Vec<Option<Item>>,
+    pub(crate) items: Vec<Item>,
 }
 
 impl Debug for Environment {
@@ -34,16 +16,11 @@ impl Debug for Environment {
                 write!(f, "\n\n    ")?;
             }
             write!(f, "{:?} is ", ItemId(index))?;
-            match item {
-                Some(item) => {
-                    if f.alternate() {
-                        let text = format!("{:#?}", item);
-                        write!(f, "{},", indented(&text[..]))?;
-                    } else {
-                        write!(f, "{:?}", item)?;
-                    }
-                }
-                None => write!(f, "None,")?,
+            if f.alternate() {
+                let text = format!("{:#?}", item);
+                write!(f, "{},", indented(&text[..]))?;
+            } else {
+                write!(f, "{:?}", item)?;
             }
         }
         if f.alternate() {
@@ -61,36 +38,21 @@ impl Environment {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &Option<Item>)> {
-        self.items
-            .iter()
-            .enumerate()
-            .map(|(index, val)| (ItemId(index), val))
-    }
-
     pub fn mark_as_module(&mut self, item: ItemId) {
         self.modules.push(item)
     }
 
-    pub fn next_id(&mut self) -> ItemId {
+    pub fn insert(&mut self, definition: Item) -> ItemId {
         let id = ItemId(self.items.len());
-        self.items.push(None);
+        self.items.push(definition);
         id
     }
 
-    pub fn define(&mut self, item: ItemId, definition: Item) {
-        assert!(item.0 < self.items.len());
-        self.items[item.0] = Some(definition)
-    }
-
-    pub fn definition_of(&self, item: ItemId) -> &Option<Item> {
+    pub fn definition_of(&self, item: ItemId) -> &Item {
         assert!(item.0 < self.items.len());
         &self.items[item.0]
     }
 }
-
-pub type Definitions = Vec<(String, ItemId)>;
-pub type Replacements = Vec<(ItemId, ItemId)>;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -108,11 +70,6 @@ pub enum Item {
         typee: ItemId,
         variant_name: String,
         records: Vec<ItemId>,
-    },
-    Item(ItemId),
-    Member {
-        base: ItemId,
-        name: String,
     },
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
@@ -169,8 +126,6 @@ impl Debug for Item {
                 }
                 write!(f, "]")
             }
-            Self::Item(id) => write!(f, "{:?}", id),
-            Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
             Self::Replacing { base, replacements } => {
