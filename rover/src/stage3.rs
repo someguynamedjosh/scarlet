@@ -1,5 +1,8 @@
 use crate::stage2::{self, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements};
-use std::fmt::{self, Debug, Formatter};
+use std::{
+    collections::HashSet,
+    fmt::{self, Debug, Formatter},
+};
 
 pub fn ingest(from: stage2::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
@@ -160,7 +163,6 @@ impl Environment {
                 self.resolve_variable(base)
             }
             Item::FromType { .. } => todo!("nice error"),
-            Item::InductiveValue { .. } => todo!("nice error"),
             Item::Item(id) => {
                 let id = *id;
                 self.resolve_variable(id)
@@ -227,6 +229,30 @@ impl Environment {
         Ok(res)
     }
 
+    // Collects all variables specified by From items pointed to by the provided ID.
+    fn get_from_variables(&mut self, typee: ItemId) -> Result<HashSet<ItemId>, String> {
+        Ok(match &self.items[typee.0].base {
+            Item::Defining { base: id, .. } | Item::Item(id) | Item::Public(id) => {
+                let id = *id;
+                self.get_from_variables(id)?
+            }
+            Item::FromType { base, vars } => {
+                let base = *base;
+                let vars: HashSet<_> = vars.iter().copied().collect();
+                let result = self.get_from_variables(base)?;
+                result.union(&vars).copied().collect()
+            }
+            Item::Member { base, name } => {
+                let base = *base;
+                let name = name.clone();
+                let id = self.get_member(base, &name)?;
+                self.get_from_variables(id)?
+            }
+            Item::Replacing { .. } => todo!(),
+            _ => HashSet::new(),
+        })
+    }
+
     fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
         assert!(of.0 < self.items.len());
         let item = &self.items[of.0];
@@ -240,8 +266,21 @@ impl Environment {
             Item::GodType { .. } => self.god_type(),
             // TODO: This is not always correct. Need to finalize how inductive
             // types can depend on vars.
-            Item::InductiveType(id) => self.god_type(),
-            Item::InductiveValue { typee, .. } => *typee,
+            Item::InductiveType(..) => self.god_type(),
+            Item::InductiveValue { typee, records, .. } => {
+                let mut from_vars = HashSet::new();
+                let typee = *typee;
+                for recorded in records.clone() {
+                    let typee = self.compute_type(recorded)?;
+                    for from_var in self.get_from_variables(typee)? {
+                        from_vars.insert(from_var);
+                    }
+                }
+                self.insert(Item::FromType {
+                    base: typee,
+                    vars: from_vars.into_iter().collect(),
+                })
+            }
             Item::Item(id) => {
                 let id = *id;
                 self.compute_type(id)?;

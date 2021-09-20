@@ -15,57 +15,61 @@ pub fn simplify(env: Environment) -> Environment {
     env
 }
 
-fn apply_replacements_to(target: &mut ItemId, replacements: &HashMap<ItemId, ItemId>) {
+fn apply_replacements_to_id(target: &mut ItemId, replacements: &HashMap<ItemId, ItemId>) {
     if let Some(rep) = replacements.get(target) {
         *target = *rep;
+    }
+}
+
+fn apply_replacements_to_item(target: &mut Item, replacements: &HashMap<ItemId, ItemId>) {
+    match target {
+        Item::Defining { base, definitions } => {
+            apply_replacements_to_id(base, replacements);
+            for (_, def) in definitions {
+                apply_replacements_to_id(def, replacements);
+            }
+        }
+        Item::GodType => (),
+        Item::FromType { base, vars } => {
+            apply_replacements_to_id(base, replacements);
+            for var in vars {
+                apply_replacements_to_id(var, replacements);
+            }
+        }
+        Item::InductiveType(id) => apply_replacements_to_id(id, replacements),
+        Item::InductiveValue { typee, records, .. } => {
+            apply_replacements_to_id(typee, replacements);
+            for record in records {
+                apply_replacements_to_id(record, replacements);
+            }
+        }
+        Item::Item(id) => apply_replacements_to_id(id, replacements),
+        Item::Member { base, .. } => apply_replacements_to_id(base, replacements),
+        Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
+        Item::Public(id) => apply_replacements_to_id(id, replacements),
+        Item::Replacing {
+            base,
+            replacements: user_specified_replacements,
+        } => {
+            apply_replacements_to_id(base, replacements);
+            for (target, value) in user_specified_replacements {
+                apply_replacements_to_id(target, replacements);
+                apply_replacements_to_id(value, replacements);
+            }
+        }
+        Item::Variable { selff, typee, .. } => {
+            apply_replacements_to_id(selff, replacements);
+            apply_replacements_to_id(typee, replacements);
+        }
     }
 }
 
 fn apply_replacements(env: &mut Environment, replacements: &HashMap<ItemId, ItemId>) {
     for (_, item, typee) in env.iter_mut() {
         if let Some(tid) = typee {
-            apply_replacements_to(tid, replacements);
+            apply_replacements_to_id(tid, replacements);
         }
-        match item {
-            Item::Defining { base, definitions } => {
-                apply_replacements_to(base, replacements);
-                for (_, def) in definitions {
-                    apply_replacements_to(def, replacements);
-                }
-            }
-            Item::GodType => (),
-            Item::FromType { base, vars } => {
-                apply_replacements_to(base, replacements);
-                for var in vars {
-                    apply_replacements_to(var, replacements);
-                }
-            }
-            Item::InductiveType(id) => apply_replacements_to(id, replacements),
-            Item::InductiveValue { typee, records, .. } => {
-                apply_replacements_to(typee, replacements);
-                for record in records {
-                    apply_replacements_to(record, replacements);
-                }
-            }
-            Item::Item(id) => apply_replacements_to(id, replacements),
-            Item::Member { base, .. } => apply_replacements_to(base, replacements),
-            Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
-            Item::Public(id) => apply_replacements_to(id, replacements),
-            Item::Replacing {
-                base,
-                replacements: user_specified_replacements,
-            } => {
-                apply_replacements_to(base, replacements);
-                for (target, value) in user_specified_replacements {
-                    apply_replacements_to(target, replacements);
-                    apply_replacements_to(value, replacements);
-                }
-            }
-            Item::Variable { selff, typee, .. } => {
-                apply_replacements_to(selff, replacements);
-                apply_replacements_to(typee, replacements);
-            }
-        }
+        apply_replacements_to_item(item, replacements)
     }
 }
 
