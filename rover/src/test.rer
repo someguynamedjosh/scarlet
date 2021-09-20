@@ -1,0 +1,19 @@
+TYPE is rover::lang::TYPE
+
+Var is any{TYPE}
+
+another is Var
+replacing{
+   Var with TYPE
+}
+
+#=
+recount is 
+pick{
+   if input == 0, 0
+   else           recount[input - 1]
+}
+where{
+   input is any{Integer32}
+}
+=#
