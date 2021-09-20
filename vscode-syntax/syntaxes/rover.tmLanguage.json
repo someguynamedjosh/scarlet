@@ -1,0 +1,50 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Rover",
+	"patterns": [
+		{
+			"name": "keyword.other",
+			"match": "\\b(is|with)\\b"
+		},
+		{
+			"name": "keyword.operator",
+			"match": "\\b(::|.|:)\\b"
+		},
+		{
+			"name": "keyword.control",
+			"match": "(replacing|defining|Type|recording|any|the)[ \\r\\n\\t]*\\{"
+		},
+		{
+			"name": "invalid.illegal",
+			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*\\{\\b"
+		},
+		{
+			"name": "keyword.control",
+			"match": "}"
+		},
+		{
+			"name": "entity.name.type",
+			"match": "\\b[A-Z][a-zA-Z0-9]*\\b"
+		},
+		{
+			"name": "variable",
+			"match": "\\b[a-zA-Z0-9]+\\b"
+		},
+		{
+			"name": "comment.line",
+			"match": "#[^=][^\\n]*$"
+		},
+		{
+			"name": "comment.block",
+			"begin": "#=",
+			"end": "=#",
+			"patterns": [
+				{
+					"name": "comment.block",
+					"match": "."
+				}
+			]
+		}
+	],
+	"scopeName": "source.rover"
+}

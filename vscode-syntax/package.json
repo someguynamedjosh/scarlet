@@ -1,9 +1,9 @@
 {
-    "name": "nodespeak-syntax",
-    "displayName": "Nodespeak Language Support",
-    "description": "Syntax highlighting for Nodespeak, a JIT-compiled language for number crunching.",
-    "version": "1.0.1",
-    "publisher": "codecube",
+    "name": "rover-syntax",
+    "displayName": "Rover Syntax Support",
+    "description": "Syntax highlighting for Rover",
+    "version": "1.0.0",
+    "publisher": "joshua-maros",
     "engines": {
         "vscode": "^1.30.0"
     },
@@ -13,18 +13,18 @@
     "contributes": {
         "languages": [
             {
-                "id": "nodespeak",
+                "id": "rover",
                 "extensions": [
-                    ".ns"
+                    ".rer"
                 ],
                 "configuration": "./language-configuration.json"
             }
         ],
         "grammars": [
             {
-                "language": "Nodespeak",
-                "scopeName": "source.nodespeak",
-                "path": "./syntaxes/nodespeak.tmLanguage.json"
+                "language": "rover",
+                "scopeName": "source.rover",
+                "path": "./syntaxes/rover.tmLanguage.json"
             }
         ]
     },
