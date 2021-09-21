@@ -112,7 +112,7 @@ impl Environment {
         }
     }
 
-    fn op_type(&self, op: &PrimitiveOperation) -> ItemId {
+    pub(super) fn op_type(&self, op: &PrimitiveOperation) -> ItemId {
         match op {
             PrimitiveOperation::I32Math(..) => self.i32_type(),
         }

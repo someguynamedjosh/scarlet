@@ -53,6 +53,36 @@ fn convertible(item: &stage2::Item) -> bool {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+enum DereferencedItem {
+    Stage2Item(ItemId),
+    Replacing {
+        base: Box<DereferencedItem>,
+        replacements: Replacements,
+    },
+}
+
+impl DereferencedItem {
+    pub fn id(&self) -> ItemId {
+        match self {
+            Self::Stage2Item(id) => *id,
+            Self::Replacing { base, .. } => base.id(),
+        }
+    }
+
+    pub fn with_base(&self, new_base: DereferencedItem) -> Self {
+        match self {
+            Self::Stage2Item(..) => new_base,
+            Self::Replacing {
+                base, replacements, ..
+            } => Self::Replacing {
+                base: Box::new(base.with_base(new_base)),
+                replacements: replacements.clone(),
+            },
+        }
+    }
+}
+
 impl<'a> IngestionContext<'a> {
     fn insert_extra_item(&mut self, item: Item) -> ItemId {
         let id = self.next_unused_id;
@@ -150,41 +180,48 @@ impl<'a> IngestionContext<'a> {
         self.convert_iid(id, true)
     }
 
+    fn convert_dereffed(&mut self, item: DereferencedItem) -> ItemId {
+        match item {
+            DereferencedItem::Stage2Item(id) => *self.id_map.get(&id).unwrap(),
+            DereferencedItem::Replacing { base, replacements } => {
+                let base = self.convert_dereffed(*base);
+                self.insert_extra_item(Item::Replacing { base, replacements })
+            }
+        }
+    }
+
     /// Applies dereferencing and id_map to the provided item id.
     fn convert_iid(&mut self, id: ItemId, deref_define: bool) -> Result<ItemId, String> {
-        let (id, replacements) = self.dereference_iid(id, deref_define)?;
-        let id = *self.id_map.get(&id).unwrap();
-        if replacements.len() == 0 {
-            Ok(id)
-        } else {
-            let base = id;
-            let item = Item::Replacing { base, replacements };
-            Ok(self.insert_extra_item(item))
-        }
+        let dereffed = self.dereference_iid(id, deref_define)?;
+        Ok(self.convert_dereffed(dereffed))
     }
 
     fn get_member(
         &mut self,
         base: ItemId,
         name: &String,
-    ) -> Result<(ItemId, Replacements), String> {
-        let (base_id, base_reps) = self.dereference_iid(base, false)?;
-        let og_base = base_id;
-        match self.src.definition_of(base_id).as_ref().unwrap() {
-            stage2::Item::Defining { base, definitions } => {
-                if let Ok(member) = self.get_member(*base, name) {
+        deref_define: bool,
+    ) -> Result<DereferencedItem, String> {
+        let og_base = self.dereference_iid(base, false)?;
+        match self.src.definition_of(og_base.id()).as_ref().unwrap() {
+            stage2::Item::Defining {
+                base: def_base,
+                definitions,
+            } => {
+                if let Ok(member) = self.get_member(*def_base, name, deref_define) {
                     return Ok(member);
                 }
                 for (cname, cdef) in definitions {
                     if cname == name {
-                        return Ok((*cdef, base_reps));
+                        let dereffed_definition = self.dereference_iid(*cdef, deref_define)?;
+                        return Ok(og_base.with_base(dereffed_definition));
                     }
                 }
                 Err(format!("{:?} has no member named {}", og_base, name))
             }
             stage2::Item::Item(..) | stage2::Item::Member { .. } => unreachable!(),
-            stage2::Item::Replacing { .. } => unreachable!("{:?} {:?}", base, base_id),
-            _ => Err(format!("{:?} has no members", base)),
+            stage2::Item::Replacing { .. } => unreachable!("{:?} {:?}", og_base, base),
+            _ => Err(format!("{:?} has no members", og_base)),
         }
     }
 
@@ -193,29 +230,26 @@ impl<'a> IngestionContext<'a> {
         &mut self,
         id: ItemId,
         deref_define: bool,
-    ) -> Result<(ItemId, Replacements), String> {
+    ) -> Result<DereferencedItem, String> {
         match self.src.definition_of(id).as_ref().unwrap() {
             stage2::Item::Defining { base, .. } => {
                 if deref_define {
                     self.dereference_iid(*base, true)
                 } else {
-                    Ok((id, vec![]))
+                    Ok(DereferencedItem::Stage2Item(id))
                 }
             }
             stage2::Item::Item(id) => self.dereference_iid(*id, deref_define),
-            stage2::Item::Member { base, name } => {
-                let (id, mut reps) = self.get_member(*base, name)?;
-                let (did, mut dreps) = self.dereference_iid(id, deref_define)?;
-                reps.append(&mut dreps);
-                Ok((did, reps))
-            }
+            stage2::Item::Member { base, name } => self.get_member(*base, name, deref_define),
             stage2::Item::Replacing { base, replacements } => {
-                let mut deref_base = self.dereference_iid(*base, deref_define)?;
-                let mut replacements = self.convert_reps(replacements)?;
-                deref_base.1.append(&mut replacements);
-                Ok(deref_base)
+                let deref_base = self.dereference_iid(*base, deref_define)?;
+                let replacements = self.convert_reps(replacements)?;
+                Ok(DereferencedItem::Replacing {
+                    base: Box::new(deref_base),
+                    replacements,
+                })
             }
-            _ => Ok((id, vec![])),
+            _ => Ok(DereferencedItem::Stage2Item(id)),
         }
     }
 }

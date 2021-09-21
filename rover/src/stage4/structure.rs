@@ -108,6 +108,19 @@ impl Environment {
         id
     }
 
+    pub(super) fn insert_with_type(&mut self, def: Item, typee: ItemId) -> ItemId {
+        if let Some(existing_id) = self.item_reverse_lookup.get(&def) {
+            return *existing_id;
+        }
+        let id = ItemId(self.items.len());
+        self.item_reverse_lookup.insert(def.clone(), id);
+        self.items.push(TypedItem {
+            base: def,
+            typee: Some(typee),
+        });
+        id
+    }
+
     pub(super) fn set_type(&mut self, item: ItemId, typee: ItemId) {
         assert!(item.0 < self.items.len());
         self.items[item.0].typee = Some(typee)

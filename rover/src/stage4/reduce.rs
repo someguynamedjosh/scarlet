@@ -113,7 +113,12 @@ impl Environment {
         }
     }
 
-    fn reduce(&mut self, item: ItemId, reps: &HashMap<ItemId, ItemId>, reduce_defs: bool) -> ItemId {
+    fn reduce(
+        &mut self,
+        item: ItemId,
+        reps: &HashMap<ItemId, ItemId>,
+        reduce_defs: bool,
+    ) -> ItemId {
         if let Some(rep) = reps.get(&item) {
             return *rep;
         }
@@ -179,12 +184,14 @@ impl Environment {
                 }
                 if input_values.len() == reduced_inputs.len() {
                     let computed = op.compute(input_values);
-                    self.insert(Item::PrimitiveValue(computed))
+                    self.insert_with_type(Item::PrimitiveValue(computed), self.op_type(&op))
                 } else if reduced_inputs == inputs {
                     item
                 } else {
                     let op = op.with_inputs(reduced_inputs);
-                    self.insert(Item::PrimitiveOperation(op))
+                    let id = self.insert(Item::PrimitiveOperation(op));
+                    self.compute_type(id).unwrap();
+                    id
                 }
             }
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => item,
@@ -210,9 +217,7 @@ impl Environment {
                     }
                 }
                 let rbase = self.reduce(base, &replacements_after, true);
-                if base == rbase {
-                    item
-                } else if remaining_replacements.len() == 0 {
+                if remaining_replacements.len() == 0 {
                     rbase
                 } else {
                     let item = Item::Replacing {
