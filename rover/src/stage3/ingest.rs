@@ -100,7 +100,9 @@ impl<'a> IngestionContext<'a> {
     fn convert_defs(&mut self, defs: &[(String, ItemId)]) -> Result<Definitions, String> {
         let mut result = Vec::new();
         for (name, def) in defs {
-            result.push((name.clone(), self.full_convert_iid(*def)?));
+            // Don't dereference defines so we can preserve module structure for
+            // when we go backwards from IDs to names.
+            result.push((name.clone(), self.convert_iid(*def, false)?));
         }
         Ok(result)
     }
@@ -155,7 +157,7 @@ impl<'a> IngestionContext<'a> {
                 }
                 for (cname, cdef) in definitions {
                     if cname == name {
-                        return Ok((*cdef, base_reps));
+                        return Ok((*cdef, base_reps))
                     }
                 }
                 Err(format!("{:?} has no member named {}", og_base, name))

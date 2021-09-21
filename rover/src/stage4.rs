@@ -1,12 +1,12 @@
-use crate::stage2::structure::{
-    self as stage2, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements,
-};
+use crate::stage2::structure::{ItemId, PrimitiveType, PrimitiveValue, Replacements};
+use crate::stage3::structure::{self as stage3, Item};
+use std::collections::HashMap;
 use std::{
     collections::HashSet,
     fmt::{self, Debug, Formatter},
 };
 
-pub fn ingest(from: stage2::Environment) -> Result<Environment, String> {
+pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
     let mut next_item = ItemId(0);
     while next_item.0 < env.items.len() {
@@ -26,6 +26,7 @@ struct TypedItem {
 pub struct Environment {
     pub modules: Vec<ItemId>,
     items: Vec<TypedItem>,
+    item_reverse_lookup: HashMap<Item, ItemId>,
 }
 
 fn indented(source: &str) -> String {
@@ -62,20 +63,28 @@ impl Debug for Environment {
 
 impl Environment {
     pub fn new_empty() -> Self {
-        Self::new(stage2::Environment::new())
+        Self::new(stage3::Environment::new())
     }
 
-    pub fn new(from: stage2::Environment) -> Self {
+    pub fn new(from: stage3::Environment) -> Self {
+        let item_reverse_lookup = from
+            .items
+            .iter()
+            .enumerate()
+            .map(|(index, item)| (item.clone(), ItemId(index)))
+            .collect();
+        let items = from
+            .items
+            .into_iter()
+            .map(|i| TypedItem {
+                base: i,
+                typee: None,
+            })
+            .collect();
         Self {
             modules: from.modules,
-            items: from
-                .items
-                .into_iter()
-                .map(|i| TypedItem {
-                    base: i.unwrap(),
-                    typee: None,
-                })
-                .collect(),
+            items,
+            item_reverse_lookup,
         }
     }
 
@@ -111,51 +120,26 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), &mut val.base, &mut val.typee))
     }
 
-    pub fn get_member(&mut self, base: ItemId, name: &String) -> Result<ItemId, String> {
-        let base_item = &self.items[base.0];
-        let member_name = name;
-        match &base_item.base {
-            Item::Defining { base, definitions } => {
-                let mut candidate = None;
-                for (name, val) in definitions {
-                    if name == member_name {
-                        candidate = Some(*val)
-                    }
-                }
-                let base = *base;
-                if let Ok(res) = self.get_member(base, name) {
-                    return Ok(res);
-                } else if let Some(val) = candidate {
-                    return Ok(val);
-                }
-            }
-            Item::FromType { base, .. } => {
-                let base = *base;
-                return self.get_member(base, member_name);
-            }
-            Item::Item(base) => {
-                let base = *base;
-                return self.get_member(base, member_name);
-            }
-            Item::Member { base, name } => {
-                let base = *base;
-                let name = name.clone();
-                let that_member = self.get_member(base, &name)?;
-                return self.get_member(that_member, member_name);
-            }
-            Item::Public(..) => todo!(),
-            Item::Replacing { .. } => todo!(),
-            Item::GodType
-            | Item::InductiveType(..)
-            | Item::InductiveValue { .. }
-            | Item::PrimitiveType(..)
-            | Item::PrimitiveValue(..)
-            | Item::Variable { .. } => (),
+    pub fn insert(&mut self, def: Item) -> ItemId {
+        if let Some(existing_id) = self.item_reverse_lookup.get(&def) {
+            return *existing_id;
         }
-        // Don't todoify this, some code relies on catching errors.
-        Err(format!("failed to find a member named ident{{{}}}", name))
+        let id = ItemId(self.items.len());
+        self.item_reverse_lookup.insert(def.clone(), id);
+        self.items.push(TypedItem {
+            base: def,
+            typee: None,
+        });
+        id
     }
 
+    pub fn set_type(&mut self, item: ItemId, typee: ItemId) {
+        assert!(item.0 < self.items.len());
+        self.items[item.0].typee = Some(typee)
+    }
+}
+
+impl Environment {
     fn resolve_variable(&mut self, reference: ItemId) -> Result<ItemId, String> {
         assert!(reference.0 < self.items.len());
         let item = &self.items[reference.0];
@@ -165,20 +149,6 @@ impl Environment {
                 self.resolve_variable(base)
             }
             Item::FromType { .. } => todo!("nice error"),
-            Item::Item(id) => {
-                let id = *id;
-                self.resolve_variable(id)
-            }
-            Item::Member { base, name } => {
-                let base = *base;
-                let name = name.clone();
-                let item = self.get_member(base, &name)?;
-                self.resolve_variable(item)
-            }
-            Item::Public(id) => {
-                let id = *id;
-                self.resolve_variable(id)
-            }
             Item::Replacing { base, .. } => {
                 let base = *base;
                 self.resolve_variable(base)
@@ -234,7 +204,7 @@ impl Environment {
     // Collects all variables specified by From items pointed to by the provided ID.
     fn get_from_variables(&mut self, typee: ItemId) -> Result<HashSet<ItemId>, String> {
         Ok(match &self.items[typee.0].base {
-            Item::Defining { base: id, .. } | Item::Item(id) | Item::Public(id) => {
+            Item::Defining { base: id, .. } => {
                 let id = *id;
                 self.get_from_variables(id)?
             }
@@ -243,12 +213,6 @@ impl Environment {
                 let vars: HashSet<_> = vars.iter().copied().collect();
                 let result = self.get_from_variables(base)?;
                 result.union(&vars).copied().collect()
-            }
-            Item::Member { base, name } => {
-                let base = *base;
-                let name = name.clone();
-                let id = self.get_member(base, &name)?;
-                self.get_from_variables(id)?
             }
             Item::Replacing { .. } => todo!(),
             _ => HashSet::new(),
@@ -283,22 +247,10 @@ impl Environment {
                     vars: from_vars.into_iter().collect(),
                 })
             }
-            Item::Item(id) => {
-                let id = *id;
-                self.compute_type(id)?;
-                self.items[id.0].typee.unwrap()
-            }
-            Item::Member { base, name } => {
-                let base = *base;
-                let name = name.clone();
-                let member = self.get_member(base, &name)?;
-                self.compute_type(member)?
-            }
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {
                 PrimitiveValue::I32(..) => self.i32_type(),
             },
-            Item::Public(..) => todo!(),
             Item::Replacing { base, replacements } => {
                 let base = *base;
                 let replacements = replacements.clone();
@@ -312,19 +264,5 @@ impl Environment {
         };
         self.set_type(of, typee);
         Ok(typee)
-    }
-
-    pub fn insert(&mut self, def: Item) -> ItemId {
-        let id = ItemId(self.items.len());
-        self.items.push(TypedItem {
-            base: def,
-            typee: None,
-        });
-        id
-    }
-
-    pub fn set_type(&mut self, item: ItemId, typee: ItemId) {
-        assert!(item.0 < self.items.len());
-        self.items[item.0].typee = Some(typee)
     }
 }

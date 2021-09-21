@@ -2,7 +2,7 @@ mod parse;
 // mod simplify;
 mod stage2;
 mod stage3;
-// mod stage4;
+mod stage4;
 mod util;
 
 fn main() {
@@ -15,6 +15,8 @@ fn main() {
     let (environment, file_id) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
     let environment = stage3::ingest(&environment).unwrap();
+    println!("{:#?}", environment);
+    let environment = stage4::ingest(environment).unwrap();
     println!("{:#?}", environment);
     // let environment = simplify::simplify(environment);
     // println!("{:#?}", environment);
