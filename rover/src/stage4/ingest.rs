@@ -1,11 +1,9 @@
 use crate::{
-    stage2::structure::{
-        IntegerMathOperation, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
-    },
+    stage2::structure::{ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
     stage3::structure::{self as stage3, Item},
     stage4::structure::Environment,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
@@ -15,6 +13,34 @@ pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
         next_item.0 += 1;
     }
     Ok(env)
+}
+
+struct VarList(Vec<ItemId>);
+
+impl VarList {
+    pub fn new() -> VarList {
+        Self(Vec::new())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn push(&mut self, item: ItemId) {
+        if !self.0.contains(&item) {
+            self.0.push(item)
+        }
+    }
+
+    pub fn append(&mut self, items: &[ItemId]) {
+        for item in items {
+            self.push(*item);
+        }
+    }
+
+    pub fn into_vec(self) -> Vec<ItemId> {
+        self.0
+    }
 }
 
 impl Environment {
@@ -50,21 +76,21 @@ impl Environment {
     ) -> Result<ItemId, String> {
         let unreplaced_type = self.compute_type(base)?;
         // A hashmap of variables to replace and what variables the replaced values depend on.
-        let mut replacement_data = HashMap::<ItemId, Vec<ItemId>>::new();
+        let mut replacement_data = HashMap::<ItemId, VarList>::new();
         for (target, value) in replacements {
             let valtype = self.compute_type(value)?;
-            let valtype_vars = self.get_from_variables(valtype)?.into_iter().collect();
+            let valtype_vars = self.get_from_variables(valtype)?;
             replacement_data.insert(target, valtype_vars);
         }
         // TODO: This doesn't work when replacing a variable with more variables. I think?
         let def = &self.items[unreplaced_type.0].base;
         let res = match def {
             Item::FromType { base, vars } => {
-                let mut vars_after_reps = Vec::new();
+                let mut vars_after_reps = VarList::new();
                 for var in vars {
                     if let Some(replaced_value_vars) = replacement_data.get(var) {
                         // $var is being replaced with a value that depends on replaced_value_vars.
-                        vars_after_reps.append(&mut replaced_value_vars.clone())
+                        vars_after_reps.append(&replaced_value_vars.0[..])
                     } else {
                         // $var is not being replaced so the expression still depends on it.
                         vars_after_reps.push(*var);
@@ -72,13 +98,13 @@ impl Environment {
                 }
                 if vars_after_reps.len() == 0 {
                     *base
-                } else if &vars_after_reps == vars {
+                } else if &vars_after_reps.0 == vars {
                     unreplaced_type
                 } else {
                     let base = *base;
                     self.insert(Item::FromType {
                         base,
-                        vars: vars_after_reps,
+                        vars: vars_after_reps.into_vec(),
                     })
                 }
             }
@@ -88,7 +114,7 @@ impl Environment {
     }
 
     // Collects all variables specified by From items pointed to by the provided ID.
-    fn get_from_variables(&mut self, typee: ItemId) -> Result<HashSet<ItemId>, String> {
+    fn get_from_variables(&mut self, typee: ItemId) -> Result<VarList, String> {
         Ok(match &self.items[typee.0].base {
             Item::Defining { base: id, .. } => {
                 let id = *id;
@@ -96,20 +122,21 @@ impl Environment {
             }
             Item::FromType { base, vars } => {
                 let base = *base;
-                let vars: HashSet<_> = vars.iter().copied().collect();
-                let result = self.get_from_variables(base)?;
-                result.union(&vars).copied().collect()
+                let vars = vars.clone();
+                let mut result = self.get_from_variables(base)?;
+                result.append(&vars[..]);
+                result
             }
             Item::Replacing { .. } => todo!(),
-            _ => HashSet::new(),
+            _ => VarList::new(),
         })
     }
 
-    fn with_from_vars(&mut self, base: ItemId, from_vars: HashSet<ItemId>) -> ItemId {
+    fn with_from_vars(&mut self, base: ItemId, from_vars: VarList) -> ItemId {
         if from_vars.len() > 0 {
             self.insert(Item::FromType {
                 base,
-                vars: from_vars.into_iter().collect(),
+                vars: from_vars.into_vec(),
             })
         } else {
             base
@@ -142,24 +169,22 @@ impl Environment {
             // types can depend on vars.
             Item::InductiveType(..) => self.god_type(),
             Item::InductiveValue { typee, records, .. } => {
-                let mut from_vars = HashSet::new();
+                let mut from_vars = VarList::new();
                 let typee = *typee;
                 for recorded in records.clone() {
                     let typee = self.compute_type(recorded)?;
-                    for from_var in self.get_from_variables(typee)? {
-                        from_vars.insert(from_var);
-                    }
+                    let recorded_vars = self.get_from_variables(typee)?;
+                    from_vars.append(&recorded_vars.into_vec()[..]);
                 }
                 self.with_from_vars(typee, from_vars)
             }
             Item::PrimitiveOperation(op) => {
-                let mut from_vars = HashSet::new();
+                let mut from_vars = VarList::new();
                 let typee = self.op_type(op);
                 for input in op.inputs() {
                     let input_type = self.items[input.0].typee.unwrap();
-                    for from_var in self.get_from_variables(input_type)? {
-                        from_vars.insert(from_var);
-                    }
+                    let input_vars = self.get_from_variables(input_type)?;
+                    from_vars.append(&input_vars.into_vec()[..]);
                 }
                 self.with_from_vars(typee, from_vars)
             }
