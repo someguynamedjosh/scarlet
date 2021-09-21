@@ -13,6 +13,12 @@ pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
         env.compute_type(next_item)?;
         next_item.0 += 1;
     }
+    println!("{:#?}", env);
+    let mut next_item = ItemId(0);
+    while next_item.0 < env.items.len() {
+        env.type_check(next_item)?;
+        next_item.0 += 1;
+    }
     Ok(env)
 }
 
@@ -140,7 +146,7 @@ impl Environment {
 }
 
 impl Environment {
-    fn resolve_variable(&mut self, reference: ItemId) -> Result<ItemId, String> {
+    fn resolve_variable(&self, reference: ItemId) -> Result<ItemId, String> {
         assert!(reference.0 < self.items.len());
         let item = &self.items[reference.0];
         match &item.base {
@@ -157,7 +163,7 @@ impl Environment {
             | Item::InductiveType(..)
             | Item::InductiveValue { .. }
             | Item::PrimitiveType(..)
-            | Item::PrimitiveValue(..) => todo!("nice error"),
+            | Item::PrimitiveValue(..) => todo!("nice error, not a variable"),
             Item::Variable { selff, .. } => Ok(*selff),
         }
     }
@@ -199,6 +205,46 @@ impl Environment {
             _ => unreplaced_type,
         };
         Ok(res)
+    }
+
+    /// Returns true if the two items are defined as the same. This check does
+    /// not always return true when this is the case, due to Godel-related math
+    /// gremlins.
+    fn are_def_equal(&self, left: ItemId, right: ItemId) -> bool {
+        if left == right {
+            true
+        } else {
+            // TODO: This is impolite, we could try a little harder than that.
+            false
+        }
+    }
+
+    /// Returns the type of the variable given by the id, assuming the id points to a variable.
+    fn get_var_type(&self, var: ItemId) -> ItemId {
+        match &self.items[var.0].base {
+            Item::Variable { typee, .. } => *typee,
+            _ => panic!("{:?} is not a variable", var),
+        }
+    }
+
+    /// Checks that, if this item is a Replacing item, that it obeys a type check.
+    fn type_check(&self, item: ItemId) -> Result<(), String> {
+        match &self.items[item.0].base {
+            Item::Replacing { replacements, .. } => {
+                for (target, val) in replacements {
+                    let var_type = self.get_var_type(*target);
+                    let val_type = self.items[val.0].typee.unwrap();
+                    if !self.are_def_equal(var_type, val_type) {
+                        return Err(format!(
+                            "(at {:?}) {:?} and {:?} have differing types",
+                            item, target, val
+                        ));
+                    }
+                }
+                Ok(())
+            }
+            _ => Ok(()),
+        }
     }
 
     // Collects all variables specified by From items pointed to by the provided ID.
