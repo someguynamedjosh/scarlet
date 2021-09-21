@@ -11,6 +11,15 @@ pub enum PrimitiveValue {
     I32(i32),
 }
 
+impl PrimitiveValue {
+    pub fn expect_i32(&self) -> i32 {
+        match self {
+            Self::I32(v) => *v,
+            _ => panic!("Expected an i32"),
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemId(pub(crate) usize);
 
@@ -102,6 +111,27 @@ pub enum IntegerMathOperation {
     // Negate(ItemId),
 }
 
+impl IntegerMathOperation {
+    pub fn inputs(&self) -> Vec<ItemId> {
+        match self {
+            Self::Add(a, b) | Self::Subtract(a, b) => vec![*a, *b],
+        }
+    }
+
+    pub fn with_inputs(&self, new_inputs: Vec<ItemId>) -> Self {
+        match self {
+            Self::Add(..) => {
+                assert_eq!(new_inputs.len(), 2);
+                Self::Add(new_inputs[0], new_inputs[1])
+            }
+            Self::Subtract(..) => {
+                assert_eq!(new_inputs.len(), 2);
+                Self::Subtract(new_inputs[0], new_inputs[1])
+            }
+        }
+    }
+}
+
 impl Debug for IntegerMathOperation {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
@@ -114,6 +144,33 @@ impl Debug for IntegerMathOperation {
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum PrimitiveOperation {
     I32Math(IntegerMathOperation),
+}
+
+impl PrimitiveOperation {
+    pub fn inputs(&self) -> Vec<ItemId> {
+        match self {
+            Self::I32Math(op) => op.inputs(),
+        }
+    }
+
+    pub fn with_inputs(&self, new_inputs: Vec<ItemId>) -> Self {
+        match self {
+            Self::I32Math(op) => Self::I32Math(op.with_inputs(new_inputs)),
+        }
+    }
+
+    pub fn compute(&self, inputs: Vec<PrimitiveValue>) -> PrimitiveValue {
+        use IntegerMathOperation as Imo;
+        match self {
+            Self::I32Math(op) => {
+                let inputs: Vec<_> = inputs.iter().map(PrimitiveValue::expect_i32).collect();
+                match op {
+                    Imo::Add(..) => PrimitiveValue::I32(inputs[0] + inputs[1]),
+                    Imo::Subtract(..) => PrimitiveValue::I32(inputs[0] - inputs[1]),
+                }
+            }
+        }
+    }
 }
 
 impl Debug for PrimitiveOperation {

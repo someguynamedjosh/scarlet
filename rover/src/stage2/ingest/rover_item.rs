@@ -16,8 +16,16 @@ fn define_binary_op(
     op: impl FnOnce(ItemId, ItemId) -> PrimitiveOperation,
 ) -> ItemId {
     let (a, b) = define_two_vars(env, typee);
+    let base = env.next_id();
+    env.define(base, Item::PrimitiveOperation(op(a, b)));
     let into = env.next_id();
-    env.define(into, Item::PrimitiveOperation(op(a, b)));
+    env.define(
+        into,
+        Item::Defining {
+            base,
+            definitions: vec![(format!("left"), a), (format!("right"), b)],
+        },
+    );
     into
 }
 

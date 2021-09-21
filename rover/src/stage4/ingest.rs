@@ -1,5 +1,7 @@
 use crate::{
-    stage2::structure::{ItemId, PrimitiveValue, Replacements},
+    stage2::structure::{
+        IntegerMathOperation, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
+    },
     stage3::structure::{self as stage3, Item},
     stage4::structure::Environment,
 };
@@ -99,6 +101,23 @@ impl Environment {
         })
     }
 
+    fn with_from_vars(&mut self, base: ItemId, from_vars: HashSet<ItemId>) -> ItemId {
+        if from_vars.len() > 0 {
+            self.insert(Item::FromType {
+                base,
+                vars: from_vars.into_iter().collect(),
+            })
+        } else {
+            base
+        }
+    }
+
+    fn op_type(&self, op: &PrimitiveOperation) -> ItemId {
+        match op {
+            PrimitiveOperation::I32Math(..) => self.i32_type(),
+        }
+    }
+
     pub(super) fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
         assert!(of.0 < self.items.len());
         let item = &self.items[of.0];
@@ -125,16 +144,19 @@ impl Environment {
                         from_vars.insert(from_var);
                     }
                 }
-                if from_vars.len() > 0 {
-                    self.insert(Item::FromType {
-                        base: typee,
-                        vars: from_vars.into_iter().collect(),
-                    })
-                } else {
-                    typee
-                }
+                self.with_from_vars(typee, from_vars)
             }
-            Item::PrimitiveOperation(..) => todo!("Accumulate all From vars from inputs"),
+            Item::PrimitiveOperation(op) => {
+                let mut from_vars = HashSet::new();
+                let typee = self.op_type(op);
+                for input in op.inputs() {
+                    let input_type = self.items[input.0].typee.unwrap();
+                    for from_var in self.get_from_variables(input_type)? {
+                        from_vars.insert(from_var);
+                    }
+                }
+                self.with_from_vars(typee, from_vars)
+            }
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {
                 PrimitiveValue::I32(..) => self.i32_type(),

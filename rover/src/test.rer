@@ -1,4 +1,11 @@
 
+add is rover::lang::Integer32::add
+
+three is add replacing{
+   add::left with i32{1}
+   add::right with i32{2}
+}
+
 #=
 recount is 
 pick{

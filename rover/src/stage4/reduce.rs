@@ -13,7 +13,7 @@ pub fn reduce(env: &mut Environment) {
     let mut id = ItemId(0);
     while id.0 < env.items.len() {
         env.compute_type(id).unwrap();
-        let new = env.reduce(id, &HashMap::new());
+        let new = env.reduce(id, &HashMap::new(), false);
         if new != id {
             replacements.insert(id, new);
         }
@@ -66,7 +66,8 @@ impl Environment {
         }
     }
 
-    /// This is used to replace references to items with references to equal items which have been reduced more than the original.
+    /// This is used to replace references to items with references to equal
+    /// items which have been reduced more than the original.
     fn apply_replacements(&mut self, item: ItemId, reps: &HashMap<ItemId, ItemId>) {
         let item = &mut self.items[item.0];
         if let Some(typee) = &mut item.typee {
@@ -112,19 +113,23 @@ impl Environment {
         }
     }
 
-    fn reduce(&mut self, item: ItemId, reps: &HashMap<ItemId, ItemId>) -> ItemId {
+    fn reduce(&mut self, item: ItemId, reps: &HashMap<ItemId, ItemId>, reduce_defs: bool) -> ItemId {
         if let Some(rep) = reps.get(&item) {
             return *rep;
         }
         match &self.items[item.0].base {
             Item::Defining { base, .. } => {
-                let base = *base;
-                self.reduce(base, reps)
+                if reduce_defs {
+                    let base = *base;
+                    self.reduce(base, reps, true)
+                } else {
+                    item
+                }
             }
             Item::FromType { base, vars } => {
                 let base = *base;
                 let vars = vars.clone();
-                let rbase = self.reduce(base, reps);
+                let rbase = self.reduce(base, reps, reduce_defs);
                 if rbase == base {
                     item
                 } else {
@@ -145,7 +150,7 @@ impl Environment {
                 let variant_name = variant_name.clone();
                 let mut new_records = Vec::new();
                 for record in &records {
-                    new_records.push(self.reduce(*record, reps));
+                    new_records.push(self.reduce(*record, reps, true));
                 }
                 if new_records == records {
                     item
@@ -160,7 +165,28 @@ impl Environment {
                     id
                 }
             }
-            Item::PrimitiveOperation(..) => todo!("Compute primitive op"),
+            Item::PrimitiveOperation(op) => {
+                let op = op.clone();
+                let inputs = op.inputs();
+                let mut reduced_inputs = Vec::new();
+                let mut input_values = Vec::new();
+                for input in &inputs {
+                    let reduced = self.reduce(*input, reps, true);
+                    reduced_inputs.push(reduced);
+                    if let Item::PrimitiveValue(val) = &self.items[reduced.0].base {
+                        input_values.push(*val);
+                    }
+                }
+                if input_values.len() == reduced_inputs.len() {
+                    let computed = op.compute(input_values);
+                    self.insert(Item::PrimitiveValue(computed))
+                } else if reduced_inputs == inputs {
+                    item
+                } else {
+                    let op = op.with_inputs(reduced_inputs);
+                    self.insert(Item::PrimitiveOperation(op))
+                }
+            }
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => item,
             Item::Replacing { base, replacements } => {
                 // Do not replace anything this new replacement statement
@@ -172,7 +198,7 @@ impl Environment {
                 let replacements_here = replacements.clone();
                 let mut remaining_replacements = Vec::new();
                 for (target, value) in &replacements_here {
-                    let value = self.reduce(*value, reps);
+                    let value = self.reduce(*value, reps, true);
                     let typee = self.items[value.0].typee.unwrap();
                     if self.type_is_not_from(typee) {
                         // If the value to replace with does not depend on other variables, we should try to plug it in.
@@ -183,7 +209,7 @@ impl Environment {
                         replacements_after.remove(target);
                     }
                 }
-                let rbase = self.reduce(base, &replacements_after);
+                let rbase = self.reduce(base, &replacements_after, true);
                 if base == rbase {
                     item
                 } else if remaining_replacements.len() == 0 {
