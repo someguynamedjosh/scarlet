@@ -103,8 +103,8 @@ pub type Replacements = Vec<(ItemId, ItemId)>;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum IntegerMathOperation {
-    Add(ItemId, ItemId),
-    Subtract(ItemId, ItemId),
+    Sum(ItemId, ItemId),
+    Difference(ItemId, ItemId),
     // Multiply(ItemId, ItemId),
     // IntegerDivide(ItemId, ItemId),
     // Modulo(ItemId, ItemId),
@@ -114,19 +114,19 @@ pub enum IntegerMathOperation {
 impl IntegerMathOperation {
     pub fn inputs(&self) -> Vec<ItemId> {
         match self {
-            Self::Add(a, b) | Self::Subtract(a, b) => vec![*a, *b],
+            Self::Sum(a, b) | Self::Difference(a, b) => vec![*a, *b],
         }
     }
 
     pub fn with_inputs(&self, new_inputs: Vec<ItemId>) -> Self {
         match self {
-            Self::Add(..) => {
+            Self::Sum(..) => {
                 assert_eq!(new_inputs.len(), 2);
-                Self::Add(new_inputs[0], new_inputs[1])
+                Self::Sum(new_inputs[0], new_inputs[1])
             }
-            Self::Subtract(..) => {
+            Self::Difference(..) => {
                 assert_eq!(new_inputs.len(), 2);
-                Self::Subtract(new_inputs[0], new_inputs[1])
+                Self::Difference(new_inputs[0], new_inputs[1])
             }
         }
     }
@@ -135,8 +135,8 @@ impl IntegerMathOperation {
 impl Debug for IntegerMathOperation {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Add(l, r) => write!(f, "add[{:?} {:?}]", l, r),
-            Self::Subtract(l, r) => write!(f, "subtract[{:?} {:?}]", l, r),
+            Self::Sum(l, r) => write!(f, "sum[{:?} {:?}]", l, r),
+            Self::Difference(l, r) => write!(f, "difference[{:?} {:?}]", l, r),
         }
     }
 }
@@ -165,8 +165,8 @@ impl PrimitiveOperation {
             Self::I32Math(op) => {
                 let inputs: Vec<_> = inputs.iter().map(PrimitiveValue::expect_i32).collect();
                 match op {
-                    Imo::Add(..) => PrimitiveValue::I32(inputs[0] + inputs[1]),
-                    Imo::Subtract(..) => PrimitiveValue::I32(inputs[0] - inputs[1]),
+                    Imo::Sum(..) => PrimitiveValue::I32(inputs[0] + inputs[1]),
+                    Imo::Difference(..) => PrimitiveValue::I32(inputs[0] - inputs[1]),
                 }
             }
         }

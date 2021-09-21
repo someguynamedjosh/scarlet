@@ -101,9 +101,9 @@ impl<'a> IngestionContext<'a> {
     ) -> Result<IntegerMathOperation, String> {
         use IntegerMathOperation as Imo;
         Ok(match op {
-            Imo::Add(l, r) => Imo::Add(self.convert_iid(l, true)?, self.convert_iid(r, true)?),
-            Imo::Subtract(l, r) => {
-                Imo::Subtract(self.convert_iid(l, true)?, self.convert_iid(r, true)?)
+            Imo::Sum(l, r) => Imo::Sum(self.convert_iid(l, true)?, self.convert_iid(r, true)?),
+            Imo::Difference(l, r) => {
+                Imo::Difference(self.convert_iid(l, true)?, self.convert_iid(r, true)?)
             }
         })
     }

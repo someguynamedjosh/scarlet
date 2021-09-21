@@ -55,11 +55,11 @@ impl Environment {
     fn apply_replacements_to_int_op(to: &mut IntegerMathOperation, reps: &HashMap<ItemId, ItemId>) {
         use IntegerMathOperation as Imo;
         match to {
-            Imo::Add(l, r) => {
+            Imo::Sum(l, r) => {
                 Self::apply_replacements_to(l, reps);
                 Self::apply_replacements_to(r, reps);
             }
-            Imo::Subtract(l, r) => {
+            Imo::Difference(l, r) => {
                 Self::apply_replacements_to(l, reps);
                 Self::apply_replacements_to(r, reps);
             }

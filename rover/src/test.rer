@@ -1,9 +1,13 @@
 
 Integer32 is rover::lang::Integer32
-add is Integer32::add
-subtract is Integer32::subtract
+sum is Integer32::sum
 
-example is subtract[1 2]
+x is any{Integer32}
+y is any{Integer32}
+z is any{Integer32}
+
+sum3 is sum[x sum[y z]]
+example is sum3[1 2 3]
 
 #=
 recount is 

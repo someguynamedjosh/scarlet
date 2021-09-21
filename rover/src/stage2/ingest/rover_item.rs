@@ -38,13 +38,13 @@ fn define_integer_type(
     let itype_base = env.next_id();
     env.define(itype_base, Item::PrimitiveType(typee));
     let itype = env.next_id();
-    let add = define_binary_op(env, itype, |a, b| op_builder(Imo::Add(a, b)));
-    let subtract = define_binary_op(env, itype, |a, b| op_builder(Imo::Subtract(a, b)));
+    let sum = define_binary_op(env, itype, |a, b| op_builder(Imo::Sum(a, b)));
+    let difference = define_binary_op(env, itype, |a, b| op_builder(Imo::Difference(a, b)));
     env.define(
         itype,
         Item::Defining {
             base: itype_base,
-            definitions: vec![(format!("add"), add), (format!("subtract"), subtract)],
+            definitions: vec![(format!("sum"), sum), (format!("difference"), difference)],
         },
     );
     itype
