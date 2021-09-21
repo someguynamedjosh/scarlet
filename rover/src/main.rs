@@ -16,8 +16,8 @@ fn main() {
     println!("{:#?}", environment);
     let environment = stage3::ingest(&environment).unwrap();
     println!("{:#?}", environment);
-    let environment = stage4::ingest(environment).unwrap();
+    let mut environment = stage4::ingest(environment).unwrap();
     println!("{:#?}", environment);
-    // let environment = simplify::simplify(environment);
-    // println!("{:#?}", environment);
+    stage4::type_check(&environment).unwrap();
+    println!("{:#?}", environment);
 }
