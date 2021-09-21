@@ -26,9 +26,11 @@ pub(super) fn process_definitions(
                     def: is.value,
                 });
             }
-            Statement::Expression(..) | Statement::Replace(..) => {
-                todo!("nice error")
-            }
+            Statement::Else(..)
+            | Statement::Expression(..)
+            | Statement::PickElif(..)
+            | Statement::PickIf(..)
+            | Statement::Replace(..) => todo!("nice error"),
         }
     }
     let definitions: Vec<_> = other_defs
@@ -68,6 +70,9 @@ pub(super) fn process_replacements(
                 let ctx = Context::Plain;
                 let value = process_expr(e, None, env, ctx, parents)?;
                 unlabeled_replacements.push(value);
+            }
+            Statement::Else(..) | Statement::PickElif(..) | Statement::PickIf(..) => {
+                todo!("nice error")
             }
         }
     }

@@ -9,7 +9,15 @@
 #  sum3 is sum[x sum[y z]]
 #  example is sum3[1 2 3]
 
-thing is 0 is_variant{0}
+Primary is Type{
+   variant red :Self
+   variant green :Self
+   variant blue :Self
+}
+
+is_green is any{Primary} is_variant{Primary::green}
+
+thing is is_green[Primary::red]
 
 #=
 recount is 

@@ -6,20 +6,25 @@ use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, PartialEq)]
 pub enum Statement {
-    Is(Is),
-    Replace(Replace),
-    // MatchCase(MatchCase),
+    Else(Else),
     Expression(Expression),
+    Is(Is),
+    PickIf(PickIf),
+    PickElif(PickElif),
+    Replace(Replace),
 }
 
 impl Statement {
     pub fn parser<'i>() -> impl Parser<'i, Self> {
         alt((
+            map(Else::parser(), |s| Statement::Else(s)),
             map(Is::parser(), |s| Statement::Is(s)),
             map(Is::variant_shorthand_parser(), |s| Statement::Is(s)),
+            map(PickIf::parser(), |s| Statement::PickIf(s)),
+            map(PickElif::parser(), |s| Statement::PickElif(s)),
             map(Replace::parser(), |s| Statement::Replace(s)),
-            // map(MatchCase::parser(), |s| Statement::MatchCase(s)),
             map(Expression::parser(), |s| Statement::Expression(s)),
+            // map(MatchCase::parser(), |s| Statement::MatchCase(s)),
         ))
     }
 }
@@ -27,9 +32,12 @@ impl Statement {
 impl Debug for Statement {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Is(s) => s.fmt(f),
-            Self::Replace(s) => s.fmt(f),
+            Self::Else(s) => s.fmt(f),
             Self::Expression(s) => s.fmt(f),
+            Self::Is(s) => s.fmt(f),
+            Self::PickIf(s) => s.fmt(f),
+            Self::PickElif(s) => s.fmt(f),
+            Self::Replace(s) => s.fmt(f),
         }
     }
 }
@@ -99,6 +107,92 @@ impl Debug for Is {
         if self.public {
             write!(f, "public ")?;
         }
+        self.value.fmt(f)
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct PickIf {
+    pub condition: Expression,
+    pub value: Expression,
+}
+
+impl PickIf {
+    pub fn parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, _) = tag("if")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, condition) = Expression::parser()(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, _) = tag(",")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, value) = Expression::parser()(input)?;
+            let sel = Self { condition , value };
+            Ok((input, sel))
+        }
+    }
+}
+
+impl Debug for PickIf {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "if ")?;
+        self.condition.fmt(f)?;
+        write!(f, ", ")?;
+        self.value.fmt(f)
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct PickElif {
+    pub condition: Expression,
+    pub value: Expression,
+}
+
+impl PickElif {
+    pub fn parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, _) = tag("elif")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, condition) = Expression::parser()(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, _) = tag(",")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, value) = Expression::parser()(input)?;
+            let sel = Self { condition , value };
+            Ok((input, sel))
+        }
+    }
+}
+
+impl Debug for PickElif {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "if ")?;
+        self.condition.fmt(f)?;
+        write!(f, ", ")?;
+        self.value.fmt(f)
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct Else {
+    pub value: Expression,
+}
+
+impl Else {
+    pub fn parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, _) = tag("else")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, value) = Expression::parser()(input)?;
+            let sel = Self { value };
+            Ok((input, sel))
+        }
+    }
+}
+
+impl Debug for Else {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "else ")?;
         self.value.fmt(f)
     }
 }

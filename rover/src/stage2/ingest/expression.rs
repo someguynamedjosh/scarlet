@@ -33,7 +33,10 @@ fn process_from(
                 named_vars.push((name, var));
                 vars.push(var);
             }
-            Statement::Replace(..) => todo!("nice error"),
+            Statement::Else(..)
+            | Statement::PickElif(..)
+            | Statement::PickIf(..)
+            | Statement::Replace(..) => todo!("nice error"),
         }
     }
     let base_item = Item::FromType {
