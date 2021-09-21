@@ -1,10 +1,51 @@
-use crate::stage2::structure::{Environment, Item, ItemId, PrimitiveType};
+use crate::stage2::structure::{
+    Environment, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType,
+};
+
+fn define_two_vars(env: &mut Environment, typee: ItemId) -> (ItemId, ItemId) {
+    let var1 = env.next_id();
+    env.define(var1, Item::Variable { selff: var1, typee });
+    let var2 = env.next_id();
+    env.define(var2, Item::Variable { selff: var2, typee });
+    (var1, var2)
+}
+
+fn define_binary_op(
+    env: &mut Environment,
+    typee: ItemId,
+    op: impl FnOnce(ItemId, ItemId) -> PrimitiveOperation,
+) -> ItemId {
+    let (a, b) = define_two_vars(env, typee);
+    let into = env.next_id();
+    env.define(into, Item::PrimitiveOperation(op(a, b)));
+    into
+}
+
+fn define_integer_type(
+    env: &mut Environment,
+    typee: PrimitiveType,
+    op_builder: impl Fn(IntegerMathOperation) -> PrimitiveOperation,
+) -> ItemId {
+    use IntegerMathOperation as Imo;
+    let itype_base = env.next_id();
+    env.define(itype_base, Item::PrimitiveType(typee));
+    let itype = env.next_id();
+    let add = define_binary_op(env, itype, |a, b| op_builder(Imo::Add(a, b)));
+    let subtract = define_binary_op(env, itype, |a, b| op_builder(Imo::Subtract(a, b)));
+    env.define(
+        itype,
+        Item::Defining {
+            base: itype_base,
+            definitions: vec![(format!("add"), add), (format!("subtract"), subtract)],
+        },
+    );
+    itype
+}
 
 fn define_lang_item(env: &mut Environment) -> (ItemId, ItemId) {
     let god_type = env.next_id();
     env.define(god_type, Item::GodType);
-    let i32_type = env.next_id();
-    env.define(i32_type, Item::PrimitiveType(PrimitiveType::I32));
+    let i32_type = define_integer_type(env, PrimitiveType::I32, |o| PrimitiveOperation::I32Math(o));
 
     let lang = env.next_id();
     env.mark_as_module(lang);
