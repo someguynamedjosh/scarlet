@@ -18,6 +18,11 @@ impl Environment {
         self.existing_item(&Item::GodType).unwrap()
     }
 
+    pub(super) fn bool_type(&self) -> ItemId {
+        self.existing_item(&Item::PrimitiveType(PrimitiveType::Bool))
+            .unwrap()
+    }
+
     pub(super) fn i32_type(&self) -> ItemId {
         self.existing_item(&Item::PrimitiveType(PrimitiveType::I32))
             .unwrap()

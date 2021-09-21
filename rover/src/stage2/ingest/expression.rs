@@ -110,7 +110,7 @@ fn process_postfix(
             cheeky_defining_storage = Some(body);
             new_parents.push(cheeky_defining_storage.as_ref().unwrap());
         }
-        "replacing" | "member" | "From" => (),
+        "replacing" | "member" | "From" | "is_variant" => (),
         _ => todo!("nice error, unexpected {} construct", post.label),
     }
     let parents = &new_parents[..];
@@ -143,6 +143,15 @@ fn process_postfix(
         "From" => {
             let statements = post.expect_statements("From")?;
             process_from(base_id, statements.to_owned(), env, parents)?
+        }
+        "is_variant" => {
+            let other = post.expect_single_expression("is_variant")?;
+            let ctx = Context::Plain;
+            let other = process_expr(other.clone(), None, env, ctx, parents)?;
+            Item::IsSameVariant {
+                base: base_id,
+                other,
+            }
         }
         _ => unreachable!(),
     })

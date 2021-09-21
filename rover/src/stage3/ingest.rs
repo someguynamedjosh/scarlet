@@ -132,6 +132,10 @@ impl<'a> IngestionContext<'a> {
                 typee: self.full_convert_iid(*typee)?,
                 variant_name: variant_name.clone(),
             },
+            stage2::Item::IsSameVariant { base, other } => Item::IsSameVariant {
+                base: self.convert_iid(*base, true)?,
+                other: self.convert_iid(*other, true)?,
+            },
             stage2::Item::Item(..) | stage2::Item::Member { .. } => panic!("Cannot convert these"),
             stage2::Item::PrimitiveOperation(op) => match op {
                 PrimitiveOperation::I32Math(op) => Item::PrimitiveOperation(

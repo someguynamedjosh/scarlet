@@ -4,15 +4,15 @@
 	"patterns": [
 		{
 			"name": "keyword.other",
-			"match": "\\b(is|with)\\b"
+			"match": "\\b(is|with|variant)\\b"
 		},
 		{
 			"name": "keyword.operator",
-			"match": "\\b(::|\\.|:)\\b"
+			"match": "\\b(:|::|\\.)\\b"
 		},
 		{
 			"name": "keyword.control",
-			"match": "(replacing|defining|Type|recording|any|the|i32|integer|int)[ \\r\\n\\t]*\\{"
+			"match": "(replacing|defining|Type|any|the|i32|integer|int|isv|is_variant|is_same_variant_as|onv|on_variants|pick|pick_first_true_condition|variant)[ \\r\\n\\t]*\\{"
 		},
 		{
 			"name": "invalid.illegal",
@@ -21,6 +21,10 @@
 		{
 			"name": "keyword.control",
 			"match": "}"
+		},
+		{
+			"name": "constant.numeric",
+			"match": "\\b[0-9_]+\\b"
 		},
 		{
 			"name": "entity.name.type",

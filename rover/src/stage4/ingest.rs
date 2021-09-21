@@ -44,29 +44,6 @@ impl VarList {
 }
 
 impl Environment {
-    fn _resolve_variable(&self, reference: ItemId) -> Result<ItemId, String> {
-        assert!(reference.0 < self.items.len());
-        let item = &self.items[reference.0];
-        match &item.base {
-            Item::Defining { base, .. } => {
-                let base = *base;
-                self._resolve_variable(base)
-            }
-            Item::FromType { .. } => todo!("nice error"),
-            Item::Replacing { base, .. } => {
-                let base = *base;
-                self._resolve_variable(base)
-            }
-            Item::GodType
-            | Item::InductiveType(..)
-            | Item::InductiveValue { .. }
-            | Item::PrimitiveOperation(..)
-            | Item::PrimitiveType(..)
-            | Item::PrimitiveValue(..) => todo!("nice error, not a variable"),
-            Item::Variable { selff, .. } => Ok(*selff),
-        }
-    }
-
     /// Returns the type of an item after applying the given replacements.
     /// E.G. a + b with replacements a: c should yield Int From{b c}
     fn compute_type_after_replacing(
@@ -178,6 +155,17 @@ impl Environment {
                 }
                 self.with_from_vars(typee, from_vars)
             }
+            Item::IsSameVariant { base, other } => {
+                // The type is a boolean dependent on the variables of the two expressions.
+                let base = *base;
+                let other = *other;
+                let btype = self.compute_type(base)?;
+                let otype = self.compute_type(other)?;
+                let mut from_vars = VarList::new();
+                from_vars.append(&self.get_from_variables(btype)?.into_vec());
+                from_vars.append(&self.get_from_variables(otype)?.into_vec());
+                self.with_from_vars(self.bool_type(), from_vars)
+            }
             Item::PrimitiveOperation(op) => {
                 let mut from_vars = VarList::new();
                 let typee = self.op_type(op);
@@ -190,6 +178,7 @@ impl Environment {
             }
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {
+                PrimitiveValue::Bool(..) => self.bool_type(),
                 PrimitiveValue::I32(..) => self.i32_type(),
             },
             Item::Replacing {

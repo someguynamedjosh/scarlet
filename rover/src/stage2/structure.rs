@@ -3,19 +3,28 @@ use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PrimitiveType {
+    Bool,
     I32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PrimitiveValue {
+    Bool(bool),
     I32(i32),
 }
 
 impl PrimitiveValue {
+    pub fn expect_bool(&self) -> bool {
+        match self {
+            Self::Bool(v) => *v,
+            _ => panic!("Expected a bool"),
+        }
+    }
+
     pub fn expect_i32(&self) -> i32 {
         match self {
             Self::I32(v) => *v,
-            // _ => panic!("Expected an i32"),
+            _ => panic!("Expected an i32"),
         }
     }
 }
@@ -198,6 +207,10 @@ pub enum Item {
         variant_name: String,
         records: Vec<ItemId>,
     },
+    IsSameVariant {
+        base: ItemId,
+        other: ItemId,
+    },
     Item(ItemId),
     Member {
         base: ItemId,
@@ -259,6 +272,9 @@ impl Debug for Item {
                     write!(f, "\n")?;
                 }
                 write!(f, "]")
+            }
+            Self::IsSameVariant { base, other } => {
+                write!(f, "{:?} is_same_variant_as{{{:?}}}", base, other)
             }
             Self::Item(id) => write!(f, "{:?}", id),
             Self::Member { base, name } => write!(f, "{:?}::{}", base, name),

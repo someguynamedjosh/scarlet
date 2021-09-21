@@ -1,5 +1,6 @@
 use crate::stage2::structure::{
     Environment, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType,
+    PrimitiveValue,
 };
 
 fn define_two_vars(env: &mut Environment, typee: ItemId) -> (ItemId, ItemId) {
@@ -44,46 +45,36 @@ fn define_integer_type(
         itype,
         Item::Defining {
             base: itype_base,
-            definitions: vec![(format!("sum"), sum), (format!("difference"), difference)],
+            definitions: vec![
+                (format!("Self"), itype),
+                (format!("sum"), sum),
+                (format!("difference"), difference),
+            ],
         },
     );
     itype
 }
 
 fn define_bool_type(env: &mut Environment) -> ItemId {
+    let bool_type_base = env.next_id();
     let bool_type = env.next_id();
-    let bool_ns = env.next_id();
     let true_con = env.next_id();
     let false_con = env.next_id();
-    env.define(bool_type, Item::InductiveType(bool_ns));
+    env.define(bool_type_base, Item::PrimitiveType(PrimitiveType::Bool));
+    env.define(true_con, Item::PrimitiveValue(PrimitiveValue::Bool(true)));
+    env.define(false_con, Item::PrimitiveValue(PrimitiveValue::Bool(false)));
     env.define(
-        true_con,
-        Item::InductiveValue {
-            typee: bool_ns,
-            records: vec![],
-            variant_name: format!("true"),
-        },
-    );
-    env.define(
-        false_con,
-        Item::InductiveValue {
-            typee: bool_ns,
-            records: vec![],
-            variant_name: format!("false"),
-        },
-    );
-    env.define(
-        bool_ns,
+        bool_type,
         Item::Defining {
-            base: bool_type,
+            base: bool_type_base,
             definitions: vec![
-                (format!("Self"), bool_ns),
+                (format!("Self"), bool_type),
                 (format!("true"), true_con),
                 (format!("false"), false_con),
-            ]
-        }
+            ],
+        },
     );
-    bool_ns
+    bool_type
 }
 
 fn define_lang_item(env: &mut Environment) -> (ItemId, ItemId) {

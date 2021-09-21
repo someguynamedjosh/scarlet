@@ -76,6 +76,10 @@ pub enum Item {
         variant_name: String,
         records: Vec<ItemId>,
     },
+    IsSameVariant {
+        base: ItemId,
+        other: ItemId,
+    },
     PrimitiveOperation(PrimitiveOperation),
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
@@ -132,6 +136,9 @@ impl Debug for Item {
                     write!(f, "\n")?;
                 }
                 write!(f, "]")
+            }
+            Self::IsSameVariant { base, other } => {
+                write!(f, "{:?} is_same_variant_as{{{:?}}}", base, other)
             }
             Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),

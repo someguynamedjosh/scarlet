@@ -80,6 +80,8 @@ pub struct Construct {
 const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32", "variant"];
 const TEXT_CONSTRUCTS: &[&str] = &["identifier", "i32"];
 const ALIASES: &[(&str, &str)] = &[
+    ("isv", "is_variant"),
+    ("is_same_variant_as", "is_variant"),
     ("T", "Type"),
     ("F", "From"),
     ("rec", "recording"),

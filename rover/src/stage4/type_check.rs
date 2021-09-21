@@ -26,6 +26,18 @@ impl Environment {
                 }
                 Ok(())
             }
+            Item::IsSameVariant { base, other } => {
+                let btype = self.after_from(self.items[base.0].typee.unwrap());
+                let otype = self.after_from(self.items[other.0].typee.unwrap());
+                if !self.are_def_equal(btype, otype) {
+                    Err(format!(
+                        "(at {:?}) {:?} and {:?} have differing types",
+                        item, base, other,
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
             _ => Ok(()),
         }
     }
@@ -39,6 +51,7 @@ impl Environment {
             Item::GodType
             | Item::InductiveType(..)
             | Item::InductiveValue { .. }
+            | Item::IsSameVariant { .. }
             | Item::PrimitiveOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => typee,

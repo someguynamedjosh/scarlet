@@ -9,12 +9,7 @@
 #  sum3 is sum[x sum[y z]]
 #  example is sum3[1 2 3]
 
-tt is rover::lang::Boolean::true
-
-Boolean is Type{
-   variant true :Self
-   variant false :Self
-}
+thing is 0 is_variant{0}
 
 #=
 recount is 

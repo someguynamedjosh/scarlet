@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     stage2::structure::{
-        Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, Replacements,
+        Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
     },
     stage3::structure::Item,
     stage4::structure::Environment,
@@ -87,11 +87,19 @@ impl Environment {
                 Self::apply_replacements_to(typee, reps);
                 Self::apply_replacements_to_ids(records, reps);
             }
+            Item::IsSameVariant { base, other } => {
+                Self::apply_replacements_to(base, reps);
+                Self::apply_replacements_to(other, reps);
+            }
             Item::PrimitiveOperation(op) => match op {
                 PrimitiveOperation::I32Math(op) => Self::apply_replacements_to_int_op(op, reps),
             },
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
-            Item::Replacing { base, replacements, unlabeled_replacements } => {
+            Item::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to_reps(replacements, reps);
                 assert_eq!(unlabeled_replacements.len(), 0);
@@ -169,6 +177,52 @@ impl Environment {
                     let id = self.insert(item);
                     self.compute_type(id).unwrap();
                     id
+                }
+            }
+            Item::IsSameVariant { base, other } => {
+                let base = *base;
+                let other = *other;
+                let rbase_id = self.reduce(base, reps, reduce_defs);
+                let rother_id = self.reduce(other, reps, reduce_defs);
+                let rbase = &self.items[rbase_id.0];
+                let rother = &self.items[rother_id.0];
+                match (&rbase.base, &rother.base) {
+                    (
+                        Item::InductiveValue {
+                            variant_name: base_variant,
+                            ..
+                        },
+                        Item::InductiveValue {
+                            variant_name: other_variant,
+                            ..
+                        },
+                    ) => {
+                        let result = base_variant == other_variant;
+                        self.insert_with_type(
+                            Item::PrimitiveValue(PrimitiveValue::Bool(result)),
+                            self.bool_type(),
+                        )
+                    }
+                    (Item::PrimitiveValue(base_value), Item::PrimitiveValue(other_value)) => {
+                        let result = base_value == other_value;
+                        self.insert_with_type(
+                            Item::PrimitiveValue(PrimitiveValue::Bool(result)),
+                            self.bool_type(),
+                        )
+                    }
+                    _ => {
+                        if base == rbase_id || other == rother_id {
+                            item
+                        } else {
+                            let item = Item::IsSameVariant {
+                                base: rbase_id,
+                                other: rother_id,
+                            };
+                            let id = self.insert(item);
+                            self.compute_type(id).unwrap();
+                            id
+                        }
+                    }
                 }
             }
             Item::PrimitiveOperation(op) => {
