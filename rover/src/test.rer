@@ -3,10 +3,7 @@ Integer32 is rover::lang::Integer32
 add is Integer32::add
 subtract is Integer32::subtract
 
-example is subtract replacing{
-   i32{1}
-   i32{2}
-}
+example is subtract[1 2]
 
 #=
 recount is 

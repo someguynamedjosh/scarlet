@@ -148,13 +148,15 @@ impl Construct {
         move |input| {
             if root {
                 alt((
-                    Self::explicit_construct_parser(root),
+                    Self::explicit_construct_parser(true),
+                    Self::integer_shorthand_parser(),
                     Self::ident_shorthand_parser(),
                 ))(input)
             } else {
                 alt((
-                    Self::explicit_construct_parser(root),
+                    Self::explicit_construct_parser(false),
                     Self::member_shorthand_parser(),
+                    Self::replacing_shorthand_parser(),
                 ))(input)
             }
         }
@@ -214,6 +216,33 @@ impl Construct {
             let expr = Expression { root, others };
             let body = ConstructBody::Statements(vec![Statement::Expression(expr)]);
             let label = String::from("member");
+            Ok((input, Self { label, body }))
+        }
+    }
+
+    fn replacing_shorthand_parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, _) = tag("[")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, body) = many0(after_ws(Statement::parser()))(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, _) = tag("]")(input)?;
+            let label = String::from("replacing");
+            let body = ConstructBody::Statements(body);
+            Ok((input, Self { label, body }))
+        }
+    }
+
+    fn integer_shorthand_parser<'i>() -> impl Parser<'i, Self> {
+        |input: &'i str| {
+            let (input, data) = take_while1(|c: char| c.is_alphanumeric() || c == '_')(input)?;
+            let without_underscores = data.replace("_", "");
+            let is_int = without_underscores.parse::<i32>().is_ok();
+            if !is_int {
+                fail::<_, (), _>(input)?;
+            }
+            let label = format!("i32");
+            let body = ConstructBody::PlainText(without_underscores);
             Ok((input, Self { label, body }))
         }
     }
