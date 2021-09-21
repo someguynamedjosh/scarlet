@@ -7,15 +7,9 @@ Point is Type{
    }
 }
 
-x is Point::new::x
-
-n is any{I32}
-
-NPoint is Point replacing { x with n }
-
-#  nnew is NPoint::new
-
-# asdf asdf asfd 0123
+eg is Point::new replacing {
+   Point::new::x with i32{123}
+}
 
 #=
 recount is 

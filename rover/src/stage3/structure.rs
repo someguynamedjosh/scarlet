@@ -1,6 +1,9 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::{stage2::structure::{Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements}, util::indented};
+use crate::{
+    stage2::structure::{Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements},
+    util::indented,
+};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
@@ -101,9 +104,9 @@ impl Debug for Item {
                 write!(f, "{:?} From{{", base)?;
                 if vars.len() > 0 {
                     write!(f, "{:?}", vars[0])?;
-                }
-                for var in &vars[1..] {
-                    write!(f, " {:?}", var)?;
+                    for var in &vars[1..] {
+                        write!(f, " {:?}", var)?;
+                    }
                 }
                 write!(f, "}}")
             }

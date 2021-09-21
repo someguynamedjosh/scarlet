@@ -38,6 +38,8 @@ impl Environment {
         }
     }
 
+    /// Returns the type of an item after applying the given replacements.
+    /// E.G. a + b with replacements a: c should yield Int From{b c}
     fn compute_type_after_replacing(
         &mut self,
         base: ItemId,
@@ -48,6 +50,7 @@ impl Environment {
         for (id, _) in replacements {
             ids_to_replace.push(self.resolve_variable(id)?)
         }
+        // TODO: This doesn't work when replacing a variable with more variables. I think?
         let def = &self.items[unreplaced_type.0].base;
         let res = match def {
             Item::FromType { base, vars } => {
@@ -95,9 +98,12 @@ impl Environment {
         })
     }
 
-    fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
+    pub(super) fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
         assert!(of.0 < self.items.len());
         let item = &self.items[of.0];
+        if let Some(typee) = item.typee {
+            return Ok(typee);
+        }
         let typee = match &item.base {
             Item::Defining { base, .. } => {
                 let base = *base;
@@ -118,10 +124,14 @@ impl Environment {
                         from_vars.insert(from_var);
                     }
                 }
-                self.insert(Item::FromType {
-                    base: typee,
-                    vars: from_vars.into_iter().collect(),
-                })
+                if from_vars.len() > 0 {
+                    self.insert(Item::FromType {
+                        base: typee,
+                        vars: from_vars.into_iter().collect(),
+                    })
+                } else {
+                    typee
+                }
             }
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {
