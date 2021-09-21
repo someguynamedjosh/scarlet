@@ -13,11 +13,11 @@ Point is Type{
 x is Point::new::x
 y is Point::new::y
 
-# point is Point::new 
-# replacing{
-#    x with i32{5}
-#    y with i32{6}
-# }
+point is Point::new 
+replacing{
+  x with i32{5}
+  y with i32{6}
+}
 
 # asdf asdf asfd 0123
 
