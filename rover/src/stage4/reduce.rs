@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage2::structure::{Definitions, ItemId, Replacements},
+    stage2::structure::{
+        Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, Replacements,
+    },
     stage3::structure::Item,
     stage4::structure::Environment,
 };
@@ -50,6 +52,20 @@ impl Environment {
         }
     }
 
+    fn apply_replacements_to_int_op(to: &mut IntegerMathOperation, reps: &HashMap<ItemId, ItemId>) {
+        use IntegerMathOperation as Imo;
+        match to {
+            Imo::Add(l, r) => {
+                Self::apply_replacements_to(l, reps);
+                Self::apply_replacements_to(r, reps);
+            }
+            Imo::Subtract(l, r) => {
+                Self::apply_replacements_to(l, reps);
+                Self::apply_replacements_to(r, reps);
+            }
+        }
+    }
+
     /// This is used to replace references to items with references to equal items which have been reduced more than the original.
     fn apply_replacements(&mut self, item: ItemId, reps: &HashMap<ItemId, ItemId>) {
         let item = &mut self.items[item.0];
@@ -70,6 +86,9 @@ impl Environment {
                 Self::apply_replacements_to(typee, reps);
                 Self::apply_replacements_to_ids(records, reps);
             }
+            Item::PrimitiveOperation(op) => match op {
+                PrimitiveOperation::I32Math(op) => Self::apply_replacements_to_int_op(op, reps),
+            },
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
             Item::Replacing { base, replacements } => {
                 Self::apply_replacements_to(base, reps);
@@ -141,6 +160,7 @@ impl Environment {
                     id
                 }
             }
+            Item::PrimitiveOperation(..) => todo!("Compute primitive op"),
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => item,
             Item::Replacing { base, replacements } => {
                 // Do not replace anything this new replacement statement

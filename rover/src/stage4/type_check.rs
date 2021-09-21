@@ -39,6 +39,7 @@ impl Environment {
             Item::GodType
             | Item::InductiveType(..)
             | Item::InductiveValue { .. }
+            | Item::PrimitiveOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => typee,
             Item::Replacing { base, .. } => todo!(),

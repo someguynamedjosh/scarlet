@@ -1,15 +1,3 @@
-TYPE is rover::lang::TYPE
-I32 is rover::lang::Integer32
-
-Point is Type{
-   new is Self recording{
-      x is any{I32} 
-   }
-}
-
-eg is Point::new replacing {
-   Point::new::x with i32{123}
-}
 
 #=
 recount is 

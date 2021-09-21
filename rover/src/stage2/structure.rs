@@ -93,6 +93,38 @@ pub type Definitions = Vec<(String, ItemId)>;
 pub type Replacements = Vec<(ItemId, ItemId)>;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
+pub enum IntegerMathOperation {
+    Add(ItemId, ItemId),
+    Subtract(ItemId, ItemId),
+    // Multiply(ItemId, ItemId),
+    // IntegerDivide(ItemId, ItemId),
+    // Modulo(ItemId, ItemId),
+    // Negate(ItemId),
+}
+
+impl Debug for IntegerMathOperation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Add(l, r) => write!(f, "add[{:?} {:?}]", l, r),
+            Self::Subtract(l, r) => write!(f, "subtract[{:?} {:?}]", l, r),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum PrimitiveOperation {
+    I32Math(IntegerMathOperation),
+}
+
+impl Debug for PrimitiveOperation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::I32Math(op) => write!(f, "Integer32::{:?}", op),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
     Defining {
         base: ItemId,
@@ -114,6 +146,7 @@ pub enum Item {
         base: ItemId,
         name: String,
     },
+    PrimitiveOperation(PrimitiveOperation),
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
     Replacing {
@@ -171,6 +204,7 @@ impl Debug for Item {
             }
             Self::Item(id) => write!(f, "{:?}", id),
             Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
+            Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
             Self::Replacing { base, replacements } => {

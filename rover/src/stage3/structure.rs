@@ -1,9 +1,6 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::{
-    stage2::structure::{Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements},
-    util::indented,
-};
+use crate::{stage2::structure::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements}, util::indented};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
@@ -74,6 +71,7 @@ pub enum Item {
         variant_name: String,
         records: Vec<ItemId>,
     },
+    PrimitiveOperation(PrimitiveOperation),
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
     Replacing {
@@ -129,6 +127,7 @@ impl Debug for Item {
                 }
                 write!(f, "]")
             }
+            Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
             Self::Replacing { base, replacements } => {

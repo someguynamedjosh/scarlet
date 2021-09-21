@@ -32,6 +32,7 @@ impl Environment {
             Item::GodType
             | Item::InductiveType(..)
             | Item::InductiveValue { .. }
+            | Item::PrimitiveOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => todo!("nice error, not a variable"),
             Item::Variable { selff, .. } => Ok(*selff),
@@ -133,6 +134,7 @@ impl Environment {
                     typee
                 }
             }
+            Item::PrimitiveOperation(..) => todo!("Accumulate all From vars from inputs"),
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {
                 PrimitiveValue::I32(..) => self.i32_type(),

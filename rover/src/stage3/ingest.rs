@@ -1,5 +1,7 @@
 use crate::{
-    stage2::structure::{self as stage2, Definitions, ItemId, Replacements},
+    stage2::structure::{
+        self as stage2, Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, Replacements,
+    },
     stage3::structure::{Environment, Item},
 };
 use std::collections::HashMap;
@@ -59,6 +61,19 @@ impl<'a> IngestionContext<'a> {
         id
     }
 
+    fn convert_integer_op(
+        &mut self,
+        op: IntegerMathOperation,
+    ) -> Result<IntegerMathOperation, String> {
+        use IntegerMathOperation as Imo;
+        Ok(match op {
+            Imo::Add(l, r) => Imo::Add(self.convert_iid(l, true)?, self.convert_iid(r, true)?),
+            Imo::Subtract(l, r) => {
+                Imo::Subtract(self.convert_iid(l, true)?, self.convert_iid(r, true)?)
+            }
+        })
+    }
+
     /// Returns a new item with full_convert_iid applied to all its referenced ids.
     fn convert_item(&mut self, item: &stage2::Item) -> Result<Item, String> {
         Ok(match item {
@@ -84,6 +99,11 @@ impl<'a> IngestionContext<'a> {
                 variant_name: variant_name.clone(),
             },
             stage2::Item::Item(..) | stage2::Item::Member { .. } => panic!("Cannot convert these"),
+            stage2::Item::PrimitiveOperation(op) => match op {
+                PrimitiveOperation::I32Math(op) => Item::PrimitiveOperation(
+                    PrimitiveOperation::I32Math(self.convert_integer_op(op.clone())?),
+                ),
+            },
             stage2::Item::PrimitiveType(pt) => Item::PrimitiveType(*pt),
             stage2::Item::PrimitiveValue(pv) => Item::PrimitiveValue(*pv),
             stage2::Item::Replacing { base, replacements } => Item::Replacing {
