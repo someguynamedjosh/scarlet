@@ -15,8 +15,8 @@ impl Environment {
         match &self.items[item.0].base {
             Item::Replacing { replacements, .. } => {
                 for (target, val) in replacements {
-                    let var_type = self.get_var_type(*target);
-                    let val_type = self.items[val.0].typee.unwrap();
+                    let var_type = self.after_from(self.get_var_type(*target));
+                    let val_type = self.after_from(self.items[val.0].typee.unwrap());
                     if !self.are_def_equal(var_type, val_type) {
                         return Err(format!(
                             "(at {:?}) {:?} and {:?} have differing types",
@@ -27,6 +27,22 @@ impl Environment {
                 Ok(())
             }
             _ => Ok(()),
+        }
+    }
+
+    /// If the given item is a From type, returns the base type aka the type
+    /// that will be produced after the variables are replaced.
+    fn after_from(&self, typee: ItemId) -> ItemId {
+        match &self.items[typee.0].base {
+            Item::Defining { base, .. } => self.after_from(*base),
+            Item::FromType { base, .. } => self.after_from(*base),
+            Item::GodType
+            | Item::InductiveType(..)
+            | Item::InductiveValue { .. }
+            | Item::PrimitiveType(..)
+            | Item::PrimitiveValue(..) => typee,
+            Item::Replacing { base, .. } => todo!(),
+            Item::Variable { .. } => typee,
         }
     }
 }

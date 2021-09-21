@@ -157,13 +157,13 @@ impl<'a> IngestionContext<'a> {
                 }
                 for (cname, cdef) in definitions {
                     if cname == name {
-                        return Ok((*cdef, base_reps))
+                        return Ok((*cdef, base_reps));
                     }
                 }
                 Err(format!("{:?} has no member named {}", og_base, name))
             }
             stage2::Item::Item(..) | stage2::Item::Member { .. } => unreachable!(),
-            stage2::Item::Replacing { .. } => unreachable!(),
+            stage2::Item::Replacing { .. } => unreachable!("{:?} {:?}", base, base_id),
             _ => Err(format!("{:?} has no members", base)),
         }
     }
@@ -190,15 +190,10 @@ impl<'a> IngestionContext<'a> {
                 Ok((did, reps))
             }
             stage2::Item::Replacing { base, replacements } => {
-                let deref_base = self.dereference_iid(*base, deref_define)?;
-                Ok(if deref_base.0 == *base {
-                    (id, vec![])
-                } else {
-                    let mut deref_base = deref_base;
-                    let mut replacements = self.convert_reps(replacements)?;
-                    deref_base.1.append(&mut replacements);
-                    deref_base
-                })
+                let mut deref_base = self.dereference_iid(*base, deref_define)?;
+                let mut replacements = self.convert_reps(replacements)?;
+                deref_base.1.append(&mut replacements);
+                Ok(deref_base)
             }
             _ => Ok((id, vec![])),
         }
