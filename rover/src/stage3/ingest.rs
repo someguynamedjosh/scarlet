@@ -59,6 +59,7 @@ enum DereferencedItem {
     Replacing {
         base: Box<DereferencedItem>,
         replacements: Replacements,
+        unlabeled_replacements: Vec<ItemId>,
     },
 }
 
@@ -74,10 +75,13 @@ impl DereferencedItem {
         match self {
             Self::Stage2Item(..) => new_base,
             Self::Replacing {
-                base, replacements, ..
+                base,
+                replacements,
+                unlabeled_replacements,
             } => Self::Replacing {
                 base: Box::new(base.with_base(new_base)),
                 replacements: replacements.clone(),
+                unlabeled_replacements: unlabeled_replacements.clone(),
             },
         }
     }
@@ -136,9 +140,14 @@ impl<'a> IngestionContext<'a> {
             },
             stage2::Item::PrimitiveType(pt) => Item::PrimitiveType(*pt),
             stage2::Item::PrimitiveValue(pv) => Item::PrimitiveValue(*pv),
-            stage2::Item::Replacing { base, replacements } => Item::Replacing {
+            stage2::Item::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => Item::Replacing {
                 base: self.full_convert_iid(*base)?,
                 replacements: self.convert_reps(replacements)?,
+                unlabeled_replacements: self.convert_iids(unlabeled_replacements)?,
             },
             stage2::Item::Variable { selff, typee } => Item::Variable {
                 selff: self.full_convert_iid(*selff)?,
@@ -183,9 +192,17 @@ impl<'a> IngestionContext<'a> {
     fn convert_dereffed(&mut self, item: DereferencedItem) -> ItemId {
         match item {
             DereferencedItem::Stage2Item(id) => *self.id_map.get(&id).unwrap(),
-            DereferencedItem::Replacing { base, replacements } => {
+            DereferencedItem::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
                 let base = self.convert_dereffed(*base);
-                self.insert_extra_item(Item::Replacing { base, replacements })
+                self.insert_extra_item(Item::Replacing {
+                    base,
+                    replacements,
+                    unlabeled_replacements,
+                })
             }
         }
     }
@@ -241,12 +258,18 @@ impl<'a> IngestionContext<'a> {
             }
             stage2::Item::Item(id) => self.dereference_iid(*id, deref_define),
             stage2::Item::Member { base, name } => self.get_member(*base, name, deref_define),
-            stage2::Item::Replacing { base, replacements } => {
+            stage2::Item::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
                 let deref_base = self.dereference_iid(*base, deref_define)?;
                 let replacements = self.convert_reps(replacements)?;
+                let unlabeled_replacements = self.convert_iids(unlabeled_replacements)?;
                 Ok(DereferencedItem::Replacing {
                     base: Box::new(deref_base),
                     replacements,
+                    unlabeled_replacements,
                 })
             }
             _ => Ok(DereferencedItem::Stage2Item(id)),

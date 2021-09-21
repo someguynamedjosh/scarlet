@@ -1,6 +1,11 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::{stage2::structure::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements}, util::indented};
+use crate::{
+    stage2::structure::{
+        Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements,
+    },
+    util::indented,
+};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
@@ -77,6 +82,7 @@ pub enum Item {
     Replacing {
         base: ItemId,
         replacements: Replacements,
+        unlabeled_replacements: Vec<ItemId>,
     },
     Variable {
         selff: ItemId,
@@ -130,9 +136,19 @@ impl Debug for Item {
             Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
-            Self::Replacing { base, replacements } => {
+            Self::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
                 let gap = if f.alternate() { "\n" } else { "" };
                 write!(f, "{:?} {}replacing{{", base, gap)?;
+                for value in unlabeled_replacements {
+                    if f.alternate() {
+                        write!(f, "\n    ")?;
+                    }
+                    write!(f, "{:?}", value);
+                }
                 for (target, value) in replacements {
                     if f.alternate() {
                         write!(f, "\n    ")?;

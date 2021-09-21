@@ -91,9 +91,10 @@ impl Environment {
                 PrimitiveOperation::I32Math(op) => Self::apply_replacements_to_int_op(op, reps),
             },
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
-            Item::Replacing { base, replacements } => {
+            Item::Replacing { base, replacements, unlabeled_replacements } => {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to_reps(replacements, reps);
+                assert_eq!(unlabeled_replacements.len(), 0);
             }
             Item::Variable { selff, typee } => {
                 Self::apply_replacements_to(selff, reps);
@@ -195,7 +196,13 @@ impl Environment {
                 }
             }
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => item,
-            Item::Replacing { base, replacements } => {
+            Item::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
+                // This should be taken care of by stage4::ingest.
+                assert_eq!(unlabeled_replacements.len(), 0);
                 // Do not replace anything this new replacement statement
                 // replaces, because this statement is replacing those with
                 // potentially different values. Only replace ones it does not
@@ -223,6 +230,7 @@ impl Environment {
                     let item = Item::Replacing {
                         base: rbase,
                         replacements: remaining_replacements,
+                        unlabeled_replacements: Vec::new(),
                     };
                     let id = self.insert(item);
                     self.compute_type(id).unwrap();

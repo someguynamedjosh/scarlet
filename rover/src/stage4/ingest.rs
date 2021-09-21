@@ -192,10 +192,33 @@ impl Environment {
             Item::PrimitiveValue(pv) => match pv {
                 PrimitiveValue::I32(..) => self.i32_type(),
             },
-            Item::Replacing { base, replacements } => {
+            Item::Replacing {
+                base, replacements, ..
+            } => {
                 let base = *base;
                 let replacements = replacements.clone();
-                self.compute_type_after_replacing(base, replacements)?
+                let after_reps = self.compute_type_after_replacing(base, replacements)?;
+                // These are the variables that unlabeled replacements might refer to.
+                let mut remaining_variables_after_reps = self.get_from_variables(after_reps)?;
+                // The same as above, but a mutable reference.
+                match &mut self.items[of.0].base {
+                    Item::Replacing {
+                        replacements,
+                        unlabeled_replacements,
+                        ..
+                    } => {
+                        for unlabeled_replacement in unlabeled_replacements.drain(..) {
+                            if remaining_variables_after_reps.len() == 0 {
+                                todo!("Nice error, no more variables to replace.");
+                            }
+                            let target = remaining_variables_after_reps.0.remove(0);
+                            replacements.push((target, unlabeled_replacement))
+                        }
+                        let replacements = replacements.clone();
+                        self.compute_type_after_replacing(base, replacements)?
+                    }
+                    _ => unreachable!(),
+                }
             }
             Item::Variable { typee, selff } => {
                 let base = *typee;

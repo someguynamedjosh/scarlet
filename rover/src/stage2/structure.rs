@@ -208,6 +208,7 @@ pub enum Item {
     PrimitiveValue(PrimitiveValue),
     Replacing {
         base: ItemId,
+        unlabeled_replacements: Vec<ItemId>,
         replacements: Replacements,
     },
     Variable {
@@ -264,9 +265,19 @@ impl Debug for Item {
             Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
-            Self::Replacing { base, replacements } => {
+            Self::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
                 let gap = if f.alternate() { "\n" } else { "" };
                 write!(f, "{:?} {}replacing{{", base, gap)?;
+                for value in unlabeled_replacements {
+                    if f.alternate() {
+                        write!(f, "\n    ")?;
+                    }
+                    write!(f, "{:?}", value);
+                }
                 for (target, value) in replacements {
                     if f.alternate() {
                         write!(f, "\n    ")?;

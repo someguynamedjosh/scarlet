@@ -54,8 +54,9 @@ pub(super) fn process_replacements(
     statements: Vec<Statement>,
     env: &mut Environment,
     parents: &[&Definitions],
-) -> Result<Replacements, String> {
+) -> Result<(Replacements, Vec<ItemId>), String> {
     let mut replacements = Replacements::new();
+    let mut unlabeled_replacements = Vec::new();
     for statement in statements {
         match statement {
             Statement::Is(..) => todo!("nice error"),
@@ -66,8 +67,12 @@ pub(super) fn process_replacements(
                 let value = process_expr(s.value, None, env, ctx, parents)?;
                 replacements.push((target, value));
             }
-            Statement::Expression(..) => todo!("Nice error"),
+            Statement::Expression(e) => {
+                let ctx = Context::Plain;
+                let value = process_expr(e, None, env, ctx, parents)?;
+                unlabeled_replacements.push(value);
+            },
         }
     }
-    Ok(replacements)
+    Ok((replacements, unlabeled_replacements))
 }

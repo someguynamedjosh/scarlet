@@ -125,10 +125,12 @@ fn process_postfix(
         }
         "replacing" => {
             let statements = post.expect_statements("replacing")?.to_owned();
-            let replacements = process_replacements(statements, env, parents)?;
+            let (replacements, unlabeled_replacements) =
+                process_replacements(statements, env, parents)?;
             Item::Replacing {
                 base: base_id,
                 replacements,
+                unlabeled_replacements,
             }
         }
         "member" => {
