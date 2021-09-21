@@ -1,15 +1,20 @@
 
 Integer32 is rover::lang::Integer32
-#  add is Integer32::add
+add is Integer32::add
 
 x is any{Integer32}
 y is any{Integer32}
+z is any{Integer32}
 
-yagain is x replacing{
-   x with y
+add3 is add replacing{
+   add::left with x
+   add::right with add replacing{
+      add::left with y
+      add::right with z
+   }
 }
 
-example is yagain replacing{ y with i32{123} }
+#  example is x replacing { x with y }
 
 #=
 recount is 

@@ -5,7 +5,7 @@ use crate::{
     stage3::structure::{self as stage3, Item},
     stage4::structure::Environment,
 };
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
@@ -49,21 +49,25 @@ impl Environment {
         replacements: Replacements,
     ) -> Result<ItemId, String> {
         let unreplaced_type = self.compute_type(base)?;
-        let mut ids_to_replace = Vec::new();
-        for (id, _) in replacements {
-            ids_to_replace.push(self.resolve_variable(id)?)
+        // A hashmap of variables to replace and what variables the replaced values depend on.
+        let mut replacement_data = HashMap::<ItemId, Vec<ItemId>>::new();
+        for (target, value) in replacements {
+            let valtype = self.compute_type(value)?;
+            let valtype_vars = self.get_from_variables(valtype)?.into_iter().collect();
+            replacement_data.insert(target, valtype_vars);
         }
         // TODO: This doesn't work when replacing a variable with more variables. I think?
         let def = &self.items[unreplaced_type.0].base;
         let res = match def {
             Item::FromType { base, vars } => {
-                let mut vars_after_reps = vars.clone();
-                for index in (0..vars_after_reps.len()).rev() {
-                    if ids_to_replace
-                        .iter()
-                        .any(|id| *id == vars_after_reps[index])
-                    {
-                        vars_after_reps.remove(index);
+                let mut vars_after_reps = Vec::new();
+                for var in vars {
+                    if let Some(replaced_value_vars) = replacement_data.get(var) {
+                        // $var is being replaced with a value that depends on replaced_value_vars.
+                        vars_after_reps.append(&mut replaced_value_vars.clone())
+                    } else {
+                        // $var is not being replaced so the expression still depends on it.
+                        vars_after_reps.push(*var);
                     }
                 }
                 if vars_after_reps.len() == 0 {
@@ -129,8 +133,10 @@ impl Environment {
                 let base = *base;
                 self.compute_type(base)?
             }
-            // TODO: This is not always correct.
-            Item::FromType { .. } => self.god_type(),
+            Item::FromType { base, .. } => {
+                let base = *base;
+                self.compute_type(base)?
+            }
             Item::GodType { .. } => self.god_type(),
             // TODO: This is not always correct. Need to finalize how inductive
             // types can depend on vars.
