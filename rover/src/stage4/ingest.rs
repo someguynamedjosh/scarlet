@@ -44,18 +44,18 @@ impl VarList {
 }
 
 impl Environment {
-    fn resolve_variable(&self, reference: ItemId) -> Result<ItemId, String> {
+    fn _resolve_variable(&self, reference: ItemId) -> Result<ItemId, String> {
         assert!(reference.0 < self.items.len());
         let item = &self.items[reference.0];
         match &item.base {
             Item::Defining { base, .. } => {
                 let base = *base;
-                self.resolve_variable(base)
+                self._resolve_variable(base)
             }
             Item::FromType { .. } => todo!("nice error"),
             Item::Replacing { base, .. } => {
                 let base = *base;
-                self.resolve_variable(base)
+                self._resolve_variable(base)
             }
             Item::GodType
             | Item::InductiveType(..)

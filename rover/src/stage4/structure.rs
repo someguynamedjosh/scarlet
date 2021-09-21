@@ -53,7 +53,7 @@ impl Debug for Environment {
 }
 
 impl Environment {
-    pub fn new_empty() -> Self {
+    pub fn _new_empty() -> Self {
         Self::new(stage3::Environment::new())
     }
 
@@ -79,14 +79,14 @@ impl Environment {
         }
     }
 
-    pub(super) fn iter(&self) -> impl Iterator<Item = (ItemId, &Item, &Option<ItemId>)> {
+    pub(super) fn _iter(&self) -> impl Iterator<Item = (ItemId, &Item, &Option<ItemId>)> {
         self.items
             .iter()
             .enumerate()
             .map(|(index, val)| (ItemId(index), &val.base, &val.typee))
     }
 
-    pub(super) fn iter_mut(
+    pub(super) fn _iter_mut(
         &mut self,
     ) -> impl Iterator<Item = (ItemId, &mut Item, &mut Option<ItemId>)> {
         self.items

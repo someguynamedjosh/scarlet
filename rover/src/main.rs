@@ -12,7 +12,7 @@ fn main() {
     if remainder.trim().len() > 0 {
         panic!("Syntax error on {}", remainder);
     }
-    let (environment, file_id) = stage2::ingest(statements).unwrap();
+    let (environment, _) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
     let environment = stage3::ingest(&environment).unwrap();
     println!("{:#?}", environment);

@@ -15,7 +15,7 @@ impl PrimitiveValue {
     pub fn expect_i32(&self) -> i32 {
         match self {
             Self::I32(v) => *v,
-            _ => panic!("Expected an i32"),
+            // _ => panic!("Expected an i32"),
         }
     }
 }
@@ -276,7 +276,7 @@ impl Debug for Item {
                     if f.alternate() {
                         write!(f, "\n    ")?;
                     }
-                    write!(f, "{:?}", value);
+                    write!(f, "{:?}", value)?;
                 }
                 for (target, value) in replacements {
                     if f.alternate() {

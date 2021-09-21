@@ -26,7 +26,7 @@ pub(super) fn process_definitions(
                     def: is.value,
                 });
             }
-            Statement::Replace(s) => todo!("nice error"),
+            Statement::Replace(..) => todo!("nice error"),
             Statement::Expression(..) => todo!("Nice error"),
         }
     }

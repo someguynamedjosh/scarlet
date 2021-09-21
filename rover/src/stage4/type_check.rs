@@ -42,7 +42,7 @@ impl Environment {
             | Item::PrimitiveOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => typee,
-            Item::Replacing { base, .. } => todo!(),
+            Item::Replacing { .. } => todo!(),
             Item::Variable { .. } => typee,
         }
     }

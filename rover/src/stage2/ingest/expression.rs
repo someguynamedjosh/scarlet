@@ -55,7 +55,6 @@ fn process_recording(
     as_from: Item,
     env: &mut Environment,
     ctx: Context,
-    parents: &[&Definitions],
 ) -> Result<Item, String> {
     let (where_body, vars) = match as_from {
         Item::Defining { base, definitions } => {
@@ -147,7 +146,7 @@ fn process_postfix(
         "recording" => {
             let statements = post.expect_statements("recording")?;
             let as_from = process_from(base_id, statements.to_owned(), env, parents)?;
-            process_recording(base_id, as_from, env, ctx, parents)?
+            process_recording(base_id, as_from, env, ctx)?
         }
         _ => unreachable!(),
     })

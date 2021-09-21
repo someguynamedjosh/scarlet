@@ -43,7 +43,7 @@ impl Environment {
         }
     }
 
-    pub fn mark_as_module(&mut self, item: ItemId) {
+    pub fn _mark_as_module(&mut self, item: ItemId) {
         self.modules.push(item)
     }
 
@@ -53,7 +53,7 @@ impl Environment {
         id
     }
 
-    pub fn definition_of(&self, item: ItemId) -> &Item {
+    pub fn _definition_of(&self, item: ItemId) -> &Item {
         assert!(item.0 < self.items.len());
         &self.items[item.0]
     }
@@ -147,7 +147,7 @@ impl Debug for Item {
                     if f.alternate() {
                         write!(f, "\n    ")?;
                     }
-                    write!(f, "{:?}", value);
+                    write!(f, "{:?}", value)?;
                 }
                 for (target, value) in replacements {
                     if f.alternate() {
