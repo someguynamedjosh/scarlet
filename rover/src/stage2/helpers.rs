@@ -37,7 +37,6 @@ pub(super) fn resolve_ident(ident: &str, parents: &[&Definitions]) -> Result<Ite
 pub(super) enum Context {
     Plain,
     Type(ItemId),
-    TypeMember(ItemId, String),
 }
 
 pub(super) fn get_or_put_into(into: &mut Option<ItemId>, env: &mut Environment) -> ItemId {

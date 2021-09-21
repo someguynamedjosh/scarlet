@@ -77,7 +77,7 @@ pub struct Construct {
     pub body: ConstructBody,
 }
 
-const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32"];
+const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32", "variant"];
 const TEXT_CONSTRUCTS: &[&str] = &["identifier", "i32"];
 const ALIASES: &[(&str, &str)] = &[
     ("T", "Type"),
@@ -157,6 +157,7 @@ impl Construct {
                     Self::explicit_construct_parser(false),
                     Self::member_shorthand_parser(),
                     Self::replacing_shorthand_parser(),
+                    Self::type_is_shorthand_parser(),
                 ))(input)
             }
         }
@@ -216,6 +217,18 @@ impl Construct {
             let expr = Expression { root, others };
             let body = ConstructBody::Statements(vec![Statement::Expression(expr)]);
             let label = String::from("member");
+            Ok((input, Self { label, body }))
+        }
+    }
+
+    fn type_is_shorthand_parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, _) = tag(":")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, typee) = Expression::parser()(input)?;
+            let label = String::from("type_is");
+            let statement = Statement::Expression(typee);
+            let body = ConstructBody::Statements(vec![statement]);
             Ok((input, Self { label, body }))
         }
     }

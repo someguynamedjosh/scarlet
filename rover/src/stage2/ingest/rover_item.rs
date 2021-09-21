@@ -50,10 +50,47 @@ fn define_integer_type(
     itype
 }
 
+fn define_bool_type(env: &mut Environment) -> ItemId {
+    let bool_type = env.next_id();
+    let bool_ns = env.next_id();
+    let true_con = env.next_id();
+    let false_con = env.next_id();
+    env.define(bool_type, Item::InductiveType(bool_ns));
+    env.define(
+        true_con,
+        Item::InductiveValue {
+            typee: bool_ns,
+            records: vec![],
+            variant_name: format!("true"),
+        },
+    );
+    env.define(
+        false_con,
+        Item::InductiveValue {
+            typee: bool_ns,
+            records: vec![],
+            variant_name: format!("false"),
+        },
+    );
+    env.define(
+        bool_ns,
+        Item::Defining {
+            base: bool_type,
+            definitions: vec![
+                (format!("Self"), bool_ns),
+                (format!("true"), true_con),
+                (format!("false"), false_con),
+            ]
+        }
+    );
+    bool_ns
+}
+
 fn define_lang_item(env: &mut Environment) -> (ItemId, ItemId) {
     let god_type = env.next_id();
     env.define(god_type, Item::GodType);
     let i32_type = define_integer_type(env, PrimitiveType::I32, |o| PrimitiveOperation::I32Math(o));
+    let bool_type = define_bool_type(env);
 
     let lang = env.next_id();
     env.mark_as_module(lang);
@@ -64,6 +101,7 @@ fn define_lang_item(env: &mut Environment) -> (ItemId, ItemId) {
             definitions: vec![
                 (format!("TYPE"), god_type),
                 (format!("Integer32"), i32_type),
+                (format!("Boolean"), bool_type),
             ],
         },
     );

@@ -1,4 +1,7 @@
-use crate::parse::{expression::Expression, nom_prelude::*};
+use crate::parse::{
+    expression::{Construct, ConstructBody, Expression},
+    nom_prelude::*,
+};
 use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, PartialEq)]
@@ -13,6 +16,7 @@ impl Statement {
     pub fn parser<'i>() -> impl Parser<'i, Self> {
         alt((
             map(Is::parser(), |s| Statement::Is(s)),
+            map(Is::variant_shorthand_parser(), |s| Statement::Is(s)),
             map(Replace::parser(), |s| Statement::Replace(s)),
             // map(MatchCase::parser(), |s| Statement::MatchCase(s)),
             map(Expression::parser(), |s| Statement::Expression(s)),
@@ -55,6 +59,31 @@ impl Is {
             let (input, value) = Expression::parser()(input)?;
             let sel = Self {
                 public,
+                name,
+                value,
+            };
+            Ok((input, sel))
+        }
+    }
+
+    pub fn variant_shorthand_parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, _) = tag("variant")(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, variant_def) = Expression::parser()(input)?;
+            let name = Expression {
+                root: variant_def.root.clone(),
+                others: vec![],
+            };
+            let value = Expression {
+                root: Construct {
+                    label: format!("variant"),
+                    body: ConstructBody::Statements(vec![Statement::Expression(variant_def)]),
+                },
+                others: vec![],
+            };
+            let sel = Self {
+                public: true,
                 name,
                 value,
             };

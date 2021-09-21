@@ -1,5 +1,4 @@
 mod parse;
-// mod simplify;
 mod stage2;
 mod stage3;
 mod stage4;
@@ -12,6 +11,7 @@ fn main() {
     if remainder.trim().len() > 0 {
         panic!("Syntax error on {}", remainder);
     }
+    println!("{:#?}", statements);
     let (environment, _) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
     let environment = stage3::ingest(&environment).unwrap();

@@ -25,7 +25,6 @@ fn process_from(
                 let var = process_expr(expr, None, env, ctx, parents)?;
                 vars.push(var);
             }
-            Statement::Replace(..) => todo!("nice error"),
             Statement::Is(is) => {
                 let name = expect_ident_expr(is.name)?;
                 let expr = is.value;
@@ -34,6 +33,7 @@ fn process_from(
                 named_vars.push((name, var));
                 vars.push(var);
             }
+            Statement::Replace(..) => todo!("nice error"),
         }
     }
     let base_item = Item::FromType {
@@ -50,33 +50,35 @@ fn process_from(
     })
 }
 
-fn process_recording(
-    base_id: ItemId,
-    as_from: Item,
+fn process_variant(
+    variant_name: String,
+    typee_id: ItemId,
     env: &mut Environment,
     ctx: Context,
 ) -> Result<Item, String> {
-    let (where_body, vars) = match as_from {
-        Item::Defining { base, definitions } => {
-            let vars = match env.definition_of(base).as_ref().unwrap() {
+    let (base_id, where_body, vars) = match env.definition_of(typee_id) {
+        None => (typee_id, None, vec![]),
+        Some(Item::Defining { base, definitions }) => {
+            let vars = match env.definition_of(*base).as_ref().unwrap() {
                 Item::FromType { vars, .. } => vars.clone(),
                 _ => unreachable!(),
             };
-            (Some(definitions), vars)
+            (*base, Some(definitions), vars)
         }
-        Item::FromType { vars, .. } => (None, vars.clone()),
+        Some(Item::FromType { vars, base }) => (*base, None, vars.clone()),
         _ => unreachable!(),
     };
-    if let Context::TypeMember(typee, member_name) = ctx {
+    if let Context::Type(typee) = ctx {
         if base_id != typee {
-            todo!("nice error, constructor result is not Self type.")
+            todo!("nice error, variant type is not Self.")
         }
         let base = Item::InductiveValue {
             typee,
-            variant_name: member_name,
+            variant_name,
             records: vars,
         };
         Ok(if let Some(definitions) = where_body {
+            let definitions = definitions.clone();
             let base_into = env.next_id();
             env.define(base_into, base);
             Item::Defining {
@@ -87,7 +89,7 @@ fn process_recording(
             base
         })
     } else {
-        todo!("nice error, recording used outside of Type construct")
+        todo!("nice error, variant used outside of Type construct")
     }
 }
 
@@ -95,7 +97,6 @@ fn process_postfix(
     post: Construct,
     remainder: Expression,
     env: &mut Environment,
-    ctx: Context,
     parents: &[&Definitions],
 ) -> Result<Item, String> {
     let mut new_parents = parents.to_owned();
@@ -109,7 +110,7 @@ fn process_postfix(
             cheeky_defining_storage = Some(body);
             new_parents.push(cheeky_defining_storage.as_ref().unwrap());
         }
-        "replacing" | "member" | "From" | "recording" => (),
+        "replacing" | "member" | "From" => (),
         _ => todo!("nice error, unexpected {} construct", post.label),
     }
     let parents = &new_parents[..];
@@ -143,11 +144,6 @@ fn process_postfix(
             let statements = post.expect_statements("From")?;
             process_from(base_id, statements.to_owned(), env, parents)?
         }
-        "recording" => {
-            let statements = post.expect_statements("recording")?;
-            let as_from = process_from(base_id, statements.to_owned(), env, parents)?;
-            process_recording(base_id, as_from, env, ctx)?
-        }
         _ => unreachable!(),
     })
 }
@@ -174,6 +170,7 @@ fn process_root(
     root: Construct,
     into: &mut Option<ItemId>,
     env: &mut Environment,
+    ctx: Context,
     parents: &[&Definitions],
 ) -> Result<Item, String> {
     Ok(match &root.label[..] {
@@ -197,6 +194,18 @@ fn process_root(
             let val: i32 = val.parse().unwrap();
             Item::PrimitiveValue(PrimitiveValue::I32(val))
         }
+        "variant" => {
+            let def_expr = root.expect_single_expression("variant")?;
+            let variant_name = def_expr.root.expect_ident()?.to_owned();
+            if def_expr.others.len() != 1 {
+                todo!("nice error");
+            }
+            let type_expr = def_expr.others[0]
+                .expect_single_expression("type_is")?
+                .clone();
+            let typee = process_expr(type_expr, None, env, Context::Plain, parents)?;
+            process_variant(variant_name, typee, env, ctx)?
+        }
         _ => todo!("nice error, unexpected {} construct", root.label),
     })
 }
@@ -210,10 +219,10 @@ pub(super) fn process_expr(
 ) -> Result<ItemId, String> {
     let mut expr = expr;
     let item = if let Some(post) = expr.others.pop() {
-        process_postfix(post, expr, env, ctx, parents)?
+        process_postfix(post, expr, env, parents)?
     } else {
         let root = expr.root;
-        process_root(root, &mut into, env, parents)?
+        process_root(root, &mut into, env, ctx, parents)?
     };
 
     if let Some(id) = into {

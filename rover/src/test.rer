@@ -1,13 +1,20 @@
 
-Integer32 is rover::lang::Integer32
-sum is Integer32::sum
+#  Integer32 is rover::lang::Integer32
+#  sum is Integer32::sum
 
-x is any{Integer32}
-y is any{Integer32}
-z is any{Integer32}
+#  x is any{Integer32}
+#  y is any{Integer32}
+#  z is any{Integer32}
 
-sum3 is sum[x sum[y z]]
-example is sum3[1 2 3]
+#  sum3 is sum[x sum[y z]]
+#  example is sum3[1 2 3]
+
+tt is rover::lang::Boolean::true
+
+Boolean is Type{
+   variant true :Self
+   variant false :Self
+}
 
 #=
 recount is 

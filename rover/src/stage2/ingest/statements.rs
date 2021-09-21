@@ -26,8 +26,9 @@ pub(super) fn process_definitions(
                     def: is.value,
                 });
             }
-            Statement::Replace(..) => todo!("nice error"),
-            Statement::Expression(..) => todo!("Nice error"),
+            Statement::Expression(..) | Statement::Replace(..) => {
+                todo!("nice error")
+            }
         }
     }
     let definitions: Vec<_> = other_defs
@@ -41,11 +42,7 @@ pub(super) fn process_definitions(
         .collect();
     let parents = &parents[..];
     for item in top_level_expressions {
-        let next_ctx = match &ctx {
-            Context::Type(type_item) => Context::TypeMember(*type_item, item.name.clone()),
-            _ => Context::Plain,
-        };
-        process_expr(item.def, Some(item.id), env, next_ctx, parents)?;
+        process_expr(item.def, Some(item.id), env, ctx.clone(), parents)?;
     }
     Ok(definitions)
 }
@@ -71,7 +68,7 @@ pub(super) fn process_replacements(
                 let ctx = Context::Plain;
                 let value = process_expr(e, None, env, ctx, parents)?;
                 unlabeled_replacements.push(value);
-            },
+            }
         }
     }
     Ok((replacements, unlabeled_replacements))
