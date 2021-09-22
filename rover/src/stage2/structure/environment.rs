@@ -1,39 +1,10 @@
-use std::fmt::{self, Debug, Formatter};
-
-use super::{Item, ItemId};
-use crate::util::indented;
+use super::Item;
+use crate::shared::{ItemId, ResolvedItem};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
     pub modules: Vec<ItemId>,
     pub(crate) items: Vec<Option<Item>>,
-}
-
-impl Debug for Environment {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "Environment [")?;
-        for (index, item) in self.items.iter().enumerate() {
-            if f.alternate() {
-                write!(f, "\n\n    ")?;
-            }
-            write!(f, "{:?} is ", ItemId(index))?;
-            match item {
-                Some(item) => {
-                    if f.alternate() {
-                        let text = format!("{:#?}", item);
-                        write!(f, "{},", indented(&text[..]))?;
-                    } else {
-                        write!(f, "{:?}", item)?;
-                    }
-                }
-                None => write!(f, "None,")?,
-            }
-        }
-        if f.alternate() {
-            writeln!(f)?;
-        }
-        write!(f, "]")
-    }
 }
 
 impl Environment {
@@ -69,7 +40,7 @@ impl Environment {
 
     pub fn insert_variable(&mut self, typee: ItemId) -> ItemId {
         let selff = self.next_id();
-        let definition = Item::Variable { selff, typee };
+        let definition = ResolvedItem::Variable { selff, typee }.into();
         self.define(selff, definition);
         selff
     }

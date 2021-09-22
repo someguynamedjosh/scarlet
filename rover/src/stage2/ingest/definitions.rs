@@ -1,13 +1,11 @@
 use super::context::LocalInfo;
 use crate::{
+    shared::{Definitions, ItemId},
     stage1::structure::{
         expression::Expression,
         statement::{Is, Statement},
     },
-    stage2::{
-        ingest::{context::Context, expression::ingest_expression},
-        structure::{Definitions, ItemId},
-    },
+    stage2::ingest::{context::Context, expression::ingest_expression},
 };
 
 struct UnprocessedItem {

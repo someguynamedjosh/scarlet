@@ -1,11 +1,6 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::{
-    stage2::structure::{
-        Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements,
-    },
-    util::indented,
-};
+use crate::{shared::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements}, util::indented};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {

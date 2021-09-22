@@ -1,6 +1,7 @@
 use self::other::ingest_non_defining_postfix_construct;
 use super::{context::Context, expression::ingest_expression};
 use crate::{
+    shared::ResolvedItem,
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{ingest::definitions::process_definitions, structure::Item},
 };
@@ -30,8 +31,9 @@ fn ingest_defining_construct(
     let body = process_definitions(&mut ctx.child(), statements, vec![])?;
     let mut child_ctx = ctx.child().with_additional_scope(&body);
     let base_id = ingest_expression(&mut child_ctx, remainder)?;
-    Ok(Item::Defining {
+    Ok(ResolvedItem::Defining {
         base: base_id,
         definitions: body,
-    })
+    }
+    .into())
 }

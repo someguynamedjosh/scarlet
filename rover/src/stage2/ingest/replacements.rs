@@ -1,12 +1,10 @@
 use crate::{
+    shared::{ItemId, Replacements},
     stage1::structure::{
         expression::Expression,
         statement::{Replace, Statement},
     },
-    stage2::{
-        ingest::{context::Context, expression::ingest_expression},
-        structure::{ItemId, Replacements},
-    },
+    stage2::ingest::{context::Context, expression::ingest_expression},
 };
 
 fn ingest_labeled_replacement(

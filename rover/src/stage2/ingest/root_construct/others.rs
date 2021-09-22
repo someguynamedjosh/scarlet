@@ -1,12 +1,13 @@
 use crate::{
+    shared::{Definitions, ItemId, PrimitiveValue, ResolvedItem},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{
             context::{Context, LocalInfo},
-            definitions::{process_definitions, process_definitions_with_info},
+            definitions::process_definitions_with_info,
             expression::ingest_expression,
         },
-        structure::{Definitions, Item, ItemId, PrimitiveValue},
+        structure::Item,
     },
 };
 
@@ -19,15 +20,16 @@ fn type_self(ctx: &mut Context) -> (ItemId, (String, ItemId)) {
 pub fn ingest_type_construct(ctx: &mut Context, root: Construct) -> Result<Item, String> {
     let statements = root.expect_statements("Type").unwrap().to_owned();
     let (self_id, self_def) = type_self(ctx);
-    let inner_type = Item::InductiveType(self_id);
+    let inner_type = ResolvedItem::InductiveType(self_id).into();
     let inner_type_id = ctx.environment.insert(inner_type);
 
     let info = LocalInfo::Type(self_id);
     let definitions = process_definitions_with_info(ctx, statements, vec![self_def], info)?;
-    Ok(Item::Defining {
+    Ok(ResolvedItem::Defining {
         base: inner_type_id,
         definitions,
-    })
+    }
+    .into())
 }
 
 fn resolve_ident_in_scope(scope: &Definitions, ident: &str) -> Option<ItemId> {
@@ -62,11 +64,11 @@ pub fn ingest_any_construct(ctx: &mut Context, root: Construct) -> Result<Item, 
     let typ_expr = root.expect_single_expression("any")?.clone();
     let typee = ingest_expression(&mut ctx.child(), typ_expr)?;
     let selff = ctx.get_or_create_current_id();
-    Ok(Item::Variable { selff, typee })
+    Ok(ResolvedItem::Variable { selff, typee }.into())
 }
 
 pub fn ingest_i32_construct(root: Construct) -> Result<Item, String> {
     let val = root.expect_text("i32")?;
     let val: i32 = val.parse().unwrap();
-    Ok(Item::PrimitiveValue(PrimitiveValue::I32(val)))
+    Ok(ResolvedItem::PrimitiveValue(PrimitiveValue::I32(val)).into())
 }

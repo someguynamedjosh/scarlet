@@ -1,11 +1,12 @@
 use crate::{
+    shared::{ItemId, ResolvedItem},
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
         ingest::{
             context::{Context, LocalInfo},
             expression::ingest_expression,
         },
-        structure::{Item, ItemId},
+        structure::Item,
     },
 };
 
@@ -35,16 +36,19 @@ fn decompose_variant_construct(root: Construct) -> Result<(String, Expression), 
 
 fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
     match ctx.environment.definition_of(type_id) {
-        Some(Item::Defining { base, .. }) | Some(Item::FromType { base, .. }) => {
-            dereference_type(ctx, *base)
-        }
+        Some(Item::Resolved(item)) => match item {
+            ResolvedItem::Defining { base, .. } | ResolvedItem::FromType { base, .. } => {
+                dereference_type(ctx, *base)
+            }
+            _ => type_id,
+        },
         _ => type_id,
     }
 }
 
 fn get_from_vars(ctx: &Context, type_id: ItemId) -> Vec<ItemId> {
     match ctx.environment.definition_of(type_id) {
-        Some(Item::FromType { base, vars }) => {
+        Some(Item::Resolved(ResolvedItem::FromType { base, vars })) => {
             let base_vars = get_from_vars(ctx, *base);
             [base_vars, vars.clone()].concat()
         }
@@ -60,9 +64,10 @@ pub fn ingest_variant_construct(ctx: &mut Context, root: Construct) -> Result<It
     check_containing_type(ctx, base_return_type_id)?;
     let recorded_vars = get_from_vars(ctx, return_type_id);
 
-    Ok(Item::InductiveValue {
+    Ok(ResolvedItem::InductiveValue {
         typee: base_return_type_id,
         variant_name,
         records: recorded_vars,
-    })
+    }
+    .into())
 }

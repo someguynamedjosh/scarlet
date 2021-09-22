@@ -1,61 +1,32 @@
-use super::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements};
+use std::fmt::{self, Debug, Formatter};
+
+use crate::shared::{ItemId, ResolvedItem};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
-    Defining {
-        base: ItemId,
-        definitions: Definitions,
-    },
-    FromType {
-        base: ItemId,
-        vars: Vec<ItemId>,
-    },
-    GodType,
-    InductiveType(ItemId),
-    InductiveValue {
-        typee: ItemId,
-        variant_name: String,
-        records: Vec<ItemId>,
-    },
-    IsSameVariant {
-        base: ItemId,
-        other: ItemId,
-    },
+    Resolved(ResolvedItem),
     Item(ItemId),
-    Member {
-        base: ItemId,
-        name: String,
-    },
-    Pick {
-        initial_clause: (ItemId, ItemId),
-        elif_clauses: Vec<(ItemId, ItemId)>,
-        else_clause: ItemId,
-    },
-    PrimitiveOperation(PrimitiveOperation),
-    PrimitiveType(PrimitiveType),
-    PrimitiveValue(PrimitiveValue),
-    Replacing {
-        base: ItemId,
-        unlabeled_replacements: Vec<ItemId>,
-        replacements: Replacements,
-    },
-    TypeIs {
-        exact: bool,
-        base: ItemId,
-        typee: ItemId,
-    },
-    Variable {
-        selff: ItemId,
-        typee: ItemId,
-    },
+    Member { base: ItemId, name: String },
 }
 
 impl Item {
     pub fn defining(base: ItemId, definitions: Vec<(&str, ItemId)>) -> Self {
-        let definitions = definitions
-            .into_iter()
-            .map(|(name, val)| (name.to_owned(), val))
-            .collect();
-        Self::Defining { base, definitions }
+        Self::Resolved(ResolvedItem::defining(base, definitions))
+    }
+}
+
+impl Debug for Item {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Resolved(resolved) => resolved.fmt(f),
+            Self::Item(id) => id.fmt(f),
+            Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
+        }
+    }
+}
+
+impl From<ResolvedItem> for Item {
+    fn from(item: ResolvedItem) -> Self {
+        Self::Resolved(item)
     }
 }

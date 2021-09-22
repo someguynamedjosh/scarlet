@@ -1,4 +1,5 @@
 use crate::{
+    shared::ResolvedItem,
     stage1::structure::{construct::Construct, statement::Statement},
     stage2::{
         ingest::{context::Context, expression::ingest_expression},
@@ -40,9 +41,10 @@ pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<Item,
         }
     }
 
-    Ok(Item::Pick {
+    Ok(ResolvedItem::Pick {
         initial_clause,
         elif_clauses,
         else_clause,
-    })
+    }
+    .into())
 }

@@ -101,7 +101,6 @@ impl Environment {
             return *existing_id;
         }
         let id = ItemId(self.items.len());
-        println!("inserted {:?} {:#?}", id, def);
         self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
             base: def,

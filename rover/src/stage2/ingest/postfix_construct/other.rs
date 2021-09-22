@@ -1,11 +1,12 @@
 use crate::{
+    shared::{ItemId, ResolvedItem},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{
             context::Context, expression::ingest_expression,
             postfix_construct::from::ingest_from_construct, replacements::ingest_replacements,
         },
-        structure::{Item, ItemId},
+        structure::Item,
     },
 };
 
@@ -32,10 +33,11 @@ fn ingest_is_variant_construct(
 ) -> Result<Item, String> {
     let other = post.expect_single_expression("is_variant")?;
     let other = ingest_expression(&mut ctx.child(), other.clone())?;
-    Ok(Item::IsSameVariant {
+    Ok(ResolvedItem::IsSameVariant {
         base: base_id,
         other,
-    })
+    }
+    .into())
 }
 
 fn ingest_type_is_construct(
@@ -47,11 +49,12 @@ fn ingest_type_is_construct(
     let label = if exact { "type_is_exactly" } else { "type_is" };
     let typee_expr = post.expect_single_expression(label).unwrap();
     let typee = ingest_expression(&mut ctx.child(), typee_expr.clone())?;
-    Ok(Item::TypeIs {
+    Ok(ResolvedItem::TypeIs {
         exact,
         base: base_id,
         typee,
-    })
+    }
+    .into())
 }
 
 fn ingest_replacing_construct(
@@ -61,11 +64,12 @@ fn ingest_replacing_construct(
 ) -> Result<Item, String> {
     let statements = post.expect_statements("replacing")?.to_owned();
     let (replacements, unlabeled_replacements) = ingest_replacements(&mut ctx.child(), statements)?;
-    Ok(Item::Replacing {
+    Ok(ResolvedItem::Replacing {
         base: base_id,
         replacements,
         unlabeled_replacements,
-    })
+    }
+    .into())
 }
 
 fn ingest_member_construct(base_id: ItemId, post: Construct) -> Result<Item, String> {

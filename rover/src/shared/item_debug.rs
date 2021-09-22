@@ -1,8 +1,8 @@
 use std::fmt::{self, Debug, Formatter};
 
-use super::Item;
+use super::ResolvedItem;
 
-impl Debug for Item {
+impl Debug for ResolvedItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let spacer = if f.alternate() { "\n" } else { " " };
         let nested_spacer = if f.alternate() { "\n    " } else { " " };
@@ -37,8 +37,6 @@ impl Debug for Item {
             Self::IsSameVariant { base, other } => {
                 write!(f, "{:?} is_same_variant_as{{{:?}}}", base, other)
             }
-            Self::Item(id) => write!(f, "{:?}", id),
-            Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
             Self::Pick {
                 initial_clause,
                 elif_clauses,

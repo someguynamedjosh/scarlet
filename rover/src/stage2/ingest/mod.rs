@@ -1,5 +1,13 @@
-use super::structure::Definitions;
-use crate::{stage1::structure::statement::Statement, stage2::{ingest::{context::Context, definitions::process_definitions, rover_item::define_rover_item}, structure::{Environment, Item, ItemId}}};
+use crate::{
+    shared::{Definitions, ItemId, ResolvedItem},
+    stage1::structure::statement::Statement,
+    stage2::{
+        ingest::{
+            context::Context, definitions::process_definitions, rover_item::define_rover_item,
+        },
+        structure::Environment,
+    },
+};
 
 mod context;
 mod definitions;
@@ -15,10 +23,11 @@ fn define_root_scope(env: &mut Environment, god_type: ItemId, definitions: Defin
     env.mark_as_module(root_scope);
     env.define(
         root_scope,
-        Item::Defining {
+        ResolvedItem::Defining {
             base: god_type,
             definitions,
-        },
+        }
+        .into(),
     );
     root_scope
 }

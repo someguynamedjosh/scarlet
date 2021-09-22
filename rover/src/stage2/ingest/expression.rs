@@ -2,10 +2,7 @@ use super::{
     context::Context, postfix_construct::ingest_postfix_construct,
     root_construct::ingest_root_construct,
 };
-use crate::{
-    stage1::structure::expression::Expression,
-    stage2::structure::{Item, ItemId},
-};
+use crate::{shared::ItemId, stage1::structure::expression::Expression, stage2::structure::Item};
 
 fn convert_expression_to_item(ctx: &mut Context, mut expr: Expression) -> Result<Item, String> {
     if let Some(post) = expr.others.pop() {

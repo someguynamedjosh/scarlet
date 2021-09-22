@@ -1,14 +1,11 @@
-use crate::{
-    stage1::structure::{
+use crate::{shared::{Definitions, ItemId, ResolvedItem}, stage1::structure::{
         construct::Construct,
         expression::Expression,
         statement::{Is, Statement},
-    },
-    stage2::{
+    }, stage2::{
         ingest::{context::Context, expression::ingest_expression, helpers::with_definitions},
-        structure::{Definitions, Item, ItemId},
-    },
-};
+        structure::Item,
+    }};
 
 pub fn ingest_from_construct(
     ctx: &mut Context,
@@ -16,10 +13,11 @@ pub fn ingest_from_construct(
     from: Construct,
 ) -> Result<Item, String> {
     let (vars, named_vars) = ingest_from_statements(ctx, from)?;
-    let base_item = Item::FromType {
+    let base_item = ResolvedItem::FromType {
         base: base_id,
         vars,
-    };
+    }
+    .into();
     Ok(with_definitions(ctx, base_item, named_vars))
 }
 

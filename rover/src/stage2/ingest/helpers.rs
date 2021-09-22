@@ -1,5 +1,8 @@
 use super::context::Context;
-use crate::stage2::structure::{Definitions, Item};
+use crate::{
+    shared::{Definitions, ResolvedItem},
+    stage2::structure::Item,
+};
 
 /// Returns the item unchanged if definitions is empty.
 pub fn with_definitions(ctx: &mut Context, base_item: Item, definitions: Definitions) -> Item {
@@ -7,9 +10,10 @@ pub fn with_definitions(ctx: &mut Context, base_item: Item, definitions: Definit
         base_item
     } else {
         let base_id = ctx.environment.insert(base_item);
-        Item::Defining {
+        ResolvedItem::Defining {
             base: base_id,
             definitions,
         }
+        .into()
     }
 }
