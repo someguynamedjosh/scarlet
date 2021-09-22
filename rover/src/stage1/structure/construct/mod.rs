@@ -17,7 +17,7 @@ impl Debug for Construct {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}{{", self.label)?;
         if f.alternate() && !self.body.is_plain_text() {
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         self.body.fmt(f)?;
         write!(f, "}}")

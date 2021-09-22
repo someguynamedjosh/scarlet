@@ -43,9 +43,7 @@ impl Construct {
         } else {
             match &body[0] {
                 Statement::Expression(expr) => Ok(expr),
-                _ => Err(format!(
-                    "Expected an expression, got a different statement instead."
-                )),
+                _ => Err("Expected an expression, got a different statement instead.".to_string()),
             }
         }
     }

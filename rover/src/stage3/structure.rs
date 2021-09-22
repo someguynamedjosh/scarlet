@@ -29,7 +29,7 @@ impl Debug for Environment {
             }
         }
         if f.alternate() {
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         write!(f, "]")
     }
@@ -118,7 +118,7 @@ impl Debug for Item {
             }
             Self::FromType { base, vars } => {
                 write!(f, "{:?} From{{", base)?;
-                if vars.len() > 0 {
+                if !vars.is_empty() {
                     write!(f, "{:?}", vars[0])?;
                     for var in &vars[1..] {
                         write!(f, " {:?}", var)?;
@@ -141,7 +141,7 @@ impl Debug for Item {
                     write!(f, "{:?}, ", record)?;
                 }
                 if f.alternate() {
-                    write!(f, "\n")?;
+                    writeln!(f)?;
                 }
                 write!(f, "]")
             }

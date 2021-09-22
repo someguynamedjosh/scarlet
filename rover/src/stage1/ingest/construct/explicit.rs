@@ -6,10 +6,10 @@ use crate::stage1::{
 fn label_parser<'i>(root: bool) -> impl Parser<'i, &'i str> {
     let get_label = helpers::identifier_parser();
     let resolved_label = map(get_label, labels::resolve_alias);
-    let checked_resolved_label = verify(resolved_label, move |label| {
+    
+    verify(resolved_label, move |label| {
         root == labels::is_root_label(label)
-    });
-    checked_resolved_label
+    })
 }
 
 fn owned_label_parser<'i>(root: bool) -> impl Parser<'i, String> {

@@ -26,8 +26,8 @@ fn is_int(text: &str) -> bool {
 fn int_literal_parser<'i>() -> impl Parser<'i, String> {
     let text = helpers::identifier_parser();
     let without_underscores = map(text, remove_underscores);
-    let checked = verify(without_underscores, is_int);
-    checked
+    
+    verify(without_underscores, is_int)
 }
 
 pub fn integer_shorthand_parser<'i>() -> impl Parser<'i, Construct> {

@@ -131,7 +131,7 @@ impl Environment {
     fn type_is_not_from(&self, typee: ItemId) -> bool {
         match &self.items[typee.0].base {
             Item::Defining { base, .. } => self.type_is_not_from(*base),
-            Item::FromType { base, vars, .. } => vars.len() == 0 && self.type_is_not_from(*base),
+            Item::FromType { base, vars, .. } => vars.is_empty() && self.type_is_not_from(*base),
             Item::Replacing { base, .. } => self.type_is_not_from(*base),
             _ => true,
         }
@@ -303,11 +303,11 @@ impl Environment {
                         replacements_after.remove(target);
                     }
                 }
-                if remaining_replacements.len() > 0 {
+                if !remaining_replacements.is_empty() {
                     return item;
                 }
                 let rbase = self.reduce(base, &replacements_after, true);
-                if remaining_replacements.len() == 0 {
+                if remaining_replacements.is_empty() {
                     rbase
                 } else {
                     let item = Item::Replacing {
@@ -335,11 +335,11 @@ impl Environment {
         reduce_defs: bool,
     ) -> Result<bool, ItemId> {
         let rcond = self.reduce(cond, reps, reduce_defs);
-        let res = match &self.items[rcond.0].base {
+        
+        match &self.items[rcond.0].base {
             Item::PrimitiveValue(val) => Ok(val.expect_bool()),
             _ => Err(rcond),
-        };
-        res
+        }
     }
 
     fn reduce_pick(
@@ -368,7 +368,7 @@ impl Environment {
             match self.reduce_condition(cond, reps, reduce_defs) {
                 Ok(true) => {
                     let val = self.reduce(val, reps, reduce_defs);
-                    if unknown_clauses.len() == 0 {
+                    if unknown_clauses.is_empty() {
                         // Only return if we know for sure no previous clauses will be used.
                         return val;
                     }
@@ -381,7 +381,7 @@ impl Environment {
         }
 
         let else_value = self.reduce(else_clause, reps, reduce_defs);
-        if unknown_clauses.len() == 0 {
+        if unknown_clauses.is_empty() {
             return else_value;
         }
 

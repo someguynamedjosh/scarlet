@@ -30,12 +30,7 @@ impl Environment {
     /// not always return true when this is the case, due to Godel-related math
     /// gremlins.
     pub(super) fn are_def_equal(&self, left: ItemId, right: ItemId) -> bool {
-        if left == right {
-            true
-        } else {
-            // TODO: This is impolite, we could try a little harder than that.
-            false
-        }
+        left == right
     }
 
     /// Returns the type of the variable given by the id, assuming the id points

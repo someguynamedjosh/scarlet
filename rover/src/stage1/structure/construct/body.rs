@@ -21,7 +21,7 @@ fn fmt_statements(f: &mut Formatter, statements: &[Statement]) -> fmt::Result {
     for s in statements {
         if f.alternate() {
             let st = format!("{:#?}", s);
-            write!(f, "{}\n", util::indented(&st))?;
+            writeln!(f, "{}", util::indented(&st))?;
         } else {
             write!(f, " ")?;
             s.fmt(f)?;

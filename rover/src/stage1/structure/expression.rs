@@ -10,7 +10,7 @@ pub struct Expression {
 
 impl Expression {
     pub fn expect_ident(&self) -> Result<&str, String> {
-        if self.others.len() > 0 {
+        if !self.others.is_empty() {
             todo!("nice error")
         }
         self.root.expect_ident()
@@ -26,7 +26,7 @@ impl Debug for Expression {
         self.root.fmt(f)?;
         for con in &self.others {
             if f.alternate() {
-                write!(f, "\n")?;
+                writeln!(f)?;
             } else {
                 write!(f, " ")?;
             }

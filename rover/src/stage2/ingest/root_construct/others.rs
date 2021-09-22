@@ -10,7 +10,7 @@ use crate::{
 
 fn type_self(ctx: &mut Context) -> (ItemId, (String, ItemId)) {
     let self_id = ctx.get_or_create_current_id();
-    let self_def = (format!("Self"), self_id);
+    let self_def = ("Self".to_string(), self_id);
     (self_id, self_def)
 }
 

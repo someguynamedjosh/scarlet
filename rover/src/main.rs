@@ -5,10 +5,10 @@ mod stage4;
 mod util;
 
 fn main() {
-    const INPUT: &'static str = include_str!("test.rer");
+    const INPUT: &str = include_str!("test.rer");
 
     let (remainder, statements) = stage1::ingest()(INPUT).unwrap();
-    if remainder.trim().len() > 0 {
+    if !remainder.trim().is_empty() {
         panic!("Syntax error on {}", remainder);
     }
     println!("{:#?}", statements);

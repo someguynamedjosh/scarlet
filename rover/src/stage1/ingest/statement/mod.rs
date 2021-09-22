@@ -11,13 +11,13 @@ mod helpers;
 impl Statement {
     pub fn parser<'i>() -> impl Parser<'i, Self> {
         alt((
-            map(Else::parser(), |s| Statement::Else(s)),
-            map(Is::parser(), |s| Statement::Is(s)),
-            map(Is::variant_shorthand_parser(), |s| Statement::Is(s)),
-            map(PickIf::parser(), |s| Statement::PickIf(s)),
-            map(PickElif::parser(), |s| Statement::PickElif(s)),
-            map(Replace::parser(), |s| Statement::Replace(s)),
-            map(Expression::parser(), |s| Statement::Expression(s)),
+            map(Else::parser(), Statement::Else),
+            map(Is::parser(), Statement::Is),
+            map(Is::variant_shorthand_parser(), Statement::Is),
+            map(PickIf::parser(), Statement::PickIf),
+            map(PickElif::parser(), Statement::PickElif),
+            map(Replace::parser(), Statement::Replace),
+            map(Expression::parser(), Statement::Expression),
         ))
     }
 }

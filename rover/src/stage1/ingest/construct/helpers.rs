@@ -11,5 +11,5 @@ pub fn text_body_parser<'i>() -> impl Parser<'i, ConstructBody> {
 
 pub fn statement_body_parser<'i>() -> impl Parser<'i, ConstructBody> {
     let pstatements = many0(after_ws(Statement::parser()));
-    map(pstatements, |s| ConstructBody::Statements(s))
+    map(pstatements, ConstructBody::Statements)
 }

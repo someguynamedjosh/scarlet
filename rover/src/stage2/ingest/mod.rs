@@ -33,7 +33,7 @@ fn define_root_scope(env: &mut Environment, god_type: ItemId, definitions: Defin
 pub fn ingest(statements: Vec<Statement>) -> Result<(Environment, ItemId), String> {
     let mut env = Environment::new();
     let (rover, god_type) = define_rover_item(&mut env);
-    let rover_def = (format!("rover"), rover);
+    let rover_def = ("rover".to_string(), rover);
 
     let mut ctx = Context::new(&mut env);
     let definitions = process_definitions(&mut ctx, statements, vec![rover_def])?;

@@ -45,7 +45,7 @@ impl Debug for Environment {
             write!(f, " }}")?;
         }
         if f.alternate() {
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         write!(f, "]")
     }
