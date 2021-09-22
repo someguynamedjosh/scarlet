@@ -4,7 +4,7 @@ pub use nom::{
     character::complete::one_of,
     combinator::{fail, map, not, opt, value, verify},
     multi::many0,
-    sequence::{tuple, terminated},
+    sequence::{terminated, tuple},
     IResult,
 };
 

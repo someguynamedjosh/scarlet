@@ -19,9 +19,13 @@ pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
 struct VarList(Vec<ItemId>);
 
 impl VarList {
-    pub fn new() -> VarList { Self(Vec::new()) }
+    pub fn new() -> VarList {
+        Self(Vec::new())
+    }
 
-    pub fn len(&self) -> usize { self.0.len() }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 
     pub fn push(&mut self, item: ItemId) {
         if !self.0.contains(&item) {
@@ -35,7 +39,9 @@ impl VarList {
         }
     }
 
-    pub fn into_vec(self) -> Vec<ItemId> { self.0 }
+    pub fn into_vec(self) -> Vec<ItemId> {
+        self.0
+    }
 }
 
 impl Environment {

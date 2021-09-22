@@ -21,7 +21,9 @@ pub struct Environment {
     pub(super) item_reverse_lookup: HashMap<Item, ItemId>,
 }
 
-fn indented(source: &str) -> String { source.replace("\n", "\n    ") }
+fn indented(source: &str) -> String {
+    source.replace("\n", "\n    ")
+}
 
 impl Debug for Environment {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -52,7 +54,9 @@ impl Debug for Environment {
 }
 
 impl Environment {
-    pub fn _new_empty() -> Self { Self::new(stage3::Environment::new()) }
+    pub fn _new_empty() -> Self {
+        Self::new(stage3::Environment::new())
+    }
 
     pub fn new(from: stage3::Environment) -> Self {
         let item_reverse_lookup = from

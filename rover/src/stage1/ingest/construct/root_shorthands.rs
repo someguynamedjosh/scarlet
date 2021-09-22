@@ -26,7 +26,7 @@ fn is_int(text: &str) -> bool {
 fn int_literal_parser<'i>() -> impl Parser<'i, String> {
     let text = helpers::identifier_parser();
     let without_underscores = map(text, remove_underscores);
-    
+
     verify(without_underscores, is_int)
 }
 

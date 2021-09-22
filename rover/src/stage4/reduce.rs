@@ -335,7 +335,7 @@ impl Environment {
         reduce_defs: bool,
     ) -> Result<bool, ItemId> {
         let rcond = self.reduce(cond, reps, reduce_defs);
-        
+
         match &self.items[rcond.0].base {
             Item::PrimitiveValue(val) => Ok(val.expect_bool()),
             _ => Err(rcond),

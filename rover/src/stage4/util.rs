@@ -14,7 +14,9 @@ impl Environment {
         None
     }
 
-    pub(super) fn god_type(&self) -> ItemId { self.existing_item(&Item::GodType).unwrap() }
+    pub(super) fn god_type(&self) -> ItemId {
+        self.existing_item(&Item::GodType).unwrap()
+    }
 
     pub(super) fn bool_type(&self) -> ItemId {
         self.existing_item(&Item::PrimitiveType(PrimitiveType::Bool))

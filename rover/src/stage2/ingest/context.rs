@@ -1,6 +1,4 @@
-use crate::{
-    stage2::structure::{Definitions, Environment, ItemId},
-};
+use crate::stage2::structure::{Definitions, Environment, ItemId};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum LocalInfo {

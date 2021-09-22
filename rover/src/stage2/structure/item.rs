@@ -1,7 +1,5 @@
 use super::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements};
 
-
-
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
     Defining {

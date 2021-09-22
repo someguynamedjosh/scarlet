@@ -1,6 +1,5 @@
-use crate::stage1::structure::{construct::Construct, expression::Expression};
-
 use super::nom_prelude::*;
+use crate::stage1::structure::{construct::Construct, expression::Expression};
 
 impl Expression {
     pub fn parser<'i>() -> impl Parser<'i, Self> {
