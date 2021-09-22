@@ -74,10 +74,9 @@ impl Environment {
                 Ok(())
             }
             Item::TypeIs { base, typee } => {
-                // Deliberately avoid discarding the From clause because the
-                // type assertion can assert From clauses.
-                let base_type = self.items[base.0].typee.unwrap();
-                if self.are_def_equal(base_type, *typee) {
+                let base_type = self.item_base_type(*base);
+                let typee = self.after_from(*typee);
+                if self.are_def_equal(base_type, typee) {
                     Ok(())
                 } else {
                     todo!("nice error, value does not match type assert")
