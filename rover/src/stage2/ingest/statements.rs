@@ -1,8 +1,10 @@
 use crate::{
     stage1::structure::statement::Statement,
     stage2::{
-        helpers::{expect_ident_expr, Context, UnprocessedItem},
-        ingest::expression::process_expr,
+        ingest::{
+            expression::process_expr,
+            helpers::{Context, UnprocessedItem},
+        },
         structure::{Definitions, Environment, ItemId, Replacements},
     },
 };
@@ -18,7 +20,7 @@ pub(super) fn process_definitions(
     for statement in statements {
         match statement {
             Statement::Is(is) => {
-                let name = expect_ident_expr(is.name)?;
+                let name = is.name.expect_ident_owned()?;
                 top_level_expressions.push(UnprocessedItem {
                     id: env.next_id(),
                     public: is.public,

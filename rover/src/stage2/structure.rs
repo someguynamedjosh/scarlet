@@ -34,7 +34,9 @@ impl PrimitiveValue {
 pub struct ItemId(pub(crate) usize);
 
 impl Debug for ItemId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { write!(f, "id{{{}}}", self.0) }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "id{{{}}}", self.0)
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -85,11 +87,39 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), val))
     }
 
-    pub fn mark_as_module(&mut self, item: ItemId) { self.modules.push(item) }
+    pub fn mark_as_module(&mut self, item: ItemId) {
+        self.modules.push(item)
+    }
 
     pub fn next_id(&mut self) -> ItemId {
         let id = ItemId(self.items.len());
         self.items.push(None);
+        id
+    }
+
+    pub fn insert(&mut self, definition: Item) -> ItemId {
+        let id = self.next_id();
+        self.define(id, definition);
+        id
+    }
+
+    pub fn insert_variable(&mut self, typee: ItemId) -> ItemId {
+        let selff = self.next_id();
+        let definition = Item::Variable { selff, typee };
+        self.define(selff, definition);
+        selff
+    }
+
+    /// Turns the provided definitions into a Defining item with an extra item
+    /// Self pointing to the inserted item.
+    pub fn insert_self_referencing_define(
+        &mut self,
+        base: ItemId,
+        mut definitions: Vec<(&str, ItemId)>,
+    ) -> ItemId {
+        let id = self.next_id();
+        definitions.insert(0, ("Self", id));
+        self.define(id, Item::defining(base, definitions));
         id
     }
 
@@ -235,6 +265,16 @@ pub enum Item {
         selff: ItemId,
         typee: ItemId,
     },
+}
+
+impl Item {
+    pub fn defining(base: ItemId, definitions: Vec<(&str, ItemId)>) -> Self {
+        let definitions = definitions
+            .into_iter()
+            .map(|(name, val)| (name.to_owned(), val))
+            .collect();
+        Self::Defining { base, definitions }
+    }
 }
 
 impl Debug for Item {

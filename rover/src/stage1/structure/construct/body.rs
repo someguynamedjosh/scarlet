@@ -17,24 +17,24 @@ impl ConstructBody {
     }
 }
 
+fn fmt_statements(f: &mut Formatter, statements: &[Statement]) -> fmt::Result {
+    for s in statements {
+        if f.alternate() {
+            let st = format!("{:#?}", s);
+            write!(f, "{}\n", util::indented(&st))?;
+        } else {
+            write!(f, " ")?;
+            s.fmt(f)?;
+        }
+    }
+    Ok(())
+}
+
 impl Debug for ConstructBody {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Statements(statements) => {
-                for s in statements {
-                    if f.alternate() {
-                        let st = format!("{:#?}", s);
-                        write!(f, "{}\n", util::indented(&st))?;
-                    } else {
-                        write!(f, " ")?;
-                        s.fmt(f)?;
-                    }
-                }
-            }
-            Self::PlainText(text) => {
-                write!(f, "{}", text)?;
-            }
+            Self::Statements(statements) => fmt_statements(f, statements),
+            Self::PlainText(text) => write!(f, "{}", text),
         }
-        Ok(())
     }
 }

@@ -1,2 +1,2 @@
 - Visibility
-- A type check which requires From variables to match
+- Move lang -> core

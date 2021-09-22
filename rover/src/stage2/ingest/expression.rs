@@ -1,8 +1,10 @@
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
     stage2::{
-        helpers::{expect_ident_expr, get_or_put_into, resolve_ident, Context},
-        ingest::statements::{process_definitions, process_replacements},
+        ingest::{
+            helpers::{self, Context},
+            statements::{process_definitions, process_replacements},
+        },
         structure::{Definitions, Environment, Item, ItemId, PrimitiveValue},
     },
 };
@@ -23,7 +25,7 @@ fn process_from(
                 vars.push(var);
             }
             Statement::Is(is) => {
-                let name = expect_ident_expr(is.name)?;
+                let name = is.name.expect_ident_owned()?;
                 let expr = is.value;
                 let ctx = Context::Plain;
                 let var = process_expr(expr, None, env, ctx, parents)?;
@@ -134,7 +136,10 @@ fn process_postfix(
             }
         }
         "member" => {
-            let name = expect_ident_expr(post.expect_single_expression("member")?.clone())?;
+            let name = post
+                .expect_single_expression("member")?
+                .clone()
+                .expect_ident_owned()?;
             Item::Member {
                 base: base_id,
                 name,
@@ -183,7 +188,7 @@ fn process_type(
     env: &mut Environment,
     parents: &[&Definitions],
 ) -> Result<Item, String> {
-    let into = get_or_put_into(into, env);
+    let into = helpers::get_or_put_into(into, env);
     let type_item = env.next_id();
     let ctx = Context::Type(into);
     let self_def = (format!("Self"), into);
@@ -239,6 +244,21 @@ fn process_pick(
     })
 }
 
+fn resolve_ident(ident: &str, parents: &[&Definitions]) -> Result<ItemId, String> {
+    // Reverse to earch the closest parents first.
+    for parent in parents.iter().rev() {
+        for (name, val) in *parent {
+            if name == ident {
+                return Ok(*val);
+            }
+        }
+    }
+    Err(format!(
+        "Could not find an item named {} in the current scope or its parents.",
+        ident
+    ))
+}
+
 fn process_root(
     root: Construct,
     into: &mut Option<ItemId>,
@@ -258,7 +278,7 @@ fn process_root(
         "any" => {
             let typ_expr = root.expect_single_expression("any")?.clone();
             let typee = process_expr(typ_expr, None, env, Context::Plain, parents)?;
-            let selff = get_or_put_into(into, env);
+            let selff = helpers::get_or_put_into(into, env);
             Item::Variable { selff, typee }
         }
         "the" => todo!(),
