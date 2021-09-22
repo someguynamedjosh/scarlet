@@ -1,5 +1,5 @@
 use crate::{
-    parse::statements::Statement,
+    stage1::structure::statement::Statement,
     stage2::{
         helpers::{expect_ident_expr, Context, UnprocessedItem},
         ingest::expression::process_expr,

@@ -1,8 +1,5 @@
 use crate::{
-    parse::{
-        expression::{Construct, Expression},
-        statements::Statement,
-    },
+    stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
     stage2::{
         helpers::{expect_ident_expr, get_or_put_into, resolve_ident, Context},
         ingest::statements::{process_definitions, process_replacements},

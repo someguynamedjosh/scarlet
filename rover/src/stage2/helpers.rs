@@ -1,5 +1,5 @@
 use crate::{
-    parse::expression::Expression,
+    stage1::structure::expression::Expression,
     stage2::structure::{Definitions, Environment, ItemId},
 };
 

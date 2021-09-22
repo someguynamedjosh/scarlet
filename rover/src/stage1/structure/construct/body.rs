@@ -1,6 +1,6 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::parse::{indented, statements::Statement};
+use crate::{stage1::structure::statement::Statement, util};
 
 #[derive(Clone, PartialEq)]
 pub enum ConstructBody {
@@ -9,7 +9,7 @@ pub enum ConstructBody {
 }
 
 impl ConstructBody {
-    fn is_plain_text(&self) -> bool {
+    pub fn is_plain_text(&self) -> bool {
         match self {
             Self::PlainText(..) => true,
             _ => false,
@@ -24,7 +24,7 @@ impl Debug for ConstructBody {
                 for s in statements {
                     if f.alternate() {
                         let st = format!("{:#?}", s);
-                        write!(f, "{}\n", indented(&st))?;
+                        write!(f, "{}\n", util::indented(&st))?;
                     } else {
                         write!(f, " ")?;
                         s.fmt(f)?;

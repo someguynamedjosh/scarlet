@@ -1,4 +1,4 @@
-mod parse;
+mod stage1;
 mod stage2;
 mod stage3;
 mod stage4;
@@ -7,7 +7,7 @@ mod util;
 fn main() {
     const INPUT: &'static str = include_str!("test.rer");
 
-    let (remainder, statements) = parse::parse(INPUT).unwrap();
+    let (remainder, statements) = stage1::ingest()(INPUT).unwrap();
     if remainder.trim().len() > 0 {
         panic!("Syntax error on {}", remainder);
     }

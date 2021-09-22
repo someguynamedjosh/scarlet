@@ -1,14 +1,11 @@
 pub use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until},
-    combinator::{map, not, opt},
+    bytes::complete::{tag, take, take_until, take_while, take_while1},
+    character::complete::one_of,
+    combinator::{fail, map, not, opt, value, verify},
     multi::many0,
     sequence::tuple,
     IResult,
-};
-use nom::{
-    bytes::complete::{take, take_while},
-    character::complete::one_of,
 };
 
 fn single_line_comment<'i>() -> impl Parser<'i, ()> {

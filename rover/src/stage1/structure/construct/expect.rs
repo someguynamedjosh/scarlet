@@ -1,3 +1,6 @@
+use super::{Construct, ConstructBody};
+use crate::stage1::structure::{expression::Expression, statement::Statement};
+
 impl Construct {
     pub fn expect_label(&self, label: &str) -> Result<&ConstructBody, String> {
         if self.label == label {
@@ -18,7 +21,9 @@ impl Construct {
         }
     }
 
-    pub fn expect_ident(&self) -> Result<&str, String> { self.expect_text("identifier") }
+    pub fn expect_ident(&self) -> Result<&str, String> {
+        self.expect_text("identifier")
+    }
 
     pub fn expect_statements(&self, label: &str) -> Result<&[Statement], String> {
         let body = self.expect_label(label)?;

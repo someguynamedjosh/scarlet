@@ -1,5 +1,5 @@
 use crate::{
-    parse::statements::Statement,
+    stage1::structure::statement::Statement,
     stage2::{
         helpers::Context,
         ingest::{rover_item::define_rover_item, statements::process_definitions},
