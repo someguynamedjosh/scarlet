@@ -62,7 +62,7 @@ pub(super) fn process_definitions_with_info(
     Ok(definitions)
 }
 
-pub(super) fn process_replacements(
+pub(super) fn ingest_replacements(
     ctx: &mut Context,
     statements: Vec<Statement>,
 ) -> Result<(Replacements, Vec<ItemId>), String> {

@@ -11,6 +11,9 @@ use crate::{
 
 mod context;
 mod expression;
+mod helpers;
+mod postfix_construct;
+mod root_construct;
 mod rover_item;
 mod statements;
 
