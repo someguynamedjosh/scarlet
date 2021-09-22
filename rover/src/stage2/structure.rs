@@ -229,6 +229,10 @@ pub enum Item {
         unlabeled_replacements: Vec<ItemId>,
         replacements: Replacements,
     },
+    TypeIs {
+        base: ItemId,
+        typee: ItemId,
+    },
     Variable {
         selff: ItemId,
         typee: ItemId,
@@ -329,6 +333,7 @@ impl Debug for Item {
                 }
                 write!(f, "{}}}", gap)
             }
+            Self::TypeIs { base, typee } => write!(f, "{:?} :{:?}", base, typee),
             Self::Variable { selff, typee } => write!(f, "any{{{:?}}} at {:?}", typee, selff),
         }
     }

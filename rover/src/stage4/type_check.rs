@@ -14,7 +14,7 @@ impl Environment {
     fn item_base_type(&self, of: ItemId) -> ItemId {
         self.after_from(self.items[of.0].typee.unwrap())
     }
-    
+
     /// Checks that, if this item is a Replacing item, that it obeys a type check.
     fn type_check(&self, item: ItemId) -> Result<(), String> {
         match &self.items[item.0].base {
@@ -43,10 +43,14 @@ impl Environment {
                     Ok(())
                 }
             }
-            Item::Pick { initial_clause, elif_clauses, else_clause } => {
+            Item::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
                 let bool_type = self.bool_type();
 
-                let initial_cond_type =self.item_base_type(initial_clause.0);
+                let initial_cond_type = self.item_base_type(initial_clause.0);
                 if !self.are_def_equal(initial_cond_type, bool_type) {
                     todo!("nice error, condition is not a Boolean");
                 }
@@ -69,6 +73,16 @@ impl Environment {
                 }
                 Ok(())
             }
+            Item::TypeIs { base, typee } => {
+                // Deliberately avoid discarding the From clause because the
+                // type assertion can assert From clauses.
+                let base_type = self.items[base.0].typee.unwrap();
+                if self.are_def_equal(base_type, *typee) {
+                    Ok(())
+                } else {
+                    todo!("nice error, value does not match type assert")
+                }
+            }
             _ => Ok(()),
         }
     }
@@ -83,11 +97,12 @@ impl Environment {
             | Item::InductiveType(..)
             | Item::InductiveValue { .. }
             | Item::IsSameVariant { .. }
-            | Item::Pick {..}
+            | Item::Pick { .. }
             | Item::PrimitiveOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => typee,
             Item::Replacing { .. } => todo!(),
+            Item::TypeIs { base, .. } => self.after_from(*base),
             Item::Variable { .. } => typee,
         }
     }

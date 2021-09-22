@@ -167,7 +167,11 @@ impl Environment {
                 self.with_from_vars(self.bool_type(), from_vars)
             }
             // Type check will ensure this is identical to the other types.
-            Item::Pick { initial_clause, elif_clauses, else_clause } => {
+            Item::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
                 let initial_clause = *initial_clause;
                 let elif_clauses = elif_clauses.clone();
                 let else_clause = *else_clause;
@@ -239,6 +243,7 @@ impl Environment {
                     _ => unreachable!(),
                 }
             }
+            Item::TypeIs { typee, .. } => *typee,
             Item::Variable { typee, selff } => {
                 let base = *typee;
                 let vars = vec![*selff];

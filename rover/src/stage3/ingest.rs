@@ -169,6 +169,10 @@ impl<'a> IngestionContext<'a> {
                 replacements: self.convert_reps(replacements)?,
                 unlabeled_replacements: self.convert_iids(unlabeled_replacements)?,
             },
+            stage2::Item::TypeIs { base, typee } => Item::TypeIs {
+                base: self.full_convert_iid(*base)?,
+                typee: self.full_convert_iid(*typee)?,
+            },
             stage2::Item::Variable { selff, typee } => Item::Variable {
                 selff: self.full_convert_iid(*selff)?,
                 typee: self.full_convert_iid(*typee)?,

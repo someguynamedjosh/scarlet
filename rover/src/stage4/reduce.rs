@@ -115,6 +115,10 @@ impl Environment {
                 Self::apply_replacements_to_reps(replacements, reps);
                 assert_eq!(unlabeled_replacements.len(), 0);
             }
+            Item::TypeIs { base, typee } => {
+                Self::apply_replacements_to(base, reps);
+                Self::apply_replacements_to(typee, reps);
+            }
             Item::Variable { selff, typee } => {
                 Self::apply_replacements_to(selff, reps);
                 Self::apply_replacements_to(typee, reps);
@@ -280,7 +284,12 @@ impl Environment {
                 // TODO: Trim away conditions that will definitely be false.
                 let item = Item::Pick {
                     initial_clause: (rconds[0], rvalues[0]),
-                    elif_clauses: rconds.iter().copied().zip(rvalues.iter().copied()).skip(1).collect(),
+                    elif_clauses: rconds
+                        .iter()
+                        .copied()
+                        .zip(rvalues.iter().copied())
+                        .skip(1)
+                        .collect(),
                     else_clause: *rvalues.last().unwrap(),
                 };
                 let id = self.insert(item);
@@ -353,6 +362,7 @@ impl Environment {
                     id
                 }
             }
+            Item::TypeIs { base, .. } => *base,
             Item::Variable { .. } => item,
         }
     }
