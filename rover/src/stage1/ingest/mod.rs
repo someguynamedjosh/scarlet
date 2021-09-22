@@ -9,5 +9,6 @@ use nom_prelude::*;
 use super::structure::statement::Statement;
 
 pub fn ingest<'i>() -> impl Parser<'i, Vec<Statement>> {
-    many0(after_ws(Statement::parser()))
+    let statements = many0(after_ws(Statement::parser()));
+    terminated(statements, ws())
 }
