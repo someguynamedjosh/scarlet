@@ -2,7 +2,9 @@ use crate::{
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{
-            context::Context, definitions::process_definitions, expression::ingest_expression,
+            context::{Context, LocalInfo},
+            definitions::{process_definitions, process_definitions_with_info},
+            expression::ingest_expression,
         },
         structure::{Definitions, Item, ItemId, PrimitiveValue},
     },
@@ -20,7 +22,8 @@ pub fn ingest_type_construct(ctx: &mut Context, root: Construct) -> Result<Item,
     let inner_type = Item::InductiveType(self_id);
     let inner_type_id = ctx.environment.insert(inner_type);
 
-    let definitions = process_definitions(ctx, statements, vec![self_def])?;
+    let info = LocalInfo::Type(self_id);
+    let definitions = process_definitions_with_info(ctx, statements, vec![self_def], info)?;
     Ok(Item::Defining {
         base: inner_type_id,
         definitions,
