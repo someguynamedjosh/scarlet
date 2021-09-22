@@ -1,10 +1,11 @@
+use std::collections::HashMap;
+
 use crate::{
     stage2::structure::{
         self as stage2, Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, Replacements,
     },
     stage3::structure::{Environment, Item},
 };
-use std::collections::HashMap;
 
 pub fn ingest(src: &stage2::Environment) -> Result<Environment, String> {
     let mut new_id = ItemId(0);
@@ -108,7 +109,8 @@ impl<'a> IngestionContext<'a> {
         })
     }
 
-    /// Returns a new item with full_convert_iid applied to all its referenced ids.
+    /// Returns a new item with full_convert_iid applied to all its referenced
+    /// ids.
     fn convert_item(&mut self, item: &stage2::Item) -> Result<Item, String> {
         Ok(match item {
             stage2::Item::Defining { base, definitions } => Item::Defining {
@@ -267,7 +269,8 @@ impl<'a> IngestionContext<'a> {
         }
     }
 
-    /// Returns the target of the item if it is a reference to another item or member.
+    /// Returns the target of the item if it is a reference to another item or
+    /// member.
     fn dereference_iid(
         &mut self,
         id: ItemId,

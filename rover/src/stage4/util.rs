@@ -14,9 +14,7 @@ impl Environment {
         None
     }
 
-    pub(super) fn god_type(&self) -> ItemId {
-        self.existing_item(&Item::GodType).unwrap()
-    }
+    pub(super) fn god_type(&self) -> ItemId { self.existing_item(&Item::GodType).unwrap() }
 
     pub(super) fn bool_type(&self) -> ItemId {
         self.existing_item(&Item::PrimitiveType(PrimitiveType::Bool))
@@ -40,7 +38,8 @@ impl Environment {
         }
     }
 
-    /// Returns the type of the variable given by the id, assuming the id points to a variable.
+    /// Returns the type of the variable given by the id, assuming the id points
+    /// to a variable.
     pub(super) fn get_var_type(&self, var: ItemId) -> ItemId {
         match &self.items[var.0].base {
             Item::Variable { typee, .. } => *typee,

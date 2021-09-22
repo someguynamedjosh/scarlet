@@ -1,5 +1,6 @@
-use crate::util::indented;
 use std::fmt::{self, Debug, Formatter};
+
+use crate::util::indented;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PrimitiveType {
@@ -33,9 +34,7 @@ impl PrimitiveValue {
 pub struct ItemId(pub(crate) usize);
 
 impl Debug for ItemId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "id{{{}}}", self.0)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { write!(f, "id{{{}}}", self.0) }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -86,9 +85,7 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), val))
     }
 
-    pub fn mark_as_module(&mut self, item: ItemId) {
-        self.modules.push(item)
-    }
+    pub fn mark_as_module(&mut self, item: ItemId) { self.modules.push(item) }
 
     pub fn next_id(&mut self) -> ItemId {
         let id = ItemId(self.items.len());
@@ -114,10 +111,10 @@ pub type Replacements = Vec<(ItemId, ItemId)>;
 pub enum IntegerMathOperation {
     Sum(ItemId, ItemId),
     Difference(ItemId, ItemId),
-    // Multiply(ItemId, ItemId),
-    // IntegerDivide(ItemId, ItemId),
-    // Modulo(ItemId, ItemId),
-    // Negate(ItemId),
+    /* Multiply(ItemId, ItemId),
+     * IntegerDivide(ItemId, ItemId),
+     * Modulo(ItemId, ItemId),
+     * Negate(ItemId), */
 }
 
 impl IntegerMathOperation {

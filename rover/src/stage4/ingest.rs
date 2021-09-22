@@ -1,9 +1,10 @@
+use std::collections::HashMap;
+
 use crate::{
     stage2::structure::{ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
     stage3::structure::{self as stage3, Item},
     stage4::structure::Environment,
 };
-use std::collections::HashMap;
 
 pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
@@ -18,13 +19,9 @@ pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
 struct VarList(Vec<ItemId>);
 
 impl VarList {
-    pub fn new() -> VarList {
-        Self(Vec::new())
-    }
+    pub fn new() -> VarList { Self(Vec::new()) }
 
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
+    pub fn len(&self) -> usize { self.0.len() }
 
     pub fn push(&mut self, item: ItemId) {
         if !self.0.contains(&item) {
@@ -38,9 +35,7 @@ impl VarList {
         }
     }
 
-    pub fn into_vec(self) -> Vec<ItemId> {
-        self.0
-    }
+    pub fn into_vec(self) -> Vec<ItemId> { self.0 }
 }
 
 impl Environment {
@@ -52,14 +47,16 @@ impl Environment {
         replacements: Replacements,
     ) -> Result<ItemId, String> {
         let unreplaced_type = self.compute_type(base)?;
-        // A hashmap of variables to replace and what variables the replaced values depend on.
+        // A hashmap of variables to replace and what variables the replaced values
+        // depend on.
         let mut replacement_data = HashMap::<ItemId, VarList>::new();
         for (target, value) in replacements {
             let valtype = self.compute_type(value)?;
             let valtype_vars = self.get_from_variables(valtype)?;
             replacement_data.insert(target, valtype_vars);
         }
-        // TODO: This doesn't work when replacing a variable with more variables. I think?
+        // TODO: This doesn't work when replacing a variable with more variables. I
+        // think?
         let def = &self.items[unreplaced_type.0].base;
         let res = match def {
             Item::FromType { base, vars } => {

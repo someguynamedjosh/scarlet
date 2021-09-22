@@ -1,9 +1,11 @@
-use crate::parse::{indented, nom_prelude::*, statements::Statement};
+use std::fmt::{self, Debug, Formatter};
+
 use nom::{
     bytes::complete::take_while1,
     combinator::{fail, value},
 };
-use std::fmt::{self, Debug, Formatter};
+
+use crate::parse::{indented, nom_prelude::*, statements::Statement};
 
 #[derive(Clone, PartialEq)]
 pub struct Expression {
@@ -37,73 +39,6 @@ impl Debug for Expression {
     }
 }
 
-#[derive(Clone, PartialEq)]
-pub enum ConstructBody {
-    Statements(Vec<Statement>),
-    PlainText(String),
-}
-
-impl ConstructBody {
-    fn is_plain_text(&self) -> bool {
-        match self {
-            Self::PlainText(..) => true,
-            _ => false,
-        }
-    }
-}
-
-impl Debug for ConstructBody {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            Self::Statements(statements) => {
-                for s in statements {
-                    if f.alternate() {
-                        let st = format!("{:#?}", s);
-                        write!(f, "{}\n", indented(&st))?;
-                    } else {
-                        write!(f, " ")?;
-                        s.fmt(f)?;
-                    }
-                }
-            }
-            Self::PlainText(text) => {
-                write!(f, "{}", text)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Construct {
-    pub label: String,
-    pub body: ConstructBody,
-}
-
-const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32", "variant", "pick"];
-const TEXT_CONSTRUCTS: &[&str] = &["identifier", "i32"];
-const ALIASES: &[(&str, &str)] = &[
-    ("iv", "is_variant"),
-    ("is_same_variant_as", "is_variant"),
-    ("T", "Type"),
-    ("F", "From"),
-    ("FromVariables", "From"),
-    ("d", "defining"),
-    ("r", "replacing"),
-    ("p", "pick"),
-    ("pick_by_conditions", "pick"),
-    ("tis", "type_is"),
-    ("ix", "type_is_exactly"),
-];
-
-fn is_root_label(label: &str) -> bool {
-    ROOT_CONSTRUCTS.iter().any(|i| *i == label)
-}
-
-fn is_text_label(label: &str) -> bool {
-    TEXT_CONSTRUCTS.iter().any(|i| *i == label)
-}
-
 impl Construct {
     pub fn expect_label(&self, label: &str) -> Result<&ConstructBody, String> {
         if self.label == label {
@@ -124,9 +59,7 @@ impl Construct {
         }
     }
 
-    pub fn expect_ident(&self) -> Result<&str, String> {
-        self.expect_text("identifier")
-    }
+    pub fn expect_ident(&self) -> Result<&str, String> { self.expect_text("identifier") }
 
     pub fn expect_statements(&self, label: &str) -> Result<&[Statement], String> {
         let body = self.expect_label(label)?;

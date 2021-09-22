@@ -43,9 +43,7 @@ impl Environment {
         }
     }
 
-    pub fn _mark_as_module(&mut self, item: ItemId) {
-        self.modules.push(item)
-    }
+    pub fn _mark_as_module(&mut self, item: ItemId) { self.modules.push(item) }
 
     pub fn insert(&mut self, definition: Item) -> ItemId {
         let id = ItemId(self.items.len());

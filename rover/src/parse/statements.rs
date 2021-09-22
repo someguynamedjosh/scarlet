@@ -1,8 +1,9 @@
+use std::fmt::{self, Debug, Formatter};
+
 use crate::parse::{
     expression::{Construct, ConstructBody, Expression},
     nom_prelude::*,
 };
-use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, PartialEq)]
 pub enum Statement {
@@ -127,7 +128,7 @@ impl PickIf {
             let (input, _) = tag(",")(input)?;
             let (input, _) = ws()(input)?;
             let (input, value) = Expression::parser()(input)?;
-            let sel = Self { condition , value };
+            let sel = Self { condition, value };
             Ok((input, sel))
         }
     }
@@ -158,7 +159,7 @@ impl PickElif {
             let (input, _) = tag(",")(input)?;
             let (input, _) = ws()(input)?;
             let (input, value) = Expression::parser()(input)?;
-            let sel = Self { condition , value };
+            let sel = Self { condition, value };
             Ok((input, sel))
         }
     }

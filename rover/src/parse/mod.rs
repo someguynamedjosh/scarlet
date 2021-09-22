@@ -1,9 +1,11 @@
+use nom::IResult;
+
 use self::{
     nom_prelude::{after_ws, many0, ws},
     statements::Statement,
 };
-use nom::IResult;
 
+pub mod construct;
 pub mod expression;
 pub mod nom_prelude;
 pub mod statements;
@@ -14,6 +16,4 @@ pub fn parse(input: &str) -> IResult<&str, Vec<Statement>> {
     Ok((input, res))
 }
 
-fn indented(source: &str) -> String {
-    format!("    {}", source.replace("\n", "\n    "))
-}
+fn indented(source: &str) -> String { format!("    {}", source.replace("\n", "\n    ")) }

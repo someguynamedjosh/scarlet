@@ -15,7 +15,8 @@ impl Environment {
         self.after_from(self.items[of.0].typee.unwrap())
     }
 
-    /// Checks that, if this item is a Replacing item, that it obeys a type check.
+    /// Checks that, if this item is a Replacing item, that it obeys a type
+    /// check.
     fn type_check(&self, item: ItemId) -> Result<(), String> {
         match &self.items[item.0].base {
             Item::Replacing { replacements, .. } => {
