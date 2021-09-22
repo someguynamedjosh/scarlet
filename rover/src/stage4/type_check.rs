@@ -1,4 +1,4 @@
-use crate::{stage2::structure::ItemId, stage3::structure::Item, stage4::structure::Environment};
+use crate::{shared::ItemId, stage3::structure::Item, stage4::structure::Environment};
 
 pub fn type_check(env: &Environment) -> Result<(), String> {
     let mut next_item = ItemId(0);

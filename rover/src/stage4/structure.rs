@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    stage2::structure::ItemId,
+    shared::ItemId,
     stage3::structure::{self as stage3, Item},
 };
 

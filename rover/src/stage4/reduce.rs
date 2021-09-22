@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage2::structure::{
+    shared::{
         Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
     },
     stage3::structure::Item,

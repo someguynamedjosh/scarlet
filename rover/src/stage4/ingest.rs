@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    stage2::structure::{ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
-    stage3::structure::{self as stage3, Item},
-    stage4::structure::Environment,
-};
+use crate::{shared::{ItemId, PrimitiveOperation, PrimitiveValue, Replacements}, stage3::structure::{self as stage3, Item}, stage4::structure::Environment};
 
 pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
