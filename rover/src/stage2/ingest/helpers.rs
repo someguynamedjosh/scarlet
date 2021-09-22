@@ -5,7 +5,11 @@ use crate::{
 };
 
 /// Returns the item unchanged if definitions is empty.
-pub fn with_definitions(ctx: &mut Context, base_item: UnresolvedItem, definitions: Definitions) -> UnresolvedItem {
+pub fn with_definitions(
+    ctx: &mut Context,
+    base_item: UnresolvedItem,
+    definitions: Definitions,
+) -> UnresolvedItem {
     if definitions.is_empty() {
         base_item
     } else {

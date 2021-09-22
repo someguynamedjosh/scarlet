@@ -1,5 +1,5 @@
 use crate::{
-    shared::{ItemId, Item},
+    shared::{Item, ItemId},
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
         ingest::{
@@ -56,7 +56,10 @@ fn get_from_vars(ctx: &Context, type_id: ItemId) -> Vec<ItemId> {
     }
 }
 
-pub fn ingest_variant_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
+pub fn ingest_variant_construct(
+    ctx: &mut Context,
+    root: Construct,
+) -> Result<UnresolvedItem, String> {
     let (variant_name, type_expr) = decompose_variant_construct(root)?;
     let return_type_id = ingest_expression(&mut ctx.child(), type_expr)?;
 

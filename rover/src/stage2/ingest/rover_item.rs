@@ -1,7 +1,6 @@
 use crate::{
     shared::{
-        IntegerMathOperation, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue,
-        Item,
+        IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue,
     },
     stage2::structure::Environment,
 };

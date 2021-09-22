@@ -1,5 +1,5 @@
 use super::UnresolvedItem;
-use crate::shared::{ItemId, Item};
+use crate::shared::{Item, ItemId};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {

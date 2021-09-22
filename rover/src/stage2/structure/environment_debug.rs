@@ -3,7 +3,7 @@ use std::fmt::{self, Debug, Formatter};
 use super::Environment;
 use crate::{shared::ItemId, stage2::structure::UnresolvedItem, util::indented};
 
-fn fmt_environment_item(f: &mut Formatter, index: usize, item: &UnresolvedItem) -> fmt::Result {
+fn fmt_environment_item(f: &mut Formatter, _index: usize, item: &UnresolvedItem) -> fmt::Result {
     if f.alternate() {
         let text = format!("{:#?}", item);
         write!(f, "{},", indented(&text[..]))
@@ -12,7 +12,11 @@ fn fmt_environment_item(f: &mut Formatter, index: usize, item: &UnresolvedItem) 
     }
 }
 
-fn maybe_fmt_environment_item(f: &mut Formatter, index: usize, item: &Option<UnresolvedItem>) -> fmt::Result {
+fn maybe_fmt_environment_item(
+    f: &mut Formatter,
+    index: usize,
+    item: &Option<UnresolvedItem>,
+) -> fmt::Result {
     if f.alternate() {
         write!(f, "\n\n    ")?;
     }

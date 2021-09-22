@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Definitions, ItemId, PrimitiveValue, Item},
+    shared::{Definitions, Item, ItemId, PrimitiveValue},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{

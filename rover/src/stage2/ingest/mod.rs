@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Definitions, ItemId, Item},
+    shared::{Definitions, Item, ItemId},
     stage1::structure::statement::Statement,
     stage2::{
         ingest::{

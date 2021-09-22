@@ -2,9 +2,14 @@ use super::{
     context::Context, postfix_construct::ingest_postfix_construct,
     root_construct::ingest_root_construct,
 };
-use crate::{shared::ItemId, stage1::structure::expression::Expression, stage2::structure::UnresolvedItem};
+use crate::{
+    shared::ItemId, stage1::structure::expression::Expression, stage2::structure::UnresolvedItem,
+};
 
-fn convert_expression_to_item(ctx: &mut Context, mut expr: Expression) -> Result<UnresolvedItem, String> {
+fn convert_expression_to_item(
+    ctx: &mut Context,
+    mut expr: Expression,
+) -> Result<UnresolvedItem, String> {
     if let Some(post) = expr.others.pop() {
         ingest_postfix_construct(ctx, post, expr)
     } else {
