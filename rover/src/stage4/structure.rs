@@ -4,8 +4,8 @@ use std::{
 };
 
 use crate::{
-    shared::ItemId,
-    stage3::structure::{self as stage3, Item},
+    shared::{Item, ItemId},
+    stage3::structure::{self as stage3},
 };
 
 #[derive(Clone, PartialEq)]

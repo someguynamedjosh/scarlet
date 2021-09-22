@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Definitions, ItemId, ResolvedItem},
+    shared::{Definitions, ItemId, Item},
     stage1::structure::statement::Statement,
     stage2::{
         ingest::{
@@ -23,7 +23,7 @@ fn define_root_scope(env: &mut Environment, god_type: ItemId, definitions: Defin
     env.mark_as_module(root_scope);
     env.define(
         root_scope,
-        ResolvedItem::Defining {
+        Item::Defining {
             base: god_type,
             definitions,
         }

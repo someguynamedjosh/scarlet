@@ -1,12 +1,12 @@
 use crate::{
-    shared::{ItemId, ResolvedItem},
+    shared::{ItemId, Item},
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
         ingest::{
             context::{Context, LocalInfo},
             expression::ingest_expression,
         },
-        structure::Item,
+        structure::UnresolvedItem,
     },
 };
 
@@ -36,8 +36,8 @@ fn decompose_variant_construct(root: Construct) -> Result<(String, Expression), 
 
 fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
     match ctx.environment.definition_of(type_id) {
-        Some(Item::Resolved(item)) => match item {
-            ResolvedItem::Defining { base, .. } | ResolvedItem::FromType { base, .. } => {
+        Some(UnresolvedItem::Just(item)) => match item {
+            Item::Defining { base, .. } | Item::FromType { base, .. } => {
                 dereference_type(ctx, *base)
             }
             _ => type_id,
@@ -48,7 +48,7 @@ fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
 
 fn get_from_vars(ctx: &Context, type_id: ItemId) -> Vec<ItemId> {
     match ctx.environment.definition_of(type_id) {
-        Some(Item::Resolved(ResolvedItem::FromType { base, vars })) => {
+        Some(UnresolvedItem::Just(Item::FromType { base, vars })) => {
             let base_vars = get_from_vars(ctx, *base);
             [base_vars, vars.clone()].concat()
         }
@@ -56,7 +56,7 @@ fn get_from_vars(ctx: &Context, type_id: ItemId) -> Vec<ItemId> {
     }
 }
 
-pub fn ingest_variant_construct(ctx: &mut Context, root: Construct) -> Result<Item, String> {
+pub fn ingest_variant_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let (variant_name, type_expr) = decompose_variant_construct(root)?;
     let return_type_id = ingest_expression(&mut ctx.child(), type_expr)?;
 
@@ -64,7 +64,7 @@ pub fn ingest_variant_construct(ctx: &mut Context, root: Construct) -> Result<It
     check_containing_type(ctx, base_return_type_id)?;
     let recorded_vars = get_from_vars(ctx, return_type_id);
 
-    Ok(ResolvedItem::InductiveValue {
+    Ok(Item::InductiveValue {
         typee: base_return_type_id,
         variant_name,
         records: recorded_vars,

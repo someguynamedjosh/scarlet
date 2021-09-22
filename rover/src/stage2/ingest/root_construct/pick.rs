@@ -1,13 +1,13 @@
 use crate::{
-    shared::ResolvedItem,
+    shared::Item,
     stage1::structure::{construct::Construct, statement::Statement},
     stage2::{
         ingest::{context::Context, expression::ingest_expression},
-        structure::Item,
+        structure::UnresolvedItem,
     },
 };
 
-pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<Item, String> {
+pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let statements = root.expect_statements("pick").unwrap();
     if statements.len() < 2 {
         todo!("nice error, pick must have at least 2 clauses.");
@@ -41,7 +41,7 @@ pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<Item,
         }
     }
 
-    Ok(ResolvedItem::Pick {
+    Ok(Item::Pick {
         initial_clause,
         elif_clauses,
         else_clause,

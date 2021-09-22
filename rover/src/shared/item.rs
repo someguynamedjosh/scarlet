@@ -1,7 +1,7 @@
 use super::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-pub enum ResolvedItem {
+pub enum Item {
     Defining {
         base: ItemId,
         definitions: Definitions,
@@ -45,7 +45,7 @@ pub enum ResolvedItem {
     },
 }
 
-impl ResolvedItem {
+impl Item {
     pub fn defining(base: ItemId, definitions: Vec<(&str, ItemId)>) -> Self {
         let definitions = definitions
             .into_iter()

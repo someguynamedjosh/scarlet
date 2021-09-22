@@ -1,10 +1,10 @@
-use super::Item;
-use crate::shared::{ItemId, ResolvedItem};
+use super::UnresolvedItem;
+use crate::shared::{ItemId, Item};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
     pub modules: Vec<ItemId>,
-    pub(crate) items: Vec<Option<Item>>,
+    pub(crate) items: Vec<Option<UnresolvedItem>>,
 }
 
 impl Environment {
@@ -15,7 +15,7 @@ impl Environment {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &Option<Item>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &Option<UnresolvedItem>)> {
         self.items
             .iter()
             .enumerate()
@@ -32,7 +32,7 @@ impl Environment {
         id
     }
 
-    pub fn insert(&mut self, definition: Item) -> ItemId {
+    pub fn insert(&mut self, definition: UnresolvedItem) -> ItemId {
         let id = self.next_id();
         self.define(id, definition);
         id
@@ -40,7 +40,7 @@ impl Environment {
 
     pub fn insert_variable(&mut self, typee: ItemId) -> ItemId {
         let selff = self.next_id();
-        let definition = ResolvedItem::Variable { selff, typee }.into();
+        let definition = Item::Variable { selff, typee }.into();
         self.define(selff, definition);
         selff
     }
@@ -54,16 +54,16 @@ impl Environment {
     ) -> ItemId {
         let id = self.next_id();
         definitions.insert(0, ("Self", id));
-        self.define(id, Item::defining(base, definitions));
+        self.define(id, UnresolvedItem::defining(base, definitions));
         id
     }
 
-    pub fn define(&mut self, item: ItemId, definition: Item) {
+    pub fn define(&mut self, item: ItemId, definition: UnresolvedItem) {
         assert!(item.0 < self.items.len());
         self.items[item.0] = Some(definition)
     }
 
-    pub fn definition_of(&self, item: ItemId) -> &Option<Item> {
+    pub fn definition_of(&self, item: ItemId) -> &Option<UnresolvedItem> {
         assert!(item.0 < self.items.len());
         &self.items[item.0]
     }

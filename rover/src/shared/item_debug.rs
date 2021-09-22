@@ -1,8 +1,8 @@
 use std::fmt::{self, Debug, Formatter};
 
-use super::ResolvedItem;
+use super::Item;
 
-impl Debug for ResolvedItem {
+impl Debug for Item {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let spacer = if f.alternate() { "\n" } else { " " };
         let nested_spacer = if f.alternate() { "\n    " } else { " " };

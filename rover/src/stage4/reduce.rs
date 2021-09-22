@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use crate::{
     shared::{
-        Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
+        Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue,
+        Replacements,
     },
-    stage3::structure::Item,
     stage4::structure::Environment,
 };
 

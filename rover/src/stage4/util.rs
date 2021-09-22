@@ -1,4 +1,7 @@
-use crate::{shared::{ItemId, PrimitiveType}, stage3::structure::Item, stage4::structure::Environment};
+use crate::{
+    shared::{Item, ItemId, PrimitiveType},
+    stage4::structure::Environment,
+};
 
 impl Environment {
     pub(super) fn existing_item(&self, def: &Item) -> Option<ItemId> {

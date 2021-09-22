@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    shared::{
-        Definitions, IntegerMathOperation, ItemId, PrimitiveOperation, Replacements, ResolvedItem,
-    },
+    shared::{Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, Replacements},
     stage2::structure::{self as stage2},
-    stage3::structure::{Environment, Item},
+    stage3::structure::Environment,
 };
 
 pub fn ingest(src: &stage2::Environment) -> Result<Environment, String> {
@@ -48,9 +46,9 @@ struct IngestionContext<'a> {
 }
 
 /// Returns true if calling convert_item(item) will not panic.
-fn convertible(item: &stage2::Item) -> bool {
+fn convertible(item: &stage2::UnresolvedItem) -> bool {
     match item {
-        stage2::Item::Item(..) | stage2::Item::Member { .. } => false,
+        stage2::UnresolvedItem::Item(..) | stage2::UnresolvedItem::Member { .. } => false,
         _ => true,
     }
 }
@@ -112,25 +110,23 @@ impl<'a> IngestionContext<'a> {
 
     /// Returns a new item with full_convert_iid applied to all its referenced
     /// ids.
-    fn convert_item(&mut self, item: &stage2::Item) -> Result<Item, String> {
+    fn convert_item(&mut self, item: &stage2::UnresolvedItem) -> Result<Item, String> {
         Ok(match item {
-            stage2::Item::Resolved(ResolvedItem::Defining { base, definitions }) => {
-                Item::Defining {
-                    base: self.full_convert_iid(*base)?,
-                    definitions: self.convert_defs(definitions)?,
-                }
-            }
-            stage2::Item::Resolved(ResolvedItem::FromType { base, vars }) => Item::FromType {
+            stage2::UnresolvedItem::Just(Item::Defining { base, definitions }) => Item::Defining {
+                base: self.full_convert_iid(*base)?,
+                definitions: self.convert_defs(definitions)?,
+            },
+            stage2::UnresolvedItem::Just(Item::FromType { base, vars }) => Item::FromType {
                 base: self.full_convert_iid(*base)?,
                 vars: self.convert_iids(vars)?,
             },
-            stage2::Item::Resolved(ResolvedItem::GodType) => Item::GodType,
+            stage2::UnresolvedItem::Just(Item::GodType) => Item::GodType,
             // Don't deref defines on this one so that the type remembers the
             // constructors it can be made with.
-            stage2::Item::Resolved(ResolvedItem::InductiveType(id)) => {
+            stage2::UnresolvedItem::Just(Item::InductiveType(id)) => {
                 Item::InductiveType(self.convert_iid(*id, false)?)
             }
-            stage2::Item::Resolved(ResolvedItem::InductiveValue {
+            stage2::UnresolvedItem::Just(Item::InductiveValue {
                 records,
                 typee,
                 variant_name,
@@ -139,14 +135,16 @@ impl<'a> IngestionContext<'a> {
                 typee: self.full_convert_iid(*typee)?,
                 variant_name: variant_name.clone(),
             },
-            stage2::Item::Resolved(ResolvedItem::IsSameVariant { base, other }) => {
+            stage2::UnresolvedItem::Just(Item::IsSameVariant { base, other }) => {
                 Item::IsSameVariant {
                     base: self.convert_iid(*base, true)?,
                     other: self.convert_iid(*other, true)?,
                 }
             }
-            stage2::Item::Item(..) | stage2::Item::Member { .. } => panic!("Cannot convert these"),
-            stage2::Item::Resolved(ResolvedItem::Pick {
+            stage2::UnresolvedItem::Item(..) | stage2::UnresolvedItem::Member { .. } => {
+                panic!("Cannot convert these")
+            }
+            stage2::UnresolvedItem::Just(Item::Pick {
                 initial_clause,
                 elif_clauses,
                 else_clause,
@@ -162,14 +160,14 @@ impl<'a> IngestionContext<'a> {
                     else_clause: self.convert_iid(*else_clause, true)?,
                 }
             }
-            stage2::Item::Resolved(ResolvedItem::PrimitiveOperation(op)) => match op {
+            stage2::UnresolvedItem::Just(Item::PrimitiveOperation(op)) => match op {
                 PrimitiveOperation::I32Math(op) => Item::PrimitiveOperation(
                     PrimitiveOperation::I32Math(self.convert_integer_op(op.clone())?),
                 ),
             },
-            stage2::Item::Resolved(ResolvedItem::PrimitiveType(pt)) => Item::PrimitiveType(*pt),
-            stage2::Item::Resolved(ResolvedItem::PrimitiveValue(pv)) => Item::PrimitiveValue(*pv),
-            stage2::Item::Resolved(ResolvedItem::Replacing {
+            stage2::UnresolvedItem::Just(Item::PrimitiveType(pt)) => Item::PrimitiveType(*pt),
+            stage2::UnresolvedItem::Just(Item::PrimitiveValue(pv)) => Item::PrimitiveValue(*pv),
+            stage2::UnresolvedItem::Just(Item::Replacing {
                 base,
                 replacements,
                 unlabeled_replacements,
@@ -178,12 +176,12 @@ impl<'a> IngestionContext<'a> {
                 replacements: self.convert_reps(replacements)?,
                 unlabeled_replacements: self.convert_iids(unlabeled_replacements)?,
             },
-            stage2::Item::Resolved(ResolvedItem::TypeIs { exact, base, typee }) => Item::TypeIs {
+            stage2::UnresolvedItem::Just(Item::TypeIs { exact, base, typee }) => Item::TypeIs {
                 exact: *exact,
                 base: self.full_convert_iid(*base)?,
                 typee: self.full_convert_iid(*typee)?,
             },
-            stage2::Item::Resolved(ResolvedItem::Variable { selff, typee }) => Item::Variable {
+            stage2::UnresolvedItem::Just(Item::Variable { selff, typee }) => Item::Variable {
                 selff: self.full_convert_iid(*selff)?,
                 typee: self.full_convert_iid(*typee)?,
             },
@@ -255,7 +253,7 @@ impl<'a> IngestionContext<'a> {
     ) -> Result<DereferencedItem, String> {
         let og_base = self.dereference_iid(base, false)?;
         match self.src.definition_of(og_base.id()).as_ref().unwrap() {
-            stage2::Item::Resolved(ResolvedItem::Defining {
+            stage2::UnresolvedItem::Just(Item::Defining {
                 base: def_base,
                 definitions,
             }) => {
@@ -270,8 +268,10 @@ impl<'a> IngestionContext<'a> {
                 }
                 Err(format!("{:?} has no member named {}", og_base, name))
             }
-            stage2::Item::Item(..) | stage2::Item::Member { .. } => unreachable!(),
-            stage2::Item::Resolved(ResolvedItem::Replacing { .. }) => {
+            stage2::UnresolvedItem::Item(..) | stage2::UnresolvedItem::Member { .. } => {
+                unreachable!()
+            }
+            stage2::UnresolvedItem::Just(Item::Replacing { .. }) => {
                 unreachable!("{:?} {:?}", og_base, base)
             }
             _ => Err(format!("{:?} has no members", og_base)),
@@ -286,16 +286,18 @@ impl<'a> IngestionContext<'a> {
         deref_define: bool,
     ) -> Result<DereferencedItem, String> {
         match self.src.definition_of(id).as_ref().unwrap() {
-            stage2::Item::Resolved(ResolvedItem::Defining { base, .. }) => {
+            stage2::UnresolvedItem::Just(Item::Defining { base, .. }) => {
                 if deref_define {
                     self.dereference_iid(*base, true)
                 } else {
                     Ok(DereferencedItem::Stage2Item(id))
                 }
             }
-            stage2::Item::Item(id) => self.dereference_iid(*id, deref_define),
-            stage2::Item::Member { base, name } => self.get_member(*base, name, deref_define),
-            stage2::Item::Resolved(ResolvedItem::Replacing {
+            stage2::UnresolvedItem::Item(id) => self.dereference_iid(*id, deref_define),
+            stage2::UnresolvedItem::Member { base, name } => {
+                self.get_member(*base, name, deref_define)
+            }
+            stage2::UnresolvedItem::Just(Item::Replacing {
                 base,
                 replacements,
                 unlabeled_replacements,

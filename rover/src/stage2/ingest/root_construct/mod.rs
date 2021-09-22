@@ -8,10 +8,10 @@ use variant::*;
 
 use crate::{
     stage1::structure::construct::Construct,
-    stage2::{ingest::Context, structure::Item},
+    stage2::{ingest::Context, structure::UnresolvedItem},
 };
 
-pub fn ingest_root_construct(ctx: &mut Context, root: Construct) -> Result<Item, String> {
+pub fn ingest_root_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     match &root.label[..] {
         "identifier" => ingest_identifier(ctx, root),
         "Type" => ingest_type_construct(ctx, root),
