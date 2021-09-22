@@ -2,7 +2,7 @@ use self::other::ingest_non_defining_postfix_construct;
 use super::{context::Context, expression::ingest_expression};
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression},
-    stage2::{ingest::statements::process_definitions, structure::Item},
+    stage2::{ingest::definitions::process_definitions, structure::Item},
 };
 
 mod from;

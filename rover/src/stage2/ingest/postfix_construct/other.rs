@@ -3,7 +3,7 @@ use crate::{
     stage2::{
         ingest::{
             context::Context, expression::ingest_expression,
-            postfix_construct::from::ingest_from_construct, statements::ingest_replacements,
+            postfix_construct::from::ingest_from_construct, replacements::ingest_replacements,
         },
         structure::{Item, ItemId},
     },

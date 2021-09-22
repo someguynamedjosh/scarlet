@@ -2,7 +2,7 @@ use crate::{
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{
-            context::Context, expression::ingest_expression, statements::process_definitions,
+            context::Context, definitions::process_definitions, expression::ingest_expression,
         },
         structure::{Definitions, Item, ItemId, PrimitiveValue},
     },

@@ -41,18 +41,29 @@ impl<'e, 'd> Context<'e, 'd> {
         ctx
     }
 
+    pub fn with_id_scope_info(
+        self,
+        current_item_id: ItemId,
+        extra_parent_scope: &'d Definitions,
+        local_info: LocalInfo,
+    ) -> Self {
+        self.with_current_item_id(current_item_id)
+            .with_additional_scope(extra_parent_scope)
+            .with_local_info(local_info)
+    }
+
     pub fn with_current_item_id(mut self, id: ItemId) -> Self {
         self.current_item_id = Some(id);
         self
     }
 
-    pub fn with_local_info(mut self, info: LocalInfo) -> Self {
-        self.local_info = info;
+    pub fn with_additional_scope(mut self, scope: &'d Definitions) -> Self {
+        self.parent_scopes.push(scope);
         self
     }
 
-    pub fn with_additional_scope(mut self, scope: &'d Definitions) -> Self {
-        self.parent_scopes.push(scope);
+    pub fn with_local_info(mut self, info: LocalInfo) -> Self {
+        self.local_info = info;
         self
     }
 

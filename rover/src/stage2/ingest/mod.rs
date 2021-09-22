@@ -1,21 +1,14 @@
 use super::structure::Definitions;
-use crate::{
-    stage1::structure::statement::Statement,
-    stage2::{
-        ingest::{
-            context::Context, rover_item::define_rover_item, statements::process_definitions,
-        },
-        structure::{Environment, Item, ItemId},
-    },
-};
+use crate::{stage1::structure::statement::Statement, stage2::{ingest::{context::Context, definitions::process_definitions, rover_item::define_rover_item}, structure::{Environment, Item, ItemId}}};
 
 mod context;
+mod definitions;
 mod expression;
 mod helpers;
 mod postfix_construct;
+mod replacements;
 mod root_construct;
 mod rover_item;
-mod statements;
 
 fn define_root_scope(env: &mut Environment, god_type: ItemId, definitions: Definitions) -> ItemId {
     let root_scope = env.next_id();
