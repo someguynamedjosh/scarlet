@@ -113,7 +113,7 @@ fn process_postfix(
             cheeky_defining_storage = Some(body);
             new_parents.push(cheeky_defining_storage.as_ref().unwrap());
         }
-        "replacing" | "member" | "From" | "is_variant" | "type_is" => (),
+        "replacing" | "member" | "From" | "is_variant" | "type_is" | "type_is_exactly" => (),
         _ => todo!("nice error, unexpected {} construct", post.label),
     }
     let parents = &new_parents[..];
@@ -161,6 +161,17 @@ fn process_postfix(
             let ctx = Context::Plain;
             let typee = process_expr(typee.clone(), None, env, ctx, parents)?;
             Item::TypeIs {
+                exact: false,
+                base: base_id,
+                typee,
+            }
+        }
+        "type_is_exactly" => {
+            let typee = post.expect_single_expression("type_is_exactly")?;
+            let ctx = Context::Plain;
+            let typee = process_expr(typee.clone(), None, env, ctx, parents)?;
+            Item::TypeIs {
+                exact: true,
                 base: base_id,
                 typee,
             }

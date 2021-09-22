@@ -115,7 +115,7 @@ impl Environment {
                 Self::apply_replacements_to_reps(replacements, reps);
                 assert_eq!(unlabeled_replacements.len(), 0);
             }
-            Item::TypeIs { base, typee } => {
+            Item::TypeIs { base, typee, .. } => {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to(typee, reps);
             }
@@ -250,14 +250,16 @@ impl Environment {
                 let else_clause = *else_clause;
 
                 let mut rconds = Vec::new();
-                let mut rvalues = Vec::new();
+                // We hold off on reducing values to avoid infinite loops while
+                // evaluating recursive functions.
+                let mut values = Vec::new();
                 rconds.push(self.reduce(initial_clause.0, reps, reduce_defs));
-                rvalues.push(self.reduce(initial_clause.1, reps, reduce_defs));
+                values.push(initial_clause.1);
                 for (cond, value) in elif_clauses {
                     rconds.push(self.reduce(cond, reps, reduce_defs));
-                    rvalues.push(self.reduce(value, reps, reduce_defs));
+                    values.push(value);
                 }
-                rvalues.push(self.reduce(else_clause, reps, reduce_defs));
+                values.push(else_clause);
 
                 let mut known_conds = Vec::new();
                 for cond in &rconds {
@@ -276,12 +278,19 @@ impl Environment {
                 for index in 0..known_conds.len() {
                     match known_conds[index] {
                         Some(false) => (),
-                        Some(true) => return rvalues[index],
+                        Some(true) => {
+                            println!("Evaluating {:?}", values[index]);
+                            return self.reduce(values[index], reps, reduce_defs);
+                        }
                         None => break,
                     }
                 }
 
                 // TODO: Trim away conditions that will definitely be false.
+                let rvalues: Vec<_> = values
+                    .into_iter()
+                    .map(|item| self.reduce(item, reps, reduce_defs))
+                    .collect();
                 let item = Item::Pick {
                     initial_clause: (rconds[0], rvalues[0]),
                     elif_clauses: rconds

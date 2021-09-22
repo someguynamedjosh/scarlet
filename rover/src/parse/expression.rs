@@ -1,5 +1,8 @@
 use crate::parse::{indented, nom_prelude::*, statements::Statement};
-use nom::{bytes::complete::take_while1, combinator::fail};
+use nom::{
+    bytes::complete::take_while1,
+    combinator::{fail, value},
+};
 use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, PartialEq)]
@@ -89,6 +92,8 @@ const ALIASES: &[(&str, &str)] = &[
     ("r", "replacing"),
     ("p", "pick"),
     ("pick_by_conditions", "pick"),
+    ("tis", "type_is"),
+    ("ix", "type_is_exactly"),
 ];
 
 fn is_root_label(label: &str) -> bool {
@@ -227,10 +232,10 @@ impl Construct {
 
     fn type_is_shorthand_parser<'i>() -> impl Parser<'i, Self> {
         |input| {
-            let (input, _) = tag(":")(input)?;
+            let (input, exact) = alt((value(false, tag(":")), value(true, tag("ix"))))(input)?;
             let (input, _) = ws()(input)?;
             let (input, typee) = Expression::parser()(input)?;
-            let label = String::from("type_is");
+            let label = String::from(if exact { "type_is_exactly" } else { "type_is" });
             let statement = Statement::Expression(typee);
             let body = ConstructBody::Statements(vec![statement]);
             Ok((input, Self { label, body }))

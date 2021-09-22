@@ -13,16 +13,14 @@ index is any{Integer32}
 
 # TODO: Lazier evaluation for Pick.
 
-# recount is 
-# pick{
-#    if index is_variant{0}, 0
-#    else                    recount[difference[index 1]]
-# }
-# :Integer32 From{index}
+recount is 
+pick{
+   if index is_variant{0}, 0
+   else                    recount[difference[index 1]]
+}
+ix Integer32 From{index}
 
-# thing is recount[0]
-
-thing is sum :Integer32
+thing is recount[0]
 
 #=
 recount is 

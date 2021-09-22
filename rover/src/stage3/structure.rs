@@ -94,6 +94,7 @@ pub enum Item {
         unlabeled_replacements: Vec<ItemId>,
     },
     TypeIs {
+        exact: bool,
         base: ItemId,
         typee: ItemId,
     },
@@ -195,7 +196,14 @@ impl Debug for Item {
                 }
                 write!(f, "{}}}", gap)
             }
-            Self::TypeIs { base, typee } => write!(f, "{:?} :{:?}", base, typee),
+            Self::TypeIs { exact, base, typee } => write!(
+                f,
+                "{:?} {}{:?}{}",
+                base,
+                if *exact { "type_is_exactly{" } else { ":" },
+                typee,
+                if *exact { "}" } else { "" },
+            ),
             Self::Variable { selff, typee } => write!(f, "any{{{:?}}} at {:?}", typee, selff),
         }
     }

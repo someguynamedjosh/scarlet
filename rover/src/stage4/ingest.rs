@@ -243,7 +243,14 @@ impl Environment {
                     _ => unreachable!(),
                 }
             }
-            Item::TypeIs { typee, .. } => *typee,
+            Item::TypeIs { exact, typee, base } => {
+                if *exact {
+                    *typee
+                } else {
+                    let base = *base;
+                    self.compute_type(base)?
+                }
+            }
             Item::Variable { typee, selff } => {
                 let base = *typee;
                 let vars = vec![*selff];

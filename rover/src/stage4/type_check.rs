@@ -73,14 +73,21 @@ impl Environment {
                 }
                 Ok(())
             }
-            Item::TypeIs { base, typee } => {
-                let base_type = self.item_base_type(*base);
-                let typee = self.after_from(*typee);
-                if self.are_def_equal(base_type, typee) {
-                    Ok(())
+            Item::TypeIs { exact, base, typee } => {
+                if *exact {
+                    // Deliberately keep any From clauses.
+                    let base_type = self.items[base.0].typee.unwrap();
+                    if !self.are_def_equal(base_type, *typee) {
+                        todo!("nice error, value does not match exact type assert")
+                    }
                 } else {
-                    todo!("nice error, value does not match type assert")
+                    let base_type = self.item_base_type(*base);
+                    let typee = self.after_from(*typee);
+                    if !self.are_def_equal(base_type, typee) {
+                        todo!("nice error, value does not match type assert")
+                    }
                 }
+                Ok(())
             }
             _ => Ok(()),
         }
