@@ -178,6 +178,50 @@ fn process_type(
     })
 }
 
+fn process_pick(
+    statements: &[Statement],
+    env: &mut Environment,
+    parents: &[&Definitions],
+) -> Result<Item, String> {
+    if statements.len() < 2 {
+        todo!("nice error, pick must have at least 2 clauses.");
+    }
+
+    let initial_clause = if let Statement::PickIf(s) = &statements[0] {
+        (
+            process_expr(s.condition.clone(), None, env, Context::Plain, parents)?,
+            process_expr(s.value.clone(), None, env, Context::Plain, parents)?,
+        )
+    } else {
+        todo!("nice error, first clause must be an if.");
+    };
+
+    let last = statements.len() - 1;
+    let else_clause = if let Statement::Else(s) = &statements[last] {
+        process_expr(s.value.clone(), None, env, Context::Plain, parents)?
+    } else {
+        todo!("nice error, first clause must be an if.");
+    };
+
+    let mut elif_clauses = Vec::new();
+    for other in &statements[1..last] {
+        if let Statement::PickElif(s) = other {
+            elif_clauses.push((
+                process_expr(s.condition.clone(), None, env, Context::Plain, parents)?,
+                process_expr(s.value.clone(), None, env, Context::Plain, parents)?,
+            ));
+        } else {
+            todo!("nice error, other clauses must be elif");
+        }
+    }
+
+    Ok(Item::Pick {
+        initial_clause,
+        elif_clauses,
+        else_clause,
+    })
+}
+
 fn process_root(
     root: Construct,
     into: &mut Option<ItemId>,
@@ -217,6 +261,10 @@ fn process_root(
                 .clone();
             let typee = process_expr(type_expr, None, env, Context::Plain, parents)?;
             process_variant(variant_name, typee, env, ctx)?
+        }
+        "pick" => {
+            let statements = root.expect_statements("pick")?;
+            process_pick(statements, env, parents)?
         }
         _ => todo!("nice error, unexpected {} construct", root.label),
     })

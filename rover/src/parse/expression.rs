@@ -77,16 +77,18 @@ pub struct Construct {
     pub body: ConstructBody,
 }
 
-const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32", "variant"];
+const ROOT_CONSTRUCTS: &[&str] = &["identifier", "Type", "any", "the", "i32", "variant", "pick"];
 const TEXT_CONSTRUCTS: &[&str] = &["identifier", "i32"];
 const ALIASES: &[(&str, &str)] = &[
-    ("isv", "is_variant"),
+    ("iv", "is_variant"),
     ("is_same_variant_as", "is_variant"),
     ("T", "Type"),
     ("F", "From"),
-    ("rec", "recording"),
-    ("def", "defining"),
-    ("rep", "replacing"),
+    ("FromVariables", "From"),
+    ("d", "defining"),
+    ("r", "replacing"),
+    ("p", "pick"),
+    ("pick_by_conditions", "pick"),
 ];
 
 fn is_root_label(label: &str) -> bool {

@@ -216,6 +216,11 @@ pub enum Item {
         base: ItemId,
         name: String,
     },
+    Pick {
+        initial_clause: (ItemId, ItemId),
+        elif_clauses: Vec<(ItemId, ItemId)>,
+        else_clause: ItemId,
+    },
     PrimitiveOperation(PrimitiveOperation),
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
@@ -278,6 +283,28 @@ impl Debug for Item {
             }
             Self::Item(id) => write!(f, "{:?}", id),
             Self::Member { base, name } => write!(f, "{:?}::{}", base, name),
+            Self::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
+                write!(f, "pick{{ ")?;
+                if f.alternate() {
+                    write!(f, "\n    ")?;
+                }
+                write!(f, "if {:?}, {:?} ", initial_clause.0, initial_clause.1)?;
+                if f.alternate() {
+                    write!(f, "\n    ")?;
+                }
+                for (condition, value) in elif_clauses {
+                    write!(f, "elif {:?}, {:?} ", condition, value)?;
+                    if f.alternate() {
+                        write!(f, "\n    ")?;
+                    }
+                }
+                write!(f, "else {:?} ", else_clause)?;
+                write!(f, "}}")
+            }
             Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),

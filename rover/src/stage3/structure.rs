@@ -80,6 +80,11 @@ pub enum Item {
         base: ItemId,
         other: ItemId,
     },
+    Pick {
+        initial_clause: (ItemId, ItemId),
+        elif_clauses: Vec<(ItemId, ItemId)>,
+        else_clause: ItemId,
+    },
     PrimitiveOperation(PrimitiveOperation),
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
@@ -139,6 +144,28 @@ impl Debug for Item {
             }
             Self::IsSameVariant { base, other } => {
                 write!(f, "{:?} is_same_variant_as{{{:?}}}", base, other)
+            }
+            Self::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
+                write!(f, "pick{{ ")?;
+                if f.alternate() {
+                    write!(f, "\n    ")?;
+                }
+                write!(f, "if {:?}, {:?} ", initial_clause.0, initial_clause.1)?;
+                if f.alternate() {
+                    write!(f, "\n    ")?;
+                }
+                for (condition, value) in elif_clauses {
+                    write!(f, "elif {:?}, {:?} ", condition, value)?;
+                    if f.alternate() {
+                        write!(f, "\n    ")?;
+                    }
+                }
+                write!(f, "else {:?} ", else_clause)?;
+                write!(f, "}}")
             }
             Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),

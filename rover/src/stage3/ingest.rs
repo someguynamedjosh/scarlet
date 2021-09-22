@@ -137,6 +137,22 @@ impl<'a> IngestionContext<'a> {
                 other: self.convert_iid(*other, true)?,
             },
             stage2::Item::Item(..) | stage2::Item::Member { .. } => panic!("Cannot convert these"),
+            stage2::Item::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
+                Item::Pick {
+                    initial_clause: (
+                        self.convert_iid(initial_clause.0, true)?,
+                        self.convert_iid(initial_clause.1, true)?,
+                    ),
+                    // The type of a replacement is coincidentally the same as the
+                    // type of a condition, and it does the exact thing we want.
+                    elif_clauses: self.convert_reps(elif_clauses)?,
+                    else_clause: self.convert_iid(*else_clause, true)?,
+                }
+            }
             stage2::Item::PrimitiveOperation(op) => match op {
                 PrimitiveOperation::I32Math(op) => Item::PrimitiveOperation(
                     PrimitiveOperation::I32Math(self.convert_integer_op(op.clone())?),

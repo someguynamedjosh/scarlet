@@ -91,6 +91,17 @@ impl Environment {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to(other, reps);
             }
+            Item::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
+                Self::apply_replacements_to(&mut initial_clause.0, reps);
+                Self::apply_replacements_to(&mut initial_clause.1, reps);
+                // Replacement coincidentally has the type and behavior we need.
+                Self::apply_replacements_to_reps(elif_clauses, reps);
+                Self::apply_replacements_to(else_clause, reps);
+            }
             Item::PrimitiveOperation(op) => match op {
                 PrimitiveOperation::I32Math(op) => Self::apply_replacements_to_int_op(op, reps),
             },
@@ -224,6 +235,57 @@ impl Environment {
                         }
                     }
                 }
+            }
+            Item::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
+                let initial_clause = *initial_clause;
+                let elif_clauses = elif_clauses.clone();
+                let else_clause = *else_clause;
+
+                let mut rconds = Vec::new();
+                let mut rvalues = Vec::new();
+                rconds.push(self.reduce(initial_clause.0, reps, reduce_defs));
+                rvalues.push(self.reduce(initial_clause.1, reps, reduce_defs));
+                for (cond, value) in elif_clauses {
+                    rconds.push(self.reduce(cond, reps, reduce_defs));
+                    rvalues.push(self.reduce(value, reps, reduce_defs));
+                }
+                rvalues.push(self.reduce(else_clause, reps, reduce_defs));
+
+                let mut known_conds = Vec::new();
+                for cond in &rconds {
+                    match &self.items[cond.0].base {
+                        Item::PrimitiveValue(PrimitiveValue::Bool(val)) => {
+                            known_conds.push(Some(*val))
+                        }
+                        _ => known_conds.push(None),
+                    }
+                }
+                // The last clause should trigger if none of the others match.
+                known_conds.push(Some(true));
+
+                // Detects if we know a particular value will definitely be the result, and if so
+                // just returns that.
+                for index in 0..known_conds.len() {
+                    match known_conds[index] {
+                        Some(false) => (),
+                        Some(true) => return rvalues[index],
+                        None => break,
+                    }
+                }
+
+                // TODO: Trim away conditions that will definitely be false.
+                let item = Item::Pick {
+                    initial_clause: (rconds[0], rvalues[0]),
+                    elif_clauses: rconds.iter().copied().zip(rvalues.iter().copied()).skip(1).collect(),
+                    else_clause: *rvalues.last().unwrap(),
+                };
+                let id = self.insert(item);
+                self.compute_type(id).unwrap();
+                id
             }
             Item::PrimitiveOperation(op) => {
                 let op = op.clone();
