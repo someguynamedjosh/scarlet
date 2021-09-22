@@ -5,22 +5,20 @@ difference is Integer32::difference
 
 index is any{Integer32}
 
-# fibb is pick {
-#    if   index is_variant{0}, 1
-#    elif index is_variant{1}, 1
-#    else                      sum[fibb[difference[index 1]] fibb[difference[index 2]]]
-# }
-
-# TODO: Lazier evaluation for Pick.
-
-recount is 
+fibb is 
 pick{
-   if index is_variant{0}, 0
-   else                    recount[difference[index 1]]
+   if   index is_variant{0}, 1
+   elif index is_variant{1}, 1
+   else sum[
+      fibb[difference[index 1]] 
+      fibb[difference[index 2]]
+   ]
 }
 ix Integer32 From{index}
 
-thing is recount[0]
+# TODO: Lazier evaluation for Pick.
+
+example is fibb[6]
 
 #=
 recount is 

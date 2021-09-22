@@ -248,62 +248,7 @@ impl Environment {
                 let initial_clause = *initial_clause;
                 let elif_clauses = elif_clauses.clone();
                 let else_clause = *else_clause;
-
-                let mut rconds = Vec::new();
-                // We hold off on reducing values to avoid infinite loops while
-                // evaluating recursive functions.
-                let mut values = Vec::new();
-                rconds.push(self.reduce(initial_clause.0, reps, reduce_defs));
-                values.push(initial_clause.1);
-                for (cond, value) in elif_clauses {
-                    rconds.push(self.reduce(cond, reps, reduce_defs));
-                    values.push(value);
-                }
-                values.push(else_clause);
-
-                let mut known_conds = Vec::new();
-                for cond in &rconds {
-                    match &self.items[cond.0].base {
-                        Item::PrimitiveValue(PrimitiveValue::Bool(val)) => {
-                            known_conds.push(Some(*val))
-                        }
-                        _ => known_conds.push(None),
-                    }
-                }
-                // The last clause should trigger if none of the others match.
-                known_conds.push(Some(true));
-
-                // Detects if we know a particular value will definitely be the result, and if so
-                // just returns that.
-                for index in 0..known_conds.len() {
-                    match known_conds[index] {
-                        Some(false) => (),
-                        Some(true) => {
-                            println!("Evaluating {:?}", values[index]);
-                            return self.reduce(values[index], reps, reduce_defs);
-                        }
-                        None => break,
-                    }
-                }
-
-                // TODO: Trim away conditions that will definitely be false.
-                let rvalues: Vec<_> = values
-                    .into_iter()
-                    .map(|item| self.reduce(item, reps, reduce_defs))
-                    .collect();
-                let item = Item::Pick {
-                    initial_clause: (rconds[0], rvalues[0]),
-                    elif_clauses: rconds
-                        .iter()
-                        .copied()
-                        .zip(rvalues.iter().copied())
-                        .skip(1)
-                        .collect(),
-                    else_clause: *rvalues.last().unwrap(),
-                };
-                let id = self.insert(item);
-                self.compute_type(id).unwrap();
-                id
+                self.reduce_pick(reps, reduce_defs, initial_clause, elif_clauses, else_clause)
             }
             Item::PrimitiveOperation(op) => {
                 let op = op.clone();
@@ -349,13 +294,17 @@ impl Environment {
                     let value = self.reduce(*value, reps, true);
                     let typee = self.items[value.0].typee.unwrap();
                     if self.type_is_not_from(typee) {
-                        // If the value to replace with does not depend on other variables, we should try to plug it in.
+                        // If the value to replace with does not depend on other
+                        // variables, we should try to plug it in.
                         replacements_after.insert(*target, value);
                     } else {
                         // Otherwise, leave it be.
                         remaining_replacements.push((*target, value));
                         replacements_after.remove(target);
                     }
+                }
+                if remaining_replacements.len() > 0 {
+                    return item;
                 }
                 let rbase = self.reduce(base, &replacements_after, true);
                 if remaining_replacements.len() == 0 {
@@ -371,8 +320,77 @@ impl Environment {
                     id
                 }
             }
-            Item::TypeIs { base, .. } => *base,
+            Item::TypeIs { base, .. } => {
+                let base = *base;
+                self.reduce(base, reps, reduce_defs)
+            }
             Item::Variable { .. } => item,
         }
+    }
+
+    fn reduce_condition(
+        &mut self,
+        cond: ItemId,
+        reps: &HashMap<ItemId, ItemId>,
+        reduce_defs: bool,
+    ) -> Result<bool, ItemId> {
+        let rcond = self.reduce(cond, reps, reduce_defs);
+        let res = match &self.items[rcond.0].base {
+            Item::PrimitiveValue(val) => Ok(val.expect_bool()),
+            _ => Err(rcond),
+        };
+        res
+    }
+
+    fn reduce_pick(
+        &mut self,
+        reps: &HashMap<ItemId, ItemId>,
+        reduce_defs: bool,
+        initial_clause: (ItemId, ItemId),
+        elif_clauses: Vec<(ItemId, ItemId)>,
+        else_clause: ItemId,
+    ) -> ItemId {
+        // Stores clauses where we don't know if they are true or false yet.
+        let mut unknown_clauses = Vec::new();
+
+        match self.reduce_condition(initial_clause.0, reps, reduce_defs) {
+            Ok(true) => {
+                debug_assert_eq!(unknown_clauses.len(), 0);
+                return self.reduce(initial_clause.1, reps, reduce_defs);
+            }
+            Ok(false) => (),
+            Err(reduced) => {
+                unknown_clauses.push((reduced, self.reduce(initial_clause.1, reps, reduce_defs)))
+            }
+        }
+
+        for (cond, val) in elif_clauses {
+            match self.reduce_condition(cond, reps, reduce_defs) {
+                Ok(true) => {
+                    let val = self.reduce(val, reps, reduce_defs);
+                    if unknown_clauses.len() == 0 {
+                        // Only return if we know for sure no previous clauses will be used.
+                        return val;
+                    }
+                }
+                Ok(false) => (),
+                Err(reduced) => {
+                    unknown_clauses.push((reduced, self.reduce(val, reps, reduce_defs)))
+                }
+            }
+        }
+
+        let else_value = self.reduce(else_clause, reps, reduce_defs);
+        if unknown_clauses.len() == 0 {
+            return else_value;
+        }
+
+        let item = Item::Pick {
+            initial_clause: unknown_clauses[0],
+            elif_clauses: unknown_clauses.into_iter().skip(1).collect(),
+            else_clause: else_value,
+        };
+        let typ = self.items[else_value.0].typee.unwrap();
+        self.insert_with_type(item, typ)
     }
 }
