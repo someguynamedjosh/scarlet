@@ -1,7 +1,4 @@
-use crate::{
-    shared::{ItemId, Replacements},
-    stage4::structure::Environment,
-};
+use crate::{shared::ItemId, stage4::structure::Environment};
 
 impl Environment {
     fn type_check_condition(&self, cond: ItemId) -> Result<(), String> {

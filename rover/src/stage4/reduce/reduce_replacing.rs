@@ -1,11 +1,6 @@
-use std::collections::HashMap;
-
 use super::ReduceOptions;
 use crate::{
-    shared::{
-        Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue,
-        Replacements,
-    },
+    shared::{Item, ItemId, Replacements},
     stage4::structure::Environment,
 };
 
