@@ -1,6 +1,5 @@
 use crate::{
-    shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
-    stage3::structure::{self as stage3},
+    shared::{Item, ItemId},
     stage4::structure::Environment,
 };
 
