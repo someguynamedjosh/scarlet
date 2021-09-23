@@ -52,7 +52,9 @@ impl IngestSetup {
     }
 
     fn unconverted_items(&self) -> Vec<ItemId> {
-        self.stage2_to_stage3.keys().copied().collect()
+        let mut res: Vec<_> = self.stage2_to_stage3.keys().copied().collect();
+        res.sort();
+        res
     }
 
     fn into_context<'e>(

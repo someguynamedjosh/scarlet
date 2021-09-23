@@ -31,7 +31,7 @@ impl PrimitiveValue {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ItemId(pub(crate) usize);
 
 impl Debug for ItemId {

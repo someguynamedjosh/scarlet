@@ -18,6 +18,8 @@ ix Integer32 From{index}
 
 example is fibb[6]
 
+# example is sum[1 2]
+
 #=
 recount is 
 pick{
