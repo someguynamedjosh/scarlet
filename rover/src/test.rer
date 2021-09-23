@@ -3,8 +3,6 @@ Integer32 is rover::lang::Integer32
 sum is Integer32::sum
 difference is Integer32::difference
 
-rover::lang::Integer32::sum::left info{}
-
 index is any{Integer32}
 
 fibb is 
@@ -18,7 +16,7 @@ pick{
 }
 ix Integer32 From{index}
 
-fibb[8] info{}
+fibb info{}
 
 
 #=
