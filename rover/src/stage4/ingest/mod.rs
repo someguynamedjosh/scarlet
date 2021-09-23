@@ -1,10 +1,16 @@
 use std::collections::HashMap;
 
+use var_list::VarList;
+
 use crate::{
     shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
     stage3::structure::{self as stage3},
     stage4::structure::Environment,
 };
+
+mod after_replacing;
+mod helpers;
+mod var_list;
 
 pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     let mut env = Environment::new(from);
@@ -16,120 +22,14 @@ pub fn ingest(from: stage3::Environment) -> Result<Environment, String> {
     Ok(env)
 }
 
-struct VarList(Vec<ItemId>);
-
-impl VarList {
-    pub fn new() -> VarList {
-        Self(Vec::new())
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn push(&mut self, item: ItemId) {
-        if !self.0.contains(&item) {
-            self.0.push(item)
-        }
-    }
-
-    pub fn append(&mut self, items: &[ItemId]) {
-        for item in items {
-            self.push(*item);
-        }
-    }
-
-    pub fn into_vec(self) -> Vec<ItemId> {
-        self.0
-    }
-}
-
 impl Environment {
-    /// Returns the type of an item after applying the given replacements.
-    /// E.G. a + b with replacements a: c should yield Int From{b c}
-    fn compute_type_after_replacing(
-        &mut self,
-        base: ItemId,
-        replacements: Replacements,
-    ) -> Result<ItemId, String> {
-        let unreplaced_type = self.compute_type(base)?;
-        // A hashmap of variables to replace and what variables the replaced values
-        // depend on.
-        let mut replacement_data = HashMap::<ItemId, VarList>::new();
-        for (target, value) in replacements {
-            let valtype = self.compute_type(value)?;
-            let valtype_vars = self.get_from_variables(valtype)?;
-            replacement_data.insert(target, valtype_vars);
-        }
-        // TODO: This doesn't work when replacing a variable with more variables. I
-        // think?
-        let def = &self.items[unreplaced_type.0].base;
-        let res = match def {
-            Item::FromType { base, vars } => {
-                let mut vars_after_reps = VarList::new();
-                for var in vars {
-                    if let Some(replaced_value_vars) = replacement_data.get(var) {
-                        // $var is being replaced with a value that depends on replaced_value_vars.
-                        vars_after_reps.append(&replaced_value_vars.0[..])
-                    } else {
-                        // $var is not being replaced so the expression still depends on it.
-                        vars_after_reps.push(*var);
-                    }
-                }
-                if vars_after_reps.len() == 0 {
-                    *base
-                } else if &vars_after_reps.0 == vars {
-                    unreplaced_type
-                } else {
-                    let base = *base;
-                    self.insert(Item::FromType {
-                        base,
-                        vars: vars_after_reps.into_vec(),
-                    })
-                }
-            }
-            _ => unreplaced_type,
-        };
-        Ok(res)
-    }
-
-    // Collects all variables specified by From items pointed to by the provided ID.
-    fn get_from_variables(&mut self, typee: ItemId) -> Result<VarList, String> {
-        Ok(match &self.items[typee.0].base {
-            Item::Defining { base: id, .. } => {
-                let id = *id;
-                self.get_from_variables(id)?
-            }
-            Item::FromType { base, vars } => {
-                let base = *base;
-                let vars = vars.clone();
-                let mut result = self.get_from_variables(base)?;
-                result.append(&vars[..]);
-                result
-            }
-            Item::Replacing { .. } => todo!(),
-            _ => VarList::new(),
-        })
-    }
-
-    fn with_from_vars(&mut self, base: ItemId, from_vars: VarList) -> ItemId {
-        if from_vars.len() > 0 {
-            self.insert(Item::FromType {
-                base,
-                vars: from_vars.into_vec(),
-            })
-        } else {
-            base
-        }
-    }
-
-    pub(super) fn op_type(&self, op: &PrimitiveOperation) -> ItemId {
+    pub fn op_type(&self, op: &PrimitiveOperation) -> ItemId {
         match op {
             PrimitiveOperation::I32Math(..) => self.i32_type(),
         }
     }
 
-    pub(super) fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
+    pub fn compute_type(&mut self, of: ItemId) -> Result<ItemId, String> {
         assert!(of.0 < self.items.len());
         let item = &self.items[of.0];
         if let Some(typee) = item.typee {
@@ -237,7 +137,7 @@ impl Environment {
                             if remaining_variables_after_reps.len() == 0 {
                                 todo!("Nice error, no more variables to replace.");
                             }
-                            let target = remaining_variables_after_reps.0.remove(0);
+                            let target = remaining_variables_after_reps.pop_front().unwrap();
                             replacements.push((target, unlabeled_replacement))
                         }
                         let replacements = replacements.clone();
