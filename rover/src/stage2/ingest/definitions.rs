@@ -11,7 +11,7 @@ use crate::{
 struct UnprocessedItem {
     id: ItemId,
     public: bool,
-    name: String,
+    name: Option<String>,
     def: Expression,
 }
 
@@ -28,16 +28,21 @@ fn is_statement_to_unprocessed_item(ctx: &mut Context, is: Is) -> Result<Unproce
     Ok(UnprocessedItem {
         id: ctx.environment.next_id(),
         public: is.public,
-        name,
+        name: Some(name),
         def: is.value,
     })
 }
 
-fn expect_is(statement: Statement) -> Result<Is, String> {
-    match statement {
-        Statement::Is(is) => Ok(is),
-        _ => todo!("nice error"),
-    }
+fn expr_statement_to_unprocessed_item(
+    ctx: &mut Context,
+    expr: Expression,
+) -> Result<UnprocessedItem, String> {
+    Ok(UnprocessedItem {
+        id: ctx.environment.next_id(),
+        public: false,
+        name: None,
+        def: expr,
+    })
 }
 
 fn statements_to_unprocessed_items(
@@ -46,19 +51,22 @@ fn statements_to_unprocessed_items(
 ) -> Result<Vec<UnprocessedItem>, String> {
     let mut top_level_expressions = Vec::new();
     for statement in statements {
-        let is = expect_is(statement)?;
-        let item = is_statement_to_unprocessed_item(ctx, is)?;
+        let item = match statement {
+            Statement::Is(is) => is_statement_to_unprocessed_item(ctx, is)?,
+            Statement::Expression(expr) => expr_statement_to_unprocessed_item(ctx, expr)?,
+            _ => todo!("Nice error"),
+        };
         top_level_expressions.push(item);
     }
     Ok(top_level_expressions)
 }
 
-fn item_to_def(item: &UnprocessedItem) -> (String, ItemId) {
-    (item.name.clone(), item.id)
+fn item_to_def(item: &UnprocessedItem) -> Option<(String, ItemId)> {
+    item.name.as_ref().map(|name| (name.clone(), item.id))
 }
 
 fn definitions(other_defs: Vec<(String, ItemId)>, unprocessed: &[UnprocessedItem]) -> Definitions {
-    let unprocessed_defs = unprocessed.iter().map(item_to_def).collect();
+    let unprocessed_defs = unprocessed.iter().filter_map(item_to_def).collect();
     [other_defs, unprocessed_defs].concat()
 }
 
