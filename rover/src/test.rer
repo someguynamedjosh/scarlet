@@ -16,8 +16,6 @@ pick{
 }
 ix Integer32 From{index}
 
-# TODO: Lazier evaluation for Pick.
-
 example is fibb[6]
 
 #=

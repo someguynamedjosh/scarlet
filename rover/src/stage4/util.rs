@@ -42,4 +42,29 @@ impl Environment {
             _ => panic!("{:?} is not a variable", var),
         }
     }
+
+    /// Returns the type of the given item, with any from clauses discarded.
+    pub(super) fn item_base_type(&self, of: ItemId) -> ItemId {
+        self.after_from(self.items[of.0].typee.unwrap())
+    }
+
+    /// If the given item is a From type, returns the base type aka the type
+    /// that will be produced after the variables are replaced.
+    pub(super) fn after_from(&self, typee: ItemId) -> ItemId {
+        match &self.items[typee.0].base {
+            Item::Defining { base, .. } => self.after_from(*base),
+            Item::FromType { base, .. } => self.after_from(*base),
+            Item::GodType
+            | Item::InductiveType(..)
+            | Item::InductiveValue { .. }
+            | Item::IsSameVariant { .. }
+            | Item::Pick { .. }
+            | Item::PrimitiveOperation(..)
+            | Item::PrimitiveType(..)
+            | Item::PrimitiveValue(..) => typee,
+            Item::Replacing { .. } => todo!(),
+            Item::TypeIs { base, .. } => self.after_from(*base),
+            Item::Variable { .. } => typee,
+        }
+    }
 }
