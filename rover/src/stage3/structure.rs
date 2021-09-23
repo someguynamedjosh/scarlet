@@ -11,20 +11,24 @@ pub struct Environment {
     pub(crate) items: Vec<Item>,
 }
 
+fn fmt_item(f: &mut Formatter, index: usize, item: &Item) -> fmt::Result {
+    if f.alternate() {
+        write!(f, "\n\n    ")?;
+    }
+    write!(f, "{:?} is ", ItemId(index))?;
+    if f.alternate() {
+        let text = format!("{:#?}", item);
+        write!(f, "{},", indented(&text[..]))
+    } else {
+        write!(f, "{:?}", item)
+    }
+}
+
 impl Debug for Environment {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Environment [")?;
         for (index, item) in self.items.iter().enumerate() {
-            if f.alternate() {
-                write!(f, "\n\n    ")?;
-            }
-            write!(f, "{:?} is ", ItemId(index))?;
-            if f.alternate() {
-                let text = format!("{:#?}", item);
-                write!(f, "{},", indented(&text[..]))?;
-            } else {
-                write!(f, "{:?}", item)?;
-            }
+            fmt_item(f, index, item)?;
         }
         if f.alternate() {
             writeln!(f)?;
