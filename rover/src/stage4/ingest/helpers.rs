@@ -1,10 +1,6 @@
-use std::collections::HashMap;
-
 use crate::{
-    shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
-    stage3::structure::{self as stage3},
-    stage4::structure::Environment,
-    stage4::ingest::VarList,
+    shared::{Item, ItemId},
+    stage4::{ingest::VarList, structure::Environment},
 };
 
 impl Environment {

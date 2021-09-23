@@ -9,9 +9,7 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), &val.base, &val.typee))
     }
 
-    pub fn _iter_mut(
-        &mut self,
-    ) -> impl Iterator<Item = (ItemId, &mut Item, &mut Option<ItemId>)> {
+    pub fn _iter_mut(&mut self) -> impl Iterator<Item = (ItemId, &mut Item, &mut Option<ItemId>)> {
         self.items
             .iter_mut()
             .enumerate()

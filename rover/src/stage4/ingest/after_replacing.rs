@@ -25,7 +25,7 @@ impl Environment {
     fn from_vars_after_replacing(
         &mut self,
         dependencies: &HashMap<ItemId, VarList>,
-        from_base: ItemId,
+        _from_base: ItemId,
         from_vars: &Vec<ItemId>,
     ) -> VarList {
         let mut vars_after_reps = VarList::new();

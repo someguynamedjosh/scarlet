@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
 use var_list::VarList;
 
 use crate::{
-    shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements},
+    shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue},
     stage3::structure::{self as stage3},
     stage4::structure::Environment,
 };
