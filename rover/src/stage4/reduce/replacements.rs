@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::Reps;
 use crate::{
     shared::{Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, Replacements},
     stage4::structure::Environment,
@@ -8,12 +9,28 @@ use crate::{
 impl Environment {
     /// This is used to replace references to items with references to equal
     /// items which have been reduced more than the original.
-    pub fn apply_replacements(&mut self, item: ItemId, reps: &HashMap<ItemId, ItemId>) {
-        let item = &mut self.items[item.0];
+    pub fn apply_replacements(&mut self, item_id: ItemId, reps: &Reps) {
+        let item = &mut self.items[item_id.0];
         if let Some(typee) = &mut item.typee {
             Self::apply_replacements_to(typee, reps);
         }
-        match &mut item.base {
+        Self::apply_replacements_to_item(&mut item.base, reps);
+        // Don't apply to modules metadata so that we keep the original items annotated
+        // and not the single primary expression they define.
+        Self::apply_replacements_to_metadata(&mut self.infos, item_id, reps);
+    }
+
+    fn apply_replacements_to_metadata(metadata: &mut Vec<ItemId>, item_id: ItemId, reps: &Reps) {
+        if let Some(pos) = metadata.iter().position(|i| i == &item_id) {
+            if let Some(new) = reps.get(&item_id) {
+                metadata.remove(pos);
+                metadata.push(*new);
+            }
+        }
+    }
+
+    fn apply_replacements_to_item(item: &mut Item, reps: &Reps) {
+        match item {
             Item::Defining { base, definitions } => {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to_defs(definitions, reps);

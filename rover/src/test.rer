@@ -1,26 +1,25 @@
 
-12345
+Integer32 is rover::lang::Integer32
+sum is Integer32::sum
+difference is Integer32::difference
 
-# Integer32 is rover::lang::Integer32
-# sum is Integer32::sum
-# difference is Integer32::difference
+rover::lang::Integer32::sum::left info{}
 
-# index is any{Integer32}
+index is any{Integer32}
 
-# fibb is 
-# pick{
-#    if   index is_variant{0}, 1
-#    elif index is_variant{1}, 1
-#    else sum[
-#       fibb[difference[index 1]] 
-#       fibb[difference[index 2]]
-#    ]
-# }
-# ix Integer32 From{index}
+fibb is 
+pick{
+   if   index is_variant{0}, 1
+   elif index is_variant{1}, 1
+   else sum[
+      fibb[difference[index 1]] 
+      fibb[difference[index 2]]
+   ]
+}
+ix Integer32 From{index}
 
-# example is fibb[6]
+fibb[8] info{}
 
-# example is sum[1 2]
 
 #=
 recount is 

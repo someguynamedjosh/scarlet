@@ -17,6 +17,7 @@ pub struct TypedItem {
 
 #[derive(Clone, PartialEq)]
 pub struct Environment {
+    pub infos: Vec<ItemId>,
     pub modules: Vec<ItemId>,
     pub items: Vec<TypedItem>,
     pub item_reverse_lookup: HashMap<Item, ItemId>,
@@ -48,10 +49,22 @@ impl Environment {
     pub fn new(from: stage3::Environment) -> Self {
         Self {
             item_reverse_lookup: reverse_lookups(&from),
+            infos: from.infos,
             modules: from.modules,
             items: items(from.items),
         }
     }
+}
+
+fn fmt_item_prefixes(f: &mut Formatter, env: &Environment, index: usize) -> fmt::Result {
+    let id = ItemId(index);
+    if env.infos.contains(&id) {
+        write!(f, "info ")?;
+    }
+    if env.modules.contains(&id) {
+        write!(f, "module ")?;
+    }
+    Ok(())
 }
 
 fn fmt_item(f: &mut Formatter, index: usize, item: &TypedItem) -> fmt::Result {
@@ -73,10 +86,16 @@ fn fmt_type_annotation(f: &mut Formatter, item: &TypedItem) -> fmt::Result {
     write!(f, " }}")
 }
 
-fn fmt_typed_item(f: &mut Formatter, index: usize, item: &TypedItem) -> fmt::Result {
+fn fmt_typed_item(
+    f: &mut Formatter,
+    env: &Environment,
+    index: usize,
+    item: &TypedItem,
+) -> fmt::Result {
     if f.alternate() {
         write!(f, "\n\n    ")?;
     }
+    fmt_item_prefixes(f, env, index)?;
     fmt_item(f, index, item)?;
     fmt_type_annotation(f, item)
 }
@@ -85,7 +104,7 @@ impl Debug for Environment {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Environment[")?;
         for (index, item) in self.items.iter().enumerate() {
-            fmt_typed_item(f, index, item)?;
+            fmt_typed_item(f, self, index, item)?;
         }
         if f.alternate() {
             writeln!(f)?;

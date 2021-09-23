@@ -7,14 +7,27 @@ use crate::{
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
+    pub infos: Vec<ItemId>,
     pub modules: Vec<ItemId>,
     pub(crate) items: Vec<Item>,
 }
 
-fn fmt_item(f: &mut Formatter, index: usize, item: &Item) -> fmt::Result {
+fn fmt_item_prefixes(f: &mut Formatter, env: &Environment, index: usize) -> fmt::Result {
+    let id = ItemId(index);
+    if env.infos.contains(&id) {
+        write!(f, "info ")?;
+    }
+    if env.modules.contains(&id) {
+        write!(f, "module ")?;
+    }
+    Ok(())
+}
+
+fn fmt_item(f: &mut Formatter, env: &Environment, index: usize, item: &Item) -> fmt::Result {
     if f.alternate() {
         write!(f, "\n\n    ")?;
     }
+    fmt_item_prefixes(f, env, index)?;
     write!(f, "{:?} is ", ItemId(index))?;
     if f.alternate() {
         let text = format!("{:#?}", item);
@@ -28,7 +41,10 @@ impl Debug for Environment {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Environment [")?;
         for (index, item) in self.items.iter().enumerate() {
-            fmt_item(f, index, item)?;
+            if self.infos.contains(&ItemId(index)) {
+                write!(f, "info ")?;
+            }
+            fmt_item(f, self, index, item)?;
         }
         if f.alternate() {
             writeln!(f)?;
@@ -40,12 +56,17 @@ impl Debug for Environment {
 impl Environment {
     pub fn new() -> Self {
         Self {
+            infos: Vec::new(),
             modules: Vec::new(),
             items: Vec::new(),
         }
     }
 
-    pub fn _mark_as_module(&mut self, item: ItemId) {
+    pub fn mark_info(&mut self, item: ItemId) {
+        self.infos.push(item)
+    }
+
+    pub fn mark_as_module(&mut self, item: ItemId) {
         self.modules.push(item)
     }
 

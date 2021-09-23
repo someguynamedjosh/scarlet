@@ -3,6 +3,8 @@ use crate::shared::{Item, ItemId};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
+    /// Items that should be displayed to the programmer.
+    pub infos: Vec<ItemId>,
     pub modules: Vec<ItemId>,
     pub(crate) items: Vec<Option<UnresolvedItem>>,
 }
@@ -10,6 +12,7 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Self {
         Self {
+            infos: vec![],
             modules: Vec::new(),
             items: Vec::new(),
         }
@@ -20,6 +23,10 @@ impl Environment {
             .iter()
             .enumerate()
             .map(|(index, val)| (ItemId(index), val))
+    }
+
+    pub fn mark_info(&mut self, item: ItemId) {
+        self.infos.push(item)
     }
 
     pub fn mark_as_module(&mut self, item: ItemId) {

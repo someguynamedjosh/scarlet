@@ -13,12 +13,15 @@ fn main() {
         panic!("Syntax error on {}", remainder);
     }
     println!("{:#?}", statements);
+
     println!("Doing stage 2");
     let (environment, _) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
+
     println!("Doing stage 3");
     let environment = stage3::ingest(&environment).unwrap();
     println!("{:#?}", environment);
+
     println!("Doing stage 4");
     let mut environment = stage4::ingest(environment).unwrap();
     println!("{:#?}", environment);
@@ -27,4 +30,7 @@ fn main() {
     println!("Doing reduce");
     stage4::reduce(&mut environment);
     println!("{:#?}", environment);
+
+    println!("Infos:");
+    environment.display_infos();
 }

@@ -22,7 +22,8 @@ pub fn ingest_non_defining_postfix_construct(
         "is_variant" => ingest_is_variant_construct(ctx, base_id, post),
         "type_is" => ingest_type_is_construct(ctx, base_id, post, false),
         "type_is_exactly" => ingest_type_is_construct(ctx, base_id, post, true),
-        _ => unreachable!(),
+        "info" => ingest_info_construct(ctx, base_id),
+        _ => todo!("Nice error"),
     }
 }
 
@@ -55,6 +56,11 @@ fn ingest_type_is_construct(
         typee,
     }
     .into())
+}
+
+fn ingest_info_construct(ctx: &mut Context, base_id: ItemId) -> Result<UnresolvedItem, String> {
+    ctx.environment.mark_info(base_id);
+    Ok(UnresolvedItem::Item(base_id))
 }
 
 fn ingest_replacing_construct(

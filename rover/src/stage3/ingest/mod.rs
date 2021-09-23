@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use self::helpers::{convert_iid, full_convert_iid};
 use crate::{
     shared::ItemId,
     stage2::structure::{self as stage2},
@@ -76,6 +77,7 @@ fn convert_items(mut ctx: Context, unconverted_items: Vec<ItemId>) -> Result<(),
     for id in unconverted_items {
         convert_item(&mut ctx, id)?;
     }
+    convert_metadata(&mut ctx)?;
     add_extra_items_to_env(ctx);
     Ok(())
 }
@@ -94,4 +96,18 @@ fn add_extra_items_to_env(ctx: Context) {
     for item in ctx.extra_items {
         ctx.env.insert(item);
     }
+}
+
+fn convert_metadata(ctx: &mut Context) -> Result<(), String> {
+    for info in &ctx.src.infos {
+        let new = full_convert_iid(ctx, *info)?;
+        ctx.env.mark_info(new);
+    }
+    for module in &ctx.src.modules {
+        // Don't deref defines, this way we keep referencing the Defining block
+        // and not the thing it defines.
+        let new = convert_iid(ctx, *module, false)?;
+        ctx.env.mark_as_module(new);
+    }
+    Ok(())
 }

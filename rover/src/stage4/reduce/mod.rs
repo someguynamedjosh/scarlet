@@ -30,27 +30,35 @@ impl<'a> ReduceOptions<'a> {
     }
 }
 
+fn reduce_item(env: &mut Environment, id: ItemId) -> ItemId {
+    env.compute_type(id).unwrap();
+    let opts = ReduceOptions {
+        item: id,
+        reduce_defs: false,
+        reps: &HashMap::new(),
+    };
+    env.reduce(opts)
+}
+
+fn apply_replacements(env: &mut Environment, reps: Reps) {
+    let mut id = ItemId(0);
+    while id.0 < env.items.len() {
+        env.apply_replacements(id, &reps);
+        id.0 += 1
+    }
+}
+
 pub fn reduce(env: &mut Environment) {
     let mut replacements = HashMap::new();
     let mut id = ItemId(0);
     while id.0 < env.items.len() {
-        env.compute_type(id).unwrap();
-        let opts = ReduceOptions {
-            item: id,
-            reduce_defs: false,
-            reps: &HashMap::new(),
-        };
-        let new = env.reduce(opts);
+        let new = reduce_item(env, id);
         if new != id {
             replacements.insert(id, new);
         }
         id.0 += 1
     }
-    let mut id = ItemId(0);
-    while id.0 < env.items.len() {
-        env.apply_replacements(id, &replacements);
-        id.0 += 1
-    }
+    apply_replacements(env, replacements)
 }
 
 impl Environment {
