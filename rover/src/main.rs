@@ -1,7 +1,7 @@
 mod shared;
 mod stage1;
 mod stage2;
-// mod stage3;
+mod stage3;
 // mod stage4;
 mod util;
 
@@ -18,9 +18,9 @@ fn main() {
     let (environment, _) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
 
-    // println!("Doing stage 3");
-    // let environment = stage3::ingest(&environment).unwrap();
-    // println!("{:#?}", environment);
+    println!("Doing stage 3");
+    let environment = stage3::ingest(&environment).unwrap();
+    println!("{:#?}", environment);
 
     // println!("Doing stage 4");
     // let mut environment = stage4::ingest(environment).unwrap();

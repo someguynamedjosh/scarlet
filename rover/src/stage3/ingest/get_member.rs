@@ -9,7 +9,11 @@ fn definition_of_dereferenced_item<'a>(
     ctx: &mut Context<'a>,
     item: &DereferencedItem,
 ) -> &'a UnresolvedItem {
-    ctx.src.definition_of(item.id()).as_ref().unwrap()
+    ctx.src
+        .definition_of(item.id())
+        .definition
+        .as_ref()
+        .unwrap()
 }
 
 fn get_member_in_defining(

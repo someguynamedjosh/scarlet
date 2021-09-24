@@ -71,7 +71,7 @@ pub fn dereference_iid(
     id: ItemId,
     deref_define: bool,
 ) -> Result<DereferencedItem, String> {
-    match ctx.src.definition_of(id).as_ref().unwrap() {
+    match ctx.src.definition_of(id).definition.as_ref().unwrap() {
         stage2::UnresolvedItem::Just(Item::Defining { base, .. }) => {
             dereference_define(ctx, deref_define, id, *base)
         }

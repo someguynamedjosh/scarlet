@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use self::helpers::{convert_iid, full_convert_iid};
+use self::helpers::full_convert_iid;
 use crate::{
     shared::ItemId,
     stage2::structure::{self as stage2},
@@ -43,7 +43,7 @@ impl IngestSetup {
 
     fn ingest(mut self, src: &stage2::Environment) -> Self {
         for (id, item) in src.iter() {
-            let item = item.as_ref().unwrap();
+            let item = item.definition.as_ref().unwrap();
             if convertible(item) {
                 self.stage2_to_stage3.insert(id, self.next_stage3_id);
                 self.next_stage3_id.0 += 1
@@ -83,9 +83,9 @@ fn convert_items(mut ctx: Context, unconverted_items: Vec<ItemId>) -> Result<(),
 }
 
 fn convert_item(ctx: &mut Context, item: ItemId) -> Result<(), String> {
-    let def = ctx.src.definition_of(item).as_ref().unwrap();
+    let def = ctx.src.definition_of(item).definition.as_ref().unwrap();
     let converted = convert_unresolved_item(ctx, def)?;
-    ctx.env.insert(converted);
+    ctx.env.insert_item(converted);
     Ok(())
 }
 
@@ -94,20 +94,19 @@ fn convert_item(ctx: &mut Context, item: ItemId) -> Result<(), String> {
 /// always possible to define an item before its ID is needed.
 fn add_extra_items_to_env(ctx: Context) {
     for item in ctx.extra_items {
-        ctx.env.insert(item);
+        ctx.env.insert_item(item);
     }
 }
 
 fn convert_metadata(ctx: &mut Context) -> Result<(), String> {
-    for info in &ctx.src.infos {
-        let new = full_convert_iid(ctx, *info)?;
-        ctx.env.mark_info(new);
-    }
-    for module in &ctx.src.modules {
-        // Don't deref defines, this way we keep referencing the Defining block
-        // and not the thing it defines.
-        let new = convert_iid(ctx, *module, false)?;
-        ctx.env.mark_as_module(new);
+    for (id, old_def) in ctx.src.iter() {
+        let new_id = full_convert_iid(ctx, id)?;
+        if old_def.info_requested {
+            ctx.env.mark_info(new_id);
+        }
+        if old_def.is_scope {
+            ctx.env.mark_as_scope(new_id);
+        }
     }
     Ok(())
 }
