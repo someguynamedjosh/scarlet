@@ -18,6 +18,12 @@ ix Integer32 From{index}
 
 fibb info{}
 
+negative is difference[0]
+decrement is difference[difference::right with 1]
+
+negative[5] info{}
+decrement[5] info{}
+
 
 #=
 recount is 

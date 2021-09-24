@@ -3,8 +3,12 @@
 	"name": "Rover",
 	"patterns": [
 		{
+			"name": "punctuation",
+			"match": "[\\{\\}\\[\\]\\(\\)]"
+		},
+		{
 			"name": "keyword.other",
-			"match": "\\b(is|with|variant)\\b"
+			"match": "\\b(is|with|variant|ix|if|elif|else)\\b"
 		},
 		{
 			"name": "keyword.operator",
@@ -12,15 +16,15 @@
 		},
 		{
 			"name": "keyword.control",
-			"match": "(replacing|defining|Type|any|the|i32|integer|int|isv|is_variant|is_same_variant_as|onv|on_variants|pick|pick_first_true_condition|variant|identifier)[ \\r\\n\\t]*\\{"
+			"match": "(replacing|defining|Type|any|the|i32|integer|int|isv|is_variant|is_same_variant_as|onv|on_variants|pick|pick_first_true_condition|variant|identifier|info)[ \\r\\n\\t]*(?=\\{)"
 		},
 		{
 			"name": "invalid.illegal",
-			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*\\{\\b"
+			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*(?=\\{)\\b"
 		},
 		{
-			"name": "keyword.control",
-			"match": "}"
+			"name": "entity.name.function",
+			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*(?=\\[)\\b"
 		},
 		{
 			"name": "constant.numeric",

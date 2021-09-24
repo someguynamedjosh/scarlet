@@ -1,6 +1,8 @@
 use super::structure::Environment;
 use crate::{
-    shared::{Item, ItemId, PrimitiveValue, Replacements},
+    shared::{
+        IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
+    },
     util::indented,
 };
 
@@ -45,6 +47,7 @@ impl Environment {
                 else_clause,
                 initial_clause,
             } => self.get_pick_code(elif_clauses, else_clause, initial_clause),
+            Item::PrimitiveOperation(op) => self.get_primitive_operation_code(op),
             Item::PrimitiveValue(val) => self.get_primitive_value_code(*val),
             Item::Replacing {
                 base, replacements, ..
@@ -119,6 +122,31 @@ impl Environment {
         res.push_str("\n}");
 
         Some(res)
+    }
+
+    fn get_integer_operation_code(&self, op: &IntegerMathOperation) -> String {
+        use IntegerMathOperation as Imo;
+        match op {
+            Imo::Sum(a, b) => format!(
+                "sum[{} {}]",
+                self.get_item_name_or_code(*a),
+                self.get_item_name_or_code(*b)
+            ),
+            Imo::Difference(a, b) => format!(
+                "difference[{} {}]",
+                self.get_item_name_or_code(*a),
+                self.get_item_name_or_code(*b)
+            ),
+        }
+    }
+
+    fn get_primitive_operation_code(&self, op: &PrimitiveOperation) -> Option<String> {
+        match op {
+            PrimitiveOperation::I32Math(op) => Some(format!(
+                "Integer32::{}",
+                self.get_integer_operation_code(op)
+            )),
+        }
     }
 
     fn get_primitive_value_code(&self, value: PrimitiveValue) -> Option<String> {
