@@ -4,10 +4,8 @@ sum is Integer32::sum
 difference is Integer32::difference
 
 Thing is Type{
-   variant new :Self From{something is any{Integer32}}
+   variant new :Self From{something is any{Integer32} info{}}
 }
-
-Thing::new info{}
 
 #=
 recount is 

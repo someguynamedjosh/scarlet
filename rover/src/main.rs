@@ -21,6 +21,7 @@ fn main() {
     println!("Doing stage 3");
     let environment = stage3::ingest(&environment).unwrap();
     println!("{:#?}", environment);
+    return;
 
     println!("Doing stage 4");
     let mut environment = stage4::ingest(environment).unwrap();

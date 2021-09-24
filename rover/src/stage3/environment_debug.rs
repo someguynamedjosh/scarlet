@@ -13,7 +13,11 @@ fn fmt_item_prefixes(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result {
     if item.is_scope {
         write!(f, "scope ")?;
     }
-    Ok(())
+    if let Some(scope) = item.defined_in {
+        write!(f, "in {:?}, ", scope)
+    } else {
+        write!(f, "root, ")
+    }
 }
 
 fn fmt_item(f: &mut Formatter, index: usize, item: &ItemDefinition) -> fmt::Result {

@@ -8,14 +8,16 @@ pub struct ItemDefinition {
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Item,
+    pub defined_in: Option<ItemId>,
 }
 
 impl ItemDefinition {
-    pub fn new(item: Item) -> Self {
+    pub fn new(item: Item, defined_in: Option<ItemId>) -> Self {
         Self {
             info_requested: false,
             is_scope: false,
             definition: item,
+            defined_in,
         }
     }
 }
@@ -46,7 +48,7 @@ impl Environment {
         id
     }
 
-    pub fn insert_item(&mut self, item: Item) -> ItemId {
-        self.insert(ItemDefinition::new(item))
+    pub fn insert_item(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
+        self.insert(ItemDefinition::new(item, defined_in))
     }
 }
