@@ -9,7 +9,7 @@ impl Environment {
         if let Some(rep) = opts.reps.get(&opts.item) {
             return *rep;
         }
-        match &self.items[opts.item.0].base {
+        match &self.items[opts.item.0].definition {
             Item::Defining { base, .. } => {
                 let base = *base;
                 self.reduce_def(opts, base)

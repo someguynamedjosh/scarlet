@@ -6,7 +6,7 @@ use crate::{
 impl Environment {
     // Collects all variables specified by From items pointed to by the provided ID.
     pub fn get_from_variables(&mut self, typee: ItemId) -> Result<VarList, String> {
-        Ok(match &self.items[typee.0].base {
+        Ok(match &self.items[typee.0].definition {
             Item::Defining { base: id, .. } => {
                 let id = *id;
                 self.get_from_variables(id)?

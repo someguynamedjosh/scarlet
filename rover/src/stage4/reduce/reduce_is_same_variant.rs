@@ -15,7 +15,7 @@ impl Environment {
         let rother_id = self.reduce(opts.with_item(other));
         let rbase = &self.items[rbase_id.0];
         let rother = &self.items[rother_id.0];
-        match (&rbase.base, &rother.base) {
+        match (&rbase.definition, &rother.definition) {
             (
                 Item::InductiveValue {
                     variant_name: base_variant,

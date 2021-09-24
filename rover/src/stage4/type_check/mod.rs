@@ -18,7 +18,7 @@ impl Environment {
     /// Checks that, if this item is a Replacing item, that it obeys a type
     /// check.
     fn type_check(&self, item: ItemId) -> Result<(), String> {
-        match &self.items[item.0].base {
+        match &self.items[item.0].definition {
             Item::Replacing { replacements, .. } => self.type_check_replacing(item, replacements),
             Item::IsSameVariant { base, other } => {
                 self.type_check_is_same_variant(item, *base, *other)

@@ -16,7 +16,7 @@ impl Environment {
         for input in &inputs {
             let reduced = self.reduce(opts.with_item(*input));
             reduced_inputs.push(reduced);
-            if let Item::PrimitiveValue(val) = &self.items[reduced.0].base {
+            if let Item::PrimitiveValue(val) = &self.items[reduced.0].definition {
                 input_values.push(*val);
             }
         }

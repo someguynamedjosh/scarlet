@@ -16,7 +16,7 @@ impl Environment {
     }
 
     fn compute_type_id(&mut self, of: ItemId) -> Result<ItemId, String> {
-        match &self.items[of.0].base {
+        match &self.items[of.0].definition {
             Item::Defining { base, .. } => {
                 let base = *base;
                 self.compute_type(base)

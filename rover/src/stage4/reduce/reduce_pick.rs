@@ -8,7 +8,7 @@ impl Environment {
     fn reduce_condition(&mut self, opts: ReduceOptions, cond: ItemId) -> Result<bool, ItemId> {
         let rcond = self.reduce(opts.with_item(cond));
 
-        match &self.items[rcond.0].base {
+        match &self.items[rcond.0].definition {
             Item::PrimitiveValue(val) => Ok(val.expect_bool()),
             _ => Err(rcond),
         }

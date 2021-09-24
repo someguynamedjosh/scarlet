@@ -72,7 +72,7 @@ impl Environment {
     ) -> Result<ItemId, String> {
         let dependencies = self.replacement_dependencies(replacements)?;
         let original_type = self.compute_type(base)?;
-        let original_type_def = &self.items[original_type.0].base.clone();
+        let original_type_def = &self.items[original_type.0].definition.clone();
         Ok(self.type_item_after_replacing(original_type, &original_type_def, &dependencies))
     }
 }

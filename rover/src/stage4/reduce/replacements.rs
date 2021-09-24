@@ -10,21 +10,20 @@ impl Environment {
     /// This is used to replace references to items with references to equal
     /// items which have been reduced more than the original.
     pub fn apply_replacements(&mut self, item_id: ItemId, reps: &Reps) {
+        self.apply_replacements_to_info_requested(item_id, reps);
         let item = &mut self.items[item_id.0];
         if let Some(typee) = &mut item.typee {
             Self::apply_replacements_to(typee, reps);
         }
-        Self::apply_replacements_to_item(&mut item.base, reps);
-        // Don't apply to modules metadata so that we keep the original items annotated
-        // and not the single primary expression they define.
-        Self::apply_replacements_to_metadata(&mut self.infos, item_id, reps);
+        Self::apply_replacements_to_item(&mut item.definition, reps);
     }
 
-    fn apply_replacements_to_metadata(metadata: &mut Vec<ItemId>, item_id: ItemId, reps: &Reps) {
-        if let Some(pos) = metadata.iter().position(|i| i == &item_id) {
+    fn apply_replacements_to_info_requested(&mut self, item_id: ItemId, reps: &Reps) {
+        let item = &mut self.items[item_id.0];
+        if item.info_requested {
             if let Some(new) = reps.get(&item_id) {
-                metadata.remove(pos);
-                metadata.push(*new);
+                item.info_requested = false;
+                self.items[new.0].info_requested = true;
             }
         }
     }

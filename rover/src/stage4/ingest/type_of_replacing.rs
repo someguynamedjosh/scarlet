@@ -14,7 +14,7 @@ impl Environment {
         // These are the variables that unlabeled replacements might refer to.
         let mut remaining_variables_after_reps = self.get_from_variables(after_reps)?;
         // The same as above, but a mutable reference.
-        match &mut self.items[replacing_id.0].base {
+        match &mut self.items[replacing_id.0].definition {
             Item::Replacing {
                 replacements,
                 unlabeled_replacements,

@@ -5,20 +5,23 @@ use std::{
 
 use crate::{
     shared::{Item, ItemId},
-    stage3::structure::{self as stage3},
+    stage3::structure::{self as stage3, ItemDefinition},
     util,
 };
 
 #[derive(Clone, PartialEq)]
 pub struct TypedItem {
-    pub base: Item,
+    /// True when the programmer has requested a diagnostic showing information
+    /// about this definition.
+    pub info_requested: bool,
+    /// True if this item is a place where other items are defined.
+    pub is_scope: bool,
+    pub definition: Item,
     pub typee: Option<ItemId>,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Environment {
-    pub infos: Vec<ItemId>,
-    pub modules: Vec<ItemId>,
     pub items: Vec<TypedItem>,
     pub item_reverse_lookup: HashMap<Item, ItemId>,
 }
@@ -27,15 +30,17 @@ fn reverse_lookups(from: &stage3::Environment) -> HashMap<Item, ItemId> {
     from.items
         .iter()
         .enumerate()
-        .map(|(index, item)| (item.clone(), ItemId(index)))
+        .map(|(index, item)| (item.definition.clone(), ItemId(index)))
         .collect()
 }
 
-fn items(items: Vec<Item>) -> Vec<TypedItem> {
+fn items(items: Vec<ItemDefinition>) -> Vec<TypedItem> {
     items
         .into_iter()
         .map(|i| TypedItem {
-            base: i,
+            info_requested: i.info_requested,
+            is_scope: i.is_scope,
+            definition: i.definition,
             typee: None,
         })
         .collect()
@@ -49,20 +54,17 @@ impl Environment {
     pub fn new(from: stage3::Environment) -> Self {
         Self {
             item_reverse_lookup: reverse_lookups(&from),
-            infos: from.infos,
-            modules: from.modules,
             items: items(from.items),
         }
     }
 }
 
-fn fmt_item_prefixes(f: &mut Formatter, env: &Environment, index: usize) -> fmt::Result {
-    let id = ItemId(index);
-    if env.infos.contains(&id) {
+fn fmt_item_prefixes(f: &mut Formatter, item: &TypedItem) -> fmt::Result {
+    if item.info_requested {
         write!(f, "info ")?;
     }
-    if env.modules.contains(&id) {
-        write!(f, "module ")?;
+    if item.is_scope {
+        write!(f, "scope ")?;
     }
     Ok(())
 }
@@ -70,10 +72,10 @@ fn fmt_item_prefixes(f: &mut Formatter, env: &Environment, index: usize) -> fmt:
 fn fmt_item(f: &mut Formatter, index: usize, item: &TypedItem) -> fmt::Result {
     write!(f, "{:?} is ", ItemId(index))?;
     if f.alternate() {
-        let text = format!("{:#?}", item.base);
+        let text = format!("{:#?}", item.definition);
         write!(f, "{}\n    ", util::indented(&text))
     } else {
-        write!(f, "{:?} ", item.base)
+        write!(f, "{:?} ", item.definition)
     }
 }
 
@@ -86,16 +88,11 @@ fn fmt_type_annotation(f: &mut Formatter, item: &TypedItem) -> fmt::Result {
     write!(f, " }}")
 }
 
-fn fmt_typed_item(
-    f: &mut Formatter,
-    env: &Environment,
-    index: usize,
-    item: &TypedItem,
-) -> fmt::Result {
+fn fmt_typed_item(f: &mut Formatter, index: usize, item: &TypedItem) -> fmt::Result {
     if f.alternate() {
         write!(f, "\n\n    ")?;
     }
-    fmt_item_prefixes(f, env, index)?;
+    fmt_item_prefixes(f, item)?;
     fmt_item(f, index, item)?;
     fmt_type_annotation(f, item)
 }
@@ -104,7 +101,7 @@ impl Debug for Environment {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Environment[")?;
         for (index, item) in self.items.iter().enumerate() {
-            fmt_typed_item(f, self, index, item)?;
+            fmt_typed_item(f, index, item)?;
         }
         if f.alternate() {
             writeln!(f)?;

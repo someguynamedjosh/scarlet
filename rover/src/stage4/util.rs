@@ -6,7 +6,7 @@ use crate::{
 impl Environment {
     pub(super) fn existing_item(&self, def: &Item) -> Option<ItemId> {
         for (index, item) in self.items.iter().enumerate() {
-            if &item.base == def {
+            if &item.definition == def {
                 return Some(ItemId(index));
             }
         }
@@ -37,7 +37,7 @@ impl Environment {
     /// Returns the type of the variable given by the id, assuming the id points
     /// to a variable.
     pub(super) fn get_var_type(&self, var: ItemId) -> ItemId {
-        match &self.items[var.0].base {
+        match &self.items[var.0].definition {
             Item::Variable { typee, .. } => *typee,
             _ => panic!("{:?} is not a variable", var),
         }
@@ -51,7 +51,7 @@ impl Environment {
     /// If the given item is a From type, returns the base type aka the type
     /// that will be produced after the variables are replaced.
     pub(super) fn after_from(&self, typee: ItemId) -> ItemId {
-        match &self.items[typee.0].base {
+        match &self.items[typee.0].definition {
             Item::Defining { base, .. } => self.after_from(*base),
             Item::FromType { base, .. } => self.after_from(*base),
             Item::GodType

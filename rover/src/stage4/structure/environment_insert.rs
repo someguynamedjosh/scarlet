@@ -2,18 +2,18 @@ use super::{Environment, TypedItem};
 use crate::shared::{Item, ItemId};
 
 impl Environment {
-    pub fn _iter(&self) -> impl Iterator<Item = (ItemId, &Item, &Option<ItemId>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &TypedItem)> {
         self.items
             .iter()
             .enumerate()
-            .map(|(index, val)| (ItemId(index), &val.base, &val.typee))
+            .map(|(index, val)| (ItemId(index), val))
     }
 
-    pub fn _iter_mut(&mut self) -> impl Iterator<Item = (ItemId, &mut Item, &mut Option<ItemId>)> {
+    pub fn _iter_mut(&mut self) -> impl Iterator<Item = (ItemId, &mut TypedItem)> {
         self.items
             .iter_mut()
             .enumerate()
-            .map(|(index, val)| (ItemId(index), &mut val.base, &mut val.typee))
+            .map(|(index, val)| (ItemId(index), val))
     }
 
     pub fn insert(&mut self, def: Item) -> ItemId {
@@ -23,7 +23,9 @@ impl Environment {
         let id = ItemId(self.items.len());
         self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
-            base: def,
+            info_requested: false,
+            is_scope: false,
+            definition: def,
             typee: None,
         });
         id
@@ -36,7 +38,9 @@ impl Environment {
         let id = ItemId(self.items.len());
         self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
-            base: def,
+            info_requested: false,
+            is_scope: false,
+            definition: def,
             typee: Some(typee),
         });
         id

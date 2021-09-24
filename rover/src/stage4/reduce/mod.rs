@@ -65,7 +65,7 @@ impl Environment {
     /// Returns true if the provided type does not indicate that corresponding
     /// values depend on the values of other variables.
     fn type_is_not_from(&self, typee: ItemId) -> bool {
-        match &self.items[typee.0].base {
+        match &self.items[typee.0].definition {
             Item::Defining { base, .. } => self.type_is_not_from(*base),
             Item::FromType { base, vars, .. } => vars.is_empty() && self.type_is_not_from(*base),
             Item::Replacing { base, .. } => self.type_is_not_from(*base),

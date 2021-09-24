@@ -8,15 +8,17 @@ use crate::{
 
 impl Environment {
     pub fn display_infos(&self) {
-        for info in &self.infos {
-            let repr = self.get_item_code_or_name(*info);
-            println!("{}", repr);
+        for (id, item) in self.iter() {
+            if item.info_requested {
+                let repr = self.get_item_code_or_name(id);
+                println!("{}", repr);
+            }
         }
     }
 
     /// Tries to get code. If that fails, gets a name instead.
     pub fn get_item_code_or_name(&self, item_id: ItemId) -> String {
-        if let Some(code) = self.get_item_code(&self.items[item_id.0].base) {
+        if let Some(code) = self.get_item_code(&self.items[item_id.0].definition) {
             return code;
         } else if let Some(name) = self.get_item_name(item_id) {
             return name;
@@ -29,7 +31,7 @@ impl Environment {
     pub fn get_item_name_or_code(&self, item_id: ItemId) -> String {
         if let Some(name) = self.get_item_name(item_id) {
             return name;
-        } else if let Some(code) = self.get_item_code(&self.items[item_id.0].base) {
+        } else if let Some(code) = self.get_item_code(&self.items[item_id.0].definition) {
             return code;
         } else {
             return format!("anonymous");
@@ -39,7 +41,7 @@ impl Environment {
     pub fn get_item_code(&self, item: &Item) -> Option<String> {
         match item {
             Item::Defining { base, .. } | Item::TypeIs { base, .. } => {
-                self.get_item_code(&self.items[base.0].base)
+                self.get_item_code(&self.items[base.0].definition)
             }
             Item::InductiveValue {
                 records,
@@ -74,7 +76,7 @@ impl Environment {
             }
             if let Item::Defining {
                 base, definitions, ..
-            } = &potential_parent.base
+            } = &potential_parent.definition
             {
                 let new_checked = [already_checked.clone(), vec![parent_id]].concat();
                 if base == &id {
