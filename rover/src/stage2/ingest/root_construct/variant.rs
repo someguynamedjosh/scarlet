@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Item, ItemId},
+    shared::{Definitions, Item, ItemId},
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
         ingest::{
@@ -46,13 +46,22 @@ fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
     }
 }
 
-fn get_from_vars(ctx: &Context, type_id: ItemId) -> Vec<ItemId> {
+fn get_from_vars(ctx: &Context, type_id: ItemId) -> (Vec<ItemId>, Definitions) {
     match ctx.environment.definition_of(type_id) {
-        Some(UnresolvedItem::Just(Item::FromType { base, vars })) => {
-            let base_vars = get_from_vars(ctx, *base);
-            [base_vars, vars.clone()].concat()
-        }
-        _ => vec![],
+        Some(UnresolvedItem::Just(item)) => match item {
+            Item::FromType { base, vars } => {
+                let (base_vars, defs) = get_from_vars(ctx, *base);
+                let vars = [base_vars, vars.clone()].concat();
+                (vars, defs)
+            }
+            Item::Defining { base, definitions } => {
+                let (vars, base_defs) = get_from_vars(ctx, *base);
+                let defs = [base_defs, definitions.clone()].concat();
+                (vars, defs)
+            }
+            _ => (vec![], vec![]),
+        },
+        _ => (vec![], vec![]),
     }
 }
 
@@ -65,12 +74,22 @@ pub fn ingest_variant_construct(
 
     let base_return_type_id = dereference_type(ctx, return_type_id);
     check_containing_type(ctx, base_return_type_id)?;
-    let recorded_vars = get_from_vars(ctx, return_type_id);
+    let (recorded_vars, definitions) = get_from_vars(ctx, return_type_id);
 
-    Ok(Item::InductiveValue {
+    let val = Item::InductiveValue {
         typee: base_return_type_id,
         variant_name,
         records: recorded_vars,
     }
-    .into())
+    .into();
+    if definitions.len() > 0 {
+        let val_id = ctx.environment.insert(val);
+        Ok(Item::Defining {
+            base: val_id,
+            definitions,
+        }
+        .into())
+    } else {
+        Ok(val)
+    }
 }

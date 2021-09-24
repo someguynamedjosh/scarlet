@@ -3,27 +3,11 @@ Integer32 is rover::lang::Integer32
 sum is Integer32::sum
 difference is Integer32::difference
 
-index is any{Integer32}
-
-fibb is 
-pick{
-   if   index is_variant{0}, 1
-   elif index is_variant{1}, 1
-   else sum[
-      fibb[difference[index 1]] 
-      fibb[difference[index 2]]
-   ]
+Thing is Type{
+   variant new :Self From{something is any{Integer32}}
 }
-ix Integer32 From{index}
 
-fibb info{}
-
-negative is difference[0]
-decrement is difference[difference::right with 1]
-
-negative[5] info{}
-decrement[5] info{}
-
+Thing::new info{}
 
 #=
 recount is 

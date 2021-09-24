@@ -41,6 +41,11 @@ impl Environment {
             Item::Defining { base, .. } | Item::TypeIs { base, .. } => {
                 self.get_item_code(&self.items[base.0].base)
             }
+            Item::InductiveValue {
+                records,
+                typee,
+                variant_name,
+            } => self.get_inductive_value_code(records, typee, variant_name),
             Item::IsSameVariant { base, other } => self.get_is_variant_code(base, other),
             Item::Pick {
                 elif_clauses,
@@ -88,6 +93,21 @@ impl Environment {
             }
         }
         choices.into_iter().min_by_key(|e| e.len())
+    }
+
+    fn get_inductive_value_code(
+        &self,
+        records: &Vec<ItemId>,
+        typee: &ItemId,
+        variant_name: &String,
+    ) -> Option<String> {
+        let mut res = format!("{}::{}[", self.get_item_name_or_code(*typee), variant_name);
+        for value in records {
+            let value = indented(&self.get_item_name_or_code(*value));
+            res.push_str(&format!("\n    {}", value))
+        }
+        res.push_str("\n]");
+        Some(res)
     }
 
     fn get_is_variant_code(&self, base: &ItemId, other: &ItemId) -> Option<String> {
