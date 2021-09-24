@@ -2,23 +2,51 @@ use super::UnresolvedItem;
 use crate::shared::{Item, ItemId};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
+pub struct ItemDefinition {
+    /// True when the programmer has requested a diagnostic showing information
+    /// about this definition.
+    pub info_requested: bool,
+    /// True if this item is a place where other items are defined.
+    pub is_scope: bool,
+    pub definition: Option<UnresolvedItem>,
+}
+
+impl ItemDefinition {
+    pub fn new() -> Self {
+        Self {
+            info_requested: false,
+            is_scope: false,
+            definition: None,
+        }
+    }
+
+    pub fn with_info_requested(mut self) -> Self {
+        self.info_requested = true;
+        self
+    }
+
+    pub fn with_is_scope(mut self) -> Self {
+        self.is_scope = true;
+        self
+    }
+
+    pub fn with_definition(mut self, definition: UnresolvedItem) -> Self {
+        self.definition = Some(definition);
+        self
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Environment {
-    /// Items that should be displayed to the programmer.
-    pub infos: Vec<ItemId>,
-    pub modules: Vec<ItemId>,
-    pub(crate) items: Vec<Option<UnresolvedItem>>,
+    pub items: Vec<ItemDefinition>,
 }
 
 impl Environment {
     pub fn new() -> Self {
-        Self {
-            infos: vec![],
-            modules: Vec::new(),
-            items: Vec::new(),
-        }
+        Self { items: Vec::new() }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &Option<UnresolvedItem>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &ItemDefinition)> {
         self.items
             .iter()
             .enumerate()
@@ -26,23 +54,41 @@ impl Environment {
     }
 
     pub fn mark_info(&mut self, item: ItemId) {
-        self.infos.push(item)
+        assert!(item.0 < self.items.len());
+        self.items[item.0].info_requested = true;
     }
 
-    pub fn mark_as_module(&mut self, item: ItemId) {
-        self.modules.push(item)
+    pub fn mark_as_scope(&mut self, item: ItemId) {
+        assert!(item.0 < self.items.len());
+        self.items[item.0].is_scope = true;
     }
 
     pub fn next_id(&mut self) -> ItemId {
         let id = ItemId(self.items.len());
-        self.items.push(None);
+        self.items.push(ItemDefinition::new());
         id
     }
 
-    pub fn insert(&mut self, definition: UnresolvedItem) -> ItemId {
+    pub fn insert(&mut self, definition: ItemDefinition) -> ItemId {
         let id = self.next_id();
-        self.define(id, definition);
+        self.items[id.0] = definition;
         id
+    }
+
+    pub fn insert_unresolved_item(&mut self, item: UnresolvedItem) -> ItemId {
+        self.insert(ItemDefinition::new().with_definition(item))
+    }
+
+    pub fn insert_item(&mut self, item: Item) -> ItemId {
+        self.insert(ItemDefinition::new().with_definition(item.into()))
+    }
+
+    pub fn insert_scope(&mut self, item: Item) -> ItemId {
+        self.insert(
+            ItemDefinition::new()
+                .with_definition(item.into())
+                .with_is_scope(),
+        )
     }
 
     pub fn insert_variable(&mut self, typee: ItemId) -> ItemId {
@@ -67,10 +113,10 @@ impl Environment {
 
     pub fn define(&mut self, item: ItemId, definition: UnresolvedItem) {
         assert!(item.0 < self.items.len());
-        self.items[item.0] = Some(definition)
+        self.items[item.0].definition = Some(definition)
     }
 
-    pub fn definition_of(&self, item: ItemId) -> &Option<UnresolvedItem> {
+    pub fn definition_of(&self, item: ItemId) -> &ItemDefinition {
         assert!(item.0 < self.items.len());
         &self.items[item.0]
     }

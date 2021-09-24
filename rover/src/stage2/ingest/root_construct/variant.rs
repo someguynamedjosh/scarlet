@@ -35,7 +35,7 @@ fn decompose_variant_construct(root: Construct) -> Result<(String, Expression), 
 }
 
 fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
-    match ctx.environment.definition_of(type_id) {
+    match &ctx.environment.definition_of(type_id).definition {
         Some(UnresolvedItem::Just(item)) => match item {
             Item::Defining { base, .. } | Item::FromType { base, .. } => {
                 dereference_type(ctx, *base)
@@ -47,7 +47,7 @@ fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
 }
 
 fn get_from_vars(ctx: &Context, type_id: ItemId) -> (Vec<ItemId>, Definitions) {
-    match ctx.environment.definition_of(type_id) {
+    match &ctx.environment.definition_of(type_id).definition {
         Some(UnresolvedItem::Just(item)) => match item {
             Item::FromType { base, vars } => {
                 let (base_vars, defs) = get_from_vars(ctx, *base);
@@ -83,7 +83,7 @@ pub fn ingest_variant_construct(
     }
     .into();
     if definitions.len() > 0 {
-        let val_id = ctx.environment.insert(val);
+        let val_id = ctx.environment.insert_unresolved_item(val);
         Ok(Item::Defining {
             base: val_id,
             definitions,

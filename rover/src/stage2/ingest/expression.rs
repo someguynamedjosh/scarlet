@@ -25,7 +25,7 @@ fn define_or_dereference_item(ctx: &mut Context, item: UnresolvedItem) -> ItemId
     } else if let UnresolvedItem::Item(id) = item {
         id
     } else {
-        ctx.environment.insert(item)
+        ctx.environment.insert_unresolved_item(item)
     }
 }
 

@@ -20,7 +20,7 @@ mod rover_item;
 
 fn define_root_scope(env: &mut Environment, god_type: ItemId, definitions: Definitions) -> ItemId {
     let root_scope = env.next_id();
-    env.mark_as_module(root_scope);
+    env.mark_as_scope(root_scope);
     env.define(
         root_scope,
         Item::Defining {

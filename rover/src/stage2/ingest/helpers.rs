@@ -13,7 +13,7 @@ pub fn with_definitions(
     if definitions.is_empty() {
         base_item
     } else {
-        let base_id = ctx.environment.insert(base_item);
+        let base_id = ctx.environment.insert_unresolved_item(base_item);
         Item::Defining {
             base: base_id,
             definitions,

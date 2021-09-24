@@ -20,8 +20,8 @@ fn type_self(ctx: &mut Context) -> (ItemId, (String, ItemId)) {
 pub fn ingest_type_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let statements = root.expect_statements("Type").unwrap().to_owned();
     let (self_id, self_def) = type_self(ctx);
-    let inner_type = Item::InductiveType(self_id).into();
-    let inner_type_id = ctx.environment.insert(inner_type);
+    let inner_type = Item::InductiveType(self_id);
+    let inner_type_id = ctx.environment.insert_item(inner_type);
 
     let info = LocalInfo::Type(self_id);
     let definitions = process_definitions_with_info(ctx, statements, vec![self_def], info)?;
