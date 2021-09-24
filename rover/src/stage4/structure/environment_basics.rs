@@ -17,6 +17,7 @@ pub struct TypedItem {
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Item,
+    pub defined_in: Option<ItemId>,
     pub typee: Option<ItemId>,
 }
 
@@ -41,6 +42,7 @@ fn items(items: Vec<ItemDefinition>) -> Vec<TypedItem> {
             info_requested: i.info_requested,
             is_scope: i.is_scope,
             definition: i.definition,
+            defined_in: i.defined_in,
             typee: None,
         })
         .collect()
@@ -66,7 +68,11 @@ fn fmt_item_prefixes(f: &mut Formatter, item: &TypedItem) -> fmt::Result {
     if item.is_scope {
         write!(f, "scope ")?;
     }
-    Ok(())
+    if let Some(scope) = item.defined_in {
+        write!(f, "in {:?}, ", scope)
+    } else {
+        write!(f, "root, ")
+    }
 }
 
 fn fmt_item(f: &mut Formatter, index: usize, item: &TypedItem) -> fmt::Result {

@@ -23,12 +23,20 @@ impl Environment {
         })
     }
 
-    pub fn with_from_vars(&mut self, base: ItemId, from_vars: VarList) -> ItemId {
+    pub fn with_from_vars(
+        &mut self,
+        base: ItemId,
+        from_vars: VarList,
+        defined_in: Option<ItemId>,
+    ) -> ItemId {
         if from_vars.len() > 0 {
-            self.insert(Item::FromType {
-                base,
-                vars: from_vars.into_vec(),
-            })
+            self.insert(
+                Item::FromType {
+                    base,
+                    vars: from_vars.into_vec(),
+                },
+                defined_in,
+            )
         } else {
             base
         }

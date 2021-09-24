@@ -16,7 +16,7 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), val))
     }
 
-    pub fn insert(&mut self, def: Item) -> ItemId {
+    pub fn insert(&mut self, def: Item, defined_in: Option<ItemId>) -> ItemId {
         if let Some(existing_id) = self.item_reverse_lookup.get(&def) {
             return *existing_id;
         }
@@ -26,12 +26,18 @@ impl Environment {
             info_requested: false,
             is_scope: false,
             definition: def,
+            defined_in,
             typee: None,
         });
         id
     }
 
-    pub fn insert_with_type(&mut self, def: Item, typee: ItemId) -> ItemId {
+    pub fn insert_with_type(
+        &mut self,
+        def: Item,
+        typee: ItemId,
+        defined_in: Option<ItemId>,
+    ) -> ItemId {
         if let Some(existing_id) = self.item_reverse_lookup.get(&def) {
             return *existing_id;
         }
@@ -41,6 +47,7 @@ impl Environment {
             info_requested: false,
             is_scope: false,
             definition: def,
+            defined_in,
             typee: Some(typee),
         });
         id

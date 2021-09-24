@@ -25,7 +25,7 @@ impl Environment {
                 records: new_records,
                 variant_name,
             };
-            let id = self.insert(item);
+            let id = self.insert(item, opts.defined_in);
             self.compute_type(id).unwrap();
             id
         }

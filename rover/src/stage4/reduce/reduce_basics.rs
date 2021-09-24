@@ -25,7 +25,7 @@ impl Environment {
             opts.item
         } else {
             let item = Item::FromType { base: rbase, vars };
-            let id = self.insert(item);
+            let id = self.insert(item, opts.defined_in);
             self.compute_type(id).unwrap();
             id
         }

@@ -15,6 +15,7 @@ impl Environment {
         &mut self,
         typee: ItemId,
         records: Vec<ItemId>,
+        defined_in: Option<ItemId>,
     ) -> Result<ItemId, String> {
         let mut from_vars = VarList::new();
         for recorded in records {
@@ -22,25 +23,27 @@ impl Environment {
             let recorded_vars = self.get_from_variables(typee)?;
             from_vars.append(&recorded_vars.into_vec()[..]);
         }
-        Ok(self.with_from_vars(typee, from_vars))
+        Ok(self.with_from_vars(typee, from_vars, defined_in))
     }
 
     pub fn type_of_is_same_variant(
         &mut self,
         base: ItemId,
         other: ItemId,
+        defined_in: Option<ItemId>,
     ) -> Result<ItemId, String> {
         let btype = self.compute_type(base)?;
         let otype = self.compute_type(other)?;
         let mut from_vars = VarList::new();
         from_vars.append(&self.get_from_variables(btype)?.into_vec());
         from_vars.append(&self.get_from_variables(otype)?.into_vec());
-        Ok(self.with_from_vars(self.bool_type(), from_vars))
+        Ok(self.with_from_vars(self.bool_type(), from_vars, defined_in))
     }
 
     pub fn type_of_primitive_operation(
         &mut self,
         op: PrimitiveOperation,
+        defined_in: Option<ItemId>,
     ) -> Result<ItemId, String> {
         let mut from_vars = VarList::new();
         let typee = self.op_type(&op);
@@ -49,7 +52,7 @@ impl Environment {
             let input_vars = self.get_from_variables(input_type)?;
             from_vars.append(&input_vars.into_vec()[..]);
         }
-        Ok(self.with_from_vars(typee, from_vars))
+        Ok(self.with_from_vars(typee, from_vars, defined_in))
     }
 
     pub fn type_of_primitive_value(&self, pv: &PrimitiveValue) -> Result<ItemId, String> {
@@ -75,6 +78,6 @@ impl Environment {
     pub fn type_of_variable(&mut self, typee: ItemId, selff: ItemId) -> Result<ItemId, String> {
         let base = typee;
         let vars = vec![selff];
-        Ok(self.insert(Item::FromType { base, vars }))
+        Ok(self.insert(Item::FromType { base, vars }, Some(selff)))
     }
 }

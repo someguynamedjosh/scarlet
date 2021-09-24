@@ -19,6 +19,7 @@ pub type Reps = HashMap<ItemId, ItemId>;
 #[derive(Clone, Copy)]
 pub struct ReduceOptions<'a> {
     item: ItemId,
+    defined_in: Option<ItemId>,
     reps: &'a Reps,
     reduce_defs: bool,
 }
@@ -32,8 +33,10 @@ impl<'a> ReduceOptions<'a> {
 
 fn reduce_item(env: &mut Environment, id: ItemId) -> ItemId {
     env.compute_type(id).unwrap();
+    let defined_in = env.items[id.0].defined_in;
     let opts = ReduceOptions {
         item: id,
+        defined_in,
         reduce_defs: false,
         reps: &HashMap::new(),
     };

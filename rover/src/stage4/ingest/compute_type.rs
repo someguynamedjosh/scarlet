@@ -16,7 +16,9 @@ impl Environment {
     }
 
     fn compute_type_id(&mut self, of: ItemId) -> Result<ItemId, String> {
-        match &self.items[of.0].definition {
+        let item = &&self.items[of.0];
+        let defined_in = item.defined_in;
+        match &item.definition {
             Item::Defining { base, .. } => {
                 let base = *base;
                 self.compute_type(base)
@@ -30,13 +32,13 @@ impl Environment {
             Item::InductiveValue { typee, records, .. } => {
                 let typee = *typee;
                 let records = records.clone();
-                self.type_of_inductive_value(typee, records)
+                self.type_of_inductive_value(typee, records, defined_in)
             }
             Item::IsSameVariant { base, other } => {
                 // The type is a boolean dependent on the variables of the two expressions.
                 let base = *base;
                 let other = *other;
-                self.type_of_is_same_variant(base, other)
+                self.type_of_is_same_variant(base, other, defined_in)
             }
             Item::Pick {
                 initial_clause,
@@ -46,11 +48,11 @@ impl Environment {
                 let initial_clause = *initial_clause;
                 let elif_clauses = elif_clauses.clone();
                 let else_clause = *else_clause;
-                self.type_of_pick(initial_clause, elif_clauses, else_clause)
+                self.type_of_pick(initial_clause, elif_clauses, else_clause, defined_in)
             }
             Item::PrimitiveOperation(op) => {
                 let op = op.clone();
-                self.type_of_primitive_operation(op)
+                self.type_of_primitive_operation(op, defined_in)
             }
             Item::PrimitiveType(..) => Ok(self.god_type()),
             Item::PrimitiveValue(pv) => self.type_of_primitive_value(pv),

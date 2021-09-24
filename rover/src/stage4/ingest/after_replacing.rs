@@ -45,6 +45,7 @@ impl Environment {
         &mut self,
         type_id: ItemId,
         type_item: &Item,
+        defined_in: Option<ItemId>,
         dependencies: &HashMap<ItemId, VarList>,
     ) -> ItemId {
         // TODO: Handle nested from types? Or maybe add something to prevent nested from
@@ -56,7 +57,7 @@ impl Environment {
                 if vars_after_reps.as_slice() == vars {
                     type_id
                 } else {
-                    self.with_from_vars(*base, vars_after_reps)
+                    self.with_from_vars(*base, vars_after_reps, defined_in)
                 }
             }
             _ => type_id,
@@ -71,8 +72,15 @@ impl Environment {
         replacements: Replacements,
     ) -> Result<ItemId, String> {
         let dependencies = self.replacement_dependencies(replacements)?;
-        let original_type = self.compute_type(base)?;
-        let original_type_def = &self.items[original_type.0].definition.clone();
-        Ok(self.type_item_after_replacing(original_type, &original_type_def, &dependencies))
+        let original_type_id = self.compute_type(base)?;
+        let original_type = &self.items[original_type_id.0];
+        let original_type_def = original_type.definition.clone();
+        let defined_in = original_type.defined_in.clone();
+        Ok(self.type_item_after_replacing(
+            original_type_id,
+            &original_type_def,
+            defined_in,
+            &dependencies,
+        ))
     }
 }

@@ -60,6 +60,6 @@ impl Environment {
             else_clause: else_value,
         };
         let typ = self.items[else_value.0].typee.unwrap();
-        self.insert_with_type(item, typ)
+        self.insert_with_type(item, typ, opts.defined_in)
     }
 }

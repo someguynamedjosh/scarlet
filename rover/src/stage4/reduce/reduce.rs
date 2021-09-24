@@ -59,7 +59,8 @@ impl Environment {
                 assert_eq!(unlabeled_replacements.len(), 0);
                 let base = *base;
                 let replacements = replacements.clone();
-                self.reduce_replacing(opts, base, replacements)
+                let base_defined_in = self.items[base.0].defined_in;
+                self.reduce_replacing(opts, base, replacements, base_defined_in)
             }
             Item::TypeIs { base, .. } => {
                 let base = *base;

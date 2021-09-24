@@ -10,6 +10,7 @@ impl Environment {
         opts: ReduceOptions,
         base: ItemId,
         replacements: Replacements,
+        base_defined_in: Option<ItemId>,
     ) -> ItemId {
         // Do not replace anything this new replacement statement
         // replaces, because this statement is replacing those with
@@ -36,6 +37,7 @@ impl Environment {
         }
         let new_opts = ReduceOptions {
             item: base,
+            defined_in: base_defined_in,
             reps: &replacements_after,
             reduce_defs: true,
         };
@@ -48,7 +50,7 @@ impl Environment {
                 replacements: remaining_replacements,
                 unlabeled_replacements: Vec::new(),
             };
-            let id = self.insert(item);
+            let id = self.insert(item, opts.defined_in);
             self.compute_type(id).unwrap();
             id
         }

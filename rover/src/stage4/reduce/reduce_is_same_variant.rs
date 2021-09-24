@@ -30,6 +30,7 @@ impl Environment {
                 self.insert_with_type(
                     Item::PrimitiveValue(PrimitiveValue::Bool(result)),
                     self.bool_type(),
+                    opts.defined_in,
                 )
             }
             (Item::PrimitiveValue(base_value), Item::PrimitiveValue(other_value)) => {
@@ -37,6 +38,7 @@ impl Environment {
                 self.insert_with_type(
                     Item::PrimitiveValue(PrimitiveValue::Bool(result)),
                     self.bool_type(),
+                    opts.defined_in,
                 )
             }
             _ => {
@@ -47,7 +49,7 @@ impl Environment {
                         base: rbase_id,
                         other: rother_id,
                     };
-                    let id = self.insert(item);
+                    let id = self.insert(item, opts.defined_in);
                     self.compute_type(id).unwrap();
                     id
                 }

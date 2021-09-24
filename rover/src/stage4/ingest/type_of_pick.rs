@@ -7,6 +7,7 @@ impl Environment {
         initial_clause: (ItemId, ItemId),
         elif_clauses: Vec<(ItemId, ItemId)>,
         else_clause: ItemId,
+        defined_in: Option<ItemId>,
     ) -> Result<ItemId, String> {
         let id = initial_clause.1;
         let initial_value_type = self.compute_type(id)?;
@@ -31,6 +32,6 @@ impl Environment {
             vars.append(&self.get_from_variables(typ)?.into_vec());
         }
 
-        Ok(self.with_from_vars(base_value_type, vars))
+        Ok(self.with_from_vars(base_value_type, vars, defined_in))
     }
 }
