@@ -10,10 +10,10 @@ use crate::{
     },
 };
 
-fn check_containing_type(ctx: &Context, expected_type: ItemId) -> Result<(), String> {
+fn check_containing_type(ctx: &Context, expected_type: ItemId) -> Result<ItemId, String> {
     if let LocalInfo::Type(typee) = ctx.local_info {
         if expected_type == typee {
-            Ok(())
+            Ok(typee)
         } else {
             todo!("nice error, variant type is not Self.")
         }
@@ -75,6 +75,10 @@ pub fn ingest_variant_construct(
     let base_return_type_id = dereference_type(ctx, return_type_id);
     check_containing_type(ctx, base_return_type_id)?;
     let (recorded_vars, definitions) = get_from_vars(ctx, return_type_id);
+    let variant_id = ctx.get_or_create_current_id();
+    for var in &recorded_vars {
+        ctx.environment.set_defined_in(*var, variant_id);
+    }
 
     let val = Item::InductiveValue {
         typee: base_return_type_id,
@@ -84,6 +88,7 @@ pub fn ingest_variant_construct(
     .into();
     if definitions.len() > 0 {
         let val_id = ctx.environment.insert_unresolved_item(val);
+        ctx.environment.set_defined_in(val_id, variant_id);
         Ok(Item::Defining {
             base: val_id,
             definitions,

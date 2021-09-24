@@ -22,6 +22,10 @@ pub fn ingest_from_construct(
         vars,
     }
     .into();
+    let self_id = ctx.get_or_create_current_id();
+    for (_, var) in &named_vars {
+        ctx.environment.set_defined_in(*var, self_id);
+    }
     Ok(with_definitions(ctx, base_item, named_vars))
 }
 

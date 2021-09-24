@@ -17,6 +17,7 @@ fn main() {
     println!("Doing stage 2");
     let (environment, _) = stage2::ingest(statements).unwrap();
     println!("{:#?}", environment);
+    return;
 
     println!("Doing stage 3");
     let environment = stage3::ingest(&environment).unwrap();

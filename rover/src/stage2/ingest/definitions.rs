@@ -19,8 +19,9 @@ pub(super) fn process_definitions(
     ctx: &mut Context,
     statements: Vec<Statement>,
     other_defs: Vec<(String, ItemId)>,
+    self_id: ItemId,
 ) -> Result<Definitions, String> {
-    process_definitions_with_info(ctx, statements, other_defs, LocalInfo::Plain)
+    process_definitions_with_info(ctx, statements, other_defs, LocalInfo::Plain, self_id)
 }
 
 fn is_statement_to_unprocessed_item(ctx: &mut Context, is: Is) -> Result<UnprocessedItem, String> {
@@ -75,6 +76,7 @@ pub(super) fn process_definitions_with_info(
     statements: Vec<Statement>,
     other_defs: Vec<(String, ItemId)>,
     info: LocalInfo,
+    self_id: ItemId,
 ) -> Result<Definitions, String> {
     let unprocessed = statements_to_unprocessed_items(ctx, statements)?;
     let definitions = definitions(other_defs, &unprocessed[..]);
@@ -82,7 +84,8 @@ pub(super) fn process_definitions_with_info(
         let mut child_ctx = ctx
             .child()
             .with_id_scope_info(item.id, &definitions, info.clone());
-        ingest_expression(&mut child_ctx, item.def)?;
+        let id = ingest_expression(&mut child_ctx, item.def)?;
+        ctx.environment.set_defined_in(id, self_id);
     }
     Ok(definitions)
 }

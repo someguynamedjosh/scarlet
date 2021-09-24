@@ -17,7 +17,11 @@ fn define_binary_op(
     let (a, b) = define_two_vars(env, typee);
     let base = env.insert_item(Item::PrimitiveOperation(op(a, b)));
     let item = Item::defining(base, vec![("left", a), ("right", b)]);
-    env.insert_scope(item)
+    let item_id = env.insert_scope(item);
+    env.set_defined_in(a, item_id);
+    env.set_defined_in(b, item_id);
+    env.set_defined_in(base, item_id);
+    item_id
 }
 
 fn define_integer_type(
@@ -30,7 +34,11 @@ fn define_integer_type(
     let sum = define_binary_op(env, itype_base, |a, b| op_builder(Imo::Sum(a, b)));
     let difference = define_binary_op(env, itype_base, |a, b| op_builder(Imo::Difference(a, b)));
     let members = vec![("sum", sum), ("difference", difference)];
-    env.insert_self_referencing_define(itype_base, members)
+    let item_id = env.insert_self_referencing_define(itype_base, members);
+    env.set_defined_in(itype_base, item_id);
+    env.set_defined_in(sum, item_id);
+    env.set_defined_in(difference, item_id);
+    item_id
 }
 
 fn define_bool_type(env: &mut Environment) -> ItemId {
@@ -38,7 +46,11 @@ fn define_bool_type(env: &mut Environment) -> ItemId {
     let true_con = env.insert_item(Item::PrimitiveValue(PrimitiveValue::Bool(true)));
     let false_con = env.insert_item(Item::PrimitiveValue(PrimitiveValue::Bool(false)));
     let members = vec![("true", true_con), ("false", false_con)];
-    env.insert_self_referencing_define(bool_type_base, members)
+    let item_id = env.insert_self_referencing_define(bool_type_base, members);
+    env.set_defined_in(bool_type_base, item_id);
+    env.set_defined_in(true_con, item_id);
+    env.set_defined_in(false_con, item_id);
+    item_id
 }
 
 fn define_lang_members(env: &mut Environment, god_type: ItemId) -> Vec<(&'static str, ItemId)> {
@@ -56,8 +68,10 @@ fn define_lang_item(env: &mut Environment) -> (ItemId, ItemId) {
     let god_type = env.insert_item(Item::GodType);
 
     let lang_members = define_lang_members(env, god_type);
-    let lang_item = env.insert_scope(Item::defining(god_type, lang_members));
-    env.mark_as_scope(lang_item);
+    let lang_item = env.insert_scope(Item::defining(god_type, lang_members.clone()));
+    for (_, item) in &lang_members {
+        env.set_defined_in(*item, lang_item);
+    }
 
     (god_type, lang_item)
 }
@@ -66,6 +80,6 @@ pub fn define_rover_item(env: &mut Environment) -> (ItemId, ItemId) {
     let (god_type, lang) = define_lang_item(env);
     let rover_members = vec![("lang", lang)];
     let rover = env.insert_scope(Item::defining(god_type, rover_members));
-    env.mark_as_scope(rover);
+    env.set_defined_in(lang, rover);
     (rover, god_type)
 }

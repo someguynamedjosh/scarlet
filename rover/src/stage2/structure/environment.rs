@@ -9,6 +9,7 @@ pub struct ItemDefinition {
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Option<UnresolvedItem>,
+    pub defined_in: Option<ItemId>,
 }
 
 impl ItemDefinition {
@@ -17,12 +18,8 @@ impl ItemDefinition {
             info_requested: false,
             is_scope: false,
             definition: None,
+            defined_in: None,
         }
-    }
-
-    pub fn with_info_requested(mut self) -> Self {
-        self.info_requested = true;
-        self
     }
 
     pub fn with_is_scope(mut self) -> Self {
@@ -108,12 +105,19 @@ impl Environment {
         let id = self.next_id();
         definitions.insert(0, ("Self", id));
         self.define(id, UnresolvedItem::defining(base, definitions));
+        self.mark_as_scope(id);
         id
     }
 
     pub fn define(&mut self, item: ItemId, definition: UnresolvedItem) {
         assert!(item.0 < self.items.len());
         self.items[item.0].definition = Some(definition)
+    }
+
+    pub fn set_defined_in(&mut self, item: ItemId, defined_in: ItemId) {
+        assert!(item.0 < self.items.len());
+        assert!(defined_in.0 < self.items.len());
+        self.items[item.0].defined_in = Some(defined_in);
     }
 
     pub fn definition_of(&self, item: ItemId) -> &ItemDefinition {

@@ -22,9 +22,11 @@ pub fn ingest_type_construct(ctx: &mut Context, root: Construct) -> Result<Unres
     let (self_id, self_def) = type_self(ctx);
     let inner_type = Item::InductiveType(self_id);
     let inner_type_id = ctx.environment.insert_item(inner_type);
+    ctx.environment.set_defined_in(inner_type_id, self_id);
 
     let info = LocalInfo::Type(self_id);
-    let definitions = process_definitions_with_info(ctx, statements, vec![self_def], info)?;
+    let definitions =
+        process_definitions_with_info(ctx, statements, vec![self_def], info, self_id)?;
     Ok(Item::Defining {
         base: inner_type_id,
         definitions,

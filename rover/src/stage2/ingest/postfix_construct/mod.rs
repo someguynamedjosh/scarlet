@@ -28,7 +28,8 @@ fn ingest_defining_construct(
     remainder: Expression,
 ) -> Result<UnresolvedItem, String> {
     let statements = post.expect_statements("defining")?.to_owned();
-    let body = process_definitions(&mut ctx.child(), statements, vec![])?;
+    let self_id = ctx.get_or_create_current_id();
+    let body = process_definitions(&mut ctx.child(), statements, vec![], self_id)?;
     let mut child_ctx = ctx.child().with_additional_scope(&body);
     let base_id = ingest_expression(&mut child_ctx, remainder)?;
     Ok(Item::Defining {
