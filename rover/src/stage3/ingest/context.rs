@@ -12,7 +12,7 @@ pub struct Context<'a> {
     pub src: &'a stage2::Environment,
     pub env: &'a mut Environment,
     pub next_unused_id: ItemId,
-    pub extra_items: Vec<Item>,
+    pub extra_items: Vec<(Item, Option<ItemId>)>,
 }
 
 /// Returns true if calling convert_item(item) will not panic.
@@ -24,9 +24,9 @@ pub fn convertible(item: &stage2::UnresolvedItem) -> bool {
 }
 
 impl<'a> Context<'a> {
-    pub fn insert_extra_item(&mut self, item: Item) -> ItemId {
+    pub fn insert_extra_item(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
         let id = self.next_unused_id;
-        self.extra_items.push(item);
+        self.extra_items.push((item, defined_in));
         self.next_unused_id.0 += 1;
         id
     }

@@ -3,8 +3,9 @@ use crate::shared::{Item, ItemId};
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
     /// True when the programmer has requested a diagnostic showing information
-    /// about this definition.
-    pub info_requested: bool,
+    /// about this definition. Contains the scope from which the information was
+    /// requested.
+    pub info_requested: Option<ItemId>,
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Item,
@@ -14,7 +15,7 @@ pub struct ItemDefinition {
 impl ItemDefinition {
     pub fn new(item: Item, defined_in: Option<ItemId>) -> Self {
         Self {
-            info_requested: false,
+            info_requested: None,
             is_scope: false,
             definition: item,
             defined_in,
@@ -32,9 +33,9 @@ impl Environment {
         Self { items: Vec::new() }
     }
 
-    pub fn mark_info(&mut self, item: ItemId) {
+    pub fn mark_info(&mut self, item: ItemId, info_scope: Option<ItemId>) {
         assert!(item.0 < self.items.len());
-        self.items[item.0].info_requested = true;
+        self.items[item.0].info_requested = info_scope;
     }
 
     pub fn mark_as_scope(&mut self, item: ItemId) {

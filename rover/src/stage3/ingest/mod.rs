@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use self::helpers::{convert_iid, full_convert_iid};
+use self::helpers::{convert_defined_in, convert_iid, full_convert_iid};
 use crate::{
     shared::{Item, ItemId},
     stage2::structure::{self as stage2, UnresolvedItem},
@@ -82,33 +82,9 @@ fn convert_items(mut ctx: Context, unconverted_items: Vec<ItemId>) -> Result<(),
     Ok(())
 }
 
-fn find_definition(ctx: &Context, item: ItemId) -> Option<ItemId> {
-    let mut backup = None;
-    for (other_id, other_item) in ctx.src.iter() {
-        if let Some(UnresolvedItem::Just(Item::Defining { definitions, base })) =
-            &other_item.definition
-        {
-            if other_id == item {
-                continue
-            } else if base == &item {
-                // This is not preferred, but will be returned if we can't find anything else.
-                backup = Some(other_id);
-            } 
-            if definitions.iter().any(|def| def.1 == item) {
-                return Some(other_id);
-            }
-        }
-    }
-    backup
-}
-
 fn find_definition_in_output(ctx: &mut Context, item: ItemId) -> Result<Option<ItemId>, String> {
-    let old_id = find_definition(ctx, item);
-    if let Some(id) = old_id {
-        convert_iid(ctx, id, false).map(Some)
-    } else {
-        Ok(None)
-    }
+    let defined_in = ctx.src.items[item.0].defined_in;
+    convert_defined_in(ctx, defined_in)
 }
 
 fn convert_item(ctx: &mut Context, item: ItemId) -> Result<(), String> {
@@ -126,8 +102,7 @@ fn add_extra_items_to_env(mut ctx: Context) {
     let mut id = ItemId(ctx.env.items.len());
     let items = ctx.extra_items;
     ctx.extra_items = vec![];
-    for item in items {
-        let defined_in = find_definition(&ctx, id);
+    for (item, defined_in) in items {
         ctx.env.insert_item(item, defined_in);
         id.0 += 1;
     }
@@ -137,7 +112,8 @@ fn convert_metadata(ctx: &mut Context) -> Result<(), String> {
     for (id, old_def) in ctx.src.iter() {
         let new_id = full_convert_iid(ctx, id)?;
         if old_def.info_requested {
-            ctx.env.mark_info(new_id);
+            let new_def_in = convert_defined_in(ctx, old_def.defined_in)?;
+            ctx.env.mark_info(new_id, new_def_in);
         }
         if old_def.is_scope {
             ctx.env.mark_as_scope(new_id);

@@ -118,6 +118,17 @@ impl Environment {
         assert!(item.0 < self.items.len());
         assert!(defined_in.0 < self.items.len());
         self.items[item.0].defined_in = Some(defined_in);
+        match &self.items[item.0].definition {
+            Some(UnresolvedItem::Member { base, .. }) => {
+                let base = *base;
+                self.set_defined_in(base, defined_in);
+            }
+            Some(UnresolvedItem::Item(base)) => {
+                let base = *base;
+                self.set_defined_in(base, defined_in);
+            }
+            _ => (),
+        }
     }
 
     pub fn definition_of(&self, item: ItemId) -> &ItemDefinition {

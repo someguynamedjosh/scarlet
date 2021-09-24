@@ -2,7 +2,7 @@ use super::{
     context::Context,
     dereferenced_item::DereferencedItem,
     get_member::get_member,
-    helpers::{convert_iids, convert_reps},
+    helpers::{convert_defined_in, convert_iids, convert_reps},
 };
 use crate::{
     shared::{Item, ItemId, Replacements},
@@ -14,18 +14,30 @@ fn convert_dereffed_replacing(
     base: DereferencedItem,
     replacements: Replacements,
     unlabeled_replacements: Vec<ItemId>,
-) -> ItemId {
-    let base = convert_dereffed(ctx, base);
-    ctx.insert_extra_item(Item::Replacing {
-        base,
-        replacements,
-        unlabeled_replacements,
-    })
+) -> Result<(ItemId, Option<ItemId>), String> {
+    let (base, defined_in) = convert_dereffed(ctx, base)?;
+    let id = ctx.insert_extra_item(
+        Item::Replacing {
+            base,
+            replacements,
+            unlabeled_replacements,
+        },
+        defined_in,
+    );
+    Ok((id, defined_in))
 }
 
-pub fn convert_dereffed(ctx: &mut Context, item: DereferencedItem) -> ItemId {
+pub fn convert_dereffed(
+    ctx: &mut Context,
+    item: DereferencedItem,
+) -> Result<(ItemId, Option<ItemId>), String> {
     match item {
-        DereferencedItem::Stage2Item(id) => *ctx.id_map.get(&id).unwrap(),
+        DereferencedItem::Stage2Item(id) => {
+            let old_defined_in = ctx.src.items[id.0].defined_in;
+            let new_defined_in = convert_defined_in(ctx, old_defined_in)?;
+            let new_id = *ctx.id_map.get(&id).unwrap();
+            Ok((new_id, new_defined_in))
+        }
         DereferencedItem::Replacing {
             base,
             replacements,

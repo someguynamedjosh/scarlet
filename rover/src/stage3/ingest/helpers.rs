@@ -40,5 +40,13 @@ pub fn full_convert_iid(ctx: &mut Context, id: ItemId) -> Result<ItemId, String>
 /// Applies dereferencing and id_map to the provided item id.
 pub fn convert_iid(ctx: &mut Context, id: ItemId, deref_define: bool) -> Result<ItemId, String> {
     let dereffed = dereference_iid(ctx, id, deref_define)?;
-    Ok(convert_dereffed(ctx, dereffed))
+    Ok(convert_dereffed(ctx, dereffed)?.0)
+}
+
+pub fn convert_defined_in(ctx: &mut Context, defined_in: Option<ItemId>) -> Result<Option<ItemId>, String> {
+    if let Some(id) = defined_in {
+        convert_iid(ctx, id, false).map(Some)
+    } else {
+        Ok(None)
+    }
 }
