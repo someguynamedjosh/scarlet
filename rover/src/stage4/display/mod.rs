@@ -33,10 +33,12 @@ impl Environment {
     pub fn display_infos(&self) {
         for (id, item) in self.iter() {
             if let Some(scope) = item.info_requested {
+                let name = self.get_item_name(id, scope).unwrap_or(format!("anonymous"));
+                println!("\n{} is", name);
                 let repr = self.get_item_code_or_name(id, Context::new(scope));
-                println!("\n{}", repr);
+                println!("{}", repr);
                 if let Some(typee) = item.typee {
-                    let type_repr = self.get_item_code_or_name(typee, Context::new(scope));
+                    let type_repr = self.get_item_name_or_code(typee, Context::new(scope));
                     println!("type_is{{\n    {}\n}}", indented(&type_repr));
                 }
             }

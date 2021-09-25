@@ -7,7 +7,14 @@ defining{
    T is any{TYPE}
    val is any{T}
 
-   val[Integer32 123] info{}
+   Unit is Type{
+      param Data is any{TYPE}
+      param value is any{Data}
+      variant new :Self
+   }
+
+   Unit::Self info{}
+   Unit::new info{}
 }
 
 
