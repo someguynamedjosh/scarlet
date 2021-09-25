@@ -95,10 +95,16 @@ impl Environment {
         ctx: Context,
     ) -> Option<String> {
         let base_def = &self.items[definition.0].definition;
-        let defines = if let Item::Defining { definitions, .. } = base_def {
-            definitions
+        let (defines, base_type_id) = if let Item::Defining { definitions, base } = base_def {
+            (definitions, *base)
         } else {
             unreachable!("Type definition should always be a defining construct.")
+        };
+        let base_type = &self.items[base_type_id.0].definition;
+        let original_params = if let Item::InductiveType { params, .. } = base_type {
+            params
+        } else {
+            unreachable!("Base of type definition should always be an inductive type")
         };
         let mut res = format!("Type{{");
         for (name, val_id) in defines {
@@ -106,14 +112,17 @@ impl Environment {
                 continue;
             }
             res.push_str("\n    ");
-            if params.contains(val_id) {
-                res.push_str("param ");
+            if let Some(index) = original_params.iter().position(|i| i == val_id) {
+                let val_id = params[index];
+                let val = self.get_item_code_or_name(val_id, ctx);
+                res.push_str(&format!("param {} is {}", name, indented(&val)));
+            } else {
+                let val = self.get_item_code_or_name(*val_id, ctx.with_in_type(*definition));
+                if !self.is_inductive_value(val_id) {
+                    res.push_str(&format!("{} is ", name));
+                }
+                res.push_str(&format!("{}", indented(&val)));
             }
-            let val = self.get_item_code_or_name(*val_id, ctx.with_in_type(*definition));
-            if !self.is_inductive_value(val_id) {
-                res.push_str(&format!("{} is ", name));
-            }
-            res.push_str(&format!("{}", indented(&val)));
         }
         res.push_str("\n}");
         Some(res)

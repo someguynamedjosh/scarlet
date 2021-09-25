@@ -9,7 +9,10 @@ defining{
    Test is 
    Type{
       param something is any{Integer32}
+      param another is any{Integer32}
    } 
+
+   example is Test[123]
    info{}
 }
 
