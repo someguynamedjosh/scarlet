@@ -1,8 +1,8 @@
-use super::structure::Environment;
 use crate::{
     shared::{
         IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
     },
+    stage4::structure::Environment,
     util::indented,
 };
 
@@ -22,42 +22,7 @@ impl ChildOf {
 }
 
 impl Environment {
-    pub fn display_infos(&self) {
-        for (id, item) in self.iter() {
-            if let Some(scope) = item.info_requested {
-                let repr = self.get_item_code_or_name(id, scope);
-                println!("{}", repr);
-                if let Some(typee) = item.typee {
-                    let type_repr = self.get_item_code_or_name(typee, scope);
-                    println!("type_is{{\n    {}\n}}", indented(&type_repr));
-                }
-            }
-        }
-    }
-
-    /// Tries to get code. If that fails, gets a name instead.
-    pub fn get_item_code_or_name(&self, item_id: ItemId, in_scope: ItemId) -> String {
-        if let Some(code) = self.get_item_code(&self.items[item_id.0].definition, in_scope) {
-            return code;
-        } else if let Some(name) = self.get_item_name(item_id, in_scope) {
-            return name;
-        } else {
-            return format!("anonymous");
-        }
-    }
-
-    /// Tries to get a name. If that fails, gets code instead.
-    pub fn get_item_name_or_code(&self, item_id: ItemId, in_scope: ItemId) -> String {
-        if let Some(name) = self.get_item_name(item_id, in_scope) {
-            return name;
-        } else if let Some(code) = self.get_item_code(&self.items[item_id.0].definition, in_scope) {
-            return code;
-        } else {
-            return format!("anonymous");
-        }
-    }
-
-    pub fn get_item_code(&self, item: &Item, in_scope: ItemId) -> Option<String> {
+    pub(super) fn get_item_code(&self, item: &Item, in_scope: ItemId) -> Option<String> {
         match item {
             Item::Defining { base, .. } | Item::TypeIs { base, .. } => {
                 self.get_item_code(&self.items[base.0].definition, in_scope)
@@ -81,97 +46,6 @@ impl Environment {
                 base, replacements, ..
             } => self.get_replacing_code(base, replacements, in_scope),
             _ => None,
-        }
-    }
-
-    fn get_item_name(&self, id: ItemId, in_scope: ItemId) -> Option<String> {
-        self.get_item_name_impl(id, in_scope, vec![]).ok().flatten()
-    }
-
-    fn get_parents(&self, of: ItemId) -> Vec<ChildOf> {
-        let mut parents = Vec::new();
-        for (id, def) in self.iter() {
-            match &def.definition {
-                Item::Defining { base, definitions } => {
-                    if *base == of {
-                        parents.push(ChildOf::Base(id))
-                    }
-                    for (name, def) in definitions {
-                        if *def == of {
-                            parents.push(ChildOf::Definition {
-                                name: name.clone(),
-                                scope: id,
-                            });
-                        }
-                    }
-                }
-                _ => (),
-            }
-        }
-        parents
-    }
-
-    fn a_is_b_or_parent_of_b(&self, a: ItemId, b: ItemId, already_checked: Vec<ItemId>) -> bool {
-        if already_checked.contains(&b) {
-            // Prevent infinite loops
-            false
-        } else if a == b {
-            // If item is scope, return true.
-            true
-        } else {
-            // Otherwise, if a parent of item or any of their parents matches the scope,
-            // return true.
-            for b_as_child in self.get_parents(b) {
-                let b_parent = b_as_child.parent_id();
-                let new_already_checked = [already_checked.clone(), vec![b]].concat();
-                if self.a_is_b_or_parent_of_b(a, b_parent, new_already_checked) {
-                    return true;
-                }
-            }
-            false
-        }
-    }
-
-    fn get_item_name_impl(
-        &self,
-        id: ItemId,
-        in_scope: ItemId,
-        already_checked: Vec<ItemId>,
-    ) -> Result<Option<String>, ()> {
-        if already_checked.contains(&id) {
-            // Prevent infinite loops.
-            Err(())
-        } else if self.a_is_b_or_parent_of_b(id, in_scope, vec![]) {
-            // If we are trying to name something which is a parent of the scope from which
-            // the name should be resolved, that's an item with no name. I.E. any children
-            // can be referred to by name without prefixing it with anything extra.
-            Ok(None)
-        } else {
-            let mut candidates = Vec::new();
-            for id_as_child in self.get_parents(id) {
-                let parent_id = id_as_child.parent_id();
-                let new_already_checked = [already_checked.clone(), vec![id]].concat();
-                let parent_name = self.get_item_name_impl(parent_id, in_scope, new_already_checked);
-                match parent_name {
-                    Ok(None) => match id_as_child {
-                        ChildOf::Base(..) => return Ok(None),
-                        ChildOf::Definition { name, .. } => candidates.push(name),
-                    },
-                    Ok(Some(parent_name)) => match id_as_child {
-                        ChildOf::Base(..) => candidates.push(parent_name),
-                        ChildOf::Definition { name, .. } => {
-                            candidates.push(format!("{}::{}", parent_name, name))
-                        }
-                    },
-                    Err(..) => (),
-                }
-            }
-            let result = candidates.into_iter().min_by_key(|p| p.len());
-            if result.is_none() {
-                Err(())
-            } else {
-                Ok(result)
-            }
         }
     }
 
@@ -301,9 +175,5 @@ impl Environment {
         }
         res.push_str("\n]");
         Some(res)
-    }
-
-    fn get_variable_code(&self, selff: ItemId, in_scope: ItemId) -> Option<String> {
-        self.get_item_name(selff, in_scope)
     }
 }
