@@ -1,6 +1,6 @@
 use crate::{
     shared::{Definitions, Item, ItemId, PrimitiveValue},
-    stage1::structure::construct::Construct,
+    stage1::structure::{construct::Construct, statement::Statement},
     stage2::{
         ingest::{
             context::{Context, LocalInfo},
@@ -19,14 +19,36 @@ fn type_self(ctx: &mut Context) -> (ItemId, (String, ItemId)) {
 
 pub fn ingest_type_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let statements = root.expect_statements("Type").unwrap().to_owned();
+    let mut params = Vec::new();
+    for statement in &statements {
+        match statement {
+            Statement::Parameter(s) => params.push((s.clone(), ctx.environment.next_id())),
+            _ => (),
+        }
+    }
+
     let (self_id, self_def) = type_self(ctx);
-    let inner_type = Item::InductiveType(self_id);
+    let inner_type = Item::InductiveType {
+        selff: self_id,
+        params: params.iter().map(|i| i.1).collect(),
+    };
     let inner_type_id = ctx.environment.insert_item(inner_type);
     ctx.environment.set_defined_in(inner_type_id, self_id);
 
     let info = LocalInfo::Type(self_id);
     let definitions =
         process_definitions_with_info(ctx, statements, vec![self_def], info, self_id)?;
+
+    let this_id = ctx.get_or_create_current_id();
+    for (statement, into_id) in params {
+        ctx.environment.set_defined_in(into_id, this_id);
+        let mut this_ctx = ctx
+            .child()
+            .with_additional_scope(&definitions)
+            .with_current_item_id(into_id);
+        ingest_expression(&mut this_ctx, statement.0, vec![])?;
+    }
+
     Ok(Item::Defining {
         base: inner_type_id,
         definitions,

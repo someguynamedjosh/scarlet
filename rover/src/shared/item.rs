@@ -11,7 +11,10 @@ pub enum Item {
         vars: Vec<ItemId>,
     },
     GodType,
-    InductiveType(ItemId),
+    InductiveType {
+        selff: ItemId,
+        params: Vec<ItemId>,
+    },
     InductiveValue {
         typee: ItemId,
         variant_name: String,

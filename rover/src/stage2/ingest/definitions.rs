@@ -55,6 +55,7 @@ fn statements_to_unprocessed_items(
         let item = match statement {
             Statement::Is(is) => is_statement_to_unprocessed_item(ctx, is)?,
             Statement::Expression(expr) => expr_statement_to_unprocessed_item(ctx, expr)?,
+            Statement::Parameter(..) => continue,
             _ => todo!("Nice error"),
         };
         top_level_expressions.push(item);

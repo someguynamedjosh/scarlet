@@ -22,7 +22,13 @@ impl Debug for Item {
                 write!(f, " }}")
             }
             Self::GodType => write!(f, "TYPE"),
-            Self::InductiveType(id) => write!(f, "InductiveType({:?})", id),
+            Self::InductiveType { params, selff } => {
+                write!(f, "user_type{{TYPE From{{")?;
+                for param in params {
+                    write!(f, " {:?}", param)?;
+                }
+                write!(f, " }}}} at {:?}", selff)
+            },
             Self::InductiveValue {
                 typee,
                 variant_name,
