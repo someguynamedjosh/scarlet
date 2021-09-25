@@ -10,7 +10,6 @@ use crate::{
 
 struct UnprocessedItem {
     id: ItemId,
-    public: bool,
     name: Option<String>,
     def: Expression,
 }
@@ -28,7 +27,6 @@ fn is_statement_to_unprocessed_item(ctx: &mut Context, is: Is) -> Result<Unproce
     let name = is.name.expect_ident_owned()?;
     Ok(UnprocessedItem {
         id: ctx.environment.next_id(),
-        public: is.public,
         name: Some(name),
         def: is.value,
     })
@@ -40,7 +38,6 @@ fn expr_statement_to_unprocessed_item(
 ) -> Result<UnprocessedItem, String> {
     Ok(UnprocessedItem {
         id: ctx.environment.next_id(),
-        public: false,
         name: None,
         def: expr,
     })

@@ -28,7 +28,7 @@ impl Debug for Item {
                     write!(f, " {:?}", param)?;
                 }
                 write!(f, " }} at {:?}", selff)
-            },
+            }
             Self::InductiveValue {
                 typee,
                 variant_name,

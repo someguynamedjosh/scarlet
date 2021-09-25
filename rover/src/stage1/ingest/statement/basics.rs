@@ -14,10 +14,8 @@ impl Is {
             let (input, name) = Expression::parser()(input)?;
             let (input, _) = ws()(input)?;
             let (input, _) = helpers::tag_then_ws("is")(input)?;
-            let (input, public) = helpers::public_parser()(input)?;
             let (input, value) = Expression::parser()(input)?;
             let sel = Self {
-                public,
                 name,
                 value,
             };
@@ -50,7 +48,6 @@ impl Is {
             let (input, variant_def) = Expression::parser()(input)?;
             let (name, value) = expand_variant_shorthand(variant_def);
             let sel = Self {
-                public: true,
                 name,
                 value,
             };
@@ -77,7 +74,6 @@ impl Parameter {
             let (input, value) = Expression::parser()(input)?;
             let is = Is {
                 name: sel.0.clone(),
-                public: false,
                 value,
             };
             Ok((input, (sel, is)))

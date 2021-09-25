@@ -4,7 +4,6 @@ use crate::stage1::structure::expression::Expression;
 
 #[derive(Clone, PartialEq)]
 pub struct Is {
-    pub public: bool,
     pub name: Expression,
     pub value: Expression,
 }
@@ -13,9 +12,6 @@ impl Debug for Is {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         self.name.fmt(f)?;
         write!(f, " is ")?;
-        if self.public {
-            write!(f, "public ")?;
-        }
         self.value.fmt(f)
     }
 }

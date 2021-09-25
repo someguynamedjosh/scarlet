@@ -4,17 +4,20 @@ defining{
    TYPE is rover::lang::TYPE
    Integer32 is rover::lang::Integer32
 
-   T is any{TYPE}
-   val is any{T}
+   variant MyThing :TYPE
 
-   Unit is Type{
-      param Data is any{TYPE}
-      param value is any{Data}
-      variant new :Self
-   }
+   # T is any{TYPE}
+   # val is any{T}
 
-   Unit::Self info{}
-   value is Unit::new[Integer32 123] info{}
+   # Unit is Type{
+   #    param Data is any{TYPE}
+   #    param value is any{Data}
+   #    variant new :Self
+   # }
+
+   # MyType is Unit[Integer32 123]
+
+   # value is MyType::new info{}
 }
 
 
