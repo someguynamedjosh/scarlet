@@ -27,6 +27,10 @@ impl Environment {
             if let Some(scope) = item.info_requested {
                 let repr = self.get_item_code_or_name(id, scope);
                 println!("{}", repr);
+                if let Some(typee) = item.typee {
+                    let type_repr = self.get_item_code_or_name(typee, scope);
+                    println!("type_is{{\n    {}\n}}", indented(&type_repr));
+                }
             }
         }
     }
@@ -58,6 +62,7 @@ impl Environment {
             Item::Defining { base, .. } | Item::TypeIs { base, .. } => {
                 self.get_item_code(&self.items[base.0].definition, in_scope)
             }
+            Item::FromType { base, vars } => self.get_from_type_code(base, vars, in_scope),
             Item::GodType => Some(format!("TYPE")),
             Item::InductiveValue {
                 records,
@@ -168,6 +173,22 @@ impl Environment {
                 Ok(result)
             }
         }
+    }
+
+    fn get_from_type_code(
+        &self,
+        base: &ItemId,
+        vars: &Vec<ItemId>,
+        in_scope: ItemId,
+    ) -> Option<String> {
+        let mut res = self.get_item_name_or_code(*base, in_scope);
+        res.push_str(" From{ ");
+        for var in vars {
+            res.push_str(&self.get_item_name_or_code(*var, in_scope));
+            res.push_str(" ");
+        }
+        res.push_str("}");
+        Some(res)
     }
 
     fn get_inductive_value_code(

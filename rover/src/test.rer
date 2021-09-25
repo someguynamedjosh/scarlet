@@ -10,6 +10,8 @@ Thing is Type{
 
 index is any{Integer32}
 
+something is fibb
+
 fibb is pick{
    if   index is_variant{0}, 1
    elif index is_variant{1}, 1
@@ -19,7 +21,7 @@ fibb is pick{
    ]
 }
 
-fibb[7] info{}
+something info{}
 
 #=
 recount is 
