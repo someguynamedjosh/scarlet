@@ -18,14 +18,19 @@ impl ConstructBody {
 }
 
 fn fmt_statements(f: &mut Formatter, statements: &[Statement]) -> fmt::Result {
+    let mut first = true;
     for s in statements {
         if f.alternate() {
+            if !first {
+                write!(f, "\n");
+            }
             let st = format!("{:#?}", s);
-            writeln!(f, "{}", util::indented(&st))?;
+            write!(f, "\n    {}", util::indented(&st))?;
         } else {
             write!(f, " ")?;
             s.fmt(f)?;
         }
+        first = false;
     }
     Ok(())
 }

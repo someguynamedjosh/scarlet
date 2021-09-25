@@ -7,6 +7,8 @@ use std::fmt::{self, Debug, Formatter};
 
 pub use body::*;
 
+use crate::util::indented;
+
 #[derive(Clone, PartialEq)]
 pub struct Construct {
     pub label: String,
@@ -17,9 +19,12 @@ impl Debug for Construct {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}{{", self.label)?;
         if f.alternate() && !self.body.is_plain_text() {
-            writeln!(f)?;
+            let text = format!("{:#?}", self.body);
+            write!(f, "{}", &text)?;
+            write!(f, "\n}}")
+        } else {
+            self.body.fmt(f)?;
+            write!(f, "}}")
         }
-        self.body.fmt(f)?;
-        write!(f, "}}")
     }
 }
