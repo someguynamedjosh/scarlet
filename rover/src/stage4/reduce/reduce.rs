@@ -71,7 +71,10 @@ impl Environment {
                 let base = *base;
                 self.reduce(opts.with_item(base))
             }
-            Item::Variable { .. } => opts.item,
+            Item::Variable { typee, selff } => {
+                let (typee, selff) = (*typee, *selff);
+                self.reduce_variable(opts, typee, selff)
+            }
         }
     }
 }

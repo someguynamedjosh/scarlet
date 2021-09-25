@@ -90,7 +90,7 @@ impl Environment {
             }
             Item::Variable { typee, selff } => {
                 let (typee, selff) = (*typee, *selff);
-                self.type_of_variable(typee, selff)
+                self.type_of_variable(typee, selff, currently_computing)
             }
         }
     }

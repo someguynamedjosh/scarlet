@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Item, ItemId, PrimitiveType},
+    shared::{Item, ItemId, PrimitiveType, Replacements},
     stage4::structure::Environment,
 };
 
@@ -32,6 +32,25 @@ impl Environment {
     /// gremlins.
     pub(super) fn are_def_equal(&self, left: ItemId, right: ItemId) -> bool {
         left == right
+    }
+
+    pub(super) fn are_def_equal_after_replacements(
+        &self,
+        left: ItemId,
+        right: ItemId,
+        replacements: &Replacements,
+    ) -> bool {
+        let left = Self::full_replace(left, replacements);
+        let right = Self::full_replace(right, replacements);
+        self.are_def_equal(left, right)
+    }
+
+    fn full_replace(start: ItemId, replacements: &Replacements) -> ItemId {
+        let mut result = start;
+        while let Some((_, with)) = replacements.iter().filter(|(t, _)| *t == result).next() {
+            result = *with;
+        }
+        result
     }
 
     /// Returns the type of the variable given by the id, assuming the id points

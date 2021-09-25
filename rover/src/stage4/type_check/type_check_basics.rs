@@ -12,7 +12,7 @@ impl Environment {
         for (target, val) in replacements {
             let var_type = self.get_var_type(*target);
             let val_type = self.item_base_type(*val);
-            if !self.are_def_equal(var_type, val_type) {
+            if !self.are_def_equal_after_replacements(var_type, val_type, replacements) {
                 return Err(format!(
                     "(at {:?}) {:?} and {:?} have differing types",
                     item, target, val

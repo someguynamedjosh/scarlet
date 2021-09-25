@@ -3,17 +3,11 @@ TYPE
 defining{
    TYPE is rover::lang::TYPE
    Integer32 is rover::lang::Integer32
-   sum is Integer32::sum
-   difference is Integer32::difference
 
-   Test is 
-   Type{
-      param something is any{Integer32}
-      param another is any{Integer32}
-   } 
+   T is any{TYPE}
+   val is any{T}
 
-   example is Test[123]
-   info{}
+   val[Integer32 123] info{}
 }
 
 

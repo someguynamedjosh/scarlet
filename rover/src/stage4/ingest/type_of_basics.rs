@@ -102,9 +102,13 @@ impl Environment {
         &mut self,
         typee: ItemId,
         selff: ItemId,
+        currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
         let base = typee;
-        let vars = vec![selff];
+        let type_type = self.compute_type(typee, currently_computing)?;
+        let mut vars = self.get_from_variables(type_type)?;
+        vars.push(selff);
+        let vars = vars.into_vec();
         MOk(self.insert(Item::FromType { base, vars }, Some(selff)))
     }
 }
