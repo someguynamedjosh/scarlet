@@ -19,7 +19,9 @@ impl Environment {
             }
             Item::FromType { base, vars } => self.get_from_type_code(base, vars, ctx),
             Item::GodType => Some(format!("TYPE")),
-            Item::InductiveType { selff, params } => self.get_inductive_type_code(selff, ctx),
+            Item::InductiveType { selff, params } => {
+                self.get_inductive_type_code(selff, params, ctx)
+            }
             Item::InductiveValue {
                 records,
                 typee,
@@ -86,7 +88,12 @@ impl Environment {
         Some(res)
     }
 
-    fn get_inductive_type_code(&self, definition: &ItemId, ctx: Context) -> Option<String> {
+    fn get_inductive_type_code(
+        &self,
+        definition: &ItemId,
+        params: &Vec<ItemId>,
+        ctx: Context,
+    ) -> Option<String> {
         let base_def = &self.items[definition.0].definition;
         let defines = if let Item::Defining { definitions, .. } = base_def {
             definitions
@@ -98,12 +105,15 @@ impl Environment {
             if name == "Self" {
                 continue;
             }
-            let val = self.get_item_code_or_name(*val_id, ctx.with_in_type(*definition));
-            if self.is_inductive_value(val_id) {
-                res.push_str(&format!("\n    {}", indented(&val)));
-            } else {
-                res.push_str(&format!("\n    {} is {}", name, indented(&val)));
+            res.push_str("\n    ");
+            if params.contains(val_id) {
+                res.push_str("param ");
             }
+            let val = self.get_item_code_or_name(*val_id, ctx.with_in_type(*definition));
+            if !self.is_inductive_value(val_id) {
+                res.push_str(&format!("{} is ", name));
+            }
+            res.push_str(&format!("{}", indented(&val)));
         }
         res.push_str("\n}");
         Some(res)
