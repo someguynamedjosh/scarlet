@@ -77,8 +77,8 @@ fn convert_items(mut ctx: Context, unconverted_items: Vec<ItemId>) -> Result<(),
     for id in unconverted_items {
         convert_item(&mut ctx, id)?;
     }
+    add_extra_items_to_env(&mut ctx);
     convert_metadata(&mut ctx)?;
-    add_extra_items_to_env(ctx);
     Ok(())
 }
 
@@ -98,10 +98,9 @@ fn convert_item(ctx: &mut Context, item: ItemId) -> Result<(), String> {
 /// During the conversion process, ctx may accumulate extra items which then
 /// need to be placed into the environment. This is required because it is not
 /// always possible to define an item before its ID is needed.
-fn add_extra_items_to_env(mut ctx: Context) {
+fn add_extra_items_to_env(ctx: &mut Context) {
     let mut id = ItemId(ctx.env.items.len());
-    let items = ctx.extra_items;
-    ctx.extra_items = vec![];
+    let items = std::mem::replace(&mut ctx.extra_items, vec![]);
     for (item, defined_in) in items {
         ctx.env.insert_item(item, defined_in);
         id.0 += 1;
@@ -111,6 +110,7 @@ fn add_extra_items_to_env(mut ctx: Context) {
 fn convert_metadata(ctx: &mut Context) -> Result<(), String> {
     for (id, old_def) in ctx.src.iter() {
         let new_id = full_convert_iid(ctx, id)?;
+        add_extra_items_to_env(ctx);
         if old_def.info_requested {
             let new_def_in = convert_defined_in(ctx, old_def.defined_in)?;
             ctx.env.mark_info(new_id, new_def_in);

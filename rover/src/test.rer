@@ -19,20 +19,7 @@ fibb is pick{
    ]
 }
 
-a is TYPE
-defining{
-   ax is TYPE
-   ay is any{TYPE}
-}
-
-b is TYPE
-defining{
-   bx is any{TYPE}
-   by is any{TYPE}
-}
-
-a::ax info{}
-
+fibb[7] info{}
 
 #=
 recount is 
