@@ -32,7 +32,7 @@ impl<'a> ReduceOptions<'a> {
 }
 
 fn reduce_item(env: &mut Environment, id: ItemId) -> ItemId {
-    env.compute_type(id).unwrap();
+    env.compute_type(id, vec![]).unwrap();
     let defined_in = env.items[id.0].defined_in;
     let opts = ReduceOptions {
         item: id,

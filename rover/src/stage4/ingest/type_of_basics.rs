@@ -2,6 +2,7 @@ use super::var_list::VarList;
 use crate::{
     shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue},
     stage4::structure::Environment,
+    util::*,
 };
 
 impl Environment {
@@ -16,14 +17,15 @@ impl Environment {
         typee: ItemId,
         records: Vec<ItemId>,
         defined_in: Option<ItemId>,
-    ) -> Result<ItemId, String> {
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<ItemId, String> {
         let mut from_vars = VarList::new();
         for recorded in records {
-            let typee = self.compute_type(recorded)?;
+            let typee = self.compute_type(recorded, currently_computing.clone())?;
             let recorded_vars = self.get_from_variables(typee)?;
             from_vars.append(&recorded_vars.into_vec()[..]);
         }
-        Ok(self.with_from_vars(typee, from_vars, defined_in))
+        MOk(self.with_from_vars(typee, from_vars, defined_in))
     }
 
     pub fn type_of_is_same_variant(
@@ -31,20 +33,21 @@ impl Environment {
         base: ItemId,
         other: ItemId,
         defined_in: Option<ItemId>,
-    ) -> Result<ItemId, String> {
-        let btype = self.compute_type(base)?;
-        let otype = self.compute_type(other)?;
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<ItemId, String> {
+        let btype = self.compute_type(base, currently_computing.clone())?;
+        let otype = self.compute_type(other, currently_computing)?;
         let mut from_vars = VarList::new();
         from_vars.append(&self.get_from_variables(btype)?.into_vec());
         from_vars.append(&self.get_from_variables(otype)?.into_vec());
-        Ok(self.with_from_vars(self.bool_type(), from_vars, defined_in))
+        MOk(self.with_from_vars(self.bool_type(), from_vars, defined_in))
     }
 
     pub fn type_of_primitive_operation(
         &mut self,
         op: PrimitiveOperation,
         defined_in: Option<ItemId>,
-    ) -> Result<ItemId, String> {
+    ) -> MaybeResult<ItemId, String> {
         let mut from_vars = VarList::new();
         let typee = self.op_type(&op);
         for input in op.inputs() {
@@ -52,11 +55,11 @@ impl Environment {
             let input_vars = self.get_from_variables(input_type)?;
             from_vars.append(&input_vars.into_vec()[..]);
         }
-        Ok(self.with_from_vars(typee, from_vars, defined_in))
+        MOk(self.with_from_vars(typee, from_vars, defined_in))
     }
 
-    pub fn type_of_primitive_value(&self, pv: &PrimitiveValue) -> Result<ItemId, String> {
-        Ok(match pv {
+    pub fn type_of_primitive_value(&self, pv: &PrimitiveValue) -> MaybeResult<ItemId, String> {
+        MOk(match pv {
             PrimitiveValue::Bool(..) => self.bool_type(),
             PrimitiveValue::I32(..) => self.i32_type(),
         })
@@ -67,17 +70,22 @@ impl Environment {
         exact: bool,
         typee: ItemId,
         base: ItemId,
-    ) -> Result<ItemId, String> {
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<ItemId, String> {
         if exact {
-            Ok(typee)
+            MOk(typee)
         } else {
-            self.compute_type(base)
+            self.compute_type(base, currently_computing)
         }
     }
 
-    pub fn type_of_variable(&mut self, typee: ItemId, selff: ItemId) -> Result<ItemId, String> {
+    pub fn type_of_variable(
+        &mut self,
+        typee: ItemId,
+        selff: ItemId,
+    ) -> MaybeResult<ItemId, String> {
         let base = typee;
         let vars = vec![selff];
-        Ok(self.insert(Item::FromType { base, vars }, Some(selff)))
+        MOk(self.insert(Item::FromType { base, vars }, Some(selff)))
     }
 }

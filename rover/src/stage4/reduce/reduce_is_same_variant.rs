@@ -50,7 +50,7 @@ impl Environment {
                         other: rother_id,
                     };
                     let id = self.insert(item, opts.defined_in);
-                    self.compute_type(id).unwrap();
+                    self.compute_type(id, vec![]).unwrap();
                     id
                 }
             }

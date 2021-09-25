@@ -4,6 +4,7 @@ use super::var_list::VarList;
 use crate::{
     shared::{Item, ItemId, Replacements},
     stage4::structure::Environment,
+    util::*,
 };
 
 impl Environment {
@@ -12,14 +13,15 @@ impl Environment {
     fn replacement_dependencies(
         &mut self,
         replacements: Replacements,
-    ) -> Result<HashMap<ItemId, VarList>, String> {
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<HashMap<ItemId, VarList>, String> {
         let mut replacement_data = HashMap::new();
         for (target, value) in replacements {
-            let valtype = self.compute_type(value)?;
+            let valtype = self.compute_type(value, currently_computing.clone())?;
             let valtype_vars = self.get_from_variables(valtype)?;
             replacement_data.insert(target, valtype_vars);
         }
-        Ok(replacement_data)
+        MOk(replacement_data)
     }
 
     fn from_vars_after_replacing(
@@ -70,13 +72,15 @@ impl Environment {
         &mut self,
         base: ItemId,
         replacements: Replacements,
-    ) -> Result<ItemId, String> {
-        let dependencies = self.replacement_dependencies(replacements)?;
-        let original_type_id = self.compute_type(base)?;
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<ItemId, String> {
+        let dependencies =
+            self.replacement_dependencies(replacements, currently_computing.clone())?;
+        let original_type_id = self.compute_type(base, currently_computing)?;
         let original_type = &self.items[original_type_id.0];
         let original_type_def = original_type.definition.clone();
         let defined_in = original_type.defined_in.clone();
-        Ok(self.type_item_after_replacing(
+        MOk(self.type_item_after_replacing(
             original_type_id,
             &original_type_def,
             defined_in,

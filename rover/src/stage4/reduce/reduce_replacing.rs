@@ -51,7 +51,7 @@ impl Environment {
                 unlabeled_replacements: Vec::new(),
             };
             let id = self.insert(item, opts.defined_in);
-            self.compute_type(id).unwrap();
+            self.compute_type(id, vec![]).unwrap();
             id
         }
     }

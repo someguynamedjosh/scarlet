@@ -28,7 +28,7 @@ impl Environment {
         } else {
             let op = op.with_inputs(reduced_inputs);
             let id = self.insert(Item::PrimitiveOperation(op), opts.defined_in);
-            self.compute_type(id).unwrap();
+            self.compute_type(id, vec![]).unwrap();
             id
         }
     }

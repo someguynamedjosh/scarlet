@@ -16,11 +16,15 @@
 		},
 		{
 			"name": "keyword.control",
-			"match": "(replacing|defining|Type|any|the|i32|integer|int|isv|is_variant|is_same_variant_as|onv|on_variants|pick|pick_first_true_condition|variant|identifier|info)[ \\r\\n\\t]*(?=\\{)"
+			"match": "(replacing|defining|Type|From|any|the|i32|integer|int|isv|is_variant|is_same_variant_as|onv|on_variants|pick|pick_first_true_condition|variant|identifier|info)[ \\r\\n\\t]*(?=\\{)"
 		},
 		{
 			"name": "invalid.illegal",
 			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*(?=\\{)\\b"
+		},
+		{
+			"name": "entity.name.type",
+			"match": "\\b[A-Z][a-zA-Z0-9]*\\b"
 		},
 		{
 			"name": "entity.name.function",
@@ -29,10 +33,6 @@
 		{
 			"name": "constant.numeric",
 			"match": "\\b[0-9_]+\\b"
-		},
-		{
-			"name": "entity.name.type",
-			"match": "\\b[A-Z][a-zA-Z0-9]*\\b"
 		},
 		{
 			"name": "variable",

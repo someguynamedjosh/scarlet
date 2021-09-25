@@ -8,6 +8,17 @@ Thing is Type{
    variant new :Self From{something is any{Integer32}}
 }
 
+index is any{Integer32}
+
+fibb is pick{
+   if   index is_variant{0}, 1
+   elif index is_variant{1}, 1
+   else sum[
+      fibb[difference[index 1]]
+      fibb[difference[index 2]]
+   ]
+}
+
 a is TYPE
 defining{
    ax is TYPE

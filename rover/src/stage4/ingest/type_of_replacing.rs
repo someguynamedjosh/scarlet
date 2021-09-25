@@ -1,7 +1,4 @@
-use crate::{
-    shared::{Item, ItemId, Replacements},
-    stage4::structure::Environment,
-};
+use crate::{shared::{Item, ItemId, Replacements}, stage4::structure::Environment, util::*};
 
 impl Environment {
     pub fn type_of_replacing(
@@ -9,8 +6,10 @@ impl Environment {
         replacing_id: ItemId,
         base: ItemId,
         replacements: Replacements,
-    ) -> Result<ItemId, String> {
-        let after_reps = self.compute_type_after_replacing(base, replacements)?;
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<ItemId, String> {
+        let after_reps =
+            self.compute_type_after_replacing(base, replacements, currently_computing.clone())?;
         // These are the variables that unlabeled replacements might refer to.
         let mut remaining_variables_after_reps = self.get_from_variables(after_reps)?;
         // The same as above, but a mutable reference.
@@ -28,7 +27,7 @@ impl Environment {
                     replacements.push((target, unlabeled_replacement))
                 }
                 let replacements = replacements.clone();
-                self.compute_type_after_replacing(base, replacements)
+                self.compute_type_after_replacing(base, replacements, currently_computing)
             }
             _ => unreachable!(),
         }
