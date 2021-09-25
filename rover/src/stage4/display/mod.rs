@@ -4,14 +4,39 @@ use crate::{shared::ItemId, util::indented};
 mod code;
 mod name;
 
+#[derive(Clone, Copy)]
+struct Context {
+    in_scope: ItemId,
+    in_type: Option<ItemId>,
+}
+
+impl Context {
+    fn new(in_scope: ItemId) -> Self {
+        Self {
+            in_scope,
+            in_type: None,
+        }
+    }
+
+    fn with_in_scope(mut self, in_scope: ItemId) -> Self {
+        self.in_scope = in_scope;
+        self
+    }
+
+    fn with_in_type(mut self, in_type: ItemId) -> Self {
+        self.in_type = Some(in_type);
+        self
+    }
+}
+
 impl Environment {
     pub fn display_infos(&self) {
         for (id, item) in self.iter() {
             if let Some(scope) = item.info_requested {
-                let repr = self.get_item_code_or_name(id, scope);
-                println!("{}", repr);
+                let repr = self.get_item_code_or_name(id, Context::new(scope));
+                println!("\n{}", repr);
                 if let Some(typee) = item.typee {
-                    let type_repr = self.get_item_code_or_name(typee, scope);
+                    let type_repr = self.get_item_code_or_name(typee, Context::new(scope));
                     println!("type_is{{\n    {}\n}}", indented(&type_repr));
                 }
             }
@@ -19,10 +44,10 @@ impl Environment {
     }
 
     /// Tries to get code. If that fails, gets a name instead.
-    pub fn get_item_code_or_name(&self, item_id: ItemId, in_scope: ItemId) -> String {
-        if let Some(code) = self.get_item_code(&self.items[item_id.0].definition, in_scope) {
+    fn get_item_code_or_name(&self, item_id: ItemId, ctx: Context) -> String {
+        if let Some(code) = self.get_item_code(&item_id, ctx) {
             return code;
-        } else if let Some(name) = self.get_item_name(item_id, in_scope) {
+        } else if let Some(name) = self.get_item_name(item_id, ctx.in_scope) {
             return name;
         } else {
             return format!("anonymous");
@@ -30,10 +55,10 @@ impl Environment {
     }
 
     /// Tries to get a name. If that fails, gets code instead.
-    pub fn get_item_name_or_code(&self, item_id: ItemId, in_scope: ItemId) -> String {
-        if let Some(name) = self.get_item_name(item_id, in_scope) {
+    fn get_item_name_or_code(&self, item_id: ItemId, ctx: Context) -> String {
+        if let Some(name) = self.get_item_name(item_id, ctx.in_scope) {
             return name;
-        } else if let Some(code) = self.get_item_code(&self.items[item_id.0].definition, in_scope) {
+        } else if let Some(code) = self.get_item_code(&item_id, ctx) {
             return code;
         } else {
             return format!("anonymous");
