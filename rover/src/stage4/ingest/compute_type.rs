@@ -43,8 +43,13 @@ impl Environment {
                 self.compute_type(base, currently_computing)
             }
             Item::GodType { .. } => MOk(self.god_type()),
-            // TODO: This does not take into account parameters (which are not yet implemented)
-            Item::InductiveType(..) => MOk(self.god_type()),
+            Item::InductiveType { params, selff } => {
+                let typ = Item::FromType {
+                    base: self.god_type(),
+                    vars: params.clone(),
+                };
+                MOk(self.insert(typ, item.defined_in))
+            }
             Item::InductiveValue { typee, records, .. } => {
                 let (typee, records) = (*typee, records.clone());
                 self.type_of_inductive_value(typee, records, defined_in, currently_computing)

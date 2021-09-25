@@ -19,7 +19,12 @@ impl Environment {
                 let vars = vars.clone();
                 self.reduce_from_type(opts, base, vars)
             }
-            Item::GodType | Item::InductiveType(..) => opts.item,
+            Item::GodType => opts.item,
+            Item::InductiveType { params, selff } => {
+                let params = params.clone();
+                let selff = *selff;
+                self.reduce_inductive_type(opts, params, selff)
+            }
             Item::InductiveValue {
                 typee,
                 records,

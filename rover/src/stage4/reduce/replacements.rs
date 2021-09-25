@@ -38,7 +38,8 @@ impl Environment {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to_ids(vars, reps);
             }
-            Item::GodType | Item::InductiveType(..) => (),
+            Item::GodType => (),
+            Item::InductiveType { params, .. } => Self::apply_replacements_to_ids(params, reps),
             Item::InductiveValue { typee, records, .. } => {
                 Self::apply_replacements_to(typee, reps);
                 Self::apply_replacements_to_ids(records, reps);

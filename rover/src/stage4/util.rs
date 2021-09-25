@@ -55,7 +55,7 @@ impl Environment {
             Item::Defining { base, .. } => self.after_from(*base),
             Item::FromType { base, .. } => self.after_from(*base),
             Item::GodType
-            | Item::InductiveType(..)
+            | Item::InductiveType { .. }
             | Item::InductiveValue { .. }
             | Item::IsSameVariant { .. }
             | Item::Pick { .. }
