@@ -14,7 +14,7 @@ pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, Strin
         Item::GodType => Ok(Item::GodType),
         // Don't deref defines on this one so that the type remembers the
         // constructors it can be made with.
-        Item::InductiveType(id) => convert_inductive_type(ctx, *id),
+        Item::InductiveType { params, selff } => convert_inductive_type(ctx, params, *selff),
         Item::InductiveValue {
             records,
             typee,
@@ -57,8 +57,15 @@ fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &Vec<ItemId>) -> Res
     })
 }
 
-fn convert_inductive_type(ctx: &mut Context, id: ItemId) -> Result<Item, String> {
-    Ok(Item::InductiveType(convert_iid(ctx, id, false)?))
+fn convert_inductive_type(
+    ctx: &mut Context,
+    params: &Vec<ItemId>,
+    selff: ItemId,
+) -> Result<Item, String> {
+    Ok(Item::InductiveType {
+        selff: convert_iid(ctx, selff, false)?,
+        params: convert_iids(ctx, params)?,
+    })
 }
 
 fn convert_inductive_value(
