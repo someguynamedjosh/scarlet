@@ -24,16 +24,20 @@ pub fn member_parser<'i>() -> impl Parser<'i, Construct> {
 /// Parses either : or ix, returning true in the latter case to indicate that it
 /// is an exact type assertion.
 fn type_is_symbol_parser<'i>() -> impl Parser<'i, bool> {
-    alt((value(false, tag(":")), value(true, tag("ix"))))
+    alt((
+        value(true, tag(":")),
+        value(true, tag("t")),
+        value(false, tag("bt")),
+    ))
 }
 
 pub fn type_is_parser<'i>() -> impl Parser<'i, Construct> {
     |input| {
         let (input, exact) = type_is_symbol_parser()(input)?;
         let (input, _) = ws()(input)?;
-        let (input, typee) = Expression::parser()(input)?;
+        let (input, typee) = Expression::type_annotation_parser()(input)?;
 
-        let label = if exact { "type_is_exactly" } else { "type_is" };
+        let label = if exact { "type_is" } else { "base_type_is" };
         Ok((input, Construct::from_expression(label, typee)))
     }
 }

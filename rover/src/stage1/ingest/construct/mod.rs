@@ -32,4 +32,12 @@ impl Construct {
             }
         }
     }
+
+    pub fn type_annotation_postfix_parser<'i>() -> impl Parser<'i, Self> {
+        alt((
+            explicit::limited_parser(&["member", "From", "replacing"]),
+            postfix_shorthands::member_parser(),
+            postfix_shorthands::replacing_parser(),
+        ))
+    }
 }

@@ -10,4 +10,14 @@ impl Expression {
             Ok((input, expr))
         }
     }
+
+    pub fn type_annotation_parser<'i>() -> impl Parser<'i, Self> {
+        |input| {
+            let (input, root) = Construct::parser(true)(input)?;
+            let (input, others) =
+                many0(after_ws(Construct::type_annotation_postfix_parser()))(input)?;
+            let expr = Self { root, others };
+            Ok((input, expr))
+        }
+    }
 }

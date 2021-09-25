@@ -15,43 +15,41 @@ impl Is {
             let (input, _) = ws()(input)?;
             let (input, _) = helpers::tag_then_ws("is")(input)?;
             let (input, value) = Expression::parser()(input)?;
-            let sel = Self {
-                name,
-                value,
-            };
+            let sel = Self { name, value };
             Ok((input, sel))
         }
     }
 }
 
-fn variant_shorthand_name(from_shorthand: &Expression) -> Expression {
-    Expression {
-        root: from_shorthand.root.clone(),
-        others: vec![],
-    }
-}
-
-/// Returns the name and value of a variant to use as a full `is` statement.
-fn expand_variant_shorthand(shorthand: Expression) -> (Expression, Expression) {
-    let name = variant_shorthand_name(&shorthand);
-    let value = Expression {
-        root: Construct::from_expression("variant", shorthand),
+fn expand_variant_shorthand(mut shorthand: Expression) -> Result<Is, String> {
+    let name = shorthand.root;
+    let name = Expression {
+        root: name,
         others: vec![],
     };
-    (name, value)
+    if shorthand.others.is_empty() {
+        return Err(format!(""));
+    }
+    let typee_construct = shorthand.others.remove(0);
+    let typee = typee_construct.expect_single_expression("type_is")?;
+    let variant_root = Construct::from_expression("variant", typee.clone());
+    let value = Expression {
+        root: variant_root,
+        others: shorthand.others,
+    };
+    let sel = Is { name, value };
+    Ok(sel)
 }
 
 impl Is {
     pub fn variant_shorthand_parser<'i>() -> impl Parser<'i, Self> {
         |input| {
             let (input, _) = helpers::tag_then_ws("variant")(input)?;
-            let (input, variant_def) = Expression::parser()(input)?;
-            let (name, value) = expand_variant_shorthand(variant_def);
-            let sel = Self {
-                name,
-                value,
-            };
-            Ok((input, sel))
+            let (input, shorthand): (_, Expression) = Expression::parser()(input)?;
+            match expand_variant_shorthand(shorthand) {
+                Ok(res) => Ok((input, res)),
+                Err(..) => fail(input),
+            }
         }
     }
 }
