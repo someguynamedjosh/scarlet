@@ -20,10 +20,10 @@ impl Environment {
 
     fn apply_replacements_to_info_requested(&mut self, item_id: ItemId, reps: &Reps) {
         let item = &mut self.items[item_id.0];
-        if item.info_requested {
+        if let Some(scope) = item.info_requested {
             if let Some(new) = reps.get(&item_id) {
-                item.info_requested = false;
-                self.items[new.0].info_requested = true;
+                item.info_requested = None;
+                self.items[new.0].info_requested = Some(scope);
             }
         }
     }

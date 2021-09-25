@@ -12,8 +12,9 @@ use crate::{
 #[derive(Clone, PartialEq)]
 pub struct TypedItem {
     /// True when the programmer has requested a diagnostic showing information
-    /// about this definition.
-    pub info_requested: bool,
+    /// about this definition. Contains the scope from which the information was
+    /// requested.
+    pub info_requested: Option<ItemId>,
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Item,
@@ -62,8 +63,8 @@ impl Environment {
 }
 
 fn fmt_item_prefixes(f: &mut Formatter, item: &TypedItem) -> fmt::Result {
-    if item.info_requested {
-        write!(f, "info ")?;
+    if let Some(scope) = item.info_requested {
+        write!(f, "info{{in {:?}}} ", scope)?;
     }
     if item.is_scope {
         write!(f, "scope ")?;

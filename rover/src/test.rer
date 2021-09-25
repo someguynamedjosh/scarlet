@@ -1,4 +1,5 @@
 
+TYPE is rover::lang::TYPE
 Integer32 is rover::lang::Integer32
 sum is Integer32::sum
 difference is Integer32::difference
@@ -7,7 +8,20 @@ Thing is Type{
    variant new :Self From{something is any{Integer32}}
 }
 
-Thing::new::something info{}
+a is TYPE
+defining{
+   ax is TYPE
+   ay is any{TYPE}
+}
+
+b is TYPE
+defining{
+   bx is any{TYPE}
+   by is any{TYPE}
+}
+
+a::ax info{}
+
 
 #=
 recount is 

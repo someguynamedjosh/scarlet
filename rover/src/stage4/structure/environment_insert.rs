@@ -23,7 +23,7 @@ impl Environment {
         let id = ItemId(self.items.len());
         self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
-            info_requested: false,
+            info_requested: None,
             is_scope: false,
             definition: def,
             defined_in,
@@ -44,7 +44,7 @@ impl Environment {
         let id = ItemId(self.items.len());
         self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
-            info_requested: false,
+            info_requested: None,
             is_scope: false,
             definition: def,
             defined_in,
