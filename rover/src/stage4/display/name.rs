@@ -1,9 +1,6 @@
 use crate::{
-    shared::{
-        IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
-    },
+    shared::{Item, ItemId},
     stage4::structure::Environment,
-    util::indented,
 };
 
 #[derive(Clone)]

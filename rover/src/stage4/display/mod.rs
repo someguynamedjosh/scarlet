@@ -1,10 +1,5 @@
 use super::structure::Environment;
-use crate::{
-    shared::{
-        IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue, Replacements,
-    },
-    util::indented,
-};
+use crate::{shared::ItemId, util::indented};
 
 mod code;
 mod name;
