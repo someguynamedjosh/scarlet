@@ -10,14 +10,14 @@ mod util;
 fn main() {
     const INPUT: &str = include_str!("test.rer");
 
-    let (remainder, statements) = stage1::ingest()(INPUT).unwrap();
+    let (remainder, expression) = stage1::ingest()(INPUT).unwrap();
     if !remainder.trim().is_empty() {
         panic!("Syntax error on {}", remainder);
     }
-    println!("{:#?}", statements);
+    println!("{:#?}", expression);
 
     println!("Doing stage 2");
-    let (environment, _) = stage2::ingest(statements).unwrap();
+    let (environment, _) = stage2::ingest(expression).unwrap();
     println!("{:#?}", environment);
 
     println!("Doing stage 3");

@@ -8,7 +8,7 @@
 		},
 		{
 			"name": "keyword.other",
-			"match": "\\b(is|with|variant|ix|if|elif|else)\\b"
+			"match": "\\b(is|with|variant|vn|t|bt|if|elif|else|p|param|parameter)\\b"
 		},
 		{
 			"name": "keyword.operator",

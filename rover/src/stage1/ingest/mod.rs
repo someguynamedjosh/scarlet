@@ -6,9 +6,8 @@ mod statement;
 
 use nom_prelude::*;
 
-use super::structure::statement::Statement;
+use super::structure::{expression::Expression, statement::Statement};
 
-pub fn ingest<'i>() -> impl Parser<'i, Vec<Statement>> {
-    let statements = many0(after_ws(Statement::parser()));
-    terminated(statements, ws())
+pub fn ingest<'i>() -> impl Parser<'i, Expression> {
+    delimited(ws(), Expression::parser(), ws())
 }

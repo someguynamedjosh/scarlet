@@ -33,7 +33,7 @@ fn ingest_is_variant_construct(
     post: Construct,
 ) -> Result<UnresolvedItem, String> {
     let other = post.expect_single_expression("is_variant")?;
-    let other = ingest_expression(&mut ctx.child(), other.clone())?;
+    let other = ingest_expression(&mut ctx.child(), other.clone(), vec![])?;
     Ok(Item::IsSameVariant {
         base: base_id,
         other,
@@ -49,7 +49,7 @@ fn ingest_type_is_construct(
 ) -> Result<UnresolvedItem, String> {
     let label = if exact { "type_is_exactly" } else { "type_is" };
     let typee_expr = post.expect_single_expression(label).unwrap();
-    let typee = ingest_expression(&mut ctx.child(), typee_expr.clone())?;
+    let typee = ingest_expression(&mut ctx.child(), typee_expr.clone(), vec![])?;
     Ok(Item::TypeIs {
         exact,
         base: base_id,

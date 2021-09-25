@@ -51,10 +51,7 @@ fn ingest_from_statement(
     match statement {
         Statement::Expression(expr) => ingest_from_variable(ctx, vars, expr),
         Statement::Is(is) => ingest_from_definition(ctx, vars, named_vars, is),
-        Statement::Else(..)
-        | Statement::PickElif(..)
-        | Statement::PickIf(..)
-        | Statement::Replace(..) => todo!("nice error"),
+        _ => todo!("nice error"),
     }
 }
 
@@ -63,7 +60,7 @@ fn ingest_from_variable(
     vars: &mut Vec<ItemId>,
     var_expr: Expression,
 ) -> Result<(), String> {
-    let var_id = ingest_expression(&mut ctx.child(), var_expr)?;
+    let var_id = ingest_expression(&mut ctx.child(), var_expr, vec![])?;
     vars.push(var_id);
     Ok(())
 }
@@ -76,7 +73,7 @@ fn ingest_from_definition(
 ) -> Result<(), String> {
     let name = definition.name.expect_ident_owned()?;
     let expr = definition.value;
-    let var = ingest_expression(&mut ctx.child(), expr)?;
+    let var = ingest_expression(&mut ctx.child(), expr, vec![])?;
     named_vars.push((name, var));
     vars.push(var);
     Ok(())

@@ -84,7 +84,7 @@ pub(super) fn process_definitions_with_info(
         let mut child_ctx = ctx
             .child()
             .with_id_scope_info(item.id, &definitions, info.clone());
-        let id = ingest_expression(&mut child_ctx, item.def)?;
+        let id = ingest_expression(&mut child_ctx, item.def, vec![])?;
         ctx.environment.set_defined_in(id, self_id);
     }
     Ok(definitions)

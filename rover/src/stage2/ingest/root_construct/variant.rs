@@ -70,7 +70,7 @@ pub fn ingest_variant_construct(
     root: Construct,
 ) -> Result<UnresolvedItem, String> {
     let (variant_name, type_expr) = decompose_variant_construct(root)?;
-    let return_type_id = ingest_expression(&mut ctx.child(), type_expr)?;
+    let return_type_id = ingest_expression(&mut ctx.child(), type_expr, vec![])?;
 
     let base_return_type_id = dereference_type(ctx, return_type_id);
     check_containing_type(ctx, base_return_type_id)?;

@@ -15,8 +15,8 @@ pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<Unres
 
     let initial_clause = if let Statement::PickIf(s) = &statements[0] {
         (
-            ingest_expression(&mut ctx.child(), s.condition.clone())?,
-            ingest_expression(&mut ctx.child(), s.value.clone())?,
+            ingest_expression(&mut ctx.child(), s.condition.clone(), vec![])?,
+            ingest_expression(&mut ctx.child(), s.value.clone(), vec![])?,
         )
     } else {
         todo!("nice error, first clause must be an if.");
@@ -24,7 +24,7 @@ pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<Unres
 
     let last = statements.len() - 1;
     let else_clause = if let Statement::Else(s) = &statements[last] {
-        ingest_expression(&mut ctx.child(), s.value.clone())?
+        ingest_expression(&mut ctx.child(), s.value.clone(), vec![])?
     } else {
         todo!("nice error, first clause must be an if.");
     };
@@ -33,8 +33,8 @@ pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<Unres
     for other in &statements[1..last] {
         if let Statement::PickElif(s) = other {
             elif_clauses.push((
-                ingest_expression(&mut ctx.child(), s.condition.clone())?,
-                ingest_expression(&mut ctx.child(), s.value.clone())?,
+                ingest_expression(&mut ctx.child(), s.condition.clone(), vec![])?,
+                ingest_expression(&mut ctx.child(), s.value.clone(), vec![])?,
             ));
         } else {
             todo!("nice error, other clauses must be elif");
