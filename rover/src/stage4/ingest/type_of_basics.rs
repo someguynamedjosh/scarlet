@@ -38,7 +38,8 @@ impl Environment {
         defined_in: Option<ItemId>,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
-        let mut from_vars = VarList::new();
+        let type_type = self.compute_type(typee, currently_computing.clone())?;
+        let mut from_vars = self.get_from_variables(type_type)?;
         for recorded in records {
             let typee = self.compute_type(recorded, currently_computing.clone())?;
             let recorded_vars = self.get_from_variables(typee)?;

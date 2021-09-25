@@ -36,16 +36,17 @@ impl Environment {
         records: Vec<ItemId>,
         variant_name: String,
     ) -> ItemId {
+        let rtypee = self.reduce(opts.with_item(typee));
         let mut new_records = Vec::new();
         for record in &records {
             let rrecord = self.reduce(opts.with_item(*record));
             new_records.push(rrecord);
         }
-        if new_records == records {
+        if new_records == records && rtypee == typee {
             opts.item
         } else {
             let item = Item::InductiveValue {
-                typee,
+                typee: rtypee,
                 records: new_records,
                 variant_name,
             };

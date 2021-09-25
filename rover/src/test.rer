@@ -14,7 +14,7 @@ defining{
    }
 
    Unit::Self info{}
-   Unit::new info{}
+   value is Unit::new[Integer32 123] info{}
 }
 
 
