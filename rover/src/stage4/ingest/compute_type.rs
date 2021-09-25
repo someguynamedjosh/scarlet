@@ -1,6 +1,6 @@
 use crate::{
     shared::{Item, ItemId},
-    stage4::structure::{Environment, TypedItem},
+    stage4::structure::Environment,
     util::*,
 };
 

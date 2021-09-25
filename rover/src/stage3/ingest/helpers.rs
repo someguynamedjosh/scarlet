@@ -43,7 +43,10 @@ pub fn convert_iid(ctx: &mut Context, id: ItemId, deref_define: bool) -> Result<
     Ok(convert_dereffed(ctx, dereffed)?.0)
 }
 
-pub fn convert_defined_in(ctx: &mut Context, defined_in: Option<ItemId>) -> Result<Option<ItemId>, String> {
+pub fn convert_defined_in(
+    ctx: &mut Context,
+    defined_in: Option<ItemId>,
+) -> Result<Option<ItemId>, String> {
     if let Some(id) = defined_in {
         convert_iid(ctx, id, false).map(Some)
     } else {

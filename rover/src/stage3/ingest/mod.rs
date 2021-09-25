@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use self::helpers::{convert_defined_in, convert_iid, full_convert_iid};
+use self::helpers::{convert_defined_in, full_convert_iid};
 use crate::{
-    shared::{Item, ItemId},
-    stage2::structure::{self as stage2, UnresolvedItem},
+    shared::ItemId,
+    stage2::structure::{self as stage2},
     stage3::{
         ingest::context::{convert_unresolved_item, convertible, Context},
         structure::Environment,

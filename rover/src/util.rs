@@ -45,7 +45,7 @@ impl<T, E: Debug> MaybeResult<T, E> {
 impl<T, T2, E> FromResidual<MaybeResult<T, E>> for MaybeResult<T2, E> {
     fn from_residual(residual: MaybeResult<T, E>) -> Self {
         match residual {
-            MaybeResult::Ok(v) => unreachable!(),
+            MaybeResult::Ok(_v) => unreachable!(),
             MaybeResult::None => Self::None,
             MaybeResult::Err(e) => Self::Err(e),
         }
@@ -55,7 +55,7 @@ impl<T, T2, E> FromResidual<MaybeResult<T, E>> for MaybeResult<T2, E> {
 impl<T, T2, E> FromResidual<Result<T, E>> for MaybeResult<T2, E> {
     fn from_residual(residual: Result<T, E>) -> Self {
         match residual {
-            Result::Ok(v) => unreachable!(),
+            Result::Ok(_v) => unreachable!(),
             Result::Err(e) => Self::Err(e),
         }
     }

@@ -22,7 +22,11 @@ impl Environment {
         }
         if input_values.len() == reduced_inputs.len() {
             let computed = op.compute(input_values);
-            self.insert_with_type(Item::PrimitiveValue(computed), self.op_type(&op), opts.defined_in)
+            self.insert_with_type(
+                Item::PrimitiveValue(computed),
+                self.op_type(&op),
+                opts.defined_in,
+            )
         } else if reduced_inputs == inputs {
             opts.item
         } else {

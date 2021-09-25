@@ -1,12 +1,9 @@
-use std::any::Any;
-
 use var_list::VarList;
 
 use crate::{
     shared::ItemId,
     stage3::structure::{self as stage3},
     stage4::structure::Environment,
-    util::*,
 };
 
 mod after_replacing;

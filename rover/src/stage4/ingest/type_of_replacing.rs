@@ -1,4 +1,8 @@
-use crate::{shared::{Item, ItemId, Replacements}, stage4::structure::Environment, util::*};
+use crate::{
+    shared::{Item, ItemId, Replacements},
+    stage4::structure::Environment,
+    util::*,
+};
 
 impl Environment {
     pub fn type_of_replacing(
