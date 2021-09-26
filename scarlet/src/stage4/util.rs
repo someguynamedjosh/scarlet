@@ -79,9 +79,8 @@ impl Environment {
             Item::FromType { base, .. } => self.after_from(*base),
             Item::GodType
             | Item::VariantInstance { .. }
-            | Item::IsSameVariant { .. }
             | Item::Pick { .. }
-            | Item::PrimitiveOperation(..)
+            | Item::BuiltinOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => typee,
             Item::Replacing { base, .. } => self.after_from(*base),

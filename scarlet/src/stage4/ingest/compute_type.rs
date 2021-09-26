@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Item, ItemId, PrimitiveOperation, PrimitiveValue},
+    shared::{BuiltinOperation, Item, ItemId, PrimitiveValue},
     stage4::structure::Environment,
     util::*,
 };
@@ -42,7 +42,6 @@ impl Environment {
             }
             Item::GodType { .. } => self.god_type(),
             Item::VariantInstance { typee, .. } => self.after_from(*typee),
-            Item::IsSameVariant { .. } => self.bool_type(),
             Item::Pick {
                 initial_clause,
                 elif_clauses,
@@ -50,8 +49,9 @@ impl Environment {
             } => {
                 todo!()
             }
-            Item::PrimitiveOperation(op) => match op {
-                PrimitiveOperation::I32Math(..) => self.i32_type(),
+            Item::BuiltinOperation(op) => match op {
+                BuiltinOperation::I32Math(..) => self.i32_type(),
+                BuiltinOperation::AreSameVariant { base, other } => self.bool_type(),
             },
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {

@@ -1,5 +1,5 @@
 use crate::{
-    shared::{IntegerMathOperation, Item, ItemId, PrimitiveOperation, Replacements},
+    shared::{IntegerMathOperation, Item, ItemId, BuiltinOperation, Replacements},
     stage4::{ingest::VarList, structure::Environment},
     util::*,
 };
@@ -32,11 +32,6 @@ impl Environment {
                 let values = params.clone();
                 self.variant_instance_dependencies(typee, values, currently_computing)
             }
-            Item::IsSameVariant { base, other } => {
-                let base = *base;
-                let other = *other;
-                self.is_same_variant_dependencies(base, other, currently_computing)
-            }
             Item::Pick {
                 initial_clause,
                 elif_clauses,
@@ -44,7 +39,7 @@ impl Environment {
             } => {
                 todo!()
             }
-            Item::PrimitiveOperation(op) => {
+            Item::BuiltinOperation(op) => {
                 let op = op.clone();
                 self.primitive_op_dependencies(op, currently_computing)
             }

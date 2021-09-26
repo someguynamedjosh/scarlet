@@ -1,6 +1,6 @@
 use crate::{
     shared::{
-        Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType,
+        BuiltinOperation, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType,
         PrimitiveValue,
     },
     stage1::structure::construct::Construct,
@@ -37,7 +37,7 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
             if args.len() != 2 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::PrimitiveOperation(PrimitiveOperation::I32Math(IntegerMathOperation::Sum(
+            Item::BuiltinOperation(BuiltinOperation::I32Math(IntegerMathOperation::Sum(
                 args[0], args[1],
             )))
         }
@@ -45,15 +45,24 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
             if args.len() != 2 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::PrimitiveOperation(PrimitiveOperation::I32Math(
-                IntegerMathOperation::Difference(args[0], args[1]),
-            ))
+            Item::BuiltinOperation(BuiltinOperation::I32Math(IntegerMathOperation::Difference(
+                args[0], args[1],
+            )))
         }
         "Boolean" => {
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
             Item::PrimitiveType(PrimitiveType::Bool)
+        }
+        "are_same_variant" => {
+            if args.len() != 2 {
+                todo!("nice error, wrong number of arguments");
+            }
+            Item::BuiltinOperation(BuiltinOperation::AreSameVariant {
+                base: args[0],
+                other: args[1],
+            })
         }
         other => return Err(format!("Unrecognized builtin_item: {}", other)),
     };

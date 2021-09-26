@@ -1,4 +1,4 @@
-use super::{Definitions, ItemId, PrimitiveOperation, PrimitiveType, PrimitiveValue, Replacements};
+use super::{Definitions, ItemId, BuiltinOperation, PrimitiveType, PrimitiveValue, Replacements};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -16,16 +16,12 @@ pub enum Item {
         variant_id: ItemId,
         values: Vec<ItemId>,
     },
-    IsSameVariant {
-        base: ItemId,
-        other: ItemId,
-    },
     Pick {
         initial_clause: (ItemId, ItemId),
         elif_clauses: Vec<(ItemId, ItemId)>,
         else_clause: ItemId,
     },
-    PrimitiveOperation(PrimitiveOperation),
+    BuiltinOperation(BuiltinOperation),
     PrimitiveType(PrimitiveType),
     PrimitiveValue(PrimitiveValue),
     Replacing {
@@ -42,4 +38,14 @@ pub enum Item {
         selff: ItemId,
         typee: ItemId,
     },
+}
+
+impl Item {
+    pub fn expect_primitive_value(&self) -> Option<PrimitiveValue> {
+        if let Self::PrimitiveValue(pv) = self {
+            Some(*pv)
+        } else {
+            None
+        }
+    }
 }

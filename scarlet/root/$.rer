@@ -5,5 +5,12 @@ defining{
     I32 is scarlet::core::Integer32
     PEq is scarlet::core::ProofEqual
 
-    the_func is any{I32 From{any{PEq}}} info{}
+    variant Primary :TYPE
+    defining{
+        variant red   :Primary
+        variant green :Primary
+        variant blue  :Primary
+    }
+
+    scarlet::core::are_same_variant[Primary Primary::red Primary::red] info{}
 }

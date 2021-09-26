@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Item, ItemId},
+    shared::{BuiltinOperation, Item, ItemId},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{
@@ -19,26 +19,11 @@ pub fn ingest_non_defining_postfix_construct(
         "replacing" => ingest_replacing_construct(ctx, base_id, post),
         "member" => ingest_member_construct(base_id, post),
         "From" => ingest_from_construct(ctx, base_id, post),
-        "is_variant" => ingest_is_variant_construct(ctx, base_id, post),
         "type_is" => ingest_type_is_construct(ctx, base_id, post, false),
         "type_is_exactly" => ingest_type_is_construct(ctx, base_id, post, true),
         "info" => ingest_info_construct(ctx, base_id),
         _ => todo!("Nice error"),
     }
-}
-
-fn ingest_is_variant_construct(
-    ctx: &mut Context,
-    base_id: ItemId,
-    post: Construct,
-) -> Result<UnresolvedItem, String> {
-    let other = post.expect_single_expression("is_variant")?;
-    let other = ingest_expression(&mut ctx.child(), other.clone(), vec![])?;
-    Ok(Item::IsSameVariant {
-        base: base_id,
-        other,
-    }
-    .into())
 }
 
 fn ingest_type_is_construct(

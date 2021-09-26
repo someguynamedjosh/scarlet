@@ -1,5 +1,5 @@
 use crate::{
-    shared::{IntegerMathOperation, ItemId, PrimitiveOperation, Replacements},
+    shared::{IntegerMathOperation, ItemId, BuiltinOperation, Replacements},
     stage4::{ingest::var_list::VarList, structure::Environment},
     util::*,
 };
@@ -21,33 +21,18 @@ impl Environment {
         MOk(res)
     }
 
-    pub fn is_same_variant_dependencies(
-        &mut self,
-        base: ItemId,
-        other: ItemId,
-        currently_computing: Vec<ItemId>,
-    ) -> MaybeResult<VarList, String> {
-        let mut res = self.compute_dependencies(base, currently_computing.clone())?;
-        let other_deps = self.compute_dependencies(other, currently_computing.clone())?;
-        res.append(other_deps.as_slice());
-        MOk(res)
-    }
-
     pub fn primitive_op_dependencies(
         &mut self,
-        op: PrimitiveOperation,
+        op: BuiltinOperation,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<VarList, String> {
-        match op {
-            PrimitiveOperation::I32Math(op) => match op {
-                IntegerMathOperation::Sum(a, b) | IntegerMathOperation::Difference(a, b) => {
-                    let mut res = self.compute_dependencies(a, currently_computing.clone())?;
-                    let other_deps = self.compute_dependencies(b, currently_computing.clone())?;
-                    res.append(other_deps.as_slice());
-                    MOk(res)
-                }
-            },
+        let inputs = op.inputs();
+        let mut res = VarList::new();
+        for input in inputs {
+            let input_deps = self.compute_dependencies(input, currently_computing.clone())?;
+            res.append(input_deps.as_slice());
         }
+        MOk(res)
     }
 
     pub fn variable_dependencies(

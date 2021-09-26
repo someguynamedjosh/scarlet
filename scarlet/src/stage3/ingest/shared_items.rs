@@ -3,7 +3,7 @@ use super::{
     helpers::{convert_defs, convert_iid, convert_iids, convert_reps, full_convert_iid},
 };
 use crate::shared::{
-    Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType,
+    BuiltinOperation, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType,
     PrimitiveValue, Replacements,
 };
 
@@ -17,13 +17,12 @@ pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, Strin
             typee,
             variant_id,
         } => convert_inductive_value(ctx, params, *typee, *variant_id),
-        Item::IsSameVariant { base, other } => convert_is_same_variant(ctx, *base, *other),
         Item::Pick {
             initial_clause,
             elif_clauses,
             else_clause,
         } => convert_pick(ctx, *initial_clause, elif_clauses, *else_clause),
-        Item::PrimitiveOperation(op) => convert_primitive_operation(ctx, op),
+        Item::BuiltinOperation(op) => convert_primitive_operation(ctx, op),
         Item::PrimitiveType(pt) => convert_primitive_type(*pt),
         Item::PrimitiveValue(pv) => convert_primitive_value(*pv),
         Item::Replacing {
@@ -67,13 +66,6 @@ fn convert_inductive_value(
     })
 }
 
-fn convert_is_same_variant(ctx: &mut Context, base: ItemId, other: ItemId) -> Result<Item, String> {
-    Ok(Item::IsSameVariant {
-        base: convert_iid(ctx, base, true)?,
-        other: convert_iid(ctx, other, true)?,
-    })
-}
-
 fn convert_pick(
     ctx: &mut Context,
     initial_clause: (ItemId, ItemId),
@@ -92,11 +84,17 @@ fn convert_pick(
     })
 }
 
-fn convert_primitive_operation(ctx: &mut Context, op: &PrimitiveOperation) -> Result<Item, String> {
+fn convert_primitive_operation(ctx: &mut Context, op: &BuiltinOperation) -> Result<Item, String> {
     Ok(match op {
-        PrimitiveOperation::I32Math(op) => Item::PrimitiveOperation(PrimitiveOperation::I32Math(
+        BuiltinOperation::I32Math(op) => Item::BuiltinOperation(BuiltinOperation::I32Math(
             convert_integer_op(ctx, op.clone())?,
         )),
+        BuiltinOperation::AreSameVariant { base, other } => {
+            Item::BuiltinOperation(BuiltinOperation::AreSameVariant {
+                base: full_convert_iid(ctx, *base)?,
+                other: full_convert_iid(ctx, *other)?,
+            })
+        }
     })
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     shared::{
-        Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType,
+        BuiltinOperation, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType,
         PrimitiveValue, Replacements,
     },
     stage4::{display::Context, structure::Environment},
@@ -24,13 +24,12 @@ impl Environment {
                 typee,
                 variant_id,
             } => self.get_inductive_value_code(params, typee, variant_id, ctx),
-            Item::IsSameVariant { base, other } => self.get_is_variant_code(base, other, ctx),
             Item::Pick {
                 elif_clauses,
                 else_clause,
                 initial_clause,
             } => self.get_pick_code(elif_clauses, else_clause, initial_clause, ctx),
-            Item::PrimitiveOperation(op) => self.get_primitive_operation_code(op, ctx),
+            Item::BuiltinOperation(op) => self.get_primitive_operation_code(op, ctx),
             Item::PrimitiveType(pt) => self.get_primitive_type_code(*pt),
             Item::PrimitiveValue(val) => self.get_primitive_value_code(*val),
             Item::Replacing {
@@ -146,15 +145,15 @@ impl Environment {
         }
     }
 
-    fn get_primitive_operation_code(
-        &self,
-        op: &PrimitiveOperation,
-        ctx: Context,
-    ) -> Option<String> {
+    fn get_primitive_operation_code(&self, op: &BuiltinOperation, ctx: Context) -> Option<String> {
         match op {
-            PrimitiveOperation::I32Math(op) => Some(format!(
+            BuiltinOperation::I32Math(op) => Some(format!(
                 "builtin_item{{i32_{}}}",
                 self.get_integer_operation_code(op, ctx)
+            )),
+            BuiltinOperation::AreSameVariant { base, other } => Some(format!(
+                "builtin_item{{are_same_variant {:?} {:?}}}",
+                base, other
             )),
         }
     }

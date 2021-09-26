@@ -37,4 +37,11 @@ defining{
             value is any{Data}
         }
     }
+
+    are_same_variant is builtin_item{are_same_variant a b}
+    defining{
+        Data is any{TYPE}
+        a is any{Data}
+        b is any{Data}
+    }
 }

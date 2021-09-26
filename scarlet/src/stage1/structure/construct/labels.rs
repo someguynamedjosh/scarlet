@@ -11,7 +11,6 @@ pub const ROOT_CONSTRUCT_LABELS: &[&str] = &[
 const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "i32"];
 const ALIASES: &[(&str, &str)] = &[
     ("iv", "is_variant"),
-    ("is_same_variant_as", "is_variant"),
     ("T", "Type"),
     ("F", "From"),
     ("FromVariables", "From"),

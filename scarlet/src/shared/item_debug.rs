@@ -33,9 +33,6 @@ impl Debug for Item {
                 }
                 write!(f, "{}]}}", spacer)
             }
-            Self::IsSameVariant { base, other } => {
-                write!(f, "{:?} is_same_variant_as{{{:?}}}", base, other)
-            }
             Self::Pick {
                 initial_clause,
                 elif_clauses,
@@ -50,7 +47,7 @@ impl Debug for Item {
                 write!(f, "{}else {:?} ", nested_spacer, else_clause)?;
                 write!(f, "{}}}", spacer)
             }
-            Self::PrimitiveOperation(po) => write!(f, "{:?}", po),
+            Self::BuiltinOperation(po) => write!(f, "{:?}", po),
             Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
             Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
             Self::Replacing {
