@@ -1,6 +1,6 @@
 use super::ReduceOptions;
 use crate::{
-    shared::{Item, ItemId},
+    shared::{Item, ItemId, Replacements},
     stage4::structure::Environment,
 };
 
@@ -33,12 +33,31 @@ impl Environment {
 
     pub fn reduce_variable(&mut self, opts: ReduceOptions, typee: ItemId, selff: ItemId) -> ItemId {
         let rtype = self.reduce(opts.with_item(typee));
-        if rtype == typee {
+        let rtype_vars = self.get_from_variables(rtype, vec![]).unwrap();
+        let mut replacements = Replacements::new();
+        for var in rtype_vars.as_slice() {
+            if let Some(replace_with) = opts.reps.get(var) {
+                replacements.push((*var, *replace_with));
+            }
+        }
+        let base = if rtype == typee {
             opts.item
         } else {
             let item = Item::Variable {
                 typee: rtype,
                 selff,
+            };
+            let id = self.insert(item, opts.defined_in);
+            self.compute_type(id, vec![]).unwrap();
+            id
+        };
+        if replacements.len() == 0 {
+            base
+        } else {
+            let item = Item::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements: Vec::new(),
             };
             let id = self.insert(item, opts.defined_in);
             self.compute_type(id, vec![]).unwrap();

@@ -7,6 +7,10 @@ impl VarList {
         Self(Vec::new())
     }
 
+    pub fn from(vec: Vec<ItemId>) -> VarList {
+        Self(vec)
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }

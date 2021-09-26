@@ -91,7 +91,6 @@ impl Environment {
         let type_type = self.compute_type(typee, currently_computing.clone())?;
         let mut vars = self.get_from_variables(type_type, currently_computing.clone())?;
         vars.push(selff);
-        let vars = vars.into_vec();
-        MOk(self.insert(Item::FromType { base, vars }, Some(selff)))
+        MOk(self.with_from_vars(base, vars, Some(selff)))
     }
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::ReduceOptions;
 use crate::{
     shared::{Item, ItemId, Replacements},
@@ -12,10 +14,23 @@ impl Environment {
         replacements: Replacements,
         base_defined_in: Option<ItemId>,
     ) -> ItemId {
-        // Do not replace anything this new replacement statement
-        // replaces, because this statement is replacing those with
-        // potentially different values. Only replace ones it does not
-        // mention.
+        let (replacements_after, remaining_replacements) =
+            self.compute_replacements_after_replacing(opts, replacements);
+        if !remaining_replacements.is_empty() {
+            return opts.item;
+        }
+        let rbase = self.reduce_replacement_base(base, base_defined_in, &replacements_after);
+        self.wrap_reduced_base_with_remaining_replacements(opts, rbase, remaining_replacements)
+    }
+
+    /// Returns replacements to apply given a replacing construct, and the
+    /// replacements that should be kept in the statement without immediately
+    /// trying to substitute them.
+    fn compute_replacements_after_replacing(
+        &mut self,
+        opts: ReduceOptions,
+        replacements: Replacements,
+    ) -> (HashMap<ItemId, ItemId>, Replacements) {
         let mut replacements_after = opts.reps.clone();
         let replacements_here = replacements.clone();
         let mut remaining_replacements = Vec::new();
@@ -27,21 +42,36 @@ impl Environment {
                 // variables, we should try to plug it in.
                 replacements_after.insert(*target, value);
             } else {
-                // Otherwise, leave it be.
+                // Otherwise, leave it be. Make sure to delete the previous replacement for this
+                // value so that we don't try to plug it in.
                 remaining_replacements.push((*target, value));
                 replacements_after.remove(target);
             }
         }
-        if !remaining_replacements.is_empty() {
-            return opts.item;
-        }
+        (replacements_after, remaining_replacements)
+    }
+
+    fn reduce_replacement_base(
+        &mut self,
+        base: ItemId,
+        base_defined_in: Option<ItemId>,
+        replacements_after: &HashMap<ItemId, ItemId>,
+    ) -> ItemId {
         let new_opts = ReduceOptions {
             item: base,
             defined_in: base_defined_in,
-            reps: &replacements_after,
+            reps: replacements_after,
             reduce_defs: true,
         };
-        let rbase = self.reduce(new_opts);
+        self.reduce(new_opts)
+    }
+
+    fn wrap_reduced_base_with_remaining_replacements(
+        &mut self,
+        opts: ReduceOptions,
+        rbase: ItemId,
+        remaining_replacements: Replacements,
+    ) -> ItemId {
         if remaining_replacements.is_empty() {
             rbase
         } else {

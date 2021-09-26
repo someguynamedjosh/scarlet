@@ -4,5 +4,9 @@ defining{
     I32 is rover::core::Integer32
     PEq is rover::core::ProofEqual
 
-    rover::core::ProofEqual::reflexive[I32 123] info{}
+    # rover::core::ProofEqual::reflexive[I32 123] info{}
+    input is any{I32}
+    func is any{I32 From{input}}
+
+    func[123] info{}
 }

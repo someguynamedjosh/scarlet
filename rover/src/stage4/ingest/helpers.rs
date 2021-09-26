@@ -63,11 +63,21 @@ impl Environment {
 
     pub fn with_from_vars(
         &mut self,
-        base: ItemId,
-        from_vars: VarList,
+        mut base: ItemId,
+        mut from_vars: VarList,
         defined_in: Option<ItemId>,
     ) -> ItemId {
         if from_vars.len() > 0 {
+            if let Item::FromType {
+                base: other_base,
+                vars: other_vars,
+            } = &self.items[base.0].definition
+            {
+                base = *other_base;
+                let mut all_vars = VarList::from(other_vars.clone());
+                all_vars.append(from_vars.as_slice());
+                from_vars = all_vars;
+            }
             self.insert(
                 Item::FromType {
                     base,
