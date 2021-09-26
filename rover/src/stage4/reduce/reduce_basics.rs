@@ -36,7 +36,10 @@ impl Environment {
         if rtype == typee {
             opts.item
         } else {
-            let item = Item::Variable { typee: rtype, selff };
+            let item = Item::Variable {
+                typee: rtype,
+                selff,
+            };
             let id = self.insert(item, opts.defined_in);
             self.compute_type(id, vec![]).unwrap();
             id

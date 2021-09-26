@@ -1,13 +1,13 @@
-use crate::{shared::{Definitions, Item, ItemId, PrimitiveType, PrimitiveValue}, stage1::structure::{construct::Construct, statement::Statement}, stage2::{
-        ingest::{
-            context::{Context, LocalInfo},
-            definitions::process_definitions_with_info,
-            expression::ingest_expression,
-        },
+use crate::{
+    shared::{Definitions, Item, ItemId, PrimitiveType, PrimitiveValue},
+    stage1::structure::construct::Construct,
+    stage2::{
+        ingest::{context::Context, expression::ingest_expression},
         structure::UnresolvedItem,
-    }};
+    },
+};
 
-pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
+pub fn ingest_builtin_item(_ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let name = root.expect_text("builtin_item")?;
     let item = match name {
         "TYPE" => Item::GodType,

@@ -1,14 +1,5 @@
 #![feature(try_trait_v2)]
 
-use std::{
-    ffi::{OsStr, OsString},
-    path::{Path, PathBuf},
-    str::FromStr,
-};
-
-use shared::{Definitions, ItemId};
-use stage2::structure::Environment;
-
 mod entry;
 mod shared;
 mod stage1;

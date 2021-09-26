@@ -1,11 +1,8 @@
 use self::expression::ingest_expression;
 use crate::{
-    shared::{Definitions, Item, ItemId},
-    stage1::structure::{expression::Expression, statement::Statement},
-    stage2::{
-        ingest::{context::Context, definitions::process_definitions},
-        structure::Environment,
-    },
+    shared::{Definitions, ItemId},
+    stage1::structure::expression::Expression,
+    stage2::{ingest::context::Context, structure::Environment},
 };
 
 mod context;

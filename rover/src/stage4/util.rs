@@ -47,7 +47,11 @@ impl Environment {
 
     fn full_replace(start: ItemId, replacements: &Replacements) -> ItemId {
         let mut result = start;
-        while let Some((_, with)) = replacements.iter().filter(|(t, v)| *t == result && t != v).next() {
+        while let Some((_, with)) = replacements
+            .iter()
+            .filter(|(t, v)| *t == result && t != v)
+            .next()
+        {
             result = *with;
         }
         result

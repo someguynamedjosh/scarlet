@@ -77,7 +77,7 @@ impl Environment {
     fn get_inductive_value_code(
         &self,
         params: &Vec<ItemId>,
-        typee: &ItemId,
+        _typee: &ItemId,
         variant_id: &ItemId,
         ctx: Context,
     ) -> Option<String> {

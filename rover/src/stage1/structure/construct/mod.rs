@@ -7,8 +7,6 @@ use std::fmt::{self, Debug, Formatter};
 
 pub use body::*;
 
-use crate::util::indented;
-
 #[derive(Clone, PartialEq)]
 pub struct Construct {
     pub label: String,

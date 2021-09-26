@@ -6,7 +6,7 @@ mod statement;
 
 use nom_prelude::*;
 
-use super::structure::{expression::Expression, statement::Statement};
+use super::structure::expression::Expression;
 
 pub fn ingest<'i>() -> impl Parser<'i, Expression> {
     delimited(ws(), Expression::parser(), ws())
