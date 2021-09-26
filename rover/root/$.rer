@@ -1,16 +1,21 @@
 void
 defining{
+    TYPE is rover::core::TYPE
     void is rover::core::Void::void
     I32 is rover::core::Integer32
     PEq is rover::core::ProofEqual
 
-    # rover::core::ProofEqual::reflexive[I32 123] info{}
-    input is any{I32}
-    func is any{I32 From{input}}
+    index is any{I32}
 
-    increment is I32::sum[input 1]
+    Data is PEq::Data
+    T is any{TYPE From{any{Data}}}
 
-    increment info{}
-    func info{}
-    func[123 increment] info{}
+    the_func is any{
+        I32
+        From{
+            any{PEq} 
+        }
+    }
+
+    variant something :TYPE From{any{PEq}} info{}
 }

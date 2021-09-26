@@ -19,14 +19,8 @@ impl Environment {
         defined_in: Option<ItemId>,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
-        let type_type = self.compute_type(typee, currently_computing.clone())?;
-        let mut from_vars = self.get_from_variables(type_type, currently_computing.clone())?;
-        for paramed in params {
-            let typee = self.compute_type(paramed, currently_computing.clone())?;
-            let paramed_vars = self.get_from_variables(typee, currently_computing.clone())?;
-            from_vars.append(&paramed_vars.into_vec()[..]);
-        }
-        MOk(self.with_from_vars(typee, from_vars, defined_in))
+        let param_vars = self.flatten_vars(&params, currently_computing.clone())?;
+        self.flatten_type(typee, currently_computing.clone(), param_vars.as_slice())
     }
 
     pub fn type_of_is_same_variant(
@@ -41,12 +35,12 @@ impl Environment {
         let mut from_vars = VarList::new();
         from_vars.append(
             &self
-                .get_from_variables(btype, currently_computing.clone())?
+                .get_from_variables(Some(base), btype, currently_computing.clone())?
                 .into_vec(),
         );
         from_vars.append(
             &self
-                .get_from_variables(otype, currently_computing.clone())?
+                .get_from_variables(Some(other), otype, currently_computing.clone())?
                 .into_vec(),
         );
         MOk(self.with_from_vars(self.bool_type(), from_vars, defined_in))
@@ -62,7 +56,8 @@ impl Environment {
         let typee = self.op_type(&op);
         for input in op.inputs() {
             let input_type = self.compute_type(input, currently_computing.clone())?;
-            let input_vars = self.get_from_variables(input_type, currently_computing.clone())?;
+            let input_vars =
+                self.get_from_variables(Some(input), input_type, currently_computing.clone())?;
             from_vars.append(&input_vars.into_vec()[..]);
         }
         MOk(self.with_from_vars(typee, from_vars, defined_in))
@@ -95,10 +90,6 @@ impl Environment {
         selff: ItemId,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
-        let base = typee;
-        let type_type = self.compute_type(typee, currently_computing.clone())?;
-        let mut vars = self.get_from_variables(type_type, currently_computing.clone())?;
-        vars.push(selff);
-        MOk(self.with_from_vars(base, vars, Some(selff)))
+        self.flatten_type(typee, currently_computing.clone(), &[selff])
     }
 }

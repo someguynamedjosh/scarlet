@@ -4,13 +4,16 @@ use crate::{
 };
 
 impl Environment {
-    fn deref_replacing_and_defining(&self, val: ItemId) -> ItemId {
-        match &self.items[val.0].definition {
-            Item::Defining { base, .. } | Item::Replacing { base, .. } => {
-                self.deref_replacing_and_defining(*base)
+    pub fn type_check_from_type(&self, vars: &Vec<ItemId>) -> Result<(), String> {
+        for param in vars {
+            let base = self.deref_replacing_and_defining(*param);
+            let def = &self.items[base.0].definition;
+            if let Item::Variable { .. } = def {
+            } else {
+                todo!("Nice error, parameter must be a variable.")
             }
-            _ => val,
         }
+        Ok(())
     }
 
     pub fn type_check_inductive_value(

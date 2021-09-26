@@ -60,6 +60,15 @@ impl Environment {
             items: items(from.items),
         }
     }
+
+    pub fn deref_replacing_and_defining(&self, val: ItemId) -> ItemId {
+        match &self.items[val.0].definition {
+            Item::Defining { base, .. } | Item::Replacing { base, .. } => {
+                self.deref_replacing_and_defining(*base)
+            }
+            _ => val,
+        }
+    }
 }
 
 fn fmt_item_prefixes(f: &mut Formatter, item: &TypedItem) -> fmt::Result {

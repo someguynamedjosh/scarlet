@@ -19,6 +19,7 @@ impl Environment {
     /// check.
     fn type_check(&self, item: ItemId) -> Result<(), String> {
         match &self.items[item.0].definition {
+            Item::FromType { vars, .. } => self.type_check_from_type(vars),
             Item::Replacing { replacements, .. } => self.type_check_replacing(item, replacements),
             Item::InductiveValue {
                 typee, variant_id, ..
