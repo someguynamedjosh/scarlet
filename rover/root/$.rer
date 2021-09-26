@@ -8,5 +8,9 @@ defining{
     input is any{I32}
     func is any{I32 From{input}}
 
-    func[123] info{}
+    increment is I32::sum[input 1]
+
+    increment info{}
+    func info{}
+    func[123 increment] info{}
 }

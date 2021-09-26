@@ -12,7 +12,11 @@ impl Environment {
         let typee = self.compute_type(condition, currently_computing.clone());
         let typee = typee.into_option_or_err()?;
         if let Some(typee) = typee {
-            vars.append(&self.get_from_variables(typee, currently_computing.clone())?.into_vec());
+            vars.append(
+                &self
+                    .get_from_variables(typee, currently_computing.clone())?
+                    .into_vec(),
+            );
         } else {
             *tentative = true;
         }
@@ -31,7 +35,11 @@ impl Environment {
         let typee = typee.into_option_or_err()?;
         if let Some(typee) = typee {
             *base_type = Some(self.after_from(typee));
-            vars.append(&self.get_from_variables(typee, currently_computing.clone())?.into_vec());
+            vars.append(
+                &self
+                    .get_from_variables(typee, currently_computing.clone())?
+                    .into_vec(),
+            );
         } else {
             *tentative = true;
         }

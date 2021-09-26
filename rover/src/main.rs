@@ -21,6 +21,9 @@ fn main() {
     let mut environment = stage4::ingest(environment).unwrap();
     println!("{:#?}", environment);
 
+    println!("Infos:");
+    environment.display_infos();
+
     println!("Doing type check");
     stage4::type_check(&environment).unwrap();
 

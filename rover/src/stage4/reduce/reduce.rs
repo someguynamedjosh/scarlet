@@ -7,7 +7,16 @@ use crate::{
 impl Environment {
     pub fn reduce(&mut self, opts: ReduceOptions) -> ItemId {
         if let Some(rep) = opts.reps.get(&opts.item) {
-            return *rep;
+            if opts.reps.len() == 1 {
+                return *rep;
+            } else {
+                let mut new_reps = opts.reps.clone();
+                new_reps.remove(&opts.item);
+                let mut opts = opts;
+                opts.item = *rep;
+                opts.reps = &new_reps;
+                return self.reduce(opts);
+            }
         }
         match &self.items[opts.item.0].definition {
             Item::Defining { base, .. } => {

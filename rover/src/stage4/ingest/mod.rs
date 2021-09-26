@@ -12,7 +12,7 @@ mod helpers;
 mod type_of_basics;
 mod type_of_pick;
 mod type_of_replacing;
-mod var_list;
+pub mod var_list;
 
 fn compute_types(env: &mut Environment) -> Result<(), String> {
     let mut next_item = ItemId(0);

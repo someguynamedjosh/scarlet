@@ -39,8 +39,16 @@ impl Environment {
         let btype = self.compute_type(base, currently_computing.clone())?;
         let otype = self.compute_type(other, currently_computing.clone())?;
         let mut from_vars = VarList::new();
-        from_vars.append(&self.get_from_variables(btype, currently_computing.clone())?.into_vec());
-        from_vars.append(&self.get_from_variables(otype, currently_computing.clone())?.into_vec());
+        from_vars.append(
+            &self
+                .get_from_variables(btype, currently_computing.clone())?
+                .into_vec(),
+        );
+        from_vars.append(
+            &self
+                .get_from_variables(otype, currently_computing.clone())?
+                .into_vec(),
+        );
         MOk(self.with_from_vars(self.bool_type(), from_vars, defined_in))
     }
 

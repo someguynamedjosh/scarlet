@@ -37,7 +37,9 @@ impl Environment {
         for (target, value) in &replacements_here {
             let value = self.reduce(opts.with_item(*value));
             let typee = self.items[value.0].typee.unwrap();
-            if self.type_is_not_from(typee) {
+            let target_type = self.items[target.0].typee.unwrap();
+            let target_expects_vars = self.get_from_variables(target_type, vec![]).unwrap();
+            if self.type_depends_on_nothing_except(typee, &target_expects_vars) {
                 // If the value to replace with does not depend on other
                 // variables, we should try to plug it in.
                 replacements_after.insert(*target, value);

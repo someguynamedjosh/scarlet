@@ -48,12 +48,12 @@ impl Environment {
         replacements: &Replacements,
     ) -> Result<(), String> {
         for (target, val) in replacements {
-            let var_type = self.get_var_type(*target);
+            let var_type = self.after_from(self.get_var_type(*target));
             let val_type = self.item_base_type(*val);
             if !self.are_def_equal_after_replacements(var_type, val_type, replacements) {
                 return Err(format!(
-                    "(at {:?}) {:?} and {:?} have differing types",
-                    item, target, val
+                    "(at {:?}) {:?} and {:?} are different types",
+                    item, var_type, val_type
                 ));
             }
         }
