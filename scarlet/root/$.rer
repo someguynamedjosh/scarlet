@@ -3,28 +3,7 @@ defining{
     TYPE is scarlet::core::TYPE
     void is scarlet::core::Void::void
     I32 is scarlet::core::Integer32
-    # PEq is scarlet::core::ProofEqual
+    PEq is scarlet::core::ProofEqual
 
-    index is any{I32}
-    v1 is any{I32}
-    v2 is any{I32}
-    vboth is I32::sum[v1 v2]
-
-    # Data is PEq::Data
-    # T is any{TYPE From{any{Data}}}
-
-    variant MyType :TYPE From{v1 v2}
-
-    the_func is any{I32 From{any{MyType}}}
-    the_func info{}
-
-    # the_func is any{
-    #     I32
-    #     From{
-    #         any{PEq} 
-    #     }
-    # }
-
-    # variant something :TYPE From{any{PEq}} info{}
-    I32::sum[123 vboth] info{}
+    the_func is any{I32 From{any{PEq}}} info{}
 }
