@@ -41,7 +41,7 @@ pub enum Item {
 }
 
 impl Item {
-    pub fn expect_primitive_value(&self) -> Option<PrimitiveValue> {
+    pub fn as_primitive_value(&self) -> Option<PrimitiveValue> {
         if let Self::PrimitiveValue(pv) = self {
             Some(*pv)
         } else {

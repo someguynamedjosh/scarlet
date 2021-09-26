@@ -9,21 +9,21 @@ impl Environment {
         &mut self,
         opts: ReduceOptions,
         typee: ItemId,
-        params: Vec<ItemId>,
+        values: Vec<ItemId>,
         variant_id: ItemId,
     ) -> ItemId {
         let rtypee = self.reduce(opts.with_item(typee));
-        let mut new_params = Vec::new();
-        for param in &params {
-            let rparam = self.reduce(opts.with_item(*param));
-            new_params.push(rparam);
+        let mut new_values = Vec::new();
+        for value in &values {
+            let rvalue = self.reduce(opts.with_item(*value));
+            new_values.push(rvalue);
         }
-        if new_params == params && rtypee == typee {
+        if new_values == values && rtypee == typee {
             opts.item
         } else {
-            let item = Item::InductiveValue {
+            let item = Item::VariantInstance {
                 typee: rtypee,
-                params: new_params,
+                values: new_values,
                 variant_id,
             };
             let id = self.insert(item, opts.defined_in);

@@ -52,7 +52,7 @@ impl Environment {
         original_type: ItemId,
         desired_vars: &VarList,
     ) -> ItemId {
-        let original_vars = self.get_from_variables(original_type, vec![]).unwrap();
+        let original_vars = self.compute_dependencies(original_value, vec![]).unwrap();
         let mut original_vars = self.annotate_vars(&original_vars);
         let desired_vars = self.annotate_vars(desired_vars);
         let mut replacements = Replacements::new();
@@ -93,7 +93,7 @@ impl Environment {
         let mut remaining_replacements = Vec::new();
         for (target, value) in &replacements_here {
             let target_type = self.get_var_type(*target);
-            let target_expects_vars = self.get_from_variables(target_type, vec![]).unwrap();
+            let target_expects_vars = self.compute_dependencies(target_type, vec![]).unwrap();
 
             let value = self.reduce(opts.with_item(*value));
             let typee = self.items[value.0].typee.unwrap();

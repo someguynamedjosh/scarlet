@@ -18,13 +18,16 @@ impl Environment {
         &mut self,
         opts: ReduceOptions,
         base: ItemId,
-        vars: Vec<ItemId>,
+        values: Vec<ItemId>,
     ) -> ItemId {
         let rbase = self.reduce(opts.with_item(base));
         if rbase == base {
             opts.item
         } else {
-            let item = Item::FromType { base: rbase, vars };
+            let item = Item::FromType {
+                base: rbase,
+                values,
+            };
             let id = self.insert(item, opts.defined_in);
             self.compute_type(id, vec![]).unwrap();
             id
@@ -33,9 +36,9 @@ impl Environment {
 
     pub fn reduce_variable(&mut self, opts: ReduceOptions, typee: ItemId, selff: ItemId) -> ItemId {
         let rtype = self.reduce(opts.with_item(typee));
-        let rtype_vars = self.get_from_variables(rtype, vec![]).unwrap();
+        let vars = self.compute_dependencies(selff, vec![]).unwrap();
         let mut replacements = Replacements::new();
-        for var in rtype_vars.as_slice() {
+        for var in vars.as_slice() {
             if let Some(replace_with) = opts.reps.get(var) {
                 replacements.push((*var, *replace_with));
             }

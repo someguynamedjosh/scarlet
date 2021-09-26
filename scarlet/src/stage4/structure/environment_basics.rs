@@ -69,6 +69,11 @@ impl Environment {
             _ => val,
         }
     }
+
+    pub fn get(&self, id: ItemId) -> &TypedItem {
+        assert!(id.0 < self.items.len());
+        &self.items[id.0]
+    }
 }
 
 fn fmt_item_prefixes(f: &mut Formatter, item: &TypedItem) -> fmt::Result {

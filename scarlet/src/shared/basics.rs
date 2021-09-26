@@ -29,6 +29,13 @@ impl PrimitiveValue {
             _ => panic!("Expected an i32"),
         }
     }
+
+    pub fn as_i32(&self) -> Option<i32> {
+        match self {
+            Self::I32(v) => Some(*v),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

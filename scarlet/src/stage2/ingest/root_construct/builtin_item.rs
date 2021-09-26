@@ -1,11 +1,7 @@
-use crate::{
-    shared::{BuiltinOperation, IntegerMathOperation, Item, PrimitiveType},
-    stage1::structure::construct::Construct,
-    stage2::{
+use crate::{shared::{BuiltinOperation, IntegerMathOperation, Item, PrimitiveType, PrimitiveValue}, stage1::structure::construct::Construct, stage2::{
         ingest::{context::Context, expression::ingest_expression},
         structure::UnresolvedItem,
-    },
-};
+    }};
 
 pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let statements = root.expect_statements("builtin_item")?;
@@ -52,6 +48,18 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
             }
             Item::PrimitiveType(PrimitiveType::Bool)
         }
+        "true" => {
+            if args.len() != 0 {
+                todo!("nice error, wrong number of arguments");
+            }
+            Item::PrimitiveValue(PrimitiveValue::Bool(true))
+        }
+        "false" => {
+            if args.len() != 0 {
+                todo!("nice error, wrong number of arguments");
+            }
+            Item::PrimitiveValue(PrimitiveValue::Bool(false))
+        }
         "are_same_variant" => {
             if args.len() != 2 {
                 todo!("nice error, wrong number of arguments");
@@ -61,7 +69,7 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
                 other: args[1],
             })
         }
-        other => return Err(format!("Unrecognized builtin_item: {}", other)),
+        other => todo!("Unrecognized builtin_item: {}", other),
     };
     Ok(UnresolvedItem::Just(item))
 }

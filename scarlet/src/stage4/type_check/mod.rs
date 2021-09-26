@@ -19,20 +19,18 @@ impl Environment {
     /// check.
     fn type_check(&self, item: ItemId) -> Result<(), String> {
         match &self.items[item.0].definition {
-            Item::FromType { vars, .. } => self.type_check_from_type(vars),
-            Item::Replacing { replacements, .. } => self.type_check_replacing(item, replacements),
-            Item::InductiveValue {
-                typee, variant_id, ..
-            } => self.type_check_inductive_value(*typee, *variant_id),
-            Item::IsSameVariant { base, other } => {
-                self.type_check_is_same_variant(item, *base, *other)
-            }
+            // TODO: BuiltinOperation
+            Item::FromType { values, .. } => self.type_check_from_type(values),
             Item::Pick {
                 initial_clause,
                 elif_clauses,
                 else_clause,
             } => self.type_check_pick(*initial_clause, elif_clauses, *else_clause),
+            Item::Replacing { replacements, .. } => self.type_check_replacing(item, replacements),
             Item::TypeIs { exact, base, typee } => self.type_check_type_is(*exact, *base, *typee),
+            Item::VariantInstance {
+                typee, variant_id, ..
+            } => self.type_check_inductive_value(*typee, *variant_id),
             _ => Ok(()),
         }
     }

@@ -18,6 +18,10 @@ defining{
     }
 
     Boolean is builtin_item{Boolean}
+    defining{
+        true is builtin_item{true}
+        false is builtin_item{false}
+    }
 
     variant Never :TYPE
 

@@ -23,26 +23,21 @@ impl Environment {
                 let base = *base;
                 self.reduce_def(opts, base)
             }
-            Item::FromType { base, vars } => {
+            Item::FromType { base, values } => {
                 let base = *base;
-                let vars = vars.clone();
+                let vars = values.clone();
                 self.reduce_from_type(opts, base, vars)
             }
             Item::GodType => opts.item,
-            Item::InductiveValue {
+            Item::VariantInstance {
                 typee,
-                params,
+                values,
                 variant_id,
             } => {
                 let typee = *typee;
-                let params = params.clone();
+                let params = values.clone();
                 let variant_id = *variant_id;
                 self.reduce_inductive_value(opts, typee, params, variant_id)
-            }
-            Item::IsSameVariant { base, other } => {
-                let base = *base;
-                let other = *other;
-                self.reduce_is_same_variant(opts, base, other)
             }
             Item::Pick {
                 initial_clause,
@@ -54,9 +49,9 @@ impl Environment {
                 let else_clause = *else_clause;
                 self.reduce_pick(opts, initial_clause, elif_clauses, else_clause)
             }
-            Item::PrimitiveOperation(op) => {
+            Item::BuiltinOperation(op) => {
                 let op = op.clone();
-                self.reduce_primitive_operation(opts, op)
+                self.reduce_builtin_operation(opts, op)
             }
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => opts.item,
             Item::Replacing {

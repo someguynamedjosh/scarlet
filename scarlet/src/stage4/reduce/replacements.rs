@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::Reps;
 use crate::{
-    shared::{Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, Replacements},
+    shared::{BuiltinOperation, Definitions, IntegerMathOperation, Item, ItemId, Replacements},
     stage4::structure::Environment,
 };
 
@@ -34,23 +34,19 @@ impl Environment {
                 Self::apply_replacements_to(base, reps);
                 Self::apply_replacements_to_defs(definitions, reps);
             }
-            Item::FromType { base, vars } => {
+            Item::FromType { base, values } => {
                 Self::apply_replacements_to(base, reps);
-                Self::apply_replacements_to_ids(vars, reps);
+                Self::apply_replacements_to_ids(values, reps);
             }
             Item::GodType => (),
-            Item::InductiveValue {
-                params,
+            Item::VariantInstance {
+                values,
                 typee,
                 variant_id,
             } => {
-                Self::apply_replacements_to_ids(params, reps);
+                Self::apply_replacements_to_ids(values, reps);
                 Self::apply_replacements_to(typee, reps);
                 Self::apply_replacements_to(variant_id, reps);
-            }
-            Item::IsSameVariant { base, other } => {
-                Self::apply_replacements_to(base, reps);
-                Self::apply_replacements_to(other, reps);
             }
             Item::Pick {
                 initial_clause,
@@ -63,8 +59,12 @@ impl Environment {
                 Self::apply_replacements_to_reps(elif_clauses, reps);
                 Self::apply_replacements_to(else_clause, reps);
             }
-            Item::PrimitiveOperation(op) => match op {
-                PrimitiveOperation::I32Math(op) => Self::apply_replacements_to_int_op(op, reps),
+            Item::BuiltinOperation(op) => match op {
+                BuiltinOperation::I32Math(op) => Self::apply_replacements_to_int_op(op, reps),
+                BuiltinOperation::AreSameVariant { base, other } => {
+                    Self::apply_replacements_to(base, reps);
+                    Self::apply_replacements_to(other, reps);
+                }
             },
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
             Item::Replacing {

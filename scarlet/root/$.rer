@@ -12,5 +12,7 @@ defining{
         variant blue  :Primary
     }
 
-    scarlet::core::are_same_variant[Primary Primary::red Primary::red] info{}
+    thing is scarlet::core::are_same_variant[Primary Primary::red Primary::red] 
+    thing info{}
+    # I32::sum[1 2] info{}
 }

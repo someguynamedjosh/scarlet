@@ -7,10 +7,9 @@ use crate::{
 
 mod reduce;
 mod reduce_basics;
+mod reduce_builtin_operation;
 mod reduce_inductive_value;
-mod reduce_is_same_variant;
 mod reduce_pick;
-mod reduce_primitive_operation;
 mod reduce_replacing;
 mod replacements;
 
@@ -70,7 +69,9 @@ impl Environment {
     fn type_is_not_from(&self, typee: ItemId) -> bool {
         match &self.items[typee.0].definition {
             Item::Defining { base, .. } => self.type_is_not_from(*base),
-            Item::FromType { base, vars, .. } => vars.is_empty() && self.type_is_not_from(*base),
+            Item::FromType { base, values, .. } => {
+                values.is_empty() && self.type_is_not_from(*base)
+            }
             Item::Replacing { base, .. } => self.type_is_not_from(*base),
             _ => true,
         }
@@ -79,9 +80,9 @@ impl Environment {
     fn type_depends_on_nothing_except(&self, typee: ItemId, allowed_deps: &VarList) -> bool {
         match &self.items[typee.0].definition {
             Item::Defining { base, .. } => self.type_is_not_from(*base),
-            Item::FromType { base, vars, .. } => {
-                for var in vars {
-                    if !allowed_deps.as_slice().contains(var) {
+            Item::FromType { base, values, .. } => {
+                for value in values {
+                    if !allowed_deps.as_slice().contains(value) {
                         return false;
                     }
                 }

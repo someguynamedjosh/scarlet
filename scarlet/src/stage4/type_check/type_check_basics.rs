@@ -4,8 +4,8 @@ use crate::{
 };
 
 impl Environment {
-    pub fn type_check_from_type(&self, vars: &Vec<ItemId>) -> Result<(), String> {
-        for param in vars {
+    pub fn type_check_from_type(&self, values: &Vec<ItemId>) -> Result<(), String> {
+        for param in values {
             let base = self.deref_replacing_and_defining(*param);
             let def = &self.items[base.0].definition;
             if let Item::Variable { .. } = def {
