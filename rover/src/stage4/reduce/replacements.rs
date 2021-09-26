@@ -39,9 +39,14 @@ impl Environment {
                 Self::apply_replacements_to_ids(vars, reps);
             }
             Item::GodType => (),
-            Item::InductiveValue { typee, records, .. } => {
-                Self::apply_replacements_to(typee, reps);
+            Item::InductiveValue {
+                records,
+                typee,
+                variant_id,
+            } => {
                 Self::apply_replacements_to_ids(records, reps);
+                Self::apply_replacements_to(typee, reps);
+                Self::apply_replacements_to(variant_id, reps);
             }
             Item::IsSameVariant { base, other } => {
                 Self::apply_replacements_to(base, reps);
