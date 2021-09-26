@@ -4,9 +4,11 @@ use crate::{
 };
 
 impl Environment {
-    fn deref_replacing(&self, val: ItemId) -> ItemId {
+    fn deref_replacing_and_defining(&self, val: ItemId) -> ItemId {
         match &self.items[val.0].definition {
-            Item::Replacing { base, .. } => self.deref_replacing(*base),
+            Item::Defining { base, .. } | Item::Replacing { base, .. } => {
+                self.deref_replacing_and_defining(*base)
+            }
             _ => val,
         }
     }
@@ -20,13 +22,13 @@ impl Environment {
             // Variants of the god type can be defined anywhere.
             Ok(())
         } else {
-            let base_typee = self.deref_replacing(typee);
+            let base_typee = self.deref_replacing_and_defining(typee);
             let type_defined_in = &self.items[base_typee.0].defined_in.unwrap();
             let defining_scope = &self.items[type_defined_in.0].definition;
             if let Item::Defining { definitions, base } = defining_scope {
                 let is_defined_here = definitions
                     .iter()
-                    .any(|(_, defined)| *defined == variant_id);
+                    .any(|(_, defined)| self.deref_replacing_and_defining(*defined) == variant_id);
                 // The second condition is to check that this is not a general scope shared by
                 // many things, but is instead one that is a defining construct on the type.
                 if !is_defined_here || *base != base_typee {

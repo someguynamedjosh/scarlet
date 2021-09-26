@@ -25,4 +25,16 @@ defining{
     defining{
         variant void :Void
     }
+
+    variant ProofEqual :TYPE From{Data left right}
+    defining{
+        Data is any{TYPE}
+        left is any{Data}
+        right is any{Data}
+
+        variant reflexive :ProofEqual[Data value value]
+        defining{
+            value is any{Data}
+        }
+    }
 }

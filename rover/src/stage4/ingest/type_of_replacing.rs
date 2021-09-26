@@ -15,7 +15,8 @@ impl Environment {
         let after_reps =
             self.compute_type_after_replacing(base, replacements, currently_computing.clone())?;
         // These are the variables that unlabeled replacements might refer to.
-        let mut remaining_variables_after_reps = self.get_from_variables(after_reps)?;
+        let mut remaining_variables_after_reps =
+            self.get_from_variables(after_reps, currently_computing.clone())?;
         // The same as above, but a mutable reference.
         match &mut self.items[replacing_id.0].definition {
             Item::Replacing {

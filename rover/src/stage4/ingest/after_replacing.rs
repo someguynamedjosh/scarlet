@@ -18,7 +18,7 @@ impl Environment {
         let mut replacement_data = HashMap::new();
         for (target, value) in replacements {
             let valtype = self.compute_type(value, currently_computing.clone())?;
-            let valtype_vars = self.get_from_variables(valtype)?;
+            let valtype_vars = self.get_from_variables(valtype, currently_computing.clone())?;
             replacement_data.insert(target, valtype_vars);
         }
         MOk(replacement_data)

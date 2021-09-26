@@ -8,15 +8,15 @@ impl Environment {
         tentative: &mut bool,
         vars: &mut VarList,
         currently_computing: &Vec<ItemId>,
-    ) -> Result<(), String> {
+    ) -> MaybeResult<(), String> {
         let typee = self.compute_type(condition, currently_computing.clone());
         let typee = typee.into_option_or_err()?;
         if let Some(typee) = typee {
-            vars.append(&self.get_from_variables(typee)?.into_vec());
+            vars.append(&self.get_from_variables(typee, currently_computing.clone())?.into_vec());
         } else {
             *tentative = true;
         }
-        Ok(())
+        MOk(())
     }
 
     fn process_value(
@@ -26,16 +26,16 @@ impl Environment {
         base_type: &mut Option<ItemId>,
         vars: &mut VarList,
         currently_computing: &Vec<ItemId>,
-    ) -> Result<(), String> {
+    ) -> MaybeResult<(), String> {
         let typee = self.compute_type(value, currently_computing.clone());
         let typee = typee.into_option_or_err()?;
         if let Some(typee) = typee {
             *base_type = Some(self.after_from(typee));
-            vars.append(&self.get_from_variables(typee)?.into_vec());
+            vars.append(&self.get_from_variables(typee, currently_computing.clone())?.into_vec());
         } else {
             *tentative = true;
         }
-        Ok(())
+        MOk(())
     }
 
     pub fn type_of_pick(

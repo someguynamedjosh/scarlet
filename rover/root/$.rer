@@ -2,6 +2,7 @@ void
 defining{
     void is rover::core::Void::void
     I32 is rover::core::Integer32
+    PEq is rover::core::ProofEqual
 
-    I32 info{}
+    rover::core::ProofEqual::reflexive[I32 123] info{}
 }

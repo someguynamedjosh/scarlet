@@ -20,10 +20,10 @@ impl Environment {
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
         let type_type = self.compute_type(typee, currently_computing.clone())?;
-        let mut from_vars = self.get_from_variables(type_type)?;
+        let mut from_vars = self.get_from_variables(type_type, currently_computing.clone())?;
         for paramed in params {
             let typee = self.compute_type(paramed, currently_computing.clone())?;
-            let paramed_vars = self.get_from_variables(typee)?;
+            let paramed_vars = self.get_from_variables(typee, currently_computing.clone())?;
             from_vars.append(&paramed_vars.into_vec()[..]);
         }
         MOk(self.with_from_vars(typee, from_vars, defined_in))
@@ -37,10 +37,10 @@ impl Environment {
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
         let btype = self.compute_type(base, currently_computing.clone())?;
-        let otype = self.compute_type(other, currently_computing)?;
+        let otype = self.compute_type(other, currently_computing.clone())?;
         let mut from_vars = VarList::new();
-        from_vars.append(&self.get_from_variables(btype)?.into_vec());
-        from_vars.append(&self.get_from_variables(otype)?.into_vec());
+        from_vars.append(&self.get_from_variables(btype, currently_computing.clone())?.into_vec());
+        from_vars.append(&self.get_from_variables(otype, currently_computing.clone())?.into_vec());
         MOk(self.with_from_vars(self.bool_type(), from_vars, defined_in))
     }
 
@@ -54,7 +54,7 @@ impl Environment {
         let typee = self.op_type(&op);
         for input in op.inputs() {
             let input_type = self.compute_type(input, currently_computing.clone())?;
-            let input_vars = self.get_from_variables(input_type)?;
+            let input_vars = self.get_from_variables(input_type, currently_computing.clone())?;
             from_vars.append(&input_vars.into_vec()[..]);
         }
         MOk(self.with_from_vars(typee, from_vars, defined_in))
@@ -88,8 +88,8 @@ impl Environment {
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
         let base = typee;
-        let type_type = self.compute_type(typee, currently_computing)?;
-        let mut vars = self.get_from_variables(type_type)?;
+        let type_type = self.compute_type(typee, currently_computing.clone())?;
+        let mut vars = self.get_from_variables(type_type, currently_computing.clone())?;
         vars.push(selff);
         let vars = vars.into_vec();
         MOk(self.insert(Item::FromType { base, vars }, Some(selff)))
