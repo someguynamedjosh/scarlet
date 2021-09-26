@@ -136,11 +136,7 @@ impl Environment {
             let from = self.get_from_type_code(&typee, records, ctx)?;
             Some(format!("variant {:?} :{}", variant_id, from))
         } else {
-            let mut res = format!(
-                "{}::{:?}[",
-                self.get_item_name_or_code(*typee, ctx),
-                variant_id
-            );
+            let mut res = format!("{}[", self.get_item_name_or_code(*variant_id, ctx),);
             for value in records {
                 let value = indented(&self.get_item_name_or_code(*value, ctx));
                 res.push_str(&format!("\n    {}", value))

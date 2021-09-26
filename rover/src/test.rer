@@ -3,11 +3,20 @@ TYPE
 defining{
    TYPE is rover::lang::TYPE
    Integer32 is rover::lang::Integer32
+   Boolean is rover::lang::Boolean
 
-   variant MyThing :TYPE
+   int is any{Integer32}
+   bool is any{Boolean}
+
+   mymod is TYPE
    defining{
-      variant new :MyThing
+      variant MyThing :TYPE From{int}
+      defining{
+         variant new :MyThing
+      }
    }
+
+   mymod::MyThing::new info{}
 
    # T is any{TYPE}
    # val is any{T}
