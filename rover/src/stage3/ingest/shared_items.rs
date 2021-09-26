@@ -13,10 +13,10 @@ pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, Strin
         Item::FromType { base, vars } => convert_from_type(ctx, *base, vars),
         Item::GodType => Ok(Item::GodType),
         Item::InductiveValue {
-            records,
+            params,
             typee,
             variant_id,
-        } => convert_inductive_value(ctx, records, *typee, *variant_id),
+        } => convert_inductive_value(ctx, params, *typee, *variant_id),
         Item::IsSameVariant { base, other } => convert_is_same_variant(ctx, *base, *other),
         Item::Pick {
             initial_clause,
@@ -56,12 +56,12 @@ fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &Vec<ItemId>) -> Res
 
 fn convert_inductive_value(
     ctx: &mut Context,
-    records: &Vec<ItemId>,
+    params: &Vec<ItemId>,
     typee: ItemId,
     variant_id: ItemId,
 ) -> Result<Item, String> {
     Ok(Item::InductiveValue {
-        records: convert_iids(ctx, records)?,
+        params: convert_iids(ctx, params)?,
         typee: full_convert_iid(ctx, typee)?,
         variant_id: full_convert_iid(ctx, variant_id)?,
     })

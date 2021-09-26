@@ -34,16 +34,16 @@ impl Environment {
     pub fn type_of_inductive_value(
         &mut self,
         typee: ItemId,
-        records: Vec<ItemId>,
+        params: Vec<ItemId>,
         defined_in: Option<ItemId>,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
         let type_type = self.compute_type(typee, currently_computing.clone())?;
         let mut from_vars = self.get_from_variables(type_type)?;
-        for recorded in records {
-            let typee = self.compute_type(recorded, currently_computing.clone())?;
-            let recorded_vars = self.get_from_variables(typee)?;
-            from_vars.append(&recorded_vars.into_vec()[..]);
+        for paramed in params {
+            let typee = self.compute_type(paramed, currently_computing.clone())?;
+            let paramed_vars = self.get_from_variables(typee)?;
+            from_vars.append(&paramed_vars.into_vec()[..]);
         }
         MOk(self.with_from_vars(typee, from_vars, defined_in))
     }

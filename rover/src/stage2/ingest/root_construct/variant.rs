@@ -66,16 +66,16 @@ pub fn ingest_variant_construct(
     let return_type_id = ingest_expression(&mut ctx.child(), type_expr, vec![])?;
 
     let base_return_type_id = dereference_type(ctx, return_type_id);
-    let (recorded_vars, definitions) = get_from_vars(ctx, return_type_id);
+    let (paramed_vars, definitions) = get_from_vars(ctx, return_type_id);
     let variant_id = ctx.get_or_create_current_id();
-    for var in &recorded_vars {
+    for var in &paramed_vars {
         ctx.environment.set_defined_in(*var, variant_id);
     }
 
     let val = Item::InductiveValue {
         typee: base_return_type_id,
         variant_id,
-        records: recorded_vars,
+        params: paramed_vars,
     }
     .into();
     if definitions.len() > 0 {

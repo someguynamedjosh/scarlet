@@ -14,7 +14,7 @@ pub enum Item {
     InductiveValue {
         typee: ItemId,
         variant_id: ItemId,
-        records: Vec<ItemId>,
+        params: Vec<ItemId>,
     },
     IsSameVariant {
         base: ItemId,

@@ -40,11 +40,11 @@ impl Environment {
             }
             Item::GodType => (),
             Item::InductiveValue {
-                records,
+                params,
                 typee,
                 variant_id,
             } => {
-                Self::apply_replacements_to_ids(records, reps);
+                Self::apply_replacements_to_ids(params, reps);
                 Self::apply_replacements_to(typee, reps);
                 Self::apply_replacements_to(variant_id, reps);
             }

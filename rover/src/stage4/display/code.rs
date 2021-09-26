@@ -20,10 +20,10 @@ impl Environment {
             Item::FromType { base, vars } => self.get_from_type_code(base, vars, ctx),
             Item::GodType => Some(format!("TYPE")),
             Item::InductiveValue {
-                records,
+                params,
                 typee,
                 variant_id,
-            } => self.get_inductive_value_code(records, typee, variant_id, ctx),
+            } => self.get_inductive_value_code(params, typee, variant_id, ctx),
             Item::IsSameVariant { base, other } => self.get_is_variant_code(base, other, ctx),
             Item::Pick {
                 elif_clauses,
@@ -98,8 +98,8 @@ impl Environment {
             unreachable!("Type definition should always be a defining construct.")
         };
         let base_type = &self.items[base_type_id.0].definition;
-        let original_params = if let Item::InductiveValue { records, .. } = base_type {
-            records
+        let original_params = if let Item::InductiveValue { params, .. } = base_type {
+            params
         } else {
             unreachable!("Base of type definition should always be an inductive type")
         };
@@ -127,17 +127,17 @@ impl Environment {
 
     fn get_inductive_value_code(
         &self,
-        records: &Vec<ItemId>,
+        params: &Vec<ItemId>,
         typee: &ItemId,
         variant_id: &ItemId,
         ctx: Context,
     ) -> Option<String> {
         if let Some(typee) = ctx.in_type {
-            let from = self.get_from_type_code(&typee, records, ctx)?;
+            let from = self.get_from_type_code(&typee, params, ctx)?;
             Some(format!("variant {:?} :{}", variant_id, from))
         } else {
             let mut res = format!("{}[", self.get_item_name_or_code(*variant_id, ctx),);
-            for value in records {
+            for value in params {
                 let value = indented(&self.get_item_name_or_code(*value, ctx));
                 res.push_str(&format!("\n    {}", value))
             }

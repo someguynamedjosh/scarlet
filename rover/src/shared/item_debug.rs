@@ -25,11 +25,11 @@ impl Debug for Item {
             Self::InductiveValue {
                 typee,
                 variant_id,
-                records,
+                params,
             } => {
                 write!(f, "value{{{:?} {:?} [", typee, variant_id)?;
-                for record in records {
-                    write!(f, "{}{:?}, ", nested_spacer, record)?;
+                for param in params {
+                    write!(f, "{}{:?}, ", nested_spacer, param)?;
                 }
                 write!(f, "{}]}}", spacer)
             }

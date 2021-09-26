@@ -43,9 +43,9 @@ impl Environment {
                 self.compute_type(base, currently_computing)
             }
             Item::GodType { .. } => MOk(self.god_type()),
-            Item::InductiveValue { typee, records, .. } => {
-                let (typee, records) = (*typee, records.clone());
-                self.type_of_inductive_value(typee, records, defined_in, currently_computing)
+            Item::InductiveValue { typee, params, .. } => {
+                let (typee, params) = (*typee, params.clone());
+                self.type_of_inductive_value(typee, params, defined_in, currently_computing)
             }
             Item::IsSameVariant { base, other } => {
                 // The type is a boolean dependent on the variables of the two expressions.

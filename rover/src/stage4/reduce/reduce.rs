@@ -22,13 +22,13 @@ impl Environment {
             Item::GodType => opts.item,
             Item::InductiveValue {
                 typee,
-                records,
+                params,
                 variant_id,
             } => {
                 let typee = *typee;
-                let records = records.clone();
+                let params = params.clone();
                 let variant_id = *variant_id;
-                self.reduce_inductive_value(opts, typee, records, variant_id)
+                self.reduce_inductive_value(opts, typee, params, variant_id)
             }
             Item::IsSameVariant { base, other } => {
                 let base = *base;
