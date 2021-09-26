@@ -35,12 +35,12 @@ impl Environment {
         let mut from_vars = VarList::new();
         from_vars.append(
             &self
-                .get_from_variables(Some(base), btype, currently_computing.clone())?
+                .get_from_variables(btype, currently_computing.clone())?
                 .into_vec(),
         );
         from_vars.append(
             &self
-                .get_from_variables(Some(other), otype, currently_computing.clone())?
+                .get_from_variables(otype, currently_computing.clone())?
                 .into_vec(),
         );
         MOk(self.with_from_vars(self.bool_type(), from_vars, defined_in))
@@ -56,8 +56,7 @@ impl Environment {
         let typee = self.op_type(&op);
         for input in op.inputs() {
             let input_type = self.compute_type(input, currently_computing.clone())?;
-            let input_vars =
-                self.get_from_variables(Some(input), input_type, currently_computing.clone())?;
+            let input_vars = self.get_from_variables(input_type, currently_computing.clone())?;
             from_vars.append(&input_vars.into_vec()[..]);
         }
         MOk(self.with_from_vars(typee, from_vars, defined_in))
