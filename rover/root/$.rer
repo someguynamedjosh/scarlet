@@ -1,4 +1,7 @@
 void
 defining{
     void is rover::core::Void::void
+    I32 is rover::core::Integer32
+
+    I32 info{}
 }

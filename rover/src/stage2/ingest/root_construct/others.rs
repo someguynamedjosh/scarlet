@@ -7,17 +7,6 @@ use crate::{
     },
 };
 
-pub fn ingest_builtin_item(_ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
-    let name = root.expect_text("builtin_item")?;
-    let item = match name {
-        "TYPE" => Item::GodType,
-        "Integer32" => Item::PrimitiveType(PrimitiveType::I32),
-        "Boolean" => Item::PrimitiveType(PrimitiveType::Bool),
-        other => return Err(format!("Unrecognized language item: {}", other)),
-    };
-    Ok(UnresolvedItem::Just(item))
-}
-
 fn resolve_ident_in_scope(scope: &Definitions, ident: &str) -> Option<ItemId> {
     for (name, val) in scope {
         if name == ident {

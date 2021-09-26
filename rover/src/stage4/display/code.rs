@@ -1,7 +1,7 @@
 use crate::{
     shared::{
-        Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveValue,
-        Replacements,
+        Definitions, IntegerMathOperation, Item, ItemId, PrimitiveOperation, PrimitiveType,
+        PrimitiveValue, Replacements,
     },
     stage4::{display::Context, structure::Environment},
     util::indented,
@@ -31,6 +31,7 @@ impl Environment {
                 initial_clause,
             } => self.get_pick_code(elif_clauses, else_clause, initial_clause, ctx),
             Item::PrimitiveOperation(op) => self.get_primitive_operation_code(op, ctx),
+            Item::PrimitiveType(pt) => self.get_primitive_type_code(*pt),
             Item::PrimitiveValue(val) => self.get_primitive_value_code(*val),
             Item::Replacing {
                 base, replacements, ..
@@ -64,7 +65,7 @@ impl Environment {
         vars: &Vec<ItemId>,
         ctx: Context,
     ) -> Option<String> {
-        let mut res = self.get_item_code_or_name(*base, ctx);
+        let mut res = self.get_item_name_or_code(*base, ctx);
         res.push_str(" From{ ");
         for var in vars {
             res.push_str(&self.get_item_name_or_code(*var, ctx));
@@ -134,12 +135,12 @@ impl Environment {
         use IntegerMathOperation as Imo;
         match op {
             Imo::Sum(a, b) => format!(
-                "sum[{} {}]",
+                "sum {} {}",
                 self.get_item_name_or_code(*a, ctx),
                 self.get_item_name_or_code(*b, ctx)
             ),
             Imo::Difference(a, b) => format!(
-                "difference[{} {}]",
+                "difference {} {}",
                 self.get_item_name_or_code(*a, ctx),
                 self.get_item_name_or_code(*b, ctx)
             ),
@@ -153,10 +154,17 @@ impl Environment {
     ) -> Option<String> {
         match op {
             PrimitiveOperation::I32Math(op) => Some(format!(
-                "Integer32::{}",
+                "builtin_item{{i32_{}}}",
                 self.get_integer_operation_code(op, ctx)
             )),
         }
+    }
+
+    fn get_primitive_type_code(&self, pt: PrimitiveType) -> Option<String> {
+        Some(String::from(match pt {
+            PrimitiveType::Bool => "builtin_item{Boolean}",
+            PrimitiveType::I32 => "builtin_item{Integer32}",
+        }))
     }
 
     fn get_primitive_value_code(&self, value: PrimitiveValue) -> Option<String> {

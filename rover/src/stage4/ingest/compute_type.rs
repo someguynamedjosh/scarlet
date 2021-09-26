@@ -70,7 +70,7 @@ impl Environment {
             }
             Item::PrimitiveOperation(op) => {
                 let op = op.clone();
-                self.type_of_primitive_operation(op, defined_in)
+                self.type_of_primitive_operation(op, defined_in, currently_computing)
             }
             Item::PrimitiveType(..) => MOk(self.god_type()),
             Item::PrimitiveValue(pv) => self.type_of_primitive_value(pv),

@@ -48,11 +48,12 @@ impl Environment {
         &mut self,
         op: PrimitiveOperation,
         defined_in: Option<ItemId>,
+        currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
         let mut from_vars = VarList::new();
         let typee = self.op_type(&op);
         for input in op.inputs() {
-            let input_type = self.items[input.0].typee.unwrap();
+            let input_type = self.compute_type(input, currently_computing.clone())?;
             let input_vars = self.get_from_variables(input_type)?;
             from_vars.append(&input_vars.into_vec()[..]);
         }

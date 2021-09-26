@@ -1,7 +1,22 @@
 Void::void
 defining{
     TYPE is builtin_item{TYPE}
+
     Integer32 is builtin_item{Integer32}
+    defining{
+        sum is builtin_item{i32_sum left right}
+        defining{
+            left is any{Integer32}
+            right is any{Integer32}
+        }
+
+        difference is builtin_item{i32_difference left right}
+        defining{
+            left is any{Integer32}
+            right is any{Integer32}
+        }
+    }
+
     Boolean is builtin_item{Boolean}
 
     variant Never :TYPE

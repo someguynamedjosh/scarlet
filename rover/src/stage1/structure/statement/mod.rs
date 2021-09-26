@@ -19,6 +19,16 @@ pub enum Statement {
     Replace(Replace),
 }
 
+impl Statement {
+    pub fn expect_expression(&self) -> Result<&Expression, String> {
+        if let Self::Expression(expr) = self {
+            Ok(expr)
+        } else {
+            todo!("nice error, expected expression")
+        }
+    }
+}
+
 impl Debug for Statement {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
