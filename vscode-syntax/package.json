@@ -1,7 +1,7 @@
 {
-    "name": "rover-syntax",
-    "displayName": "Rover Syntax Support",
-    "description": "Syntax highlighting for Rover",
+    "name": "scarlet-syntax",
+    "displayName": "Scarlet Syntax Support",
+    "description": "Syntax highlighting for Scarlet",
     "version": "1.0.0",
     "publisher": "joshua-maros",
     "engines": {
@@ -13,7 +13,7 @@
     "contributes": {
         "languages": [
             {
-                "id": "rover",
+                "id": "scarlet",
                 "extensions": [
                     ".rer"
                 ],
@@ -22,9 +22,9 @@
         ],
         "grammars": [
             {
-                "language": "rover",
-                "scopeName": "source.rover",
-                "path": "./syntaxes/rover.tmLanguage.json"
+                "language": "scarlet",
+                "scopeName": "source.scarlet",
+                "path": "./syntaxes/scarlet.tmLanguage.json"
             }
         ]
     },

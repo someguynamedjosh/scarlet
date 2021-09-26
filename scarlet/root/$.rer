@@ -1,9 +1,9 @@
 void
 defining{
-    TYPE is rover::core::TYPE
-    void is rover::core::Void::void
-    I32 is rover::core::Integer32
-    # PEq is rover::core::ProofEqual
+    TYPE is scarlet::core::TYPE
+    void is scarlet::core::Void::void
+    I32 is scarlet::core::Integer32
+    # PEq is scarlet::core::ProofEqual
 
     index is any{I32}
     v1 is any{I32}

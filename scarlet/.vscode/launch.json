@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rover'",
+            "name": "Debug executable 'scarlet'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=rover",
-                    "--package=rover"
+                    "--bin=scarlet",
+                    "--package=scarlet"
                 ],
                 "filter": {
-                    "name": "rover",
+                    "name": "scarlet",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'rover'",
+            "name": "Debug unit tests in executable 'scarlet'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=rover",
-                    "--package=rover"
+                    "--bin=scarlet",
+                    "--package=scarlet"
                 ],
                 "filter": {
-                    "name": "rover",
+                    "name": "scarlet",
                     "kind": "bin"
                 }
             },

@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Rover",
+	"name": "Scarlet",
 	"patterns": [
 		{
 			"name": "keyword.control",
@@ -54,5 +54,5 @@
 			]
 		}
 	],
-	"scopeName": "source.rover"
+	"scopeName": "source.scarlet"
 }
