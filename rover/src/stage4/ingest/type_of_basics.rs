@@ -19,7 +19,7 @@ impl Environment {
         defined_in: Option<ItemId>,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<ItemId, String> {
-        let param_vars = self.flatten_vars(&params, currently_computing.clone())?;
+        let param_vars = self.item_vars(&params, currently_computing.clone())?;
         self.flatten_type(typee, currently_computing.clone(), param_vars.as_slice())
     }
 

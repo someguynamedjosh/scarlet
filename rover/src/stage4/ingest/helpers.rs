@@ -33,7 +33,7 @@ impl Environment {
             Item::FromType { base, vars } => {
                 let base = *base;
                 let vars = vars.clone();
-                let mut result = self.flatten_vars(&vars, currently_computing.clone())?;
+                let mut result = self.item_vars(&vars, currently_computing.clone())?;
                 let base_vars = self.get_from_variables(base, currently_computing)?;
                 result.append(base_vars.as_slice());
                 result
@@ -70,11 +70,14 @@ impl Environment {
         &mut self,
         typee: ItemId,
         currently_computing: Vec<ItemId>,
-        extra_vars: &[ItemId],
+        extra_parameters: &[ItemId],
     ) -> MaybeResult<ItemId, String> {
         let defined_in = self.items[typee.0].defined_in;
         let mut vars = self.get_from_variables(typee, currently_computing.clone())?;
-        vars.append(extra_vars);
+
+        let extra_vars = self.item_vars(extra_parameters, currently_computing.clone())?;
+        vars.append(extra_vars.as_slice());
+
         let vars = vars.into_vec();
         let base = self.deref_replacing_and_defining(typee);
         let item = Item::FromType { base, vars };
@@ -82,14 +85,32 @@ impl Environment {
         MaybeResult::Ok(id)
     }
 
-    pub fn flatten_vars(
+    fn is_flat_var(
         &mut self,
-        vars: &[ItemId],
+        item: ItemId,
+        currently_computing: Vec<ItemId>,
+    ) -> MaybeResult<bool, String> {
+        if let Item::Variable { typee, .. } = &self.items[item.0].definition {
+            let typee = *typee;
+            let type_deps = self.get_from_variables(typee, currently_computing)?;
+            MaybeResult::Ok(type_deps.len() == 0)
+        } else {
+            MaybeResult::Ok(false)
+        }
+    }
+
+    pub fn item_vars(
+        &mut self,
+        items: &[ItemId],
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<VarList, String> {
         let mut res = VarList::new();
-        for var in vars {
-            let var_type = self.compute_type(*var, currently_computing.clone())?;
+        for item in items {
+            if self.is_flat_var(*item, currently_computing.clone())? {
+                res.push(*item);
+                continue;
+            }
+            let var_type = self.compute_type(*item, currently_computing.clone())?;
             let var_vars = self.get_from_variables(var_type, currently_computing.clone())?;
             res.append(var_vars.as_slice());
         }
