@@ -1,7 +1,6 @@
 use std::fmt::{self, Debug, Formatter};
 
-use super::{ItemId, PrimitiveValue};
-use crate::{shared::Item, stage4::structure::Environment};
+use super::ItemId;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum IntegerMathOperation {

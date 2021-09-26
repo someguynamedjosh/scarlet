@@ -1,5 +1,5 @@
 use crate::{
-    shared::{IntegerMathOperation, Item, ItemId, BuiltinOperation, Replacements},
+    shared::{Item, ItemId},
     stage4::{ingest::VarList, structure::Environment},
     util::*,
 };
@@ -33,9 +33,9 @@ impl Environment {
                 self.variant_instance_dependencies(typee, values, currently_computing)
             }
             Item::Pick {
-                initial_clause,
-                elif_clauses,
-                else_clause,
+                initial_clause: _,
+                elif_clauses: _,
+                else_clause: _,
             } => {
                 todo!()
             }

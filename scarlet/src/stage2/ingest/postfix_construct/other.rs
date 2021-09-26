@@ -1,5 +1,5 @@
 use crate::{
-    shared::{BuiltinOperation, Item, ItemId},
+    shared::{Item, ItemId},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{

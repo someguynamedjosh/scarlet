@@ -43,15 +43,15 @@ impl Environment {
             Item::GodType { .. } => self.god_type(),
             Item::VariantInstance { typee, .. } => self.after_from(*typee),
             Item::Pick {
-                initial_clause,
-                elif_clauses,
-                else_clause,
+                initial_clause: _,
+                elif_clauses: _,
+                else_clause: _,
             } => {
                 todo!()
             }
             Item::BuiltinOperation(op) => match op {
                 BuiltinOperation::I32Math(..) => self.i32_type(),
-                BuiltinOperation::AreSameVariant { base, other } => self.bool_type(),
+                BuiltinOperation::AreSameVariant { base: _, other: _ } => self.bool_type(),
             },
             Item::PrimitiveType(..) => self.god_type(),
             Item::PrimitiveValue(pv) => match pv {
@@ -62,7 +62,11 @@ impl Environment {
                 let base = *base;
                 self.compute_base_type(base, currently_computing)
             }
-            Item::TypeIs { exact, typee, base } => {
+            Item::TypeIs {
+                exact: _,
+                typee: _,
+                base: _,
+            } => {
                 todo!()
             }
             Item::Variable { typee, .. } => self.after_from(*typee),

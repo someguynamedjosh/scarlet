@@ -1,4 +1,4 @@
-use super::{Definitions, ItemId, BuiltinOperation, PrimitiveType, PrimitiveValue, Replacements};
+use super::{BuiltinOperation, Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {

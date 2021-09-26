@@ -1,5 +1,5 @@
 use crate::{
-    shared::{IntegerMathOperation, ItemId, BuiltinOperation, Replacements},
+    shared::{BuiltinOperation, ItemId},
     stage4::{ingest::var_list::VarList, structure::Environment},
     util::*,
 };
