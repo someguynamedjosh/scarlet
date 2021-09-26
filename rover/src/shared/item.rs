@@ -8,13 +8,13 @@ pub enum Item {
     },
     FromType {
         base: ItemId,
-        vars: Vec<ItemId>,
+        values: Vec<ItemId>,
     },
     GodType,
-    InductiveValue {
+    VariantInstance {
         typee: ItemId,
         variant_id: ItemId,
-        params: Vec<ItemId>,
+        values: Vec<ItemId>,
     },
     IsSameVariant {
         base: ItemId,

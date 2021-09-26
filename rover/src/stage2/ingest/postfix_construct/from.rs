@@ -19,7 +19,7 @@ pub fn ingest_from_construct(
     let (vars, named_vars) = ingest_from_statements(ctx, from)?;
     let base_item = Item::FromType {
         base: base_id,
-        vars,
+        values: vars,
     }
     .into();
     let self_id = ctx.get_or_create_current_id();

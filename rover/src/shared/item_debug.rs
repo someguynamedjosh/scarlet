@@ -14,7 +14,7 @@ impl Debug for Item {
                 }
                 write!(f, "{}}}", spacer)
             }
-            Self::FromType { base, vars } => {
+            Self::FromType { base, values: vars } => {
                 write!(f, "{:?} From{{", base)?;
                 for var in vars {
                     write!(f, " {:?}", var)?;
@@ -22,10 +22,10 @@ impl Debug for Item {
                 write!(f, " }}")
             }
             Self::GodType => write!(f, "TYPE"),
-            Self::InductiveValue {
+            Self::VariantInstance {
                 typee,
                 variant_id,
-                params,
+                values: params,
             } => {
                 write!(f, "value{{{:?} {:?} [", typee, variant_id)?;
                 for param in params {

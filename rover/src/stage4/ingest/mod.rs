@@ -6,8 +6,10 @@ use crate::{
     stage4::structure::Environment,
 };
 
+mod basic_dependencies;
 mod compute_type;
 mod dependencies;
+mod replacing_dependencies;
 pub mod var_list;
 
 fn compute_types(env: &mut Environment) -> Result<(), String> {

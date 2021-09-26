@@ -17,10 +17,10 @@ impl Environment {
             Item::Defining { base, definitions } => {
                 self.get_defining_code(item_id, base, definitions, ctx)
             }
-            Item::FromType { base, vars } => self.get_from_type_code(base, vars, ctx),
+            Item::FromType { base, values: vars } => self.get_from_type_code(base, vars, ctx),
             Item::GodType => Some(format!("TYPE")),
-            Item::InductiveValue {
-                params,
+            Item::VariantInstance {
+                values: params,
                 typee,
                 variant_id,
             } => self.get_inductive_value_code(params, typee, variant_id, ctx),

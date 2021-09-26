@@ -8,10 +8,7 @@ defining{
     index is any{I32}
     v1 is any{I32}
     v2 is any{I32}
-    vboth is I32::sum[
-        I32::sum::left with v1 
-        I32::sum::right with v2
-    ]
+    vboth is I32::sum[v1 v2]
 
     # Data is PEq::Data
     # T is any{TYPE From{any{Data}}}
@@ -29,4 +26,5 @@ defining{
     # }
 
     # variant something :TYPE From{any{PEq}} info{}
+    I32::sum[123 vboth] info{}
 }

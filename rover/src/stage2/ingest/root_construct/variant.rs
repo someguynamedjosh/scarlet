@@ -27,7 +27,7 @@ fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
 fn get_from_vars(ctx: &Context, type_id: ItemId) -> (Vec<ItemId>, Definitions) {
     match &ctx.environment.definition_of(type_id).definition {
         Some(UnresolvedItem::Just(item)) => match item {
-            Item::FromType { base, vars } => {
+            Item::FromType { base, values: vars } => {
                 let (base_vars, defs) = get_from_vars(ctx, *base);
                 let vars = [base_vars, vars.clone()].concat();
                 (vars, defs)
@@ -57,10 +57,10 @@ pub fn ingest_variant_construct(
         ctx.environment.set_defined_in(*var, variant_id);
     }
 
-    let val = Item::InductiveValue {
+    let val = Item::VariantInstance {
         typee: base_return_type_id,
         variant_id,
-        params: paramed_vars,
+        values: paramed_vars,
     }
     .into();
     if definitions.len() > 0 {

@@ -78,7 +78,7 @@ impl Environment {
             Item::Defining { base, .. } => self.after_from(*base),
             Item::FromType { base, .. } => self.after_from(*base),
             Item::GodType
-            | Item::InductiveValue { .. }
+            | Item::VariantInstance { .. }
             | Item::IsSameVariant { .. }
             | Item::Pick { .. }
             | Item::PrimitiveOperation(..)

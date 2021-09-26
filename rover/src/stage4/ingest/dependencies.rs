@@ -1,5 +1,3 @@
-use std::thread::current;
-
 use crate::{
     shared::{IntegerMathOperation, Item, ItemId, PrimitiveOperation, Replacements},
     stage4::{ingest::VarList, structure::Environment},
@@ -17,38 +15,27 @@ impl Environment {
                 let base = *base;
                 self.compute_dependencies(base, currently_computing)
             }
-            Item::FromType { base, vars } => {
+            Item::FromType { base, values } => {
                 let base = *base;
-                let values = vars.clone();
-                let mut res = VarList::new();
-                for value in values {
-                    let value_deps = self.compute_dependencies(value, currently_computing.clone())?;
-                    res.append(value_deps.as_slice());
-                }
-                let base_deps = self.compute_dependencies(base, currently_computing.clone())?;
-                res.append(base_deps.as_slice());
-                MOk(res)
+                let values = values.clone();
+                self.from_type_dependencies(base, values, currently_computing)
             }
             Item::GodType | Item::PrimitiveType(..) | Item::PrimitiveValue(..) => {
                 MOk(VarList::new())
             }
-            Item::InductiveValue { typee, params, .. } => {
+            Item::VariantInstance {
+                typee,
+                values: params,
+                ..
+            } => {
                 let typee = *typee;
                 let values = params.clone();
-                let mut res = self.compute_dependencies(typee, currently_computing.clone())?;
-                for value in values {
-                    let value_deps = self.compute_dependencies(value, currently_computing.clone())?;
-                    res.append(value_deps.as_slice());
-                }
-                MOk(res)
+                self.variant_instance_dependencies(typee, values, currently_computing)
             }
             Item::IsSameVariant { base, other } => {
                 let base = *base;
                 let other = *other;
-                let mut res = self.compute_dependencies(base, currently_computing.clone())?;
-                let other_deps = self.compute_dependencies(other, currently_computing.clone())?;
-                res.append(other_deps.as_slice());
-                MOk(res)
+                self.is_same_variant_dependencies(base, other, currently_computing)
             }
             Item::Pick {
                 initial_clause,
@@ -57,45 +44,34 @@ impl Environment {
             } => {
                 todo!()
             }
-            Item::PrimitiveOperation(op) => match op {
-                PrimitiveOperation::I32Math(op) => match op {
-                    IntegerMathOperation::Sum(a, b) | IntegerMathOperation::Difference(a, b) => {
-                        let a = *a;
-                        let b = *b;
-                        let mut res = self.compute_dependencies(a, currently_computing.clone())?;
-                        let other_deps = self.compute_dependencies(b, currently_computing.clone())?;
-                        res.append(other_deps.as_slice());
-                        MOk(res)
-                    }
-                },
-            },
-            Item::Replacing { base, replacements, unlabeled_replacements } => {
-                assert!(unlabeled_replacements.len() == 0, "TODO: Better unlabeled replacements");
+            Item::PrimitiveOperation(op) => {
+                let op = op.clone();
+                self.primitive_op_dependencies(op, currently_computing)
+            }
+            Item::Replacing {
+                base,
+                replacements,
+                unlabeled_replacements,
+            } => {
                 let base = *base;
                 let replacements = replacements.clone();
-                let base_deps = self.compute_dependencies(base, currently_computing.clone())?;
-                let mut result = VarList::new();
-                for dep in base_deps.into_vec()  {
-                    if let Some(rep) = replacements.iter().find(|r| r.0 == dep && r.0 != r.1) {
-                        let replaced_with = rep.1;
-                        let replaced_deps = self.compute_dependencies(replaced_with, currently_computing.clone())?;
-                        result.append(replaced_deps.as_slice())
-                    } else {
-                        result.push(dep);
-                    }
-                }
-                MOk(result)
+                let unlabeled_replacements = unlabeled_replacements.clone();
+                self.replacing_dependencies(
+                    item,
+                    base,
+                    replacements,
+                    unlabeled_replacements,
+                    currently_computing,
+                )
             }
-            Item::TypeIs { base,.. } => {
+            Item::TypeIs { base, .. } => {
                 let base = *base;
                 self.compute_dependencies(base, currently_computing)
             }
             Item::Variable { selff, typee } => {
                 let selff = *selff;
                 let typee = *typee;
-                let mut res = self.compute_dependencies(typee, currently_computing)?;
-                res.push(selff);
-                MOk(res)
+                self.variable_dependencies(selff, typee, currently_computing)
             }
         }
     }
@@ -109,18 +85,18 @@ impl Environment {
         if dependencies.len() > 0 {
             if let Item::FromType {
                 base: other_base,
-                vars: other_vars,
+                values: other_values,
             } = &self.items[base_type.0].definition
             {
                 base_type = *other_base;
-                let mut all_vars = VarList::from(other_vars.clone());
-                all_vars.append(dependencies.as_slice());
-                dependencies = all_vars;
+                let mut all_dependencies = VarList::from(other_values.clone());
+                all_dependencies.append(dependencies.as_slice());
+                dependencies = all_dependencies;
             }
             self.insert(
                 Item::FromType {
                     base: base_type,
-                    vars: dependencies.into_vec(),
+                    values: dependencies.into_vec(),
                 },
                 defined_in,
             )

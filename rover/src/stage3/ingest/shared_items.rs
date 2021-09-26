@@ -10,10 +10,10 @@ use crate::shared::{
 pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, String> {
     match item {
         Item::Defining { base, definitions } => convert_defining(ctx, *base, definitions),
-        Item::FromType { base, vars } => convert_from_type(ctx, *base, vars),
+        Item::FromType { base, values: vars } => convert_from_type(ctx, *base, vars),
         Item::GodType => Ok(Item::GodType),
-        Item::InductiveValue {
-            params,
+        Item::VariantInstance {
+            values: params,
             typee,
             variant_id,
         } => convert_inductive_value(ctx, params, *typee, *variant_id),
@@ -50,7 +50,7 @@ fn convert_defining(
 fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &Vec<ItemId>) -> Result<Item, String> {
     Ok(Item::FromType {
         base: full_convert_iid(ctx, base)?,
-        vars: convert_iids(ctx, vars)?,
+        values: convert_iids(ctx, vars)?,
     })
 }
 
@@ -60,8 +60,8 @@ fn convert_inductive_value(
     typee: ItemId,
     variant_id: ItemId,
 ) -> Result<Item, String> {
-    Ok(Item::InductiveValue {
-        params: convert_iids(ctx, params)?,
+    Ok(Item::VariantInstance {
+        values: convert_iids(ctx, params)?,
         typee: full_convert_iid(ctx, typee)?,
         variant_id: full_convert_iid(ctx, variant_id)?,
     })

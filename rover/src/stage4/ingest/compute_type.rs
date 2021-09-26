@@ -41,8 +41,8 @@ impl Environment {
                 self.compute_base_type(base, currently_computing)
             }
             Item::GodType { .. } => self.god_type(),
-            Item::InductiveValue { typee, .. } => self.after_from(*typee),
-            Item::IsSameVariant { base, .. } => self.bool_type(),
+            Item::VariantInstance { typee, .. } => self.after_from(*typee),
+            Item::IsSameVariant { .. } => self.bool_type(),
             Item::Pick {
                 initial_clause,
                 elif_clauses,
@@ -65,7 +65,7 @@ impl Environment {
             Item::TypeIs { exact, typee, base } => {
                 todo!()
             }
-            Item::Variable { typee, selff } => self.after_from(*typee),
+            Item::Variable { typee, .. } => self.after_from(*typee),
         }
     }
 }
