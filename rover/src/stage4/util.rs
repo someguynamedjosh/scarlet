@@ -84,7 +84,7 @@ impl Environment {
             | Item::PrimitiveOperation(..)
             | Item::PrimitiveType(..)
             | Item::PrimitiveValue(..) => typee,
-            Item::Replacing { .. } => todo!(),
+            Item::Replacing { base, .. } => self.after_from(*base),
             Item::TypeIs { base, .. } => self.after_from(*base),
             Item::Variable { .. } => typee,
         }

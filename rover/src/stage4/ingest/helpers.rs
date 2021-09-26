@@ -1,9 +1,9 @@
 use std::thread::current;
 
 use crate::{
-    shared::{Item, ItemId, Replacements},
+    shared::{IntegerMathOperation, Item, ItemId, PrimitiveOperation, Replacements},
     stage4::{ingest::VarList, structure::Environment},
-    util::MaybeResult,
+    util::*,
 };
 
 impl Environment {
@@ -19,130 +19,125 @@ impl Environment {
         }
     }
 
-    // Collects all variables specified by From items pointed to by the provided ID.
-    pub fn get_from_variables(
-        &mut self,
-        typee: ItemId,
-        currently_computing: Vec<ItemId>,
-    ) -> MaybeResult<VarList, String> {
-        MaybeResult::Ok(match &self.items[typee.0].definition {
-            Item::Defining { base: id, .. } => {
-                let id = *id;
-                self.get_from_variables(id, currently_computing)?
-            }
-            Item::FromType { base, vars } => {
-                let base = *base;
-                let vars = vars.clone();
-                let mut result = self.item_vars(&vars, currently_computing.clone())?;
-                let base_vars = self.get_from_variables(base, currently_computing)?;
-                result.append(base_vars.as_slice());
-                result
-            }
-            Item::Replacing {
-                base, replacements, ..
-            } => {
-                let base = *base;
-                let replacements = replacements.clone();
-                let base_list = self.get_from_variables(base, currently_computing.clone())?;
-                let mut after_list = VarList::new();
-                for base_var in base_list.into_vec() {
-                    if let Some(rep_idx) = replacements.iter().position(|i| i.0 == base_var) {
-                        let rep_id = ItemId(rep_idx);
-                        let rep_type = self.compute_type(rep_id, currently_computing.clone())?;
-                        after_list.append(
-                            &self
-                                .get_from_variables(rep_type, currently_computing.clone())?
-                                .into_vec(),
-                        );
-                    } else {
-                        after_list.push(base_var);
-                    }
-                }
-                after_list
-            }
-            _ => VarList::new(),
-        })
-    }
-
-    /// Does things like converting From{dependant} to From{input1 input2
-    /// dependant}
-    pub fn flatten_type(
-        &mut self,
-        typee: ItemId,
-        currently_computing: Vec<ItemId>,
-        extra_parameters: &[ItemId],
-    ) -> MaybeResult<ItemId, String> {
-        let defined_in = self.items[typee.0].defined_in;
-        let mut vars = self.get_from_variables(typee, currently_computing.clone())?;
-
-        let extra_vars = self.item_vars(extra_parameters, currently_computing.clone())?;
-        vars.append(extra_vars.as_slice());
-
-        let vars = vars.into_vec();
-        let base = self.deref_replacing_and_defining(typee);
-        let item = Item::FromType { base, vars };
-        let id = self.insert(item, defined_in);
-        MaybeResult::Ok(id)
-    }
-
-    fn is_flat_var(
+    pub fn get_dependencies(
         &mut self,
         item: ItemId,
         currently_computing: Vec<ItemId>,
-    ) -> MaybeResult<bool, String> {
-        if let Item::Variable { typee, .. } = &self.items[item.0].definition {
-            let typee = *typee;
-            let type_deps = self.get_from_variables(typee, currently_computing)?;
-            MaybeResult::Ok(type_deps.len() == 0)
-        } else {
-            MaybeResult::Ok(false)
-        }
-    }
-
-    pub fn item_vars(
-        &mut self,
-        items: &[ItemId],
-        currently_computing: Vec<ItemId>,
     ) -> MaybeResult<VarList, String> {
-        let mut res = VarList::new();
-        for item in items {
-            if self.is_flat_var(*item, currently_computing.clone())? {
-                res.push(*item);
-                continue;
+        match &self.items[item.0].definition {
+            Item::Defining { base, .. } => {
+                let base = *base;
+                self.get_dependencies(base, currently_computing)
             }
-            let var_type = self.compute_type(*item, currently_computing.clone())?;
-            let var_vars = self.get_from_variables(var_type, currently_computing.clone())?;
-            res.append(var_vars.as_slice());
+            Item::FromType { base, vars } => {
+                let base = *base;
+                let values = vars.clone();
+                let mut res = VarList::new();
+                for value in values {
+                    let value_deps = self.get_dependencies(value, currently_computing.clone())?;
+                    res.append(value_deps.as_slice());
+                }
+                let base_deps = self.get_dependencies(base, currently_computing.clone())?;
+                res.append(base_deps.as_slice());
+                MOk(res)
+            }
+            Item::GodType | Item::PrimitiveType(..) | Item::PrimitiveValue(..) => {
+                MOk(VarList::new())
+            }
+            Item::InductiveValue { typee, params, .. } => {
+                let typee = *typee;
+                let values = params.clone();
+                let mut res = self.get_dependencies(typee, currently_computing.clone())?;
+                for value in values {
+                    let value_deps = self.get_dependencies(value, currently_computing.clone())?;
+                    res.append(value_deps.as_slice());
+                }
+                MOk(res)
+            }
+            Item::IsSameVariant { base, other } => {
+                let base = *base;
+                let other = *other;
+                let mut res = self.get_dependencies(base, currently_computing.clone())?;
+                let other_deps = self.get_dependencies(other, currently_computing.clone())?;
+                res.append(other_deps.as_slice());
+                MOk(res)
+            }
+            Item::Pick {
+                initial_clause,
+                elif_clauses,
+                else_clause,
+            } => {
+                todo!()
+            }
+            Item::PrimitiveOperation(op) => match op {
+                PrimitiveOperation::I32Math(op) => match op {
+                    IntegerMathOperation::Sum(a, b) | IntegerMathOperation::Difference(a, b) => {
+                        let a = *a;
+                        let b = *b;
+                        let mut res = self.get_dependencies(a, currently_computing.clone())?;
+                        let other_deps = self.get_dependencies(b, currently_computing.clone())?;
+                        res.append(other_deps.as_slice());
+                        MOk(res)
+                    }
+                },
+            },
+            Item::Replacing { base, replacements, unlabeled_replacements } => {
+                assert!(unlabeled_replacements.len() == 0, "TODO: Better unlabeled replacements");
+                let base = *base;
+                let replacements = replacements.clone();
+                let base_deps = self.get_dependencies(base, currently_computing.clone())?;
+                let mut result = VarList::new();
+                for dep in base_deps.into_vec()  {
+                    if let Some(rep) = replacements.iter().find(|r| r.0 == dep && r.0 != r.1) {
+                        let replaced_with = rep.1;
+                        let replaced_deps = self.get_dependencies(replaced_with, currently_computing.clone())?;
+                        result.append(replaced_deps.as_slice())
+                    } else {
+                        result.push(dep);
+                    }
+                }
+                MOk(result)
+            }
+            Item::TypeIs { base,.. } => {
+                let base = *base;
+                self.get_dependencies(base, currently_computing)
+            }
+            Item::Variable { selff, typee } => {
+                let selff = *selff;
+                let typee = *typee;
+                let mut res = self.get_dependencies(typee, currently_computing)?;
+                res.push(selff);
+                MOk(res)
+            }
         }
-        MaybeResult::Ok(res)
     }
 
-    pub fn with_from_vars(
+    pub fn type_with_dependencies(
         &mut self,
-        mut base: ItemId,
-        mut from_vars: VarList,
+        mut base_type: ItemId,
+        mut dependencies: VarList,
         defined_in: Option<ItemId>,
     ) -> ItemId {
-        if from_vars.len() > 0 {
+        if dependencies.len() > 0 {
             if let Item::FromType {
                 base: other_base,
                 vars: other_vars,
-            } = &self.items[base.0].definition
+            } = &self.items[base_type.0].definition
             {
-                base = *other_base;
+                base_type = *other_base;
                 let mut all_vars = VarList::from(other_vars.clone());
-                all_vars.append(from_vars.as_slice());
-                from_vars = all_vars;
+                all_vars.append(dependencies.as_slice());
+                dependencies = all_vars;
             }
             self.insert(
                 Item::FromType {
-                    base,
-                    vars: from_vars.into_vec(),
+                    base: base_type,
+                    vars: dependencies.into_vec(),
                 },
                 defined_in,
             )
         } else {
-            base
+            base_type
         }
     }
 }

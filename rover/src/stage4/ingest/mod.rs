@@ -6,12 +6,8 @@ use crate::{
     stage4::structure::Environment,
 };
 
-mod after_replacing;
 mod compute_type;
 mod helpers;
-mod type_of_basics;
-mod type_of_pick;
-mod type_of_replacing;
 pub mod var_list;
 
 fn compute_types(env: &mut Environment) -> Result<(), String> {
