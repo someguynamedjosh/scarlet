@@ -7,19 +7,7 @@ use crate::{
 };
 
 impl Environment {
-    fn get_replacement(base: ItemId, reps: &Replacements) -> Option<ItemId> {
-        let mut res = base;
-        while let Some(rep_idx) = reps.iter().position(|i| i.0 == res && i.0 != i.1) {
-            res = reps[rep_idx].1;
-        }
-        if res == base {
-            None
-        } else {
-            Some(res)
-        }
-    }
-
-    pub fn get_dependencies(
+    pub fn compute_dependencies(
         &mut self,
         item: ItemId,
         currently_computing: Vec<ItemId>,
@@ -27,17 +15,17 @@ impl Environment {
         match &self.items[item.0].definition {
             Item::Defining { base, .. } => {
                 let base = *base;
-                self.get_dependencies(base, currently_computing)
+                self.compute_dependencies(base, currently_computing)
             }
             Item::FromType { base, vars } => {
                 let base = *base;
                 let values = vars.clone();
                 let mut res = VarList::new();
                 for value in values {
-                    let value_deps = self.get_dependencies(value, currently_computing.clone())?;
+                    let value_deps = self.compute_dependencies(value, currently_computing.clone())?;
                     res.append(value_deps.as_slice());
                 }
-                let base_deps = self.get_dependencies(base, currently_computing.clone())?;
+                let base_deps = self.compute_dependencies(base, currently_computing.clone())?;
                 res.append(base_deps.as_slice());
                 MOk(res)
             }
@@ -47,9 +35,9 @@ impl Environment {
             Item::InductiveValue { typee, params, .. } => {
                 let typee = *typee;
                 let values = params.clone();
-                let mut res = self.get_dependencies(typee, currently_computing.clone())?;
+                let mut res = self.compute_dependencies(typee, currently_computing.clone())?;
                 for value in values {
-                    let value_deps = self.get_dependencies(value, currently_computing.clone())?;
+                    let value_deps = self.compute_dependencies(value, currently_computing.clone())?;
                     res.append(value_deps.as_slice());
                 }
                 MOk(res)
@@ -57,8 +45,8 @@ impl Environment {
             Item::IsSameVariant { base, other } => {
                 let base = *base;
                 let other = *other;
-                let mut res = self.get_dependencies(base, currently_computing.clone())?;
-                let other_deps = self.get_dependencies(other, currently_computing.clone())?;
+                let mut res = self.compute_dependencies(base, currently_computing.clone())?;
+                let other_deps = self.compute_dependencies(other, currently_computing.clone())?;
                 res.append(other_deps.as_slice());
                 MOk(res)
             }
@@ -74,8 +62,8 @@ impl Environment {
                     IntegerMathOperation::Sum(a, b) | IntegerMathOperation::Difference(a, b) => {
                         let a = *a;
                         let b = *b;
-                        let mut res = self.get_dependencies(a, currently_computing.clone())?;
-                        let other_deps = self.get_dependencies(b, currently_computing.clone())?;
+                        let mut res = self.compute_dependencies(a, currently_computing.clone())?;
+                        let other_deps = self.compute_dependencies(b, currently_computing.clone())?;
                         res.append(other_deps.as_slice());
                         MOk(res)
                     }
@@ -85,12 +73,12 @@ impl Environment {
                 assert!(unlabeled_replacements.len() == 0, "TODO: Better unlabeled replacements");
                 let base = *base;
                 let replacements = replacements.clone();
-                let base_deps = self.get_dependencies(base, currently_computing.clone())?;
+                let base_deps = self.compute_dependencies(base, currently_computing.clone())?;
                 let mut result = VarList::new();
                 for dep in base_deps.into_vec()  {
                     if let Some(rep) = replacements.iter().find(|r| r.0 == dep && r.0 != r.1) {
                         let replaced_with = rep.1;
-                        let replaced_deps = self.get_dependencies(replaced_with, currently_computing.clone())?;
+                        let replaced_deps = self.compute_dependencies(replaced_with, currently_computing.clone())?;
                         result.append(replaced_deps.as_slice())
                     } else {
                         result.push(dep);
@@ -100,12 +88,12 @@ impl Environment {
             }
             Item::TypeIs { base,.. } => {
                 let base = *base;
-                self.get_dependencies(base, currently_computing)
+                self.compute_dependencies(base, currently_computing)
             }
             Item::Variable { selff, typee } => {
                 let selff = *selff;
                 let typee = *typee;
-                let mut res = self.get_dependencies(typee, currently_computing)?;
+                let mut res = self.compute_dependencies(typee, currently_computing)?;
                 res.push(selff);
                 MOk(res)
             }

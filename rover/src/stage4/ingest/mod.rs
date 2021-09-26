@@ -7,7 +7,7 @@ use crate::{
 };
 
 mod compute_type;
-mod helpers;
+mod dependencies;
 pub mod var_list;
 
 fn compute_types(env: &mut Environment) -> Result<(), String> {

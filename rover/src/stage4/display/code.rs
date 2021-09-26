@@ -38,7 +38,6 @@ impl Environment {
             } => self.get_replacing_code(base, replacements, ctx),
             Item::TypeIs { base, .. } => self.get_item_code(base, ctx),
             Item::Variable { typee, .. } => self.get_variable_code(typee, ctx),
-            _ => None,
         }
     }
 
