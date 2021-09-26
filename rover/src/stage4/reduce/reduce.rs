@@ -20,20 +20,15 @@ impl Environment {
                 self.reduce_from_type(opts, base, vars)
             }
             Item::GodType => opts.item,
-            Item::InductiveType { params, selff } => {
-                let params = params.clone();
-                let selff = *selff;
-                self.reduce_inductive_type(opts, params, selff)
-            }
             Item::InductiveValue {
                 typee,
                 records,
-                variant_name,
+                variant_id,
             } => {
                 let typee = *typee;
                 let records = records.clone();
-                let variant_name = variant_name.clone();
-                self.reduce_inductive_value(opts, typee, records, variant_name)
+                let variant_id = *variant_id;
+                self.reduce_inductive_value(opts, typee, records, variant_id)
             }
             Item::IsSameVariant { base, other } => {
                 let base = *base;

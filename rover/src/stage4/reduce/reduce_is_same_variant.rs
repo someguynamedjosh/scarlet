@@ -18,11 +18,11 @@ impl Environment {
         match (&rbase.definition, &rother.definition) {
             (
                 Item::InductiveValue {
-                    variant_name: base_variant,
+                    variant_id: base_variant,
                     ..
                 },
                 Item::InductiveValue {
-                    variant_name: other_variant,
+                    variant_id: other_variant,
                     ..
                 },
             ) => {

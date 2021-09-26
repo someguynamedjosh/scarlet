@@ -5,36 +5,12 @@ use crate::{
 };
 
 impl Environment {
-    pub fn reduce_inductive_type(
-        &mut self,
-        opts: ReduceOptions,
-        params: Vec<ItemId>,
-        selff: ItemId,
-    ) -> ItemId {
-        let mut new_params = Vec::new();
-        for param in &params {
-            let rparam = self.reduce(opts.with_item(*param));
-            new_params.push(rparam);
-        }
-        if new_params == params {
-            opts.item
-        } else {
-            let item = Item::InductiveType {
-                selff,
-                params: new_params,
-            };
-            let id = self.insert(item, opts.defined_in);
-            self.compute_type(id, vec![]).unwrap();
-            id
-        }
-    }
-
     pub fn reduce_inductive_value(
         &mut self,
         opts: ReduceOptions,
         typee: ItemId,
         records: Vec<ItemId>,
-        variant_name: String,
+        variant_id: ItemId,
     ) -> ItemId {
         let rtypee = self.reduce(opts.with_item(typee));
         let mut new_records = Vec::new();
@@ -48,7 +24,7 @@ impl Environment {
             let item = Item::InductiveValue {
                 typee: rtypee,
                 records: new_records,
-                variant_name,
+                variant_id,
             };
             let id = self.insert(item, opts.defined_in);
             self.compute_type(id, vec![]).unwrap();

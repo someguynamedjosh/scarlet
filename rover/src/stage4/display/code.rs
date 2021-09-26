@@ -19,14 +19,11 @@ impl Environment {
             }
             Item::FromType { base, vars } => self.get_from_type_code(base, vars, ctx),
             Item::GodType => Some(format!("TYPE")),
-            Item::InductiveType { selff, params } => {
-                self.get_inductive_type_code(selff, params, ctx)
-            }
             Item::InductiveValue {
                 records,
                 typee,
-                variant_name,
-            } => self.get_inductive_value_code(records, typee, variant_name, ctx),
+                variant_id,
+            } => self.get_inductive_value_code(records, typee, variant_id, ctx),
             Item::IsSameVariant { base, other } => self.get_is_variant_code(base, other, ctx),
             Item::Pick {
                 elif_clauses,
@@ -101,8 +98,8 @@ impl Environment {
             unreachable!("Type definition should always be a defining construct.")
         };
         let base_type = &self.items[base_type_id.0].definition;
-        let original_params = if let Item::InductiveType { params, .. } = base_type {
-            params
+        let original_params = if let Item::InductiveValue { records, .. } = base_type {
+            records
         } else {
             unreachable!("Base of type definition should always be an inductive type")
         };
@@ -132,17 +129,17 @@ impl Environment {
         &self,
         records: &Vec<ItemId>,
         typee: &ItemId,
-        variant_name: &String,
+        variant_id: &ItemId,
         ctx: Context,
     ) -> Option<String> {
         if let Some(typee) = ctx.in_type {
             let from = self.get_from_type_code(&typee, records, ctx)?;
-            Some(format!("variant {} :{}", variant_name, from))
+            Some(format!("variant {:?} :{}", variant_id, from))
         } else {
             let mut res = format!(
-                "{}::{}[",
+                "{}::{:?}[",
                 self.get_item_name_or_code(*typee, ctx),
-                variant_name
+                variant_id
             );
             for value in records {
                 let value = indented(&self.get_item_name_or_code(*value, ctx));
