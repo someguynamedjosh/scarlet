@@ -95,23 +95,15 @@ impl Environment {
         selff
     }
 
-    /// Turns the provided definitions into a Defining item with an extra item
-    /// Self pointing to the inserted item.
-    pub fn insert_self_referencing_define(
-        &mut self,
-        base: ItemId,
-        mut definitions: Vec<(&str, ItemId)>,
-    ) -> ItemId {
-        let id = self.next_id();
-        definitions.insert(0, ("Self", id));
-        self.define(id, UnresolvedItem::defining(base, definitions));
-        self.mark_as_scope(id);
-        id
-    }
-
     pub fn define(&mut self, item: ItemId, definition: UnresolvedItem) {
         assert!(item.0 < self.items.len());
         self.items[item.0].definition = Some(definition)
+    }
+
+    fn checked_set_defined_in(&mut self, item: ItemId, defined_in: ItemId) {
+        if self.items[item.0].defined_in != Some(defined_in) {
+            self.set_defined_in(item, defined_in);
+        }
     }
 
     pub fn set_defined_in(&mut self, item: ItemId, defined_in: ItemId) {
@@ -121,11 +113,11 @@ impl Environment {
         match &self.items[item.0].definition {
             Some(UnresolvedItem::Member { base, .. }) => {
                 let base = *base;
-                self.set_defined_in(base, defined_in);
+                self.checked_set_defined_in(base, defined_in);
             }
             Some(UnresolvedItem::Item(base)) => {
                 let base = *base;
-                self.set_defined_in(base, defined_in);
+                self.checked_set_defined_in(base, defined_in);
             }
             _ => (),
         }
