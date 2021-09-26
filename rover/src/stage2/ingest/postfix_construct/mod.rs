@@ -34,6 +34,7 @@ pub fn ingest_defining_construct(
     let body = process_definitions(&mut ctx.child(), statements, extra_defines, self_id)?;
     let mut child_ctx = ctx.child().with_additional_scope(&body);
     let base_id = ingest_expression(&mut child_ctx, remainder, vec![])?;
+    ctx.environment.set_defined_in(base_id, self_id);
     Ok(Item::Defining {
         base: base_id,
         definitions: body,

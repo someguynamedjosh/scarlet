@@ -4,8 +4,7 @@ defining{
    TYPE is rover::lang::TYPE
    Integer32 is rover::lang::Integer32
 
-   variant MyThing 
-   :TYPE From{abc}
+   variant MyThing :TYPE
    defining{
       variant new :MyThing
    }

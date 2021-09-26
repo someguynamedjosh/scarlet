@@ -22,23 +22,16 @@ impl Debug for Item {
                 write!(f, " }}")
             }
             Self::GodType => write!(f, "TYPE"),
-            Self::InductiveType { params, selff } => {
-                write!(f, "user_type{{")?;
-                for param in params {
-                    write!(f, " {:?}", param)?;
-                }
-                write!(f, " }} at {:?}", selff)
-            }
             Self::InductiveValue {
                 typee,
-                variant_name,
+                variant_id,
                 records,
             } => {
-                write!(f, "inductive_value {:?}::{}[", typee, variant_name)?;
+                write!(f, "value{{{:?} {:?} [", typee, variant_id)?;
                 for record in records {
                     write!(f, "{}{:?}, ", nested_spacer, record)?;
                 }
-                write!(f, "{}]", spacer)
+                write!(f, "{}]}}", spacer)
             }
             Self::IsSameVariant { base, other } => {
                 write!(f, "{:?} is_same_variant_as{{{:?}}}", base, other)

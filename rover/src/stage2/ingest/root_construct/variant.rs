@@ -22,16 +22,9 @@ fn check_containing_type(ctx: &Context, expected_type: ItemId) -> Result<ItemId,
     }
 }
 
-fn decompose_variant_construct(root: Construct) -> Result<(String, Expression), String> {
-    let def_expr = root.expect_single_expression("variant")?;
-    let variant_name = def_expr.root.expect_ident()?.to_owned();
-    if def_expr.others.len() != 1 {
-        todo!("nice error");
-    }
-    let type_expr = def_expr.others[0]
-        .expect_single_expression("type_is")?
-        .clone();
-    Ok((variant_name, type_expr))
+fn get_variant_type(root: Construct) -> Result<Expression, String> {
+    let type_expr = root.expect_single_expression("variant")?;
+    Ok(type_expr.clone())
 }
 
 fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
@@ -69,11 +62,10 @@ pub fn ingest_variant_construct(
     ctx: &mut Context,
     root: Construct,
 ) -> Result<UnresolvedItem, String> {
-    let (variant_name, type_expr) = decompose_variant_construct(root)?;
+    let type_expr = get_variant_type(root)?;
     let return_type_id = ingest_expression(&mut ctx.child(), type_expr, vec![])?;
 
     let base_return_type_id = dereference_type(ctx, return_type_id);
-    check_containing_type(ctx, base_return_type_id)?;
     let (recorded_vars, definitions) = get_from_vars(ctx, return_type_id);
     let variant_id = ctx.get_or_create_current_id();
     for var in &recorded_vars {
@@ -82,7 +74,7 @@ pub fn ingest_variant_construct(
 
     let val = Item::InductiveValue {
         typee: base_return_type_id,
-        variant_name,
+        variant_id,
         records: recorded_vars,
     }
     .into();

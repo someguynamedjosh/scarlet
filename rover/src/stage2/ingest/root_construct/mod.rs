@@ -14,7 +14,6 @@ use crate::{
 pub fn ingest_root_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     match &root.label[..] {
         "identifier" => ingest_identifier(ctx, root),
-        "Type" => ingest_type_construct(ctx, root),
         "any" => ingest_any_construct(ctx, root),
         "the" => todo!(),
         "i32" => ingest_i32_construct(root),
