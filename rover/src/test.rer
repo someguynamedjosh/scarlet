@@ -4,17 +4,19 @@ defining{
    TYPE is rover::lang::TYPE
    Integer32 is rover::lang::Integer32
    Boolean is rover::lang::Boolean
+   true is Boolean::true
 
-   int is any{Integer32}
-   bool is any{Boolean}
+   Data is any{TYPE}
+   left is any{Data}
+   right is any{Data}
 
-   mymod is TYPE
+   condition is any{Boolean}
+   variant TruthProof :TYPE From{condition}
    defining{
-      variant MyThing :TYPE From{int}
-      defining{
-         variant something :MyThing
-      }
+      variant trivial :TruthProof[true]
    }
+
+   TruthProof::trivial info{}
 
    # other info{}
 

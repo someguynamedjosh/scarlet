@@ -21,13 +21,17 @@ pub fn member_parser<'i>() -> impl Parser<'i, Construct> {
     }
 }
 
+fn followed_by_nonempty_whitespace<'i, T>(og: impl Parser<'i, T>) -> impl Parser<'i, T> {
+    terminated(og, one_of("\t\r\n "))
+}
+
 /// Parses either : or ix, returning true in the latter case to indicate that it
 /// is an exact type assertion.
 fn type_is_symbol_parser<'i>() -> impl Parser<'i, bool> {
     alt((
         value(true, tag(":")),
-        value(true, tag("t")),
-        value(false, tag("bt")),
+        value(true, followed_by_nonempty_whitespace(tag("t"))),
+        value(false, followed_by_nonempty_whitespace(tag("bt"))),
     ))
 }
 

@@ -4,6 +4,13 @@ use crate::{
 };
 
 impl Environment {
+    fn deref_replacing(&self, val: ItemId) -> ItemId {
+        match &self.items[val.0].definition {
+            Item::Replacing { base, .. } => self.deref_replacing(*base),
+            _ => val,
+        }
+    }
+
     pub fn type_check_inductive_value(
         &self,
         typee: ItemId,
@@ -13,7 +20,8 @@ impl Environment {
             // Variants of the god type can be defined anywhere.
             Ok(())
         } else {
-            let type_defined_in = &self.items[typee.0].defined_in.unwrap();
+            let base_typee = self.deref_replacing(typee);
+            let type_defined_in = &self.items[base_typee.0].defined_in.unwrap();
             let defining_scope = &self.items[type_defined_in.0].definition;
             if let Item::Defining { definitions, base } = defining_scope {
                 let is_defined_here = definitions
@@ -21,7 +29,7 @@ impl Environment {
                     .any(|(_, defined)| *defined == variant_id);
                 // The second condition is to check that this is not a general scope shared by
                 // many things, but is instead one that is a defining construct on the type.
-                if !is_defined_here || *base != typee {
+                if !is_defined_here || *base != base_typee {
                     todo!("nice error, variant defined outside of defining construct on type")
                 } else {
                     Ok(())

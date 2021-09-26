@@ -63,7 +63,7 @@ fn convert_inductive_value(
     Ok(Item::InductiveValue {
         records: convert_iids(ctx, records)?,
         typee: full_convert_iid(ctx, typee)?,
-        variant_id: convert_iid(ctx, variant_id, false)?,
+        variant_id: full_convert_iid(ctx, variant_id)?,
     })
 }
 
