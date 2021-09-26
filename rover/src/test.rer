@@ -12,11 +12,11 @@ defining{
    defining{
       variant MyThing :TYPE From{int}
       defining{
-         variant new :MyThing
+         variant something :MyThing
       }
    }
 
-   mymod::MyThing::new info{}
+   # other info{}
 
    # T is any{TYPE}
    # val is any{T}

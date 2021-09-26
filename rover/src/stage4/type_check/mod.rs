@@ -20,6 +20,9 @@ impl Environment {
     fn type_check(&self, item: ItemId) -> Result<(), String> {
         match &self.items[item.0].definition {
             Item::Replacing { replacements, .. } => self.type_check_replacing(item, replacements),
+            Item::InductiveValue {
+                typee, variant_id, ..
+            } => self.type_check_inductive_value(*typee, *variant_id),
             Item::IsSameVariant { base, other } => {
                 self.type_check_is_same_variant(item, *base, *other)
             }
