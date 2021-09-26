@@ -12,14 +12,11 @@ pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, Strin
         Item::Defining { base, definitions } => convert_defining(ctx, *base, definitions),
         Item::FromType { base, vars } => convert_from_type(ctx, *base, vars),
         Item::GodType => Ok(Item::GodType),
-        // Don't deref defines on this one so that the type remembers the
-        // constructors it can be made with.
-        Item::InductiveType { params, selff } => convert_inductive_type(ctx, params, *selff),
         Item::InductiveValue {
             records,
             typee,
-            variant_name,
-        } => convert_inductive_value(ctx, records, *typee, variant_name),
+            variant_id,
+        } => convert_inductive_value(ctx, records, *typee, *variant_id),
         Item::IsSameVariant { base, other } => convert_is_same_variant(ctx, *base, *other),
         Item::Pick {
             initial_clause,
@@ -57,27 +54,16 @@ fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &Vec<ItemId>) -> Res
     })
 }
 
-fn convert_inductive_type(
-    ctx: &mut Context,
-    params: &Vec<ItemId>,
-    selff: ItemId,
-) -> Result<Item, String> {
-    Ok(Item::InductiveType {
-        selff: convert_iid(ctx, selff, false)?,
-        params: convert_iids(ctx, params)?,
-    })
-}
-
 fn convert_inductive_value(
     ctx: &mut Context,
     records: &Vec<ItemId>,
     typee: ItemId,
-    variant_name: &String,
+    variant_id: ItemId,
 ) -> Result<Item, String> {
     Ok(Item::InductiveValue {
         records: convert_iids(ctx, records)?,
         typee: full_convert_iid(ctx, typee)?,
-        variant_name: variant_name.clone(),
+        variant_id: convert_iid(ctx, variant_id, false)?,
     })
 }
 
