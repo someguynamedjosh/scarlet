@@ -14,9 +14,12 @@ defining{
    variant TruthProof :TYPE From{condition}
    defining{
       variant trivial :TruthProof[true]
+      variant other :TruthProof
    }
 
    TruthProof::trivial info{}
+   TruthProof::other info{}
+   TruthProof info{}
 
    # other info{}
 

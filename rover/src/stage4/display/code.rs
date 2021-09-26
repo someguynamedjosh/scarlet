@@ -41,17 +41,6 @@ impl Environment {
         }
     }
 
-    fn is_inductive_value(&self, subject: &ItemId) -> bool {
-        let def = &self.items[subject.0].definition;
-        match def {
-            Item::Defining { base, .. } | Item::TypeIs { base, .. } => {
-                self.is_inductive_value(base)
-            }
-            Item::InductiveValue { .. } => true,
-            _ => false,
-        }
-    }
-
     fn get_defining_code(
         &self,
         selff: &ItemId,
@@ -75,53 +64,13 @@ impl Environment {
         vars: &Vec<ItemId>,
         ctx: Context,
     ) -> Option<String> {
-        let mut res = self.get_item_name_or_code(*base, ctx);
+        let mut res = self.get_item_code_or_name(*base, ctx);
         res.push_str(" From{ ");
         for var in vars {
             res.push_str(&self.get_item_name_or_code(*var, ctx));
             res.push_str(" ");
         }
         res.push_str("}");
-        Some(res)
-    }
-
-    fn get_inductive_type_code(
-        &self,
-        definition: &ItemId,
-        params: &Vec<ItemId>,
-        ctx: Context,
-    ) -> Option<String> {
-        let base_def = &self.items[definition.0].definition;
-        let (defines, base_type_id) = if let Item::Defining { definitions, base } = base_def {
-            (definitions, *base)
-        } else {
-            unreachable!("Type definition should always be a defining construct.")
-        };
-        let base_type = &self.items[base_type_id.0].definition;
-        let original_params = if let Item::InductiveValue { params, .. } = base_type {
-            params
-        } else {
-            unreachable!("Base of type definition should always be an inductive type")
-        };
-        let mut res = format!("Type{{");
-        for (name, val_id) in defines {
-            if name == "Self" {
-                continue;
-            }
-            res.push_str("\n    ");
-            if let Some(index) = original_params.iter().position(|i| i == val_id) {
-                let val_id = params[index];
-                let val = self.get_item_code_or_name(val_id, ctx);
-                res.push_str(&format!("param {} is {}", name, indented(&val)));
-            } else {
-                let val = self.get_item_code_or_name(*val_id, ctx.with_in_type(*definition));
-                if !self.is_inductive_value(val_id) {
-                    res.push_str(&format!("{} is ", name));
-                }
-                res.push_str(&format!("{}", indented(&val)));
-            }
-        }
-        res.push_str("\n}");
         Some(res)
     }
 
