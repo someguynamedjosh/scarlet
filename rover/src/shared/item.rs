@@ -43,13 +43,3 @@ pub enum Item {
         typee: ItemId,
     },
 }
-
-impl Item {
-    pub fn defining(base: ItemId, definitions: Vec<(&str, ItemId)>) -> Self {
-        let definitions = definitions
-            .into_iter()
-            .map(|(name, val)| (name.to_owned(), val))
-            .collect();
-        Self::Defining { base, definitions }
-    }
-}

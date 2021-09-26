@@ -12,25 +12,6 @@ impl Environment {
         }
     }
 
-    pub fn type_of_inductive_type(
-        &mut self,
-        params: Vec<ItemId>,
-        defined_in: Option<ItemId>,
-        currently_computing: Vec<ItemId>,
-    ) -> MaybeResult<ItemId, String> {
-        let mut from_vars = VarList::new();
-        for param in params {
-            let typee = self.compute_type(param, currently_computing.clone())?;
-            let this_param_vars = self.get_from_variables(typee)?;
-            from_vars.append(&this_param_vars.into_vec()[..]);
-        }
-        let typ = Item::FromType {
-            base: self.god_type(),
-            vars: from_vars.into_vec(),
-        };
-        MOk(self.insert(typ, defined_in))
-    }
-
     pub fn type_of_inductive_value(
         &mut self,
         typee: ItemId,

@@ -1,5 +1,5 @@
 use super::UnresolvedItem;
-use crate::shared::{Item, ItemId};
+use crate::shared::ItemId;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
@@ -20,11 +20,6 @@ impl ItemDefinition {
             definition: None,
             defined_in: None,
         }
-    }
-
-    pub fn with_is_scope(mut self) -> Self {
-        self.is_scope = true;
-        self
     }
 
     pub fn with_definition(mut self, definition: UnresolvedItem) -> Self {
@@ -55,11 +50,6 @@ impl Environment {
         self.items[item.0].info_requested = true;
     }
 
-    pub fn mark_as_scope(&mut self, item: ItemId) {
-        assert!(item.0 < self.items.len());
-        self.items[item.0].is_scope = true;
-    }
-
     pub fn next_id(&mut self) -> ItemId {
         let id = ItemId(self.items.len());
         self.items.push(ItemDefinition::new());
@@ -74,25 +64,6 @@ impl Environment {
 
     pub fn insert_unresolved_item(&mut self, item: UnresolvedItem) -> ItemId {
         self.insert(ItemDefinition::new().with_definition(item))
-    }
-
-    pub fn insert_item(&mut self, item: Item) -> ItemId {
-        self.insert(ItemDefinition::new().with_definition(item.into()))
-    }
-
-    pub fn insert_scope(&mut self, item: Item) -> ItemId {
-        self.insert(
-            ItemDefinition::new()
-                .with_definition(item.into())
-                .with_is_scope(),
-        )
-    }
-
-    pub fn insert_variable(&mut self, typee: ItemId) -> ItemId {
-        let selff = self.next_id();
-        let definition = Item::Variable { selff, typee }.into();
-        self.define(selff, definition);
-        selff
     }
 
     pub fn define(&mut self, item: ItemId, definition: UnresolvedItem) {

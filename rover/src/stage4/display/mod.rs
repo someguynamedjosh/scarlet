@@ -22,11 +22,6 @@ impl Context {
         self.in_scope = in_scope;
         self
     }
-
-    fn with_in_type(mut self, in_type: ItemId) -> Self {
-        self.in_type = Some(in_type);
-        self
-    }
 }
 
 impl Environment {

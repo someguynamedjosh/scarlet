@@ -1,18 +1,10 @@
 use std::{
-    cell::RefCell,
     fmt::Debug,
     ops::{ControlFlow, FromResidual, Try},
-    rc::Rc,
 };
 
 pub(crate) fn indented(source: &str) -> String {
     source.replace("\n", "\n    ")
-}
-
-pub type Rcrc<T> = Rc<RefCell<T>>;
-
-pub fn new_rcrc<T>(value: T) -> Rcrc<T> {
-    Rc::new(RefCell::new(value))
 }
 
 pub enum MaybeResult<T, E> {

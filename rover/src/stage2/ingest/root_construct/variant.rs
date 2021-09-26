@@ -2,25 +2,10 @@ use crate::{
     shared::{Definitions, Item, ItemId},
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
-        ingest::{
-            context::{Context, LocalInfo},
-            expression::ingest_expression,
-        },
+        ingest::{context::Context, expression::ingest_expression},
         structure::UnresolvedItem,
     },
 };
-
-fn check_containing_type(ctx: &Context, expected_type: ItemId) -> Result<ItemId, String> {
-    if let LocalInfo::Type(typee) = ctx.local_info {
-        if expected_type == typee {
-            Ok(typee)
-        } else {
-            todo!("nice error, variant type is not Self.")
-        }
-    } else {
-        todo!("nice error, not in a type.")
-    }
-}
 
 fn get_variant_type(root: Construct) -> Result<Expression, String> {
     let type_expr = root.expect_single_expression("variant")?;

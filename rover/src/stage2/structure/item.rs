@@ -9,12 +9,6 @@ pub enum UnresolvedItem {
     Member { base: ItemId, name: String },
 }
 
-impl UnresolvedItem {
-    pub fn defining(base: ItemId, definitions: Vec<(&str, ItemId)>) -> Self {
-        Self::Just(Item::defining(base, definitions))
-    }
-}
-
 impl Debug for UnresolvedItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {

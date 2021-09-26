@@ -1,4 +1,3 @@
-use super::context::LocalInfo;
 use crate::{
     shared::{Definitions, ItemId},
     stage1::structure::{
@@ -20,7 +19,14 @@ pub(super) fn process_definitions(
     other_defs: Vec<(String, ItemId)>,
     self_id: ItemId,
 ) -> Result<Definitions, String> {
-    process_definitions_with_info(ctx, statements, other_defs, LocalInfo::Plain, self_id)
+    let unprocessed = statements_to_unprocessed_items(ctx, statements)?;
+    let definitions = definitions(other_defs, &unprocessed[..]);
+    for item in unprocessed {
+        let mut child_ctx = ctx.child().with_id_and_scope(item.id, &definitions);
+        let id = ingest_expression(&mut child_ctx, item.def, vec![])?;
+        ctx.environment.set_defined_in(id, self_id);
+    }
+    Ok(definitions)
 }
 
 fn is_statement_to_unprocessed_item(ctx: &mut Context, is: Is) -> Result<UnprocessedItem, String> {
@@ -67,23 +73,4 @@ fn item_to_def(item: &UnprocessedItem) -> Option<(String, ItemId)> {
 fn definitions(other_defs: Vec<(String, ItemId)>, unprocessed: &[UnprocessedItem]) -> Definitions {
     let unprocessed_defs = unprocessed.iter().filter_map(item_to_def).collect();
     [other_defs, unprocessed_defs].concat()
-}
-
-pub(super) fn process_definitions_with_info(
-    ctx: &mut Context,
-    statements: Vec<Statement>,
-    other_defs: Vec<(String, ItemId)>,
-    info: LocalInfo,
-    self_id: ItemId,
-) -> Result<Definitions, String> {
-    let unprocessed = statements_to_unprocessed_items(ctx, statements)?;
-    let definitions = definitions(other_defs, &unprocessed[..]);
-    for item in unprocessed {
-        let mut child_ctx = ctx
-            .child()
-            .with_id_scope_info(item.id, &definitions, info.clone());
-        let id = ingest_expression(&mut child_ctx, item.def, vec![])?;
-        ctx.environment.set_defined_in(id, self_id);
-    }
-    Ok(definitions)
 }
