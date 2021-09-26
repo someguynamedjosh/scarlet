@@ -1,1 +1,4 @@
-TYPE
+void
+defining{
+    void is rover::core::Void::void
+}

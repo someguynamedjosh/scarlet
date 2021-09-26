@@ -26,11 +26,10 @@ fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
     let mut results = Vec::new();
     for entry in std::fs::read_dir(at).unwrap() {
         let entry = entry.unwrap();
-        let name = entry.file_name().to_string_lossy().to_string();
-        if !name.ends_with(".rer") {
-            continue;
+        let mut name = entry.file_name().to_string_lossy().to_string();
+        if name.ends_with(".rer") {
+            name = name[..name.len() - 4].to_owned();
         }
-        let name = name[..name.len() - 4].to_owned();
         if name == "$" {
             continue;
         }

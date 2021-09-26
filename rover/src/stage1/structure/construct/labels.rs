@@ -1,5 +1,14 @@
-pub const ROOT_CONSTRUCT_LABELS: &[&str] = &["identifier", "Type", "any", "the", "i32", "variant", "pick"];
-const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "i32"];
+pub const ROOT_CONSTRUCT_LABELS: &[&str] = &[
+    "identifier",
+    "Type",
+    "any",
+    "the",
+    "i32",
+    "variant",
+    "pick",
+    "builtin_item",
+];
+const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "i32", "builtin_item"];
 const ALIASES: &[(&str, &str)] = &[
     ("iv", "is_variant"),
     ("is_same_variant_as", "is_variant"),

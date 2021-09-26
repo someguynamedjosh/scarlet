@@ -1,0 +1,13 @@
+Void::void
+defining{
+    TYPE is builtin_item{TYPE}
+    Integer32 is builtin_item{Integer32}
+    Boolean is builtin_item{Boolean}
+
+    variant Never :TYPE
+
+    variant Void :TYPE
+    defining{
+        variant void :Void
+    }
+}

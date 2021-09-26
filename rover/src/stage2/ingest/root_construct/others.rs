@@ -1,15 +1,22 @@
-use crate::{
-    shared::{Definitions, Item, ItemId, PrimitiveValue},
-    stage1::structure::{construct::Construct, statement::Statement},
-    stage2::{
+use crate::{shared::{Definitions, Item, ItemId, PrimitiveType, PrimitiveValue}, stage1::structure::{construct::Construct, statement::Statement}, stage2::{
         ingest::{
             context::{Context, LocalInfo},
             definitions::process_definitions_with_info,
             expression::ingest_expression,
         },
         structure::UnresolvedItem,
-    },
-};
+    }};
+
+pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
+    let name = root.expect_text("builtin_item")?;
+    let item = match name {
+        "TYPE" => Item::GodType,
+        "Integer32" => Item::PrimitiveType(PrimitiveType::I32),
+        "Boolean" => Item::PrimitiveType(PrimitiveType::Bool),
+        other => return Err(format!("Unrecognized language item: {}", other)),
+    };
+    Ok(UnresolvedItem::Just(item))
+}
 
 fn resolve_ident_in_scope(scope: &Definitions, ident: &str) -> Option<ItemId> {
     for (name, val) in scope {
