@@ -95,6 +95,15 @@ fn convert_primitive_operation(ctx: &mut Context, op: &BuiltinOperation) -> Resu
                 other: full_convert_iid(ctx, *other)?,
             })
         }
+        BuiltinOperation::Reinterpret {
+            this,
+            parameterized_type,
+            original,
+        } => Item::BuiltinOperation(BuiltinOperation::Reinterpret {
+            this: full_convert_iid(ctx, *this)?,
+            parameterized_type: full_convert_iid(ctx, *parameterized_type)?,
+            original: full_convert_iid(ctx, *original)?,
+        }),
     })
 }
 

@@ -49,7 +49,9 @@ impl Environment {
         id
     }
 
-    pub fn insert_item(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
-        self.insert(ItemDefinition::new(item, defined_in))
+    pub fn insert_item(&mut self, def: Item, defined_in: Option<ItemId>) -> ItemId {
+        // Don't deduplicate items here because it will eff with other people's
+        // references to items that haven't been created yet.
+        self.insert(ItemDefinition::new(def, defined_in))
     }
 }
