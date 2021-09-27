@@ -19,13 +19,14 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
 
     let item = match name {
         "reinterpret" => {
-            if args.len() != 3 {
+            if args.len() != 4 {
                 todo!("nice error, wrong number of arguments");
             }
             Item::BuiltinOperation(BuiltinOperation::Reinterpret {
-                this: args[0],
-                parameterized_type: args[1],
-                original: args[2],
+                proof_equal: args[0],
+                original_type: args[1],
+                new_type: args[2],
+                original: args[3],
             })
         }
         "TYPE" => {

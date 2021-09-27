@@ -41,7 +41,14 @@ defining{
             value is any{Data}
         }
 
-        reinterpret is builtin_item{reinterpret this Type original}
+        reinterpret is 
+        builtin_item{
+            reinterpret 
+            this
+            Type[Data left] 
+            Type[Data right] 
+            original
+        }
         defining{
             this is any{ProofEqual}
             Type is any{TYPE From{any{Data}}}

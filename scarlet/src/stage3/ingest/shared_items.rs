@@ -96,12 +96,14 @@ fn convert_primitive_operation(ctx: &mut Context, op: &BuiltinOperation) -> Resu
             })
         }
         BuiltinOperation::Reinterpret {
-            this,
-            parameterized_type,
+            proof_equal,
+            original_type,
+            new_type,
             original,
         } => Item::BuiltinOperation(BuiltinOperation::Reinterpret {
-            this: full_convert_iid(ctx, *this)?,
-            parameterized_type: full_convert_iid(ctx, *parameterized_type)?,
+            proof_equal: full_convert_iid(ctx, *proof_equal)?,
+            original_type: full_convert_iid(ctx, *original_type)?,
+            new_type: full_convert_iid(ctx, *new_type)?,
             original: full_convert_iid(ctx, *original)?,
         }),
     })

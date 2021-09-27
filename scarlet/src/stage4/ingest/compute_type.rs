@@ -60,6 +60,7 @@ impl Environment {
             Item::BuiltinOperation(op) => Some(match op {
                 BuiltinOperation::I32Math(..) => self.i32_type(),
                 BuiltinOperation::AreSameVariant { base: _, other: _ } => self.bool_type(),
+                BuiltinOperation::Reinterpret { new_type, .. } => *new_type,
             }),
             Item::PrimitiveType(..) => Some(self.god_type()),
             Item::PrimitiveValue(pv) => Some(match pv {

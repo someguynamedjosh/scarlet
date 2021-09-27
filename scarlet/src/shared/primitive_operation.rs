@@ -50,8 +50,9 @@ pub enum BuiltinOperation {
         other: ItemId,
     },
     Reinterpret {
-        this: ItemId,
-        parameterized_type: ItemId,
+        proof_equal: ItemId,
+        original_type: ItemId,
+        new_type: ItemId,
         original: ItemId,
     },
 }
@@ -62,10 +63,11 @@ impl BuiltinOperation {
             Self::I32Math(op) => op.inputs(),
             Self::AreSameVariant { base, other } => vec![*base, *other],
             Self::Reinterpret {
-                this,
-                parameterized_type,
+                proof_equal,
+                original_type,
+                new_type,
                 original,
-            } => vec![*this, *parameterized_type, *original],
+            } => vec![*proof_equal, *original_type, *new_type, *original],
         }
     }
 
@@ -79,11 +81,12 @@ impl BuiltinOperation {
                 Self::AreSameVariant { base, other }
             }
             Self::Reinterpret { .. } => {
-                assert_eq!(new_inputs.len(), 3);
+                assert_eq!(new_inputs.len(), 4);
                 Self::Reinterpret {
-                    this: new_inputs[0],
-                    parameterized_type: new_inputs[1],
-                    original: new_inputs[2],
+                    proof_equal: new_inputs[0],
+                    original_type: new_inputs[1],
+                    new_type: new_inputs[2],
+                    original: new_inputs[3],
                 }
             }
         }
@@ -98,14 +101,15 @@ impl Debug for BuiltinOperation {
                 write!(f, "builtin_item{{are_same_variant {:?} {:?}}}", base, other)
             }
             Self::Reinterpret {
-                this,
-                parameterized_type,
+                proof_equal,
+                original_type,
+                new_type,
                 original,
             } => {
                 write!(
                     f,
-                    "builtin_item{{reinterpret {:?} {:?} {:?}}}",
-                    this, parameterized_type, original
+                    "builtin_item{{reinterpret {:?} {:?} {:?} {:?}}}",
+                    proof_equal, original_type, new_type, original
                 )
             }
         }

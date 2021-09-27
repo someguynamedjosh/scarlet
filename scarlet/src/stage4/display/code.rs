@@ -155,6 +155,18 @@ impl Environment {
                 "builtin_item{{are_same_variant {:?} {:?}}}",
                 base, other
             )),
+            BuiltinOperation::Reinterpret {
+                proof_equal,
+                original_type,
+                new_type,
+                original,
+            } => Some(format!(
+                "builtin_item{{reinterpret {} {} {} {}}}",
+                self.get_item_name_or_code(*proof_equal, ctx),
+                self.get_item_name_or_code(*original_type, ctx),
+                self.get_item_name_or_code(*new_type, ctx),
+                self.get_item_name_or_code(*original, ctx),
+            )),
         }
     }
 
