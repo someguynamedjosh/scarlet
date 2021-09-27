@@ -60,6 +60,11 @@ impl Environment {
         defined_in: Option<ItemId>,
     ) -> ItemId {
         let id = ItemId(self.items.len());
+        for (idx, item) in self.items.iter().enumerate() {
+            if item.definition == def && item.typee == Some(typee) {
+                return ItemId(idx);
+            }
+        }
         self.items.push(TypedItem {
             info_requested: None,
             is_scope: false,

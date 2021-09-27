@@ -27,7 +27,23 @@ defining{
         index is any{I32}
     }
 
-    # PEq::reinterpret::this info{}
+    variant Unit :TYPE From{any{Data}}
+    defining{
+        Data is any{TYPE}
+        variant unit :Unit
+    }
+
+    impossible is any{PEq[I32 0 1]}
+    IntUnit is Unit[I32]
+    ZeroUnit is Unit[I32 0]
+    OneUnit is Unit[I32 1]
+    something is any{ZeroUnit}
+
+    something_as_one is PEq::reinterpret[
+        I32 0 1
+    ]
+    something_as_one info{}
+
     # PEq::reinterpret[I32 123 456] info{}
     # PEq::reflexive[I32 123] info{}
 }
