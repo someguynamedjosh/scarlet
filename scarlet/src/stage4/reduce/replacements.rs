@@ -65,6 +65,17 @@ impl Environment {
                     Self::apply_replacements_to(base, reps);
                     Self::apply_replacements_to(other, reps);
                 }
+                BuiltinOperation::Reinterpret {
+                    proof_equal,
+                    original_type,
+                    new_type,
+                    original,
+                } => {
+                    Self::apply_replacements_to(proof_equal, reps);
+                    Self::apply_replacements_to(original_type, reps);
+                    Self::apply_replacements_to(new_type, reps);
+                    Self::apply_replacements_to(original, reps);
+                }
             },
             Item::PrimitiveType(..) | Item::PrimitiveValue(..) => (),
             Item::Replacing {

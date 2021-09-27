@@ -5,8 +5,8 @@ mod util;
 
 pub use ingest::ingest;
 
-// pub mod reduce;
-// pub use reduce::reduce;
+pub mod type_check;
+pub use type_check::type_check;
 
-// pub mod type_check;
-// pub use type_check::type_check;
+pub mod reduce;
+pub use reduce::reduce;

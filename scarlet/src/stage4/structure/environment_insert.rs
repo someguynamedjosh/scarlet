@@ -59,9 +59,6 @@ impl Environment {
         typee: ItemId,
         defined_in: Option<ItemId>,
     ) -> ItemId {
-        if let Some(existing_id) = self.get_existing_item(&def) {
-            return existing_id;
-        }
         let id = ItemId(self.items.len());
         self.items.push(TypedItem {
             info_requested: None,

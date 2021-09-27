@@ -19,6 +19,7 @@ fn resolve_ident_in_scope(scope: &Definitions, ident: &str) -> Option<ItemId> {
 fn resolve_ident(ctx: &Context, ident: &str) -> Result<ItemId, String> {
     // Reverse to earch the closest parents first.
     for scope in ctx.parent_scopes.iter().rev() {
+        println!("{:?}", scope);
         if let Some(id) = resolve_ident_in_scope(scope, ident) {
             return Ok(id);
         }

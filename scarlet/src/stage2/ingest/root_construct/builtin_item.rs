@@ -14,7 +14,11 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
     let mut args = Vec::new();
     for statement in &statements[1..] {
         let expr = statement.expect_expression()?;
-        args.push(ingest_expression(ctx, expr.clone(), vec![])?);
+        if let Ok("a") = expr.root.expect_ident() {
+            println!();
+        }
+        let result = ingest_expression(&mut ctx.child(), expr.clone(), vec![])?;
+        args.push(result);
     }
 
     let item = match name {

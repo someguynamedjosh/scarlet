@@ -27,7 +27,7 @@ defining{
         index is any{I32}
     }
 
-    PEq::reinterpret::this info{}
-    PEq::reinterpret[I32 123 456] info{}
+    # PEq::reinterpret::this info{}
+    # PEq::reinterpret[I32 123 456] info{}
     # PEq::reflexive[I32 123] info{}
 }
