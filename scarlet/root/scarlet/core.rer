@@ -40,6 +40,16 @@ defining{
         defining{
             value is any{Data}
         }
+
+        reinterpret is 
+        any{
+            Type[Data right]
+            From{this Type any{Type[Data left]}}
+        }
+        defining{
+            this is any{ProofEqual}
+            Type is any{TYPE From{any{Data}}}
+        }
     }
 
     are_same_variant is builtin_item{are_same_variant a b}

@@ -20,7 +20,9 @@ fn owned_label_parser<'i>(root: bool) -> impl Parser<'i, String> {
         let (input, label) = if root {
             limited_label_parser(ROOT_CONSTRUCT_LABELS)(input)?
         } else {
-            label_parser()(input)?
+            verify(label_parser(), |label| {
+                !ROOT_CONSTRUCT_LABELS.contains(label)
+            })(input)?
         };
         Ok((input, String::from(label)))
     }

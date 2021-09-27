@@ -73,6 +73,7 @@ fn ingest_file_tree(
         .map_err(|_| format!("Failed to read {:?}", tree.self_def))?;
     let (remainder, parsed) =
         stage1::ingest()(&data).map_err(|_| format!("Failed to parse {:?}", tree.self_def))?;
+    println!("{:#?}", parsed);
     if remainder.len() > 0 {
         todo!("nice error, syntax error");
     }

@@ -48,6 +48,9 @@ impl Environment {
             selff,
         };
         let base = self.insert_and_compute_type(item, opts.defined_in).unwrap();
+        if relevant_replacements.is_empty() {
+            return base;
+        }
         let item = Item::Replacing {
             base,
             replacements: relevant_replacements,

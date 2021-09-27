@@ -27,10 +27,5 @@ defining{
         index is any{I32}
     }
 
-    fibb[6] info{}
-
-    index is any{I32}
-
-    thing is smvr[I32 index 0] info{}
-    thing[0] info{}
+    PEq::reinterpret info{}
 }
