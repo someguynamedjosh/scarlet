@@ -37,7 +37,7 @@ impl Environment {
                 let typee = *typee;
                 let params = values.clone();
                 let variant_id = *variant_id;
-                self.reduce_inductive_value(opts, typee, params, variant_id)
+                self.reduce_variant_instance(opts, typee, params, variant_id)
             }
             Item::Pick {
                 initial_clause,

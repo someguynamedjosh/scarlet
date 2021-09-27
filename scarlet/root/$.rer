@@ -14,23 +14,23 @@ defining{
         variant blue  :Primary
     }
 
-    # fibb is 
-    # pick{
-    #     if true, 1
-    #     else 2
-    # }
-    # defining{
-    #     index is any{I32}
-    # }
-
-    recount is
+    fibb is 
     pick{
-        if smvr[I32 index 0], 0
-        else recount[I32::difference[index 1]]
+        if smvr[I32 index 0], 1
+        elif smvr[I32 index 1], 1
+        else I32::sum[
+            fibb[I32::difference[index 1]]
+            fibb[I32::difference[index 2]]
+        ]
     }
     defining{
         index is any{I32}
     }
 
-    recount[5] info{}
+    fibb[6] info{}
+
+    index is any{I32}
+
+    thing is smvr[I32 index 0] info{}
+    thing[0] info{}
 }

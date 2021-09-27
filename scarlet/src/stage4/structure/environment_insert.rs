@@ -1,5 +1,8 @@
 use super::{Environment, TypedItem};
-use crate::shared::{Item, ItemId};
+use crate::{
+    shared::{Item, ItemId},
+    util::MaybeResult,
+};
 
 impl Environment {
     pub fn iter(&self) -> impl Iterator<Item = (ItemId, &TypedItem)> {
@@ -19,7 +22,7 @@ impl Environment {
     fn get_existing_item(&self, def: &Item) -> Option<ItemId> {
         for (index, item) in self.items.iter().enumerate() {
             if &item.definition == def {
-                return Some(ItemId(index))
+                return Some(ItemId(index));
             }
         }
         None
@@ -38,6 +41,16 @@ impl Environment {
             typee: None,
         });
         id
+    }
+
+    pub fn insert_and_compute_type(
+        &mut self,
+        def: Item,
+        defined_in: Option<ItemId>,
+    ) -> MaybeResult<ItemId, String> {
+        let id = self.insert(def, defined_in);
+        self.compute_type(id, vec![])?;
+        MaybeResult::Ok(id)
     }
 
     pub fn insert_with_type(

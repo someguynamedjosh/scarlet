@@ -39,21 +39,24 @@ impl Environment {
                 )?;
                 Some(Item::PrimitiveValue(val))
             }
-            BuiltinOperation::AreSameVariant { .. } => {
-                if let (
+            BuiltinOperation::AreSameVariant { .. } => match (
+                &self.get(input_values[0]).definition,
+                &self.get(input_values[1]).definition,
+            ) {
+                (
                     Item::VariantInstance { variant_id: a, .. },
                     Item::VariantInstance { variant_id: b, .. },
-                ) = (
-                    &self.get(input_values[0]).definition,
-                    &self.get(input_values[1]).definition,
-                ) {
+                ) => {
                     let (a, b) = (*a, *b);
                     let same = self.are_def_equal(a, b);
                     Some(Item::PrimitiveValue(PrimitiveValue::Bool(same)))
-                } else {
-                    None
                 }
-            }
+                (Item::PrimitiveValue(a), Item::PrimitiveValue(b)) => {
+                    let same = a == b;
+                    Some(Item::PrimitiveValue(PrimitiveValue::Bool(same)))
+                }
+                _ => None,
+            },
         }
     }
 
@@ -69,16 +72,12 @@ impl Environment {
             reduced_inputs.push(reduced);
         }
         if let Some(value) = self.compute(op.clone(), reduced_inputs.clone()) {
-            let id = self.insert(value, opts.defined_in);
-            self.compute_type(id, vec![]).unwrap();
-            id
-        } else if reduced_inputs == inputs {
-            opts.item
+            self.insert_and_compute_type(value, opts.defined_in)
+                .unwrap()
         } else {
             let op = op.with_inputs(reduced_inputs);
-            let id = self.insert(Item::BuiltinOperation(op), opts.defined_in);
-            self.compute_type(id, vec![]).unwrap();
-            id
+            self.insert_and_compute_type(Item::BuiltinOperation(op), opts.defined_in)
+                .unwrap()
         }
     }
 }

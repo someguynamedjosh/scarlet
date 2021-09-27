@@ -8,7 +8,6 @@ use crate::{
 mod reduce;
 mod reduce_basics;
 mod reduce_builtin_operation;
-mod reduce_inductive_value;
 mod reduce_pick;
 mod reduce_replacing;
 mod replacements;
@@ -79,7 +78,7 @@ impl Environment {
 
     fn type_depends_on_nothing_except(&self, typee: ItemId, allowed_deps: &VarList) -> bool {
         match &self.items[typee.0].definition {
-            Item::Defining { base, .. } => self.type_is_not_from(*base),
+            Item::Defining { base, .. } => self.type_depends_on_nothing_except(*base, allowed_deps),
             Item::FromType { base, values, .. } => {
                 for value in values {
                     if !allowed_deps.as_slice().contains(value) {
@@ -88,7 +87,7 @@ impl Environment {
                 }
                 self.type_depends_on_nothing_except(*base, allowed_deps)
             }
-            Item::Replacing { base, .. } => self.type_is_not_from(*base),
+            Item::Replacing { base, .. } => self.type_depends_on_nothing_except(*base, allowed_deps),
             _ => true,
         }
     }
