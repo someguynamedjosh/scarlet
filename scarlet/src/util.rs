@@ -53,9 +53,10 @@ impl<T, T2, E> FromResidual<Result<T, E>> for MaybeResult<T2, E> {
     }
 }
 
-impl<T, E> FromResidual<E> for MaybeResult<T, E> {
-    fn from_residual(residual: E) -> Self {
-        Self::Err(residual)
+impl<T, T2, E> FromResidual<Option<T>> for MaybeResult<T2, E> {
+    fn from_residual(residual: Option<T>) -> Self {
+        debug_assert!(residual.is_none());
+        Self::None
     }
 }
 

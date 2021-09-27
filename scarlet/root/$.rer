@@ -4,6 +4,8 @@ defining{
     void is scarlet::core::Void::void
     I32 is scarlet::core::Integer32
     PEq is scarlet::core::ProofEqual
+    smvr is scarlet::core::are_same_variant
+    true is scarlet::core::Boolean::true
 
     variant Primary :TYPE
     defining{
@@ -12,7 +14,23 @@ defining{
         variant blue  :Primary
     }
 
-    thing is scarlet::core::are_same_variant[Primary Primary::red Primary::red] 
-    thing info{}
-    # I32::sum[1 2] info{}
+    # fibb is 
+    # pick{
+    #     if true, 1
+    #     else 2
+    # }
+    # defining{
+    #     index is any{I32}
+    # }
+
+    recount is
+    pick{
+        if smvr[I32 index 0], 0
+        else recount[I32::difference[index 1]]
+    }
+    defining{
+        index is any{I32}
+    }
+
+    recount[5] info{}
 }

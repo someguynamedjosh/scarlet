@@ -8,8 +8,12 @@ impl Environment {
     pub fn compute_dependencies(
         &mut self,
         item: ItemId,
-        currently_computing: Vec<ItemId>,
+        mut currently_computing: Vec<ItemId>,
     ) -> MaybeResult<VarList, String> {
+        if currently_computing.contains(&item) {
+            return MaybeResult::None;
+        }
+        currently_computing.push(item);
         match &self.items[item.0].definition {
             Item::Defining { base, .. } => {
                 let base = *base;
@@ -33,11 +37,13 @@ impl Environment {
                 self.variant_instance_dependencies(typee, values, currently_computing)
             }
             Item::Pick {
-                initial_clause: _,
-                elif_clauses: _,
-                else_clause: _,
+                initial_clause,
+                elif_clauses,
+                else_clause,
             } => {
-                todo!()
+                let (ic, ec) = (*initial_clause, *else_clause);
+                let eic = elif_clauses.clone();
+                self.compute_pick_dependencies(ic, eic, ec, currently_computing)
             }
             Item::BuiltinOperation(op) => {
                 let op = op.clone();

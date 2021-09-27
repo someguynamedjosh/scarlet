@@ -167,7 +167,7 @@ impl Environment {
 
     fn get_primitive_value_code(&self, value: PrimitiveValue) -> Option<String> {
         match value {
-            PrimitiveValue::Bool(..) => None,
+            PrimitiveValue::Bool(val) => Some(format!("builtin_item{{{}}}", val)),
             PrimitiveValue::I32(val) => Some(format!("{}", val)),
         }
     }

@@ -16,12 +16,20 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), val))
     }
 
+    fn get_existing_item(&self, def: &Item) -> Option<ItemId> {
+        for (index, item) in self.items.iter().enumerate() {
+            if &item.definition == def {
+                return Some(ItemId(index))
+            }
+        }
+        None
+    }
+
     pub fn insert(&mut self, def: Item, defined_in: Option<ItemId>) -> ItemId {
-        if let Some(existing_id) = self.item_reverse_lookup.get(&def) {
-            return *existing_id;
+        if let Some(existing_id) = self.get_existing_item(&def) {
+            return existing_id;
         }
         let id = ItemId(self.items.len());
-        self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
             info_requested: None,
             is_scope: false,
@@ -38,11 +46,10 @@ impl Environment {
         typee: ItemId,
         defined_in: Option<ItemId>,
     ) -> ItemId {
-        if let Some(existing_id) = self.item_reverse_lookup.get(&def) {
-            return *existing_id;
+        if let Some(existing_id) = self.get_existing_item(&def) {
+            return existing_id;
         }
         let id = ItemId(self.items.len());
-        self.item_reverse_lookup.insert(def.clone(), id);
         self.items.push(TypedItem {
             info_requested: None,
             is_scope: false,

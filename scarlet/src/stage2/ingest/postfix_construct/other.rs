@@ -22,7 +22,7 @@ pub fn ingest_non_defining_postfix_construct(
         "type_is" => ingest_type_is_construct(ctx, base_id, post, false),
         "type_is_exactly" => ingest_type_is_construct(ctx, base_id, post, true),
         "info" => ingest_info_construct(ctx, base_id),
-        _ => todo!("Nice error"),
+        other => todo!("Nice error {}", other),
     }
 }
 
