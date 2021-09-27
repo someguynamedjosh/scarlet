@@ -4,8 +4,8 @@ mod entry;
 mod shared;
 mod stage1;
 mod stage2;
-mod stage3;
-mod stage4;
+// mod stage3;
+// mod stage4;
 mod util;
 
 fn main() {
@@ -16,24 +16,24 @@ fn main() {
     let environment = entry::start_from_root(&path).unwrap();
     println!("{:#?}", environment);
 
-    println!("Doing stage 3");
-    let environment = stage3::ingest(&environment).unwrap();
-    println!("{:#?}", environment);
+    // println!("Doing stage 3");
+    // let environment = stage3::ingest(&environment).unwrap();
+    // println!("{:#?}", environment);
 
-    println!("Doing stage 4");
-    let mut environment = stage4::ingest(environment).unwrap();
-    println!("{:#?}", environment);
+    // println!("Doing stage 4");
+    // let mut environment = stage4::ingest(environment).unwrap();
+    // println!("{:#?}", environment);
 
-    println!("Infos:");
-    environment.display_infos();
+    // println!("Infos:");
+    // environment.display_infos();
 
-    println!("Doing type check");
-    stage4::type_check(&environment).unwrap();
+    // println!("Doing type check");
+    // stage4::type_check(&environment).unwrap();
 
-    println!("Doing reduce");
-    stage4::reduce(&mut environment);
-    println!("{:#?}", environment);
+    // println!("Doing reduce");
+    // stage4::reduce(&mut environment);
+    // println!("{:#?}", environment);
 
-    println!("Infos:");
-    environment.display_infos();
+    // println!("Infos:");
+    // environment.display_infos();
 }

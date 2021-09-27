@@ -1,7 +1,11 @@
-use crate::{shared::{BuiltinOperation, IntegerMathOperation, Item, PrimitiveType, PrimitiveValue}, stage1::structure::construct::Construct, stage2::{
+use crate::{
+    shared::{BuiltinOperation, IntegerMathOperation, Item, PrimitiveType, PrimitiveValue},
+    stage1::structure::construct::Construct,
+    stage2::{
         ingest::{context::Context, expression::ingest_expression},
         structure::UnresolvedItem,
-    }};
+    },
+};
 
 pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let statements = root.expect_statements("builtin_item")?;
@@ -14,6 +18,16 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
     }
 
     let item = match name {
+        "reinterpret" => {
+            if args.len() != 3 {
+                todo!("nice error, wrong number of arguments");
+            }
+            Item::BuiltinOperation(BuiltinOperation::Reinterpret {
+                this: args[0],
+                parameterized_type: args[1],
+                original: args[2],
+            })
+        }
         "TYPE" => {
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
