@@ -2,19 +2,13 @@
     TYPE is builtin_item{TYPE}
     I32 is builtin_item{Integer32}
     Boolean is builtin_item{Boolean}
-    smvr is builtin_item{are_same_variant a b}
+
+    variant Unit :TYPE From{any{Data}}
     defining{
-        Type is any{TYPE}
-        a is any{Type}
-        b is any{Type}
+        Data is any{TYPE}
+        variant unit :Unit
     }
 
-    fibb is 
-    pick{
-        if smvr[I32 index 0], 1
-        else fibb[index]
-    }
-    defining{
-        index is any{I32}
-    }
+    IntUnit is Unit[I32]
+    ZeroUnit is IntUnit[0]
 }

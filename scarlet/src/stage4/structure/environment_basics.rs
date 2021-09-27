@@ -3,11 +3,7 @@ use std::{
     fmt::{self, Debug, Formatter},
 };
 
-use crate::{
-    shared::{Item, ItemId},
-    stage3::structure::{self as stage3, ItemDefinition},
-    util,
-};
+use crate::{shared::{Item, ItemId}, stage3::structure::{self as stage3, ItemDefinition}, stage4::ingest::var_list::VarList, util};
 
 #[derive(Clone, PartialEq)]
 pub struct TypedItem {
@@ -20,6 +16,7 @@ pub struct TypedItem {
     pub definition: Item,
     pub defined_in: Option<ItemId>,
     pub typee: Option<ItemId>,
+    pub reduction_blockers: VarList,
 }
 
 #[derive(Clone, PartialEq)]
@@ -45,6 +42,7 @@ fn items(items: Vec<ItemDefinition>) -> Vec<TypedItem> {
             definition: i.definition,
             defined_in: i.defined_in,
             typee: None,
+            reduction_blockers: VarList::new(),
         })
         .collect()
 }

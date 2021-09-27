@@ -1,8 +1,5 @@
 use super::{Environment, TypedItem};
-use crate::{
-    shared::{Item, ItemId},
-    util::MaybeResult,
-};
+use crate::{shared::{Item, ItemId}, stage4::ingest::var_list::VarList, util::MaybeResult};
 
 impl Environment {
     pub fn iter(&self) -> impl Iterator<Item = (ItemId, &TypedItem)> {
@@ -39,6 +36,7 @@ impl Environment {
             definition: def,
             defined_in,
             typee: None,
+            reduction_blockers: VarList::new(),
         });
         id
     }
@@ -71,6 +69,7 @@ impl Environment {
             definition: def,
             defined_in,
             typee: Some(typee),
+            reduction_blockers: VarList::new(),
         });
         id
     }

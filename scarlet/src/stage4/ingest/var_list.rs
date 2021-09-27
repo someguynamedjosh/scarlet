@@ -1,6 +1,6 @@
 use crate::shared::ItemId;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct VarList(Vec<ItemId>);
 
 impl VarList {
