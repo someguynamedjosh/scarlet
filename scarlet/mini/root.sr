@@ -3,11 +3,11 @@
     I32 is builtin_item{Integer32}
     # Boolean is builtin_item{Boolean}
 
-    # variant Unit :TYPE From{any{Data}}
-    # defining{
-    #     Data is any{TYPE}
-    #     variant unit :Unit
-    # }
+    variant Unit :TYPE
+    defining{
+        # Data is any{TYPE}
+        variant unit :Unit
+    }
 
     # IntUnit is Unit[I32] info{}
     # ZeroUnit is IntUnit[0]

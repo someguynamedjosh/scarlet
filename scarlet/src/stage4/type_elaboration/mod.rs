@@ -44,6 +44,7 @@ impl Environment {
                 let base = *base;
                 self.get_type(base)
             }
+            Item::Variant { typee, .. } => *typee,
             _ => todo!(),
         };
         self.get_mut(of).cached_type = Some(typee);
