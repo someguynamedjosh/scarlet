@@ -5,6 +5,11 @@
 
     something is any{any{TYPE}}
 
+
+    Ty is TYPE From{something}
+
+    another is any{Ty}
+
     # Unit vn TYPE
     # defining{
     #     # Data is any{TYPE}

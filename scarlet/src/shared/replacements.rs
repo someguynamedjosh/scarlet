@@ -45,7 +45,7 @@ impl Replacements {
         self.into_iter()
     }
 
-    pub fn applied_to(&mut self, base: ItemId) -> ItemId {
+    pub fn applied_to(&self, base: ItemId) -> ItemId {
         for rep in &self.0 {
             if rep.0 == base {
                 return rep.1;
