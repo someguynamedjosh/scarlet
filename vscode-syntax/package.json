@@ -15,7 +15,7 @@
             {
                 "id": "scarlet",
                 "extensions": [
-                    ".rer"
+                    ".sr"
                 ],
                 "configuration": "./language-configuration.json"
             }
