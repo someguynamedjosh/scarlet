@@ -22,8 +22,12 @@ impl VarList {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=&ItemId> {
+    pub fn iter(&self) -> impl Iterator<Item = &ItemId> {
         self.into_iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 }
 

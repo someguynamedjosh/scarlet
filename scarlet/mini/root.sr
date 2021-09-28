@@ -1,14 +1,7 @@
 0 defining{
-    TYPE is builtin_item{TYPE}
     I32 is builtin_item{Integer32}
-    # Boolean is builtin_item{Boolean}
 
-    something is any{any{TYPE}}
-
-
-    Ty is TYPE From{something}
-
-    another is any{Ty}
+    whatever is builtin_item{i32_sum 1 2}
 
     # Unit vn TYPE
     # defining{

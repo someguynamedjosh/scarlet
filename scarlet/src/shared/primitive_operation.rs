@@ -2,7 +2,7 @@ use std::fmt::{self, Debug, Formatter};
 
 use super::ItemId;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IntegerMathOperation {
     Sum(ItemId, ItemId),
     Difference(ItemId, ItemId),
@@ -42,7 +42,7 @@ impl Debug for IntegerMathOperation {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BuiltinOperation {
     I32Math(IntegerMathOperation),
     AreSameVariant {

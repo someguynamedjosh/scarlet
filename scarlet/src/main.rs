@@ -27,4 +27,8 @@ fn main() {
     println!("Elaborating types");
     environment.elaborate_all_types();
     println!("{:#?}", environment);
+
+    println!("Reducing items");
+    environment.reduce_all_items();
+    println!("{:#?}", environment);
 }
