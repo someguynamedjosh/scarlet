@@ -16,20 +16,16 @@ pub struct ItemDefinition {
 }
 
 impl ItemDefinition {
-    pub fn from(s2: &stage2::structure::ItemDefinition, definition: Item) -> Self {
-        Self {
-            info_requested: s2.info_requested,
-            is_scope: s2.is_scope,
-            definition,
-            defined_in: s2.defined_in,
-        }
-    }
-
-    pub fn new(item: Item, defined_in: Option<ItemId>) -> Self {
+    pub fn new(
+        info_requested: Option<ItemId>,
+        is_scope: bool,
+        definition: Item,
+        defined_in: Option<ItemId>,
+    ) -> Self {
         Self {
             info_requested: None,
             is_scope: false,
-            definition: item,
+            definition,
             defined_in,
         }
     }
@@ -49,25 +45,9 @@ impl Environment {
         &self.items[id.0]
     }
 
-    pub fn mark_info(&mut self, item: ItemId, info_scope: Option<ItemId>) {
-        assert!(item.0 < self.items.len());
-        self.items[item.0].info_requested = info_scope;
-    }
-
-    pub fn mark_as_scope(&mut self, item: ItemId) {
-        assert!(item.0 < self.items.len());
-        self.items[item.0].is_scope = true;
-    }
-
     pub fn insert(&mut self, definition: ItemDefinition) -> ItemId {
         let id = ItemId(self.items.len());
         self.items.push(definition);
         id
-    }
-
-    pub fn insert_item(&mut self, def: Item, defined_in: Option<ItemId>) -> ItemId {
-        // Don't deduplicate items here because it will eff with other people's
-        // references to items that haven't been created yet.
-        self.insert(ItemDefinition::new(def, defined_in))
     }
 }

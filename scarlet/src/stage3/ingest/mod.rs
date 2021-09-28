@@ -82,7 +82,15 @@ impl Context {
             UnresolvedItem::Just(item) => {
                 let new_id = self.reserve_new_item(item_id);
                 let citem = self.convert_item(item)?;
-                let def = ItemDefinition::from(&item_def, citem);
+                let info_requested = match item_def.info_requested {
+                    Some(id) => Some(self.convert_iid(id)?),
+                    None => None,
+                };
+                let defined_in = match item_def.defined_in {
+                    Some(id) => Some(self.convert_iid(id)?),
+                    None => None,
+                };
+                let def = ItemDefinition::new(info_requested, item_def.is_scope, citem, defined_in);
                 self.stage3_items.push((new_id, def));
                 Ok(new_id)
             }
