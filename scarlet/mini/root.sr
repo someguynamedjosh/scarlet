@@ -3,10 +3,10 @@
     I32 is builtin_item{Integer32}
     # Boolean is builtin_item{Boolean}
 
-    variant Unit :TYPE
+    Unit vn TYPE
     defining{
         # Data is any{TYPE}
-        variant unit :Unit
+        unit vn Unit
     }
 
     # IntUnit is Unit[I32] info{}

@@ -21,35 +21,32 @@ impl Is {
     }
 }
 
-fn expand_variant_shorthand(mut shorthand: Expression) -> Result<Is, String> {
-    let name = shorthand.root;
-    let name = Expression {
-        root: name,
-        others: vec![],
-    };
-    if shorthand.others.is_empty() {
-        return Err(format!(""));
-    }
-    let typee_construct = shorthand.others.remove(0);
-    let typee = typee_construct.expect_single_expression("type_is")?;
+fn expand_variant_shorthand(name: Expression, typee: Expression) -> Is {
     let variant_root = Construct::from_expression("variant", typee.clone());
     let value = Expression {
         root: variant_root,
-        others: shorthand.others,
+        others: Vec::new(),
     };
     let sel = Is { name, value };
-    Ok(sel)
+    sel
 }
 
 impl Is {
     pub fn variant_shorthand_parser<'i>() -> impl Parser<'i, Self> {
         |input| {
-            let (input, _) = helpers::tag_then_ws("variant")(input)?;
-            let (input, shorthand): (_, Expression) = Expression::parser()(input)?;
-            match expand_variant_shorthand(shorthand) {
-                Ok(res) => Ok((input, res)),
-                Err(..) => fail(input),
-            }
+            let (input, name): (_, Expression) = Expression::parser()(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, _) = alt((
+                tag("vn"),
+                tag("variant"),
+                tag("variant_of"),
+                tag("is_variant_of"),
+            ))(input)?;
+            let (input, _) = ws()(input)?;
+            // TODO: Only take type-related postfix constructs.
+            let (input, typee): (_, Expression) = Expression::parser()(input)?;
+            let st = expand_variant_shorthand(name, typee);
+            Ok((input, st))
         }
     }
 }

@@ -16,7 +16,7 @@
 		},
 		{
 			"name": "keyword.other",
-			"match": "\\b(is|with|variant|vn|t|bt|if|elif|else|p|param|parameter)\\b"
+			"match": "\\b(is|with|variant_of|is_variant_of|variant|vn|t|bt|if|elif|else|p|param|parameter)\\b"
 		},
 		{
 			"name": "keyword.operator",
