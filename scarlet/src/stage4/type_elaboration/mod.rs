@@ -1,5 +1,5 @@
 use super::structure::{Environment, ItemDefinition};
-use crate::shared::{BuiltinValue, Item, ItemId};
+use crate::shared::{BuiltinValue, Item, ItemId, VarList};
 
 impl Environment {
     pub fn get_or_insert(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
@@ -36,6 +36,12 @@ impl Environment {
             return typee;
         }
         let typee = match self.get_item(of) {
+            Item::Any { selff, typee } => {
+                let (selff, typee) = (*selff, *typee);
+                let typee = self.reduce(typee);
+                let type_type = self.get_type(typee);
+                self.flatten_from_types(&[typee, type_type], &[selff])
+            }
             Item::BuiltinValue(val) => {
                 let val = *val;
                 self.type_of_builtin_value(val)
@@ -44,7 +50,14 @@ impl Environment {
                 let base = *base;
                 self.get_type(base)
             }
-            Item::Variant { typee, .. } => *typee,
+            Item::FromType { base, .. } => {
+                let base = *base;
+                self.get_type(base)
+            }
+            Item::Variant { typee, .. } => {
+                let typee = *typee;
+                self.reduce(typee)
+            }
             _ => todo!(),
         };
         self.get_mut(of).cached_type = Some(typee);
@@ -57,6 +70,42 @@ impl Environment {
             self.get_type(id);
             id.0 += 1;
         }
+    }
+
+    /// Takes the given types and combines all the variables they specify (if
+    /// they are From types) and combines them into a new From type.
+    fn flatten_from_types(&mut self, types: &[ItemId], extra_vars: &[ItemId]) -> ItemId {
+        assert!(types.len() > 0);
+        let mut total_vars = VarList::new();
+        let mut total_base = None;
+        for typee in types {
+            match self.get_item(*typee) {
+                Item::FromType { base, vars } => {
+                    if total_base.is_none() {
+                        total_base = Some(*base)
+                    }
+                    total_vars.append(vars);
+                }
+                _ => {
+                    if total_base.is_none() {
+                        total_base = Some(*typee);
+                    }
+                }
+            }
+        }
+        for var in extra_vars {
+            total_vars.push(*var);
+        }
+        let item = Item::FromType {
+            base: total_base.unwrap(),
+            vars: total_vars,
+        };
+        let defined_in = self.get(types[0]).defined_in;
+        self.get_or_insert(item, defined_in)
+    }
+
+    fn reduce(&mut self, item: ItemId) -> ItemId {
+        item
     }
 
     fn type_of_builtin_value(&mut self, val: BuiltinValue) -> ItemId {

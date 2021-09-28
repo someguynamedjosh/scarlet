@@ -1,4 +1,4 @@
-use super::{BuiltinOperation, Definitions, ItemId, BuiltinValue, Replacements};
+use super::{BuiltinOperation, BuiltinValue, Definitions, ItemId, Replacements, VarList};
 
 pub type ConditionalClause = (ItemId, ItemId);
 
@@ -16,7 +16,7 @@ pub enum Item {
     },
     FromType {
         base: ItemId,
-        values: Vec<ItemId>,
+        vars: VarList,
     },
     Pick {
         clauses: Vec<ConditionalClause>,

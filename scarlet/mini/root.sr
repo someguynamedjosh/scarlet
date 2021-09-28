@@ -3,11 +3,13 @@
     I32 is builtin_item{Integer32}
     # Boolean is builtin_item{Boolean}
 
-    Unit vn TYPE
-    defining{
-        # Data is any{TYPE}
-        unit vn Unit
-    }
+    something is any{any{TYPE}}
+
+    # Unit vn TYPE
+    # defining{
+    #     # Data is any{TYPE}
+    #     unit vn Unit
+    # }
 
     # IntUnit is Unit[I32] info{}
     # ZeroUnit is IntUnit[0]

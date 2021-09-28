@@ -12,37 +12,6 @@ fn get_variant_type(root: Construct) -> Result<Expression, String> {
     Ok(type_expr.clone())
 }
 
-fn dereference_type(ctx: &Context, type_id: ItemId) -> ItemId {
-    match &ctx.environment.definition_of(type_id).definition {
-        Some(UnresolvedItem::Just(item)) => match item {
-            Item::Defining { base, .. } | Item::FromType { base, .. } => {
-                dereference_type(ctx, *base)
-            }
-            _ => type_id,
-        },
-        _ => type_id,
-    }
-}
-
-fn get_from_vars(ctx: &Context, type_id: ItemId) -> (Vec<ItemId>, Definitions) {
-    match &ctx.environment.definition_of(type_id).definition {
-        Some(UnresolvedItem::Just(item)) => match item {
-            Item::FromType { base, values: vars } => {
-                let (base_vars, defs) = get_from_vars(ctx, *base);
-                let vars = [base_vars, vars.clone()].concat();
-                (vars, defs)
-            }
-            Item::Defining { base, definitions } => {
-                let (vars, base_defs) = get_from_vars(ctx, *base);
-                let defs = base_defs.after_inserting(definitions);
-                (vars, defs)
-            }
-            _ => (Default::default(), Default::default()),
-        },
-        _ => (Default::default(), Default::default()),
-    }
-}
-
 pub fn ingest_variant_construct(
     ctx: &mut Context,
     root: Construct,

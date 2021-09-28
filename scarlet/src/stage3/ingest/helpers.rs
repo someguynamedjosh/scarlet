@@ -2,7 +2,7 @@ use super::{
     context::Context,
     dereference::{convert_dereffed, dereference_iid},
 };
-use crate::shared::{ConditionalClause, Definitions, ItemId, Replacements};
+use crate::shared::{ConditionalClause, Definitions, ItemId, Replacements, VarList};
 
 pub fn convert_defs(ctx: &mut Context, defs: &Definitions) -> Result<Definitions, String> {
     let mut result = Definitions::new();
@@ -39,12 +39,12 @@ pub fn convert_reps(ctx: &mut Context, reps: &Replacements) -> Result<Replacemen
     Ok(result)
 }
 
+pub fn convert_var_list(ctx: &mut Context, ids: &VarList) -> Result<VarList, String> {
+    ids.iter().map(|id| full_convert_iid(ctx, *id)).collect()
+}
+
 pub fn convert_iids(ctx: &mut Context, ids: &[ItemId]) -> Result<Vec<ItemId>, String> {
-    let mut result = Vec::new();
-    for id in ids {
-        result.push(full_convert_iid(ctx, *id)?);
-    }
-    Ok(result)
+    ids.iter().map(|id| full_convert_iid(ctx, *id)).collect()
 }
 
 pub fn full_convert_iid(ctx: &mut Context, id: ItemId) -> Result<ItemId, String> {

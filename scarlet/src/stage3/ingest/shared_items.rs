@@ -1,12 +1,13 @@
 use super::{
     context::Context,
     helpers::{
-        convert_clauses, convert_defs, convert_iid, convert_iids, convert_reps, full_convert_iid,
+        convert_clauses, convert_defs, convert_iid, convert_iids, convert_reps, convert_var_list,
+        full_convert_iid,
     },
 };
 use crate::shared::{
     BuiltinOperation, BuiltinValue, ConditionalClause, Definitions, IntegerMathOperation, Item,
-    ItemId, Replacements,
+    ItemId, Replacements, VarList,
 };
 
 pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, String> {
@@ -15,7 +16,7 @@ pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, Strin
         Item::BuiltinOperation(op) => convert_builtin_operation(ctx, op),
         Item::BuiltinValue(pv) => convert_builtin_value(*pv),
         Item::Defining { base, definitions } => convert_defining(ctx, *base, definitions),
-        Item::FromType { base, values: vars } => convert_from_type(ctx, *base, vars),
+        Item::FromType { base, vars } => convert_from_type(ctx, *base, vars),
         Item::Pick { clauses, default } => convert_pick(ctx, clauses, *default),
         Item::Replacing { base, replacements } => convert_replacing(ctx, *base, replacements),
         Item::TypeIs {
@@ -38,10 +39,10 @@ fn convert_defining(
     })
 }
 
-fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &Vec<ItemId>) -> Result<Item, String> {
+fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &VarList) -> Result<Item, String> {
     Ok(Item::FromType {
         base: full_convert_iid(ctx, base)?,
-        values: convert_iids(ctx, vars)?,
+        vars: convert_var_list(ctx, vars)?,
     })
 }
 
