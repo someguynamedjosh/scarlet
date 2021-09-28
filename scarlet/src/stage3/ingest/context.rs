@@ -25,6 +25,16 @@ pub fn convertible(item: &stage2::UnresolvedItem) -> bool {
 
 impl<'a> Context<'a> {
     pub fn insert_extra_item(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
+        for (index, this_item) in self.env.items.iter().enumerate() {
+            if this_item.definition == item && this_item.defined_in == defined_in {
+                return ItemId(index);
+            }
+        }
+        for (index, this_item) in self.extra_items.iter().enumerate() {
+            if this_item.0 == item && this_item.1 == defined_in {
+                return ItemId(self.env.items.len() + index);
+            }
+        }
         let id = self.next_unused_id;
         self.extra_items.push((item, defined_in));
         self.next_unused_id.0 += 1;
