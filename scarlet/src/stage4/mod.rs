@@ -1,5 +1,6 @@
 use crate::stage3;
 
+mod display;
 pub mod structure;
 mod type_elaboration;
 

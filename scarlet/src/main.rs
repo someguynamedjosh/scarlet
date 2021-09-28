@@ -31,4 +31,7 @@ fn main() {
     println!("Reducing items");
     environment.reduce_all_items();
     println!("{:#?}", environment);
+
+    println!("Infos:");
+    environment.display_infos();
 }

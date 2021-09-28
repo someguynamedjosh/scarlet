@@ -40,4 +40,11 @@ impl Environment {
         let items = other.items.into_iter().map(ItemDefinition::from).collect();
         Self { items }
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (ItemId, &ItemDefinition)> {
+        self.items
+            .iter()
+            .enumerate()
+            .map(|(idx, val)| (ItemId(idx), val))
+    }
 }
