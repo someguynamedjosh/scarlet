@@ -5,6 +5,7 @@ mod shared;
 mod stage1;
 mod stage2;
 mod stage3;
+mod stage4;
 mod util;
 
 fn main() {
@@ -17,5 +18,9 @@ fn main() {
 
     println!("Doing stage 3");
     let environment = stage3::ingest(&environment).unwrap();
+    println!("{:#?}", environment);
+
+    println!("Entering stage 4");
+    let environment = stage4::ingest(environment);
     println!("{:#?}", environment);
 }
