@@ -1,5 +1,5 @@
 use crate::{
-    shared::{BuiltinOperation, ConditionalClause, ItemId},
+    shared::{ConditionalClause, ItemId},
     stage4::{ingest::var_list::VarList, structure::Environment},
     util::*,
 };

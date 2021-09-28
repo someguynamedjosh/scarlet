@@ -1,7 +1,7 @@
 use super::structure::Environment;
 use crate::shared::{Item, ItemId};
 
-pub fn find_reduction_blockers(env: &mut Environment) -> Result<(), String> {
+pub fn find_reduction_blockers(_env: &mut Environment) -> Result<(), String> {
     Ok(())
 }
 

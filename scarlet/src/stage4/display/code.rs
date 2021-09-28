@@ -1,4 +1,11 @@
-use crate::{shared::{BuiltinOperation, ConditionalClause, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements}, stage4::{display::Context, structure::Environment}, util::indented};
+use crate::{
+    shared::{
+        BuiltinOperation, ConditionalClause, Definitions, IntegerMathOperation, Item, ItemId,
+        PrimitiveType, PrimitiveValue, Replacements,
+    },
+    stage4::{display::Context, structure::Environment},
+    util::indented,
+};
 
 impl Environment {
     pub(super) fn get_item_code(&self, item_id: &ItemId, ctx: Context) -> Option<String> {

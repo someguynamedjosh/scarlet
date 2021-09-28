@@ -3,7 +3,12 @@ use std::{
     fmt::{self, Debug, Formatter},
 };
 
-use crate::{shared::{Item, ItemId}, stage3::structure::{self as stage3, ItemDefinition}, stage4::ingest::var_list::VarList, util};
+use crate::{
+    shared::{Item, ItemId},
+    stage3::structure::{self as stage3, ItemDefinition},
+    stage4::ingest::var_list::VarList,
+    util,
+};
 
 #[derive(Clone, PartialEq)]
 pub struct TypedItem {

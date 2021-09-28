@@ -1,5 +1,9 @@
 use super::{Environment, TypedItem};
-use crate::{shared::{Item, ItemId}, stage4::ingest::var_list::VarList, util::MaybeResult};
+use crate::{
+    shared::{Item, ItemId},
+    stage4::ingest::var_list::VarList,
+    util::MaybeResult,
+};
 
 impl Environment {
     pub fn iter(&self) -> impl Iterator<Item = (ItemId, &TypedItem)> {
