@@ -39,7 +39,7 @@ impl Debug for Item {
                 write!(f, "{}}}", spacer)
             }
             Self::Replacing { base, replacements } => {
-                write!(f, "{:?}{}{:#?}", base, spacer, replacements)?;
+                write!(f, "{:?}{}replacing{{", base, spacer)?;
                 for (target, value) in replacements {
                     write!(f, "{}{:?} with {:?} ", nested_spacer, target, value)?;
                 }

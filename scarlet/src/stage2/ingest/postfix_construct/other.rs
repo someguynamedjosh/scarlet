@@ -54,7 +54,7 @@ fn ingest_replacing_construct(
     post: Construct,
 ) -> Result<UnresolvedItem, String> {
     let statements = post.expect_statements("replacing")?.to_owned();
-    let (replacements, unlabeled_replacements) = ingest_replacements(&mut ctx.child(), statements)?;
+    let (replacements, unlabeled_replacements) = ingest_replacements(ctx, statements)?;
     if unlabeled_replacements.len() != 0 {
         todo!()
     }

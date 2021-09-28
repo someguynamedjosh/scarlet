@@ -29,6 +29,10 @@ impl VarList {
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
+    pub fn contains(&self, id: ItemId) -> bool {
+        self.0.contains(&id)
+    }
 }
 
 impl Default for VarList {

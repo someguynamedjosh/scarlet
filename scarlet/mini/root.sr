@@ -1,7 +1,9 @@
 0 defining{
     I32 is builtin_item{Integer32}
+    var is any{I32}
+    double is builtin_item{i32_sum var var}
 
-    whatever is builtin_item{i32_sum 1 2}
+    val is double replacing { var with 123 }
 
     # Unit vn TYPE
     # defining{

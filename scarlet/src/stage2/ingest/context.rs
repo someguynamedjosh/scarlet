@@ -31,6 +31,12 @@ impl<'e, 'd> Context<'e, 'd> {
     }
 
     /// Returns a new Context with the same values
+    pub fn child_without_defining<'s>(&'s mut self) -> Context<'s, 'd> {
+        self.borrow_new()
+    }
+
+    /// Returns a new Context with the same values, except marking that all
+    /// child items are defined in the current item.
     pub fn child<'s>(&'s mut self) -> Context<'s, 'd> {
         let id = self.get_or_create_current_id();
         self.borrow_new().with_defined_in(id)

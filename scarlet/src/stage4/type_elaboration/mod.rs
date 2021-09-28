@@ -78,6 +78,11 @@ impl Environment {
                 let base = *base;
                 self.get_type(base)
             }
+            Item::Replacing { base, replacements } => {
+                let (base, reps) = (*base, replacements.clone());
+                let base_type = self.get_type(base);
+                self.reduce(base_type, &reps, &[])
+            }
             Item::TypeIs { typee, .. } | Item::Variant { typee, .. } => {
                 let typee = *typee;
                 self.reduce(typee, &Default::default(), &[])
@@ -156,6 +161,7 @@ impl Environment {
             let new = self.reduce(id, &Default::default(), &[]);
             if id != new {
                 println!("{:?} becomes {:?}", id, new);
+                self.get_type(new);
             }
             id.0 += 1;
         }
@@ -203,8 +209,37 @@ impl Environment {
                 }
                 let rbase = self.reduce(base, reps, &visited);
                 let (base, vars) = (rbase, vars_after_reps);
-                let item = Item::FromType { base, vars };
-                self.get_or_insert(item, defined_in)
+                if vars.len() == 0 {
+                    base
+                } else {
+                    let item = Item::FromType { base, vars };
+                    self.get_or_insert(item, defined_in)
+                }
+            }
+            Item::Replacing { base, replacements } => {
+                let mut new_reps = reps.clone();
+                for rep in replacements {
+                    new_reps.insert_or_replace(*rep);
+                }
+                let base = *base;
+                let rbase = self.reduce(base, &new_reps, &visited);
+                let rdeps = self.get_dependencies(rbase);
+                // Replacements of variables the expression is still dependant on.
+                let mut remaining_reps = Replacements::new();
+                for rep in new_reps {
+                    if rdeps.contains(rep.0) {
+                        remaining_reps.insert_no_replace(rep);
+                    }
+                }
+                if remaining_reps.len() == 0 {
+                    rbase
+                } else {
+                    let item = Item::Replacing {
+                        base: rbase,
+                        replacements: remaining_reps,
+                    };
+                    self.get_or_insert(item, defined_in)
+                }
             }
             Item::Variant { selff, typee } => {
                 let (selff, typee) = (*selff, *typee);
