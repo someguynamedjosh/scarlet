@@ -13,17 +13,9 @@ fn convert_dereffed_replacing(
     ctx: &mut Context,
     base: DereferencedItem,
     replacements: Replacements,
-    unlabeled_replacements: Vec<ItemId>,
 ) -> Result<(ItemId, Option<ItemId>), String> {
     let (base, defined_in) = convert_dereffed(ctx, base)?;
-    let id = ctx.insert_extra_item(
-        Item::Replacing {
-            base,
-            replacements,
-            unlabeled_replacements,
-        },
-        defined_in,
-    );
+    let id = ctx.insert_extra_item(Item::Replacing { base, replacements }, defined_in);
     Ok((id, defined_in))
 }
 
@@ -38,11 +30,9 @@ pub fn convert_dereffed(
             let new_id = *ctx.id_map.get(&id).unwrap();
             Ok((new_id, new_defined_in))
         }
-        DereferencedItem::Replacing {
-            base,
-            replacements,
-            unlabeled_replacements,
-        } => convert_dereffed_replacing(ctx, *base, replacements, unlabeled_replacements),
+        DereferencedItem::Replacing { base, replacements } => {
+            convert_dereffed_replacing(ctx, *base, replacements)
+        }
     }
 }
 
@@ -64,15 +54,12 @@ fn dereference_replacing(
     deref_define: bool,
     base: ItemId,
     replacements: &Replacements,
-    unlabeled_replacements: &Vec<ItemId>,
 ) -> Result<DereferencedItem, String> {
     let deref_base = dereference_iid(ctx, base, deref_define)?;
     let replacements = convert_reps(ctx, replacements)?;
-    let unlabeled_replacements = convert_iids(ctx, unlabeled_replacements)?;
     Ok(DereferencedItem::Replacing {
         base: Box::new(deref_base),
         replacements,
-        unlabeled_replacements,
     })
 }
 
@@ -89,17 +76,9 @@ pub fn dereference_iid(
         }
         stage2::UnresolvedItem::Item(id) => dereference_iid(ctx, *id, deref_define),
         stage2::UnresolvedItem::Member { base, name } => get_member(ctx, *base, name, deref_define),
-        stage2::UnresolvedItem::Just(Item::Replacing {
-            base,
-            replacements,
-            unlabeled_replacements,
-        }) => dereference_replacing(
-            ctx,
-            deref_define,
-            *base,
-            replacements,
-            unlabeled_replacements,
-        ),
+        stage2::UnresolvedItem::Just(Item::Replacing { base, replacements }) => {
+            dereference_replacing(ctx, deref_define, *base, replacements)
+        }
         _ => Ok(DereferencedItem::Stage2Item(id)),
     }
 }

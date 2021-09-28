@@ -5,35 +5,25 @@ use super::{
     },
 };
 use crate::shared::{
-    BuiltinOperation, ConditionalClause, Definitions, IntegerMathOperation, Item, ItemId,
-    PrimitiveType, BuiltinValue, Replacements,
+    BuiltinOperation, BuiltinValue, ConditionalClause, Definitions, IntegerMathOperation, Item,
+    ItemId, Replacements,
 };
 
 pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, String> {
     match item {
+        Item::Any { selff, typee } => convert_any(ctx, *selff, *typee),
+        Item::BuiltinOperation(op) => convert_builtin_operation(ctx, op),
+        Item::BuiltinValue(pv) => convert_builtin_value(*pv),
         Item::Defining { base, definitions } => convert_defining(ctx, *base, definitions),
         Item::FromType { base, values: vars } => convert_from_type(ctx, *base, vars),
-        Item::GodType => Ok(Item::GodType),
-        Item::Variant {
-            values: params,
-            typee,
-            selff: variant_id,
-        } => convert_inductive_value(ctx, params, *typee, *variant_id),
-        Item::Pick {
-            initial_clause,
-            clauses: elif_clauses,
-            else_clause,
-        } => convert_pick(ctx, *initial_clause, elif_clauses, *else_clause),
-        Item::BuiltinOperation(op) => convert_primitive_operation(ctx, op),
-        Item::PrimitiveType(pt) => convert_primitive_type(*pt),
-        Item::BuiltinValue(pv) => convert_primitive_value(*pv),
-        Item::Replacing {
+        Item::Pick { clauses, default } => convert_pick(ctx, clauses, *default),
+        Item::Replacing { base, replacements } => convert_replacing(ctx, *base, replacements),
+        Item::TypeIs {
+            base_type_only,
             base,
-            replacements,
-            unlabeled_replacements,
-        } => convert_replacing(ctx, *base, replacements, unlabeled_replacements),
-        Item::TypeIs { base_type_only: exact, base, typee } => convert_type_is(ctx, *exact, *base, *typee),
-        Item::Any { selff, typee } => convert_variable(ctx, *selff, *typee),
+            typee,
+        } => convert_type_is(ctx, *base_type_only, *base, *typee),
+        Item::Variant { selff, typee } => convert_variant(ctx, *selff, *typee),
     }
 }
 
@@ -55,36 +45,25 @@ fn convert_from_type(ctx: &mut Context, base: ItemId, vars: &Vec<ItemId>) -> Res
     })
 }
 
-fn convert_inductive_value(
-    ctx: &mut Context,
-    params: &Vec<ItemId>,
-    typee: ItemId,
-    variant_id: ItemId,
-) -> Result<Item, String> {
+fn convert_variant(ctx: &mut Context, selff: ItemId, typee: ItemId) -> Result<Item, String> {
     Ok(Item::Variant {
-        values: convert_iids(ctx, params)?,
+        selff: full_convert_iid(ctx, selff)?,
         typee: full_convert_iid(ctx, typee)?,
-        selff: full_convert_iid(ctx, variant_id)?,
     })
 }
 
 fn convert_pick(
     ctx: &mut Context,
-    initial_clause: ConditionalClause,
-    elif_clauses: &Vec<ConditionalClause>,
-    else_clause: ItemId,
+    clauses: &Vec<ConditionalClause>,
+    default: ItemId,
 ) -> Result<Item, String> {
     Ok(Item::Pick {
-        initial_clause: (
-            convert_iid(ctx, initial_clause.0, true)?,
-            convert_iid(ctx, initial_clause.1, true)?,
-        ),
-        clauses: convert_clauses(ctx, elif_clauses)?,
-        else_clause: convert_iid(ctx, else_clause, true)?,
+        clauses: convert_clauses(ctx, clauses)?,
+        default: full_convert_iid(ctx, default)?,
     })
 }
 
-fn convert_primitive_operation(ctx: &mut Context, op: &BuiltinOperation) -> Result<Item, String> {
+fn convert_builtin_operation(ctx: &mut Context, op: &BuiltinOperation) -> Result<Item, String> {
     Ok(match op {
         BuiltinOperation::I32Math(op) => Item::BuiltinOperation(BuiltinOperation::I32Math(
             convert_integer_op(ctx, op.clone())?,
@@ -122,11 +101,7 @@ fn convert_integer_op(
     })
 }
 
-fn convert_primitive_type(pt: PrimitiveType) -> Result<Item, String> {
-    Ok(Item::PrimitiveType(pt))
-}
-
-fn convert_primitive_value(pv: BuiltinValue) -> Result<Item, String> {
+fn convert_builtin_value(pv: BuiltinValue) -> Result<Item, String> {
     Ok(Item::BuiltinValue(pv))
 }
 
@@ -134,29 +109,27 @@ fn convert_replacing(
     ctx: &mut Context,
     base: ItemId,
     replacements: &Replacements,
-    unlabeled_replacements: &Vec<ItemId>,
 ) -> Result<Item, String> {
     Ok(Item::Replacing {
         base: full_convert_iid(ctx, base)?,
         replacements: convert_reps(ctx, replacements)?,
-        unlabeled_replacements: convert_iids(ctx, unlabeled_replacements)?,
     })
 }
 
 fn convert_type_is(
     ctx: &mut Context,
-    exact: bool,
+    base_type_only: bool,
     base: ItemId,
     typee: ItemId,
 ) -> Result<Item, String> {
     Ok(Item::TypeIs {
-        base_type_only: exact,
+        base_type_only,
         base: full_convert_iid(ctx, base)?,
         typee: full_convert_iid(ctx, typee)?,
     })
 }
 
-fn convert_variable(ctx: &mut Context, selff: ItemId, typee: ItemId) -> Result<Item, String> {
+fn convert_any(ctx: &mut Context, selff: ItemId, typee: ItemId) -> Result<Item, String> {
     Ok(Item::Any {
         selff: full_convert_iid(ctx, selff)?,
         typee: full_convert_iid(ctx, typee)?,
