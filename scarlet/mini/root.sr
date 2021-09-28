@@ -9,5 +9,9 @@
         unit vn Unit
     }
 
+    Data1 is any{TYPE}
+    Data2 is any{TYPE}
+
     IntUnit is Unit replacing{Unit::Data with I32} info{}
+    I32 From{Data1 Data2} replacing{Data1 with I32} info{}
 }

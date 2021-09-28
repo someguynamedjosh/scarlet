@@ -58,14 +58,6 @@ impl Environment {
         Some(res)
     }
 
-    fn get_is_variant_code(&self, base: &ItemId, other: &ItemId, ctx: Context) -> Option<String> {
-        Some(format!(
-            "{} is_variant{{{}}}",
-            self.get_item_name_or_code(*base, ctx),
-            self.get_item_name_or_code(*other, ctx)
-        ))
-    }
-
     fn get_pick_code(
         &self,
         clauses: &Vec<ConditionalClause>,

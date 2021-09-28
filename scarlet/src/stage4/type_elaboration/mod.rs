@@ -4,7 +4,7 @@ use crate::shared::{
 };
 
 impl Environment {
-    fn get_or_insert(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
+    pub fn get_or_insert(&mut self, item: Item, defined_in: Option<ItemId>) -> ItemId {
         for (index, this_item) in self.items.iter().enumerate() {
             if this_item.definition == item {
                 return ItemId(index);
@@ -17,31 +17,32 @@ impl Environment {
             definition: item,
             defined_in,
             cached_type: None,
+            cached_reduction: None,
         });
         id
     }
 
-    fn get_or_insert_primary_type(&mut self) -> ItemId {
+    pub fn get_or_insert_primary_type(&mut self) -> ItemId {
         self.get_or_insert(Item::BuiltinValue(BuiltinValue::OriginType), None)
     }
 
-    fn get_or_insert_bool_type(&mut self) -> ItemId {
+    pub fn get_or_insert_bool_type(&mut self) -> ItemId {
         self.get_or_insert(Item::BuiltinValue(BuiltinValue::BoolType), None)
     }
 
-    fn get_or_insert_i32_type(&mut self) -> ItemId {
+    pub fn get_or_insert_i32_type(&mut self) -> ItemId {
         self.get_or_insert(Item::BuiltinValue(BuiltinValue::I32Type), None)
     }
 
-    fn get(&self, item: ItemId) -> &ItemDefinition {
+    pub fn get(&self, item: ItemId) -> &ItemDefinition {
         &self.items[item.0]
     }
 
-    fn get_mut(&mut self, item: ItemId) -> &mut ItemDefinition {
+    pub fn get_mut(&mut self, item: ItemId) -> &mut ItemDefinition {
         &mut self.items[item.0]
     }
 
-    fn get_item(&self, item: ItemId) -> &Item {
+    pub fn get_item(&self, item: ItemId) -> &Item {
         &self.get(item).definition
     }
 
@@ -177,7 +178,7 @@ impl Environment {
             .chain(std::iter::once(item))
             .collect();
         let defined_in = self.get(item).defined_in;
-        match self.get_item(item) {
+        let reduced = match self.get_item(item) {
             Item::Any { selff, .. } => reps.applied_to(*selff),
             Item::BuiltinOperation(op) => {
                 let op = *op;
@@ -254,7 +255,9 @@ impl Environment {
                 };
                 self.get_or_insert(item, defined_in)
             }
-        }
+        };
+        self.get_mut(item).cached_reduction = Some(reduced);
+        reduced
     }
 
     fn get_builtin_value(&self, from: ItemId) -> Option<&BuiltinValue> {

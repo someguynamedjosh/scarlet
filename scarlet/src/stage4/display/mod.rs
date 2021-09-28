@@ -28,6 +28,11 @@ impl Environment {
     pub fn display_infos(&self) {
         for (id, item) in self.iter() {
             if let Some(scope) = item.info_requested {
+                let (item, id) = if let Some(id) = item.cached_reduction {
+                    (self.get(id), id)
+                } else {
+                    (item, id)
+                };
                 let name = self
                     .get_item_name(id, scope)
                     .unwrap_or(format!("anonymous"));

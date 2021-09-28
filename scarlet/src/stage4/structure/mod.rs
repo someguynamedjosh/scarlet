@@ -16,6 +16,7 @@ pub struct ItemDefinition {
     pub definition: Item,
     pub defined_in: Option<ItemId>,
     pub cached_type: Option<ItemId>,
+    pub cached_reduction: Option<ItemId>,
 }
 
 impl ItemDefinition {
@@ -26,6 +27,7 @@ impl ItemDefinition {
             definition: other.definition,
             defined_in: other.defined_in,
             cached_type: None,
+            cached_reduction: None,
         }
     }
 }
