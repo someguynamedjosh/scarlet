@@ -1,18 +1,15 @@
 use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PrimitiveType {
-    Bool,
-    I32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PrimitiveValue {
+pub enum BuiltinValue {
+    PrimaryType,
+    BoolType,
     Bool(bool),
+    I32Type,
     I32(i32),
 }
 
-impl PrimitiveValue {
+impl BuiltinValue {
     pub fn expect_bool(&self) -> bool {
         match self {
             Self::Bool(v) => *v,

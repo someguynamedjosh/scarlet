@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Definitions, Item, ItemId, PrimitiveValue},
+    shared::{Definitions, Item, ItemId, BuiltinValue},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{context::Context, expression::ingest_expression},
@@ -19,7 +19,6 @@ fn resolve_ident_in_scope(scope: &Definitions, ident: &str) -> Option<ItemId> {
 fn resolve_ident(ctx: &Context, ident: &str) -> Result<ItemId, String> {
     // Reverse to earch the closest parents first.
     for scope in ctx.parent_scopes.iter().rev() {
-        println!("{:?}", scope);
         if let Some(id) = resolve_ident_in_scope(scope, ident) {
             return Ok(id);
         }
@@ -40,11 +39,11 @@ pub fn ingest_any_construct(ctx: &mut Context, root: Construct) -> Result<Unreso
     let typ_expr = root.expect_single_expression("any")?.clone();
     let typee = ingest_expression(&mut ctx.child(), typ_expr, Default::default())?;
     let selff = ctx.get_or_create_current_id();
-    Ok(Item::Variable { selff, typee }.into())
+    Ok(Item::Any { selff, typee }.into())
 }
 
 pub fn ingest_i32_construct(root: Construct) -> Result<UnresolvedItem, String> {
     let val = root.expect_text("i32")?;
     let val: i32 = val.parse().unwrap();
-    Ok(Item::PrimitiveValue(PrimitiveValue::I32(val)).into())
+    Ok(Item::BuiltinValue(BuiltinValue::I32(val)).into())
 }

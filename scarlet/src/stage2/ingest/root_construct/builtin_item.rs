@@ -1,5 +1,5 @@
 use crate::{
-    shared::{BuiltinOperation, IntegerMathOperation, Item, PrimitiveType, PrimitiveValue},
+    shared::{BuiltinOperation, BuiltinValue, IntegerMathOperation, Item},
     stage1::structure::construct::Construct,
     stage2::{
         ingest::{context::Context, expression::ingest_expression},
@@ -37,13 +37,13 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::GodType
+            Item::BuiltinValue(BuiltinValue::PrimaryType)
         }
         "Integer32" => {
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::PrimitiveType(PrimitiveType::I32)
+            Item::BuiltinValue(BuiltinValue::I32Type)
         }
         "i32_sum" => {
             if args.len() != 2 {
@@ -65,19 +65,19 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::PrimitiveType(PrimitiveType::Bool)
+            Item::BuiltinValue(BuiltinValue::BoolType)
         }
         "true" => {
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::PrimitiveValue(PrimitiveValue::Bool(true))
+            Item::BuiltinValue(BuiltinValue::Bool(true))
         }
         "false" => {
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::PrimitiveValue(PrimitiveValue::Bool(false))
+            Item::BuiltinValue(BuiltinValue::Bool(false))
         }
         "are_same_variant" => {
             if args.len() != 2 {

@@ -17,14 +17,12 @@ pub(super) fn process_definitions(
     ctx: &mut Context,
     statements: Vec<Statement>,
     other_defs: Definitions,
-    self_id: ItemId,
 ) -> Result<Definitions, String> {
     let unprocessed = statements_to_unprocessed_items(ctx, statements)?;
     let definitions = definitions(other_defs, &unprocessed[..]);
     for item in unprocessed {
         let mut child_ctx = ctx.child().with_id_and_scope(item.id, &definitions);
-        let id = ingest_expression(&mut child_ctx, item.def, Default::default())?;
-        ctx.environment.set_defined_in(id, self_id);
+        ingest_expression(&mut child_ctx, item.def, Default::default())?;
     }
     Ok(definitions)
 }
@@ -55,6 +53,7 @@ fn statements_to_unprocessed_items(
 ) -> Result<Vec<UnprocessedItem>, String> {
     let mut top_level_expressions = Vec::new();
     for statement in statements {
+        let ctx = &mut ctx.child();
         let item = match statement {
             Statement::Is(is) => is_statement_to_unprocessed_item(ctx, is)?,
             Statement::Expression(expr) => expr_statement_to_unprocessed_item(ctx, expr)?,

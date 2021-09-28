@@ -49,29 +49,12 @@ pub fn ingest_variant_construct(
 ) -> Result<UnresolvedItem, String> {
     let type_expr = get_variant_type(root)?;
     let return_type_id = ingest_expression(&mut ctx.child(), type_expr, Default::default())?;
-
-    let base_return_type_id = dereference_type(ctx, return_type_id);
-    let (paramed_vars, definitions) = get_from_vars(ctx, return_type_id);
     let variant_id = ctx.get_or_create_current_id();
-    for var in &paramed_vars {
-        ctx.environment.set_defined_in(*var, variant_id);
-    }
 
-    let val = Item::VariantInstance {
-        typee: base_return_type_id,
-        variant_id,
-        values: paramed_vars,
+    let val = Item::Variant {
+        typee: return_type_id,
+        selff: variant_id,
     }
     .into();
-    if definitions.len() > 0 {
-        let val_id = ctx.environment.insert_unresolved_item(val);
-        ctx.environment.set_defined_in(val_id, variant_id);
-        Ok(Item::Defining {
-            base: val_id,
-            definitions,
-        }
-        .into())
-    } else {
-        Ok(val)
-    }
+    Ok(val)
 }

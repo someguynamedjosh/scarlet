@@ -36,7 +36,7 @@ fn ingest_type_is_construct(
     let typee_expr = post.expect_single_expression(label).unwrap();
     let typee = ingest_expression(&mut ctx.child(), typee_expr.clone(), Default::default())?;
     Ok(Item::TypeIs {
-        exact,
+        base_type_only: exact,
         base: base_id,
         typee,
     }
@@ -55,10 +55,12 @@ fn ingest_replacing_construct(
 ) -> Result<UnresolvedItem, String> {
     let statements = post.expect_statements("replacing")?.to_owned();
     let (replacements, unlabeled_replacements) = ingest_replacements(&mut ctx.child(), statements)?;
+    if unlabeled_replacements.len() != 0 {
+        todo!()
+    }
     Ok(Item::Replacing {
         base: base_id,
         replacements,
-        unlabeled_replacements,
     }
     .into())
 }

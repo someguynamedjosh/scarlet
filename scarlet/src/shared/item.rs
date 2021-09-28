@@ -1,9 +1,15 @@
-use super::{BuiltinOperation, Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements};
+use super::{BuiltinOperation, Definitions, ItemId, BuiltinValue, Replacements};
 
 pub type ConditionalClause = (ItemId, ItemId);
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
+    Any {
+        selff: ItemId,
+        typee: ItemId,
+    },
+    BuiltinOperation(BuiltinOperation),
+    BuiltinValue(BuiltinValue),
     Defining {
         base: ItemId,
         definitions: Definitions,
@@ -12,39 +18,28 @@ pub enum Item {
         base: ItemId,
         values: Vec<ItemId>,
     },
-    GodType,
-    VariantInstance {
-        typee: ItemId,
-        variant_id: ItemId,
-        values: Vec<ItemId>,
-    },
     Pick {
-        initial_clause: ConditionalClause,
-        elif_clauses: Vec<ConditionalClause>,
-        else_clause: ItemId,
+        clauses: Vec<ConditionalClause>,
+        default: ItemId,
     },
-    BuiltinOperation(BuiltinOperation),
-    PrimitiveType(PrimitiveType),
-    PrimitiveValue(PrimitiveValue),
     Replacing {
         base: ItemId,
-        unlabeled_replacements: Vec<ItemId>,
         replacements: Replacements,
     },
     TypeIs {
-        exact: bool,
+        base_type_only: bool,
         base: ItemId,
         typee: ItemId,
     },
-    Variable {
+    Variant {
         selff: ItemId,
         typee: ItemId,
     },
 }
 
 impl Item {
-    pub fn as_primitive_value(&self) -> Option<PrimitiveValue> {
-        if let Self::PrimitiveValue(pv) = self {
+    pub fn as_builtin_value(&self) -> Option<BuiltinValue> {
+        if let Self::BuiltinValue(pv) = self {
             Some(*pv)
         } else {
             None

@@ -5,6 +5,7 @@ use crate::{
 
 pub struct Context<'e, 'd> {
     pub current_item_id: Option<ItemId>,
+    pub defined_in: Option<ItemId>,
     pub environment: &'e mut Environment,
     pub parent_scopes: Vec<&'d Definitions>,
 }
@@ -13,6 +14,7 @@ impl<'e, 'd> Context<'e, 'd> {
     pub fn new(environment: &'e mut Environment) -> Self {
         Self {
             current_item_id: None,
+            defined_in: None,
             environment,
             parent_scopes: Vec::new(),
         }
@@ -22,6 +24,7 @@ impl<'e, 'd> Context<'e, 'd> {
     fn borrow_new<'s>(&'s mut self) -> Context<'s, 'd> {
         Context {
             current_item_id: None,
+            defined_in: self.defined_in,
             environment: self.environment,
             parent_scopes: self.parent_scopes.clone(),
         }
@@ -29,7 +32,8 @@ impl<'e, 'd> Context<'e, 'd> {
 
     /// Returns a new Context with the same values
     pub fn child<'s>(&'s mut self) -> Context<'s, 'd> {
-        self.borrow_new()
+        let id = self.get_or_create_current_id();
+        self.borrow_new().with_defined_in(id)
     }
 
     pub fn with_id_and_scope(
@@ -48,6 +52,11 @@ impl<'e, 'd> Context<'e, 'd> {
 
     pub fn with_additional_scope(mut self, scope: &'d Definitions) -> Self {
         self.parent_scopes.push(scope);
+        self
+    }
+
+    pub fn with_defined_in(mut self, defined_in: ItemId) -> Self {
+        self.defined_in = Some(defined_in);
         self
     }
 

@@ -4,7 +4,7 @@ mod entry;
 mod shared;
 mod stage1;
 mod stage2;
-mod stage3;
+// mod stage3;
 mod util;
 
 fn main() {
@@ -15,7 +15,7 @@ fn main() {
     let environment = entry::start_from_root(&path).unwrap();
     println!("{:#?}", environment);
 
-    println!("Doing stage 3");
-    let environment = stage3::ingest(&environment).unwrap();
-    println!("{:#?}", environment);
+    // println!("Doing stage 3");
+    // let environment = stage3::ingest(&environment).unwrap();
+    // println!("{:#?}", environment);
 }

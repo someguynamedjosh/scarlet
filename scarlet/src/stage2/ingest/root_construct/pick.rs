@@ -9,42 +9,40 @@ use crate::{
 
 pub fn ingest_pick_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let statements = root.expect_statements("pick").unwrap();
-    if statements.len() < 2 {
-        todo!("nice error, pick must have at least 2 clauses.");
+    if statements.len() < 1 {
+        todo!("nice error, pick must have at least 1 clause.");
     }
 
-    let initial_clause = if let Statement::PickIf(s) = &statements[0] {
-        (
-            ingest_expression(&mut ctx.child(), s.condition.clone(), Default::default())?,
-            ingest_expression(&mut ctx.child(), s.value.clone(), Default::default())?,
-        )
-    } else {
-        todo!("nice error, first clause must be an if.");
-    };
-
     let last = statements.len() - 1;
-    let else_clause = if let Statement::Else(s) = &statements[last] {
+    let default = if let Statement::Else(s) = &statements[last] {
         ingest_expression(&mut ctx.child(), s.value.clone(), Default::default())?
     } else {
-        todo!("nice error, first clause must be an if.");
+        todo!("nice error, last clause must be an else.");
     };
 
-    let mut elif_clauses = Vec::new();
-    for other in &statements[1..last] {
-        if let Statement::PickElif(s) = other {
-            elif_clauses.push((
+    let mut clauses = vec![];
+
+    if statements.len() > 1 {
+        if let Statement::PickIf(s) = &statements[0] {
+            clauses.push((
                 ingest_expression(&mut ctx.child(), s.condition.clone(), Default::default())?,
                 ingest_expression(&mut ctx.child(), s.value.clone(), Default::default())?,
             ));
         } else {
-            todo!("nice error, other clauses must be elif");
+            todo!("nice error, first clause must be an if.");
+        };
+
+        for other in &statements[1..last] {
+            if let Statement::PickElif(s) = other {
+                clauses.push((
+                    ingest_expression(&mut ctx.child(), s.condition.clone(), Default::default())?,
+                    ingest_expression(&mut ctx.child(), s.value.clone(), Default::default())?,
+                ));
+            } else {
+                todo!("nice error, other clauses must be elif");
+            }
         }
     }
 
-    Ok(Item::Pick {
-        initial_clause,
-        elif_clauses,
-        else_clause,
-    }
-    .into())
+    Ok(Item::Pick { clauses, default }.into())
 }

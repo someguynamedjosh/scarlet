@@ -16,41 +16,32 @@ pub fn ingest_from_construct(
     base_id: ItemId,
     from: Construct,
 ) -> Result<UnresolvedItem, String> {
-    let (vars, named_vars) = ingest_from_statements(ctx, from)?;
-    let base_item = Item::FromType {
+    let values = ingest_from_statements(ctx, from)?;
+    let item = Item::FromType {
         base: base_id,
-        values: vars,
+        values,
     }
     .into();
-    let self_id = ctx.get_or_create_current_id();
-    for (_, var) in &named_vars {
-        ctx.environment.set_defined_in(*var, self_id);
-    }
-    Ok(with_definitions(ctx, base_item, named_vars))
+    Ok(item)
 }
 
-fn ingest_from_statements(
-    ctx: &mut Context,
-    from: Construct,
-) -> Result<(Vec<ItemId>, Definitions), String> {
+fn ingest_from_statements(ctx: &mut Context, from: Construct) -> Result<Vec<ItemId>, String> {
     let statements = from.expect_statements("From").unwrap().to_owned();
-    let mut vars = Vec::new();
-    let mut named_vars = Default::default();
+    let mut values = Vec::new();
     for statement in statements {
-        ingest_from_statement(ctx, &mut vars, &mut named_vars, statement)?
+        ingest_from_statement(&mut ctx.child(), &mut values, statement)?
     }
-    Ok((vars, named_vars))
+    Ok(values)
 }
 
 fn ingest_from_statement(
     ctx: &mut Context,
     vars: &mut Vec<ItemId>,
-    named_vars: &mut Definitions,
     statement: Statement,
 ) -> Result<(), String> {
     match statement {
         Statement::Expression(expr) => ingest_from_variable(ctx, vars, expr),
-        Statement::Is(is) => ingest_from_definition(ctx, vars, named_vars, is),
+        Statement::Is(..) => todo!(),
         _ => todo!("nice error"),
     }
 }
@@ -60,21 +51,7 @@ fn ingest_from_variable(
     vars: &mut Vec<ItemId>,
     var_expr: Expression,
 ) -> Result<(), String> {
-    let var_id = ingest_expression(&mut ctx.child(), var_expr, Default::default())?;
+    let var_id = ingest_expression(ctx, var_expr, Default::default())?;
     vars.push(var_id);
-    Ok(())
-}
-
-fn ingest_from_definition(
-    ctx: &mut Context,
-    vars: &mut Vec<ItemId>,
-    named_vars: &mut Definitions,
-    definition: Is,
-) -> Result<(), String> {
-    let name = definition.name.expect_ident_owned()?;
-    let expr = definition.value;
-    let var = ingest_expression(&mut ctx.child(), expr, Default::default())?;
-    named_vars.insert_or_replace((name, var));
-    vars.push(var);
     Ok(())
 }

@@ -28,11 +28,18 @@ fn convert_expression_to_item(
 fn define_or_dereference_item(ctx: &mut Context, item: UnresolvedItem) -> ItemId {
     if let Some(id) = ctx.current_item_id {
         ctx.environment.define(id, item);
+        if let Some(defined_in) = ctx.defined_in {
+            ctx.environment.set_defined_in(id, defined_in);
+        }
         id
     } else if let UnresolvedItem::Item(id) = item {
         id
     } else {
-        ctx.environment.insert_unresolved_item(item)
+        let id = ctx.environment.insert_unresolved_item(item);
+        if let Some(defined_in) = ctx.defined_in {
+            ctx.environment.set_defined_in(id, defined_in);
+        }
+        id
     }
 }
 

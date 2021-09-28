@@ -7,6 +7,9 @@ impl Debug for Item {
         let spacer = if f.alternate() { "\n" } else { " " };
         let nested_spacer = if f.alternate() { "\n    " } else { " " };
         match self {
+            Self::Any { selff, typee } => write!(f, "any{{{:?}}} at {:?}", typee, selff),
+            Self::BuiltinOperation(bo) => write!(f, "{:?}", bo),
+            Self::BuiltinValue(bv) => write!(f, "{:?}", bv),
             Self::Defining { base, definitions } => {
                 write!(f, "{:?}{}defining{{", base, spacer)?;
                 for (name, def) in definitions {
@@ -21,55 +24,38 @@ impl Debug for Item {
                 }
                 write!(f, " }}")
             }
-            Self::GodType => write!(f, "TYPE"),
-            Self::VariantInstance {
-                typee,
-                variant_id,
-                values: params,
-            } => {
-                write!(f, "value{{{:?} {:?} [", typee, variant_id)?;
-                for param in params {
-                    write!(f, "{}{:?}, ", nested_spacer, param)?;
-                }
-                write!(f, "{}]}}", spacer)
-            }
-            Self::Pick {
-                initial_clause,
-                elif_clauses,
-                else_clause,
-            } => {
+            Self::Pick { clauses, default } => {
                 write!(f, "pick{{")?;
-                let (condition, value) = initial_clause;
-                write!(f, "{}if {:?}, {:?}", nested_spacer, condition, value)?;
-                for (condition, value) in elif_clauses {
-                    write!(f, "{}elif {:?}, {:?} ", nested_spacer, condition, value)?;
+                let mut first = true;
+                for (condition, value) in clauses {
+                    if first {
+                        write!(f, "{}if {:?}, {:?}", nested_spacer, condition, value)?;
+                    } else {
+                        write!(f, "{}elif {:?}, {:?} ", nested_spacer, condition, value)?;
+                    }
+                    first = false;
                 }
-                write!(f, "{}else {:?} ", nested_spacer, else_clause)?;
+                write!(f, "{}else {:?} ", nested_spacer, default)?;
                 write!(f, "{}}}", spacer)
             }
-            Self::BuiltinOperation(po) => write!(f, "{:?}", po),
-            Self::PrimitiveType(pt) => write!(f, "{:?}", pt),
-            Self::PrimitiveValue(pv) => write!(f, "{:?}", pv),
-            Self::Replacing {
-                base,
-                replacements,
-                unlabeled_replacements,
-            } => {
+            Self::Replacing { base, replacements } => {
                 write!(f, "{:?}{}{:#?}", base, spacer, replacements)?;
-                for value in unlabeled_replacements {
-                    write!(f, "{}{:?}", nested_spacer, value)?;
-                }
                 for (target, value) in replacements {
                     write!(f, "{}{:?} with {:?} ", nested_spacer, target, value)?;
                 }
                 write!(f, "{}}}", spacer)
             }
-            Self::TypeIs { exact, base, typee } => {
-                let open = if *exact { "type_is_exactly{" } else { ":" };
-                let close = if *exact { "}" } else { "" };
-                write!(f, "{:?} {}{:?}{}", base, open, typee, close)
+            Self::TypeIs {
+                base_type_only,
+                base,
+                typee,
+            } => {
+                let symbol = if *base_type_only { "bt" } else { ":" };
+                write!(f, "{:?} {}{:?}", base, symbol, typee)
             }
-            Self::Variable { selff, typee } => write!(f, "any{{{:?}}} at {:?}", typee, selff),
+            Self::Variant { selff, typee } => {
+                write!(f, "variant{{{:?}}} at {:?}", typee, selff)
+            }
         }
     }
 }

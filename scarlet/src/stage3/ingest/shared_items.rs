@@ -6,7 +6,7 @@ use super::{
 };
 use crate::shared::{
     BuiltinOperation, ConditionalClause, Definitions, IntegerMathOperation, Item, ItemId,
-    PrimitiveType, PrimitiveValue, Replacements,
+    PrimitiveType, BuiltinValue, Replacements,
 };
 
 pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, String> {
@@ -14,26 +14,26 @@ pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, Strin
         Item::Defining { base, definitions } => convert_defining(ctx, *base, definitions),
         Item::FromType { base, values: vars } => convert_from_type(ctx, *base, vars),
         Item::GodType => Ok(Item::GodType),
-        Item::VariantInstance {
+        Item::Variant {
             values: params,
             typee,
-            variant_id,
+            selff: variant_id,
         } => convert_inductive_value(ctx, params, *typee, *variant_id),
         Item::Pick {
             initial_clause,
-            elif_clauses,
+            clauses: elif_clauses,
             else_clause,
         } => convert_pick(ctx, *initial_clause, elif_clauses, *else_clause),
         Item::BuiltinOperation(op) => convert_primitive_operation(ctx, op),
         Item::PrimitiveType(pt) => convert_primitive_type(*pt),
-        Item::PrimitiveValue(pv) => convert_primitive_value(*pv),
+        Item::BuiltinValue(pv) => convert_primitive_value(*pv),
         Item::Replacing {
             base,
             replacements,
             unlabeled_replacements,
         } => convert_replacing(ctx, *base, replacements, unlabeled_replacements),
-        Item::TypeIs { exact, base, typee } => convert_type_is(ctx, *exact, *base, *typee),
-        Item::Variable { selff, typee } => convert_variable(ctx, *selff, *typee),
+        Item::TypeIs { base_type_only: exact, base, typee } => convert_type_is(ctx, *exact, *base, *typee),
+        Item::Any { selff, typee } => convert_variable(ctx, *selff, *typee),
     }
 }
 
@@ -61,10 +61,10 @@ fn convert_inductive_value(
     typee: ItemId,
     variant_id: ItemId,
 ) -> Result<Item, String> {
-    Ok(Item::VariantInstance {
+    Ok(Item::Variant {
         values: convert_iids(ctx, params)?,
         typee: full_convert_iid(ctx, typee)?,
-        variant_id: full_convert_iid(ctx, variant_id)?,
+        selff: full_convert_iid(ctx, variant_id)?,
     })
 }
 
@@ -79,7 +79,7 @@ fn convert_pick(
             convert_iid(ctx, initial_clause.0, true)?,
             convert_iid(ctx, initial_clause.1, true)?,
         ),
-        elif_clauses: convert_clauses(ctx, elif_clauses)?,
+        clauses: convert_clauses(ctx, elif_clauses)?,
         else_clause: convert_iid(ctx, else_clause, true)?,
     })
 }
@@ -126,8 +126,8 @@ fn convert_primitive_type(pt: PrimitiveType) -> Result<Item, String> {
     Ok(Item::PrimitiveType(pt))
 }
 
-fn convert_primitive_value(pv: PrimitiveValue) -> Result<Item, String> {
-    Ok(Item::PrimitiveValue(pv))
+fn convert_primitive_value(pv: BuiltinValue) -> Result<Item, String> {
+    Ok(Item::BuiltinValue(pv))
 }
 
 fn convert_replacing(
@@ -150,14 +150,14 @@ fn convert_type_is(
     typee: ItemId,
 ) -> Result<Item, String> {
     Ok(Item::TypeIs {
-        exact,
+        base_type_only: exact,
         base: full_convert_iid(ctx, base)?,
         typee: full_convert_iid(ctx, typee)?,
     })
 }
 
 fn convert_variable(ctx: &mut Context, selff: ItemId, typee: ItemId) -> Result<Item, String> {
-    Ok(Item::Variable {
+    Ok(Item::Any {
         selff: full_convert_iid(ctx, selff)?,
         typee: full_convert_iid(ctx, typee)?,
     })
