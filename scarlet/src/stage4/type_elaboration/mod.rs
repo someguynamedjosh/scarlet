@@ -206,6 +206,7 @@ impl Environment {
                 for var in vars_before_reps {
                     let repped = reps.applied_to(var);
                     if var == repped {
+                        vars_after_reps.push(var);
                         continue;
                     }
                     vars_after_reps.append(&self.get_dependencies(repped));
@@ -258,7 +259,9 @@ impl Environment {
                 self.get_or_insert(item, defined_in)
             }
         };
-        self.get_mut(item).cached_reduction = Some(reduced);
+        if reps.len() == 0 {
+            self.get_mut(item).cached_reduction = Some(reduced);
+        }
         reduced
     }
 

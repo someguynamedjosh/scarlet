@@ -34,13 +34,21 @@ fn fmt_type_annotation(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result 
     }
 }
 
+fn fmt_reduction(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result {
+    match item.cached_reduction{
+        Some(item) => write!(f, "\n    reduces to {:?}", item),
+        None => Ok(()),
+    }
+}
+
 fn fmt_item(f: &mut Formatter, index: usize, item: &ItemDefinition) -> fmt::Result {
     if f.alternate() {
         write!(f, "\n\n    ")?;
     }
     fmt_item_prefixes(f, item)?;
     fmt_item_definition(f, index, item)?;
-    fmt_type_annotation(f, item)
+    fmt_type_annotation(f, item)?;
+    fmt_reduction(f, item)
 }
 
 impl Debug for Environment {
