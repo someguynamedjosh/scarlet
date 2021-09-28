@@ -1,6 +1,6 @@
 0 defining{
-    # TYPE is builtin_item{TYPE}
-    # I32 is builtin_item{Integer32}
+    TYPE is builtin_item{TYPE}
+    I32 is builtin_item{Integer32}
     # Boolean is builtin_item{Boolean}
 
     # variant Unit :TYPE From{any{Data}}

@@ -21,6 +21,10 @@ fn main() {
     println!("{:#?}", environment);
 
     println!("Entering stage 4");
-    let environment = stage4::ingest(environment);
+    let mut environment = stage4::ingest(environment);
+    println!("{:#?}", environment);
+
+    println!("Elaborating types");
+    environment.elaborate_all_types();
     println!("{:#?}", environment);
 }
