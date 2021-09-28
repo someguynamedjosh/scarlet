@@ -35,7 +35,7 @@ impl Environment {
                 };
                 let name = self
                     .get_item_name(id, scope)
-                    .unwrap_or(format!("anonymous"));
+                    .unwrap_or(format!("anonymous {:?}", id));
                 println!("\n{} is", name);
                 let repr = self.get_item_code_or_name(id, Context::new(scope));
                 println!("{}", repr);

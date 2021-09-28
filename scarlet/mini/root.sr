@@ -10,5 +10,5 @@
     }
 
     IntUnit is Unit replacing{Unit::Data with I32} info{}
-    # I32 From{Data1 Data2} replacing{Data1 with I32} info{}
+    ZeroUnit is IntUnit replacing{Unit::value with 0} info{}
 }
