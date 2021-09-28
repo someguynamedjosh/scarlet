@@ -4,11 +4,11 @@
 
     Unit is variant{TYPE From{a b}}
     defining{
-        a is any{I32}
+        a is any{I32} info{}
         b is any{I32}
     }
 
-    IntUnit is Unit replacing{Unit::a with 0} info{}
+    IntUnit is Unit::a info{}
     # ZeroUnit is IntUnit replacing{Unit::b with 1}
     # ZeroUnitAgain is ZeroUnit info{}
 }

@@ -12,6 +12,7 @@ pub fn ingest(src: stage2::structure::Environment) -> Result<Environment, String
         src,
         stage2_to_stage3: HashMap::new(),
         stage3_items: Vec::new(),
+        info_requests: Vec::new(),
         next_stage3_id: ItemId(0),
     };
     let mut id = ItemId(0);
@@ -29,6 +30,9 @@ pub fn ingest(src: stage2::structure::Environment) -> Result<Environment, String
         env.insert(def);
         next_expected_id.0 += 1;
     }
+    for (item, scope) in ctx.info_requests {
+        env.get_mut(item).info_requested_in.push(scope);
+    }
 
     Ok(env)
 }
@@ -37,6 +41,8 @@ struct Context {
     src: stage2::structure::Environment,
     stage2_to_stage3: HashMap<ItemId, ItemId>,
     stage3_items: Vec<(ItemId, ItemDefinition)>,
+    /// Item for which info is requested, scope the info was requested from.
+    info_requests: Vec<(ItemId, ItemId)>,
     next_stage3_id: ItemId,
 }
 
@@ -51,6 +57,7 @@ impl Context {
         }
     }
 
+    /// Returns a stage 2 id
     fn get_member(&self, from: ItemId, name: &str) -> Result<ItemId, String> {
         let def = self.src.get(from);
         let item = def.definition.as_ref().expect("ICE: Undefined Item");
@@ -77,7 +84,7 @@ impl Context {
 
     fn convert_unresolved_item(&mut self, item_id: ItemId) -> Result<ItemId, String> {
         let item_def = self.src.get(item_id).clone();
-        match item_def.definition.as_ref().expect("ICE: Undefined item") {
+        let id = match item_def.definition.as_ref().expect("ICE: Undefined item") {
             UnresolvedItem::Item(id) => self.convert_iid(*id),
             UnresolvedItem::Just(item) => {
                 let new_id = self.reserve_new_item(item_id);
@@ -90,12 +97,20 @@ impl Context {
                     Some(id) => Some(self.convert_iid(id)?),
                     None => None,
                 };
-                let def = ItemDefinition::new(info_requested, item_def.is_scope, citem, defined_in);
+                let def = ItemDefinition::new(item_def.is_scope, citem, defined_in);
                 self.stage3_items.push((new_id, def));
                 Ok(new_id)
             }
-            UnresolvedItem::Member { base, name } => self.get_member(*base, name),
+            UnresolvedItem::Member { base, name } => {
+                let s2_id = self.get_member(*base, name)?;
+                self.convert_iid(s2_id)
+            }
+        };
+        let id = id?;
+        if let Some(scope) = item_def.info_requested {
+            self.info_requests.push((id, scope));
         }
+        Ok(id)
     }
 
     fn convert_definitions(&mut self, definitions: &Definitions) -> Result<Definitions, String> {

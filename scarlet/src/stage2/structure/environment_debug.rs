@@ -14,7 +14,7 @@ fn fmt_item(f: &mut Formatter, item: &UnresolvedItem) -> fmt::Result {
 
 fn fmt_item_prefixes(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result {
     if let Some(scope) = item.info_requested {
-        write!(f, "info{{in {:?}}}", scope)?;
+        write!(f, "info{{in {:?}}} ", scope)?;
     }
     if item.is_scope {
         write!(f, "scope ")?;

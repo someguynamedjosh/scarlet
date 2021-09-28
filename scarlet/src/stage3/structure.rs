@@ -5,10 +5,8 @@ use crate::{
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
-    /// True when the programmer has requested a diagnostic showing information
-    /// about this definition. Contains the scope from which the information was
-    /// requested.
-    pub info_requested: Option<ItemId>,
+    /// A list of all scopes from which info has been requested.
+    pub info_requested_in: Vec<ItemId>,
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Item,
@@ -17,14 +15,13 @@ pub struct ItemDefinition {
 
 impl ItemDefinition {
     pub fn new(
-        info_requested: Option<ItemId>,
         is_scope: bool,
         definition: Item,
         defined_in: Option<ItemId>,
     ) -> Self {
         Self {
-            info_requested: None,
-            is_scope: false,
+            info_requested_in: vec![],
+            is_scope,
             definition,
             defined_in,
         }
@@ -43,6 +40,10 @@ impl Environment {
 
     pub fn get(&self, id: ItemId) -> &ItemDefinition {
         &self.items[id.0]
+    }
+
+    pub fn get_mut(&mut self, id: ItemId) -> &mut ItemDefinition {
+        &mut self.items[id.0]
     }
 
     pub fn insert(&mut self, definition: ItemDefinition) -> ItemId {
