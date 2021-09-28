@@ -19,7 +19,17 @@ impl ChildOf {
 }
 
 impl Environment {
+    fn unreduce(&self, id: ItemId) -> ItemId {
+        for (candidate, item) in self.iter() {
+            if item.cached_reduction == Some(id) {
+                return candidate
+            }
+        }
+        id
+    }
+
     pub(super) fn get_item_name(&self, id: ItemId, in_scope: ItemId) -> Option<String> {
+        let id = self.unreduce(id);
         self.get_item_name_impl(id, in_scope, vec![]).ok().flatten()
     }
 

@@ -161,7 +161,6 @@ impl Environment {
         while id.0 < self.items.len() {
             let new = self.reduce(id, &Default::default(), &[]);
             if id != new {
-                println!("{:?} becomes {:?}", id, new);
                 self.get_type(new);
             }
             id.0 += 1;
@@ -206,6 +205,9 @@ impl Environment {
                 let mut vars_after_reps = VarList::new();
                 for var in vars_before_reps {
                     let repped = reps.applied_to(var);
+                    if var == repped {
+                        continue;
+                    }
                     vars_after_reps.append(&self.get_dependencies(repped));
                 }
                 let rbase = self.reduce(base, reps, &visited);
