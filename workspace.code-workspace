@@ -9,7 +9,7 @@
 			"path": "vscode-syntax"
 		},
 		{
-			"name": "the_language_that_will_fix_everything",
+			"name": "root",
 			"path": "."
 		}
 	],
