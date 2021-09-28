@@ -1,123 +1,158 @@
 use std::collections::HashMap;
 
-use self::helpers::{convert_defined_in, full_convert_iid};
+use super::structure::ItemDefinition;
 use crate::{
-    shared::ItemId,
-    stage2::structure::{self as stage2},
-    stage3::{
-        ingest::context::{convert_unresolved_item, convertible, Context},
-        structure::Environment,
-    },
+    shared::{Definitions, Item, ItemId, Replacements, VarList},
+    stage2::{self, structure::UnresolvedItem},
+    stage3::structure::Environment,
 };
 
-mod context;
-mod dereference;
-mod dereferenced_item;
-mod get_member;
-mod helpers;
-mod shared_items;
-
-pub fn ingest(src: &stage2::Environment) -> Result<Environment, String> {
-    let setup = IngestSetup::new().ingest(src);
+pub fn ingest(src: stage2::structure::Environment) -> Result<Environment, String> {
+    let mut ctx = Context {
+        src,
+        stage2_to_stage3: HashMap::new(),
+        stage3_items: Vec::new(),
+        next_stage3_id: ItemId(0),
+    };
+    let mut id = ItemId(0);
+    while id.0 < ctx.src.items.len() {
+        ctx.convert_iid(id)?;
+        id.0 += 1;
+    }
 
     let mut env = Environment::new();
-    let unconverted_items = setup.unconverted_items();
-    let ctx = setup.into_context(src, &mut env);
-    convert_items(ctx, unconverted_items)?;
+    ctx.stage3_items.sort_unstable_by_key(|k| k.0);
+    let items = ctx.stage3_items;
+    let mut next_expected_id = ItemId(0);
+    for (id, def) in items {
+        assert_eq!(id, next_expected_id);
+        env.insert(def);
+        next_expected_id.0 += 1;
+    }
 
     Ok(env)
 }
 
-struct IngestSetup {
-    next_stage3_id: ItemId,
+struct Context {
+    src: stage2::structure::Environment,
     stage2_to_stage3: HashMap<ItemId, ItemId>,
+    stage3_items: Vec<(ItemId, ItemDefinition)>,
+    next_stage3_id: ItemId,
 }
 
-impl IngestSetup {
-    fn new() -> Self {
-        Self {
-            next_stage3_id: ItemId(0),
-            stage2_to_stage3: HashMap::new(),
+impl Context {
+    pub fn convert_iid(&mut self, id: ItemId) -> Result<ItemId, String> {
+        if let Some(s3) = self.stage2_to_stage3.get(&id) {
+            Ok(*s3)
+        } else {
+            let new_id = self.convert_unresolved_item(id)?;
+            self.stage2_to_stage3.insert(id, new_id);
+            Ok(new_id)
         }
     }
 
-    fn ingest(mut self, src: &stage2::Environment) -> Self {
-        for (id, item) in src.iter() {
-            let item = item.definition.as_ref().unwrap();
-            if convertible(item) {
-                self.stage2_to_stage3.insert(id, self.next_stage3_id);
-                self.next_stage3_id.0 += 1
+    fn get_member(&self, from: ItemId, name: &str) -> Result<ItemId, String> {
+        let def = self.src.get(from);
+        let item = def.definition.as_ref().expect("ICE: Undefined Item");
+        if let UnresolvedItem::Just(Item::Defining { base, definitions }) = item {
+            if let Ok(member) = self.get_member(*base, name) {
+                return Ok(member);
+            } else {
+                for def in definitions {
+                    if def.0 == name {
+                        return Ok(def.1);
+                    }
+                }
             }
         }
-        self
+        Err(format!("{:?} has no member named {}", from, name))
     }
 
-    fn unconverted_items(&self) -> Vec<ItemId> {
-        let mut res: Vec<_> = self.stage2_to_stage3.keys().copied().collect();
-        res.sort();
-        res
+    fn reserve_new_item(&mut self, s2_id: ItemId) -> ItemId {
+        let s3_id = self.next_stage3_id;
+        self.next_stage3_id.0 += 1;
+        self.stage2_to_stage3.insert(s2_id, s3_id);
+        s3_id
     }
 
-    fn into_context<'e>(
-        self,
-        src: &'e stage2::Environment,
-        env: &'e mut Environment,
-    ) -> Context<'e> {
-        Context {
-            env,
-            extra_items: vec![],
-            id_map: self.stage2_to_stage3,
-            next_unused_id: self.next_stage3_id,
-            src,
+    fn convert_unresolved_item(&mut self, item_id: ItemId) -> Result<ItemId, String> {
+        let item_def = self.src.get(item_id).clone();
+        match item_def.definition.as_ref().expect("ICE: Undefined item") {
+            UnresolvedItem::Item(id) => self.convert_iid(*id),
+            UnresolvedItem::Just(item) => {
+                let new_id = self.reserve_new_item(item_id);
+                let citem = self.convert_item(item)?;
+                let def = ItemDefinition::from(&item_def, citem);
+                self.stage3_items.push((new_id, def));
+                Ok(new_id)
+            }
+            UnresolvedItem::Member { base, name } => self.get_member(*base, name),
         }
     }
-}
 
-fn convert_items(mut ctx: Context, unconverted_items: Vec<ItemId>) -> Result<(), String> {
-    for id in unconverted_items {
-        convert_item(&mut ctx, id)?;
-    }
-    add_extra_items_to_env(&mut ctx);
-    convert_metadata(&mut ctx)?;
-    Ok(())
-}
-
-fn find_definition_in_output(ctx: &mut Context, item: ItemId) -> Result<Option<ItemId>, String> {
-    let defined_in = ctx.src.items[item.0].defined_in;
-    convert_defined_in(ctx, defined_in)
-}
-
-fn convert_item(ctx: &mut Context, item: ItemId) -> Result<(), String> {
-    let def = ctx.src.definition_of(item).definition.as_ref().unwrap();
-    let converted = convert_unresolved_item(ctx, def)?;
-    let defined_in = find_definition_in_output(ctx, item)?;
-    ctx.env.insert_item(converted, defined_in);
-    Ok(())
-}
-
-/// During the conversion process, ctx may accumulate extra items which then
-/// need to be placed into the environment. This is required because it is not
-/// always possible to define an item before its ID is needed.
-fn add_extra_items_to_env(ctx: &mut Context) {
-    let mut id = ItemId(ctx.env.items.len());
-    let items = std::mem::replace(&mut ctx.extra_items, vec![]);
-    for (item, defined_in) in items {
-        ctx.env.insert_item(item, defined_in);
-        id.0 += 1;
-    }
-}
-
-fn convert_metadata(ctx: &mut Context) -> Result<(), String> {
-    for (id, old_def) in ctx.src.iter() {
-        let new_id = full_convert_iid(ctx, id)?;
-        add_extra_items_to_env(ctx);
-        if old_def.info_requested {
-            let new_def_in = convert_defined_in(ctx, old_def.defined_in)?;
-            ctx.env.mark_info(new_id, new_def_in);
+    fn convert_definitions(&mut self, definitions: &Definitions) -> Result<Definitions, String> {
+        let mut new_definitions = Definitions::new();
+        for (name, val) in definitions {
+            new_definitions.insert_no_replace((name.clone(), self.convert_iid(*val)?))
         }
-        if old_def.is_scope {
-            ctx.env.mark_as_scope(new_id);
-        }
+        Ok(new_definitions)
     }
-    Ok(())
+
+    fn convert_replacements(
+        &mut self,
+        replacements: &Replacements,
+    ) -> Result<Replacements, String> {
+        let mut new_replacements = Replacements::new();
+        for (target, val) in replacements {
+            let target = self.convert_iid(*target)?;
+            let val = self.convert_iid(*val)?;
+            new_replacements.insert_no_replace((target, val))
+        }
+        Ok(new_replacements)
+    }
+
+    fn convert_var_list(&mut self, var_list: &VarList) -> Result<VarList, String> {
+        let mut new_var_list = VarList::new();
+        for var in var_list {
+            new_var_list.push(self.convert_iid(*var)?)
+        }
+        Ok(new_var_list)
+    }
+
+    fn convert_item(&mut self, item: &Item) -> Result<Item, String> {
+        Ok(match item {
+            Item::Any { selff, typee } => Item::Any {
+                selff: self.convert_iid(*selff)?,
+                typee: self.convert_iid(*typee)?,
+            },
+            Item::BuiltinOperation(..) => todo!(),
+            Item::BuiltinValue(val) => Item::BuiltinValue(*val),
+            Item::Defining { base, definitions } => Item::Defining {
+                base: self.convert_iid(*base)?,
+                definitions: self.convert_definitions(definitions)?,
+            },
+            Item::FromType { base, vars } => Item::FromType {
+                base: self.convert_iid(*base)?,
+                vars: self.convert_var_list(vars)?,
+            },
+            Item::Pick { .. } => todo!(),
+            Item::Replacing { base, replacements } => Item::Replacing {
+                base: self.convert_iid(*base)?,
+                replacements: self.convert_replacements(replacements)?,
+            },
+            Item::TypeIs {
+                base_type_only,
+                base,
+                typee,
+            } => Item::TypeIs {
+                base_type_only: *base_type_only,
+                base: self.convert_iid(*base)?,
+                typee: self.convert_iid(*typee)?,
+            },
+            Item::Variant { selff, typee } => Item::Variant {
+                selff: self.convert_iid(*selff)?,
+                typee: self.convert_iid(*typee)?,
+            },
+        })
+    }
 }

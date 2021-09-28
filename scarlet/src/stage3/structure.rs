@@ -1,4 +1,7 @@
-use crate::shared::{Item, ItemId};
+use crate::{
+    shared::{Item, ItemId},
+    stage2,
+};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
@@ -13,6 +16,15 @@ pub struct ItemDefinition {
 }
 
 impl ItemDefinition {
+    pub fn from(s2: &stage2::structure::ItemDefinition, definition: Item) -> Self {
+        Self {
+            info_requested: s2.info_requested,
+            is_scope: s2.is_scope,
+            definition,
+            defined_in: s2.defined_in,
+        }
+    }
+
     pub fn new(item: Item, defined_in: Option<ItemId>) -> Self {
         Self {
             info_requested: None,
@@ -31,6 +43,10 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Self {
         Self { items: Vec::new() }
+    }
+
+    pub fn get(&self, id: ItemId) -> &ItemDefinition {
+        &self.items[id.0]
     }
 
     pub fn mark_info(&mut self, item: ItemId, info_scope: Option<ItemId>) {

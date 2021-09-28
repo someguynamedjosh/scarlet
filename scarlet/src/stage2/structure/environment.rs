@@ -4,8 +4,9 @@ use crate::shared::ItemId;
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
     /// True when the programmer has requested a diagnostic showing information
-    /// about this definition.
-    pub info_requested: bool,
+    /// about this definition. Contains the scope from which the information was
+    /// requested.
+    pub info_requested: Option<ItemId>,
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Option<UnresolvedItem>,
@@ -15,7 +16,7 @@ pub struct ItemDefinition {
 impl ItemDefinition {
     pub fn new() -> Self {
         Self {
-            info_requested: false,
+            info_requested: None,
             is_scope: false,
             definition: None,
             defined_in: None,
@@ -38,6 +39,10 @@ impl Environment {
         Self { items: Vec::new() }
     }
 
+    pub fn get(&self, id: ItemId) -> &ItemDefinition {
+        &self.items[id.0]
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = (ItemId, &ItemDefinition)> {
         self.items
             .iter()
@@ -45,9 +50,9 @@ impl Environment {
             .map(|(index, val)| (ItemId(index), val))
     }
 
-    pub fn mark_info(&mut self, item: ItemId) {
+    pub fn mark_info(&mut self, item: ItemId, scope: Option<ItemId>) {
         assert!(item.0 < self.items.len());
-        self.items[item.0].info_requested = true;
+        self.items[item.0].info_requested = scope;
     }
 
     pub fn next_id(&mut self) -> ItemId {
@@ -57,6 +62,11 @@ impl Environment {
     }
 
     pub fn insert(&mut self, definition: ItemDefinition) -> ItemId {
+        for (id, def) in self.iter() {
+            if def == &definition {
+                return id;
+            }
+        }
         let id = self.next_id();
         self.items[id.0] = definition;
         id

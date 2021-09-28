@@ -44,7 +44,8 @@ fn ingest_type_is_construct(
 }
 
 fn ingest_info_construct(ctx: &mut Context, base_id: ItemId) -> Result<UnresolvedItem, String> {
-    ctx.environment.mark_info(base_id);
+    let scope = ctx.defined_in;
+    ctx.environment.mark_info(base_id, scope);
     Ok(UnresolvedItem::Item(base_id))
 }
 
