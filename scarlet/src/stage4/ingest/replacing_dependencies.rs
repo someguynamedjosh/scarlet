@@ -31,7 +31,7 @@ impl Environment {
                 todo!("nice error, no more variables to replace.");
             } else {
                 let target = remaining_deps_after_replacements.remove(0);
-                fully_labeled_replacements.push((target, unlabeled));
+                fully_labeled_replacements.insert_or_replace((target, unlabeled));
             }
         }
 

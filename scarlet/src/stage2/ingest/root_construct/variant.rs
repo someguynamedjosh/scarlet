@@ -34,12 +34,12 @@ fn get_from_vars(ctx: &Context, type_id: ItemId) -> (Vec<ItemId>, Definitions) {
             }
             Item::Defining { base, definitions } => {
                 let (vars, base_defs) = get_from_vars(ctx, *base);
-                let defs = [base_defs, definitions.clone()].concat();
+                let defs = base_defs.after_inserting(definitions);
                 (vars, defs)
             }
-            _ => (vec![], vec![]),
+            _ => (Default::default(), Default::default()),
         },
-        _ => (vec![], vec![]),
+        _ => (Default::default(), Default::default()),
     }
 }
 
@@ -48,7 +48,7 @@ pub fn ingest_variant_construct(
     root: Construct,
 ) -> Result<UnresolvedItem, String> {
     let type_expr = get_variant_type(root)?;
-    let return_type_id = ingest_expression(&mut ctx.child(), type_expr, vec![])?;
+    let return_type_id = ingest_expression(&mut ctx.child(), type_expr, Default::default())?;
 
     let base_return_type_id = dereference_type(ctx, return_type_id);
     let (paramed_vars, definitions) = get_from_vars(ctx, return_type_id);

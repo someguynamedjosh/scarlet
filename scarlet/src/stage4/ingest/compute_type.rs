@@ -1,5 +1,5 @@
 use crate::{
-    shared::{BuiltinOperation, Item, ItemId, PrimitiveValue},
+    shared::{BuiltinOperation, ConditionalClause, Item, ItemId, PrimitiveValue},
     stage4::structure::Environment,
     util::*,
 };
@@ -84,8 +84,8 @@ impl Environment {
 
     fn compute_pick_base_type(
         &mut self,
-        initial_clause: (ItemId, ItemId),
-        elif_clauses: Vec<(ItemId, ItemId)>,
+        initial_clause: ConditionalClause,
+        elif_clauses: Vec<ConditionalClause>,
         else_clause: ItemId,
         currently_computing: Vec<ItemId>,
     ) -> Option<ItemId> {

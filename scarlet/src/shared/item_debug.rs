@@ -55,7 +55,7 @@ impl Debug for Item {
                 replacements,
                 unlabeled_replacements,
             } => {
-                write!(f, "{:?}{}replacing{{", base, spacer)?;
+                write!(f, "{:?}{}{:#?}", base, spacer, replacements)?;
                 for value in unlabeled_replacements {
                     write!(f, "{}{:?}", nested_spacer, value)?;
                 }

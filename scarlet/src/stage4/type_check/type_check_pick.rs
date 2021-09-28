@@ -1,4 +1,7 @@
-use crate::{shared::ItemId, stage4::structure::Environment};
+use crate::{
+    shared::{ConditionalClause, ItemId},
+    stage4::structure::Environment,
+};
 
 impl Environment {
     fn type_check_condition(&self, cond: ItemId) -> Result<(), String> {
@@ -12,7 +15,7 @@ impl Environment {
     fn type_check_elif_clauses(
         &self,
         value_type: ItemId,
-        elif_clauses: &Vec<(ItemId, ItemId)>,
+        elif_clauses: &Vec<ConditionalClause>,
     ) -> Result<(), String> {
         for (cond, value) in elif_clauses {
             self.type_check_condition(*cond)?;
@@ -38,8 +41,8 @@ impl Environment {
 
     pub fn type_check_pick(
         &self,
-        initial_clause: (ItemId, ItemId),
-        elif_clauses: &Vec<(ItemId, ItemId)>,
+        initial_clause: ConditionalClause,
+        elif_clauses: &Vec<ConditionalClause>,
         else_clause: ItemId,
     ) -> Result<(), String> {
         let value_type = self.item_base_type(initial_clause.1);

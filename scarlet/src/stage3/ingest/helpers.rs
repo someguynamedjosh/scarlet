@@ -2,22 +2,36 @@ use super::{
     context::Context,
     dereference::{convert_dereffed, dereference_iid},
 };
-use crate::shared::{Definitions, ItemId, Replacements};
+use crate::shared::{ConditionalClause, Definitions, ItemId, Replacements};
 
-pub fn convert_defs(ctx: &mut Context, defs: &[(String, ItemId)]) -> Result<Definitions, String> {
-    let mut result = Vec::new();
+pub fn convert_defs(ctx: &mut Context, defs: &Definitions) -> Result<Definitions, String> {
+    let mut result = Definitions::new();
     for (name, def) in defs {
         // Don't dereference defines so we can preserve module structure for
         // when we go backwards from IDs to names.
-        result.push((name.clone(), convert_iid(ctx, *def, false)?));
+        result.insert_or_replace((name.clone(), convert_iid(ctx, *def, false)?));
     }
     Ok(result)
 }
 
-pub fn convert_reps(ctx: &mut Context, reps: &[(ItemId, ItemId)]) -> Result<Replacements, String> {
+pub fn convert_clauses(
+    ctx: &mut Context,
+    clauses: &[ConditionalClause],
+) -> Result<Vec<ConditionalClause>, String> {
     let mut result = Vec::new();
-    for (target, val) in reps {
+    for (target, val) in clauses {
         result.push((
+            full_convert_iid(ctx, *target)?,
+            full_convert_iid(ctx, *val)?,
+        ));
+    }
+    Ok(result)
+}
+
+pub fn convert_reps(ctx: &mut Context, reps: &Replacements) -> Result<Replacements, String> {
+    let mut result = Replacements::new();
+    for (target, val) in reps {
+        result.insert_or_replace((
             full_convert_iid(ctx, *target)?,
             full_convert_iid(ctx, *val)?,
         ));

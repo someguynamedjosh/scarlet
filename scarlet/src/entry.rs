@@ -78,9 +78,9 @@ fn ingest_file_tree(
         todo!("nice error, syntax error");
     }
 
-    let mut child_defs = Vec::new();
+    let mut child_defs = Definitions::new();
     for child in &tree.children {
-        child_defs.push((child.0.clone(), env.next_id()));
+        child_defs.insert_or_replace((child.0.clone(), env.next_id()));
     }
     let scopes = [scopes.clone(), vec![&child_defs]].concat();
 

@@ -1,8 +1,5 @@
 use std::fmt::{self, Debug, Formatter};
 
-pub type Definitions = Vec<(String, ItemId)>;
-pub type Replacements = Vec<(ItemId, ItemId)>;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PrimitiveType {
     Bool,

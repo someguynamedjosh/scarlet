@@ -34,7 +34,7 @@ fn ingest_type_is_construct(
 ) -> Result<UnresolvedItem, String> {
     let label = if exact { "type_is_exactly" } else { "type_is" };
     let typee_expr = post.expect_single_expression(label).unwrap();
-    let typee = ingest_expression(&mut ctx.child(), typee_expr.clone(), vec![])?;
+    let typee = ingest_expression(&mut ctx.child(), typee_expr.clone(), Default::default())?;
     Ok(Item::TypeIs {
         exact,
         base: base_id,

@@ -1,11 +1,4 @@
-use crate::{
-    shared::{
-        BuiltinOperation, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType,
-        PrimitiveValue, Replacements,
-    },
-    stage4::{display::Context, structure::Environment},
-    util::indented,
-};
+use crate::{shared::{BuiltinOperation, ConditionalClause, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType, PrimitiveValue, Replacements}, stage4::{display::Context, structure::Environment}, util::indented};
 
 impl Environment {
     pub(super) fn get_item_code(&self, item_id: &ItemId, ctx: Context) -> Option<String> {
@@ -104,9 +97,9 @@ impl Environment {
 
     fn get_pick_code(
         &self,
-        elif_clauses: &Vec<(ItemId, ItemId)>,
+        elif_clauses: &Vec<ConditionalClause>,
         else_clause: &ItemId,
-        initial_clause: &(ItemId, ItemId),
+        initial_clause: &ConditionalClause,
         ctx: Context,
     ) -> Option<String> {
         let mut res = String::from("pick{");

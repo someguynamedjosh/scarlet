@@ -1,10 +1,12 @@
 use super::{
     context::Context,
-    helpers::{convert_defs, convert_iid, convert_iids, convert_reps, full_convert_iid},
+    helpers::{
+        convert_clauses, convert_defs, convert_iid, convert_iids, convert_reps, full_convert_iid,
+    },
 };
 use crate::shared::{
-    BuiltinOperation, Definitions, IntegerMathOperation, Item, ItemId, PrimitiveType,
-    PrimitiveValue, Replacements,
+    BuiltinOperation, ConditionalClause, Definitions, IntegerMathOperation, Item, ItemId,
+    PrimitiveType, PrimitiveValue, Replacements,
 };
 
 pub fn convert_shared_item(ctx: &mut Context, item: &Item) -> Result<Item, String> {
@@ -68,8 +70,8 @@ fn convert_inductive_value(
 
 fn convert_pick(
     ctx: &mut Context,
-    initial_clause: (ItemId, ItemId),
-    elif_clauses: &Vec<(ItemId, ItemId)>,
+    initial_clause: ConditionalClause,
+    elif_clauses: &Vec<ConditionalClause>,
     else_clause: ItemId,
 ) -> Result<Item, String> {
     Ok(Item::Pick {
@@ -77,9 +79,7 @@ fn convert_pick(
             convert_iid(ctx, initial_clause.0, true)?,
             convert_iid(ctx, initial_clause.1, true)?,
         ),
-        // The type of a replacement is coincidentally the same as the
-        // type of a condition, and it does the exact thing we want.
-        elif_clauses: convert_reps(ctx, elif_clauses)?,
+        elif_clauses: convert_clauses(ctx, elif_clauses)?,
         else_clause: convert_iid(ctx, else_clause, true)?,
     })
 }

@@ -16,14 +16,14 @@ struct UnprocessedItem {
 pub(super) fn process_definitions(
     ctx: &mut Context,
     statements: Vec<Statement>,
-    other_defs: Vec<(String, ItemId)>,
+    other_defs: Definitions,
     self_id: ItemId,
 ) -> Result<Definitions, String> {
     let unprocessed = statements_to_unprocessed_items(ctx, statements)?;
     let definitions = definitions(other_defs, &unprocessed[..]);
     for item in unprocessed {
         let mut child_ctx = ctx.child().with_id_and_scope(item.id, &definitions);
-        let id = ingest_expression(&mut child_ctx, item.def, vec![])?;
+        let id = ingest_expression(&mut child_ctx, item.def, Default::default())?;
         ctx.environment.set_defined_in(id, self_id);
     }
     Ok(definitions)
@@ -70,7 +70,7 @@ fn item_to_def(item: &UnprocessedItem) -> Option<(String, ItemId)> {
     item.name.as_ref().map(|name| (name.clone(), item.id))
 }
 
-fn definitions(other_defs: Vec<(String, ItemId)>, unprocessed: &[UnprocessedItem]) -> Definitions {
+fn definitions(other_defs: Definitions, unprocessed: &[UnprocessedItem]) -> Definitions {
     let unprocessed_defs = unprocessed.iter().filter_map(item_to_def).collect();
-    [other_defs, unprocessed_defs].concat()
+    other_defs.after_inserting(&unprocessed_defs)
 }

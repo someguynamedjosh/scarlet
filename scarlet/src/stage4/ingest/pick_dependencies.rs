@@ -1,5 +1,5 @@
 use crate::{
-    shared::{BuiltinOperation, ItemId},
+    shared::{BuiltinOperation, ConditionalClause, ItemId},
     stage4::{ingest::var_list::VarList, structure::Environment},
     util::*,
 };
@@ -22,8 +22,8 @@ impl Environment {
 
     pub fn compute_pick_dependencies(
         &mut self,
-        initial_clause: (ItemId, ItemId),
-        elif_clauses: Vec<(ItemId, ItemId)>,
+        initial_clause: ConditionalClause,
+        elif_clauses: Vec<ConditionalClause>,
         else_clause: ItemId,
         currently_computing: Vec<ItemId>,
     ) -> MaybeResult<VarList, String> {

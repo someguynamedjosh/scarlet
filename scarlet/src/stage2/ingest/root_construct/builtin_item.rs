@@ -17,7 +17,7 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
         if let Ok("a") = expr.root.expect_ident() {
             println!();
         }
-        let result = ingest_expression(&mut ctx.child(), expr.clone(), vec![])?;
+        let result = ingest_expression(&mut ctx.child(), expr.clone(), Default::default())?;
         args.push(result);
     }
 

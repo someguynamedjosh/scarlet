@@ -27,12 +27,12 @@ fn main() {
     println!("Infos:");
     environment.display_infos();
 
+    // println!("Doing reduce");
+    // stage4::reduce(&mut environment);
+    // println!("{:#?}", environment);
+
     println!("Doing type check");
     stage4::type_check(&environment).unwrap();
-
-    println!("Doing reduce");
-    stage4::reduce(&mut environment);
-    println!("{:#?}", environment);
 
     println!("Infos:");
     environment.display_infos();

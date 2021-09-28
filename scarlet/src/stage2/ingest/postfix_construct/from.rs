@@ -35,7 +35,7 @@ fn ingest_from_statements(
 ) -> Result<(Vec<ItemId>, Definitions), String> {
     let statements = from.expect_statements("From").unwrap().to_owned();
     let mut vars = Vec::new();
-    let mut named_vars = Vec::new();
+    let mut named_vars = Default::default();
     for statement in statements {
         ingest_from_statement(ctx, &mut vars, &mut named_vars, statement)?
     }
@@ -60,7 +60,7 @@ fn ingest_from_variable(
     vars: &mut Vec<ItemId>,
     var_expr: Expression,
 ) -> Result<(), String> {
-    let var_id = ingest_expression(&mut ctx.child(), var_expr, vec![])?;
+    let var_id = ingest_expression(&mut ctx.child(), var_expr, Default::default())?;
     vars.push(var_id);
     Ok(())
 }
@@ -73,8 +73,8 @@ fn ingest_from_definition(
 ) -> Result<(), String> {
     let name = definition.name.expect_ident_owned()?;
     let expr = definition.value;
-    let var = ingest_expression(&mut ctx.child(), expr, vec![])?;
-    named_vars.push((name, var));
+    let var = ingest_expression(&mut ctx.child(), expr, Default::default())?;
+    named_vars.insert_or_replace((name, var));
     vars.push(var);
     Ok(())
 }

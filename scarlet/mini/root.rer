@@ -9,6 +9,6 @@
         variant unit :Unit
     }
 
-    IntUnit is Unit[I32]
-    ZeroUnit is IntUnit[0]
+    IntUnit is Unit[I32] info{}
+    # ZeroUnit is IntUnit[0]
 }

@@ -1,5 +1,7 @@
 use super::{BuiltinOperation, Definitions, ItemId, PrimitiveType, PrimitiveValue, Replacements};
 
+pub type ConditionalClause = (ItemId, ItemId);
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Item {
     Defining {
@@ -17,8 +19,8 @@ pub enum Item {
         values: Vec<ItemId>,
     },
     Pick {
-        initial_clause: (ItemId, ItemId),
-        elif_clauses: Vec<(ItemId, ItemId)>,
+        initial_clause: ConditionalClause,
+        elif_clauses: Vec<ConditionalClause>,
         else_clause: ItemId,
     },
     BuiltinOperation(BuiltinOperation),

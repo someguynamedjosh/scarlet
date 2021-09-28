@@ -38,7 +38,7 @@ pub fn ingest_identifier(ctx: &mut Context, root: Construct) -> Result<Unresolve
 
 pub fn ingest_any_construct(ctx: &mut Context, root: Construct) -> Result<UnresolvedItem, String> {
     let typ_expr = root.expect_single_expression("any")?.clone();
-    let typee = ingest_expression(&mut ctx.child(), typ_expr, vec![])?;
+    let typee = ingest_expression(&mut ctx.child(), typ_expr, Default::default())?;
     let selff = ctx.get_or_create_current_id();
     Ok(Item::Variable { selff, typee }.into())
 }
