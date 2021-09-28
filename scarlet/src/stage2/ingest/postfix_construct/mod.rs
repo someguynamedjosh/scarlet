@@ -18,7 +18,8 @@ pub fn ingest_postfix_construct(
     if post.label == "defining" {
         ingest_defining_construct(ctx, post, remainder, extra_defines)
     } else {
-        let base_id = ingest_expression(&mut ctx.child(), remainder, extra_defines)?;
+        let base_id =
+            ingest_expression(&mut ctx.child_without_defining(), remainder, extra_defines)?;
         ingest_non_defining_postfix_construct(ctx, base_id, post)
     }
 }

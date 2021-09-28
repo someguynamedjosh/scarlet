@@ -2,10 +2,12 @@
     TYPE is builtin_item{TYPE}
     I32 is builtin_item{Integer32}
 
-    Unit is Data
+    Unit is variant{TYPE From{value}}
     defining{
         Data is any{TYPE}
+        value is any{Data}
+        unit vn Unit
     }
 
-    thing is Unit replacing{Unit::Data with I32}
+    IntUnit is Unit replacing{Unit::Data with I32} info{}
 }
