@@ -22,7 +22,7 @@ impl Environment {
     }
 
     fn get_or_insert_primary_type(&mut self) -> ItemId {
-        self.get_or_insert(Item::BuiltinValue(BuiltinValue::PrimaryType), None)
+        self.get_or_insert(Item::BuiltinValue(BuiltinValue::OriginType), None)
     }
 
     fn get_or_insert_bool_type(&mut self) -> ItemId {
@@ -78,6 +78,7 @@ impl Environment {
                 let base = *base;
                 self.get_type(base)
             }
+            Item::Pick { .. } => todo!(),
             Item::Replacing { base, replacements } => {
                 let (base, reps) = (*base, replacements.clone());
                 let base_type = self.get_type(base);
@@ -87,7 +88,6 @@ impl Environment {
                 let typee = *typee;
                 self.reduce(typee, &Default::default(), &[])
             }
-            _ => todo!(),
         };
         self.get_mut(of).cached_type = Some(typee);
         typee
@@ -216,6 +216,7 @@ impl Environment {
                     self.get_or_insert(item, defined_in)
                 }
             }
+            Item::Pick { .. } => todo!(),
             Item::Replacing { base, replacements } => {
                 let mut new_reps = reps.clone();
                 for rep in replacements {
@@ -241,15 +242,18 @@ impl Environment {
                     self.get_or_insert(item, defined_in)
                 }
             }
+            Item::TypeIs { base, .. } => {
+                let base = *base;
+                self.reduce(base, reps, &visited)
+            }
             Item::Variant { selff, typee } => {
                 let (selff, typee) = (*selff, *typee);
                 let item = Item::Variant {
                     selff,
-                    typee: self.reduce(typee, reps, &visited),
+                    typee: self.reduce(typee, &Default::default(), &visited),
                 };
                 self.get_or_insert(item, defined_in)
             }
-            _ => todo!(),
         }
     }
 
@@ -304,7 +308,7 @@ impl Environment {
 
     fn type_of_builtin_value(&mut self, val: BuiltinValue) -> ItemId {
         match val {
-            BuiltinValue::PrimaryType | BuiltinValue::BoolType | BuiltinValue::I32Type => {
+            BuiltinValue::OriginType | BuiltinValue::BoolType | BuiltinValue::I32Type => {
                 self.get_or_insert_primary_type()
             }
             BuiltinValue::Bool(..) => self.get_or_insert_bool_type(),

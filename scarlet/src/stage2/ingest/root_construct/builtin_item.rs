@@ -37,7 +37,7 @@ pub fn ingest_builtin_item(ctx: &mut Context, root: Construct) -> Result<Unresol
             if args.len() != 0 {
                 todo!("nice error, wrong number of arguments");
             }
-            Item::BuiltinValue(BuiltinValue::PrimaryType)
+            Item::BuiltinValue(BuiltinValue::OriginType)
         }
         "Integer32" => {
             if args.len() != 0 {

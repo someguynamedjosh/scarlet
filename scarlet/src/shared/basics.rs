@@ -2,7 +2,7 @@ use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinValue {
-    PrimaryType,
+    OriginType,
     BoolType,
     Bool(bool),
     I32Type,
