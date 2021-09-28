@@ -21,7 +21,7 @@ fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
     for entry in std::fs::read_dir(at).unwrap() {
         let entry = entry.unwrap();
         let mut name = entry.file_name().to_string_lossy().to_string();
-        if name.ends_with(".rer") {
+        if name.ends_with(".sr") {
             name = name[..name.len() - 4].to_owned();
         }
         if name == "$" {
@@ -35,10 +35,10 @@ fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
 }
 
 fn read_path(at: &Path) -> Option<FileNode> {
-    let rer_extension = OsString::from_str("rer").unwrap();
-    let rer_extension = Some(rer_extension.as_os_str());
-    if at.is_dir() && at.extension() != rer_extension {
-        let self_file = at.join("$.rer");
+    let sr_extension = OsString::from_str("sr").unwrap();
+    let sr_extension = Some(sr_extension.as_os_str());
+    if at.is_dir() && at.extension() != sr_extension {
+        let self_file = at.join("$.sr");
         if self_file.exists() {
             Some(FileNode {
                 self_def: self_file,
@@ -47,7 +47,7 @@ fn read_path(at: &Path) -> Option<FileNode> {
         } else {
             None
         }
-    } else if at.is_file() && at.extension() == rer_extension {
+    } else if at.is_file() && at.extension() == sr_extension {
         Some(FileNode {
             self_def: at.to_owned(),
             children: vec![],
@@ -58,7 +58,7 @@ fn read_path(at: &Path) -> Option<FileNode> {
 }
 
 fn read_root(at: &Path) -> Option<FileNode> {
-    let root_file = at.join("root.rer");
+    let root_file = at.join("root.sr");
     let root_folder = at.join("root");
     read_path(&root_file).or(read_path(&root_folder))
 }

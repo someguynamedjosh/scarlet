@@ -62,9 +62,9 @@ impl Replacements {
         self.len() == 0
     }
 
-    pub fn after_inserting(mut self, others: Replacements) -> Self {
+    pub fn after_inserting(mut self, others: &Replacements) -> Self {
         for rep in others {
-            self.insert_or_replace(rep);
+            self.insert_or_replace(*rep);
         }
         self
     }

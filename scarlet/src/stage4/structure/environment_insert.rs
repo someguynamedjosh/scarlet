@@ -40,7 +40,6 @@ impl Environment {
             definition: def,
             defined_in,
             typee: None,
-            reduction_blockers: VarList::new(),
         });
         id
     }
@@ -73,7 +72,6 @@ impl Environment {
             definition: def,
             defined_in,
             typee: Some(typee),
-            reduction_blockers: VarList::new(),
         });
         id
     }
