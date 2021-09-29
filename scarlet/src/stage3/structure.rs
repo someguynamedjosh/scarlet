@@ -1,7 +1,4 @@
-use crate::{
-    shared::{Item, ItemId},
-    stage2,
-};
+use crate::shared::{Item, ItemId};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
@@ -14,11 +11,7 @@ pub struct ItemDefinition {
 }
 
 impl ItemDefinition {
-    pub fn new(
-        is_scope: bool,
-        definition: Item,
-        defined_in: Option<ItemId>,
-    ) -> Self {
+    pub fn new(is_scope: bool, definition: Item, defined_in: Option<ItemId>) -> Self {
         Self {
             info_requested_in: vec![],
             is_scope,
