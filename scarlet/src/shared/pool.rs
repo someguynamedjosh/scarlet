@@ -2,15 +2,21 @@ use std::{
     fmt::{self, Debug},
     hash::Hash,
     marker::PhantomData,
-    slice::{Iter, IterMut},
+    sync::{Arc, Mutex},
 };
 
-use rand::RngCore;
+use lazy_static::lazy_static;
+
+use crate::shared::{reset_color, set_color_index};
+
+lazy_static! {
+    static ref POOL_ID_COUNTER: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+}
 
 pub struct Id<T> {
-    index: usize,
-    pool_id: u64,
-    _pd: PhantomData<T>,
+    pub(super) index: usize,
+    pub(super) pool_id: u64,
+    pub(super) _pd: PhantomData<T>,
 }
 
 impl<T> Clone for Id<T> {
@@ -29,10 +35,13 @@ impl<T> Debug for Id<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "<{} id {} pool {}>",
-            std::any::type_name::<T>(),
+            "<{} {}id {} {}pool {}{}>",
+            std::any::type_name::<T>().split("::").last().unwrap(),
+            set_color_index(self.index),
             self.index,
-            self.pool_id
+            set_color_index(self.pool_id as usize),
+            self.pool_id,
+            reset_color()
         )
     }
 }
@@ -53,25 +62,45 @@ impl<T> Hash for Id<T> {
 }
 
 pub struct Pool<T> {
-    id: u64,
-    items: Vec<T>,
+    pub(super) id: u64,
+    pub(super) items: Vec<T>,
 }
 
 impl<T> Pool<T> {
+    pub(super) fn next_pool_id() -> u64 {
+        let mut counter = POOL_ID_COUNTER.lock().unwrap();
+        let result = *counter;
+        *counter += 1;
+        result
+    }
+
     pub fn new() -> Self {
         Self {
-            id: rand::thread_rng().next_u64(),
+            id: Self::next_pool_id(),
             items: Vec::new(),
         }
     }
 
-    pub fn push(&mut self, item: T) -> Id<T> {
-        self.items.push(item);
+    /// Returns true if the given ID was created by this pool (and therefore
+    /// will not trigger a panic when used with get()).
+    pub fn contains(&self, id: Id<T>) -> bool {
+        self.id == id.pool_id
+    }
+
+    /// Abuse unsafe here to tell people that you really shouldn't use this
+    /// function unless you know what you're doing.
+    pub unsafe fn next_id(&self) -> Id<T> {
         Id {
-            index: self.items.len() - 1,
+            index: self.items.len(),
             pool_id: self.id,
             _pd: PhantomData,
         }
+    }
+
+    pub fn push(&mut self, item: T) -> Id<T> {
+        let id = unsafe { self.next_id() };
+        self.items.push(item);
+        id
     }
 
     /// Returns the next ID after the given ID, or None if there is no item with
@@ -101,91 +130,5 @@ impl<T> Pool<T> {
         // We will never provide methods to remove data from a pool.
         debug_assert!(id.index < self.items.len());
         &mut self.items[id.index]
-    }
-}
-
-impl<T: Clone> Clone for Pool<T> {
-    fn clone(&self) -> Self {
-        Self {
-            id: rand::thread_rng().next_u64(),
-            items: self.items.clone(),
-        }
-    }
-}
-
-impl<T: Debug> Debug for Pool<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Pool<{}>[", std::any::type_name::<T>())?;
-        for (id, element) in self {
-            write!(f, "\n\nat {:?}\n", id)?;
-            element.fmt(f)?;
-        }
-        write!(f, "\n\n]")
-    }
-}
-
-use std::{
-    iter::{Enumerate, Map},
-    vec::IntoIter,
-};
-
-impl<T> IntoIterator for Pool<T> {
-    type IntoIter = Map<Enumerate<IntoIter<T>>, Box<dyn Fn((usize, T)) -> (Id<T>, T)>>;
-    type Item = (Id<T>, T);
-
-    fn into_iter(self) -> Self::IntoIter {
-        let pool_id = self.id;
-        let mapper = |(index, element)| {
-            (
-                Id {
-                    index,
-                    pool_id,
-                    _pd: PhantomData,
-                },
-                element,
-            )
-        };
-        self.items.into_iter().enumerate().map(Box::new(mapper))
-    }
-}
-
-impl<'a, T: 'a> IntoIterator for &'a Pool<T> {
-    type IntoIter = Map<Enumerate<Iter<'a, T>>, Box<dyn Fn((usize, &'a T)) -> (Id<T>, &'a T)>>;
-    type Item = (Id<T>, &'a T);
-
-    fn into_iter(self) -> Self::IntoIter {
-        let pool_id = self.id;
-        let mapper = |(index, element)| {
-            (
-                Id {
-                    index,
-                    pool_id,
-                    _pd: PhantomData,
-                },
-                element,
-            )
-        };
-        self.items.iter().enumerate().map(Box::new(mapper))
-    }
-}
-
-impl<'a, T: 'a> IntoIterator for &'a mut Pool<T> {
-    type IntoIter =
-        Map<Enumerate<IterMut<'a, T>>, Box<dyn Fn((usize, &'a mut T)) -> (Id<T>, &'a mut T)>>;
-    type Item = (Id<T>, &'a mut T);
-
-    fn into_iter(self) -> Self::IntoIter {
-        let pool_id = self.id;
-        let mapper = |(index, element)| {
-            (
-                Id {
-                    index,
-                    pool_id,
-                    _pd: PhantomData,
-                },
-                element,
-            )
-        };
-        self.items.iter_mut().enumerate().map(Box::new(mapper))
     }
 }
