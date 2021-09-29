@@ -22,17 +22,56 @@
         defining{
             x is any{Data}
         }
+
+        reinterpret is 
+        builtin_item{
+            reinterpret
+            this
+            type[param with left]
+            type[param with right]
+            value
+        }
+        defining{
+            this is any{ProofEqual}
+            param is any{Data}
+            type is any{TYPE From{param}}
+            value is any{type[param with left]}
+        }
     }
 
-    Impossible is ProofEqual 
-    replacing { 
-        ProofEqual::Data with I32 
-        ProofEqual::left with 0 
-        ProofEqual::right with 1 
+    ProofEqual::reinterpret 
+    replacing{
+        ProofEqual::Data with TYPE
+        ProofEqual::left with I32
+        ProofEqual::right with TYPE
     }
+    info{}
 
-    impossible is any{Impossible} 
-    Impossible info{}
+    # ProofEqual::reinterpret is
+    # builtin_item{
+    #     reinterpret 
+    #     ProofEqual::reinterpret::this 
+    #     ProofEqual::reinterpret::type[
+    #         ProofEqual::reinterpret::param is ProofEqual::left
+    #     ] 
+    #     ProofEqual::reinterpret::type[
+    #         ProofEqual::reinterpret::param is ProofEqual::right
+    #     ] 
+    #     ProofEqual::reinterpret::value
+    # }
+    # type_is{
+    #     ProofEqual::reinterpret::type[
+    #         ProofEqual::reinterpret::param is ProofEqual::right
+    #     ] 
+    #     From{ 
+    #         ProofEqual::Data 
+    #         ProofEqual::left 
+    #         ProofEqual::right 
+    #         ProofEqual::reinterpret::this 
+    #         ProofEqual::reinterpret::type 
+    #         ProofEqual::reinterpret::value 
+    #     }
+    # }
 
     # ZeroUnit is IntUnit replacing{Unit::b with 1}
     # ZeroUnitAgain is ZeroUnit info{}

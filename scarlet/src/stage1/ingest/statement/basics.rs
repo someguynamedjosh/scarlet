@@ -4,7 +4,7 @@ use crate::stage1::{
     structure::{
         construct::Construct,
         expression::Expression,
-        statement::{Is, Parameter, Replace},
+        statement::{Is, Replace},
     },
 };
 
@@ -49,31 +49,6 @@ impl Is {
             let (input, others) = Expression::postfixes_parser()(input)?;
             let st = expand_variant_shorthand(name, typee, others);
             Ok((input, st))
-        }
-    }
-}
-
-impl Parameter {
-    pub fn parser<'i>() -> impl Parser<'i, Self> {
-        |input| {
-            let (input, _) = alt((tag("parameter"), tag("param"), tag("p")))(input)?;
-            let (input, _) = ws()(input)?;
-            let (input, name) = Expression::parser()(input)?;
-            Ok((input, Self(name)))
-        }
-    }
-
-    pub fn definition_shorthand_parser<'i>() -> impl Parser<'i, (Self, Is)> {
-        |input| {
-            let (input, sel) = Self::parser()(input)?;
-            let (input, _) = ws()(input)?;
-            let (input, _) = helpers::tag_then_ws("is")(input)?;
-            let (input, value) = Expression::parser()(input)?;
-            let is = Is {
-                name: sel.0.clone(),
-                value,
-            };
-            Ok((input, (sel, is)))
         }
     }
 }

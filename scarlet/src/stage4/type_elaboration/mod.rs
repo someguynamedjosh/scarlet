@@ -22,6 +22,17 @@ impl Environment {
         id
     }
 
+    pub fn get_or_insert_def(&mut self, def: ItemDefinition) -> ItemId {
+        for (index, this_item) in self.items.iter().enumerate() {
+            if this_item == &def {
+                return ItemId(index);
+            }
+        }
+        let id = ItemId(self.items.len());
+        self.items.push(def);
+        id
+    }
+
     pub fn get_or_insert_primary_type(&mut self) -> ItemId {
         self.get_or_insert(Item::BuiltinValue(BuiltinValue::OriginType), None)
     }
@@ -323,7 +334,22 @@ impl Environment {
                 let item = Item::BuiltinValue(BuiltinValue::I32(val));
                 Some(self.get_or_insert(item, defined_in))
             }
-            BuiltinOperation::Reinterpret { .. } => todo!(),
+            BuiltinOperation::Reinterpret { .. } => {
+                if self.get_dependencies(inputs[0]).len() > 0
+                    || self.get_dependencies(inputs[1]).len() > 0
+                    || self.get_dependencies(inputs[2]).len() > 0
+                    || self.get_from_vars_and_base(inputs[1]).0.len()
+                        != self.get_dependencies(inputs[3]).len()
+                {
+                    return None;
+                }
+                let original_def = self.get(inputs[3]).clone();
+                let item_def = ItemDefinition {
+                    cached_type: Some(inputs[2]),
+                    ..original_def
+                };
+                Some(self.get_or_insert_def(item_def))
+            }
         }
     }
 

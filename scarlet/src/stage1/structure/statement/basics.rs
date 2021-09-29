@@ -17,16 +17,6 @@ impl Debug for Is {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Parameter(pub Expression);
-
-impl Debug for Parameter {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "parameter ")?;
-        self.0.fmt(f)
-    }
-}
-
-#[derive(Clone, PartialEq)]
 pub struct Replace {
     pub target: Expression,
     pub value: Expression,

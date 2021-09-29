@@ -7,7 +7,8 @@ use crate::{
     stage3::structure::Environment,
 };
 
-mod convert;
+mod convert_helpers;
+mod convert_item;
 mod helpers;
 
 pub fn ingest(src: stage2::structure::Environment) -> Result<Environment, String> {
