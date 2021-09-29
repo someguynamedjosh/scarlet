@@ -21,7 +21,7 @@ impl ChildOf {
 impl Environment {
     fn unreduce<'a>(&'a self, id: ItemId) -> impl Iterator<Item = ItemId> + 'a {
         self.iter().filter_map(move |(candidate, val)| {
-            if val.cached_reduction == Some(id) {
+            if val.cached_reduction == Some(id) || candidate == id {
                 Some(candidate)
             } else {
                 None

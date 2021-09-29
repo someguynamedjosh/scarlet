@@ -2,20 +2,37 @@
     TYPE is builtin_item{TYPE}
     I32 is builtin_item{Integer32}
 
-    Unit is variant{TYPE From{value}}
+    Unit vn TYPE From{value}
     defining{
         Data is any{TYPE}
         value is any{Data}
     }
 
-    ProofEqual is variant{TYPE From{left right}}
+    ProofEqual vn TYPE From{left right}
     defining{
         Data is any{TYPE}
         left is any{Data}
         right is any{Data}
+
+        reflexive vn ProofEqual
+        replacing{
+            left with x
+            right with x
+        }
+        defining{
+            x is any{Data}
+        }
     }
 
-    ProofEqual info{}
+    Impossible is ProofEqual 
+    replacing { 
+        ProofEqual::Data with I32 
+        ProofEqual::left with 0 
+        ProofEqual::right with 1 
+    }
+
+    impossible is any{Impossible} 
+    Impossible info{}
 
     # ZeroUnit is IntUnit replacing{Unit::b with 1}
     # ZeroUnitAgain is ZeroUnit info{}

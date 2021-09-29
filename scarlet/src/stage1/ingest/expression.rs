@@ -5,7 +5,7 @@ impl Expression {
     pub fn parser<'i>() -> impl Parser<'i, Self> {
         |input| {
             let (input, root) = Construct::parser(true)(input)?;
-            let (input, others) = many0(after_ws(Construct::parser(false)))(input)?;
+            let (input, others) = Self::postfixes_parser()(input)?;
             let expr = Self { root, others };
             Ok((input, expr))
         }
@@ -19,5 +19,9 @@ impl Expression {
             let expr = Self { root, others };
             Ok((input, expr))
         }
+    }
+
+    pub fn postfixes_parser<'i>() -> impl Parser<'i, Vec<Construct>> {
+        many0(after_ws(Construct::parser(false)))
     }
 }

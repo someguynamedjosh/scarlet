@@ -21,11 +21,11 @@ impl Is {
     }
 }
 
-fn expand_variant_shorthand(name: Expression, typee: Expression) -> Is {
+fn expand_variant_shorthand(name: Expression, typee: Expression, others: Vec<Construct>) -> Is {
     let variant_root = Construct::from_expression("variant", typee.clone());
     let value = Expression {
         root: variant_root,
-        others: Vec::new(),
+        others,
     };
     let sel = Is { name, value };
     sel
@@ -44,8 +44,10 @@ impl Is {
             ))(input)?;
             let (input, _) = ws()(input)?;
             // TODO: Only take type-related postfix constructs.
-            let (input, typee): (_, Expression) = Expression::parser()(input)?;
-            let st = expand_variant_shorthand(name, typee);
+            let (input, typee) = Expression::type_annotation_parser()(input)?;
+            let (input, _) = ws()(input)?;
+            let (input, others) = Expression::postfixes_parser()(input)?;
+            let st = expand_variant_shorthand(name, typee, others);
             Ok((input, st))
         }
     }

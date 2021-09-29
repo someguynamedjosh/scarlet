@@ -34,6 +34,8 @@ impl Context {
             return self.get_member(*base, name)
         } else if let UnresolvedItem::Item(base) = item {
             return self.get_member(*base, name)
+        } else if let UnresolvedItem::Member{ base: other_base, name: other_name } = item {
+            return self.get_member(self.get_member(*other_base, other_name)?, name)
         }
         Err(format!("{:?} has no member named {}", from, name))
     }

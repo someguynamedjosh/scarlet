@@ -50,22 +50,22 @@ impl Environment {
     /// Tries to get code. If that fails, gets a name instead.
     fn get_item_code_or_name(&self, item_id: ItemId, ctx: Context) -> String {
         if let Some(code) = self.get_item_code(&item_id, ctx) {
-            return code;
+            code
         } else if let Some(name) = self.get_item_name(item_id, ctx.in_scope) {
-            return name;
+            name
         } else {
-            return format!("anonymous");
+            format!("anonymous {:?}", item_id)
         }
     }
 
     /// Tries to get a name. If that fails, gets code instead.
     fn get_item_name_or_code(&self, item_id: ItemId, ctx: Context) -> String {
         if let Some(name) = self.get_item_name(item_id, ctx.in_scope) {
-            return name;
+            name
         } else if let Some(code) = self.get_item_code(&item_id, ctx) {
-            return code;
+            code
         } else {
-            return format!("anonymous");
+            format!("anonymous {:?}", item_id)
         }
     }
 }

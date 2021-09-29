@@ -87,7 +87,18 @@ impl Environment {
             }
             Item::TypeIs { typee, .. } | Item::Variant { typee, .. } => {
                 let typee = *typee;
-                self.reduce(typee, &Default::default(), &[])
+                let rtype = self.reduce(typee, &Default::default(), &[]);
+                let deps = self.get_dependencies(rtype);
+                if deps.len() == 0 {
+                    rtype
+                } else {
+                    let item = Item::FromType {
+                        base: rtype,
+                        vals: deps,
+                    };
+                    let defined_in = self.get(typee).defined_in;
+                    self.get_or_insert(item, defined_in)
+                }
             }
         };
         self.get_mut(of).cached_type = Some(typee);
@@ -178,7 +189,22 @@ impl Environment {
             .collect();
         let defined_in = self.get(item).defined_in;
         let reduced = match self.get_item(item) {
-            Item::Any { selff, .. } => reps.applied_to(*selff),
+            Item::Any { selff, typee } => {
+                let new_val = reps.applied_to(*selff);
+                if new_val != *selff {
+                    new_val
+                } else {
+                    let (selff, typee) = (*selff, *typee);
+                    let new_type = self.reduce(typee, reps, &visited);
+                    if new_type == typee {
+                        item
+                    } else {
+                        let typee = new_type;
+                        let item = Item::Any { selff, typee };
+                        self.get_or_insert(item, defined_in)
+                    }
+                }
+            }
             Item::BuiltinOperation(op) => {
                 let op = *op;
                 let mut rinputs = Vec::new();
@@ -215,11 +241,12 @@ impl Environment {
             }
             Item::Pick { .. } => todo!(),
             Item::Replacing { base, replacements } => {
-                let mut new_reps = reps.clone();
-                for rep in replacements {
-                    new_reps.insert_or_replace(*rep);
-                }
                 let base = *base;
+                let mut new_reps = reps.clone();
+                for rep in replacements.clone() {
+                    let new_val = self.reduce(rep.1, reps, &visited);
+                    new_reps.insert_or_replace((rep.0, new_val));
+                }
                 let rbase = self.reduce(base, &new_reps, &visited);
                 let rdeps = self.get_dependencies(rbase);
                 // Replacements of variables the expression is still dependant on.
@@ -243,14 +270,7 @@ impl Environment {
                 let base = *base;
                 self.reduce(base, reps, &visited)
             }
-            Item::Variant { selff, typee } => {
-                let (selff, typee) = (*selff, *typee);
-                let item = Item::Variant {
-                    selff,
-                    typee: self.reduce(typee, &Default::default(), &visited),
-                };
-                self.get_or_insert(item, defined_in)
-            }
+            Item::Variant { selff, typee } => item,
         };
         if reps.len() == 0 {
             self.get_mut(item).cached_reduction = Some(reduced);
