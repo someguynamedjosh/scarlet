@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    shared::{Definitions, Item, ItemId, Replacements, VarList},
+    shared::{Item, ItemId},
     stage2::{self, structure::UnresolvedItem},
-    stage3::structure::{Environment, ItemDefinition},
+    stage3::structure::ItemDefinition,
 };
 
 pub(super) struct Context {

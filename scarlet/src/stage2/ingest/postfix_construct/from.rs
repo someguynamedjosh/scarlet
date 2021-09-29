@@ -1,11 +1,11 @@
-use crate::{shared::{Definitions, Item, ItemId, VarList}, stage1::structure::{
-        construct::Construct,
-        expression::Expression,
-        statement::{Is, Statement},
-    }, stage2::{
-        ingest::{context::Context, expression::ingest_expression, helpers::with_definitions},
+use crate::{
+    shared::{Item, ItemId, VarList},
+    stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
+    stage2::{
+        ingest::{context::Context, expression::ingest_expression},
         structure::UnresolvedItem,
-    }};
+    },
+};
 
 pub fn ingest_from_construct(
     ctx: &mut Context,

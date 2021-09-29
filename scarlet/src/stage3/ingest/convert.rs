@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
 use super::helpers::Context;
 use crate::{
     shared::{Definitions, Item, ItemId, Replacements, VarList},
-    stage2::{self, structure::UnresolvedItem},
-    stage3::structure::{Environment, ItemDefinition},
+    stage2::structure::UnresolvedItem,
+    stage3::structure::ItemDefinition,
 };
 
 impl Context {

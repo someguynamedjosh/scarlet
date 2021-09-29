@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
 use self::helpers::Context;
-use super::structure::ItemDefinition;
 use crate::{
-    shared::{Definitions, Item, ItemId, Replacements, VarList},
-    stage2::{self, structure::UnresolvedItem},
+    shared::ItemId,
+    stage2::{self},
     stage3::structure::Environment,
 };
 

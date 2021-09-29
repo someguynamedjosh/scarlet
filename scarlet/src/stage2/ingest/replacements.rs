@@ -12,8 +12,16 @@ fn ingest_labeled_replacement(
     replacements: &mut Replacements,
     replacement: Replace,
 ) -> Result<(), String> {
-    let target = ingest_expression(&mut ctx.child_without_defining(), replacement.target, Default::default())?;
-    let value = ingest_expression(&mut ctx.child_without_defining(), replacement.value, Default::default())?;
+    let target = ingest_expression(
+        &mut ctx.child_without_defining(),
+        replacement.target,
+        Default::default(),
+    )?;
+    let value = ingest_expression(
+        &mut ctx.child_without_defining(),
+        replacement.value,
+        Default::default(),
+    )?;
     replacements.insert_or_replace((target, value));
     Ok(())
 }
@@ -23,7 +31,11 @@ fn ingest_unlabeled_replacement(
     unlabeled_replacements: &mut Vec<ItemId>,
     replacement: Expression,
 ) -> Result<(), String> {
-    let value = ingest_expression(&mut ctx.child_without_defining(), replacement, Default::default())?;
+    let value = ingest_expression(
+        &mut ctx.child_without_defining(),
+        replacement,
+        Default::default(),
+    )?;
     unlabeled_replacements.push(value);
     Ok(())
 }
