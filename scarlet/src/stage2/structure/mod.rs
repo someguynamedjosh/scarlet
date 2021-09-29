@@ -1,6 +1,6 @@
-use std::ops::{Index, IndexMut};
+use std::{fmt::{self, Debug}, ops::{Index, IndexMut}};
 
-use crate::shared::{Id, Pool};
+use crate::{shared::{Id, Pool}, util::indented};
 
 mod definitions;
 mod replacements;
@@ -24,12 +24,30 @@ pub enum BuiltinValue {
     I8(i8),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Item {
     pub value: Option<Value>,
     pub typee: Option<ItemId>,
     pub defined_in: ScopeId,
     pub member_scopes: Vec<ScopeId>,
+}
+
+impl Debug for Item {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(value) = &self.value {
+            let text = format!("{:#?}", value);
+            let text = indented(&text);
+            writeln!(f, "value: {}", text)?;
+        }
+        if let Some(typee) = &self.typee {
+            writeln!(f, "typee: {:?}", typee)?;
+        }
+        writeln!(f, "in {:?}", self.defined_in)?;
+        if self.member_scopes.len() > 0 {
+            writeln!(f, "members from {:?}", self.member_scopes)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

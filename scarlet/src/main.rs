@@ -1,5 +1,3 @@
-#![feature(try_trait_v2)]
-
 mod entry;
 mod shared;
 mod stage1;

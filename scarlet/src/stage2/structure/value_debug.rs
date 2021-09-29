@@ -9,7 +9,7 @@ impl Debug for Value {
         match self {
             Self::Any { variable } => variable.fmt(f),
             Self::BuiltinOperation { operation } => operation.fmt(f),
-            Self::BuiltinValue { value } => value.fmt(f),
+            Self::BuiltinValue { value } => write!(f, "{:?}", value),
             Self::Defining {
                 base,
                 definitions,

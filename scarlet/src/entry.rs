@@ -6,9 +6,7 @@ use std::{
 
 use crate::{
     stage1::{self, structure::expression::Expression},
-    stage2::structure::{
-        BuiltinValue, Definitions, Environment, Item, ItemId, Scope, ScopeId, Value,
-    },
+    stage2::structure::{BuiltinValue, Definitions, Environment, ItemId, Scope, ScopeId, Value},
 };
 
 #[derive(Debug, Clone)]
@@ -104,12 +102,14 @@ fn ingest_file_tree(
     let base_item = ingest_to_stage2(env, stage1_expression, this_scope_id)?;
     env.define_item_value(base_item_id, base_item);
 
+    // Ingest all the child files.
     let mut children = Definitions::new();
     for (name, node) in tree.children {
         let item_id = ingest_file_tree(env, node, this_scope_id)?;
         children.insert_no_replace((name, item_id));
     }
 
+    // Build a defining item from base and children.
     let value = Value::Defining {
         base: base_item_id,
         definitions: children,
@@ -117,6 +117,7 @@ fn ingest_file_tree(
     };
     env.define_item_value(this_item_id, value);
 
+    // Return that item's ID.
     Ok(this_item_id)
 }
 
