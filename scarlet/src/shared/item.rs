@@ -16,7 +16,7 @@ pub enum Item {
     },
     FromType {
         base: ItemId,
-        vars: VarList,
+        vals: VarList,
     },
     Pick {
         clauses: Vec<ConditionalClause>,

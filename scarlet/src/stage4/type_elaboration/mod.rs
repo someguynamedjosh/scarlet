@@ -113,7 +113,7 @@ impl Environment {
     fn get_from_vars_and_base(&self, typee: ItemId) -> (VarList, ItemId) {
         match self.get_item(typee) {
             Item::Defining { base, .. } => self.get_from_vars_and_base(*base),
-            Item::FromType { base, vars } => {
+            Item::FromType { base, vals: vars } => {
                 let (mut list, base) = self.get_from_vars_and_base(*base);
                 list.append(vars);
                 (list, base)
@@ -141,7 +141,7 @@ impl Environment {
         if total_vars.len() > 0 {
             let item = Item::FromType {
                 base: total_base.unwrap(),
-                vars: total_vars,
+                vals: total_vars,
             };
             let defined_in = self.get(types[0]).defined_in;
             self.get_or_insert(item, defined_in)
@@ -196,27 +196,20 @@ impl Environment {
                 let base = *base;
                 self.reduce(base, reps, &visited)
             }
-            Item::FromType { base, vars } => {
-                let (base, values) = (*base, vars.clone());
-                let mut vars_before_reps = VarList::new();
+            Item::FromType { base, vals } => {
+                let (base, values) = (*base, vals.clone());
+                let mut new_vals = VarList::new();
                 for val in values {
-                    vars_before_reps.append(&self.get_dependencies(val));
+                    let rval = self.reduce(val, reps, &visited);
+                    let rdeps = self.get_dependencies(rval);
+                    new_vals.append(&rdeps);
                 }
-                let mut vars_after_reps = VarList::new();
-                for var in vars_before_reps {
-                    let repped = reps.applied_to(var);
-                    if var == repped {
-                        vars_after_reps.push(var);
-                        continue;
-                    }
-                    vars_after_reps.append(&self.get_dependencies(repped));
-                }
-                let rbase = self.reduce(base, reps, &visited);
-                let (base, vars) = (rbase, vars_after_reps);
-                if vars.len() == 0 {
+                let vals = new_vals;
+                let base = self.reduce(base, reps, &visited);
+                if vals.len() == 0 {
                     base
                 } else {
-                    let item = Item::FromType { base, vars };
+                    let item = Item::FromType { base, vals };
                     self.get_or_insert(item, defined_in)
                 }
             }

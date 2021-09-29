@@ -15,7 +15,7 @@ pub fn ingest_from_construct(
     let values = ingest_from_statements(ctx, from)?;
     let item = Item::FromType {
         base: base_id,
-        vars: values,
+        vals: values,
     }
     .into();
     Ok(item)

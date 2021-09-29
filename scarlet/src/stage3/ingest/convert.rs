@@ -85,9 +85,9 @@ impl Context {
                 base: self.convert_iid(*base)?,
                 definitions: self.convert_definitions(definitions)?,
             },
-            Item::FromType { base, vars } => Item::FromType {
+            Item::FromType { base, vals: vars } => Item::FromType {
                 base: self.convert_iid(*base)?,
-                vars: self.convert_var_list(vars)?,
+                vals: self.convert_var_list(vars)?,
             },
             Item::Pick { .. } => todo!(),
             Item::Replacing { base, replacements } => Item::Replacing {

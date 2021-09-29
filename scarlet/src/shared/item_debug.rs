@@ -17,7 +17,7 @@ impl Debug for Item {
                 }
                 write!(f, "{}}}", spacer)
             }
-            Self::FromType { base, vars } => {
+            Self::FromType { base, vals: vars } => {
                 write!(f, "{:?} From{{", base)?;
                 for var in vars {
                     write!(f, " {:?}", var)?;

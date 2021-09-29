@@ -20,7 +20,7 @@ impl Environment {
             Item::Defining { base, definitions } => {
                 self.get_defining_code(item_id, base, definitions, ctx)
             }
-            Item::FromType { base, vars } => self.get_from_type_code(base, vars, ctx),
+            Item::FromType { base, vals: vars } => self.get_from_type_code(base, vars, ctx),
             Item::Pick { clauses, default } => self.get_pick_code(clauses, default, ctx),
             Item::Replacing {
                 base, replacements, ..
