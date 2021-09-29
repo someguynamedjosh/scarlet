@@ -13,7 +13,7 @@ impl Debug for Value {
             Self::Defining {
                 base,
                 definitions,
-                child_scope,
+                this_scope: child_scope,
             } => {
                 write!(
                     f,

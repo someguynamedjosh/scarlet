@@ -35,7 +35,6 @@ pub struct Item {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Scope {
     pub definition: Option<ItemId>,
-    pub parent: Option<ScopeId>,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -52,7 +51,7 @@ pub enum Value {
     Defining {
         base: ItemId,
         definitions: Definitions,
-        child_scope: ScopeId,
+        this_scope: ScopeId,
     },
     FromItems {
         base: ItemId,
@@ -96,6 +95,7 @@ pub struct Variant {
 #[derive(Clone, Debug)]
 pub struct Environment {
     root_scope: ScopeId,
+    void_item: ItemId,
     pub items: Pool<Item>,
     pub scopes: Pool<Scope>,
     pub variables: Pool<Variable>,
@@ -105,14 +105,19 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Self {
         let mut scopes = Pool::new();
-        let root_scope = scopes.push(Scope {
-            definition: None,
-            parent: None,
+        let root_scope = scopes.push(Scope { definition: None });
+        let mut items = Pool::new();
+        let void_item = items.push(Item {
+            defined_in: root_scope,
+            typee: None,
+            value: None,
+            member_scopes: Vec::new(),
         });
         Self {
             root_scope,
-            items: Pool::new(),
+            void_item,
             scopes,
+            items,
             variables: Pool::new(),
             variants: Pool::new(),
         }
@@ -129,16 +134,22 @@ impl Environment {
     }
 
     pub fn define_item_value(&mut self, id: ItemId, value: Value) {
+        assert!(self[id].value.is_none());
         self[id].value = Some(value)
     }
 
     pub fn get_root_scope(&self) -> ScopeId {
         self.root_scope
     }
+
+    pub fn get_void_item(&self) -> ItemId {
+        self.void_item
+    }
 }
 
 impl Index<ItemId> for Environment {
     type Output = Item;
+
     fn index(&self, index: ItemId) -> &Self::Output {
         &self.items[index]
     }
@@ -152,6 +163,7 @@ impl IndexMut<ItemId> for Environment {
 
 impl Index<ScopeId> for Environment {
     type Output = Scope;
+
     fn index(&self, index: ScopeId) -> &Self::Output {
         &self.scopes[index]
     }
@@ -165,6 +177,7 @@ impl IndexMut<ScopeId> for Environment {
 
 impl Index<VariableId> for Environment {
     type Output = Variable;
+
     fn index(&self, index: VariableId) -> &Self::Output {
         &self.variables[index]
     }
@@ -178,6 +191,7 @@ impl IndexMut<VariableId> for Environment {
 
 impl Index<VariantId> for Environment {
     type Output = Variant;
+
     fn index(&self, index: VariantId) -> &Self::Output {
         &self.variants[index]
     }
