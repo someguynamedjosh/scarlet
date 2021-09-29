@@ -5,7 +5,7 @@ mod shared;
 mod stage1;
 mod stage2;
 mod stage3;
-// mod stage4;
+mod stage4;
 mod util;
 
 fn main() {
@@ -20,18 +20,18 @@ fn main() {
     let environment = stage3::ingest(environment).unwrap();
     println!("{:#?}", environment);
 
-    // println!("Entering stage 4");
-    // let mut environment = stage4::ingest(environment);
-    // println!("{:#?}", environment);
+    println!("Entering stage 4");
+    let mut environment = stage4::ingest(environment);
+    println!("{:#?}", environment);
 
-    // println!("Elaborating types");
-    // environment.elaborate_all_types();
-    // println!("{:#?}", environment);
+    println!("Elaborating types");
+    environment.elaborate_all_types();
+    println!("{:#?}", environment);
 
-    // println!("Reducing items");
-    // environment.reduce_all_items();
-    // println!("{:#?}", environment);
+    println!("Reducing items");
+    environment.reduce_all_items();
+    println!("{:#?}", environment);
 
-    // println!("Infos:");
-    // environment.display_infos();
+    println!("Infos:");
+    environment.display_infos();
 }

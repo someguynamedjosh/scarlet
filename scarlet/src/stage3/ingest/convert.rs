@@ -38,7 +38,8 @@ impl Context {
         };
         let id = id?;
         if let Some(scope) = item_def.info_requested {
-            self.info_requests.push((id, scope));
+            let cscope = self.convert_iid(scope)?;
+            self.info_requests.push((id, cscope));
         }
         Ok(id)
     }

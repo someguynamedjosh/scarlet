@@ -12,7 +12,7 @@ impl Environment {
         }
         let id = ItemId(self.items.len());
         self.items.push(ItemDefinition {
-            info_requested: None,
+            info_requested_in: vec![],
             is_scope: false,
             definition: item,
             defined_in,

@@ -4,8 +4,12 @@ use super::{Environment, ItemDefinition};
 use crate::{shared::ItemId, util::indented};
 
 fn fmt_item_prefixes(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result {
-    if let Some(scope) = item.info_requested {
-        write!(f, "info{{in {:?}}} ", scope)?;
+    if item.info_requested_in.len() > 0 {
+        write!(f, "info{{ ")?;
+        for scope in &item.info_requested_in {
+            write!(f, "{:?} ", scope)?;
+        }
+        write!(f, "}} ")?;
     }
     if item.is_scope {
         write!(f, "scope ")?;
@@ -35,7 +39,7 @@ fn fmt_type_annotation(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result 
 }
 
 fn fmt_reduction(f: &mut Formatter, item: &ItemDefinition) -> fmt::Result {
-    match item.cached_reduction{
+    match item.cached_reduction {
         Some(item) => write!(f, "\n    reduces to {:?}", item),
         None => Ok(()),
     }

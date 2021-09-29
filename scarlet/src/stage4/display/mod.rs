@@ -27,7 +27,7 @@ impl Context {
 impl Environment {
     pub fn display_infos(&self) {
         for (id, item) in self.iter() {
-            if let Some(scope) = item.info_requested {
+            for &scope in &item.info_requested_in {
                 let (item, id) = if let Some(id) = item.cached_reduction {
                     (self.get(id), id)
                 } else {

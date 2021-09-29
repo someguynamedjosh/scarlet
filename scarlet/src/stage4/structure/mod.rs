@@ -7,10 +7,8 @@ mod environment_debug;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ItemDefinition {
-    /// True when the programmer has requested a diagnostic showing information
-    /// about this definition. Contains the scope from which the information was
-    /// requested.
-    pub info_requested: Option<ItemId>,
+    /// A list of all scopes from which info has been requested.
+    pub info_requested_in: Vec<ItemId>,
     /// True if this item is a place where other items are defined.
     pub is_scope: bool,
     pub definition: Item,
@@ -22,7 +20,7 @@ pub struct ItemDefinition {
 impl ItemDefinition {
     pub fn from(other: stage3::structure::ItemDefinition) -> Self {
         Self {
-            info_requested: other.info_requested,
+            info_requested_in: other.info_requested_in,
             is_scope: other.is_scope,
             definition: other.definition,
             defined_in: other.defined_in,
