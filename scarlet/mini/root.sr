@@ -8,17 +8,14 @@
         value is any{Data}
     }
 
-    IntUnit is Unit 
-    replacing{
-        Unit::Data with I32
-    } 
-    info{}
-
-    ZeroUnit is IntUnit
-    replacing{
-        IntUnit::value with 0
+    ProofEqual is variant{TYPE From{left right}}
+    defining{
+        Data is any{TYPE}
+        left is any{Data}
+        right is any{Data}
     }
-    info{}
+
+    ProofEqual info{}
 
     # ZeroUnit is IntUnit replacing{Unit::b with 1}
     # ZeroUnitAgain is ZeroUnit info{}

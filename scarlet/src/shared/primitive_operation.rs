@@ -18,19 +18,6 @@ impl IntegerMathOperation {
             Self::Sum(a, b) | Self::Difference(a, b) => vec![*a, *b],
         }
     }
-
-    pub fn with_inputs(&self, new_inputs: Vec<ItemId>) -> Self {
-        match self {
-            Self::Sum(..) => {
-                assert_eq!(new_inputs.len(), 2);
-                Self::Sum(new_inputs[0], new_inputs[1])
-            }
-            Self::Difference(..) => {
-                assert_eq!(new_inputs.len(), 2);
-                Self::Difference(new_inputs[0], new_inputs[1])
-            }
-        }
-    }
 }
 
 impl Debug for IntegerMathOperation {
@@ -68,27 +55,6 @@ impl BuiltinOperation {
                 new_type,
                 original,
             } => vec![*proof_equal, *original_type, *new_type, *original],
-        }
-    }
-
-    pub fn with_inputs(&self, new_inputs: Vec<ItemId>) -> Self {
-        match self {
-            Self::I32Math(op) => Self::I32Math(op.with_inputs(new_inputs)),
-            Self::AreSameVariant { .. } => {
-                assert_eq!(new_inputs.len(), 2);
-                let base = new_inputs[0];
-                let other = new_inputs[1];
-                Self::AreSameVariant { base, other }
-            }
-            Self::Reinterpret { .. } => {
-                assert_eq!(new_inputs.len(), 4);
-                Self::Reinterpret {
-                    proof_equal: new_inputs[0],
-                    original_type: new_inputs[1],
-                    new_type: new_inputs[2],
-                    original: new_inputs[3],
-                }
-            }
         }
     }
 }

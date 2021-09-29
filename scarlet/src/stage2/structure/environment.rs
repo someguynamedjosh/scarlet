@@ -103,9 +103,4 @@ impl Environment {
             _ => (),
         }
     }
-
-    pub fn definition_of(&self, item: ItemId) -> &ItemDefinition {
-        assert!(item.0 < self.items.len());
-        &self.items[item.0]
-    }
 }

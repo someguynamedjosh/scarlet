@@ -16,22 +16,22 @@ pub enum MaybeResult<T, E> {
 pub use MaybeResult::{Err as MErr, None as MNone, Ok as MOk};
 
 impl<T, E: Debug> MaybeResult<T, E> {
-    #[track_caller]
-    pub fn unwrap(self) -> T {
-        match self {
-            Self::Ok(t) => t,
-            Self::None => panic!("Tried to unwrap a None value"),
-            Self::Err(err) => panic!("Tried to unwrap an Error value: {:?}", err),
-        }
-    }
+    // #[track_caller]
+    // pub fn unwrap(self) -> T {
+    //     match self {
+    //         Self::Ok(t) => t,
+    //         Self::None => panic!("Tried to unwrap a None value"),
+    //         Self::Err(err) => panic!("Tried to unwrap an Error value: {:?}", err),
+    //     }
+    // }
 
-    pub fn into_option_or_err(self) -> Result<Option<T>, E> {
-        match self {
-            Self::Ok(t) => Ok(Some(t)),
-            Self::None => Ok(None),
-            Self::Err(e) => Err(e),
-        }
-    }
+    // pub fn into_option_or_err(self) -> Result<Option<T>, E> {
+    //     match self {
+    //         Self::Ok(t) => Ok(Some(t)),
+    //         Self::None => Ok(None),
+    //         Self::Err(e) => Err(e),
+    //     }
+    // }
 }
 
 impl<T, T2, E> FromResidual<MaybeResult<T, E>> for MaybeResult<T2, E> {

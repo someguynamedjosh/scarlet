@@ -31,10 +31,6 @@ impl Environment {
         Self { items: Vec::new() }
     }
 
-    pub fn get(&self, id: ItemId) -> &ItemDefinition {
-        &self.items[id.0]
-    }
-
     pub fn get_mut(&mut self, id: ItemId) -> &mut ItemDefinition {
         &mut self.items[id.0]
     }

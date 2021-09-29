@@ -8,7 +8,6 @@ use crate::{
 mod context;
 mod definitions;
 mod expression;
-mod helpers;
 mod postfix_construct;
 mod replacements;
 mod root_construct;

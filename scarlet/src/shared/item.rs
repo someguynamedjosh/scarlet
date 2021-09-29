@@ -36,13 +36,3 @@ pub enum Item {
         typee: ItemId,
     },
 }
-
-impl Item {
-    pub fn as_builtin_value(&self) -> Option<BuiltinValue> {
-        if let Self::BuiltinValue(pv) = self {
-            Some(*pv)
-        } else {
-            None
-        }
-    }
-}
