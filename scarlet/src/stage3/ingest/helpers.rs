@@ -30,6 +30,10 @@ impl Context {
                     }
                 }
             }
+        } else if let UnresolvedItem::Just(Item::Replacing { base, .. }) = item {
+            return self.get_member(*base, name)
+        } else if let UnresolvedItem::Item(base) = item {
+            return self.get_member(*base, name)
         }
         Err(format!("{:?} has no member named {}", from, name))
     }
