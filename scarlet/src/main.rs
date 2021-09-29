@@ -3,6 +3,7 @@
 mod entry;
 mod shared;
 mod stage1;
+mod stage2;
 mod util;
 
 fn main() {
