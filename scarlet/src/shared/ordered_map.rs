@@ -21,7 +21,7 @@ impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
     fn insert_impl(&mut self, key: K, value: V, allow_replacement: bool) {
         if let Some(existing_idx) = self.entries.iter().position(|i| i.0 == key) {
             if !allow_replacement {
-                panic!("Tried value insert without replacement, but a definition for {:?} already exists.", key)
+                panic!("Tried value insert without replacement, but a value at key {:?} already exists.", key)
             }
             self.entries[existing_idx].1 = value;
         } else {

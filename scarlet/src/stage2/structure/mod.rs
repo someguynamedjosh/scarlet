@@ -161,11 +161,11 @@ impl Environment {
         self[id].value = Some(value)
     }
 
-    // pub fn insert_item(&mut self, defined_in: ScopeId, value: Value) -> ItemId {
-    //     let id = self.new_undefined_item(defined_in);
-    //     self.define_item_value(id, value);
-    //     id
-    // }
+    pub fn insert_value(&mut self, defined_in: ScopeId, value: Value) -> ItemId {
+        let id = self.new_undefined_item(defined_in);
+        self.define_item_value(id, value);
+        id
+    }
 
     pub fn get_root_scope(&self) -> ScopeId {
         self.root_scope
