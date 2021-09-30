@@ -34,7 +34,7 @@ pub struct Item {
     pub value: Option<Value>,
     pub typee: Option<ItemId>,
     pub defined_in: Option<ScopeId>,
-    pub cached_replacement: Option<ItemId>,
+    pub cached_reduction: Option<ItemId>,
 }
 
 impl Debug for Item {
@@ -43,6 +43,9 @@ impl Debug for Item {
             let text = format!("{:#?}", value);
             let text = indented(&text);
             writeln!(f, "value: {}", text)?;
+        }
+        if let Some(reduced) = &self.cached_reduction {
+            writeln!(f, "reduces to: {:?}", reduced)?;
         }
         if let Some(typee) = &self.typee {
             writeln!(f, "typee: {:?}", typee)?;
@@ -143,7 +146,7 @@ impl Environment {
             defined_in,
             typee: None,
             value: None,
-            cached_replacement: None,
+            cached_reduction: None,
         })
     }
 
