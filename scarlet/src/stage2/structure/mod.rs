@@ -93,7 +93,7 @@ pub enum Value {
     },
     Member {
         base: ItemId,
-        member: String,
+        name: String,
     },
     Replacing {
         base: ItemId,

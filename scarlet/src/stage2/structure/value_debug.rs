@@ -40,7 +40,7 @@ impl Debug for Value {
                 write!(f, " }}")
             }
             Self::Item { item } => item.fmt(f),
-            Self::Member { base, member } => write!(f, "{:?}::{}", base, member),
+            Self::Member { base, name: member } => write!(f, "{:?}::{}", base, member),
             Self::Identifier { name } => write!(f, "identifier{{{}}}", name),
             Self::Replacing { base, replacements } => {
                 write!(f, "{:?}{}replacing{{", base, spacer)?;

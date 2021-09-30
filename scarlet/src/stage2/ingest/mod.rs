@@ -22,7 +22,12 @@ fn ingest_root_construct(
     match &root.label[..] {
         "any" => todo!(),
         "builtin_item" => todo!(),
-        "identifier" => todo!(),
+        "identifier" => {
+            let name = root.expect_text("identifier").unwrap().to_owned();
+            let value = Value::Identifier { name };
+            env.define_item_value(into, value);
+            Ok(())
+        }
         "u8" => {
             let value = root.expect_text("u8").unwrap();
             let value: u8 = value.parse().unwrap();
@@ -46,10 +51,26 @@ fn ingest_postfix_construct(
     if post.label == "defining" {
         ingest_defining_construct(env, remainder, post, into)
     } else {
+        let defined_in = env[into].defined_in;
+        let base = env.new_undefined_item(defined_in);
+        ingest(env, remainder, base)?;
         match &post.label[..] {
             "defining" => unreachable!(),
             "FromItems" => todo!(),
-            "member" => todo!(),
+            "member" => {
+                let name = post.expect_single_expression("member").unwrap();
+                if name.others.len() > 0 {
+                    todo!("Member should only be a single identifier");
+                }
+                let name = name
+                    .root
+                    .expect_ident()
+                    .expect("TODO: nice error")
+                    .to_owned();
+                let value = Value::Member { base, name };
+                env.define_item_value(into, value);
+                Ok(())
+            }
             "replacing" => todo!(),
             "type_is" => todo!(),
             other => todo!("nice error, {} is not a valid postfix construct.", other),
