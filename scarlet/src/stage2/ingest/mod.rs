@@ -89,14 +89,14 @@ fn ingest_defining_construct(
     self_id: ItemId,
 ) -> Result<(), String> {
     let self_scope = env.scopes.push(Scope {
-        definition: Some(self_id),
+        definition: self_id,
     });
-    let base_id = env.new_undefined_item(self_scope);
+    let base_id = env.new_undefined_item(Some(self_scope));
     ingest(env, remainder, base_id)?;
 
     let mut definitions = Definitions::new();
     for statement in post.expect_statements("defining")? {
-        let id = env.new_undefined_item(self_scope);
+        let id = env.new_undefined_item(Some(self_scope));
         match statement {
             Statement::Is(s) => {
                 ingest(env, s.value.clone(), id)?;

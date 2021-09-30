@@ -79,7 +79,7 @@ fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
 fn ingest_file_tree(
     env: &mut Environment,
     tree: FileNode,
-    parent_scope_id: ScopeId,
+    parent_scope_id: Option<ScopeId>,
 ) -> Result<ItemId, String> {
     println!("Parsing {:?}", tree.self_def);
     let stage1_expression = parse_file_to_stage1(&tree)?;
@@ -87,17 +87,17 @@ fn ingest_file_tree(
     // This item contains all the files as members.
     let this_item_id = env.new_undefined_item(parent_scope_id);
     let this_scope_id = env.scopes.push(Scope {
-        definition: Some(this_item_id),
+        definition: this_item_id,
     });
 
     // This item is the actual code written in the file.
-    let base_item_id = env.new_undefined_item(this_scope_id);
+    let base_item_id = env.new_undefined_item(Some(this_scope_id));
     stage2::ingest(env, stage1_expression, base_item_id)?;
 
     // Ingest all the child files.
     let mut children = Definitions::new();
     for (name, node) in tree.children {
-        let item_id = ingest_file_tree(env, node, this_scope_id)?;
+        let item_id = ingest_file_tree(env, node, Some(this_scope_id))?;
         children.insert_no_replace(name, item_id);
     }
 
@@ -116,7 +116,6 @@ fn ingest_file_tree(
 pub fn start_from_root(path: &str) -> Result<Environment, String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
     let mut env = Environment::new();
-    let root_id = env.get_root_scope();
-    ingest_file_tree(&mut env, tree, root_id).unwrap();
+    ingest_file_tree(&mut env, tree, None).unwrap();
     Ok(env)
 }

@@ -15,7 +15,6 @@ impl Environment {
     }
 
     fn get_or_insert_value(&mut self, value: Value, defined_in: Option<ScopeId>) -> ItemId {
-        let defined_in = defined_in.unwrap_or(self.get_root_scope());
         for (id, item) in &self.items {
             if item.value.as_ref().expect("ICE: Undefined value") == &value {
                 return id;

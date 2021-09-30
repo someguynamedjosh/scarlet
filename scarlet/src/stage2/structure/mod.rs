@@ -33,7 +33,7 @@ pub enum BuiltinValue {
 pub struct Item {
     pub value: Option<Value>,
     pub typee: Option<ItemId>,
-    pub defined_in: ScopeId,
+    pub defined_in: Option<ScopeId>,
     /// Ordered closest to farthest, I.E. the first ones should be searched
     /// first when looking for members.
     pub member_scopes: Vec<ScopeId>,
@@ -60,7 +60,7 @@ impl Debug for Item {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Scope {
-    pub definition: Option<ItemId>,
+    pub definition: ItemId,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -124,7 +124,6 @@ pub struct Variant {
 
 #[derive(Clone, Debug)]
 pub struct Environment {
-    root_scope: ScopeId,
     pub items: Pool<Item>,
     pub scopes: Pool<Scope>,
     pub variables: Pool<Variable>,
@@ -133,11 +132,9 @@ pub struct Environment {
 
 impl Environment {
     pub fn new() -> Self {
-        let mut scopes = Pool::new();
-        let root_scope = scopes.push(Scope { definition: None });
+        let scopes = Pool::new();
         let items = Pool::new();
         Self {
-            root_scope,
             scopes,
             items,
             variables: Pool::new(),
@@ -145,8 +142,10 @@ impl Environment {
         }
     }
 
-    pub fn new_undefined_item(&mut self, defined_in: ScopeId) -> ItemId {
-        assert!(self.scopes.contains(defined_in));
+    pub fn new_undefined_item(&mut self, defined_in: Option<ScopeId>) -> ItemId {
+        if let Some(scope) = defined_in {
+            assert!(self.scopes.contains(scope));
+        }
         self.items.push(Item {
             defined_in,
             typee: None,
@@ -161,14 +160,10 @@ impl Environment {
         self[id].value = Some(value)
     }
 
-    pub fn insert_value(&mut self, defined_in: ScopeId, value: Value) -> ItemId {
+    pub fn insert_value(&mut self, defined_in: Option<ScopeId>, value: Value) -> ItemId {
         let id = self.new_undefined_item(defined_in);
         self.define_item_value(id, value);
         id
-    }
-
-    pub fn get_root_scope(&self) -> ScopeId {
-        self.root_scope
     }
 }
 
