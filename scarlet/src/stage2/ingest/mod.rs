@@ -1,7 +1,7 @@
 use super::structure::{Definitions, Environment, ItemId, ScopeId, Value};
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
-    stage2::structure::{BuiltinValue, Scope},
+    stage2::structure::{BuiltinValue, Scope, Variable, Variant},
 };
 
 pub fn ingest(env: &mut Environment, mut expr: Expression, into: ItemId) -> Result<(), String> {
@@ -19,17 +19,29 @@ fn ingest_root_construct(
     root: Construct,
     into: ItemId,
 ) -> Result<(), String> {
+    let defined_in = env[into].defined_in;
     match &root.label[..] {
-        "any" => todo!(),
+        "any" => {
+            let typee = root.expect_single_expression("any")?;
+            let type_id = env.new_undefined_item(defined_in);
+            ingest(env, typee.clone(), type_id)?;
+            let variable = env.variables.push(Variable {
+                definition: into,
+                original_type: type_id,
+            });
+            let value = Value::Any { variable };
+            env.define_item_value(into, value);
+            Ok(())
+        }
         "builtin_item" => todo!(),
         "identifier" => {
-            let name = root.expect_text("identifier").unwrap().to_owned();
+            let name = root.expect_text("identifier")?.to_owned();
             let value = Value::Identifier { name };
             env.define_item_value(into, value);
             Ok(())
         }
         "u8" => {
-            let value = root.expect_text("u8").unwrap();
+            let value = root.expect_text("u8")?;
             let value: u8 = value.parse().unwrap();
             let value = Value::BuiltinValue {
                 value: BuiltinValue::U8(value),
@@ -37,7 +49,18 @@ fn ingest_root_construct(
             env.define_item_value(into, value);
             Ok(())
         }
-        "variant" => todo!(),
+        "variant" => {
+            let typee = root.expect_single_expression("variant")?;
+            let type_id = env.new_undefined_item(defined_in);
+            ingest(env, typee.clone(), type_id)?;
+            let variant = env.variants.push(Variant {
+                definition: into,
+                original_type: type_id,
+            });
+            let value = Value::Variant { variant };
+            env.define_item_value(into, value);
+            Ok(())
+        }
         other => todo!("nice error, {} is not a valid root construct.", other),
     }
 }
