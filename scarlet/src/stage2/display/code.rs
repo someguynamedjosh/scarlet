@@ -38,7 +38,7 @@ impl Environment {
             Value::Identifier { .. }
             | Value::Item { .. }
             | Value::Member { .. }
-            | Value::ReplacingItems { .. } => unreachable!("Should be reduced"),
+            | Value::ReplacingItems { .. } => Some(format!("error during reduction")),
             Value::ReplacingVariables { .. } => todo!(),
             Value::Variant { variant } => {
                 let type_code = self.item_name_or_code(self[*variant].original_type, context);

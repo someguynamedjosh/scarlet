@@ -2,5 +2,11 @@
 defining{
     TYPE is builtin_item{TYPE}
 
-    whatever is variant{TYPE} info{}
+    MyType is variant{TYPE}
+    defining{
+        alpha is variant{MyType}
+        beta is variant{MyType}
+    }
+
+    a is MyType::alpha info{}
 }
