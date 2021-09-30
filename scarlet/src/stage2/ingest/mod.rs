@@ -174,6 +174,11 @@ fn ingest_non_defining_postfix_construct(
             env.define_item_value(into, self_value);
             Ok(())
         }
+        "info" => {
+            env.info_requests.push((base, defined_in.unwrap()));
+            env.define_item_value(into, Value::Item { item: base });
+            Ok(())
+        }
         "member" => {
             let name = post.expect_single_expression("member")?;
             if name.others.len() > 0 {

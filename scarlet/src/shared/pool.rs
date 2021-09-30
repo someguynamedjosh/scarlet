@@ -31,6 +31,10 @@ impl<T> Pool<T> {
         }
     }
 
+    pub fn iter(&self) -> impl Iterator<Item = (Id<T>, &T)> {
+        self.into_iter()
+    }
+
     /// Returns true if the given ID was created by this pool (and therefore
     /// will not trigger a panic when used with get()).
     pub fn contains(&self, id: Id<T>) -> bool {

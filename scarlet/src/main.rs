@@ -15,4 +15,7 @@ fn main() {
     println!("Reducing everything");
     environment.reduce_everything();
     println!("{:#?}", environment);
+
+    println!("Infos:");
+    environment.display_infos();
 }

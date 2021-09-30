@@ -1,1 +1,4 @@
 any{other::U8}
+defining{
+    whatever is other info{}
+}

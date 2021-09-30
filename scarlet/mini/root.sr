@@ -1,5 +1,5 @@
 U8 From{u8}
 defining{
     U8 is builtin_item{UnsignedInteger8}
-    u8 is any{U8}
+    u8 is any{U8} info{}
 }

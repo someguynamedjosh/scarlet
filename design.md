@@ -42,12 +42,16 @@ implementation from its value.
   variables
 - Reduction:
   - self
+- Code:
+  - any{`name_or_code(variable.original_type)`}
 
 ### BuiltinOperation
 - Fields:
   - operation: `BuiltinOperation`
 - Inferred type:
   - `operation.inferred_type()`
+- Code:
+  - builtin_operation{`name` `name_or_code(args)`}
 
 ### BuiltinValue
 - Fields:
@@ -67,6 +71,8 @@ implementation from its value.
 - Reduction:
   - reduce base
   - reduce definitions
+- Code:
+  - `code_or_name(base)` defining{ `name` is .. }
 
 ### FromItems
 - Fields:
@@ -78,6 +84,8 @@ implementation from its value.
   - Gets the dependencies of all items.
   - `reduce(FromVars { base, variables: dependencies })`
   - If dependencies is empty, return `reduce(base)`
+- Code:
+  - Use reduced form
 
 ### FromVars
 - Fields:
@@ -90,6 +98,8 @@ implementation from its value.
 - Reduction:
   - Reduce base
   - If dependencies is empty, return `reduce(base)`
+- Code:
+  - `name_or_code(base)` From{ `name_or_code(item)` }
 
 ### Identifier
 - Fields:
@@ -98,6 +108,8 @@ implementation from its value.
   - `type_of(reduce(self))`
 - Reduction:
   - Find a definition of `name` in containing scope or any of its parents.
+- Code:
+  - Use reduced form
 
 ### Item
 - Fields:
@@ -106,6 +118,8 @@ implementation from its value.
   - `type_of(item)`
 - Reduction:
   - `reduce(item)`
+- Code:
+  - Use reduced form
 
 ### Member
 - Fields:
@@ -116,6 +130,8 @@ implementation from its value.
 - Reduction:
   - Get `reduce(base)`
   - Find a definition of `name` in reduced base's `member_scopes`
+- Code:
+  - Use reduced form
 
 ### Replacing
 - Fields:
@@ -138,6 +154,8 @@ implementation from its value.
   - Create a new Replacing which keeps replacements that the base is still
   dependant on.
   - If none, returns the reduced base.
+- Code:
+  - `name_or_code(base)` replacing{`name(var)` with `name_or_code(val)`}
 
 ### TypeIs (M2)
 - Fields:
@@ -157,6 +175,8 @@ implementation from its value.
   - `variant.original_type`
 - Reduction:
   - Inserts a copy of this item with the type reduced.
+- Code:
+  - anonymous
 
 ## Variable/VariableId
 - Fields:

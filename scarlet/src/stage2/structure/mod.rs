@@ -122,6 +122,7 @@ pub struct Environment {
     pub scopes: Pool<Scope>,
     pub variables: Pool<Variable>,
     pub variants: Pool<Variant>,
+    pub info_requests: Vec<(ItemId, ScopeId)>,
 }
 
 impl Environment {
@@ -133,6 +134,7 @@ impl Environment {
             items,
             variables: Pool::new(),
             variants: Pool::new(),
+            info_requests: Vec::new(),
         }
     }
 

@@ -241,7 +241,10 @@ impl Environment {
                     .map(|i| self.type_of(i))
                     .flatten()
             }
-            Value::Item { item } => todo!(),
+            Value::Item { item } => {
+                let item = *item;
+                self.type_of(item)
+            }
             Value::Member { base, name } => {
                 let (base, name) = (*base, name.clone());
                 self.resolve_member(base, &name)
@@ -341,7 +344,10 @@ impl Environment {
                     .expect("TODO: nice error, bad ident");
                 self.reduce(resolved)
             }
-            Value::Item { item } => todo!(),
+            Value::Item { item } => {
+                let item = *item;
+                self.reduce(item)
+            }
             Value::Member { base, name } => {
                 let (base, name) = (*base, name.clone());
                 let resolved = self
