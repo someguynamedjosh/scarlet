@@ -275,7 +275,10 @@ impl Environment {
                 }
                 Some(self.replace(base_type, reduced_replacements))
             }
-            Value::Variant { variant } => todo!(),
+            Value::Variant { variant } => {
+                let typee = self[*variant].original_type;
+                Some(self.reduce(typee))
+            }
         }
     }
 
@@ -357,7 +360,7 @@ impl Environment {
             }
             Value::ReplacingItems { base, replacements } => todo!(),
             Value::ReplacingVariables { base, replacements } => todo!(),
-            Value::Variant { variant } => todo!(),
+            Value::Variant { .. } => item_id,
         }
     }
 }

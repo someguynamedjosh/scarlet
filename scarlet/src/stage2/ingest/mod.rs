@@ -49,6 +49,12 @@ fn ingest_root_construct(
             let name = args.remove(0).expect_ident()?;
             let args = args;
             let value = match name {
+                "TYPE" => {
+                    assert_eq!(args.len(), 0, "TOODO: Nice error, wrong number of args");
+                    Value::BuiltinValue {
+                        value: BuiltinValue::OriginType,
+                    }
+                }
                 "UnsignedInteger8" => {
                     assert_eq!(args.len(), 0, "TOODO: Nice error, wrong number of args");
                     Value::BuiltinValue {

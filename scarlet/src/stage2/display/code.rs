@@ -40,7 +40,10 @@ impl Environment {
             | Value::Member { .. }
             | Value::ReplacingItems { .. } => unreachable!("Should be reduced"),
             Value::ReplacingVariables { .. } => todo!(),
-            Value::Variant { .. } => None,
+            Value::Variant { variant } => {
+                let type_code = self.item_name_or_code(self[*variant].original_type, context);
+                Some(format!("variant{{{}}}", type_code))
+            }
         }
     }
 }
