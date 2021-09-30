@@ -2,9 +2,10 @@ pub fn set_color(r: u8, g: u8, b: u8) -> String {
     format!("\x1b[38;2;{};{};{}m", r, g, b)
 }
 
+// Tweaked resistor color code.
 const COLORS: &[u32] = &[
-    0xFFFFFF, 0xFF0000, 0x00FF00, 0x8888FF, 0xFFFF00, 0xFF00FF, 0x00FFFF, 0xFF8800, 0x0088FF,
-    0x8800FF,
+    0x884400, 0xFF0000, 0xFF8800, 0xFFFF00, 0x00FF00, 0x00DDDD, 0x0088FF, 0xDD00DD, 0xBBBBBB,
+    0xFFFFFF,
 ];
 
 pub fn set_color_index(index: usize) -> String {
