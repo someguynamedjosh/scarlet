@@ -22,8 +22,6 @@
   - type: `Option<ItemId>`
   - defined_in: `Option<ScopeId>`
   - cached_reduction: `Option<ItemId>`
-  - member_scopes: `Vec<ScopeId>`
-    - This should be left untouched by reduction.
 - Type is either `self.type` or the inferred type of `value`.
   - This is the definition of `type_of(item_id)`
 - Reduction takes an Item and produces a new ItemId according to an
@@ -66,7 +64,8 @@ implementation from its value.
 - Inferred type:
   - `type_of(base)`
 - Reduction:
-  - `reduced(base)` with `child_scope` appended to `member_scopes`.
+  - reduce base
+  - reduce definitions
 
 ### FromItems
 - Fields:
@@ -128,7 +127,7 @@ implementation from its value.
 - Replacement:
   - Converts an `Item` into another `Item` where all instances of variables have
   been replaced with other items according to `self.replacements` in itself and
-  its type.
+  its type (including members.)
 - Reduction:
   - Reduce base
   - Reduce replacements

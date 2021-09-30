@@ -34,9 +34,6 @@ pub struct Item {
     pub value: Option<Value>,
     pub typee: Option<ItemId>,
     pub defined_in: Option<ScopeId>,
-    /// Ordered closest to farthest, I.E. the first ones should be searched
-    /// first when looking for members.
-    pub member_scopes: Vec<ScopeId>,
     pub cached_replacement: Option<ItemId>,
 }
 
@@ -50,11 +47,7 @@ impl Debug for Item {
         if let Some(typee) = &self.typee {
             writeln!(f, "typee: {:?}", typee)?;
         }
-        writeln!(f, "in {:?}", self.defined_in)?;
-        if self.member_scopes.len() > 0 {
-            writeln!(f, "members from {:?}", self.member_scopes)?;
-        }
-        Ok(())
+        writeln!(f, "in {:?}", self.defined_in)
     }
 }
 
@@ -150,7 +143,6 @@ impl Environment {
             defined_in,
             typee: None,
             value: None,
-            member_scopes: Vec::new(),
             cached_replacement: None,
         })
     }

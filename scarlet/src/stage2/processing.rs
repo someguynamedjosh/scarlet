@@ -1,5 +1,5 @@
 use super::structure::{Environment, ItemId, ScopeId, Value};
-use crate::stage2::structure::{BuiltinValue, VariableId, VariableReplacements};
+use crate::stage2::structure::{BuiltinValue, Definitions, VariableId, VariableReplacements};
 
 impl Environment {
     pub fn reduce_everything(&mut self) {
@@ -67,8 +67,27 @@ impl Environment {
         todo!()
     }
 
+    fn resolve_ident(&mut self, name: &str, defined_in: Option<ScopeId>) -> Option<ItemId> {
+        if let Some(defined_in) = defined_in {
+            let scope_def = self[defined_in].definition;
+            if let Some(Value::Defining { definitions, .. }) = &self[scope_def].value {
+                for (candidate_name, val) in definitions {
+                    if candidate_name == name {
+                        return Some(*val);
+                    }
+                }
+                self.resolve_ident(name, self[scope_def].defined_in)
+            } else {
+                unreachable!("ICE: scope is not defined as Defining")
+            }
+        } else {
+            None
+        }
+    }
+
     /// Called when an item doesn't have its type annotated.
     fn infer_type(&mut self, item_id: ItemId) -> Option<ItemId> {
+        let defined_in = self[item_id].defined_in;
         match self[item_id].value.as_ref().expect("ICE: Undefined value") {
             Value::Any { variable } => todo!(),
             Value::BuiltinOperation { operation } => todo!(),
@@ -84,7 +103,12 @@ impl Environment {
             }
             Value::FromItems { base, items } => todo!(),
             Value::FromVariables { base, variables } => todo!(),
-            Value::Identifier { name } => todo!(),
+            Value::Identifier { name } => {
+                let name = name.clone();
+                self.resolve_ident(&name, defined_in)
+                    .map(|i| self.type_of(i))
+                    .flatten()
+            }
             Value::Item { item } => todo!(),
             Value::Member { base, name } => todo!(),
             Value::ReplacingItems { base, replacements } => {
@@ -135,22 +159,38 @@ impl Environment {
     }
 
     fn reduce_impl(&mut self, item_id: ItemId, typee: ItemId) -> ItemId {
+        let defined_in = self[item_id].defined_in;
         match self[item_id].value.as_ref().expect("ICE: Undefined value") {
             Value::Any { variable } => todo!(),
             Value::BuiltinOperation { operation } => todo!(),
-            Value::BuiltinValue { value } => todo!(),
+            Value::BuiltinValue { .. } => item_id,
             Value::Defining {
                 base,
                 definitions,
                 this_scope,
             } => {
-                let mut new_base = self[*base].clone();
-                new_base.member_scopes.push(*this_scope);
-                todo!();
+                let (base, old_definitions, this_scope) = (*base, definitions.clone(), *this_scope);
+                let base = self.reduce(base);
+                let mut definitions = Definitions::new();
+                for (name, value) in old_definitions {
+                    definitions.insert_no_replace(name, self.reduce(value));
+                }
+                let value = Value::Defining {
+                    base,
+                    definitions,
+                    this_scope,
+                };
+                self.get_or_insert_value(value, defined_in)
             }
             Value::FromItems { base, items } => todo!(),
             Value::FromVariables { base, variables } => todo!(),
-            Value::Identifier { name } => todo!(),
+            Value::Identifier { name } => {
+                let name = name.clone();
+                let resolved = self
+                    .resolve_ident(&name, defined_in)
+                    .expect("TODO: nice error, bad ident");
+                self.reduce(resolved)
+            }
             Value::Item { item } => todo!(),
             Value::Member { base, name } => todo!(),
             Value::ReplacingItems { base, replacements } => todo!(),

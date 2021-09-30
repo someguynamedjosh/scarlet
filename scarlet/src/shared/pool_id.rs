@@ -7,8 +7,8 @@ use std::{
 use crate::shared::{reset_color, set_color_index};
 
 pub struct Id<T> {
-    pub(super) index: usize,
     pub(super) pool_id: u64,
+    pub(super) index: usize,
     pub(super) _pd: PhantomData<T>,
 }
 
