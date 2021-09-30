@@ -53,6 +53,18 @@ impl<T> Pool<T> {
         id
     }
 
+    pub fn first(&self) -> Option<Id<T>> {
+        if self.items.len() == 0 {
+            None
+        } else {
+            Some(Id {
+                index: 0,
+                pool_id: self.id,
+                _pd: PhantomData,
+            })
+        }
+    }
+
     /// Returns the next ID after the given ID, or None if there is no item with
     /// the new ID.
     pub fn next(&self, after: Id<T>) -> Option<Id<T>> {

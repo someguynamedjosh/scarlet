@@ -42,8 +42,15 @@ impl Debug for Value {
             Self::Item { item } => item.fmt(f),
             Self::Member { base, name: member } => write!(f, "{:?}::{}", base, member),
             Self::Identifier { name } => write!(f, "identifier{{{}}}", name),
-            Self::Replacing { base, replacements } => {
+            Self::ReplacingItems { base, replacements } => {
                 write!(f, "{:?}{}replacing{{", base, spacer)?;
+                for (target, value) in replacements {
+                    write!(f, "{}{:?} with {:?} ", nested_spacer, target, value)?;
+                }
+                write!(f, "{}}}", spacer)
+            }
+            Self::ReplacingVariables { base, replacements } => {
+                write!(f, "{:?}{}replacing_variables{{", base, spacer)?;
                 for (target, value) in replacements {
                     write!(f, "{}{:?} with {:?} ", nested_spacer, target, value)?;
                 }

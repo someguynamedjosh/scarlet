@@ -98,7 +98,7 @@ fn ingest_file_tree(
     let mut children = Definitions::new();
     for (name, node) in tree.children {
         let item_id = ingest_file_tree(env, node, this_scope_id)?;
-        children.insert_no_replace((name, item_id));
+        children.insert_no_replace(name, item_id);
     }
 
     // Build a defining item from base and children.

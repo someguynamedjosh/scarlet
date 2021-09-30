@@ -1,7 +1,7 @@
 use super::structure::{Definitions, Environment, ItemId, ScopeId, Value};
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
-    stage2::structure::{BuiltinValue, Replacements, Scope, Variable, Variant},
+    stage2::structure::{BuiltinValue, ItemReplacements, Scope, Variable, Variant},
 };
 
 pub fn ingest(env: &mut Environment, mut expr: Expression, into: ItemId) -> Result<(), String> {
@@ -100,11 +100,11 @@ fn ingest_defining_construct(
         match statement {
             Statement::Is(s) => {
                 ingest(env, s.value.clone(), id)?;
-                let key = s.name.expect_ident()?;
-                if definitions.contains_key(key) {
+                let key = s.name.expect_ident()?.to_owned();
+                if definitions.contains_key(&key) {
                     todo!("Nice error, multiple definitions with name {}", key);
                 }
-                definitions.insert_no_replace((key.to_owned(), id));
+                definitions.insert_no_replace(key, id);
             }
             _ => todo!(),
         }
@@ -160,7 +160,7 @@ fn ingest_non_defining_postfix_construct(
             Ok(())
         }
         "replacing" => {
-            let mut replacements = Replacements::new();
+            let mut replacements = ItemReplacements::new();
             for statement in post.expect_statements("replacing")? {
                 let id = env.new_undefined_item(defined_in);
                 match statement {
@@ -171,13 +171,13 @@ fn ingest_non_defining_postfix_construct(
                         if replacements.contains_key(&target_id) {
                             todo!("Nice error, multiple replacements of {:?}", target_id);
                         }
-                        replacements.insert_no_replace((target_id, id));
+                        replacements.insert_no_replace(target_id, id);
                     }
                     _ => todo!(),
                 }
             }
 
-            let self_value = Value::Replacing { base, replacements };
+            let self_value = Value::ReplacingItems { base, replacements };
             env.define_item_value(into, self_value);
             Ok(())
         }

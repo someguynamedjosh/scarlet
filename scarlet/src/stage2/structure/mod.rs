@@ -4,16 +4,15 @@ use std::{
 };
 
 use crate::{
-    shared::{Id, Pool},
+    shared::{Id, OrderedMap, Pool},
     util::indented,
 };
 
-mod definitions;
-mod replacements;
 mod value_debug;
 
-pub use definitions::*;
-pub use replacements::*;
+pub type ItemReplacements = OrderedMap<ItemId, ItemId>;
+pub type VariableReplacements = OrderedMap<VariableId, ItemId>;
+pub type Definitions = OrderedMap<String, ItemId>;
 
 pub type ItemId = Id<Item>;
 pub type ScopeId = Id<Scope>;
@@ -35,7 +34,10 @@ pub struct Item {
     pub value: Option<Value>,
     pub typee: Option<ItemId>,
     pub defined_in: ScopeId,
+    /// Ordered closest to farthest, I.E. the first ones should be searched
+    /// first when looking for members.
     pub member_scopes: Vec<ScopeId>,
+    pub cached_replacement: Option<ItemId>,
 }
 
 impl Debug for Item {
@@ -95,9 +97,13 @@ pub enum Value {
         base: ItemId,
         name: String,
     },
-    Replacing {
+    ReplacingItems {
         base: ItemId,
-        replacements: Replacements,
+        replacements: ItemReplacements,
+    },
+    ReplacingVariables {
+        base: ItemId,
+        replacements: VariableReplacements,
     },
     Variant {
         variant: VariantId,
@@ -146,6 +152,7 @@ impl Environment {
             typee: None,
             value: None,
             member_scopes: Vec::new(),
+            cached_replacement: None,
         })
     }
 

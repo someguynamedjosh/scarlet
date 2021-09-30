@@ -9,6 +9,10 @@ fn main() {
     println!("Reading source from {}", path);
 
     println!("Doing stages 1 and 2");
-    let environment = entry::start_from_root(&path).unwrap();
+    let mut environment = entry::start_from_root(&path).unwrap();
+    println!("{:#?}", environment);
+
+    println!("Reducing everything");
+    environment.reduce_everything();
     println!("{:#?}", environment);
 }
