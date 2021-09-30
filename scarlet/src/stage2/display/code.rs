@@ -1,4 +1,4 @@
-use crate::stage2::structure::{BuiltinValue, Environment, ItemId, ScopeId, Value};
+use crate::{stage2::structure::{BuiltinValue, Environment, ItemId, ScopeId, Value}, util::indented};
 
 impl Environment {
     pub fn item_code(&self, item: ItemId, context: ScopeId) -> Option<String> {
@@ -42,7 +42,8 @@ impl Environment {
             Value::ReplacingVariables { .. } => todo!(),
             Value::Variant { variant } => {
                 let type_code = self.item_name_or_code(self[*variant].original_type, context);
-                Some(format!("variant{{{}}}", type_code))
+                let type_code = indented(&type_code);
+                Some(format!("variant{{\n    {}\n}}", type_code))
             }
         }
     }

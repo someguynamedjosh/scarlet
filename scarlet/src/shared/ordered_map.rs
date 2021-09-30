@@ -40,6 +40,15 @@ impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
         self.insert_impl(key, value, false)
     }
 
+    pub fn get(&self, key: &K) -> Option<&V> {
+        for (candidate, value) in self {
+            if candidate == key {
+                return Some(value)
+            }
+        }
+        None
+    }
+
     pub fn contains_key(&self, key: &K) -> bool {
         for (candidate, _) in self {
             if candidate == key {

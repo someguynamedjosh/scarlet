@@ -1,4 +1,4 @@
-use super::structure::{Environment, Item, ItemId, ScopeId, Value, Variables};
+use super::structure::{Environment, Item, ItemId, ItemReplacements, ScopeId, Value, Variables};
 use crate::{
     shared::OrderedMap,
     stage2::structure::{BuiltinValue, Definitions, VariableId, VariableReplacements},
@@ -75,8 +75,78 @@ impl Environment {
         }
     }
 
-    fn replace(&mut self, target: ItemId, reduced_replacements: VariableReplacements) -> ItemId {
-        todo!()
+    fn item_replacements_to_variable_replacements(
+        &mut self,
+        item_replacements: ItemReplacements,
+    ) -> VariableReplacements {
+        let mut result = VariableReplacements::new();
+        for (target, value) in item_replacements {
+            let target = self.reduce_expecting_variable(target);
+            if result.contains_key(&target) {
+                todo!("nice error, duplicate replacement")
+            }
+            result.insert_no_replace(target, value)
+        }
+        result
+    }
+
+    /// Target should already be reduced.
+    fn replace(&mut self, target: ItemId, reduced_replacements: &VariableReplacements) -> ItemId {
+        let defined_in = self[target].defined_in;
+        let value = self[target].value.clone().expect("ICE: Undefined value");
+        let value = match value {
+            Value::Any { variable } => {
+                if let Some(rep) = reduced_replacements.get(&variable) {
+                    return *rep;
+                } else {
+                    value
+                }
+            }
+            Value::BuiltinValue { .. } => return target,
+            Value::FromVariables { base, variables } => {
+                let base = self.replace(base, reduced_replacements);
+                let mut new_variables = Variables::new();
+                for (variable, _) in variables {
+                    if let Some(rep) = reduced_replacements.get(&variable) {
+                        let rep_deps = self.dependencies(*rep).expect("TODO: Nice error");
+                        new_variables = new_variables.union(rep_deps);
+                    } else {
+                        new_variables.insert_no_replace(variable, ())
+                    }
+                }
+                Value::FromVariables {
+                    base,
+                    variables: new_variables,
+                }
+            }
+            Value::Variant { .. } => return target,
+            other => todo!("{:#?}", other),
+        };
+        let typee = self[target].typee.unwrap();
+        let typee = self.replace(typee, reduced_replacements);
+        let item = Item {
+            cached_reduction: None,
+            defined_in,
+            typee: Some(typee),
+            value: Some(value),
+        };
+        let base = self.get_or_insert_item(item);
+        let mut remaining_replacements = VariableReplacements::new();
+        let remaining_vars = self.get_from_variables(typee);
+        for (var, _) in remaining_vars {
+            if let Some(rep) = reduced_replacements.get(&var) {
+                remaining_replacements.insert_no_replace(var, *rep);
+            }
+        }
+        if remaining_replacements.is_empty() {
+            base
+        } else {
+            let value = Value::ReplacingVariables {
+                base,
+                replacements: remaining_replacements,
+            };
+            self.get_or_insert_value(value, defined_in)
+        }
     }
 
     fn resolve_ident(&mut self, name: &str, defined_in: Option<ScopeId>) -> Option<ItemId> {
@@ -131,12 +201,18 @@ impl Environment {
 
     fn dependencies(&mut self, item: ItemId) -> Option<Variables> {
         let typ = self.type_of(item)?;
-        if let Value::FromVariables { variables, .. } =
-            self[typ].value.as_ref().expect("ICE: Undefined value")
+        Some(self.get_from_variables(typ))
+    }
+
+    fn get_from_variables(&mut self, from_type: ItemId) -> Variables {
+        if let Value::FromVariables { variables, .. } = self[from_type]
+            .value
+            .as_ref()
+            .expect("ICE: Undefined value")
         {
-            Some(variables.clone())
+            variables.clone()
         } else {
-            Some(Variables::new())
+            Variables::new()
         }
     }
 
@@ -263,7 +339,7 @@ impl Environment {
                     }
                     reduced_replacements.insert_no_replace(target, value);
                 }
-                Some(self.replace(base_type, reduced_replacements))
+                Some(self.replace(base_type, &reduced_replacements))
             }
             Value::ReplacingVariables { base, replacements } => {
                 let (base, replacements) = (*base, replacements.clone());
@@ -273,7 +349,7 @@ impl Environment {
                     let value = self.reduce(value, true);
                     reduced_replacements.insert_no_replace(target, value);
                 }
-                Some(self.replace(base_type, reduced_replacements))
+                Some(self.replace(base_type, &reduced_replacements))
             }
             Value::Variant { variant } => {
                 let typee = self[*variant].original_type;
@@ -360,8 +436,24 @@ impl Environment {
                     .expect("TODO: nice error, bad member");
                 self.reduce(resolved, value_only)
             }
-            Value::ReplacingItems { base, replacements } => todo!(),
-            Value::ReplacingVariables { base, replacements } => todo!(),
+            Value::ReplacingItems { base, replacements } => {
+                let base = *base;
+                let item_replacements = replacements.clone();
+                let replacements =
+                    self.item_replacements_to_variable_replacements(item_replacements);
+                let value = Value::ReplacingVariables { base, replacements };
+                let inserted = self.get_or_insert_value(value, defined_in);
+                self.reduce(inserted, value_only)
+            }
+            Value::ReplacingVariables { base, replacements } => {
+                let base = *base;
+                let replacements = replacements.clone();
+                let mut reduced_replacements = VariableReplacements::new();
+                for (target, value) in replacements {
+                    reduced_replacements.insert_no_replace(target, self.reduce(value, true));
+                }
+                self.replace(base, &reduced_replacements)
+            }
             Value::Variant { .. } => item_id,
         }
     }
