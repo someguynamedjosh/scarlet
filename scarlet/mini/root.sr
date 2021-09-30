@@ -1,4 +1,4 @@
-0 replacing{
-    asdf with 12
-    fdsa with 34
+any{U8}
+defining{
+    U8 is builtin_item{UnsignedInteger8}
 }

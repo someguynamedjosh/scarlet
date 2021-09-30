@@ -155,6 +155,10 @@ impl Environment {
         self[id].value = Some(value)
     }
 
+    pub fn insert_item(&mut self, item: Item) -> ItemId {
+        self.items.push(item)
+    }
+
     pub fn insert_value(&mut self, defined_in: Option<ScopeId>, value: Value) -> ItemId {
         let id = self.new_undefined_item(defined_in);
         self.define_item_value(id, value);

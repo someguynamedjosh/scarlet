@@ -1,4 +1,4 @@
 0
 defining{
-    member is 123
+    U8 is builtin_item{UnsignedInteger8}
 }

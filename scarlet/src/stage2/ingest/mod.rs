@@ -33,7 +33,36 @@ fn ingest_root_construct(
             env.define_item_value(into, value);
             Ok(())
         }
-        "builtin_item" => todo!(),
+        "builtin_item" => {
+            let statements = root.expect_statements("builtin_item")?;
+            let mut args = Vec::new();
+            for statement in statements {
+                if let Statement::Expression(expr) = statement {
+                    args.push(expr);
+                } else {
+                    todo!("Nice error, expected expression.");
+                }
+            }
+            if args.len() == 0 {
+                todo!("Nice error, require at least one expression.");
+            }
+            let name = args.remove(0).expect_ident()?;
+            let args = args;
+            let value = match name {
+                "UnsignedInteger8" => {
+                    assert_eq!(args.len(), 0, "TOODO: Nice error, wrong number of args");
+                    Value::BuiltinValue {
+                        value: BuiltinValue::U8Type,
+                    }
+                }
+                other => todo!(
+                    "Nice error, {} is not a recognized builtin item name",
+                    other
+                ),
+            };
+            env.define_item_value(into, value);
+            Ok(())
+        }
         "identifier" => {
             let name = root.expect_text("identifier")?.to_owned();
             let value = Value::Identifier { name };

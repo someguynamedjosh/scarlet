@@ -1,4 +1,4 @@
-use super::structure::{Environment, ItemId, ScopeId, Value};
+use super::structure::{Environment, Item, ItemId, ScopeId, Value};
 use crate::stage2::structure::{BuiltinValue, Definitions, VariableId, VariableReplacements};
 
 impl Environment {
@@ -12,6 +12,15 @@ impl Environment {
                 break;
             }
         }
+    }
+
+    fn get_or_insert_item(&mut self, item: Item) -> ItemId {
+        for (id, candidate_item) in &self.items {
+            if candidate_item == &item {
+                return id;
+            }
+        }
+        self.insert_item(item)
     }
 
     fn get_or_insert_value(&mut self, value: Value, defined_in: Option<ScopeId>) -> ItemId {
@@ -129,7 +138,10 @@ impl Environment {
     fn infer_type(&mut self, item_id: ItemId) -> Option<ItemId> {
         let defined_in = self[item_id].defined_in;
         match self[item_id].value.as_ref().expect("ICE: Undefined value") {
-            Value::Any { variable } => todo!(),
+            Value::Any { variable } => {
+                let typee = self[*variable].original_type;
+                Some(self.reduce(typee))
+            },
             Value::BuiltinOperation { operation } => todo!(),
             Value::BuiltinValue { value } => match value {
                 BuiltinValue::OriginType | BuiltinValue::U8Type => {
@@ -206,7 +218,18 @@ impl Environment {
     fn reduce_impl(&mut self, item_id: ItemId, typee: ItemId) -> ItemId {
         let defined_in = self[item_id].defined_in;
         match self[item_id].value.as_ref().expect("ICE: Undefined value") {
-            Value::Any { variable } => todo!(),
+            Value::Any { variable } => {
+                let original_type = self[*variable].original_type;
+                let reduced_type = self.reduce(original_type);
+                let original_item = self[item_id].clone();
+                let new_item = Item {
+                    cached_reduction: None,
+                    defined_in: original_item.defined_in,
+                    typee: Some(reduced_type),
+                    value: original_item.value,
+                };
+                self.get_or_insert_item(new_item)
+            }
             Value::BuiltinOperation { operation } => todo!(),
             Value::BuiltinValue { .. } => item_id,
             Value::Defining {
