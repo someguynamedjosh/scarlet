@@ -41,6 +41,15 @@ impl Replacements {
         self.insert_impl(rep, false)
     }
 
+    pub fn contains_key(&self, key: &ItemId) -> bool {
+        for (candidate, _) in self {
+            if candidate == key {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &Replacement> {
         self.into_iter()
     }

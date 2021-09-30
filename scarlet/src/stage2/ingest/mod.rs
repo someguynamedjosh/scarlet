@@ -1,7 +1,7 @@
 use super::structure::{Definitions, Environment, ItemId, ScopeId, Value};
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
-    stage2::structure::{BuiltinValue, Scope, Variable, Variant},
+    stage2::structure::{BuiltinValue, Replacements, Scope, Variable, Variant},
 };
 
 pub fn ingest(env: &mut Environment, mut expr: Expression, into: ItemId) -> Result<(), String> {
@@ -77,27 +77,8 @@ fn ingest_postfix_construct(
         let defined_in = env[into].defined_in;
         let base = env.new_undefined_item(defined_in);
         ingest(env, remainder, base)?;
-        match &post.label[..] {
-            "defining" => unreachable!(),
-            "FromItems" => todo!(),
-            "member" => {
-                let name = post.expect_single_expression("member").unwrap();
-                if name.others.len() > 0 {
-                    todo!("Member should only be a single identifier");
-                }
-                let name = name
-                    .root
-                    .expect_ident()
-                    .expect("TODO: nice error")
-                    .to_owned();
-                let value = Value::Member { base, name };
-                env.define_item_value(into, value);
-                Ok(())
-            }
-            "replacing" => todo!(),
-            "type_is" => todo!(),
-            other => todo!("nice error, {} is not a valid postfix construct.", other),
-        }
+        ingest_non_defining_postfix_construct(env, base, post, into)?;
+        Ok(())
     }
 }
 
@@ -136,4 +117,71 @@ fn ingest_defining_construct(
     };
     env.define_item_value(self_id, self_value);
     Ok(())
+}
+
+fn ingest_non_defining_postfix_construct(
+    env: &mut Environment,
+    base: ItemId,
+    post: Construct,
+    into: ItemId,
+) -> Result<(), String> {
+    let defined_in = env[into].defined_in;
+    match &post.label[..] {
+        "defining" => unreachable!(),
+        "FromItems" => {
+            let mut items = Vec::new();
+            for statement in post.expect_statements("defining")? {
+                let id = env.new_undefined_item(defined_in);
+                match statement {
+                    Statement::Expression(s) => {
+                        ingest(env, s.clone(), id)?;
+                    }
+                    _ => todo!(),
+                }
+                items.push(id);
+            }
+
+            let self_value = Value::FromItems { base, items };
+            env.define_item_value(into, self_value);
+            Ok(())
+        }
+        "member" => {
+            let name = post.expect_single_expression("member").unwrap();
+            if name.others.len() > 0 {
+                todo!("Member should only be a single identifier");
+            }
+            let name = name
+                .root
+                .expect_ident()
+                .expect("TODO: nice error")
+                .to_owned();
+            let value = Value::Member { base, name };
+            env.define_item_value(into, value);
+            Ok(())
+        }
+        "replacing" => {
+            let mut replacements = Replacements::new();
+            for statement in post.expect_statements("replacing")? {
+                let id = env.new_undefined_item(defined_in);
+                match statement {
+                    Statement::Replace(s) => {
+                        ingest(env, s.value.clone(), id)?;
+                        let target_id = env.new_undefined_item(defined_in);
+                        ingest(env, s.target.clone(), target_id)?;
+                        if replacements.contains_key(&target_id) {
+                            todo!("Nice error, multiple replacements of {:?}", target_id);
+                        }
+                        replacements.insert_no_replace((target_id, id));
+                    }
+                    _ => todo!(),
+                }
+            }
+
+            let self_value = Value::Replacing { base, replacements };
+            env.define_item_value(into, self_value);
+            Ok(())
+        }
+        "type_is" => todo!(),
+        other => todo!("nice error, {} is not a valid postfix construct.", other),
+    }
 }
