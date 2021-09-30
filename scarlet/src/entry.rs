@@ -6,7 +6,10 @@ use std::{
 
 use crate::{
     stage1::{self, structure::expression::Expression},
-    stage2::structure::{BuiltinValue, Definitions, Environment, ItemId, Scope, ScopeId, Value},
+    stage2::{
+        self,
+        structure::{BuiltinValue, Definitions, Environment, ItemId, Scope, ScopeId, Value},
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -73,16 +76,6 @@ fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
     Ok(parsed)
 }
 
-fn ingest_to_stage2(
-    env: &mut Environment,
-    expr: Expression,
-    parent_scope: ScopeId,
-) -> Result<Value, String> {
-    Ok(Value::BuiltinValue {
-        value: BuiltinValue::I8(0),
-    })
-}
-
 fn ingest_file_tree(
     env: &mut Environment,
     tree: FileNode,
@@ -99,8 +92,7 @@ fn ingest_file_tree(
 
     // This item is the actual code written in the file.
     let base_item_id = env.new_undefined_item(this_scope_id);
-    let base_item = ingest_to_stage2(env, stage1_expression, this_scope_id)?;
-    env.define_item_value(base_item_id, base_item);
+    stage2::ingest(env, stage1_expression, base_item_id)?;
 
     // Ingest all the child files.
     let mut children = Definitions::new();

@@ -18,7 +18,7 @@ fn remove_underscores(text: &str) -> String {
 
 /// Returns true if the specified string is an integer literal.
 fn is_int(text: &str) -> bool {
-    text.parse::<i32>().is_ok()
+    text.parse::<u8>().is_ok()
 }
 
 /// Returns Ok() if the specified text is an int literal. The result is the text
@@ -32,6 +32,6 @@ fn int_literal_parser<'i>() -> impl Parser<'i, String> {
 
 pub fn integer_shorthand_parser<'i>() -> impl Parser<'i, Construct> {
     map(int_literal_parser(), |text| {
-        Construct::from_text("i32", &text[..])
+        Construct::from_text("u8", &text[..])
     })
 }

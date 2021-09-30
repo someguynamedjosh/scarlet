@@ -36,6 +36,15 @@ impl Definitions {
         self.insert_impl(def, false)
     }
 
+    pub fn contains_key(&self, key: &str) -> bool {
+        for (candidate, _) in self {
+            if candidate == key {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &Definition> {
         self.into_iter()
     }

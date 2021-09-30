@@ -1,24 +1,22 @@
 pub const ROOT_CONSTRUCT_LABELS: &[&str] = &[
     "identifier",
-    "Type",
     "any",
     "the",
-    "i32",
+    "u8",
     "variant",
     "pick",
     "builtin_item",
 ];
-const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "i32"];
+const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "u8"];
 const ALIASES: &[(&str, &str)] = &[
     ("iv", "is_variant"),
     ("T", "Type"),
-    ("F", "From"),
-    ("FromVariables", "From"),
+    ("F", "FromItems"),
+    ("From", "FromItems"),
     ("d", "defining"),
     ("r", "replacing"),
     ("p", "pick"),
     ("pick_by_conditions", "pick"),
-    ("t", "type_is"),
     ("bt", "base_type_is"),
 ];
 

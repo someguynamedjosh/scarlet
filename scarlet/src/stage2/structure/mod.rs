@@ -1,6 +1,12 @@
-use std::{fmt::{self, Debug}, ops::{Index, IndexMut}};
+use std::{
+    fmt::{self, Debug},
+    ops::{Index, IndexMut},
+};
 
-use crate::{shared::{Id, Pool}, util::indented};
+use crate::{
+    shared::{Id, Pool},
+    util::indented,
+};
 
 mod definitions;
 mod replacements;
@@ -20,8 +26,8 @@ pub enum BuiltinOperation {}
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinValue {
     OriginType,
-    I8Type,
-    I8(i8),
+    U8Type,
+    U8(u8),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -113,7 +119,6 @@ pub struct Variant {
 #[derive(Clone, Debug)]
 pub struct Environment {
     root_scope: ScopeId,
-    void_item: ItemId,
     pub items: Pool<Item>,
     pub scopes: Pool<Scope>,
     pub variables: Pool<Variable>,
@@ -124,16 +129,9 @@ impl Environment {
     pub fn new() -> Self {
         let mut scopes = Pool::new();
         let root_scope = scopes.push(Scope { definition: None });
-        let mut items = Pool::new();
-        let void_item = items.push(Item {
-            defined_in: root_scope,
-            typee: None,
-            value: None,
-            member_scopes: Vec::new(),
-        });
+        let items = Pool::new();
         Self {
             root_scope,
-            void_item,
             scopes,
             items,
             variables: Pool::new(),
@@ -156,12 +154,14 @@ impl Environment {
         self[id].value = Some(value)
     }
 
+    // pub fn insert_item(&mut self, defined_in: ScopeId, value: Value) -> ItemId {
+    //     let id = self.new_undefined_item(defined_in);
+    //     self.define_item_value(id, value);
+    //     id
+    // }
+
     pub fn get_root_scope(&self) -> ScopeId {
         self.root_scope
-    }
-
-    pub fn get_void_item(&self) -> ItemId {
-        self.void_item
     }
 }
 
