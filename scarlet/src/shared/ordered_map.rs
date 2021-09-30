@@ -3,6 +3,8 @@ use std::{
     iter::FromIterator,
 };
 
+pub type OrderedSet<K> = OrderedMap<K, ()>;
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct OrderedMap<K, V> {
     entries: Vec<(K, V)>,
@@ -64,6 +66,16 @@ impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
             self.insert_or_replace(key, value);
         }
         self
+    }
+
+    pub fn difference(self, keys_to_remove: &Self) -> Self {
+        let mut result = Self::new();
+        for (key, value) in self {
+            if !keys_to_remove.contains_key(&key) {
+                result.insert_no_replace(key, value)
+            }
+        }
+        result
     }
 }
 

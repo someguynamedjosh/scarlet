@@ -1,5 +1,8 @@
-use super::structure::{Environment, Item, ItemId, ScopeId, Value};
-use crate::stage2::structure::{BuiltinValue, Definitions, VariableId, VariableReplacements};
+use super::structure::{Environment, Item, ItemId, ScopeId, Value, Variables};
+use crate::{
+    shared::OrderedMap,
+    stage2::structure::{BuiltinValue, Definitions, VariableId, VariableReplacements},
+};
 
 impl Environment {
     pub fn reduce_everything(&mut self) {
@@ -126,6 +129,33 @@ impl Environment {
         }
     }
 
+    fn dependencies(&mut self, item: ItemId) -> Option<Variables> {
+        let typ = self.type_of(item)?;
+        if let Value::FromVariables { variables, .. } =
+            self[typ].value.as_ref().expect("ICE: Undefined value")
+        {
+            Some(variables.clone())
+        } else {
+            Some(Variables::new())
+        }
+    }
+
+    /// Converts a FromItems to FromVariables
+    fn from_items_to_variables(
+        &mut self,
+        base: ItemId,
+        items: Vec<ItemId>,
+        defined_in: Option<ScopeId>,
+    ) -> Option<ItemId> {
+        let mut variables = Variables::new();
+        for item in items {
+            let deps = self.dependencies(item)?;
+            variables = variables.union(deps);
+        }
+        let value = Value::FromVariables { base, variables };
+        Some(self.get_or_insert_value(value, defined_in))
+    }
+
     // fn get_base_value(&mut self, of: ItemId) -> ItemId {
     //     match self[of].value.as_ref().expect("ICE: undefined item") {
     //         Value::Defining { base, .. } => self.get_base_value(of),
@@ -134,14 +164,45 @@ impl Environment {
     //     }
     // }
 
+    fn type_with_additional_from_variables(
+        &mut self,
+        base: ItemId,
+        additional_variables: Variables,
+    ) -> ItemId {
+        let defined_in = self[base].defined_in;
+        let value = match self[base].value.as_ref().expect("ICE: Undefined value") {
+            Value::FromItems { .. } => unimplemented!(),
+            Value::FromVariables { base, variables } => {
+                let base = *base;
+                let variables = variables.clone().union(additional_variables);
+                Value::FromVariables { base, variables }
+            }
+            _ => {
+                if additional_variables.is_empty() {
+                    return base;
+                } else {
+                    Value::FromVariables {
+                        base,
+                        variables: additional_variables,
+                    }
+                }
+            }
+        };
+        self.get_or_insert_value(value, defined_in)
+    }
+
     /// Called when an item doesn't have its type annotated.
     fn infer_type(&mut self, item_id: ItemId) -> Option<ItemId> {
         let defined_in = self[item_id].defined_in;
         match self[item_id].value.as_ref().expect("ICE: Undefined value") {
             Value::Any { variable } => {
-                let typee = self[*variable].original_type;
-                Some(self.reduce(typee))
-            },
+                let variable = *variable;
+                let typee = self[variable].original_type;
+                let typee = self.reduce(typee);
+                let mut deps = self.dependencies(typee)?;
+                deps.insert_or_replace(variable, ());
+                Some(self.type_with_additional_from_variables(typee, deps))
+            }
             Value::BuiltinOperation { operation } => todo!(),
             Value::BuiltinValue { value } => match value {
                 BuiltinValue::OriginType | BuiltinValue::U8Type => {
@@ -153,8 +214,27 @@ impl Environment {
                 let base = *base;
                 self.type_of(base)
             }
-            Value::FromItems { base, items } => todo!(),
-            Value::FromVariables { base, variables } => todo!(),
+            Value::FromItems { base, items } => {
+                let (base, items) = (*base, items.clone());
+                let as_from_variables = self.from_items_to_variables(base, items, defined_in)?;
+                self.type_of(as_from_variables)
+            }
+            Value::FromVariables { base, variables } => {
+                let (base, variables) = (*base, variables.clone());
+                let base_type = self.type_of(base)?;
+                let base_type = self.reduce(base_type);
+                let outer_variables = variables;
+                if let Value::FromVariables { base, variables } =
+                    self[base_type].value.as_ref().expect("ICE: Undefined item")
+                {
+                    let difference = outer_variables.difference(&variables);
+                    let (base, variables) = (*base, difference);
+                    let value = Value::FromVariables { base, variables };
+                    Some(self.get_or_insert_value(value, defined_in))
+                } else {
+                    Some(base_type)
+                }
+            }
             Value::Identifier { name } => {
                 let name = name.clone();
                 self.resolve_ident(&name, defined_in)
@@ -218,18 +298,7 @@ impl Environment {
     fn reduce_impl(&mut self, item_id: ItemId, typee: ItemId) -> ItemId {
         let defined_in = self[item_id].defined_in;
         match self[item_id].value.as_ref().expect("ICE: Undefined value") {
-            Value::Any { variable } => {
-                let original_type = self[*variable].original_type;
-                let reduced_type = self.reduce(original_type);
-                let original_item = self[item_id].clone();
-                let new_item = Item {
-                    cached_reduction: None,
-                    defined_in: original_item.defined_in,
-                    typee: Some(reduced_type),
-                    value: original_item.value,
-                };
-                self.get_or_insert_item(new_item)
-            }
+            Value::Any { .. } => item_id,
             Value::BuiltinOperation { operation } => todo!(),
             Value::BuiltinValue { .. } => item_id,
             Value::Defining {
@@ -250,8 +319,21 @@ impl Environment {
                 };
                 self.get_or_insert_value(value, defined_in)
             }
-            Value::FromItems { base, items } => todo!(),
-            Value::FromVariables { base, variables } => todo!(),
+            Value::FromItems { base, items } => {
+                let (base, items) = (*base, items.clone());
+                let as_from_variables = self.from_items_to_variables(base, items, defined_in);
+                self.reduce(as_from_variables.unwrap())
+            }
+            Value::FromVariables { base, variables } => {
+                let (base, variables) = (*base, variables.clone());
+                let base = self.reduce(base);
+                if variables.len() == 0 {
+                    base
+                } else {
+                    let value = Value::FromVariables { base, variables };
+                    self.get_or_insert_value(value, defined_in)
+                }
+            }
             Value::Identifier { name } => {
                 let name = name.clone();
                 let resolved = self

@@ -26,18 +26,18 @@ impl Debug for Value {
                 write!(f, "{}}}", spacer)
             }
             Self::FromItems { base, items } => {
-                write!(f, "{:?} FromItems{{", base)?;
-                for variable in items {
-                    write!(f, " {:?}", variable)?;
+                write!(f, "{:?}{}FromItems{{", base, spacer)?;
+                for item in items {
+                    write!(f, "{}{:?}", nested_spacer, item,)?;
                 }
-                write!(f, " }}")
+                write!(f, "{}}}", spacer)
             }
             Self::FromVariables { base, variables } => {
-                write!(f, "{:?} FromVariables{{", base)?;
-                for variable in variables {
-                    write!(f, " {:?}", variable)?;
+                write!(f, "{:?}{}FromVariables{{", base, spacer)?;
+                for (variable, _) in variables {
+                    write!(f, "{}{:?}", nested_spacer, variable,)?;
                 }
-                write!(f, " }}")
+                write!(f, "{}}}", spacer)
             }
             Self::Item { item } => item.fmt(f),
             Self::Member { base, name: member } => write!(f, "{:?}::{}", base, member),

@@ -34,7 +34,7 @@ fn ingest_root_construct(
             Ok(())
         }
         "builtin_item" => {
-            let statements = root.expect_statements("builtin_item")?;
+            let statements = root.expect_statements("builtin_item").unwrap();
             let mut args = Vec::new();
             for statement in statements {
                 if let Statement::Expression(expr) = statement {
@@ -64,13 +64,13 @@ fn ingest_root_construct(
             Ok(())
         }
         "identifier" => {
-            let name = root.expect_text("identifier")?.to_owned();
+            let name = root.expect_text("identifier").unwrap().to_owned();
             let value = Value::Identifier { name };
             env.define_item_value(into, value);
             Ok(())
         }
         "u8" => {
-            let value = root.expect_text("u8")?;
+            let value = root.expect_text("u8").unwrap();
             let value: u8 = value.parse().unwrap();
             let value = Value::BuiltinValue {
                 value: BuiltinValue::U8(value),
@@ -124,7 +124,7 @@ fn ingest_defining_construct(
     ingest(env, remainder, base_id)?;
 
     let mut definitions = Definitions::new();
-    for statement in post.expect_statements("defining")? {
+    for statement in post.expect_statements("defining").unwrap() {
         let id = env.new_undefined_item(Some(self_scope));
         match statement {
             Statement::Is(s) => {
@@ -159,7 +159,7 @@ fn ingest_non_defining_postfix_construct(
         "defining" => unreachable!(),
         "FromItems" => {
             let mut items = Vec::new();
-            for statement in post.expect_statements("defining")? {
+            for statement in post.expect_statements("FromItems").unwrap() {
                 let id = env.new_undefined_item(defined_in);
                 match statement {
                     Statement::Expression(s) => {
@@ -175,7 +175,7 @@ fn ingest_non_defining_postfix_construct(
             Ok(())
         }
         "member" => {
-            let name = post.expect_single_expression("member").unwrap();
+            let name = post.expect_single_expression("member")?;
             if name.others.len() > 0 {
                 todo!("Member should only be a single identifier");
             }
@@ -190,7 +190,7 @@ fn ingest_non_defining_postfix_construct(
         }
         "replacing" => {
             let mut replacements = ItemReplacements::new();
-            for statement in post.expect_statements("replacing")? {
+            for statement in post.expect_statements("replacing").unwrap() {
                 let id = env.new_undefined_item(defined_in);
                 match statement {
                     Statement::Replace(s) => {

@@ -3,16 +3,14 @@ use std::{
     ops::{Index, IndexMut},
 };
 
-use crate::{
-    shared::{Id, OrderedMap, Pool},
-    util::indented,
-};
+use crate::{shared::{Id, OrderedMap, OrderedSet, Pool}, util::indented};
 
 mod value_debug;
 
 pub type ItemReplacements = OrderedMap<ItemId, ItemId>;
 pub type VariableReplacements = OrderedMap<VariableId, ItemId>;
 pub type Definitions = OrderedMap<String, ItemId>;
+pub type Variables = OrderedSet<VariableId>;
 
 pub type ItemId = Id<Item>;
 pub type ScopeId = Id<Scope>;
@@ -81,7 +79,7 @@ pub enum Value {
     },
     FromVariables {
         base: ItemId,
-        variables: Vec<VariableId>,
+        variables: Variables,
     },
     Identifier {
         name: String,

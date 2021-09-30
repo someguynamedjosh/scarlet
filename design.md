@@ -38,9 +38,10 @@ implementation from its value.
 - Fields:
   - variable: `VariableId`
 - Inferred type:
-  - `reduce(variable.original_type)`
+  - `reduce(variable.original_type)` with deps of type and self as from
+  variables
 - Reduction:
-  - Inserts a copy of this item with the type reduced.
+  - self
 
 ### BuiltinOperation
 - Fields:
