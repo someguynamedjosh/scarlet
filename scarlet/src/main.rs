@@ -1,4 +1,5 @@
 mod entry;
+mod rust_analyzer_actions;
 mod shared;
 mod stage1;
 mod stage2;

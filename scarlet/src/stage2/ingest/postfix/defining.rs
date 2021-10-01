@@ -12,21 +12,11 @@ pub fn ingest(
     post: Construct,
     in_namespace: NamespaceId,
 ) -> Item {
-    let this_ns = env.new_undefined_namespace();
-    let base = stage2::ingest(env, remainder, this_ns);
-    let mut definitions = Definitions::new();
-    for statement in post.expect_statements("defining").expect("TODO error") {
-        match statement {
-            Statement::Is(is) => {
-                let name = is.name.expect_ident().expect("TODO error").to_owned();
-                let item = stage2::ingest(env, is.value.clone(), this_ns);
-                definitions.insert_no_replace(name, item);
-            }
-            _ => todo!("nice error"),
-        }
-    }
+    let this_namespace = env.new_undefined_namespace();
+    let base = stage2::ingest(env, remainder, this_namespace);
+    let definitions = ingest_definitions(env, post, this_namespace);
     env.define_namespace(
-        this_ns,
+        this_namespace,
         Namespace::Defining {
             base: base.namespace,
             definitions,
@@ -34,7 +24,35 @@ pub fn ingest(
         },
     );
     Item {
-        namespace: this_ns,
+        namespace: this_namespace,
         value: base.value,
+    }
+}
+
+fn ingest_definitions(
+    env: &mut Environment,
+    post: Construct,
+    this_namespace: NamespaceId,
+) -> Definitions {
+    let mut definitions = Definitions::new();
+    for statement in post.expect_statements("defining").unwrap() {
+        ingest_definition(env, statement, this_namespace, &mut definitions)
+    }
+    definitions
+}
+
+fn ingest_definition(
+    env: &mut Environment,
+    statement: &Statement,
+    this_namespace: NamespaceId,
+    definitions: &mut Definitions,
+) {
+    match statement {
+        Statement::Is(is) => {
+            let name = is.name.expect_ident().expect("TODO error").to_owned();
+            let item = stage2::ingest(env, is.value.clone(), this_namespace);
+            definitions.insert_no_replace(name, item);
+        }
+        _ => todo!("nice error"),
     }
 }
