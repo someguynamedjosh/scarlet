@@ -9,8 +9,8 @@ fn main() {
     println!("Reading source from {}", path);
 
     println!("Doing stages 1 and 2");
-    let mut environment = entry::start_from_root(&path).unwrap();
-    println!("{:#?}", environment);
+    let (mut environment, root) = entry::start_from_root(&path).unwrap();
+    println!("\nRESULT:\n{}", stage2::vomit_completely(&environment, root));
 
     // println!("Reducing everything");
     // environment.reduce_everything();

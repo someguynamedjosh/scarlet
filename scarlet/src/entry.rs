@@ -112,15 +112,12 @@ fn ingest_file_tree(
     })
 }
 
-pub fn start_from_root(path: &str) -> Result<Environment, String> {
+pub fn start_from_root(path: &str) -> Result<(Environment, Item), String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
     let mut env = Environment::new();
     let root_namespace = env.new_undefined_namespace();
     let root_item = ingest_file_tree(&mut env, tree, root_namespace).unwrap();
     env.define_namespace(root_namespace, Namespace::Root(root_item));
 
-    let expr = stage2::vomit(&env, root_item);
-    println!("Stage 2 result:\n{}", stage1::vomit(&expr));
-
-    Ok(env)
+    Ok((env, root_item))
 }

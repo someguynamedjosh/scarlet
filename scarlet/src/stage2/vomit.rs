@@ -1,12 +1,9 @@
 use super::structure::{Environment, Item, Namespace, Value, ValueId};
-use crate::{
-    stage1::structure::{
+use crate::{stage1::{self, structure::{
         construct::{Construct, ConstructBody},
         expression::Expression,
         statement::{Is, Statement},
-    },
-    stage2::structure::{BuiltinOperation, BuiltinValue},
-};
+    }}, stage2::structure::{BuiltinOperation, BuiltinValue}};
 
 fn single_expr_construct(label: &str, expr: Expression) -> Construct {
     Construct {
@@ -49,6 +46,10 @@ fn just_root_expression(root: Construct) -> Expression {
         root,
         others: vec![],
     }
+}
+
+pub fn vomit_completely(env: &Environment, item: Item) -> String {
+    stage1::vomit(&vomit(env, item))
 }
 
 pub fn vomit(env: &Environment, item: Item) -> Expression {
