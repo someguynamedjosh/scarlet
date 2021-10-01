@@ -8,7 +8,7 @@ impl Debug for Value {
         let nested_spacer = if f.alternate() { "\n    " } else { " " };
         match self {
             Self::Any { variable } => variable.fmt(f),
-            Self::BuiltinOperation { operation } => operation.fmt(f),
+            Self::BuiltinOperation(operation) => operation.fmt(f),
             Self::BuiltinValue(value) => write!(f, "{:?}", value),
             Self::From { base, values } => {
                 write!(f, "{:?}{}FromItems{{", base, spacer)?;

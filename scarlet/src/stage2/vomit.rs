@@ -5,7 +5,7 @@ use crate::{
         expression::Expression,
         statement::{Is, Statement},
     },
-    stage2::structure::BuiltinValue,
+    stage2::structure::{BuiltinOperation, BuiltinValue},
 };
 
 fn single_expr_construct(label: &str, expr: Expression) -> Construct {
@@ -13,6 +13,13 @@ fn single_expr_construct(label: &str, expr: Expression) -> Construct {
         body: ConstructBody::Statements(vec![Statement::Expression(expr)]),
         label: label.to_owned(),
     }
+}
+
+fn expressions_construct(label: &str, expressions: Vec<Expression>) -> Construct {
+    statements_construct(
+        label,
+        expressions.into_iter().map(Statement::Expression).collect(),
+    )
 }
 
 fn statements_construct(label: &str, statements: Vec<Statement>) -> Construct {
@@ -70,7 +77,7 @@ pub fn vomit(env: &Environment, item: Item) -> Expression {
             expr.others.push(construct);
             expr
         }
-        Namespace::Empty => vomit_value(env, value),
+        Namespace::Empty => vomit_value_impl(env, value),
         Namespace::Identifier { name, .. } => {
             if let Value::Identifier { name: vname, .. } = value {
                 debug_assert_eq!(name, vname);
@@ -106,16 +113,28 @@ pub fn vomit(env: &Environment, item: Item) -> Expression {
         _ => todo!(),
     }
 }
+fn vomit_value(env: &Environment, value: ValueId) -> Expression {
+    let value = env[value].as_ref().expect("TODO: Nice error");
+    vomit_value_impl(env, value)
+}
 
-fn vomit_value(env: &Environment, value: &Value) -> Expression {
+fn vomit_value_impl(env: &Environment, value: &Value) -> Expression {
     let construct = match value {
         Value::Any { variable } => {
             let typee = env[*variable].original_type;
-            let typee = env[typee].as_ref().expect("TODO: Nice error");
             let typee = vomit_value(env, typee);
             single_expr_construct("any", typee)
         }
-        Value::BuiltinOperation { .. } => unimplemented!(),
+        Value::BuiltinOperation(op) => {
+            let name = match op {
+                BuiltinOperation::Cast { .. } => "cast",
+            };
+            let mut exprs = vec![just_root_expression(identifier(name))];
+            for arg in op.inputs() {
+                exprs.push(vomit_value(env, arg));
+            }
+            expressions_construct("builtin_item", exprs)
+        }
         Value::BuiltinValue(val) => match val {
             BuiltinValue::OriginType => simple_builtin_item("TYPE"),
             BuiltinValue::U8(value) => text_construct("u8", format!("{}", value)),

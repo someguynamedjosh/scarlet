@@ -14,7 +14,22 @@ fn vomit_root_construct(construct: &Construct) -> String {
         let text = construct.body.expect_text().unwrap();
         text.to_owned()
     } else {
-        todo!("{}", construct.label)
+        vomit_explicit_construct(construct)
+    }
+}
+
+fn vomit_explicit_construct(construct: &Construct) -> String {
+    match &construct.body {
+        ConstructBody::PlainText(txt) => format!("{}{{{}}}", construct.label, txt),
+        ConstructBody::Statements(statements) => {
+            let mut result = format!("{}{{", construct.label);
+            for statement in statements {
+                result.push_str("\n    ");
+                result.push_str(&indented(&vomit_statement(statement)))
+            }
+            result.push_str("\n}");
+            result
+        }
     }
 }
 
@@ -26,18 +41,14 @@ fn vomit_postfix_construct(construct: &Construct) -> String {
                 vomit(construct.expect_single_expression("member").unwrap())
             )
         }
-        other => match &construct.body {
-            ConstructBody::PlainText(txt) => format!(" {}{{{}}}", other, txt),
-            ConstructBody::Statements(statements) => {
-                let mut result = format!("\n{}{{", other);
-                for statement in statements {
-                    result.push_str("\n    ");
-                    result.push_str(&indented(&vomit_statement(statement)))
-                }
-                result.push_str("\n}");
-                result
-            }
-        },
+        _ => {
+            let mut result = match &construct.body {
+                ConstructBody::PlainText(..) => format!(" "),
+                ConstructBody::Statements(..) => format!("\n"),
+            };
+            result.push_str(&vomit_explicit_construct(construct));
+            result
+        }
     }
 }
 
