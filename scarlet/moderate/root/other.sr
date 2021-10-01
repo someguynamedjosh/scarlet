@@ -1,4 +1,1 @@
 0
-defining{
-    U8 is builtin_item{UnsignedInteger8}
-}

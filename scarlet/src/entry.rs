@@ -88,12 +88,7 @@ fn ingest_file_tree(
     let this_namespace_id = env.new_undefined_namespace();
 
     // This item is the actual code written in the file.
-    let item = Item {
-        namespace: env.insert_namespace(Namespace::Empty),
-        value: env.insert_value(Value::BuiltinValue {
-            value: BuiltinValue::OriginType,
-        }),
-    };
+    let item = stage2::ingest(env, stage1_expression, this_namespace_id);
 
     // Ingest all the child files.
     let mut children = Definitions::new();
@@ -119,7 +114,8 @@ fn ingest_file_tree(
 pub fn start_from_root(path: &str) -> Result<Environment, String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
     let mut env = Environment::new();
-    let root_namespace = env.insert_namespace(Namespace::Empty);
-    ingest_file_tree(&mut env, tree, root_namespace).unwrap();
+    let root_namespace = env.new_undefined_namespace();
+    let root_item = ingest_file_tree(&mut env, tree, root_namespace).unwrap();
+    env.define_namespace(root_namespace, Namespace::Root(root_item));
     Ok(env)
 }

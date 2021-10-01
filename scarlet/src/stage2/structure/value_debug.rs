@@ -9,7 +9,7 @@ impl Debug for Value {
         match self {
             Self::Any { variable } => variable.fmt(f),
             Self::BuiltinOperation { operation } => operation.fmt(f),
-            Self::BuiltinValue { value } => write!(f, "{:?}", value),
+            Self::BuiltinValue(value) => write!(f, "{:?}", value),
             Self::From { base, values } => {
                 write!(f, "{:?}{}FromItems{{", base, spacer)?;
                 for item in values {
@@ -18,7 +18,9 @@ impl Debug for Value {
                 write!(f, "{}}}", spacer)
             }
             Self::Member { base, name: member } => write!(f, "{:?}::{}", base, member),
-            Self::Identifier { name, scope } => write!(f, "identifier{{{}}} in {:?}", name, scope),
+            Self::Identifier { name, in_namespace } => {
+                write!(f, "identifier{{{}}} in {:?}", name, in_namespace)
+            }
             Self::Replacing { base, replacements } => {
                 write!(f, "{:?}{}replacing{{", base, spacer)?;
                 for (target, value) in replacements {

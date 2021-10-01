@@ -49,7 +49,10 @@ pub enum Namespace {
         parent: NamespaceId,
     },
     Empty,
-    Identifier(String),
+    Identifier {
+        name: String,
+        in_namespace: NamespaceId,
+    },
     Member {
         base: NamespaceId,
         name: String,
@@ -58,6 +61,7 @@ pub enum Namespace {
         base: NamespaceId,
         replacements: Replacements,
     },
+    Root(Item),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -68,16 +72,14 @@ pub enum Value {
     BuiltinOperation {
         operation: BuiltinOperation,
     },
-    BuiltinValue {
-        value: BuiltinValue,
-    },
+    BuiltinValue(BuiltinValue),
     From {
         base: ValueId,
         values: Vec<ValueId>,
     },
     Identifier {
         name: String,
-        scope: NamespaceId,
+        in_namespace: NamespaceId,
     },
     Member {
         base: NamespaceId,
