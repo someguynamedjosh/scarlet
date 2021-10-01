@@ -3,7 +3,7 @@ use super::structure::{
 };
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
-    stage2::structure::BuiltinOperation,
+    stage2::structure::{BuiltinOperation, Replacements, Variable, Variant},
 };
 
 pub fn ingest(
@@ -67,7 +67,21 @@ fn ingest_non_defining_postfix_construct(
 ) -> Item {
     match &post.label[..] {
         "defining" => unreachable!(),
-        "FromItems" => todo!(),
+        "FromValues" => {
+            let items = post.expect_statements("FromValues").unwrap();
+            let items = items
+                .iter()
+                .map(|i| i.expect_expression().expect("TODO: Nice error"));
+            let items = items.map(|i| ingest(env, i.clone(), in_namespace));
+            let values = items.map(|i| i.value).collect();
+            let value = Value::From {
+                base: base.value,
+                values,
+            };
+            let value = env.insert_value(value);
+            let namespace = env.insert_namespace(Namespace::Empty);
+            Item { namespace, value }
+        }
         "member" => {
             let the_name = post
                 .expect_single_expression("member")
@@ -87,7 +101,31 @@ fn ingest_non_defining_postfix_construct(
             });
             Item { namespace, value }
         }
-        "replacing" => todo!(),
+        "replacing" => {
+            let mut replacements = Replacements::new();
+            for statement in post.expect_statements("replacing").unwrap() {
+                match statement {
+                    Statement::Replace(replace) => {
+                        let target = ingest(env, replace.target.clone(), in_namespace);
+                        let value = ingest(env, replace.value.clone(), in_namespace);
+                        replacements.push((target.value, value.value));
+                    }
+                    Statement::Expression(..) => todo!(),
+                    _ => todo!("nice error"),
+                }
+            }
+            let namespace = Namespace::Replacing {
+                base: base.namespace,
+                replacements: replacements.clone(),
+            };
+            let namespace = env.insert_namespace(namespace);
+            let value = Value::Replacing {
+                base: base.value,
+                replacements,
+            };
+            let value = env.insert_value(value);
+            Item { namespace, value }
+        }
         "type_is" => todo!(),
         _ => todo!("nice error"),
     }
@@ -99,7 +137,27 @@ fn ingest_root_construct(
     in_namespace: NamespaceId,
 ) -> Item {
     match &root.label[..] {
-        "any" => todo!(),
+        "any" => {
+            let typee = root
+                .expect_single_expression("any")
+                .expect("TODO: Nice error");
+            let typee = ingest(env, typee.clone(), in_namespace);
+
+            let definition = env.new_undefined_value();
+
+            let variable = Variable {
+                definition,
+                original_type: typee.value,
+            };
+            let variable = env.variables.push(variable);
+
+            let value = Value::Any { variable };
+            env.define_value(definition, value);
+
+            let namespace = env.insert_namespace(Namespace::Empty);
+            let value = definition;
+            Item { namespace, value }
+        }
         "builtin_item" => {
             let args = root.expect_statements("builtin_item").unwrap();
             let mut args: Vec<_> = args
@@ -155,7 +213,27 @@ fn ingest_root_construct(
             let value = env.insert_value(value);
             Item { namespace, value }
         }
-        "variant" => todo!(),
+        "variant" => {
+            let typee = root
+                .expect_single_expression("variant")
+                .expect("TODO: Nice error");
+            let typee = ingest(env, typee.clone(), in_namespace);
+
+            let definition = env.new_undefined_value();
+
+            let variant = Variant {
+                definition,
+                original_type: typee.value,
+            };
+            let variant = env.variants.push(variant);
+
+            let value = Value::Variant { variant };
+            env.define_value(definition, value);
+
+            let namespace = env.insert_namespace(Namespace::Empty);
+            let value = definition;
+            Item { namespace, value }
+        }
         _ => todo!("Nice error"),
     }
 }

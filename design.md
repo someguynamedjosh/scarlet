@@ -27,7 +27,7 @@
       parent: context.containing_namespace 
     }
     ```
-- FromItems
+- FromValues
 - member
 - replacing
 - type_is (M2)
@@ -118,7 +118,7 @@ implementation based on its value.
 - Code:
   - `code_or_name(base)` defining{ `name` is .. }
 
-### FromItems
+### FromValues
 - Fields:
   - base: `ItemId`
   - items: `Vec<ItemId>`

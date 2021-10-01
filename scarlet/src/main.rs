@@ -10,6 +10,7 @@ fn main() {
 
     println!("Doing stages 1 and 2");
     let (mut environment, root) = entry::start_from_root(&path).unwrap();
+    println!("{:#?}", environment);
     println!("\nRESULT:\n{}", stage2::vomit_completely(&environment, root));
 
     // println!("Reducing everything");

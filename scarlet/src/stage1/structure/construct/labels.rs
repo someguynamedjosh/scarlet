@@ -11,8 +11,8 @@ const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "u8"];
 const ALIASES: &[(&str, &str)] = &[
     ("iv", "is_variant"),
     ("T", "Type"),
-    ("F", "FromItems"),
-    ("From", "FromItems"),
+    ("F", "FromValues"),
+    ("From", "FromValues"),
     ("d", "defining"),
     ("r", "replacing"),
     ("p", "pick"),

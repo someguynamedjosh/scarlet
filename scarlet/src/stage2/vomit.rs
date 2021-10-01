@@ -1,9 +1,15 @@
 use super::structure::{Environment, Item, Namespace, Value, ValueId};
-use crate::{stage1::{self, structure::{
-        construct::{Construct, ConstructBody},
-        expression::Expression,
-        statement::{Is, Statement},
-    }}, stage2::structure::{BuiltinOperation, BuiltinValue}};
+use crate::{
+    stage1::{
+        self,
+        structure::{
+            construct::{Construct, ConstructBody},
+            expression::Expression,
+            statement::{Is, Replace, Statement},
+        },
+    },
+    stage2::structure::{BuiltinOperation, BuiltinValue},
+};
 
 fn single_expr_construct(label: &str, expr: Expression) -> Construct {
     Construct {
@@ -55,9 +61,6 @@ pub fn vomit_completely(env: &Environment, item: Item) -> String {
 pub fn vomit(env: &Environment, item: Item) -> Expression {
     let namespace = env[item.namespace].as_ref().expect("TODO: Nice error");
     let value = env[item.value].as_ref().expect("TODO: Nice error");
-    if let Value::From { .. } = value {
-        return todo!();
-    }
     match namespace {
         Namespace::Defining {
             base, definitions, ..
@@ -110,7 +113,32 @@ pub fn vomit(env: &Environment, item: Item) -> Expression {
             }
         }
         Namespace::Root(item) => vomit(env, *item),
-        Namespace::Replacing { .. } => todo!(),
+        Namespace::Replacing { base, replacements } => {
+            if let Value::Replacing {
+                base: vbase,
+                replacements: vreplacements,
+            } = value
+            {
+                debug_assert_eq!(replacements, vreplacements);
+                let base = Item {
+                    value: *vbase,
+                    namespace: *base,
+                };
+                let mut base = vomit(env, base);
+                let mut statements = Vec::new();
+                for (target, value) in replacements {
+                    let target = vomit_value(env, *target);
+                    let value = vomit_value(env, *value);
+                    let statement = Replace { target, value };
+                    statements.push(Statement::Replace(statement));
+                }
+                let replacing = statements_construct("replacing", statements);
+                base.others.push(replacing);
+                base
+            } else {
+                unreachable!("ICE")
+            }
+        }
         _ => todo!(),
     }
 }
@@ -141,8 +169,15 @@ fn vomit_value_impl(env: &Environment, value: &Value) -> Expression {
             BuiltinValue::U8(value) => text_construct("u8", format!("{}", value)),
             BuiltinValue::U8Type => simple_builtin_item("UnsignedInteger8"),
         },
-        Value::From { .. } => unimplemented!(),
-        Value::Identifier { .. } => unreachable!(),
+        Value::From { base, values } => {
+            let values = values.iter().map(|v| vomit_value(env, *v));
+            let mut result = vomit_value(env, *base);
+            result
+                .others
+                .push(expressions_construct("FromValues", values.collect()));
+            return result;
+        }
+        Value::Identifier { name, .. } => identifier(name),
         Value::Member { .. } => unreachable!(),
         Value::Replacing { .. } => todo!(),
         Value::Variant { .. } => todo!(),

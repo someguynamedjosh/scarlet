@@ -10,9 +10,8 @@ use crate::{
 
 mod value_debug;
 
-pub type Replacements = OrderedMap<ValueId, ValueId>;
+pub type Replacements = Vec<(ValueId, ValueId)>;
 pub type Definitions = OrderedMap<String, Item>;
-pub type Variables = OrderedSet<VariableId>;
 
 pub type NamespaceId = Id<Option<Namespace>>;
 pub type ValueId = Id<Option<Value>>;

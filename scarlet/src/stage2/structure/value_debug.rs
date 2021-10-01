@@ -11,7 +11,7 @@ impl Debug for Value {
             Self::BuiltinOperation(operation) => operation.fmt(f),
             Self::BuiltinValue(value) => write!(f, "{:?}", value),
             Self::From { base, values } => {
-                write!(f, "{:?}{}FromItems{{", base, spacer)?;
+                write!(f, "{:?}{}FromValues{{", base, spacer)?;
                 for item in values {
                     write!(f, "{}{:?}", nested_spacer, item,)?;
                 }
