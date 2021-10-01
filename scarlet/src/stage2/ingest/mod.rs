@@ -14,7 +14,8 @@ pub fn ingest(
         if post.label == "defining" {
             ingest_defining_postfix_construct(env, expression, post, in_namespace)
         } else {
-            todo!()
+            let base = ingest(env, expression, in_namespace);
+            ingest_non_defining_postfix_construct(env, base, post, in_namespace)
         }
     } else {
         ingest_root_construct(env, expression.root, in_namespace)
@@ -54,6 +55,35 @@ fn ingest_defining_postfix_construct(
     Item {
         namespace: this_ns,
         value: base.value,
+    }
+}
+
+fn ingest_non_defining_postfix_construct(
+    env: &mut Environment,
+    base: Item,
+    post: Construct,
+    in_namespace: NamespaceId,
+) -> Item {
+    match &post.label[..] {
+        "defining" => unreachable!(),
+        "FromItems" => todo!(),
+        "member" => {
+            let the_name = post
+                .expect_single_expression("member")
+                .expect("TODO: nice error")
+                .expect_ident()
+                .unwrap()
+                .to_owned();
+            let base = base.namespace;
+            let name = the_name.clone();
+            let namespace = env.insert_namespace(Namespace::Member { base, name });
+            let name = the_name;
+            let value = env.insert_value(Value::Member { base, name });
+            Item { namespace, value }
+        }
+        "replacing" => todo!(),
+        "type_is" => todo!(),
+        _ => todo!("nice error"),
     }
 }
 
