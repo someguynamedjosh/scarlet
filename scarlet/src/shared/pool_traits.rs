@@ -63,24 +63,25 @@ impl<T> IntoIterator for Pool<T> {
     }
 }
 
+fn map_index_to_id<'a, T>(pool_id: u64, (index, value): (usize, &'a T)) -> (Id<T>, &'a T) {
+    let id = unsafe { Pool::id_from_index(pool_id, index) };
+    (id, value)
+}
+
 impl<'a, T: 'a> IntoIterator for &'a Pool<T> {
     type IntoIter = Map<Enumerate<Iter<'a, T>>, Box<dyn Fn((usize, &'a T)) -> (Id<T>, &'a T)>>;
     type Item = (Id<T>, &'a T);
 
     fn into_iter(self) -> Self::IntoIter {
         let pool_id = self.id;
-        let mapper = move |(index, element)| {
-            (
-                Id {
-                    index,
-                    pool_id,
-                    _pd: PhantomData,
-                },
-                element,
-            )
-        };
+        let mapper = move |x| map_index_to_id(pool_id, x);
         self.items.iter().enumerate().map(Box::new(mapper))
     }
+}
+
+fn map_index_to_id_mut<'a, T>(pool_id: u64, (index, value): (usize, &'a mut T)) -> (Id<T>, &'a mut T) {
+    let id = unsafe { Pool::id_from_index(pool_id, index) };
+    (id, value)
 }
 
 impl<'a, T: 'a> IntoIterator for &'a mut Pool<T> {
@@ -90,16 +91,7 @@ impl<'a, T: 'a> IntoIterator for &'a mut Pool<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         let pool_id = self.id;
-        let mapper = move |(index, element)| {
-            (
-                Id {
-                    index,
-                    pool_id,
-                    _pd: PhantomData,
-                },
-                element,
-            )
-        };
+        let mapper = move |x| map_index_to_id_mut(pool_id, x);
         self.items.iter_mut().enumerate().map(Box::new(mapper))
     }
 }

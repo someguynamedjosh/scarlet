@@ -43,10 +43,18 @@ impl<T> Pool<T> {
 
     /// Abuse unsafe here to tell people that you really shouldn't use this
     /// function unless you know what you're doing.
-    pub unsafe fn next_id(&self) -> Id<T> {
+    pub(super) unsafe fn next_id(&self) -> Id<T> {
         Id {
             index: self.items.len(),
             pool_id: self.id,
+            _pd: PhantomData,
+        }
+    }
+
+    pub(super) unsafe fn id_from_index(self_id: u64, index: usize) -> Id<T> {
+        Id {
+            index,
+            pool_id: self_id,
             _pd: PhantomData,
         }
     }
