@@ -14,7 +14,7 @@ fn vomit_root_construct(construct: &Construct) -> String {
         let text = construct.body.expect_text().unwrap();
         text.to_owned()
     } else {
-        todo!()
+        todo!("{}", construct.label)
     }
 }
 

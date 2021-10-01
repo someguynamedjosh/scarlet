@@ -118,5 +118,9 @@ pub fn start_from_root(path: &str) -> Result<Environment, String> {
     let root_namespace = env.new_undefined_namespace();
     let root_item = ingest_file_tree(&mut env, tree, root_namespace).unwrap();
     env.define_namespace(root_namespace, Namespace::Root(root_item));
+
+    let expr = stage2::vomit(&env, root_item);
+    println!("Stage 2 result:\n{}", stage1::vomit(&expr));
+
     Ok(env)
 }

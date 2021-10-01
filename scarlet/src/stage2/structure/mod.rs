@@ -29,7 +29,7 @@ pub enum BuiltinValue {
     U8(u8),
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Item {
     pub namespace: NamespaceId,
     pub value: ValueId,
@@ -82,6 +82,8 @@ pub enum Value {
         in_namespace: NamespaceId,
     },
     Member {
+        /// Kept for vomiting.
+        previous_value: ValueId,
         base: NamespaceId,
         name: String,
     },

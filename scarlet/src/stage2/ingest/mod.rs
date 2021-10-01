@@ -74,11 +74,16 @@ fn ingest_non_defining_postfix_construct(
                 .expect_ident()
                 .unwrap()
                 .to_owned();
+            let previous_value = base.value;
             let base = base.namespace;
             let name = the_name.clone();
             let namespace = env.insert_namespace(Namespace::Member { base, name });
             let name = the_name;
-            let value = env.insert_value(Value::Member { base, name });
+            let value = env.insert_value(Value::Member {
+                base,
+                name,
+                previous_value,
+            });
             Item { namespace, value }
         }
         "replacing" => todo!(),

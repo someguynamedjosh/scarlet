@@ -17,7 +17,9 @@ impl Debug for Value {
                 }
                 write!(f, "{}}}", spacer)
             }
-            Self::Member { base, name: member } => write!(f, "{:?}::{}", base, member),
+            Self::Member {
+                base, name: member, ..
+            } => write!(f, "{:?}::{}", base, member),
             Self::Identifier { name, in_namespace } => {
                 write!(f, "identifier{{{}}} in {:?}", name, in_namespace)
             }
