@@ -3,10 +3,7 @@ use std::{
     ops::{Index, IndexMut},
 };
 
-use crate::{
-    shared::{Id, OrderedMap, OrderedSet, Pool},
-    util::indented,
-};
+use crate::shared::{Id, OrderedMap, Pool};
 
 mod value_debug;
 

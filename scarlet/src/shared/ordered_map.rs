@@ -43,7 +43,7 @@ impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
     pub fn get(&self, key: &K) -> Option<&V> {
         for (candidate, value) in self {
             if candidate == key {
-                return Some(value)
+                return Some(value);
             }
         }
         None

@@ -1,10 +1,5 @@
-use super::structure::{
-    BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId, Value,
-};
-use crate::{
-    stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
-    stage2::structure::{BuiltinOperation, Replacements, Variable, Variant},
-};
+use super::structure::{Environment, Item, NamespaceId};
+use crate::stage1::structure::expression::Expression;
 
 mod postfix;
 mod root;

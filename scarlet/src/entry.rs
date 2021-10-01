@@ -8,7 +8,7 @@ use crate::{
     stage1::{self, structure::expression::Expression},
     stage2::{
         self,
-        structure::{BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId, Value},
+        structure::{Definitions, Environment, Item, Namespace, NamespaceId},
     },
 };
 

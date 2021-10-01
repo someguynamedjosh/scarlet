@@ -2,10 +2,7 @@ use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
     stage2::{
         self,
-        structure::{
-            BuiltinOperation, BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId,
-            Replacements, Value, Variable, Variant,
-        },
+        structure::{Definitions, Environment, Item, Namespace, NamespaceId},
     },
 };
 

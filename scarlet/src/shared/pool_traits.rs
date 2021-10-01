@@ -79,7 +79,10 @@ impl<'a, T: 'a> IntoIterator for &'a Pool<T> {
     }
 }
 
-fn map_index_to_id_mut<'a, T>(pool_id: u64, (index, value): (usize, &'a mut T)) -> (Id<T>, &'a mut T) {
+fn map_index_to_id_mut<'a, T>(
+    pool_id: u64,
+    (index, value): (usize, &'a mut T),
+) -> (Id<T>, &'a mut T) {
     let id = unsafe { Pool::id_from_index(pool_id, index) };
     (id, value)
 }
