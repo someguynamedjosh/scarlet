@@ -15,6 +15,13 @@ impl ConstructBody {
             _ => false,
         }
     }
+
+    pub fn expect_text(&self) -> Result<&str, String> {
+        match self {
+            Self::PlainText(txt) => Ok(txt),
+            _ => todo!("nice error"),
+        }
+    }
 }
 
 fn fmt_statements(f: &mut Formatter, statements: &[Statement]) -> fmt::Result {

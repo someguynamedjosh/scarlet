@@ -83,6 +83,7 @@ fn ingest_file_tree(
 ) -> Result<Item, String> {
     println!("Parsing {:?}", tree.self_def);
     let stage1_expression = parse_file_to_stage1(&tree)?;
+    println!("{}", stage1::vomit(&stage1_expression));
 
     // This namespace contains all the files as members.
     let this_namespace_id = env.new_undefined_namespace();
