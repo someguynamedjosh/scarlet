@@ -12,10 +12,10 @@ fn main() {
     let mut environment = entry::start_from_root(&path).unwrap();
     println!("{:#?}", environment);
 
-    println!("Reducing everything");
-    environment.reduce_everything();
-    println!("{:#?}", environment);
+    // println!("Reducing everything");
+    // environment.reduce_everything();
+    // println!("{:#?}", environment);
 
-    println!("Infos:");
-    environment.display_infos();
+    // println!("Infos:");
+    // environment.display_infos();
 }

@@ -2,35 +2,79 @@
 
 ## Root
 - any
+  - Produces `Any` value, `Empty` namespace.
 - builtin_item
+  - Produces `BuiltinValue` or `BuiltinOperator` value, `Empty` namespace.
 - identifier
+  - Produces `Identifier` value and namespace.
 - u8
+  - Produces `BuiltinValue` value, `Empty` namespace.
 - variant
+  - Produces `Variant` value, `Empty` namespace.
   
 ## Postfix
 - defining
+  - Value: identity
+  - Namespace: 
+    ```rust
+    let id = next_ns_id();
+    Defining { 
+      child: base.namespace_id, 
+      definitions: body.map(
+        todo!()
+        parent: next_ns_id
+      ),
+      parent: context.containing_namespace 
+    }
+    ```
 - FromItems
 - member
 - replacing
 - type_is (M2)
 
+# Stuff
+
+## Context
+- Fields:
+  - containing_namespace: `Namespace`
+
 # Things there can be
 
-## Item/ItemId
+## Item
 - Fields:
-  - value: `Value`
+  - namespace_id: `NamespaceId`
+  - value_id: `ValueId`
+
+## Namespace/NamespaceId
+
+### Defining
+- Fields:
+  - child: `NamespaceId`
+  - definitions: `Definitions` aka `OrderedMap<String, Item>`
+  - parent: `NamespaceId`
+
+### Empty
+- No fields
+
+### Identifier
+- Fields:
+  - name: String
+
+### Replacing
+- Fields:
+  - replacements: `VariableReplacements` aka `OrderedMap<VariableId, ValueId>`
+  - source: `NamespaceId`
+
+## AnnotatedValue/ValueId
+- Fields:
+  - definition: `Value`
   - type: `Option<ItemId>`
-  - defined_in: `Option<ScopeId>`
+  - defined_in: `Option<NamespaceId>`
   - cached_reduction: `Option<ItemId>`
 - Type is either `self.type` or the inferred type of `value`.
   - This is the definition of `type_of(item_id)`
-- Reduction takes an Item and produces a new ItemId according to an
-implementation from its value.
-
-## Scope/ScopeId
-- Fields:
-  - definition: `ItemId` pointing to a `Defining`
-  - parent: `Option<ScopeId>`
+- Reduction takes a ValueId and produces a new ValueId according to an
+implementation based on its value.
 
 ## Value
 

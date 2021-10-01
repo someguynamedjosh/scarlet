@@ -8,7 +8,7 @@ use crate::{
     stage1::{self, structure::expression::Expression},
     stage2::{
         self,
-        structure::{BuiltinValue, Definitions, Environment, ItemId, Scope, ScopeId, Value},
+        structure::{BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId, Value},
     },
 };
 
@@ -79,43 +79,47 @@ fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
 fn ingest_file_tree(
     env: &mut Environment,
     tree: FileNode,
-    parent_scope_id: Option<ScopeId>,
-) -> Result<ItemId, String> {
+    parent_namespace_id: NamespaceId,
+) -> Result<Item, String> {
     println!("Parsing {:?}", tree.self_def);
     let stage1_expression = parse_file_to_stage1(&tree)?;
 
-    // This item contains all the files as members.
-    let this_item_id = env.new_undefined_item(parent_scope_id);
-    let this_scope_id = env.scopes.push(Scope {
-        definition: this_item_id,
-    });
+    // This namespace contains all the files as members.
+    let this_namespace_id = env.new_undefined_namespace();
 
     // This item is the actual code written in the file.
-    let base_item_id = env.new_undefined_item(Some(this_scope_id));
-    stage2::ingest(env, stage1_expression, base_item_id)?;
+    let item = Item {
+        namespace: env.insert_namespace(Namespace::Empty),
+        value: env.insert_value(Value::BuiltinValue {
+            value: BuiltinValue::OriginType,
+        }),
+    };
 
     // Ingest all the child files.
     let mut children = Definitions::new();
     for (name, node) in tree.children {
-        let item_id = ingest_file_tree(env, node, Some(this_scope_id))?;
+        let item_id = ingest_file_tree(env, node, this_namespace_id)?;
         children.insert_no_replace(name, item_id);
     }
 
-    // Build a defining item from base and children.
-    let value = Value::Defining {
-        base: base_item_id,
+    // Build a defining namespace from base and children.
+    let ns = Namespace::Defining {
+        base: item.namespace,
         definitions: children,
-        this_scope: this_scope_id,
+        parent: parent_namespace_id,
     };
-    env.define_item_value(this_item_id, value);
+    env.define_namespace(this_namespace_id, ns);
 
-    // Return that item's ID.
-    Ok(this_item_id)
+    Ok(Item {
+        namespace: this_namespace_id,
+        value: item.value,
+    })
 }
 
 pub fn start_from_root(path: &str) -> Result<Environment, String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
     let mut env = Environment::new();
-    ingest_file_tree(&mut env, tree, None).unwrap();
+    let root_namespace = env.insert_namespace(Namespace::Empty);
+    ingest_file_tree(&mut env, tree, root_namespace).unwrap();
     Ok(env)
 }

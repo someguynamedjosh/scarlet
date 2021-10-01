@@ -3,17 +3,19 @@ use std::{
     ops::{Index, IndexMut},
 };
 
-use crate::{shared::{Id, OrderedMap, OrderedSet, Pool}, util::indented};
+use crate::{
+    shared::{Id, OrderedMap, OrderedSet, Pool},
+    util::indented,
+};
 
 mod value_debug;
 
-pub type ItemReplacements = OrderedMap<ItemId, ItemId>;
-pub type VariableReplacements = OrderedMap<VariableId, ItemId>;
-pub type Definitions = OrderedMap<String, ItemId>;
+pub type Replacements = OrderedMap<ValueId, ValueId>;
+pub type Definitions = OrderedMap<String, Item>;
 pub type Variables = OrderedSet<VariableId>;
 
-pub type ItemId = Id<Item>;
-pub type ScopeId = Id<Scope>;
+pub type NamespaceId = Id<Option<Namespace>>;
+pub type ValueId = Id<Option<Value>>;
 pub type VariableId = Id<Variable>;
 pub type VariantId = Id<Variant>;
 
@@ -29,32 +31,33 @@ pub enum BuiltinValue {
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Item {
-    pub value: Option<Value>,
-    pub typee: Option<ItemId>,
-    pub defined_in: Option<ScopeId>,
-    pub cached_reduction: Option<ItemId>,
+    pub namespace: NamespaceId,
+    pub value: ValueId,
 }
 
 impl Debug for Item {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(value) = &self.value {
-            let text = format!("{:#?}", value);
-            let text = indented(&text);
-            writeln!(f, "value: {}", text)?;
-        }
-        if let Some(reduced) = &self.cached_reduction {
-            writeln!(f, "reduces to: {:?}", reduced)?;
-        }
-        if let Some(typee) = &self.typee {
-            writeln!(f, "typee: {:?}", typee)?;
-        }
-        writeln!(f, "in {:?}", self.defined_in)
+        writeln!(f, "{:?}, {:?}", self.namespace, self.value)
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Scope {
-    pub definition: ItemId,
+pub enum Namespace {
+    Defining {
+        base: NamespaceId,
+        definitions: Definitions,
+        parent: NamespaceId,
+    },
+    Empty,
+    Identifier(String),
+    Member {
+        base: NamespaceId,
+        name: String,
+    },
+    Replacing {
+        base: NamespaceId,
+        replacements: Replacements,
+    },
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -68,36 +71,21 @@ pub enum Value {
     BuiltinValue {
         value: BuiltinValue,
     },
-    Defining {
-        base: ItemId,
-        definitions: Definitions,
-        this_scope: ScopeId,
-    },
-    FromItems {
-        base: ItemId,
-        items: Vec<ItemId>,
-    },
-    FromVariables {
-        base: ItemId,
-        variables: Variables,
+    From {
+        base: ValueId,
+        values: Vec<ValueId>,
     },
     Identifier {
         name: String,
-    },
-    Item {
-        item: ItemId,
+        scope: NamespaceId,
     },
     Member {
-        base: ItemId,
+        base: NamespaceId,
         name: String,
     },
-    ReplacingItems {
-        base: ItemId,
-        replacements: ItemReplacements,
-    },
-    ReplacingVariables {
-        base: ItemId,
-        replacements: VariableReplacements,
+    Replacing {
+        base: ValueId,
+        replacements: Replacements,
     },
     Variant {
         variant: VariantId,
@@ -106,91 +94,88 @@ pub enum Value {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Variable {
-    pub definition: ItemId,
-    pub original_type: ItemId,
+    pub definition: ValueId,
+    pub original_type: ValueId,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Variant {
-    pub definition: ItemId,
-    pub original_type: ItemId,
+    pub definition: ValueId,
+    pub original_type: ValueId,
 }
 
 #[derive(Clone, Debug)]
 pub struct Environment {
-    pub items: Pool<Item>,
-    pub scopes: Pool<Scope>,
+    pub namespaces: Pool<Option<Namespace>>,
+    pub values: Pool<Option<Value>>,
     pub variables: Pool<Variable>,
     pub variants: Pool<Variant>,
-    pub info_requests: Vec<(ItemId, ScopeId)>,
+    pub info_requests: Vec<(Item, NamespaceId)>,
 }
 
 impl Environment {
     pub fn new() -> Self {
-        let scopes = Pool::new();
-        let items = Pool::new();
         Self {
-            scopes,
-            items,
+            namespaces: Pool::new(),
+            values: Pool::new(),
             variables: Pool::new(),
             variants: Pool::new(),
             info_requests: Vec::new(),
         }
     }
 
-    pub fn new_undefined_item(&mut self, defined_in: Option<ScopeId>) -> ItemId {
-        if let Some(scope) = defined_in {
-            assert!(self.scopes.contains(scope));
-        }
-        self.items.push(Item {
-            defined_in,
-            typee: None,
-            value: None,
-            cached_reduction: None,
-        })
+    pub fn new_undefined_namespace(&mut self) -> NamespaceId {
+        self.namespaces.push(None)
     }
 
-    pub fn define_item_value(&mut self, id: ItemId, value: Value) {
-        assert!(self[id].value.is_none());
-        self[id].value = Some(value)
+    pub fn define_namespace(&mut self, id: NamespaceId, namespace: Namespace) {
+        assert!(self[id].is_none());
+        self[id] = Some(namespace)
     }
 
-    pub fn insert_item(&mut self, item: Item) -> ItemId {
-        self.items.push(item)
+    pub fn insert_namespace(&mut self, namespace: Namespace) -> NamespaceId {
+        self.namespaces.push(Some(namespace))
     }
 
-    pub fn insert_value(&mut self, defined_in: Option<ScopeId>, value: Value) -> ItemId {
-        let id = self.new_undefined_item(defined_in);
-        self.define_item_value(id, value);
-        id
+    pub fn new_undefined_value(&mut self) -> ValueId {
+        self.values.push(None)
     }
-}
 
-impl Index<ItemId> for Environment {
-    type Output = Item;
+    pub fn define_value(&mut self, id: ValueId, value: Value) {
+        assert!(self[id].is_none());
+        self[id] = Some(value)
+    }
 
-    fn index(&self, index: ItemId) -> &Self::Output {
-        &self.items[index]
+    pub fn insert_value(&mut self, value: Value) -> ValueId {
+        self.values.push(Some(value))
     }
 }
 
-impl IndexMut<ItemId> for Environment {
-    fn index_mut(&mut self, index: ItemId) -> &mut Self::Output {
-        &mut self.items[index]
+impl Index<ValueId> for Environment {
+    type Output = Option<Value>;
+
+    fn index(&self, index: ValueId) -> &Self::Output {
+        &self.values[index]
     }
 }
 
-impl Index<ScopeId> for Environment {
-    type Output = Scope;
-
-    fn index(&self, index: ScopeId) -> &Self::Output {
-        &self.scopes[index]
+impl IndexMut<ValueId> for Environment {
+    fn index_mut(&mut self, index: ValueId) -> &mut Self::Output {
+        &mut self.values[index]
     }
 }
 
-impl IndexMut<ScopeId> for Environment {
-    fn index_mut(&mut self, index: ScopeId) -> &mut Self::Output {
-        &mut self.scopes[index]
+impl Index<NamespaceId> for Environment {
+    type Output = Option<Namespace>;
+
+    fn index(&self, index: NamespaceId) -> &Self::Output {
+        &self.namespaces[index]
+    }
+}
+
+impl IndexMut<NamespaceId> for Environment {
+    fn index_mut(&mut self, index: NamespaceId) -> &mut Self::Output {
+        &mut self.namespaces[index]
     }
 }
 

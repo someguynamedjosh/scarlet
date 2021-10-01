@@ -29,7 +29,7 @@ impl<T> Debug for Id<T> {
         write!(
             f,
             "<{} {}pool {} {}id {}{}>",
-            std::any::type_name::<T>().split("::").last().unwrap(),
+            &std::any::type_name::<T>().split("::").last().unwrap()[..1],
             set_color_index(self.pool_id as usize),
             self.pool_id,
             set_color_index(self.index),
