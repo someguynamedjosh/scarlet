@@ -15,10 +15,6 @@ impl Expression {
         }
         self.root.expect_ident()
     }
-
-    pub fn expect_ident_owned(&self) -> Result<String, String> {
-        self.expect_ident().map(String::from)
-    }
 }
 
 impl Debug for Expression {

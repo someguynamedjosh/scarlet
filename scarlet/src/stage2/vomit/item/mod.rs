@@ -26,7 +26,6 @@ fn vomit_impl(namespace: &Namespace, env: &Environment, item: Item, value: &Valu
         Namespace::Replacing { base, replacements } => {
             replacing::vomit(value, replacements, base, env)
         }
-        _ => todo!(),
     }
 }
 
