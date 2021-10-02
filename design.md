@@ -32,12 +32,6 @@
 - replacing
 - type_is (M2)
 
-# Stuff
-
-## Context
-- Fields:
-  - containing_namespace: `Namespace`
-
 # Things there can be
 
 ## Item
@@ -104,19 +98,6 @@ implementation based on its value.
   - `value.inferred_type()`
 - Reduction:
   - `self`
-
-### Defining
-- Fields:
-  - base: `ItemId`
-  - definitions: `Vec<(String, ItemId)>`
-  - child_scope: `ScopeId`
-- Inferred type:
-  - `type_of(base)`
-- Reduction:
-  - reduce base
-  - reduce definitions
-- Code:
-  - `code_or_name(base)` defining{ `name` is .. }
 
 ### FromValues
 - Fields:
