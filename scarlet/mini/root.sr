@@ -1,7 +1,4 @@
-asdf::member
-defining{
-    asdf is 0
-    defining{
-        member is 123
-    }
+asdf
+replacing{
+    something with another
 }

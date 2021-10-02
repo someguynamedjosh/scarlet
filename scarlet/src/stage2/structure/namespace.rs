@@ -1,4 +1,4 @@
-use super::{Definitions, Item, NamespaceId, Replacements};
+use super::{Definitions, Item, NamespaceId, Replacements, ReplacementsId};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Namespace {
@@ -18,7 +18,7 @@ pub enum Namespace {
     },
     Replacing {
         base: NamespaceId,
-        replacements: Replacements,
+        replacements: ReplacementsId,
     },
     Root(Item),
 }

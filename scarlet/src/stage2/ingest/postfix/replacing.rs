@@ -45,14 +45,11 @@ fn ingest_replacement(
     }
 }
 
-fn create_replacement_item(
-    env: &mut Environment,
-    base: Item,
-    replacements: Vec<(ValueId, ValueId)>,
-) -> Item {
+fn create_replacement_item(env: &mut Environment, base: Item, replacements: Replacements) -> Item {
+    let replacements = env.replacements.push(replacements);
     let namespace = env.insert_namespace(Namespace::Replacing {
         base: base.namespace,
-        replacements: replacements.clone(),
+        replacements,
     });
     let value = env.insert_value(Value::Replacing {
         base: base.value,

@@ -4,12 +4,12 @@ use crate::{
         expression::Expression,
         statement::{Replace, Statement},
     },
-    stage2::structure::{Environment, Item, NamespaceId, Value, ValueId},
+    stage2::structure::{Environment, Item, NamespaceId, ReplacementsId, Value, ValueId},
 };
 
 pub fn vomit(
     value: &Value,
-    replacements: &Vec<(ValueId, ValueId)>,
+    replacements: &ReplacementsId,
     base: &NamespaceId,
     env: &Environment,
 ) -> Expression {
@@ -25,8 +25,8 @@ pub fn vomit(
 }
 
 fn vomit_impl(
-    replacements: &Vec<(ValueId, ValueId)>,
-    vreplacements: &Vec<(ValueId, ValueId)>,
+    replacements: &ReplacementsId,
+    vreplacements: &ReplacementsId,
     vbase: &ValueId,
     base: &NamespaceId,
     env: &Environment,
@@ -40,15 +40,9 @@ fn vomit_impl(
     build_replacing_expr(statements, env, base)
 }
 
-fn build_statements(
-    replacements: &Vec<(
-        crate::shared::Id<Option<Value>>,
-        crate::shared::Id<Option<Value>>,
-    )>,
-    env: &Environment,
-) -> Vec<Statement> {
+fn build_statements(replacements: &ReplacementsId, env: &Environment) -> Vec<Statement> {
     let mut statements = Vec::new();
-    for (target, value) in replacements {
+    for (target, value) in &env[*replacements] {
         statements.push(build_statement(env, target, value));
     }
     statements
@@ -56,8 +50,8 @@ fn build_statements(
 
 fn build_statement(
     env: &Environment,
-    target: &crate::shared::Id<Option<Value>>,
-    value: &crate::shared::Id<Option<Value>>,
+    target: &ValueId,
+    value: &ValueId,
 ) -> Statement {
     let target = value::vomit_value(env, *target);
     let value = value::vomit_value(env, *value);

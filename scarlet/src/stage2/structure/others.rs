@@ -7,6 +7,7 @@ pub type Replacements = Vec<(ValueId, ValueId)>;
 pub type Definitions = OrderedMap<String, Item>;
 
 pub type NamespaceId = Id<Option<Namespace>>;
+pub type ReplacementsId = Id<Replacements>;
 pub type ValueId = Id<Option<Value>>;
 pub type VariableId = Id<Variable>;
 pub type VariantId = Id<Variant>;
