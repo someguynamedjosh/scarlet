@@ -1,4 +1,4 @@
-use super::{Definitions, Item, NamespaceId, Replacements, ReplacementsId};
+use super::{Definitions, Item, NamespaceId, ReplacementsId};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Namespace {

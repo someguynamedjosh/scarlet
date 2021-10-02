@@ -48,11 +48,7 @@ fn build_statements(replacements: &ReplacementsId, env: &Environment) -> Vec<Sta
     statements
 }
 
-fn build_statement(
-    env: &Environment,
-    target: &ValueId,
-    value: &ValueId,
-) -> Statement {
+fn build_statement(env: &Environment, target: &ValueId, value: &ValueId) -> Statement {
     let target = value::vomit_value(env, *target);
     let value = value::vomit_value(env, *value);
     let statement = Replace { target, value };

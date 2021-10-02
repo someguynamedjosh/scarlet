@@ -62,15 +62,15 @@ impl<'a> Context<'a> {
                 let value = s3::Value::BuiltinValue(*value);
                 self.output.values.get_or_push(value)
             }
-            s2::Value::From { base, values } => todo!(),
+            s2::Value::From { base: _, values: _ } => todo!(),
             s2::Value::Identifier { .. } => unreachable!(),
             s2::Value::Member { .. } => unreachable!(),
             s2::Value::Replacing { .. } => unreachable!(),
-            s2::Value::Variant { variant } => todo!(),
+            s2::Value::Variant { variant: _ } => todo!(),
         }
     }
 
-    fn ingest_replacements(&mut self, replacements: s2::ReplacementsId) -> s3::ReplacementsId {
+    fn ingest_replacements(&mut self, _replacements: s2::ReplacementsId) -> s3::ReplacementsId {
         let replacements = s3::Replacements::new();
         self.output.replacements.get_or_push(replacements)
     }
@@ -179,7 +179,10 @@ impl<'a> Context<'a> {
                 let item = self.dereference_member(base, other_name)?;
                 self.dereference_identifier(name, item.namespace.unwrap())
             }
-            s2::Namespace::Replacing { base, replacements } => {
+            s2::Namespace::Replacing {
+                base: _,
+                replacements: _,
+            } => {
                 unreachable!("i think? question mark?")
             }
             s2::Namespace::Root(..) => None,

@@ -2,9 +2,7 @@ use crate::{
     stage1::structure::construct::Construct,
     stage2::{
         self,
-        structure::{
-            Environment, Item, Namespace, NamespaceId, Value, ValueId, Variant, VariantId,
-        },
+        structure::{Environment, Item, Namespace, NamespaceId, Value, ValueId, Variant},
     },
 };
 

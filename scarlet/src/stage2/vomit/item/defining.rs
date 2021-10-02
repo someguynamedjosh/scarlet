@@ -4,7 +4,7 @@ use crate::{
         expression::Expression,
         statement::{Is, Statement},
     },
-    stage2::structure::{Definitions, Environment, Item, Namespace, NamespaceId},
+    stage2::structure::{Definitions, Environment, Item, NamespaceId},
 };
 
 pub fn vomit(

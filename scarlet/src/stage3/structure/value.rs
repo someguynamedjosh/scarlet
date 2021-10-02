@@ -1,6 +1,5 @@
 use super::{
-    BuiltinOperation, BuiltinValue, Replacements, ReplacementsId, ValueId, VariableId, Variables,
-    VariantId,
+    BuiltinOperation, BuiltinValue, ReplacementsId, ValueId, VariableId, Variables, VariantId,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash)]
