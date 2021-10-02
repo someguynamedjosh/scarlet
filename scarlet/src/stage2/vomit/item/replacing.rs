@@ -1,17 +1,10 @@
 use super::{helpers, value};
 use crate::{
-    stage1::{
-        self,
-        structure::{
-            construct::{Construct, ConstructBody},
-            expression::Expression,
-            statement::{Is, Replace, Statement},
-        },
+    stage1::structure::{
+        expression::Expression,
+        statement::{Replace, Statement},
     },
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId,
-        Value, ValueId,
-    },
+    stage2::structure::{Environment, Item, NamespaceId, Value, ValueId},
 };
 
 pub fn vomit(

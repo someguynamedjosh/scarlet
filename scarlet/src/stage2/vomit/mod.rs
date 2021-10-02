@@ -1,15 +1,5 @@
-use super::structure::{Environment, Item, Namespace, Value, ValueId};
-use crate::{
-    stage1::{
-        self,
-        structure::{
-            construct::{Construct, ConstructBody},
-            expression::Expression,
-            statement::{Is, Replace, Statement},
-        },
-    },
-    stage2::structure::{BuiltinOperation, BuiltinValue},
-};
+use super::structure::{Environment, Item};
+use crate::stage1::{self};
 
 mod helpers;
 mod item;
@@ -20,4 +10,3 @@ pub use item::vomit;
 pub fn completely_vomit_item(env: &Environment, item: Item) -> String {
     stage1::vomit(&vomit(env, item))
 }
-

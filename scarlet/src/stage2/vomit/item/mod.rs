@@ -1,17 +1,7 @@
 use super::{helpers, value};
 use crate::{
-    stage1::{
-        self,
-        structure::{
-            construct::{Construct, ConstructBody},
-            expression::Expression,
-            statement::{Is, Replace, Statement},
-        },
-    },
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId,
-        Value, ValueId,
-    },
+    stage1::structure::expression::Expression,
+    stage2::structure::{Environment, Item, Namespace, Value},
 };
 
 mod defining;
@@ -24,12 +14,7 @@ pub fn vomit(env: &Environment, item: Item) -> Expression {
     vomit_impl(namespace, env, item, value)
 }
 
-fn vomit_impl(
-    namespace: &Namespace,
-    env: &Environment,
-    item: Item,
-    value: &Value,
-) -> Expression {
+fn vomit_impl(namespace: &Namespace, env: &Environment, item: Item, value: &Value) -> Expression {
     match namespace {
         Namespace::Defining {
             base, definitions, ..

@@ -1,17 +1,7 @@
-use super::{helpers, value};
+use super::helpers;
 use crate::{
-    stage1::{
-        self,
-        structure::{
-            construct::{Construct, ConstructBody},
-            expression::Expression,
-            statement::{Is, Replace, Statement},
-        },
-    },
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Definitions, Environment, Item, Namespace, NamespaceId,
-        Value, ValueId,
-    },
+    stage1::structure::expression::Expression,
+    stage2::structure::{Environment, Item, Namespace, NamespaceId, Value},
 };
 
 pub fn vomit(value: &Value, base: &NamespaceId, name: &String, env: &Environment) -> Expression {

@@ -32,7 +32,10 @@ fn define_variable(env: &mut Environment, typee: Item) -> crate::shared::Id<Opti
     definition
 }
 
-fn create_variable_item(env: &mut Environment, definition: crate::shared::Id<Option<Value>>) -> Item {
+fn create_variable_item(
+    env: &mut Environment,
+    definition: crate::shared::Id<Option<Value>>,
+) -> Item {
     let namespace = env.insert_namespace(Namespace::Empty);
     let value = definition;
     Item { namespace, value }

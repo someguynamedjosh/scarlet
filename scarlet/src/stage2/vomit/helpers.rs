@@ -1,15 +1,7 @@
-use crate::{
-    stage1::{
-        self,
-        structure::{
-            construct::{Construct, ConstructBody},
-            expression::Expression,
-            statement::{Is, Replace, Statement},
-        },
-    },
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Environment, Item, Namespace, NamespaceId, Value,
-    },
+use crate::stage1::structure::{
+    construct::{Construct, ConstructBody},
+    expression::Expression,
+    statement::Statement,
 };
 
 pub fn single_expr_construct(label: &str, expr: Expression) -> Construct {
