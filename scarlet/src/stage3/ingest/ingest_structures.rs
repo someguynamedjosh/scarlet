@@ -44,4 +44,21 @@ impl<'a> Context<'a> {
         self.variable_map.insert(variable_id, result);
         result
     }
+
+    pub fn ingest_variant(&mut self, variant_id: s2::VariantId) -> s3::VariantId {
+        if let Some(result) = self.variant_map.get(&variant_id) {
+            return *result;
+        }
+        let original_type = self.input[variant_id].original_type;
+        let ingested_type = self.ingest(original_type);
+        // For now, set the definition to the type because we do not yet have an
+        // ID for the actual definition.
+        let variant = s3::Variant {
+            definition: ingested_type,
+            original_type: ingested_type,
+        };
+        let result = self.output.variants.push(variant);
+        self.variant_map.insert(variant_id, result);
+        result
+    }
 }

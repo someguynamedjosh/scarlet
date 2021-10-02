@@ -1,10 +1,4 @@
-asdf
-replacing{
-    asdf with 123
-}
-replacing{
-    asdf with 12
-}
+builtin_item{cast 0 0 0 0}
 defining{
-    asdf is any{builtin_item{UnsignedInteger8}}
+    TYPE is builtin_item{TYPE}
 }

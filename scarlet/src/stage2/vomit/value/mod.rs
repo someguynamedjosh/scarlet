@@ -1,7 +1,9 @@
 use super::helpers;
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression},
-    stage2::structure::{BuiltinOperation, BuiltinValue, Environment, Value, ValueId, VariableId},
+    stage2::structure::{
+        BuiltinOperation, BuiltinValue, Environment, Value, ValueId, VariableId, VariantId,
+    },
 };
 
 pub fn vomit_value(env: &Environment, value: ValueId) -> Expression {
@@ -18,7 +20,7 @@ pub fn vomit_value_impl(env: &Environment, value: &Value) -> Expression {
         Value::Identifier { name, .. } => helpers::identifier(name),
         Value::Member { .. } => unreachable!(),
         Value::Replacing { .. } => todo!(),
-        Value::Variant { .. } => todo!(),
+        Value::Variant { variant } => vomit_variant(env, variant),
     };
     helpers::just_root_expression(construct)
 }
@@ -29,7 +31,7 @@ fn vomit_any(env: &Environment, variable: &VariableId) -> Construct {
     helpers::single_expr_construct("any", typee)
 }
 
-fn vomit_operation(op: &BuiltinOperation, env: &Environment) -> Construct {
+fn vomit_operation(op: &BuiltinOperation<ValueId>, env: &Environment) -> Construct {
     let name = match op {
         BuiltinOperation::Cast { .. } => "cast",
     };
@@ -56,4 +58,10 @@ fn vomit_from(values: &Vec<ValueId>, env: &Environment, base: &ValueId) -> Expre
         values.collect(),
     ));
     result
+}
+
+fn vomit_variant(env: &Environment, variant: &VariantId) -> Construct {
+    let typee = env[*variant].original_type;
+    let typee = vomit_value(env, typee);
+    helpers::single_expr_construct("variant", typee)
 }

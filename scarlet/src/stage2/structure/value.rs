@@ -7,7 +7,7 @@ pub enum Value {
     Any {
         variable: VariableId,
     },
-    BuiltinOperation(BuiltinOperation),
+    BuiltinOperation(BuiltinOperation<ValueId>),
     BuiltinValue(BuiltinValue),
     From {
         base: ValueId,
