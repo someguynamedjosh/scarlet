@@ -1,6 +1,7 @@
 use super::Value;
 use crate::shared::{Id, OrderedMap, OrderedSet};
 
+pub type Definitions = OrderedMap<VariableId, ValueId>;
 pub type Replacements = OrderedMap<VariableId, ValueId>;
 pub type Variables = OrderedSet<(VariableId, ())>;
 pub type ValueId = Id<Value>;
