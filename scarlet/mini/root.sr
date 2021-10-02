@@ -1,8 +1,10 @@
-0 From{thing5}
+ns1::value
 defining{
-    TYPE is builtin_item{TYPE}
-    thing1 is any{TYPE}
-    thing2 is any{TYPE}
-    thing5 is thing4
-    thing4 is thing1
+    U8 is builtin_item{UnsignedInteger8}
+    asdf is any{U8}
+
+    ns1 is 0
+    defining{
+        value is asdf
+    }
 }

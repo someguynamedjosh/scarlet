@@ -26,7 +26,7 @@ impl<'a> Context<'a> {
             } => {
                 let (other_name, in_namespace) = (other_name.clone(), *in_namespace);
                 let item = self.dereference_identifier(other_name, in_namespace)?;
-                self.dereference_member(item.namespace.unwrap(), name)
+                self.dereference_member(item.namespace, name)
             }
             s2::Namespace::Member {
                 base: other_base,
@@ -34,7 +34,7 @@ impl<'a> Context<'a> {
             } => {
                 let (other_name, other_base) = (other_name.clone(), *other_base);
                 let item = self.dereference_member(other_base, other_name)?;
-                self.dereference_member(item.namespace.unwrap(), name)
+                self.dereference_member(item.namespace, name)
             }
             s2::Namespace::Replacing { base, replacements } => {
                 let (base, replacements) = (*base, *replacements);

@@ -6,7 +6,7 @@ mod member;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DereferencedItem {
-    pub namespace: Option<s2::NamespaceId>,
+    pub namespace: s2::NamespaceId,
     pub replacements: Vec<s2::ReplacementsId>,
     pub value: s2::ValueId,
 }
@@ -14,7 +14,7 @@ pub struct DereferencedItem {
 impl DereferencedItem {
     fn from_item(item: s2::Item) -> Self {
         Self {
-            namespace: Some(item.namespace),
+            namespace: item.namespace,
             replacements: Vec::new(),
             value: item.value,
         }
@@ -23,13 +23,11 @@ impl DereferencedItem {
 
 impl<'a> Context<'a> {
     pub fn dereference_variable(&mut self, value_id: s2::ValueId) -> s3::VariableId {
-        let dereferenced = self.dereference_value(value_id);
-        if !dereferenced.replacements.is_empty() {
+        let (value, replacements) = self.dereference_value(value_id);
+        if !replacements.is_empty() {
             todo!("nice error")
         }
-        let value = self.input[dereferenced.value]
-            .as_ref()
-            .expect("ICE: Undefined item");
+        let value = self.input[value].as_ref().expect("ICE: Undefined item");
         if let s2::Value::Any { variable } = value {
             let variable = *variable;
             self.ingest_variable(variable)
@@ -38,7 +36,10 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub fn dereference_value(&mut self, value_id: s2::ValueId) -> DereferencedItem {
+    pub fn dereference_value(
+        &mut self,
+        value_id: s2::ValueId,
+    ) -> (s2::ValueId, Vec<s2::ReplacementsId>) {
         let value = self.input[value_id].as_ref().expect("ICE: Undefined item");
         match value {
             s2::Value::Identifier { name, in_namespace } => {
@@ -57,15 +58,43 @@ impl<'a> Context<'a> {
             }
             s2::Value::Replacing { base, replacements } => {
                 let (base, replacements) = (*base, *replacements);
-                let mut base = self.dereference_value(base);
-                base.replacements.push(replacements);
-                base
+                let (value, mut reps) = self.dereference_value(base);
+                reps.push(replacements);
+                (value, reps)
             }
-            _ => DereferencedItem {
-                namespace: None,
-                replacements: Vec::new(),
-                value: value_id,
-            },
+            _ => (value_id, Vec::new()),
+        }
+    }
+
+    pub fn dereference_namespace(
+        &mut self,
+        namespace_id: s2::NamespaceId,
+    ) -> (s2::NamespaceId, Vec<s2::ReplacementsId>) {
+        let namespace = self.input[namespace_id]
+            .as_ref()
+            .expect("ICE: Undefined item");
+        match namespace {
+            s2::Namespace::Identifier { name, in_namespace } => {
+                let (name, in_namespace) = (name.clone(), *in_namespace);
+                let next_item = self
+                    .dereference_identifier(name, in_namespace)
+                    .expect("TODO: Nice error");
+                self.dereference_namespace(next_item.namespace)
+            }
+            s2::Namespace::Member { base, name, .. } => {
+                let (base, name) = (*base, name.clone());
+                let next_item = self
+                    .dereference_member(base, name)
+                    .expect("TODO: Nice error");
+                self.dereference_namespace(next_item.namespace)
+            }
+            s2::Namespace::Replacing { base, replacements } => {
+                let (base, replacements) = (*base, *replacements);
+                let (namespace, mut reps) = self.dereference_namespace(base);
+                reps.push(replacements);
+                (namespace, reps)
+            }
+            _ => (namespace_id, Vec::new()),
         }
     }
 }

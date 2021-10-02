@@ -6,10 +6,25 @@ impl<'a> Context<'a> {
         if let Some(result) = self.value_map.get(&value_id) {
             return *result;
         }
-        let dereferenced = self.dereference_value(value_id);
-        let result = self.ingest_dereferenced(dereferenced);
+        let (base, reps) = self.dereference_value(value_id);
+        let base = self.ingest_dereferenced_base(base);
+        let result = self.add_replacements(base, reps);
         self.value_map.insert(value_id, result);
         result
+    }
+
+    pub fn add_replacements(
+        &mut self,
+        base: s3::ValueId,
+        replacements: Vec<s2::ReplacementsId>,
+    ) -> s3::ValueId {
+        if replacements.is_empty() {
+            base
+        } else {
+            let replacements = self.ingest_replacements_list(replacements);
+            let value = s3::Value::Replacing { base, replacements };
+            self.output.values.get_or_push(value)
+        }
     }
 
     pub fn ingest_dereferenced_base(&mut self, base: s2::ValueId) -> s3::ValueId {
@@ -109,16 +124,5 @@ impl<'a> Context<'a> {
         let result = self.output.values.get_or_push(value);
         self.output.variants[variant].definition = result;
         result
-    }
-
-    pub fn ingest_dereferenced(&mut self, dereferenced: DereferencedItem) -> s3::ValueId {
-        let base = self.ingest_dereferenced_base(dereferenced.value);
-        if dereferenced.replacements.is_empty() {
-            base
-        } else {
-            let replacements = self.ingest_replacements_list(dereferenced.replacements);
-            let value = s3::Value::Replacing { base, replacements };
-            self.output.values.get_or_push(value)
-        }
     }
 }
