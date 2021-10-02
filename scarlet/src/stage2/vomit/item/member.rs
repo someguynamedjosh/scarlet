@@ -1,7 +1,7 @@
 use super::helpers;
 use crate::{
     stage1::structure::expression::Expression,
-    stage2::structure::{Environment, Item, Namespace, NamespaceId, Value},
+    stage2::structure::{Environment, Item, Namespace, NamespaceId, Value, ValueId},
 };
 
 pub fn vomit(value: &Value, base: &NamespaceId, name: &String, env: &Environment) -> Expression {
@@ -20,8 +20,8 @@ pub fn vomit(value: &Value, base: &NamespaceId, name: &String, env: &Environment
 }
 
 fn vomit_impl(
-    previous_value: &crate::shared::Id<Option<Value>>,
-    base: &crate::shared::Id<Option<Namespace>>,
+    previous_value: &ValueId,
+    base: &NamespaceId,
     env: &Environment,
     name: &String,
 ) -> Expression {

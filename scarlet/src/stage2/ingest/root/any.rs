@@ -2,7 +2,7 @@ use crate::{
     stage1::structure::construct::Construct,
     stage2::{
         self,
-        structure::{Environment, Item, Namespace, NamespaceId, Value, Variable},
+        structure::{Environment, Item, Namespace, NamespaceId, Value, ValueId, Variable},
     },
 };
 
@@ -20,7 +20,7 @@ fn get_type_definition(root: Construct, env: &mut Environment, in_namespace: Nam
     typee
 }
 
-fn define_variable(env: &mut Environment, typee: Item) -> crate::shared::Id<Option<Value>> {
+fn define_variable(env: &mut Environment, typee: Item) -> ValueId {
     let definition = env.new_undefined_value();
     let variable = Variable {
         definition,
@@ -32,10 +32,7 @@ fn define_variable(env: &mut Environment, typee: Item) -> crate::shared::Id<Opti
     definition
 }
 
-fn create_variable_item(
-    env: &mut Environment,
-    definition: crate::shared::Id<Option<Value>>,
-) -> Item {
+fn create_variable_item(env: &mut Environment, definition: ValueId) -> Item {
     let namespace = env.insert_namespace(Namespace::Empty);
     let value = definition;
     Item { namespace, value }

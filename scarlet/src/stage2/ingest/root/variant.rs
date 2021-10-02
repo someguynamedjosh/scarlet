@@ -2,7 +2,9 @@ use crate::{
     stage1::structure::construct::Construct,
     stage2::{
         self,
-        structure::{Environment, Item, Namespace, NamespaceId, Value, Variant},
+        structure::{
+            Environment, Item, Namespace, NamespaceId, Value, ValueId, Variant, VariantId,
+        },
     },
 };
 
@@ -12,11 +14,7 @@ pub fn ingest(env: &mut Environment, root: Construct, in_namespace: NamespaceId)
     inserted_value(env, definition)
 }
 
-fn ingest_type(
-    root: Construct,
-    env: &mut Environment,
-    in_namespace: crate::shared::Id<Option<Namespace>>,
-) -> Item {
+fn ingest_type(root: Construct, env: &mut Environment, in_namespace: NamespaceId) -> Item {
     let typee = root
         .expect_single_expression("variant")
         .expect("TODO: Nice error");
@@ -24,7 +22,7 @@ fn ingest_type(
     typee
 }
 
-fn make_variant(env: &mut Environment, typee: Item) -> crate::shared::Id<Option<Value>> {
+fn make_variant(env: &mut Environment, typee: Item) -> ValueId {
     let definition = env.new_undefined_value();
     let variant = Variant {
         definition,
@@ -36,7 +34,7 @@ fn make_variant(env: &mut Environment, typee: Item) -> crate::shared::Id<Option<
     definition
 }
 
-fn inserted_value(env: &mut Environment, definition: crate::shared::Id<Option<Value>>) -> Item {
+fn inserted_value(env: &mut Environment, definition: ValueId) -> Item {
     let namespace = env.insert_namespace(Namespace::Empty);
     let value = definition;
     Item { namespace, value }

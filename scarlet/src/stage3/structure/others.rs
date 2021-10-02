@@ -4,10 +4,10 @@ use crate::shared::{Id, OrderedMap, OrderedSet};
 pub type Definitions = OrderedMap<VariableId, ValueId>;
 pub type Replacements = OrderedMap<VariableId, ValueId>;
 pub type Variables = OrderedSet<(VariableId, ())>;
-pub type ReplacementsId = Id<Replacements>;
-pub type ValueId = Id<Value>;
-pub type VariableId = Id<Variable>;
-pub type VariantId = Id<Variant>;
+pub type ReplacementsId = Id<Replacements, 'R'>;
+pub type ValueId = Id<Value, 'L'>;
+pub type VariableId = Id<Variable, 'V'>;
+pub type VariantId = Id<Variant, 'T'>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Variable {

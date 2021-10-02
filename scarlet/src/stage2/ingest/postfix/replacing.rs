@@ -19,7 +19,7 @@ pub fn ingest(
 fn ingest_replacements(
     post: Construct,
     env: &mut Environment,
-    in_namespace: crate::shared::Id<Option<Namespace>>,
+    in_namespace: NamespaceId,
 ) -> Vec<(ValueId, ValueId)> {
     let mut replacements = Replacements::new();
     for statement in post.expect_statements("replacing").unwrap() {
@@ -31,7 +31,7 @@ fn ingest_replacements(
 fn ingest_replacement(
     statement: &Statement,
     env: &mut Environment,
-    in_namespace: crate::shared::Id<Option<Namespace>>,
+    in_namespace: NamespaceId,
     replacements: &mut Vec<(ValueId, ValueId)>,
 ) {
     match statement {

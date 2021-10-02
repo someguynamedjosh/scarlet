@@ -5,11 +5,11 @@ use super::{
 
 #[derive(Clone, Debug)]
 pub struct Environment {
-    pub namespaces: Pool<Option<Namespace>>,
-    pub replacements: Pool<Replacements>,
-    pub values: Pool<Option<Value>>,
-    pub variables: Pool<Variable>,
-    pub variants: Pool<Variant>,
+    pub namespaces: Pool<Option<Namespace>, 'N'>,
+    pub replacements: Pool<Replacements, 'R'>,
+    pub values: Pool<Option<Value>, 'L'>,
+    pub variables: Pool<Variable, 'V'>,
+    pub variants: Pool<Variant, 'T'>,
     pub info_requests: Vec<(Item, NamespaceId)>,
 }
 

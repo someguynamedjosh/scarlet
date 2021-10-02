@@ -31,7 +31,7 @@ fn build_statements(definitions: &Definitions, env: &Environment) -> Vec<Stateme
 
 fn build_expr(
     statements: Vec<Statement>,
-    base: &crate::shared::Id<Option<Namespace>>,
+    base: &NamespaceId,
     item: Item,
     env: &Environment,
 ) -> Expression {

@@ -1,6 +1,6 @@
 use crate::{
     stage1::structure::construct::Construct,
-    stage2::structure::{Environment, Item, Namespace, NamespaceId, Value},
+    stage2::structure::{Environment, Item, Namespace, NamespaceId, Value, ValueId},
 };
 
 pub fn ingest(env: &mut Environment, root: Construct, in_namespace: NamespaceId) -> Item {
@@ -10,20 +10,12 @@ pub fn ingest(env: &mut Environment, root: Construct, in_namespace: NamespaceId)
     Item { namespace, value }
 }
 
-fn build_namespace(
-    env: &mut Environment,
-    name: String,
-    in_namespace: crate::shared::Id<Option<Namespace>>,
-) -> crate::shared::Id<Option<Namespace>> {
+fn build_namespace(env: &mut Environment, name: String, in_namespace: NamespaceId) -> NamespaceId {
     let namespace = env.insert_namespace(Namespace::Identifier { name, in_namespace });
     namespace
 }
 
-fn build_value(
-    env: &mut Environment,
-    name: String,
-    in_namespace: crate::shared::Id<Option<Namespace>>,
-) -> crate::shared::Id<Option<Value>> {
+fn build_value(env: &mut Environment, name: String, in_namespace: NamespaceId) -> ValueId {
     let value = env.insert_value(Value::Identifier { name, in_namespace });
     value
 }

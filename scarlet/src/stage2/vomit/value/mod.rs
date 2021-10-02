@@ -1,7 +1,7 @@
 use super::helpers;
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression},
-    stage2::structure::{BuiltinOperation, BuiltinValue, Environment, Value, ValueId},
+    stage2::structure::{BuiltinOperation, BuiltinValue, Environment, Value, ValueId, VariableId},
 };
 
 pub fn vomit_value(env: &Environment, value: ValueId) -> Expression {
@@ -23,10 +23,7 @@ pub fn vomit_value_impl(env: &Environment, value: &Value) -> Expression {
     helpers::just_root_expression(construct)
 }
 
-fn vomit_any(
-    env: &Environment,
-    variable: &crate::shared::Id<crate::stage2::structure::Variable>,
-) -> Construct {
+fn vomit_any(env: &Environment, variable: &VariableId) -> Construct {
     let typee = env[*variable].original_type;
     let typee = vomit_value(env, typee);
     helpers::single_expr_construct("any", typee)

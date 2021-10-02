@@ -4,10 +4,10 @@ use super::{
 
 #[derive(Clone, Debug)]
 pub struct Environment {
-    pub replacements: Pool<Replacements>,
-    pub values: Pool<Value>,
-    pub variables: Pool<Variable>,
-    pub variants: Pool<Variant>,
+    pub replacements: Pool<Replacements, 'R'>,
+    pub values: Pool<Value, 'L'>,
+    pub variables: Pool<Variable, 'V'>,
+    pub variants: Pool<Variant, 'T'>,
 }
 
 impl Environment {
