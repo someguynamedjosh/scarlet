@@ -14,7 +14,7 @@ fn main() {
     println!("{:#?}", environment);
     println!(
         "\nRESULT:\n{}",
-        stage2::vomit_completely(&environment, root)
+        stage2::completely_vomit_item(&environment, root)
     );
 
     // println!("Reducing everything");
