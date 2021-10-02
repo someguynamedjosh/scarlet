@@ -27,7 +27,24 @@ impl<'a> Context<'a> {
                 let value = s3::Value::BuiltinValue(*value);
                 self.output.values.get_or_push(value)
             }
-            s2::Value::From { base: _, values: _ } => todo!(),
+            s2::Value::From { base, values } => {
+                let (base, values) = (*base, values.clone());
+                let base = self.ingest(base);
+                let mut total_deps = s3::Variables::new();
+                for value in values {
+                    let value = self.ingest(value);
+                    let value_deps = self.get_dependencies(value);
+                    total_deps = total_deps.union(value_deps);
+                }
+                if total_deps.len() == 0 {
+                    return base;
+                }
+                let value = s3::Value::From {
+                    base,
+                    variables: total_deps,
+                };
+                self.output.values.get_or_push(value)
+            }
             s2::Value::Identifier { .. } => unreachable!(),
             s2::Value::Member { .. } => unreachable!(),
             s2::Value::Replacing { .. } => unreachable!(),
@@ -35,6 +52,21 @@ impl<'a> Context<'a> {
                 let variant = *variant;
                 self.do_variant(variant)
             }
+        }
+    }
+
+    fn get_dependencies(&self, of: s3::ValueId) -> s3::Variables {
+        match &self.output[of] {
+            s3::Value::Any { variable } => vec![(*variable, ())].into_iter().collect(),
+            s3::Value::BuiltinOperation(op) => op
+                .inputs()
+                .into_iter()
+                .flat_map(|input| self.get_dependencies(input).into_iter())
+                .collect(),
+            s3::Value::BuiltinValue(..) => s3::Variables::new(),
+            s3::Value::From { base, variables } => todo!(),
+            s3::Value::Replacing { base, replacements } => todo!(),
+            s3::Value::Variant { .. } => s3::Variables::new(),
         }
     }
 

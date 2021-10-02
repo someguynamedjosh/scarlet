@@ -1,4 +1,6 @@
-builtin_item{cast 0 0 0 0}
+TYPE
 defining{
     TYPE is builtin_item{TYPE}
+    thing1 is any{TYPE}
+    thing2 is any{TYPE}
 }

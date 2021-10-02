@@ -4,7 +4,7 @@ use crate::shared::{Id, OrderedMap, OrderedSet};
 pub type BuiltinOperation = crate::stage2::structure::BuiltinOperation<ValueId>;
 pub type Definitions = OrderedMap<VariableId, ValueId>;
 pub type Replacements = OrderedMap<VariableId, ValueId>;
-pub type Variables = OrderedSet<(VariableId, ())>;
+pub type Variables = OrderedSet<VariableId>;
 
 pub type ReplacementsId = Id<Replacements, 'R'>;
 pub type ValueId = Id<Value, 'L'>;
