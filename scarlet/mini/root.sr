@@ -3,5 +3,6 @@ defining{
     TYPE is builtin_item{TYPE}
     thing1 is any{TYPE}
     thing2 is any{TYPE}
-    thing5 is thing1
+    thing5 is thing4
+    thing4 is thing1
 }

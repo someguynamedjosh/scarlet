@@ -43,13 +43,17 @@ impl<'a> Context<'a> {
         match value {
             s2::Value::Identifier { name, in_namespace } => {
                 let (name, in_namespace) = (name.clone(), *in_namespace);
-                self.dereference_identifier(name, in_namespace)
-                    .expect("TODO: Nice error")
+                let next_item = self
+                    .dereference_identifier(name, in_namespace)
+                    .expect("TODO: Nice error");
+                self.dereference_value(next_item.value)
             }
             s2::Value::Member { base, name, .. } => {
                 let (base, name) = (*base, name.clone());
-                self.dereference_member(base, name)
-                    .expect("TODO: Nice error")
+                let next_item = self
+                    .dereference_member(base, name)
+                    .expect("TODO: Nice error");
+                self.dereference_value(next_item.value)
             }
             s2::Value::Replacing { base, replacements } => {
                 let (base, replacements) = (*base, *replacements);
