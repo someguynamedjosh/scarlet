@@ -1,4 +1,7 @@
 asdf
 replacing{
-    something with another
+    asdf with 123
+}
+defining{
+    asdf is any{builtin_item{UnsignedInteger8}}
 }

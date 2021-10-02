@@ -18,11 +18,11 @@ impl Debug for Value {
                 write!(f, "{}}}", spacer)
             }
             Self::Replacing { base, replacements } => {
-                write!(f, "{:?}{}replacing{{", base, spacer)?;
-                for (target, value) in replacements {
-                    write!(f, "{}{:?} with {:?} ", nested_spacer, target, value)?;
+                write!(f, "{:?}{}replacing{{ ", base, spacer)?;
+                for id in replacements {
+                    write!(f, "{:?} ", id)?;
                 }
-                write!(f, "{}}}", spacer)
+                write!(f, "}}")
             }
             Self::Variant { variant } => variant.fmt(f),
         }

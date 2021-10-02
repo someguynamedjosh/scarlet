@@ -1,5 +1,6 @@
 use super::{
-    BuiltinOperation, BuiltinValue, Replacements, ValueId, VariableId, Variables, VariantId,
+    BuiltinOperation, BuiltinValue, Replacements, ReplacementsId, ValueId, VariableId, Variables,
+    VariantId,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -15,7 +16,7 @@ pub enum Value {
     },
     Replacing {
         base: ValueId,
-        replacements: Replacements,
+        replacements: Vec<ReplacementsId>,
     },
     Variant {
         variant: VariantId,
