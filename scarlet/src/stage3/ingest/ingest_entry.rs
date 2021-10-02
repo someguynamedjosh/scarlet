@@ -29,21 +29,7 @@ impl<'a> Context<'a> {
             }
             s2::Value::From { base, values } => {
                 let (base, values) = (*base, values.clone());
-                let base = self.ingest(base);
-                let mut total_deps = s3::Variables::new();
-                for value in values {
-                    let value = self.ingest(value);
-                    let value_deps = self.get_dependencies(value);
-                    total_deps = total_deps.union(value_deps);
-                }
-                if total_deps.len() == 0 {
-                    return base;
-                }
-                let value = s3::Value::From {
-                    base,
-                    variables: total_deps,
-                };
-                self.output.values.get_or_push(value)
+                self.do_from(base, values)
             }
             s2::Value::Identifier { .. } => unreachable!(),
             s2::Value::Member { .. } => unreachable!(),
@@ -55,6 +41,29 @@ impl<'a> Context<'a> {
         }
     }
 
+    fn do_from(&mut self, base: s2::ValueId, values: Vec<s2::ValueId>) -> s3::ValueId {
+        let base = self.ingest(base);
+        let total_deps = self.get_from_deps(values);
+        if total_deps.len() == 0 {
+            return base;
+        }
+        let value = s3::Value::From {
+            base,
+            variables: total_deps,
+        };
+        self.output.values.get_or_push(value)
+    }
+
+    fn get_from_deps(&mut self, values: Vec<s2::ValueId>) -> s3::Variables {
+        let mut total_deps = s3::Variables::new();
+        for value in values {
+            let value = self.ingest(value);
+            let value_deps = self.get_dependencies(value);
+            total_deps = total_deps.union(value_deps);
+        }
+        total_deps
+    }
+
     fn get_dependencies(&self, of: s3::ValueId) -> s3::Variables {
         match &self.output[of] {
             s3::Value::Any { variable } => vec![(*variable, ())].into_iter().collect(),
@@ -64,8 +73,18 @@ impl<'a> Context<'a> {
                 .flat_map(|input| self.get_dependencies(input).into_iter())
                 .collect(),
             s3::Value::BuiltinValue(..) => s3::Variables::new(),
-            s3::Value::From { base, variables } => todo!(),
-            s3::Value::Replacing { base, replacements } => todo!(),
+            s3::Value::From { base, variables } => {
+                self.get_dependencies(*base).difference(variables)
+            }
+            s3::Value::Replacing { base, replacements } => {
+                let mut keys_to_remove = s3::Variables::new();
+                for rep in replacements {
+                    for (target, _) in &self.output[*rep] {
+                        keys_to_remove.insert_or_replace(*target, ());
+                    }
+                }
+                self.get_dependencies(*base).difference(&keys_to_remove)
+            }
             s3::Value::Variant { .. } => s3::Variables::new(),
         }
     }

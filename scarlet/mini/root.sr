@@ -1,6 +1,7 @@
-TYPE
+0 From{thing5}
 defining{
     TYPE is builtin_item{TYPE}
     thing1 is any{TYPE}
     thing2 is any{TYPE}
+    thing5 is thing1
 }
