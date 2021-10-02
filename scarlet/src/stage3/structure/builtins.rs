@@ -22,10 +22,3 @@ impl BuiltinOperation {
         }
     }
 }
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum BuiltinValue {
-    OriginType,
-    U8Type,
-    U8(u8),
-}

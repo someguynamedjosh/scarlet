@@ -1,1 +1,7 @@
-TYPE replacing{a with 123}
+asdf::member
+defining{
+    asdf is 0
+    defining{
+        member is 123
+    }
+}

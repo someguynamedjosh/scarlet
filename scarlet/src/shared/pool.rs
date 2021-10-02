@@ -106,3 +106,14 @@ impl<T> Pool<T> {
         &mut self.items[id.index]
     }
 }
+
+impl<T: PartialEq + Eq> Pool<T> {
+    pub fn get_or_push(&mut self, item: T) -> Id<T> {
+        for (id, candidate) in &*self {
+            if candidate == &item {
+                return id;
+            }
+        }
+        self.push(item)
+    }
+}
