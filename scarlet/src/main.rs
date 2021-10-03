@@ -19,7 +19,7 @@ fn main() {
     );
 
     println!("Doing stage 3");
-    let (environment, root) = stage3::ingest(&environment, root);
+    let (environment, _root) = stage3::ingest(&environment, root);
     println!("{:#?}", environment);
 
     // println!("Infos:");

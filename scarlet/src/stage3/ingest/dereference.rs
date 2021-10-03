@@ -1,5 +1,5 @@
 use super::context::Context;
-use crate::{stage2::structure as s2, stage3::structure as s3};
+use crate::stage2::structure as s2;
 
 #[derive(Clone, Debug)]
 pub struct ItemBeingDereferenced {
@@ -51,7 +51,10 @@ impl<'a> Context<'a> {
         ItemBeingDereferenced { namespace, value }.as_base_of(item)
     }
 
-    pub fn dereference_namespace(&mut self, namespace_id: s2::NamespaceId) -> DereferencedNamespace {
+    pub fn dereference_namespace(
+        &mut self,
+        namespace_id: s2::NamespaceId,
+    ) -> DereferencedNamespace {
         let namespace = self.input[namespace_id].as_ref();
         let namespace = namespace.expect("ICE: Undefined item");
         match namespace {

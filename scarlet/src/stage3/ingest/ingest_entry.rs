@@ -1,7 +1,4 @@
-use super::{
-    context::Context,
-    dereference::{DereferencedValue, ItemBeingDereferenced},
-};
+use super::context::Context;
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
 impl<'a> Context<'a> {
@@ -34,8 +31,14 @@ impl<'a> Context<'a> {
                 .flat_map(|input| self.get_dependencies(input).into_iter())
                 .collect(),
             s3::Value::BuiltinValue(..) => s3::Variables::new(),
-            s3::Value::From { base, variables } => todo!(),
-            s3::Value::Replacing { base, replacements } => todo!(),
+            s3::Value::From {
+                base: _,
+                variables: _,
+            } => todo!(),
+            s3::Value::Replacing {
+                base: _,
+                replacements: _,
+            } => todo!(),
             s3::Value::Variant { .. } => s3::Variables::new(),
         }
     }

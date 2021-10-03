@@ -1,6 +1,6 @@
 use self::context::Context;
 use super::structure::Environment;
-use crate::stage3::{ingest::dereference::ItemBeingDereferenced, structure::Item};
+use crate::stage3::structure::Item;
 
 mod context;
 mod dereference;

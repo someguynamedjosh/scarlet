@@ -1,7 +1,4 @@
-use super::{
-    context::Context,
-    dereference::{DereferencedValue, ItemBeingDereferenced},
-};
+use super::{context::Context, dereference::DereferencedValue};
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
 impl<'a> Context<'a> {
