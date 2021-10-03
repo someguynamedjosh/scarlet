@@ -10,9 +10,9 @@ mod ingest_entry;
 mod ingest_structures;
 
 pub fn ingest(
-    input: &mut crate::stage2::structure::Environment,
+    input: &crate::stage2::structure::Environment,
     root: crate::stage2::structure::Item,
-) -> Environment {
+) -> (Environment, Item) {
     let mut env = Environment::new();
     let mut ctx = Context::new(input, &mut env);
     let root_namespace = ctx.ingest_namespace(root.namespace);
@@ -21,6 +21,5 @@ pub fn ingest(
         namespace: root_namespace,
         value: root_value,
     };
-    println!("{:?}\nbecomes\n{:#?}\n", root, new_root_item);
-    env
+    (env, new_root_item)
 }

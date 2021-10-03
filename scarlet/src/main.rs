@@ -11,7 +11,7 @@ fn main() {
     println!("Reading source from {}", path);
 
     println!("Doing stages 1 and 2");
-    let (mut environment, root) = entry::start_from_root(&path).unwrap();
+    let (environment, root) = entry::start_from_root(&path).unwrap();
     println!("{:#?}", environment);
     println!(
         "\nRESULT:\n{}",
@@ -19,7 +19,7 @@ fn main() {
     );
 
     println!("Doing stage 3");
-    let environment = stage3::ingest(&mut environment, root);
+    let (environment, root) = stage3::ingest(&environment, root);
     println!("{:#?}", environment);
 
     // println!("Infos:");

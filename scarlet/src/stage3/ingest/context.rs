@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
 pub struct Context<'a> {
-    pub input: &'a mut s2::Environment,
+    pub input: &'a s2::Environment,
     pub output: &'a mut s3::Environment,
     pub namespace_map: HashMap<s2::NamespaceId, s3::NamespaceId>,
     pub value_map: HashMap<s2::ValueId, s3::ValueId>,
@@ -12,7 +12,7 @@ pub struct Context<'a> {
 }
 
 impl<'a> Context<'a> {
-    pub fn new(input: &'a mut s2::Environment, output: &'a mut s3::Environment) -> Self {
+    pub fn new(input: &'a s2::Environment, output: &'a mut s3::Environment) -> Self {
         Self {
             input,
             output,
