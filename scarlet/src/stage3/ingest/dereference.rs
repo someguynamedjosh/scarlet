@@ -19,6 +19,13 @@ impl DereferencedItem {
             value: item.value,
         }
     }
+
+    pub fn including_replacements(self, from: Self) -> Self {
+        Self {
+            replacements: [self.replacements, from.replacements].concat(),
+            ..self
+        }
+    }
 }
 
 impl<'a> Context<'a> {
@@ -44,17 +51,21 @@ impl<'a> Context<'a> {
         match value {
             s2::Value::Identifier { name, in_namespace } => {
                 let (name, in_namespace) = (name.clone(), *in_namespace);
-                let next_item = self
+                let mut next_item = self
                     .dereference_identifier(name, in_namespace)
                     .expect("TODO: Nice error");
-                self.dereference_value(next_item.value)
+                let (value, mut reps) = self.dereference_value(next_item.value);
+                reps.append(&mut next_item.replacements);
+                (value, reps)
             }
             s2::Value::Member { base, name, .. } => {
                 let (base, name) = (*base, name.clone());
-                let next_item = self
+                let mut next_item = self
                     .dereference_member(base, name)
                     .expect("TODO: Nice error");
-                self.dereference_value(next_item.value)
+                let (value, mut reps) = self.dereference_value(next_item.value);
+                reps.append(&mut next_item.replacements);
+                (value, reps)
             }
             s2::Value::Replacing { base, replacements } => {
                 let (base, replacements) = (*base, *replacements);
@@ -76,17 +87,21 @@ impl<'a> Context<'a> {
         match namespace {
             s2::Namespace::Identifier { name, in_namespace } => {
                 let (name, in_namespace) = (name.clone(), *in_namespace);
-                let next_item = self
+                let mut next_item = self
                     .dereference_identifier(name, in_namespace)
                     .expect("TODO: Nice error");
-                self.dereference_namespace(next_item.namespace)
+                let (namespace, mut reps) = self.dereference_namespace(next_item.namespace);
+                reps.append(&mut next_item.replacements);
+                (namespace, reps)
             }
             s2::Namespace::Member { base, name, .. } => {
                 let (base, name) = (*base, name.clone());
-                let next_item = self
+                let mut next_item = self
                     .dereference_member(base, name)
                     .expect("TODO: Nice error");
-                self.dereference_namespace(next_item.namespace)
+                let (namespace, mut reps) = self.dereference_namespace(next_item.namespace);
+                reps.append(&mut next_item.replacements);
+                (namespace, reps)
             }
             s2::Namespace::Replacing { base, replacements } => {
                 let (base, replacements) = (*base, *replacements);

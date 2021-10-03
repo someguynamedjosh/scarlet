@@ -5,6 +5,7 @@ use crate::{stage2::structure as s2, stage3::structure as s3};
 pub struct Context<'a> {
     pub input: &'a mut s2::Environment,
     pub output: &'a mut s3::Environment,
+    pub namespace_map: HashMap<s2::NamespaceId, s3::NamespaceId>,
     pub value_map: HashMap<s2::ValueId, s3::ValueId>,
     pub variable_map: HashMap<s2::VariableId, s3::VariableId>,
     pub variant_map: HashMap<s2::VariantId, s3::VariantId>,
@@ -15,6 +16,7 @@ impl<'a> Context<'a> {
         Self {
             input,
             output,
+            namespace_map: HashMap::new(),
             value_map: HashMap::new(),
             variable_map: HashMap::new(),
             variant_map: HashMap::new(),

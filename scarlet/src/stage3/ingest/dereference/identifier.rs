@@ -13,7 +13,7 @@ impl<'a> Context<'a> {
         let namespace = self.input[in_namespace]
             .as_ref()
             .expect("ICE: Undefined item");
-        match namespace {
+        Some(match namespace {
             s2::Namespace::Defining {
                 definitions,
                 parent,
@@ -21,16 +21,17 @@ impl<'a> Context<'a> {
             } => {
                 let definitions = definitions.clone();
                 let parent = *parent;
-                lookup_in_defining(self, definitions, name, parent)
+                lookup_in_defining(self, definitions, name, parent)?
             }
-            s2::Namespace::Empty => None,
+            s2::Namespace::Empty => return None,
             s2::Namespace::Identifier {
                 name: other_name,
                 in_namespace: other_namespace,
             } => {
                 let (other_name, other_namespace) = (other_name.clone(), *other_namespace);
                 let item = self.dereference_identifier(other_name, other_namespace)?;
-                self.dereference_identifier(name, item.namespace)
+                self.dereference_identifier(name, item.namespace)?
+                    .including_replacements(item)
             }
             s2::Namespace::Member {
                 base,
@@ -38,7 +39,8 @@ impl<'a> Context<'a> {
             } => {
                 let (other_name, base) = (other_name.clone(), *base);
                 let item = self.dereference_member(base, other_name)?;
-                self.dereference_identifier(name, item.namespace)
+                self.dereference_identifier(name, item.namespace)?
+                    .including_replacements(item)
             }
             s2::Namespace::Replacing {
                 base: _,
@@ -46,8 +48,8 @@ impl<'a> Context<'a> {
             } => {
                 unreachable!("i think? question mark?")
             }
-            s2::Namespace::Root(..) => None,
-        }
+            s2::Namespace::Root(..) => return None,
+        })
     }
 }
 

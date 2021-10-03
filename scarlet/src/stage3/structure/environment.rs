@@ -1,9 +1,11 @@
 use super::{
-    Replacements, ReplacementsId, Value, ValueId, Variable, VariableId, Variant, VariantId,
+    Namespace, NamespaceId, Replacements, ReplacementsId, Value, ValueId, Variable, VariableId,
+    Variant, VariantId,
 };
 
 #[derive(Clone, Debug)]
 pub struct Environment {
+    pub namespaces: Pool<Namespace, 'N'>,
     pub replacements: Pool<Replacements, 'R'>,
     pub values: Pool<Value, 'L'>,
     pub variables: Pool<Variable, 'V'>,
@@ -13,11 +15,26 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Self {
         Self {
+            namespaces: Pool::new(),
             replacements: Pool::new(),
             values: Pool::new(),
             variables: Pool::new(),
             variants: Pool::new(),
         }
+    }
+}
+
+impl Index<NamespaceId> for Environment {
+    type Output = Namespace;
+
+    fn index(&self, index: NamespaceId) -> &Self::Output {
+        &self.namespaces[index]
+    }
+}
+
+impl IndexMut<NamespaceId> for Environment {
+    fn index_mut(&mut self, index: NamespaceId) -> &mut Self::Output {
+        &mut self.namespaces[index]
     }
 }
 
