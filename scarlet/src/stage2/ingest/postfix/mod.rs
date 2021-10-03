@@ -1,9 +1,6 @@
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression},
-    stage2::{
-        self,
-        structure::{Environment, Item, NamespaceId},
-    },
+    stage2::{self, structure::Item},
 };
 
 mod defining;
@@ -11,31 +8,21 @@ mod from_values;
 mod member;
 mod replacing;
 
-pub fn ingest(
-    env: &mut Environment,
-    remainder: Expression,
-    post: Construct,
-    in_namespace: NamespaceId,
-) -> Item {
+pub fn ingest(remainder: Expression, post: Construct) -> Item {
     if post.label == "defining" {
-        defining::ingest(env, remainder, post, in_namespace)
+        defining::ingest(remainder, post)
     } else {
-        let base = stage2::ingest(env, remainder, in_namespace);
-        ingest_non_defining(env, base, post, in_namespace)
+        let base = stage2::ingest(remainder);
+        ingest_non_defining(base, post)
     }
 }
 
-fn ingest_non_defining(
-    env: &mut Environment,
-    base: Item,
-    post: Construct,
-    in_namespace: NamespaceId,
-) -> Item {
+fn ingest_non_defining(base: Item, post: Construct) -> Item {
     match &post.label[..] {
         "defining" => unreachable!(),
-        "FromValues" => from_values::ingest(env, base, post, in_namespace),
-        "member" => member::ingest(env, base, post, in_namespace),
-        "replacing" => replacing::ingest(env, base, post, in_namespace),
+        "FromValues" => from_values::ingest(base, post),
+        "member" => member::ingest(base, post),
+        "replacing" => replacing::ingest(base, post),
         "type_is" => todo!(),
         _ => todo!("nice error"),
     }

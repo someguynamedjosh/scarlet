@@ -1,20 +1,14 @@
-use super::structure::{Environment, Item, NamespaceId};
+use super::structure::Item;
 use crate::stage1::structure::expression::Expression;
 
 mod postfix;
 mod root;
 
-pub fn ingest(
-    env: &mut Environment,
-    mut expression: Expression,
-    in_namespace: NamespaceId,
-) -> Item {
+pub fn ingest(mut expression: Expression) -> Item {
     let result = if let Some(post) = expression.others.pop() {
-        postfix::ingest(env, expression, post, in_namespace)
+        postfix::ingest(expression, post)
     } else {
-        root::ingest(env, expression.root, in_namespace)
+        root::ingest(expression.root)
     };
-    assert!(env[result.namespace].is_some());
-    assert!(env[result.value].is_some());
     result
 }

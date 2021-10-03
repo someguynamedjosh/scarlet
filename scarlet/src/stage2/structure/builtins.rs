@@ -8,15 +8,15 @@ pub enum BuiltinOperation<ValueId> {
     },
 }
 
-impl<ValueId: Copy> BuiltinOperation<ValueId> {
-    pub fn inputs(&self) -> Vec<ValueId> {
+impl<ValueId: Clone> BuiltinOperation<ValueId> {
+    pub fn inputs(&self) -> Vec<&ValueId> {
         match self {
             Self::Cast {
                 equality_proof,
                 original_type,
                 new_type,
                 original_value,
-            } => vec![*equality_proof, *original_type, *new_type, *original_value],
+            } => vec![equality_proof, original_type, new_type, original_value],
         }
     }
 
@@ -35,7 +35,7 @@ impl<ValueId: Copy> BuiltinOperation<ValueId> {
     }
 
     pub fn map<V: Copy>(&self, f: impl FnMut(ValueId) -> V) -> BuiltinOperation<V> {
-        self.with_inputs(self.inputs().into_iter().map(f).collect())
+        self.with_inputs(self.inputs().into_iter().cloned().map(f).collect())
     }
 }
 

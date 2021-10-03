@@ -1,7 +1,4 @@
-use crate::{
-    stage1::structure::construct::Construct,
-    stage2::structure::{Environment, Item, NamespaceId},
-};
+use crate::{stage1::structure::construct::Construct, stage2::structure::Item};
 
 mod any;
 mod builtin_item;
@@ -9,13 +6,13 @@ mod identifier;
 mod u8;
 mod variant;
 
-pub fn ingest(env: &mut Environment, root: Construct, in_namespace: NamespaceId) -> Item {
+pub fn ingest(root: Construct) -> Item {
     match &root.label[..] {
-        "any" => any::ingest(env, root, in_namespace),
-        "builtin_item" => builtin_item::ingest(env, root, in_namespace),
-        "identifier" => identifier::ingest(env, root, in_namespace),
-        "u8" => u8::ingest(env, root, in_namespace),
-        "variant" => variant::ingest(env, root, in_namespace),
+        "any" => any::ingest(root),
+        "builtin_item" => builtin_item::ingest(root),
+        "identifier" => identifier::ingest(root),
+        "u8" => u8::ingest(root),
+        "variant" => variant::ingest(root),
         _ => todo!("Nice error"),
     }
 }

@@ -2,58 +2,32 @@ use crate::{
     stage1::structure::{construct::Construct, statement::Statement},
     stage2::{
         self,
-        structure::{Environment, Item, Namespace, NamespaceId, Replacements, Value, ValueId},
+        structure::{Item, Replacements},
     },
 };
 
-pub fn ingest(
-    env: &mut Environment,
-    base: Item,
-    post: Construct,
-    in_namespace: NamespaceId,
-) -> Item {
-    let replacements = ingest_replacements(post, env, in_namespace);
-    create_replacement_item(env, base, replacements)
+pub fn ingest(base: Item, post: Construct) -> Item {
+    let base = Box::new(base);
+    let replacements = ingest_replacements(post);
+    Item::Replacing { base, replacements }
 }
 
-fn ingest_replacements(
-    post: Construct,
-    env: &mut Environment,
-    in_namespace: NamespaceId,
-) -> Vec<(ValueId, ValueId)> {
+fn ingest_replacements(post: Construct) -> Replacements {
     let mut replacements = Replacements::new();
     for statement in post.expect_statements("replacing").unwrap() {
-        ingest_replacement(statement, env, in_namespace, &mut replacements);
+        ingest_replacement(statement, &mut replacements);
     }
     replacements
 }
 
-fn ingest_replacement(
-    statement: &Statement,
-    env: &mut Environment,
-    in_namespace: NamespaceId,
-    replacements: &mut Vec<(ValueId, ValueId)>,
-) {
+fn ingest_replacement(statement: &Statement, replacements: &mut Replacements) {
     match statement {
         Statement::Replace(replace) => {
-            let target = stage2::ingest(env, replace.target.clone(), in_namespace);
-            let value = stage2::ingest(env, replace.value.clone(), in_namespace);
-            replacements.push((target.value, value.value));
+            let target = stage2::ingest(replace.target.clone());
+            let value = stage2::ingest(replace.value.clone());
+            replacements.push((target, value));
         }
         Statement::Expression(..) => todo!(),
         _ => todo!("nice error"),
     }
-}
-
-fn create_replacement_item(env: &mut Environment, base: Item, replacements: Replacements) -> Item {
-    let replacements = env.replacements.push(replacements);
-    let namespace = env.insert_namespace(Namespace::Replacing {
-        base: base.namespace,
-        replacements,
-    });
-    let value = env.insert_value(Value::Replacing {
-        base: base.value,
-        replacements,
-    });
-    Item { namespace, value }
 }

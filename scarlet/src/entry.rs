@@ -8,7 +8,7 @@ use crate::{
     stage1::{self, structure::expression::Expression},
     stage2::{
         self,
-        structure::{Definitions, Environment, Item, Namespace, NamespaceId},
+        structure::{Definitions, Item},
     },
 };
 
@@ -76,48 +76,27 @@ fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
     Ok(parsed)
 }
 
-fn ingest_file_tree(
-    env: &mut Environment,
-    tree: FileNode,
-    parent_namespace_id: NamespaceId,
-) -> Result<Item, String> {
+fn ingest_file_tree(tree: FileNode) -> Result<Item, String> {
     println!("Parsing {:?}", tree.self_def);
     let stage1_expression = parse_file_to_stage1(&tree)?;
     println!("{}", stage1::vomit(&stage1_expression));
 
-    // This namespace contains all the files as members.
-    let this_namespace_id = env.new_undefined_namespace();
-
     // This item is the actual code written in the file.
-    let item = stage2::ingest(env, stage1_expression, this_namespace_id);
+    let base = stage2::ingest(stage1_expression);
+    let base = Box::new(base);
 
     // Ingest all the child files.
     let mut children = Definitions::new();
     for (name, node) in tree.children {
-        let item_id = ingest_file_tree(env, node, this_namespace_id)?;
-        children.insert_no_replace(name, item_id);
+        let item = ingest_file_tree(node)?;
+        children.insert_no_replace(name, item);
     }
+    let definitions = children;
 
-    // Build a defining namespace from base and children.
-    let ns = Namespace::Defining {
-        base: item.namespace,
-        definitions: children,
-        parent: parent_namespace_id,
-    };
-    env.define_namespace(this_namespace_id, ns);
-
-    Ok(Item {
-        namespace: this_namespace_id,
-        value: item.value,
-    })
+    Ok(Item::Defining { base, definitions })
 }
 
-pub fn start_from_root(path: &str) -> Result<(Environment, Item), String> {
+pub fn start_from_root(path: &str) -> Result<Item, String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
-    let mut env = Environment::new();
-    let root_namespace = env.new_undefined_namespace();
-    let root_item = ingest_file_tree(&mut env, tree, root_namespace).unwrap();
-    env.define_namespace(root_namespace, Namespace::Root(root_item));
-
-    Ok((env, root_item))
+    ingest_file_tree(tree)
 }
