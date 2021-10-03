@@ -1,5 +1,5 @@
 use self::context::Context;
-use super::structure::Environment;
+use super::structure::{Environment, Namespace};
 use crate::stage3::structure::Item;
 
 mod context;
@@ -21,5 +21,6 @@ pub fn ingest(
         namespace: root_namespace,
         value: root_value,
     };
+    env.namespaces.get_or_push(Namespace::Root(new_root_item));
     (env, new_root_item)
 }
