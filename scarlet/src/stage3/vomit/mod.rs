@@ -22,6 +22,11 @@ struct Context<'a> {
     variable_map: HashMap<s3::VariableId, s2::VariableId>,
 }
 
+enum ItemPath {
+    Root,
+    Member { base: Box<ItemPath>, name: String },
+}
+
 impl<'a> Context<'a> {
     fn new(input: &'a s3::Environment) -> Self {
         Self {
@@ -40,7 +45,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    fn get_parent(&self, child: s3::NamespaceId) -> s3::NamespaceId {
+    fn get_immediate_parent(&self, child: s3::NamespaceId) -> s3::NamespaceId {
         for (candidate_id, candidate_ns) in &self.input.namespaces {
             match candidate_ns {
                 s3::Namespace::Defining { base, definitions } => {
@@ -56,8 +61,42 @@ impl<'a> Context<'a> {
                 }
                 s3::Namespace::Empty => (),
                 s3::Namespace::Replacing { base, replacements } => {
-                    if *base == child {
+                    let (base, replacements) = (*base, replacements.clone());
+                    if base == child {
                         return candidate_id;
+                    }
+                }
+                s3::Namespace::Root(item) => {
+                    if item.namespace == child {
+                        return candidate_id;
+                    }
+                }
+            }
+        }
+        unreachable!()
+    }
+
+    /// Tbe base of a defining item is not considered a child in this one.
+    fn get_logical_parent(&self, child: s3::NamespaceId) -> s3::NamespaceId {
+        for (candidate_id, candidate_ns) in &self.input.namespaces {
+            match candidate_ns {
+                s3::Namespace::Defining { base, definitions } => {
+                    let base = *base;
+                    if base == child {
+                        return self.get_logical_parent(base);
+                    } else {
+                        for (_, def) in definitions {
+                            if def.namespace == child {
+                                return candidate_id;
+                            }
+                        }
+                    }
+                }
+                s3::Namespace::Empty => (),
+                s3::Namespace::Replacing { base, replacements } => {
+                    let (base, replacements) = (*base, replacements.clone());
+                    if base == child {
+                        return self.get_logical_parent(base);
                     }
                 }
                 s3::Namespace::Root(item) => {
@@ -101,7 +140,7 @@ impl<'a> Context<'a> {
                     .into_iter()
                     .map(|(name, item)| (name, self.vomit_item(item)))
                     .collect();
-                let parent = self.get_parent(namespace_id);
+                let parent = self.get_immediate_parent(namespace_id);
                 let parent = self.vomit_namespace(parent);
                 s2::Namespace::Defining {
                     base,
