@@ -2,20 +2,33 @@ use super::context::Context;
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
 impl<'a> Context<'a> {
-    pub fn ingest_replacements(
-        &mut self,
-        replacements: s2::ReplacementsId,
-    ) -> s3::ReplacementsId {
+    pub fn ingest_replacements(&mut self, replacements: s2::ReplacementsId) -> s3::ReplacementsId {
         let mut result = s3::Replacements::new();
         for (target, value) in self.input[replacements].clone() {
             let target = self.dereference_variable(target);
-            let value = self.ingest(value);
+            let value = self.ingest_value(value);
             if result.contains_key(&target) {
                 todo!("nice error")
             }
             result.insert_no_replace(target, value);
         }
         self.output.replacements.get_or_push(result)
+    }
+
+    pub fn dereference_variable(&mut self, value_id: s2::ValueId) -> s3::VariableId {
+        let dereferenced = self.dereference_value(value_id);
+        if !dereferenced.replacements.is_empty() {
+            todo!("nice error")
+        }
+        let value = self.input[dereferenced.id]
+            .as_ref()
+            .expect("ICE: Undefined item");
+        if let s2::Value::Any { variable } = value {
+            let variable = *variable;
+            self.ingest_variable(variable)
+        } else {
+            todo!("Nice error")
+        }
     }
 
     pub fn ingest_replacements_list(
@@ -33,7 +46,7 @@ impl<'a> Context<'a> {
             return *result;
         }
         let original_type = self.input[variable_id].original_type;
-        let ingested_type = self.ingest(original_type);
+        let ingested_type = self.ingest_value(original_type);
         // For now, set the definition to the type because we do not yet have an
         // ID for the actual definition.
         let variable = s3::Variable {
@@ -50,7 +63,7 @@ impl<'a> Context<'a> {
             return *result;
         }
         let original_type = self.input[variant_id].original_type;
-        let ingested_type = self.ingest(original_type);
+        let ingested_type = self.ingest_value(original_type);
         // For now, set the definition to the type because we do not yet have an
         // ID for the actual definition.
         let variant = s3::Variant {

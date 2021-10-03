@@ -4,7 +4,8 @@ use crate::stage3::ingest::dereference::ItemBeingDereferenced;
 
 mod context;
 mod dereference;
-// mod ingest_structures;
+mod ingest_entry;
+mod ingest_structures;
 
 pub fn ingest(
     input: &mut crate::stage2::structure::Environment,
@@ -12,7 +13,7 @@ pub fn ingest(
 ) -> Environment {
     let mut env = Environment::new();
     let mut ctx = Context::new(input, &mut env);
-    let result = ctx.dereference(ItemBeingDereferenced::from(root));
+    let result = ctx.ingest_value(root.value);
     println!("{:?}\nbecomes\n{:#?}\n", root, result);
     env
 }

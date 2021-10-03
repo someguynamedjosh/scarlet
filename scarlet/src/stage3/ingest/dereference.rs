@@ -51,7 +51,7 @@ impl<'a> Context<'a> {
         ItemBeingDereferenced { namespace, value }.as_base_of(item)
     }
 
-    fn dereference_namespace(&mut self, namespace_id: s2::NamespaceId) -> DereferencedNamespace {
+    pub fn dereference_namespace(&mut self, namespace_id: s2::NamespaceId) -> DereferencedNamespace {
         let namespace = self.input[namespace_id].as_ref();
         let namespace = namespace.expect("ICE: Undefined item");
         match namespace {
@@ -80,7 +80,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    fn dereference_value(&mut self, value_id: s2::ValueId) -> DereferencedValue {
+    pub fn dereference_value(&mut self, value_id: s2::ValueId) -> DereferencedValue {
         let value = self.input[value_id].as_ref();
         let value = value.expect("ICE: Undefined item");
         match value {
@@ -144,9 +144,9 @@ impl<'a> Context<'a> {
                 }
             }
             s2::Namespace::Empty => None,
-            s2::Namespace::Identifier { name, in_namespace } => unreachable!(),
-            s2::Namespace::Member { base, name } => unreachable!(),
-            s2::Namespace::Replacing { base, replacements } => unreachable!(),
+            s2::Namespace::Identifier { .. } => unreachable!(),
+            s2::Namespace::Member { .. } => unreachable!(),
+            s2::Namespace::Replacing { .. } => unreachable!(),
             s2::Namespace::Root(..) => None,
         }?;
         Some(self.dereference(item))
@@ -181,9 +181,9 @@ impl<'a> Context<'a> {
                 Some(item)
             }
             s2::Namespace::Empty => None,
-            s2::Namespace::Identifier { name, in_namespace } => unreachable!(),
-            s2::Namespace::Member { base, name } => unreachable!(),
-            s2::Namespace::Replacing { base, replacements } => unreachable!(),
+            s2::Namespace::Identifier { .. } => unreachable!(),
+            s2::Namespace::Member { .. } => unreachable!(),
+            s2::Namespace::Replacing { .. } => unreachable!(),
             s2::Namespace::Root(..) => None,
         }?;
         Some(self.dereference(item))
