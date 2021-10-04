@@ -3,6 +3,8 @@ use std::{
     iter::FromIterator,
 };
 
+use crate::util::indented;
+
 pub type OrderedSet<K> = OrderedMap<K, ()>;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -92,7 +94,8 @@ impl<K: Debug, V: Debug> Debug for OrderedMap<K, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{\n")?;
         for (key, value) in self {
-            write!(f, "    {:?} -> {:?}\n", key, value)?;
+            let value = indented(&format!("{:#?}", value));
+            write!(f, "    {:?} -> {}\n", key, value)?;
         }
         write!(f, "}}")
     }
