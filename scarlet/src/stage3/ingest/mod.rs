@@ -198,7 +198,10 @@ impl<'e, 'i> Context<'e, 'i> {
                     *var
                 } else {
                     let typee = self.child().without_path().ingest(typee);
-                    let new_id = self.environment.variables.push(s3::Variable);
+                    let new_id = self
+                        .environment
+                        .variables
+                        .push(s3::Variable { stage2_id: *id });
                     self.variable_map.insert(*id, (new_id, typee));
                     (new_id, typee)
                 };

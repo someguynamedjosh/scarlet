@@ -12,7 +12,10 @@ pub type VariantId = Id<Variant, 'T'>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Value {
-    Any { id: VariableId, typee: ValueId },
+    Any {
+        id: VariableId,
+        typee: ValueId,
+    },
     BuiltinOperation(BuiltinOperation<ValueId>),
     BuiltinValue(BuiltinValue),
     From {
@@ -28,7 +31,9 @@ pub enum Value {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct Variable;
+pub struct Variable {
+    pub stage2_id: crate::stage2::structure::VariableId,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Variant {
