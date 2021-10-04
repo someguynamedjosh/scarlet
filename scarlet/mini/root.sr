@@ -1,13 +1,17 @@
-ns1::value
+builtin_item{
+    cast
+    asdf
+    asdf
+    asdf
+    asdf
+}
 defining{
     U8 is builtin_item{UnsignedInteger8}
-    asdf is any{U8}
-
-    ns1 is 0
+    asdf is var
     defining{
-        value is asdf
+        var is any{U8}
     }
-    replacing{
-        asdf with 123
-    }
+    # replacing{
+    #     asdf with 123
+    # }
 }

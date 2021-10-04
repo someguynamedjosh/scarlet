@@ -15,9 +15,10 @@ fn main() {
     println!("{:#?}", root);
     println!("\nRESULT:\n{}", stage2::completely_vomit_item(&root));
 
-    // println!("Doing stage 3");
-    // let (environment, root) = stage3::ingest(&environment, root);
-    // println!("{:#?}", environment);
+    println!("Doing stage 3");
+    let (environment, root) = stage3::ingest(&root);
+    println!("{:#?}", environment);
+    println!("root {:#?}", root);
     // println!(
     //     "\nRESULT:\n{}",
     //     stage3::completely_vomit_item(&environment, root)
