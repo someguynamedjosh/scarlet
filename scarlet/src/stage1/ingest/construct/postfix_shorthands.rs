@@ -46,13 +46,13 @@ pub fn type_is_parser<'i>() -> impl Parser<'i, Construct> {
     }
 }
 
-pub fn replacing_parser<'i>() -> impl Parser<'i, Construct> {
+pub fn substituting_parser<'i>() -> impl Parser<'i, Construct> {
     |input| {
         let (input, _) = tag("[")(input)?;
         let (input, _) = ws()(input)?;
         let (input, body) = helpers::statement_body_parser()(input)?;
         let (input, _) = helpers::ws_then_tag("]")(input)?;
 
-        Ok((input, Construct::from_body("replacing", body)))
+        Ok((input, Construct::from_body("substituting", body)))
     }
 }

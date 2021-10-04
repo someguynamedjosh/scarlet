@@ -9,7 +9,7 @@ use crate::{
 mod defining;
 mod from_values;
 mod member;
-mod replacing;
+mod substituting;
 
 pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> Item {
     if post.label == "defining" {
@@ -25,7 +25,7 @@ fn ingest_non_defining(env: &mut Environment, base: Item, post: Construct) -> It
         "defining" => unreachable!(),
         "FromValues" => from_values::ingest(env, base, post),
         "member" => member::ingest(base, post),
-        "replacing" => replacing::ingest(env, base, post),
+        "substituting" => substituting::ingest(env, base, post),
         "type_is" => todo!(),
         _ => todo!("nice error"),
     }

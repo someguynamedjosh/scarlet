@@ -2,7 +2,7 @@ use super::{BuiltinOperation, BuiltinValue, VariableId, VariantId};
 use crate::shared::OrderedMap;
 
 pub type Definitions = OrderedMap<String, Item>;
-pub type Replacements = Vec<(Item, Item)>;
+pub type Substitutions = Vec<(Item, Item)>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -25,9 +25,9 @@ pub enum Item {
         base: Box<Item>,
         name: String,
     },
-    Replacing {
+    Substituting {
         base: Box<Item>,
-        replacements: Replacements,
+        substitutions: Substitutions,
     },
     Variant {
         typee: Box<Item>,

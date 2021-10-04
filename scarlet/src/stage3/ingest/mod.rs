@@ -14,7 +14,7 @@ struct Context<'e, 'i> {
 
 struct ItemBeingResolved<'i> {
     base: &'i s2::Item,
-    reps: Vec<s2::Replacements>,
+    reps: Vec<s2::Substitutions>,
 }
 
 impl<'i> ItemBeingResolved<'i> {
@@ -109,9 +109,9 @@ impl<'e, 'i> Context<'e, 'i> {
                     .expect("TODO: Nice error");
                 self.resolve_member(base, name)
             }
-            s2::Item::Replacing { base, replacements } => {
+            s2::Item::Substituting { base, substitutions } => {
                 let mut base = self.resolve_member((&**base).into(), name)?;
-                base.reps.push(replacements.clone());
+                base.reps.push(substitutions.clone());
                 Some(base.wrapped_with(of))
             }
             _ => None,
@@ -122,7 +122,7 @@ impl<'e, 'i> Context<'e, 'i> {
         match self.environment.values[from] {
             s3::Value::Any(id) => Some(id),
             // TODO: This is dumb
-            s3::Value::Replacing { base, .. } => self.extract_variable(from),
+            s3::Value::Substituting { base, .. } => self.extract_variable(from),
             _ => None,
         }
     }
@@ -138,9 +138,9 @@ impl<'e, 'i> Context<'e, 'i> {
     {
         let mut input = resolved.base.clone();
         for rep in resolved.reps {
-            input = s2::Item::Replacing {
+            input = s2::Item::Substituting {
                 base: Box::new(input),
-                replacements: rep,
+                substitutions: rep,
             };
         }
         self.ingest(&input)
@@ -185,19 +185,19 @@ impl<'e, 'i> Context<'e, 'i> {
                     .expect("TODO: Nice error, bad member");
                 self.ingest_resolved(resolved)
             }
-            s2::Item::Replacing { base, replacements } => {
+            s2::Item::Substituting { base, substitutions } => {
                 let base = self.ingest(base);
-                let mut new_replacements = s3::Replacements::new();
-                for (target, value) in replacements {
+                let mut new_substitutions = s3::Substitutions::new();
+                for (target, value) in substitutions {
                     let target = self.resolve_variable(target).expect("TODO: Nice error");
                     let value = self.ingest(value);
-                    if new_replacements.contains_key(&target) {
+                    if new_substitutions.contains_key(&target) {
                         todo!("nice error")
                     }
-                    new_replacements.insert_no_replace(target, value);
+                    new_substitutions.insert_no_replace(target, value);
                 }
-                let replacements = new_replacements;
-                let value = s3::Value::Replacing { base, replacements };
+                let substitutions = new_substitutions;
+                let value = s3::Value::Substituting { base, substitutions };
                 self.gpv(value)
             }
             s2::Item::Variant { typee, id } => {

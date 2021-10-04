@@ -6,7 +6,7 @@ use crate::{
 
 mod defining;
 mod member;
-mod replacing;
+mod substituting;
 
 pub fn vomit(item: &Item) -> Expression {
     match item {
@@ -17,7 +17,7 @@ pub fn vomit(item: &Item) -> Expression {
         Item::From { base, values } => return vomit_from(values, base),
         Item::Identifier(name) => vomit_identifier(name),
         Item::Member { base, name } => member::vomit(base, name),
-        Item::Replacing { base, replacements } => replacing::vomit(replacements, base),
+        Item::Substituting { base, substitutions } => substituting::vomit(substitutions, base),
         Item::Variant { typee, .. } => vomit_variant(typee),
     }
 }

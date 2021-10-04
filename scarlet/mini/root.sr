@@ -1,9 +1,9 @@
 builtin_item{
     cast
-    replaced::var
-    replaced::var
-    replaced::var
-    replaced::var
+    substited::var
+    substited::var
+    substited::var
+    substited::var
 }
 defining{
     U8 is builtin_item{UnsignedInteger8}
@@ -13,11 +13,11 @@ defining{
         var is any{U8}
     }
 
-    replaced is asdf 
-    replacing{
-        asdf::var with 123
+    substited is asdf 
+    s{
+        asdf::var is 123
     }
-    # replacing{
+    # substituting{
     #     asdf with 123
     # }
 }

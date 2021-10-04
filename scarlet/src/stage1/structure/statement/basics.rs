@@ -15,18 +15,3 @@ impl Debug for Is {
         self.value.fmt(f)
     }
 }
-
-#[derive(Clone, PartialEq)]
-pub struct Replace {
-    pub target: Expression,
-    pub value: Expression,
-}
-
-impl Debug for Replace {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "replace ")?;
-        self.target.fmt(f)?;
-        write!(f, " with ")?;
-        self.value.fmt(f)
-    }
-}

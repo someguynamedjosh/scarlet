@@ -1,7 +1,7 @@
 use super::nom_prelude::*;
 use crate::stage1::structure::{
     expression::Expression,
-    statement::{Else, Is, PickElif, PickIf, Replace, Statement},
+    statement::{Else, Is, PickElif, PickIf, Statement},
 };
 
 mod basics;
@@ -23,7 +23,6 @@ impl Statement {
             map(Is::variant_shorthand_parser(), Statement::Is),
             map(PickIf::parser(), Statement::PickIf),
             map(PickElif::parser(), Statement::PickElif),
-            map(Replace::parser(), Statement::Replace),
             map(Expression::parser(), Statement::Expression),
         ))
     }

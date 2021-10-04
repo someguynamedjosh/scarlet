@@ -17,7 +17,7 @@ fn postfix_parser<'i>() -> impl Parser<'i, Construct> {
     alt((
         explicit::parser(false),
         postfix_shorthands::member_parser(),
-        postfix_shorthands::replacing_parser(),
+        postfix_shorthands::substituting_parser(),
         postfix_shorthands::type_is_parser(),
     ))
 }
@@ -35,9 +35,9 @@ impl Construct {
 
     pub fn type_annotation_postfix_parser<'i>() -> impl Parser<'i, Self> {
         alt((
-            explicit::limited_parser(&["member", "From", "replacing"]),
+            explicit::limited_parser(&["member", "From", "substituting"]),
             postfix_shorthands::member_parser(),
-            postfix_shorthands::replacing_parser(),
+            postfix_shorthands::substituting_parser(),
         ))
     }
 }

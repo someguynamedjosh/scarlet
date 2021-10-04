@@ -1,11 +1,7 @@
 use super::helpers;
 use crate::stage1::{
     ingest::nom_prelude::*,
-    structure::{
-        construct::Construct,
-        expression::Expression,
-        statement::{Is, Replace},
-    },
+    structure::{construct::Construct, expression::Expression, statement::Is},
 };
 
 impl Is {
@@ -49,18 +45,6 @@ impl Is {
             let (input, others) = Expression::postfixes_parser()(input)?;
             let st = expand_variant_shorthand(name, typee, others);
             Ok((input, st))
-        }
-    }
-}
-
-impl Replace {
-    pub fn parser<'i>() -> impl Parser<'i, Self> {
-        |input| {
-            let (input, target) = Expression::parser()(input)?;
-            let (input, _) = ws()(input)?;
-            let (input, _) = helpers::tag_then_ws("with")(input)?;
-            let (input, value) = Expression::parser()(input)?;
-            Ok((input, Self { target, value }))
         }
     }
 }

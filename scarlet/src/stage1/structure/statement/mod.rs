@@ -15,7 +15,6 @@ pub enum Statement {
     Is(Is),
     PickIf(PickIf),
     PickElif(PickElif),
-    Replace(Replace),
 }
 
 impl Statement {
@@ -36,7 +35,6 @@ impl Debug for Statement {
             Self::Is(s) => s.fmt(f),
             Self::PickIf(s) => s.fmt(f),
             Self::PickElif(s) => s.fmt(f),
-            Self::Replace(s) => s.fmt(f),
         }
     }
 }

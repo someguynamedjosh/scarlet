@@ -3,7 +3,7 @@ use crate::{
     stage2::structure::{BuiltinOperation, BuiltinValue},
 };
 
-pub type Replacements = OrderedMap<VariableId, ValueId>;
+pub type Substitutions = OrderedMap<VariableId, ValueId>;
 
 pub type ValueId = Id<Value, 'L'>;
 pub type VariableId = Id<Variable, 'V'>;
@@ -18,9 +18,9 @@ pub enum Value {
         base: ValueId,
         values: Vec<ValueId>,
     },
-    Replacing {
+    Substituting {
         base: ValueId,
-        replacements: Replacements,
+        substitutions: Substitutions,
     },
     Variant(VariantId),
 }

@@ -14,7 +14,7 @@ const ALIASES: &[(&str, &str)] = &[
     ("F", "FromValues"),
     ("From", "FromValues"),
     ("d", "defining"),
-    ("r", "replacing"),
+    ("s", "substituting"),
     ("p", "pick"),
     ("pick_by_conditions", "pick"),
     ("bt", "base_type_is"),
