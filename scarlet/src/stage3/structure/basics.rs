@@ -1,9 +1,10 @@
 use crate::{
-    shared::{Id, OrderedMap},
+    shared::{Id, OrderedMap, OrderedSet},
     stage2::structure::{BuiltinOperation, BuiltinValue},
 };
 
-pub type Substitutions = OrderedMap<VariableId, ValueId>;
+pub type Substitution = (VariableId, ValueId);
+pub type Variables = OrderedSet<VariableId>;
 
 pub type ValueId = Id<Value, 'L'>;
 pub type VariableId = Id<Variable, 'V'>;
@@ -16,11 +17,12 @@ pub enum Value {
     BuiltinValue(BuiltinValue),
     From {
         base: ValueId,
-        values: Vec<ValueId>,
+        variable: VariableId,
     },
     Substituting {
         base: ValueId,
-        substitutions: Substitutions,
+        target: VariableId,
+        value: ValueId,
     },
     Variant(VariantId),
 }

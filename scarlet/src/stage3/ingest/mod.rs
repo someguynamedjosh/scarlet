@@ -198,6 +198,9 @@ impl<'e, 'i> Context<'e, 'i> {
             s2::Item::BuiltinValue(value) => self.gpv(s3::Value::BuiltinValue(*value)),
             s2::Item::Defining { base, definitions } => {
                 let mut child = self.child().with_additional_parent_scope(definitions);
+                for (_, def) in definitions {
+                    child.ingest(def);
+                }
                 child.ingest(base)
             }
             s2::Item::From { base, values } => todo!(),
@@ -218,21 +221,13 @@ impl<'e, 'i> Context<'e, 'i> {
                 substitutions,
             } => {
                 let base = self.ingest(base);
-                let mut new_substitutions = s3::Substitutions::new();
-                for (target, value) in substitutions {
+                let mut result = base;
+                for (target, value) in substitutions.iter().rev() {
                     let target = self.resolve_variable(target).expect("TODO: Nice error");
                     let value = self.ingest(value);
-                    if new_substitutions.contains_key(&target) {
-                        todo!("nice error")
-                    }
-                    new_substitutions.insert_no_replace(target, value);
+                    result = self.gpv(s3::Value::Substituting { base, target, value })
                 }
-                let substitutions = new_substitutions;
-                let value = s3::Value::Substituting {
-                    base,
-                    substitutions,
-                };
-                self.gpv(value)
+                result
             }
             s2::Item::Variant { typee, id } => {
                 let variant = if let Some(id) = self.variant_map.get(id) {

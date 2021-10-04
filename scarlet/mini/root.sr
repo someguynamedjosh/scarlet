@@ -1,17 +1,8 @@
-sub::var
+var[
+    var is 123
+]
 defining{
     U8 is builtin_item{UnsignedInteger8}
-
-    asdf is 0
-    defining{
-        var is any{U8}
-    }
-
-    sub is asdf
-    # asdf[
-    #     asdf::var is 123
-    # ]
-    # substituting{
-    #     asdf with 123
-    # }
+    var is any{U8}
+    another is any{U8}
 }

@@ -1,32 +1,33 @@
-use super::structure::{Environment, ValueId};
+use super::structure::{Environment, ValueId, VariableId, Variables};
 use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
 
 impl Environment {
-    fn gp_builtin_value(&mut self, value: BuiltinValue) -> ValueId {
-        self.values.get_or_push(Value::BuiltinValue(value))
-    }
-
-    fn gp_origin_type(&mut self) -> ValueId {
-        self.gp_builtin_value(BuiltinValue::OriginType)
-    }
-
-    fn gp_u8_type(&mut self) -> ValueId {
-        self.gp_builtin_value(BuiltinValue::U8Type)
-    }
-
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of] {
-            Value::Any(var) => self.variables[*var].typee,
+            Value::Any(variable) => {
+                let variable = *variable;
+                let base = self.variables[variable].typee;
+                self.gpv(Value::From { base, variable })
+            }
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(val) => match val {
                 BuiltinValue::OriginType | &BuiltinValue::U8Type => self.gp_origin_type(),
                 BuiltinValue::U8(..) => self.gp_u8_type(),
             },
-            Value::From { base, values } => todo!(),
+            Value::From { base, variable } => {
+                let (base, variable) = (*base, *variable);
+                let base_type = self.get_type(base);
+                self.remove_from_variable(base_type, variable)
+            }
             Value::Substituting {
                 base,
-                substitutions,
-            } => todo!(),
+                target,
+                value,
+            } => {
+                let (base, target, value) = (*base, *target, *value);
+                let base_type = self.get_type(base);
+                self.substitute(base_type, target, value)
+            }
             Value::Variant(_) => todo!(),
         }
     }
