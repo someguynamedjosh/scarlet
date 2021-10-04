@@ -1,23 +1,24 @@
+use std::collections::HashMap;
+
 use super::structure::Environment;
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
 #[derive(Debug)]
 struct Context<'e, 'i> {
     environment: &'e mut s3::Environment,
+    variable_map: &'e mut HashMap<s2::VariableId, s3::VariableId>,
+    variant_map: &'e mut HashMap<s2::VariantId, s3::VariantId>,
+    input: &'i s2::Environment,
     parent_scopes: Vec<&'i s2::Definitions>,
 }
 
 impl<'e, 'i> Context<'e, 'i> {
-    pub fn root(environment: &'e mut s3::Environment) -> Self {
-        Self {
-            environment,
-            parent_scopes: Vec::new(),
-        }
-    }
-
     pub fn child<'e2>(&'e2 mut self) -> Context<'e2, 'i> {
         Context {
             environment: self.environment,
+            variable_map: self.variable_map,
+            variant_map: self.variant_map,
+            input: self.input,
             parent_scopes: self.parent_scopes.clone(),
         }
     }
@@ -72,12 +73,22 @@ impl<'e, 'i> Context<'e, 'i> {
         }
     }
 
+    fn resolve_variable(&mut self, item: &s2::Item) -> Option<s3::VariableId> {
+        
+    }
+
     pub fn ingest(&mut self, input: &s2::Item) -> s3::ValueId {
         match input {
-            s2::Item::Any { typee } => {
-                let typee = self.ingest(typee);
-                let variable = s3::Variable { typee };
-                let variable = self.environment.variables.push(variable);
+            s2::Item::Any { typee, id } => {
+                let variable = if let Some(id) = self.variable_map.get(id) {
+                    *id
+                } else {
+                    let typee = self.ingest(typee);
+                    let variable = s3::Variable { typee };
+                    let variable = self.environment.variables.push(variable);
+                    self.variable_map.insert(*id, variable);
+                    variable
+                };
                 self.gpv(s3::Value::Any(variable))
             }
             s2::Item::BuiltinOperation(op) => {
@@ -103,10 +114,16 @@ impl<'e, 'i> Context<'e, 'i> {
                 self.ingest(resolved)
             }
             s2::Item::Replacing { base, replacements } => todo!(),
-            s2::Item::Variant { typee } => {
-                let typee = self.ingest(typee);
-                let variant = s3::Variant { typee };
-                let variant = self.environment.variants.push(variant);
+            s2::Item::Variant { typee, id } => {
+                let variant = if let Some(id) = self.variant_map.get(id) {
+                    *id
+                } else {
+                    let typee = self.ingest(typee);
+                    let variant = s3::Variant { typee };
+                    let variant = self.environment.variants.push(variant);
+                    self.variant_map.insert(*id, variant);
+                    variant
+                };
                 self.gpv(s3::Value::Variant(variant))
             }
         }
@@ -115,9 +132,17 @@ impl<'e, 'i> Context<'e, 'i> {
 
 impl Environment {}
 
-pub fn ingest(input: &s2::Item) -> (s3::Environment, s3::ValueId) {
-    let mut env = s3::Environment::new();
-    let mut ctx = Context::root(&mut env);
+pub fn ingest(s2_env: &s2::Environment, input: &s2::Item) -> (s3::Environment, s3::ValueId) {
+    let mut environment = s3::Environment::new();
+    // let mut variable_map = HashMap::new();
+    // let mut variant_map = HashMap::new();
+    let mut ctx = Context {
+        environment: &mut environment,
+        variable_map: &mut HashMap::new(),
+        variant_map: &mut HashMap::new(),
+        input: s2_env,
+        parent_scopes: Vec::new(),
+    };
     let value = ctx.ingest(input);
-    (env, value)
+    (environment, value)
 }

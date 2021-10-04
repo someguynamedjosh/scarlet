@@ -1,17 +1,17 @@
 use crate::{
     stage1::structure::construct::Construct,
-    stage2::{self, structure::Item},
+    stage2::{
+        self,
+        structure::{Environment, Item},
+    },
 };
 
-pub fn ingest(root: Construct) -> Item {
-    let typee = Box::new(get_type_definition(root));
-    Item::Variant { typee }
-}
-
-fn get_type_definition(root: Construct) -> Item {
+pub fn ingest(env: &mut Environment, root: Construct) -> Item {
     let typee = root
         .expect_single_expression("variant")
         .expect("TODO: Nice error");
-    let typee = stage2::ingest(typee.clone());
-    typee
+    let typee = stage2::ingest_expression(env, typee.clone());
+    let typee = Box::new(typee);
+    let id = env.new_variant();
+    Item::Variant { typee, id }
 }

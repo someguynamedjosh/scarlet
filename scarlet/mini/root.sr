@@ -15,3 +15,6 @@ defining{
     #     asdf with 123
     # }
 }
+replacing{
+    asdf with 123
+}

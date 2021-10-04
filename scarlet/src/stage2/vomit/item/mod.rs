@@ -10,7 +10,7 @@ mod replacing;
 
 pub fn vomit(item: &Item) -> Expression {
     match item {
-        Item::Any { typee } => vomit_any(typee),
+        Item::Any { typee, .. } => vomit_any(typee),
         Item::BuiltinOperation(op) => vomit_operation(op),
         Item::BuiltinValue(val) => vomit_builtin_value(val),
         Item::Defining { base, definitions } => defining::vomit(definitions, base),
@@ -18,7 +18,7 @@ pub fn vomit(item: &Item) -> Expression {
         Item::Identifier(name) => vomit_identifier(name),
         Item::Member { base, name } => member::vomit(base, name),
         Item::Replacing { base, replacements } => replacing::vomit(replacements, base),
-        Item::Variant { typee } => vomit_variant(typee),
+        Item::Variant { typee, .. } => vomit_variant(typee),
     }
 }
 

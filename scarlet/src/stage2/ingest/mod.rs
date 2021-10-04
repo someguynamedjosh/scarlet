@@ -1,14 +1,14 @@
-use super::structure::Item;
+use super::structure::{Environment, Item};
 use crate::stage1::structure::expression::Expression;
 
 mod postfix;
 mod root;
 
-pub fn ingest(mut expression: Expression) -> Item {
+pub fn ingest_expression(env: &mut Environment, mut expression: Expression) -> Item {
     let result = if let Some(post) = expression.others.pop() {
-        postfix::ingest(expression, post)
+        postfix::ingest(env, expression, post)
     } else {
-        root::ingest(expression.root)
+        root::ingest(env, expression.root)
     };
     result
 }

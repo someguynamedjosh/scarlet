@@ -2,13 +2,13 @@ use crate::{
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
         self,
-        structure::{BuiltinOperation, BuiltinValue, Item},
+        structure::{BuiltinOperation, BuiltinValue, Environment, Item},
     },
 };
 
-pub fn ingest(root: Construct) -> Item {
+pub fn ingest(env: &mut Environment, root: Construct) -> Item {
     let args = ingest_args(&root);
-    let (name, args) = reduce_args(args);
+    let (name, args) = reduce_args(env, args);
     ingest_builtin_value(&name, args)
 }
 
@@ -22,7 +22,7 @@ fn ingest_args(root: &Construct) -> Vec<&Expression> {
     args
 }
 
-fn reduce_args(mut args: Vec<&Expression>) -> (String, Vec<Item>) {
+fn reduce_args(env: &mut Environment, mut args: Vec<&Expression>) -> (String, Vec<Item>) {
     if args.len() < 1 {
         todo!("nice error");
     }
@@ -32,7 +32,7 @@ fn reduce_args(mut args: Vec<&Expression>) -> (String, Vec<Item>) {
             .expect("TODO: Nice error")
             .to_owned(),
         args.into_iter()
-            .map(|arg| stage2::ingest(arg.clone()))
+            .map(|arg| stage2::ingest_expression(env, arg.clone()))
             .collect(),
     )
 }

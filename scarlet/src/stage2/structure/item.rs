@@ -1,4 +1,4 @@
-use super::{BuiltinOperation, BuiltinValue};
+use super::{BuiltinOperation, BuiltinValue, VariableId, VariantId};
 use crate::shared::OrderedMap;
 
 pub type Definitions = OrderedMap<String, Item>;
@@ -8,6 +8,7 @@ pub type Replacements = Vec<(Item, Item)>;
 pub enum Item {
     Any {
         typee: Box<Item>,
+        id: VariableId,
     },
     BuiltinOperation(Box<BuiltinOperation<Item>>),
     BuiltinValue(BuiltinValue),
@@ -30,5 +31,6 @@ pub enum Item {
     },
     Variant {
         typee: Box<Item>,
+        id: VariantId,
     },
 }

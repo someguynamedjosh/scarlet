@@ -11,12 +11,12 @@ fn main() {
     println!("Reading source from {}", path);
 
     println!("Doing stages 1 and 2");
-    let root = entry::start_from_root(&path).unwrap();
+    let (environment, root) = entry::start_from_root(&path).unwrap();
     println!("{:#?}", root);
     println!("\nRESULT:\n{}", stage2::completely_vomit_item(&root));
 
     println!("Doing stage 3");
-    let (environment, root) = stage3::ingest(&root);
+    let (environment, root) = stage3::ingest(&environment, &root);
     println!("{:#?}", environment);
     println!("root {:#?}", root);
     // println!(
