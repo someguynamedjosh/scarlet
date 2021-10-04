@@ -5,11 +5,17 @@ impl Environment {
     /// Replaces $target with $value in $base.
     pub fn substitute(&mut self, base: ValueId, target: VariableId, value: ValueId) -> ValueId {
         match &self.values[base] {
-            Value::Any(variable) => {
-                if *variable == target {
+            Value::Any { id, typee } => {
+                let (id, typee) = (*id, *typee);
+                if id == target {
+                    if self.get_type(value) != typee {
+                        todo!("Nice error");
+                    }
                     value
                 } else {
-                    base
+                    let typee = self.substitute(typee, target, value);
+                    let value = Value::Any { id, typee };
+                    self.gpv(value)
                 }
             }
             Value::BuiltinOperation(_) => todo!(),

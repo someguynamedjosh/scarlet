@@ -4,9 +4,8 @@ use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
 impl Environment {
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of] {
-            Value::Any(variable) => {
-                let variable = *variable;
-                let base = self.variables[variable].typee;
+            Value::Any { id, typee } => {
+                let (variable, base) = (*id, *typee);
                 self.gpv(Value::From { base, variable })
             }
             Value::BuiltinOperation(_) => todo!(),

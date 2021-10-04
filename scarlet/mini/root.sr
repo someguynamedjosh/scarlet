@@ -1,8 +1,11 @@
 var[
+    Type is U8
     var is 123
 ]
 defining{
+    TYPE is builtin_item{TYPE}
     U8 is builtin_item{UnsignedInteger8}
-    var is any{U8}
-    another is any{U8}
+
+    Type is any{TYPE}
+    var is any{Type}
 }

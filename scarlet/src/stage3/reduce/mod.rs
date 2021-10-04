@@ -3,7 +3,12 @@ use super::structure::{Environment, Value, ValueId};
 impl Environment {
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of] {
-            Value::Any(..) => of,
+            Value::Any { id, typee } => {
+                let (id, typee) = (*id, *typee);
+                let typee = self.reduce(typee);
+                let value = Value::Any{id, typee};
+                self.gpv(value)
+            },
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => of,
             Value::From { base, variable } => {
@@ -32,7 +37,8 @@ impl Environment {
         } else {
             let reduced = self.reduce_from_scratch(of);
             self.reduce_cache.insert(of, reduced);
-            self.get_type(reduced);
+            let typee = self.get_type(of);
+            self.type_cache.insert(reduced, typee);
             reduced
         }
     }

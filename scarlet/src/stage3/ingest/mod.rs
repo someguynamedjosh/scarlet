@@ -31,7 +31,7 @@ pub fn ingest(s2_env: &s2::Environment, input: &s2::Item) -> (s3::Environment, s
 #[derive(Debug)]
 struct Context<'e, 'i> {
     environment: &'e mut s3::Environment,
-    variable_map: &'e mut HashMap<s2::VariableId, s3::VariableId>,
+    variable_map: &'e mut HashMap<s2::VariableId, (s3::VariableId, s3::ValueId)>,
     variant_map: &'e mut HashMap<s2::VariantId, s3::VariantId>,
     input: &'i s2::Environment,
     parent_scopes: Vec<&'i s2::Definitions>,
@@ -148,7 +148,7 @@ impl<'e, 'i> Context<'e, 'i> {
 
     fn extract_variable(&mut self, from: s3::ValueId) -> Option<s3::VariableId> {
         match self.environment.values[from] {
-            s3::Value::Any(id) => Some(id),
+            s3::Value::Any { id, .. } => Some(id),
             // TODO: This is dumb
             s3::Value::Substituting { base, .. } => self.extract_variable(from),
             _ => None,
@@ -180,16 +180,15 @@ impl<'e, 'i> Context<'e, 'i> {
     {
         match input {
             s2::Item::Any { typee, id } => {
-                let variable = if let Some(id) = self.variable_map.get(id) {
-                    *id
+                let (id, typee) = if let Some(var) = self.variable_map.get(id) {
+                    *var
                 } else {
                     let typee = self.ingest(typee);
-                    let variable = s3::Variable { typee };
-                    let variable = self.environment.variables.push(variable);
-                    self.variable_map.insert(*id, variable);
-                    variable
+                    let new_id = self.environment.variables.push(s3::Variable);
+                    self.variable_map.insert(*id, (new_id, typee));
+                    (new_id, typee)
                 };
-                self.gpv(s3::Value::Any(variable))
+                self.gpv(s3::Value::Any { id, typee })
             }
             s2::Item::BuiltinOperation(op) => {
                 let op = op.map(|input| self.ingest(&input));
@@ -225,7 +224,11 @@ impl<'e, 'i> Context<'e, 'i> {
                 for (target, value) in substitutions.iter().rev() {
                     let target = self.resolve_variable(target).expect("TODO: Nice error");
                     let value = self.ingest(value);
-                    result = self.gpv(s3::Value::Substituting { base, target, value })
+                    result = self.gpv(s3::Value::Substituting {
+                        base,
+                        target,
+                        value,
+                    })
                 }
                 result
             }
