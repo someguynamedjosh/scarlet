@@ -3,6 +3,31 @@ use std::{borrow::Borrow, collections::HashMap};
 use super::structure::Environment;
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
+pub fn ingest(s2_env: &s2::Environment, input: &s2::Item) -> (s3::Environment, s3::ValueId) {
+    let mut environment = s3::Environment::new();
+    // let mut variable_map = HashMap::new();
+    // let mut variant_map = HashMap::new();
+    let mut ctx = Context {
+        environment: &mut environment,
+        variable_map: &mut HashMap::new(),
+        variant_map: &mut HashMap::new(),
+        input: s2_env,
+        parent_scopes: Vec::new(),
+    };
+    let value = ctx.ingest(input);
+    if let Some(start) = environment.values.first() {
+        let mut id = start;
+        loop {
+            environment.reduce(id);
+            match environment.values.next(id) {
+                Some(next) => id = next,
+                None => break,
+            }
+        }
+    }
+    (environment, value)
+}
+
 #[derive(Debug)]
 struct Context<'e, 'i> {
     environment: &'e mut s3::Environment,
@@ -109,7 +134,10 @@ impl<'e, 'i> Context<'e, 'i> {
                     .expect("TODO: Nice error");
                 self.resolve_member(base, name)
             }
-            s2::Item::Substituting { base, substitutions } => {
+            s2::Item::Substituting {
+                base,
+                substitutions,
+            } => {
                 let mut base = self.resolve_member((&**base).into(), name)?;
                 base.reps.push(substitutions.clone());
                 Some(base.wrapped_with(of))
@@ -185,7 +213,10 @@ impl<'e, 'i> Context<'e, 'i> {
                     .expect("TODO: Nice error, bad member");
                 self.ingest_resolved(resolved)
             }
-            s2::Item::Substituting { base, substitutions } => {
+            s2::Item::Substituting {
+                base,
+                substitutions,
+            } => {
                 let base = self.ingest(base);
                 let mut new_substitutions = s3::Substitutions::new();
                 for (target, value) in substitutions {
@@ -197,7 +228,10 @@ impl<'e, 'i> Context<'e, 'i> {
                     new_substitutions.insert_no_replace(target, value);
                 }
                 let substitutions = new_substitutions;
-                let value = s3::Value::Substituting { base, substitutions };
+                let value = s3::Value::Substituting {
+                    base,
+                    substitutions,
+                };
                 self.gpv(value)
             }
             s2::Item::Variant { typee, id } => {
@@ -214,21 +248,4 @@ impl<'e, 'i> Context<'e, 'i> {
             }
         }
     }
-}
-
-impl Environment {}
-
-pub fn ingest(s2_env: &s2::Environment, input: &s2::Item) -> (s3::Environment, s3::ValueId) {
-    let mut environment = s3::Environment::new();
-    // let mut variable_map = HashMap::new();
-    // let mut variant_map = HashMap::new();
-    let mut ctx = Context {
-        environment: &mut environment,
-        variable_map: &mut HashMap::new(),
-        variant_map: &mut HashMap::new(),
-        input: s2_env,
-        parent_scopes: Vec::new(),
-    };
-    let value = ctx.ingest(input);
-    (environment, value)
 }
