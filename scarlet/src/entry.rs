@@ -8,7 +8,7 @@ use crate::{
     stage1::{self, structure::expression::Expression},
     stage2::{
         self,
-        structure::{Definitions, Environment, Item},
+        structure::{Definitions, Environment, Item, ItemId},
     },
 };
 
@@ -76,14 +76,13 @@ fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
     Ok(parsed)
 }
 
-fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<Item, String> {
+fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<ItemId, String> {
     println!("Parsing {:?}", tree.self_def);
     let stage1_expression = parse_file_to_stage1(&tree)?;
     println!("{}", stage1::vomit(&stage1_expression));
 
     // This item is the actual code written in the file.
     let base = stage2::ingest_expression(env, stage1_expression);
-    let base = Box::new(base);
 
     // Ingest all the child files.
     let mut children = Definitions::new();
@@ -93,10 +92,11 @@ fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<Item, Strin
     }
     let definitions = children;
 
-    Ok(Item::Defining { base, definitions })
+    let item = Item::Defining { base, definitions };
+    Ok(env.push_item(item))
 }
 
-pub fn start_from_root(path: &str) -> Result<(Environment, Item), String> {
+pub fn start_from_root(path: &str) -> Result<(Environment, ItemId), String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
     let mut env = Environment::new();
     let item = ingest_file_tree(&mut env, tree)?;

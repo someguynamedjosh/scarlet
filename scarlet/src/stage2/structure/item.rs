@@ -1,36 +1,37 @@
 use super::{BuiltinOperation, BuiltinValue, VariableId, VariantId};
-use crate::shared::OrderedMap;
+use crate::shared::{Id, OrderedMap};
 
-pub type Definitions = OrderedMap<String, Item>;
-pub type Substitutions = Vec<(Item, Item)>;
+pub type Definitions = OrderedMap<String, ItemId>;
+pub type ItemId = Id<Item, 'I'>;
+pub type Substitutions = Vec<(ItemId, ItemId)>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Item {
     Any {
-        typee: Box<Item>,
+        typee: ItemId,
         id: VariableId,
     },
-    BuiltinOperation(Box<BuiltinOperation<Item>>),
+    BuiltinOperation(BuiltinOperation<ItemId>),
     BuiltinValue(BuiltinValue),
     Defining {
-        base: Box<Item>,
+        base: ItemId,
         definitions: Definitions,
     },
     From {
-        base: Box<Item>,
-        values: Vec<Item>,
+        base: ItemId,
+        values: Vec<ItemId>,
     },
     Identifier(String),
     Member {
-        base: Box<Item>,
+        base: ItemId,
         name: String,
     },
     Substituting {
-        base: Box<Item>,
+        base: ItemId,
         substitutions: Substitutions,
     },
     Variant {
-        typee: Box<Item>,
+        typee: ItemId,
         id: VariantId,
     },
 }

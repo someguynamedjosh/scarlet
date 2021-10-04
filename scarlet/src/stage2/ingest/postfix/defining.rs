@@ -2,14 +2,14 @@ use crate::{
     stage1::structure::{construct::Construct, expression::Expression, statement::Statement},
     stage2::{
         self,
-        structure::{Definitions, Environment, Item},
+        structure::{Definitions, Environment, Item, ItemId},
     },
 };
 
-pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> Item {
-    let base = Box::new(stage2::ingest_expression(env, remainder));
+pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> ItemId {
+    let base = stage2::ingest_expression(env, remainder);
     let definitions = ingest_definitions(env, post);
-    Item::Defining { base, definitions }
+    env.push_item(Item::Defining { base, definitions })
 }
 
 fn ingest_definitions(env: &mut Environment, post: Construct) -> Definitions {

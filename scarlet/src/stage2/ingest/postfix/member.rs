@@ -1,11 +1,14 @@
-use crate::{stage1::structure::construct::Construct, stage2::structure::Item};
+use crate::{
+    stage1::structure::construct::Construct,
+    stage2::structure::{Environment, Item, ItemId},
+};
 
-pub fn ingest(base: Item, post: Construct) -> Item {
+pub fn ingest(env: &mut Environment, base: ItemId, post: Construct) -> ItemId {
     let the_name = ingest_ident_name(post);
-    Item::Member {
-        base: Box::new(base),
+    env.push_item(Item::Member {
+        base,
         name: the_name,
-    }
+    })
 }
 
 fn ingest_ident_name(post: Construct) -> String {

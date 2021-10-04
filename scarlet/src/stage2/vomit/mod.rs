@@ -1,4 +1,4 @@
-use super::structure::Item;
+use super::structure::{Environment, Item, ItemId};
 use crate::stage1::{self};
 
 mod helpers;
@@ -6,6 +6,6 @@ mod item;
 
 pub use item::vomit;
 
-pub fn completely_vomit_item(item: &Item) -> String {
-    stage1::vomit(&vomit(item))
+pub fn completely_vomit_item(env: &Environment, item: ItemId) -> String {
+    stage1::vomit(&vomit(env, item))
 }

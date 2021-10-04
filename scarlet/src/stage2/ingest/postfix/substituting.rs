@@ -2,17 +2,16 @@ use crate::{
     stage1::structure::{construct::Construct, statement::Statement},
     stage2::{
         self,
-        structure::{Environment, Item, Substitutions},
+        structure::{Environment, Item, ItemId, Substitutions},
     },
 };
 
-pub fn ingest(env: &mut Environment, base: Item, post: Construct) -> Item {
-    let base = Box::new(base);
+pub fn ingest(env: &mut Environment, base: ItemId, post: Construct) -> ItemId {
     let substitutions = ingest_substitutions(env, post);
-    Item::Substituting {
+    env.push_item(Item::Substituting {
         base,
         substitutions,
-    }
+    })
 }
 
 fn ingest_substitutions(env: &mut Environment, post: Construct) -> Substitutions {

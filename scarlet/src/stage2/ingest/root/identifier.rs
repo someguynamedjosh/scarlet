@@ -1,6 +1,9 @@
-use crate::{stage1::structure::construct::Construct, stage2::structure::Item};
+use crate::{
+    stage1::structure::construct::Construct,
+    stage2::structure::{Environment, Item, ItemId},
+};
 
-pub fn ingest(root: Construct) -> Item {
+pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
     let name = root.expect_ident().unwrap().to_owned();
-    Item::Identifier(name)
+    env.push_item(Item::Identifier(name))
 }
