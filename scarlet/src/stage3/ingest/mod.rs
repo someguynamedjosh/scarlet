@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, collections::HashMap};
 
-use super::structure::Environment;
+use super::structure::{Environment, Path};
 use crate::{stage2::structure as s2, stage3::structure as s3};
 
 pub fn ingest(s2_env: &s2::Environment, input: &s2::Item) -> (s3::Environment, s3::ValueId) {
@@ -11,6 +11,7 @@ pub fn ingest(s2_env: &s2::Environment, input: &s2::Item) -> (s3::Environment, s
         environment: &mut environment,
         variable_map: &mut HashMap::new(),
         variant_map: &mut HashMap::new(),
+        path: Some(Path::new()),
         input: s2_env,
         parent_scopes: Vec::new(),
     };
@@ -33,6 +34,7 @@ struct Context<'e, 'i> {
     environment: &'e mut s3::Environment,
     variable_map: &'e mut HashMap<s2::VariableId, (s3::VariableId, s3::ValueId)>,
     variant_map: &'e mut HashMap<s2::VariantId, s3::VariantId>,
+    path: Option<Path>,
     input: &'i s2::Environment,
     parent_scopes: Vec<&'i s2::Definitions>,
 }
@@ -66,6 +68,7 @@ impl<'e, 'i> Context<'e, 'i> {
             environment: self.environment,
             variable_map: self.variable_map,
             variant_map: self.variant_map,
+            path: self.path.clone(),
             input: self.input,
             parent_scopes: self.parent_scopes.clone(),
         }
@@ -75,6 +78,17 @@ impl<'e, 'i> Context<'e, 'i> {
         // Search this one before other parents.
         self.parent_scopes.insert(0, scope);
         self
+    }
+
+    pub fn with_additional_path_component(self, component: s3::PathComponent) -> Self {
+        Self {
+            path: self.path.map(|p| [p, vec![component]].concat()),
+            ..self
+        }
+    }
+
+    pub fn without_path(self) -> Self {
+        Self { path: None, ..self }
     }
 
     pub fn resolve_ident(&self, name: &String) -> Option<ItemBeingResolved<'i>> {
@@ -156,7 +170,7 @@ impl<'e, 'i> Context<'e, 'i> {
     }
 
     fn resolve_variable(&mut self, item: &s2::Item) -> Option<s3::VariableId> {
-        let value = self.ingest(item);
+        let value = self.child().without_path().ingest(item);
         self.extract_variable(value)
     }
 
@@ -171,19 +185,19 @@ impl<'e, 'i> Context<'e, 'i> {
                 substitutions: rep,
             };
         }
-        self.ingest(&input)
+        self.child().without_path().ingest(&input)
     }
 
     pub fn ingest<'n>(&mut self, input: &'n s2::Item) -> s3::ValueId
     where
         'i: 'n,
     {
-        match input {
+        let result = match input {
             s2::Item::Any { typee, id } => {
                 let (id, typee) = if let Some(var) = self.variable_map.get(id) {
                     *var
                 } else {
-                    let typee = self.ingest(typee);
+                    let typee = self.child().without_path().ingest(typee);
                     let new_id = self.environment.variables.push(s3::Variable);
                     self.variable_map.insert(*id, (new_id, typee));
                     (new_id, typee)
@@ -191,16 +205,20 @@ impl<'e, 'i> Context<'e, 'i> {
                 self.gpv(s3::Value::Any { id, typee })
             }
             s2::Item::BuiltinOperation(op) => {
-                let op = op.map(|input| self.ingest(&input));
+                let op = op.map(|input| self.child().without_path().ingest(&input));
                 self.gpv(s3::Value::BuiltinOperation(op))
             }
             s2::Item::BuiltinValue(value) => self.gpv(s3::Value::BuiltinValue(*value)),
             s2::Item::Defining { base, definitions } => {
                 let mut child = self.child().with_additional_parent_scope(definitions);
-                for (_, def) in definitions {
-                    child.ingest(def);
+                for (name, def) in definitions {
+                    child
+                        .child()
+                        .with_additional_path_component(s3::PathComponent::Member(name.clone()))
+                        .ingest(def);
                 }
-                child.ingest(base)
+                // Skip adding a path for the base item again.
+                return child.ingest(base);
             }
             s2::Item::From { base, values } => todo!(),
             s2::Item::Identifier(name) => {
@@ -219,11 +237,11 @@ impl<'e, 'i> Context<'e, 'i> {
                 base,
                 substitutions,
             } => {
-                let base = self.ingest(base);
+                let base = self.child().without_path().ingest(base);
                 let mut result = base;
                 for (target, value) in substitutions.iter().rev() {
                     let target = self.resolve_variable(target).expect("TODO: Nice error");
-                    let value = self.ingest(value);
+                    let value = self.child().without_path().ingest(value);
                     result = self.gpv(s3::Value::Substituting {
                         base,
                         target,
@@ -236,7 +254,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 let variant = if let Some(id) = self.variant_map.get(id) {
                     *id
                 } else {
-                    let typee = self.ingest(typee);
+                    let typee = self.child().without_path().ingest(typee);
                     let variant = s3::Variant { typee };
                     let variant = self.environment.variants.push(variant);
                     self.variant_map.insert(*id, variant);
@@ -244,6 +262,10 @@ impl<'e, 'i> Context<'e, 'i> {
                 };
                 self.gpv(s3::Value::Variant(variant))
             }
+        };
+        if let Some(path) = &self.path {
+            self.environment.paths.add(result, path.clone());
         }
+        result
     }
 }
