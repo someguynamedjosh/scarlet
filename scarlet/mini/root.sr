@@ -1,20 +1,23 @@
 builtin_item{
     cast
-    asdf
-    asdf
-    asdf
-    asdf
+    replaced::var
+    replaced::var
+    replaced::var
+    replaced::var
 }
 defining{
     U8 is builtin_item{UnsignedInteger8}
-    asdf is var
+
+    asdf is 0
     defining{
         var is any{U8}
+    }
+
+    replaced is asdf 
+    replacing{
+        asdf::var with 123
     }
     # replacing{
     #     asdf with 123
     # }
-}
-replacing{
-    asdf with 123
 }

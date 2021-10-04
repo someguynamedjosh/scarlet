@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap};
 
 use super::structure::Environment;
 use crate::{stage2::structure as s2, stage3::structure as s3};
@@ -10,6 +10,29 @@ struct Context<'e, 'i> {
     variant_map: &'e mut HashMap<s2::VariantId, s3::VariantId>,
     input: &'i s2::Environment,
     parent_scopes: Vec<&'i s2::Definitions>,
+}
+
+struct ItemBeingResolved<'i> {
+    base: &'i s2::Item,
+    reps: Vec<s2::Replacements>,
+}
+
+impl<'i> ItemBeingResolved<'i> {
+    fn wrapped_with(self, other: Self) -> Self {
+        Self {
+            base: self.base,
+            reps: [self.reps, other.reps].concat(),
+        }
+    }
+}
+
+impl<'i> From<&'i s2::Item> for ItemBeingResolved<'i> {
+    fn from(value: &'i s2::Item) -> Self {
+        Self {
+            base: value.borrow(),
+            reps: Vec::new(),
+        }
+    }
 }
 
 impl<'e, 'i> Context<'e, 'i> {
@@ -29,10 +52,19 @@ impl<'e, 'i> Context<'e, 'i> {
         self
     }
 
-    pub fn resolve_ident(&self, name: &String) -> Option<&'i s2::Item> {
+    pub fn resolve_ident(&self, name: &String) -> Option<ItemBeingResolved<'i>> {
         for scope in &self.parent_scopes {
             if let Some(item) = scope.get(name) {
-                return Some(item);
+                return Some(match item {
+                    s2::Item::Identifier(name) => {
+                        self.resolve_ident(name).expect("TODO: Nice error").into()
+                    }
+                    s2::Item::Member { base, name } => self
+                        .resolve_member((&**base).into(), name)
+                        .expect("TODO: Nice error")
+                        .into(),
+                    _ => item.into(),
+                });
             }
         }
         None
@@ -43,41 +75,81 @@ impl<'e, 'i> Context<'e, 'i> {
         self.environment.values.get_or_push(value)
     }
 
-    fn resolve_member(&self, of: &'i s2::Item, name: &String) -> Option<&'i s2::Item> {
-        match of {
+    fn resolve_member<'n>(
+        &self,
+        of: ItemBeingResolved<'n>,
+        name: &String,
+    ) -> Option<ItemBeingResolved<'n>>
+    where
+        'i: 'n,
+    {
+        match of.base {
             s2::Item::Defining { base, definitions } => {
-                if let Some(member) = self.resolve_member(base, name) {
-                    return Some(member);
+                if let Some(member) = self.resolve_member((&**base).into(), name) {
+                    return Some(member.wrapped_with(of));
                 }
                 for (candidate_name, value) in definitions {
                     if name == candidate_name {
-                        return Some(value);
+                        return Some(value.into());
                     }
                 }
                 None
             }
-            s2::Item::From { base, .. } => self.resolve_member(base, name),
+            s2::Item::From { base, .. } => self.resolve_member((&**base).into(), name),
             s2::Item::Identifier(base_name) => {
-                let base = self.resolve_ident(base_name)?;
+                let base = self.resolve_ident(base_name).expect("TODO: Nice error");
                 self.resolve_member(base, name)
             }
             s2::Item::Member {
                 base: base_of,
                 name: base_name,
             } => {
-                let base = self.resolve_member(base_of, base_name)?;
+                let base = self
+                    .resolve_member((&**base_of).into(), base_name)
+                    .expect("TODO: Nice error");
                 self.resolve_member(base, name)
             }
-            s2::Item::Replacing { base, replacements } => todo!(),
+            s2::Item::Replacing { base, replacements } => {
+                let mut base = self.resolve_member((&**base).into(), name)?;
+                base.reps.push(replacements.clone());
+                Some(base.wrapped_with(of))
+            }
+            _ => None,
+        }
+    }
+
+    fn extract_variable(&mut self, from: s3::ValueId) -> Option<s3::VariableId> {
+        match self.environment.values[from] {
+            s3::Value::Any(id) => Some(id),
+            // TODO: This is dumb
+            s3::Value::Replacing { base, .. } => self.extract_variable(from),
             _ => None,
         }
     }
 
     fn resolve_variable(&mut self, item: &s2::Item) -> Option<s3::VariableId> {
-        
+        let value = self.ingest(item);
+        self.extract_variable(value)
     }
 
-    pub fn ingest(&mut self, input: &s2::Item) -> s3::ValueId {
+    fn ingest_resolved<'n>(&mut self, resolved: ItemBeingResolved<'n>) -> s3::ValueId
+    where
+        'i: 'n,
+    {
+        let mut input = resolved.base.clone();
+        for rep in resolved.reps {
+            input = s2::Item::Replacing {
+                base: Box::new(input),
+                replacements: rep,
+            };
+        }
+        self.ingest(&input)
+    }
+
+    pub fn ingest<'n>(&mut self, input: &'n s2::Item) -> s3::ValueId
+    where
+        'i: 'n,
+    {
         match input {
             s2::Item::Any { typee, id } => {
                 let variable = if let Some(id) = self.variable_map.get(id) {
@@ -105,15 +177,29 @@ impl<'e, 'i> Context<'e, 'i> {
                 let resolved = self
                     .resolve_ident(name)
                     .expect("TODO: Nice error, bad ident");
-                self.ingest(resolved)
+                self.ingest_resolved(resolved)
             }
             s2::Item::Member { base, name } => {
                 let resolved = self
-                    .resolve_member(base, name)
+                    .resolve_member((&**base).into(), name)
                     .expect("TODO: Nice error, bad member");
-                self.ingest(resolved)
+                self.ingest_resolved(resolved)
             }
-            s2::Item::Replacing { base, replacements } => todo!(),
+            s2::Item::Replacing { base, replacements } => {
+                let base = self.ingest(base);
+                let mut new_replacements = s3::Replacements::new();
+                for (target, value) in replacements {
+                    let target = self.resolve_variable(target).expect("TODO: Nice error");
+                    let value = self.ingest(value);
+                    if new_replacements.contains_key(&target) {
+                        todo!("nice error")
+                    }
+                    new_replacements.insert_no_replace(target, value);
+                }
+                let replacements = new_replacements;
+                let value = s3::Value::Replacing { base, replacements };
+                self.gpv(value)
+            }
             s2::Item::Variant { typee, id } => {
                 let variant = if let Some(id) = self.variant_map.get(id) {
                     *id
