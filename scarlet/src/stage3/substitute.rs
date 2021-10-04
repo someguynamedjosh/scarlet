@@ -4,12 +4,13 @@ use crate::stage3::structure::Value;
 impl Environment {
     /// Replaces $target with $value in $base.
     pub fn substitute(&mut self, base: ValueId, target: VariableId, value: ValueId) -> ValueId {
+        let base = self.reduce(base);
         match &self.values[base] {
             Value::Any { id, typee } => {
                 let (id, typee) = (*id, *typee);
                 if id == target {
                     if self.get_type(value) != typee {
-                        todo!("Nice error");
+                        // todo!("Nice error");
                     }
                     value
                 } else {
@@ -39,7 +40,12 @@ impl Environment {
                     (*other_base, *other_target, *other_value);
                 let sub_base = self.substitute(other_base, target, value);
                 let sub_value = self.substitute(other_value, target, value);
-                self.substitute(sub_base, other_target, sub_value)
+                let value = Value::Substituting {
+                    base: sub_base,
+                    target: other_target,
+                    value: sub_value,
+                };
+                self.gpv(value)
             }
             Value::Variant(_) => todo!(),
         }
