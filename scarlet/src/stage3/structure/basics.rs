@@ -1,12 +1,15 @@
 use crate::{
     shared::{Id, OrderedMap, OrderedSet},
-    stage2::structure::{BuiltinOperation, BuiltinValue},
+    stage2::{
+        self,
+        structure::{BuiltinOperation, BuiltinValue},
+    },
 };
 
 pub type Substitution = (VariableId, ValueId);
 pub type Variables = OrderedSet<VariableId>;
 
-pub type ValueId = Id<Value, 'L'>;
+pub type ValueId = Id<AnnotatedValue, 'L'>;
 pub type VariableId = Id<Variable, 'V'>;
 pub type VariantId = Id<Variant, 'T'>;
 
@@ -28,6 +31,14 @@ pub enum Value {
         value: ValueId,
     },
     Variant(VariantId),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct AnnotatedValue {
+    pub cached_type: Option<ValueId>,
+    pub cached_reduction: Option<ValueId>,
+    pub defined_at: Option<stage2::structure::ItemId>,
+    pub value: Value,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

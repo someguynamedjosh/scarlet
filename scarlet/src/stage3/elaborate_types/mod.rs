@@ -3,7 +3,7 @@ use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
 
 impl Environment {
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
-        match &self.values[of] {
+        match &self.values[of].value {
             Value::Any { id, typee } => {
                 let (variable, base) = (*id, *typee);
                 self.gpv(Value::From { base, variable })
@@ -32,12 +32,12 @@ impl Environment {
     }
 
     pub fn get_type(&mut self, of: ValueId) -> ValueId {
-        if let Some(cached) = self.type_cache.get(&of) {
-            *cached
+        if let Some(cached) = self.values[of].cached_type {
+            cached
         } else {
             let typee = self.elaborate_type_from_scratch(of);
             let typee = self.reduce(typee);
-            self.type_cache.insert(of, typee);
+            self.values[of].cached_type = Some(typee);
             typee
         }
     }

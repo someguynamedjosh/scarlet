@@ -3,7 +3,7 @@ use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
 
 impl Environment {
     pub fn gp_builtin_value(&mut self, value: BuiltinValue) -> ValueId {
-        self.values.get_or_push(Value::BuiltinValue(value))
+        self.gpv(Value::BuiltinValue(value))
     }
 
     pub fn gp_origin_type(&mut self) -> ValueId {
@@ -16,7 +16,7 @@ impl Environment {
 
     /// Get or push value
     pub fn gpv(&mut self, value: Value) -> ValueId {
-        self.values.get_or_push(value)
+        self.get_or_push_value(value)
     }
 
     pub fn remove_from_variable(
@@ -24,7 +24,7 @@ impl Environment {
         inn: ValueId,
         variable_to_remove: VariableId,
     ) -> ValueId {
-        match &self.values[inn] {
+        match &self.values[inn].value {
             Value::From { base, variable } => {
                 let (base, variable) = (*base, *variable);
                 let base = self.remove_from_variable(base, variable_to_remove);
@@ -39,7 +39,7 @@ impl Environment {
     }
 
     fn get_from_variables_impl(&self, typee: ValueId, vars: &mut Variables) {
-        match &self.values[typee] {
+        match &self.values[typee].value {
             Value::From { base, variable } => {
                 let (base, variable) = (*base, *variable);
                 self.get_from_variables_impl(base, vars);

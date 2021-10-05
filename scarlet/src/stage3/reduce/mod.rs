@@ -2,13 +2,13 @@ use super::structure::{Environment, Value, ValueId};
 
 impl Environment {
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
-        match &self.values[of] {
+        match &self.values[of].value {
             Value::Any { id, typee } => {
                 let (id, typee) = (*id, *typee);
                 let typee = self.reduce(typee);
-                let value = Value::Any{id, typee};
+                let value = Value::Any { id, typee };
                 self.gpv(value)
-            },
+            }
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => of,
             Value::From { base, variable } => {
@@ -32,13 +32,16 @@ impl Environment {
     }
 
     pub fn reduce(&mut self, of: ValueId) -> ValueId {
-        if let Some(cached) = self.reduce_cache.get(&of) {
-            *cached
+        if let Some(cached) = self.values[of].cached_reduction {
+            cached
         } else {
             let reduced = self.reduce_from_scratch(of);
-            self.reduce_cache.insert(of, reduced);
+            self.values[of].cached_reduction = Some(reduced);
+            self.values[reduced].cached_reduction = Some(reduced);
+            debug_assert_eq!(self.reduce(reduced), reduced);
             let typee = self.get_type(of);
-            self.type_cache.insert(reduced, typee);
+            debug_assert_eq!(typee, self.get_type(reduced));
+            self.values[reduced].cached_type = Some(typee);
             reduced
         }
     }

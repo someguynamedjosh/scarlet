@@ -5,7 +5,7 @@ impl Environment {
     /// Replaces $target with $value in $base.
     pub fn substitute(&mut self, base: ValueId, target: VariableId, value: ValueId) -> ValueId {
         let base = self.reduce(base);
-        match &self.values[base] {
+        match &self.values[base].value {
             Value::Any { id, typee } => {
                 let (id, typee) = (*id, *typee);
                 if id == target {

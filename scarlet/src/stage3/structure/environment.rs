@@ -3,7 +3,7 @@ use std::{
     fmt::{self, Debug},
 };
 
-use super::{Value, ValueId, Variable, Variant};
+use super::{AnnotatedValue, Value, ValueId, Variable, Variant};
 use crate::shared::Pool;
 
 #[derive(Clone, Debug)]
@@ -50,12 +50,9 @@ impl Paths {
 
 #[derive(Clone, Debug)]
 pub struct Environment {
-    pub values: Pool<Value, 'L'>,
+    pub values: Pool<AnnotatedValue, 'L'>,
     pub variables: Pool<Variable, 'V'>,
     pub variants: Pool<Variant, 'T'>,
-    pub type_cache: HashMap<ValueId, ValueId>,
-    pub reduce_cache: HashMap<ValueId, ValueId>,
-    pub paths: Paths,
 }
 
 impl Environment {
@@ -64,9 +61,20 @@ impl Environment {
             values: Pool::new(),
             variables: Pool::new(),
             variants: Pool::new(),
-            type_cache: HashMap::new(),
-            reduce_cache: HashMap::new(),
-            paths: Paths::new(),
         }
+    }
+
+    pub fn get_or_push_value(&mut self, value: Value) -> ValueId {
+        for (id, candidate) in &self.values {
+            if candidate.value == value {
+                return id;
+            }
+        }
+        self.values.push(AnnotatedValue {
+            cached_reduction: None,
+            cached_type: None,
+            defined_at: None,
+            value,
+        })
     }
 }
