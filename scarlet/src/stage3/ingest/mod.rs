@@ -161,7 +161,19 @@ impl<'e, 'i> Context<'e, 'i> {
                 base,
                 substitutions,
             } => {
-                todo!()
+                let mut result = self.ingest(*base);
+                for (target, value) in substitutions {
+                    let target = self
+                        .resolve_variable(*target)
+                        .expect("TODO: Nice error, not a variable");
+                    let value = self.ingest(*value);
+                    result = self.gpv(s3::Value::Substituting {
+                        base: result,
+                        target,
+                        value,
+                    })
+                }
+                result
             }
             s2::Item::Variant { typee, id } => {
                 todo!()

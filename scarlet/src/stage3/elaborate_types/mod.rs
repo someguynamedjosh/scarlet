@@ -5,7 +5,9 @@ impl Environment {
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of].value {
             Value::Any { id, typee } => {
-                let (variable, base) = (*id, *typee);
+                let (variable, typee) = (*id, *typee);
+                let type_deps = self.dependencies(typee);
+                let base = self.with_from_variables(typee, &type_deps[..]);
                 self.gpv(Value::From { base, variable })
             }
             Value::BuiltinOperation(_) => todo!(),

@@ -43,12 +43,21 @@ impl Value {
             }
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(val) => format!("{:?}", val),
-            Value::From { base, variable } => format!("{}\n    From{{{:?}}}", env.cfv(*base), variable),
+            Value::From { base, variable } => {
+                format!("{}\n    From{{{:?}}}", env.cfv(*base), variable)
+            }
             Value::Substituting {
                 base,
                 target,
                 value,
-            } => todo!(),
+            } => {
+                format!(
+                    "{}\n    substituting{{{:?} is {}}}",
+                    env.cfv(*base),
+                    target,
+                    env.cfv(*value)
+                )
+            }
             Value::Variant(_) => todo!(),
         }
     }
