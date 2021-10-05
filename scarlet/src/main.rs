@@ -17,7 +17,12 @@ fn main() {
     println!("vomited root:\n{}", stage2::completely_vomit_item(&environment, root));
 
     println!("Doing stage 3");
-    let (environment, root) = stage3::ingest(&environment, root);
+    let (mut environment, root) = stage3::ingest(&environment, root);
+    println!("{:#?}", environment);
+    println!("root {:#?}", root);
+
+    println!("Doing reduction");
+    environment.reduce_all();
     println!("{:#?}", environment);
     println!("root {:#?}", root);
 

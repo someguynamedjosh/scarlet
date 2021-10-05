@@ -16,16 +16,6 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
         parent_scopes: Vec::new(),
     };
     let value = ctx.ingest(input);
-    if let Some(start) = environment.values.first() {
-        let mut id = start;
-        loop {
-            environment.reduce(id);
-            match environment.values.next(id) {
-                Some(next) => id = next,
-                None => break,
-            }
-        }
-    }
     (environment, value)
 }
 

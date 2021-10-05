@@ -1,6 +1,19 @@
 use super::structure::{Environment, Value, ValueId};
 
 impl Environment {
+    pub fn reduce_all(&mut self) {
+        if let Some(start) = self.values.first() {
+            let mut id = start;
+            loop {
+                self.reduce(id);
+                match self.values.next(id) {
+                    Some(next) => id = next,
+                    None => break,
+                }
+            }
+        }
+    }
+
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of].value {
             Value::Any { id, typee } => {

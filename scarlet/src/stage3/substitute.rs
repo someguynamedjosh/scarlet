@@ -10,7 +10,7 @@ impl Environment {
                 let (id, typee) = (*id, *typee);
                 if id == target {
                     if self.get_type(value) != typee {
-                        // todo!("Nice error");
+                        todo!("Nice error");
                     }
                     value
                 } else {
