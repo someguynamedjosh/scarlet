@@ -13,6 +13,9 @@
     "contributes": {
         "languages": [
             {
+                "id": "scarlet-injection"
+            },
+            {
                 "id": "scarlet",
                 "extensions": [
                     ".sr"
@@ -25,6 +28,17 @@
                 "language": "scarlet",
                 "scopeName": "source.scarlet",
                 "path": "./syntaxes/scarlet.tmLanguage.json"
+            },
+            {
+                "language": "scarlet-injection",
+                "scopeName": "markdown.scarlet.codeblock",
+                "path": "./syntaxes/codeblock.json",
+                "injectTo": [
+                    "text.html.markdown"
+                ],
+                "embeddedLanguages": {
+                    "meta.embedded.block.scarlet": "scarlet"
+                }
             }
         ]
     },
