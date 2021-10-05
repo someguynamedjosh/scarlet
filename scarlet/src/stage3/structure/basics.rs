@@ -52,10 +52,10 @@ impl Value {
                 value,
             } => {
                 format!(
-                    "{}\n    substituting{{{:?} is {}}}",
+                    "{}\n    substituting{{\n        {:?} is {}\n    }}",
                     env.cfv(*base),
                     target,
-                    env.cfv(*value)
+                    indented(&indented(&env.cfv(*value)))
                 )
             }
             Value::Variant(_) => todo!(),

@@ -2,6 +2,36 @@ use super::structure::{Environment, ValueId, VariableId};
 use crate::stage3::structure::Value;
 
 impl Environment {
+    pub fn type_is_base_of_other(&self, base_id: ValueId, other_id: ValueId) -> bool {
+        let base = &self.values[base_id].value;
+        let other = &self.values[other_id].value;
+        match (base, other) {
+            (
+                Value::From {
+                    base: base_base,
+                    variable: base_variable,
+                },
+                Value::From {
+                    base: other_base,
+                    variable: other_variable,
+                },
+            ) => {
+                if base_variable == other_variable {
+                    self.type_is_base_of_other(*base_base, *other_base)
+                } else {
+                    self.type_is_base_of_other(base_id, *other_base)
+                }
+            }
+            (
+                _,
+                Value::From {
+                    base: other_base, ..
+                },
+            ) => self.type_is_base_of_other(base_id, *other_base),
+            _ => base_id == other_id,
+        }
+    }
+
     /// Replaces $target with $value in $base.
     pub fn substitute(&mut self, base: ValueId, target: VariableId, value: ValueId) -> ValueId {
         let base = self.reduce(base);
@@ -9,8 +39,9 @@ impl Environment {
             Value::Any { id, typee } => {
                 let (id, typee) = (*id, *typee);
                 if id == target {
-                    if self.get_type(value) != typee {
-                        todo!("Nice error");
+                    let value_type = self.get_type(value);
+                    if !self.type_is_base_of_other(typee, value_type) {
+                        todo!("Nice error, {:?} is not base of {:?}", value_type, typee);
                     }
                     value
                 } else {

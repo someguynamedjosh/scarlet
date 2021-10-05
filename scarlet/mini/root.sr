@@ -1,11 +1,11 @@
-var[
-    Type is U8
-    var is 123
+var1[
+    var1 is var2
 ]
 defining{
-    TYPE is builtin_item{TYPE}
-    U8 is builtin_item{UnsignedInteger8}
+   TYPE is builtin_item{TYPE}
+   U8 is builtin_item{UnsignedInteger8}
 
-    Type is any{TYPE}
-    var is any{Type}
+   Type is any{TYPE}
+   var1 is any{Type}
+   var2 is any{Type}
 }
