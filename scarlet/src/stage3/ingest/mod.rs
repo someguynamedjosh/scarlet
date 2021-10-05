@@ -144,7 +144,15 @@ impl<'e, 'i> Context<'e, 'i> {
             }
             s2::Item::From { base, values } => todo!(),
             s2::Item::Identifier(name) => {
-                todo!()
+                let mut result = None;
+                for scope in &self.parent_scopes {
+                    if let Some(item) = scope.get(name) {
+                        let item = *item;
+                        result = Some(self.ingest(item));
+                        break;
+                    }
+                }
+                result.expect("TOOO: Nice error")
             }
             s2::Item::Member { base, name } => {
                 todo!()

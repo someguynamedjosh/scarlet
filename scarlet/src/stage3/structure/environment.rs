@@ -48,7 +48,7 @@ impl Paths {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, )]
 pub struct Environment {
     pub values: Pool<AnnotatedValue, 'L'>,
     pub variables: Pool<Variable, 'V'>,
@@ -76,5 +76,20 @@ impl Environment {
             defined_at: None,
             value,
         })
+    }
+
+    /// Contextually format value
+    pub fn cfv(&self, id: ValueId) -> String {
+        self.values[id].value.contextual_fmt(self)
+    }
+}
+
+impl Debug for Environment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (id, value) in &self.values {
+            let value = value.contextual_fmt(self);
+            write!(f, "\n{:?} is\n{}\n", id, value)?;
+        }
+        Ok(())
     }
 }
