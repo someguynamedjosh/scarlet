@@ -6,6 +6,9 @@ defining{
    var1 is any{Type}
    var2 is any{Type}
 }
+defining{
+    another is any{Type}
+}
 var1[
     var1 is var2
 ]

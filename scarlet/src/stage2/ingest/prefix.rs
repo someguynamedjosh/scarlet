@@ -6,15 +6,16 @@ use crate::{
     },
 };
 
-mod member;
-mod substituting;
+mod defining;
+mod from_values;
 
 pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> ItemId {
-    let base = ingest_expression(env, remainder);
     match &post.label[..] {
-        "member" => member::ingest(env, base, post),
-        "substituting" => substituting::ingest(env, base, post),
-        "type_is" => todo!(),
+        "defining" => defining::ingest(env, remainder, post),
+        "FromValues" => {
+            let base = ingest_expression(env, remainder);
+            from_values::ingest(env, base, post)
+        }
         _ => todo!("nice error"),
     }
 }
