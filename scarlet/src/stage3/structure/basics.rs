@@ -32,7 +32,10 @@ pub enum Value {
         target: VariableId,
         value: ValueId,
     },
-    Variant(VariantId),
+    Variant {
+        id: VariantId,
+        typee: ValueId,
+    },
 }
 
 impl Value {
@@ -58,7 +61,9 @@ impl Value {
                     indented(&env.cfv(*value))
                 )
             }
-            Value::Variant(_) => todo!(),
+            Value::Variant { id, typee } => {
+                format!("variant_of{{\n    {}\n}} at {:?}", indented(&env.cfv(*typee)), id)
+            }
         }
     }
 }
@@ -94,5 +99,5 @@ pub struct Variable {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Variant {
-    pub typee: ValueId,
+    pub stage2_id: crate::stage2::structure::VariantId,
 }

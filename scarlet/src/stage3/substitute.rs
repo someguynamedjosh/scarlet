@@ -94,7 +94,22 @@ impl Environment {
                 };
                 self.gpv(value)
             }
-            Value::Variant(_) => todo!(),
+            Value::Variant { id, typee } => {
+                let (id, typee) = (*id, *typee);
+                let type_vars = self.get_from_variables(typee);
+                if type_vars.contains_key(&target) {
+                    let value = Value::Substituting {
+                        base,
+                        target,
+                        value,
+                    };
+                    self.gpv(value)
+                } else {
+                    let typee = self.substitute(typee, target, value);
+                    let value = Value::Variant { id, typee };
+                    self.gpv(value)
+                }
+            }
         }
     }
 }

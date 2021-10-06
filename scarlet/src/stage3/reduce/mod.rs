@@ -40,7 +40,12 @@ impl Environment {
                 let rvalue = self.reduce(value);
                 self.substitute(rbase, target, rvalue)
             }
-            Value::Variant(_) => todo!(),
+            Value::Variant { id, typee } => {
+                let (id, typee) = (*id, *typee);
+                let typee = self.reduce(typee);
+                let value = Value::Variant { id, typee };
+                self.gpv(value)
+            }
         }
     }
 

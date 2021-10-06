@@ -26,7 +26,7 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
 struct Context<'e, 'i> {
     environment: &'e mut s3::Environment,
     variable_map: &'e mut HashMap<s2::VariableId, (s3::VariableId, s3::ValueId)>,
-    variant_map: &'e mut HashMap<s2::VariantId, s3::VariantId>,
+    variant_map: &'e mut HashMap<s2::VariantId, (s3::VariantId, s3::ValueId)>,
     path: Option<Path>,
     input: &'i s2::Environment,
     parent_scopes: Vec<&'i s2::Definitions>,
@@ -173,7 +173,18 @@ impl<'e, 'i> Context<'e, 'i> {
                 })
             }
             s2::Item::Variant { typee, id } => {
-                todo!()
+                let (id, typee) = if let Some(vnt) = self.variant_map.get(id) {
+                    *vnt
+                } else {
+                    let typee = self.child().without_path().ingest(*typee);
+                    let new_id = self
+                        .environment
+                        .variants
+                        .push(s3::Variant { stage2_id: *id });
+                    self.variant_map.insert(*id, (new_id, typee));
+                    (new_id, typee)
+                };
+                self.gpv(s3::Value::Variant { id, typee })
             }
         }
     }

@@ -15,7 +15,7 @@ pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
         "builtin_item" => builtin_item::ingest(env, root),
         "identifier" => identifier::ingest(env, root),
         "u8" => u8::ingest(env, root),
-        "variant" => variant::ingest(env, root),
+        "variant_of" => variant::ingest(env, root),
         _ => todo!("Nice error"),
     }
 }

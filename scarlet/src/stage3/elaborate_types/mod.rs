@@ -29,7 +29,11 @@ impl Environment {
                 let base_type = self.get_type(base);
                 self.substitute(base_type, target, value)
             }
-            Value::Variant(_) => todo!(),
+            Value::Variant { typee, .. } => {
+                let typee = *typee;
+                let type_deps = self.dependencies(typee);
+                self.with_from_variables(typee, &type_deps[..])
+            }
         }
     }
 
