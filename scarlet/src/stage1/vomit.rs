@@ -1,4 +1,4 @@
-use super::structure::{construct::Construct, expression::Expression, statement::Statement};
+use super::structure::{construct::Construct, expression::Expression};
 use crate::{stage1::structure::construct::ConstructBody, util::indented};
 
 pub fn vomit(expr: &Expression) -> String {
@@ -44,7 +44,7 @@ fn vomit_explicit_prefix_construct(construct: &Construct) -> String {
     let mut result = vomit_explicit_construct(construct);
     result.push_str(match &construct.body {
         ConstructBody::PlainText(..) => " ",
-        ConstructBody::Statements(..) => "\n",
+        ConstructBody::Expressions(..) => "\n",
     });
     result
 }
@@ -52,7 +52,7 @@ fn vomit_explicit_prefix_construct(construct: &Construct) -> String {
 fn vomit_explicit_postfix_construct(construct: &Construct) -> String {
     let mut result = match &construct.body {
         ConstructBody::PlainText(..) => format!(" "),
-        ConstructBody::Statements(..) => format!("\n"),
+        ConstructBody::Expressions(..) => format!("\n"),
     };
     result.push_str(&vomit_explicit_construct(construct));
     result
@@ -61,24 +61,16 @@ fn vomit_explicit_postfix_construct(construct: &Construct) -> String {
 fn vomit_explicit_construct(construct: &Construct) -> String {
     match &construct.body {
         ConstructBody::PlainText(txt) => format!("{}{{{}}}", construct.label, txt),
-        ConstructBody::Statements(statements) => vomit_statements_body(construct, statements),
+        ConstructBody::Expressions(statements) => vomit_expressions_body(construct, statements),
     }
 }
 
-fn vomit_statements_body(construct: &Construct, statements: &[Statement]) -> String {
+fn vomit_expressions_body(construct: &Construct, expressions: &[Expression]) -> String {
     let mut result = format!("{}{{", construct.label);
-    for statement in statements {
+    for expression in expressions {
         result.push_str("\n    ");
-        result.push_str(&indented(&vomit_statement(statement)))
+        result.push_str(&indented(&vomit(expression)))
     }
     result.push_str("\n}");
     result
-}
-
-fn vomit_statement(statement: &Statement) -> String {
-    match statement {
-        Statement::Else(s) => format!("else {}", vomit(&s.value)),
-        Statement::Expression(s) => format!("{}", vomit(s)),
-        _ => todo!(),
-    }
 }

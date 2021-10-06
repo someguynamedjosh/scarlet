@@ -12,17 +12,11 @@ pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
     env.push_item(ingest_builtin_value(&name, args))
 }
 
-fn ingest_args(root: &Construct) -> Vec<&Expression> {
-    let args: Vec<_> = root
-        .expect_statements("builtin_item")
-        .unwrap()
-        .iter()
-        .map(|s| s.expect_expression().expect("TODO: Nice error"))
-        .collect();
-    args
+fn ingest_args(root: &Construct) -> Vec<Expression> {
+    root.expect_expressions("builtin_item").unwrap().to_owned()
 }
 
-fn reduce_args(env: &mut Environment, mut args: Vec<&Expression>) -> (String, Vec<ItemId>) {
+fn reduce_args(env: &mut Environment, mut args: Vec<Expression>) -> (String, Vec<ItemId>) {
     if args.len() < 1 {
         todo!("nice error");
     }

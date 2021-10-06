@@ -1,10 +1,10 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::{stage1::structure::statement::Statement, util};
+use crate::{stage1::structure::expression::Expression, util};
 
 #[derive(Clone, PartialEq)]
 pub enum ConstructBody {
-    Statements(Vec<Statement>),
+    Expressions(Vec<Expression>),
     PlainText(String),
 }
 
@@ -24,9 +24,9 @@ impl ConstructBody {
     }
 }
 
-fn fmt_statements(f: &mut Formatter, statements: &[Statement]) -> fmt::Result {
+fn fmt_expressions(f: &mut Formatter, expressions: &[Expression]) -> fmt::Result {
     let mut first = true;
-    for s in statements {
+    for s in expressions {
         if f.alternate() {
             if !first {
                 write!(f, "\n")?;
@@ -45,7 +45,7 @@ fn fmt_statements(f: &mut Formatter, statements: &[Statement]) -> fmt::Result {
 impl Debug for ConstructBody {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Statements(statements) => fmt_statements(f, statements),
+            Self::Expressions(expressions) => fmt_expressions(f, expressions),
             Self::PlainText(text) => write!(f, "{}", text),
         }
     }

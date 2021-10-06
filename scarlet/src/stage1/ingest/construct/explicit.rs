@@ -30,7 +30,7 @@ fn body_parser<'i>(label: &str) -> impl Parser<'i, ConstructBody> {
         if is_text_label {
             helpers::text_body_parser()(input)
         } else {
-            helpers::statement_body_parser()(input)
+            helpers::expression_body_parser()(input)
         }
     }
 }

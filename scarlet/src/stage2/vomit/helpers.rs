@@ -1,26 +1,18 @@
 use crate::stage1::structure::{
     construct::{Construct, ConstructBody},
     expression::Expression,
-    statement::Statement,
 };
 
 pub fn single_expr_construct(label: &str, expr: Expression) -> Construct {
     Construct {
-        body: ConstructBody::Statements(vec![Statement::Expression(expr)]),
+        body: ConstructBody::Expressions(vec![expr]),
         label: label.to_owned(),
     }
 }
 
 pub fn expressions_construct(label: &str, expressions: Vec<Expression>) -> Construct {
-    statements_construct(
-        label,
-        expressions.into_iter().map(Statement::Expression).collect(),
-    )
-}
-
-pub fn statements_construct(label: &str, statements: Vec<Statement>) -> Construct {
     Construct {
-        body: ConstructBody::Statements(statements),
+        body: ConstructBody::Expressions(expressions),
         label: label.to_owned(),
     }
 }
