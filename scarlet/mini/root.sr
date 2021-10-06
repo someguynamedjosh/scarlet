@@ -1,10 +1,12 @@
 defining{
-   TYPE is builtin_item{TYPE}
-   U8 is builtin_item{UnsignedInteger8}
+    TYPE is builtin_item{TYPE}
+    U8 is builtin_item{UnsignedInteger8}
 
-   Type is any{TYPE}
-   var1 is any{Type}
-   var2 is any{Type}
+    Type is any{TYPE}
+    var1 is any{Type}
+    var2 is any{Type}
+
+    SomeFnType is From{var1} U8
 }
 defining{
     another is any{Type}

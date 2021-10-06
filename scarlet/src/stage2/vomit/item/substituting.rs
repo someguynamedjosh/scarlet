@@ -4,20 +4,12 @@ use crate::{
         expression::Expression,
         statement::{Is, Statement},
     },
-    stage2::structure::{Environment, Item, ItemId, Substitutions},
+    stage2::structure::{Environment, Item, ItemId},
 };
 
-pub fn vomit(env: &Environment, substitutions: &Substitutions, base: ItemId) -> Expression {
-    let statements = build_statements(env, substitutions);
-    build_replacing_expr(env, statements, base)
-}
-
-fn build_statements(env: &Environment, substitutions: &Substitutions) -> Vec<Statement> {
-    let mut statements = Vec::new();
-    for (target, value) in substitutions {
-        statements.push(build_statement(env, *target, *value));
-    }
-    statements
+pub fn vomit(env: &Environment, target: ItemId, value: ItemId, base: ItemId) -> Expression {
+    let statement = build_statement(env, target, value);
+    build_replacing_expr(env, vec![statement], base)
 }
 
 fn build_statement(env: &Environment, target: ItemId, value: ItemId) -> Statement {

@@ -33,18 +33,22 @@ impl Construct {
         }
     }
 
-    pub fn expect_single_expression(&self, label: &str) -> Result<&Expression, String> {
+    pub fn expect_single_statement(&self, label: &str) -> Result<&Statement, String> {
         let body = self.expect_statements(label)?;
-        if body.len() != 1 {
+        if body.len() == 1 {
+            Ok(&body[0])
+        } else {
             Err(format!(
-                "Expected a single expression, got {} items instead.",
+                "Expected a single expression, got {} statements instead.",
                 body.len()
             ))
-        } else {
-            match &body[0] {
-                Statement::Expression(expr) => Ok(expr),
-                _ => Err("Expected an expression, got a different statement instead.".to_string()),
-            }
+        }
+    }
+
+    pub fn expect_single_expression(&self, label: &str) -> Result<&Expression, String> {
+        match &self.expect_single_statement(label)? {
+            Statement::Expression(expr) => Ok(expr),
+            _ => Err("Expected an expression, got a different statement instead.".to_string()),
         }
     }
 }

@@ -1,7 +1,10 @@
 use super::helpers;
 use crate::{
     stage1::structure::{construct::Construct, expression::Expression},
-    stage2::structure::{BuiltinOperation, BuiltinValue, Environment, Item, ItemId},
+    stage2::{
+        completely_vomit_item,
+        structure::{BuiltinOperation, BuiltinValue, Environment, Item, ItemId},
+    },
 };
 
 mod defining;
@@ -15,13 +18,14 @@ pub fn vomit(env: &Environment, item: ItemId) -> Expression {
         Item::BuiltinOperation(op) => vomit_operation(env, op),
         Item::BuiltinValue(val) => vomit_builtin_value(val),
         Item::Defining { base, definitions } => defining::vomit(env, definitions, *base),
-        Item::From { base, values } => return vomit_from(env, values, *base),
+        Item::From { base, value } => return vomit_from(env, *value, *base),
         Item::Identifier(name) => vomit_identifier(name),
         Item::Member { base, name } => member::vomit(env, *base, name),
         Item::Substituting {
             base,
-            substitutions,
-        } => substituting::vomit(env, substitutions, *base),
+            target,
+            value,
+        } => substituting::vomit(env, *target, *value, *base),
         Item::Variant { typee, .. } => vomit_variant(env, *typee),
     }
 }
@@ -57,13 +61,12 @@ fn vomit_builtin_value(val: &BuiltinValue) -> Expression {
     helpers::just_root_expression(construct)
 }
 
-fn vomit_from(env: &Environment, values: &Vec<ItemId>, base: ItemId) -> Expression {
-    let values = values.iter().map(|i| vomit(env, *i));
+fn vomit_from(env: &Environment, value: ItemId, base: ItemId) -> Expression {
+    let expressions = vec![vomit(env, value)];
     let mut result = vomit(env, base);
-    result.pres.insert(
-        0,
-        helpers::expressions_construct("FromValues", values.collect()),
-    );
+    result
+        .pres
+        .insert(0, helpers::expressions_construct("FromValues", expressions));
     result
 }
 

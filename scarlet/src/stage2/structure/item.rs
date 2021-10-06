@@ -3,7 +3,6 @@ use crate::shared::{Id, OrderedMap};
 
 pub type Definitions = OrderedMap<String, ItemId>;
 pub type ItemId = Id<Item, 'I'>;
-pub type Substitutions = Vec<(ItemId, ItemId)>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -19,7 +18,7 @@ pub enum Item {
     },
     From {
         base: ItemId,
-        values: Vec<ItemId>,
+        value: ItemId,
     },
     Identifier(String),
     Member {
@@ -28,7 +27,8 @@ pub enum Item {
     },
     Substituting {
         base: ItemId,
-        substitutions: Substitutions,
+        target: ItemId,
+        value: ItemId,
     },
     Variant {
         typee: ItemId,
