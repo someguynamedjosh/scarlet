@@ -2,11 +2,21 @@ use super::structure::{construct::Construct, expression::Expression, statement::
 use crate::{stage1::structure::construct::ConstructBody, util::indented};
 
 pub fn vomit(expr: &Expression) -> String {
-    let mut result = vomit_root_construct(&expr.root);
+    let mut result = String::new();
+    for pre in &expr.pres {
+        result.push_str(&vomit_prefix_construct(pre));
+    }
+    result.push_str(&vomit_root_construct(&expr.root));
     for post in &expr.posts {
         result.push_str(&vomit_postfix_construct(post));
     }
     result
+}
+
+fn vomit_prefix_construct(construct: &Construct) -> String {
+    match &construct.label[..] {
+        _ => vomit_explicit_prefix_construct(construct),
+    }
 }
 
 fn vomit_root_construct(construct: &Construct) -> String {
@@ -28,6 +38,15 @@ fn vomit_postfix_construct(construct: &Construct) -> String {
 fn vomit_member(construct: &Construct) -> String {
     let name = vomit(construct.expect_single_expression("member").unwrap());
     format!("::{}", name)
+}
+
+fn vomit_explicit_prefix_construct(construct: &Construct) -> String {
+    let mut result = vomit_explicit_construct(construct);
+    result.push_str(match &construct.body {
+        ConstructBody::PlainText(..) => " ",
+        ConstructBody::Statements(..) => "\n",
+    });
+    result
 }
 
 fn vomit_explicit_postfix_construct(construct: &Construct) -> String {
