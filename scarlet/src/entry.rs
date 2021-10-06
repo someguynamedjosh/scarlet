@@ -68,8 +68,8 @@ fn read_root(at: &Path) -> Option<FileNode> {
 fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
     let data = std::fs::read_to_string(&file.self_def)
         .map_err(|_| format!("Failed to read {:?}", file.self_def))?;
-    let (remainder, parsed) =
-        stage1::ingest()(&data).map_err(|_| format!("Failed to parse {:?}", file.self_def))?;
+    let (remainder, parsed) = stage1::ingest()(&data)
+        .map_err(|err| format!("Failed to parse {:?}: {:?}", file.self_def, err))?;
     if remainder.len() > 0 {
         todo!("nice error, syntax error");
     }

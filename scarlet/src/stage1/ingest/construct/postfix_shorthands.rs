@@ -3,18 +3,25 @@ use crate::stage1::{
         construct::{explicit, helpers, root_shorthands},
         nom_prelude::*,
     },
-    structure::{construct::Construct, expression::Expression},
+    structure::{
+        construct::{Construct, Position},
+        expression::Expression,
+    },
 };
 
 pub fn member_parser<'i>() -> impl Parser<'i, Construct> {
     |input| {
         let (input, _) = tag("::")(input)?;
         let (input, _) = ws()(input)?;
-        let (input, root) = alt((explicit::parser(true), root_shorthands::ident_parser()))(input)?;
+        let (input, root) = alt((
+            explicit::parser(Position::Root),
+            root_shorthands::ident_parser(),
+        ))(input)?;
 
         let expression = Expression {
+            pres: vec![],
             root,
-            others: vec![],
+            posts: vec![],
         };
         let construct = Construct::from_expression("member", expression);
         Ok((input, construct))

@@ -1,13 +1,20 @@
-use crate::stage1::{ingest::nom_prelude::*, structure::construct::Construct};
+use crate::stage1::{
+    ingest::nom_prelude::*,
+    structure::construct::{Construct, Position},
+};
 
 mod explicit;
 mod helpers;
 mod postfix_shorthands;
 mod root_shorthands;
 
+fn prefix_parser<'i>() -> impl Parser<'i, Construct> {
+    explicit::parser(Position::Prefix)
+}
+
 fn root_parser<'i>() -> impl Parser<'i, Construct> {
     alt((
-        explicit::parser(true),
+        explicit::parser(Position::Root),
         root_shorthands::integer_shorthand_parser(),
         root_shorthands::ident_parser(),
     ))
@@ -15,7 +22,7 @@ fn root_parser<'i>() -> impl Parser<'i, Construct> {
 
 fn postfix_parser<'i>() -> impl Parser<'i, Construct> {
     alt((
-        explicit::parser(false),
+        explicit::parser(Position::Postfix),
         postfix_shorthands::member_parser(),
         postfix_shorthands::substituting_parser(),
         postfix_shorthands::type_is_parser(),
@@ -23,13 +30,11 @@ fn postfix_parser<'i>() -> impl Parser<'i, Construct> {
 }
 
 impl Construct {
-    pub fn parser<'i>(root: bool) -> impl Parser<'i, Self> {
-        move |input| {
-            if root {
-                root_parser()(input)
-            } else {
-                postfix_parser()(input)
-            }
+    pub fn parser<'i>(position: Position) -> impl Parser<'i, Self> {
+        move |input| match position {
+            Position::Prefix => prefix_parser()(input),
+            Position::Root => root_parser()(input),
+            Position::Postfix => postfix_parser()(input),
         }
     }
 

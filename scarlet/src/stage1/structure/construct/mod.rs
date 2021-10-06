@@ -7,6 +7,13 @@ use std::fmt::{self, Debug, Formatter};
 
 pub use body::*;
 
+#[derive(Clone, Copy, Debug)]
+pub enum Position {
+    Prefix,
+    Root,
+    Postfix,
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Construct {
     pub label: String,

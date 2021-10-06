@@ -1,8 +1,8 @@
 use crate::stage1::{
     ingest::{construct::helpers, nom_prelude::*},
     structure::construct::{
-        labels::{self, ROOT_CONSTRUCT_LABELS},
-        Construct, ConstructBody,
+        labels::{self, POSTFIX_CONSTRUCT_LABELS, PREFIX_CONSTRUCT_LABELS, ROOT_CONSTRUCT_LABELS},
+        Construct, ConstructBody, Position,
     },
 };
 
@@ -15,17 +15,13 @@ fn limited_label_parser<'i>(allowed_labels: &'static [&'static str]) -> impl Par
     verify(label_parser(), move |label| allowed_labels.contains(label))
 }
 
-fn owned_label_parser<'i>(root: bool) -> impl Parser<'i, String> {
-    move |input| {
-        let (input, label) = if root {
-            limited_label_parser(ROOT_CONSTRUCT_LABELS)(input)?
-        } else {
-            verify(label_parser(), |label| {
-                !ROOT_CONSTRUCT_LABELS.contains(label)
-            })(input)?
-        };
-        Ok((input, String::from(label)))
-    }
+fn owned_label_parser<'i>(position: Position) -> impl Parser<'i, String> {
+    let allowed = match position {
+        Position::Prefix => PREFIX_CONSTRUCT_LABELS,
+        Position::Root => ROOT_CONSTRUCT_LABELS,
+        Position::Postfix => POSTFIX_CONSTRUCT_LABELS,
+    };
+    map(limited_label_parser(allowed), String::from)
 }
 
 fn body_parser<'i>(label: &str) -> impl Parser<'i, ConstructBody> {
@@ -39,9 +35,9 @@ fn body_parser<'i>(label: &str) -> impl Parser<'i, ConstructBody> {
     }
 }
 
-pub fn parser<'i>(root: bool) -> impl Parser<'i, Construct> {
+pub fn parser<'i>(position: Position) -> impl Parser<'i, Construct> {
     move |input| {
-        let (input, label) = owned_label_parser(root)(input)?;
+        let (input, label) = owned_label_parser(position)(input)?;
         let (input, _) = helpers::ws_then_tag("{")(input)?;
         let (input, body) = body_parser(&label[..])(input)?;
         let (input, _) = helpers::ws_then_tag("}")(input)?;

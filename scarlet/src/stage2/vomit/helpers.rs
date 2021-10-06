@@ -42,7 +42,8 @@ pub fn simple_builtin_item(name: &str) -> Construct {
 
 pub fn just_root_expression(root: Construct) -> Expression {
     Expression {
+        pres: vec![],
         root,
-        others: vec![],
+        posts: vec![],
     }
 }

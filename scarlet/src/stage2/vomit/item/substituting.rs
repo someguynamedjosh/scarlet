@@ -34,6 +34,6 @@ fn build_statement(env: &Environment, target: ItemId, value: ItemId) -> Statemen
 fn build_replacing_expr(env: &Environment, statements: Vec<Statement>, base: ItemId) -> Expression {
     let substituting = helpers::statements_construct("substituting", statements);
     let mut base = super::vomit(env, base);
-    base.others.push(substituting);
+    base.posts.push(substituting);
     base
 }

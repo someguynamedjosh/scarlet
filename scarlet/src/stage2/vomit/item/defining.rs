@@ -27,6 +27,6 @@ fn build_statements(env: &Environment, definitions: &Definitions) -> Vec<Stateme
 fn build_expr(env: &Environment, statements: Vec<Statement>, base: ItemId) -> Expression {
     let construct = helpers::statements_construct("defining", statements);
     let mut expr = super::vomit(env, base);
-    expr.others.push(construct);
+    expr.posts.push(construct);
     expr
 }

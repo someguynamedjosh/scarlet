@@ -3,7 +3,7 @@ use crate::{stage1::structure::construct::ConstructBody, util::indented};
 
 pub fn vomit(expr: &Expression) -> String {
     let mut result = vomit_root_construct(&expr.root);
-    for post in &expr.others {
+    for post in &expr.posts {
         result.push_str(&vomit_postfix_construct(post));
     }
     result

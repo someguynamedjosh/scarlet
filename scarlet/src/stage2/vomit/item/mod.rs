@@ -60,7 +60,7 @@ fn vomit_builtin_value(val: &BuiltinValue) -> Expression {
 fn vomit_from(env: &Environment, values: &Vec<ItemId>, base: ItemId) -> Expression {
     let values = values.iter().map(|i| vomit(env, *i));
     let mut result = vomit(env, base);
-    result.others.push(helpers::expressions_construct(
+    result.posts.push(helpers::expressions_construct(
         "FromValues",
         values.collect(),
     ));

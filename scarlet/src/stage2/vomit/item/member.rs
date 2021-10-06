@@ -5,6 +5,6 @@ pub fn vomit(env: &Environment, base: ItemId, name: &String) -> Expression {
     let mut base = super::vomit(env, base);
     let ident = helpers::just_root_expression(helpers::identifier(name));
     let member = helpers::single_expr_construct("member", ident);
-    base.others.push(member);
+    base.posts.push(member);
     base
 }
