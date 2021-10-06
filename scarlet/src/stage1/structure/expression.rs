@@ -16,6 +16,20 @@ impl Expression {
         }
         self.root.expect_ident()
     }
+
+    pub fn extract_target(&mut self) -> Result<Option<Expression>, String> {
+        for index in 0..self.pres.len() {
+            if self.pres[index].label == "target" {
+                return Ok(Some(
+                    self.pres
+                        .remove(index)
+                        .expect_single_expression("target")?
+                        .clone(),
+                ));
+            }
+        }
+        Ok(None)
+    }
 }
 
 impl Debug for Expression {

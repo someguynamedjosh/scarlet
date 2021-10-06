@@ -1,10 +1,9 @@
 use super::nom_prelude::*;
 use crate::stage1::structure::{
     expression::Expression,
-    statement::{Else, Is, PickElif, PickIf, Statement},
+    statement::{Else, PickElif, PickIf, Statement},
 };
 
-mod basics;
 mod conditions;
 mod helpers;
 
@@ -19,8 +18,6 @@ impl Statement {
     fn single_parser<'i>() -> impl Parser<'i, Self> {
         alt((
             map(Else::parser(), Statement::Else),
-            map(Is::parser(), Statement::Is),
-            map(Is::variant_shorthand_parser(), Statement::Is),
             map(PickIf::parser(), Statement::PickIf),
             map(PickElif::parser(), Statement::PickElif),
             map(Expression::parser(), Statement::Expression),

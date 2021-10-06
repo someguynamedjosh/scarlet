@@ -1,10 +1,7 @@
 use super::helpers;
 use crate::{
-    stage1::structure::{
-        expression::Expression,
-        statement::{Is, Statement},
-    },
-    stage2::structure::{Environment, Item, ItemId},
+    stage1::structure::{expression::Expression, statement::Statement},
+    stage2::structure::{Environment, ItemId},
 };
 
 pub fn vomit(env: &Environment, target: ItemId, value: ItemId, base: ItemId) -> Expression {
@@ -14,13 +11,11 @@ pub fn vomit(env: &Environment, target: ItemId, value: ItemId, base: ItemId) -> 
 
 fn build_statement(env: &Environment, target: ItemId, value: ItemId) -> Statement {
     let target = super::vomit(env, target);
-    let value = super::vomit(env, value);
-    let statement = Is {
-        name: target,
-        value,
-    };
-    let statement = Statement::Is(statement);
-    statement
+    let mut value = super::vomit(env, value);
+    value
+        .pres
+        .push(helpers::single_expr_construct("target", target));
+    Statement::Expression(value)
 }
 
 fn build_replacing_expr(env: &Environment, statements: Vec<Statement>, base: ItemId) -> Expression {

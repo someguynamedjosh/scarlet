@@ -79,7 +79,6 @@ fn vomit_statement(statement: &Statement) -> String {
     match statement {
         Statement::Else(s) => format!("else {}", vomit(&s.value)),
         Statement::Expression(s) => format!("{}", vomit(s)),
-        Statement::Is(s) => format!("{} is {}", vomit(&s.name), vomit(&s.value)),
         _ => todo!(),
     }
 }

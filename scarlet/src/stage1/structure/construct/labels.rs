@@ -1,4 +1,4 @@
-pub const PREFIX_CONSTRUCT_LABELS: &[&str] = &["defining", "FromValues"];
+pub const PREFIX_CONSTRUCT_LABELS: &[&str] = &["defining", "FromValues", "target"];
 pub const ROOT_CONSTRUCT_LABELS: &[&str] = &["identifier", "any", "u8", "variant", "builtin_item"];
 pub const POSTFIX_CONSTRUCT_LABELS: &[&str] = &["is_variant", "substituting", "type_is"];
 const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "u8"];

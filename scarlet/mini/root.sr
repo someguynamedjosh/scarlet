@@ -1,13 +1,12 @@
 defining{
-    TYPE is builtin_item{TYPE}
-    U8 is builtin_item{UnsignedInteger8}
+    # TYPE is builtin_item{TYPE}
 
-    Type is any{TYPE}
+    defining{
+        target{asdf} 123
+    }
+    target{U8}
+    builtin_item{UnsignedInteger8}
 
-    var1 is any{Type}
-    var2 is any{Type}
-
-    input is any{U8}
-    func is any{From{input} U8}
+    # Type is any{TYPE}
 }
-func[input is 3]
+0

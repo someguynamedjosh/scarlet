@@ -1,9 +1,6 @@
 use super::helpers;
 use crate::{
-    stage1::structure::{
-        expression::Expression,
-        statement::{Is, Statement},
-    },
+    stage1::structure::{expression::Expression, statement::Statement},
     stage2::structure::{Definitions, Environment, Item, ItemId},
 };
 
@@ -17,9 +14,11 @@ fn build_statements(env: &Environment, definitions: &Definitions) -> Vec<Stateme
     let mut statements = Vec::new();
     for (name, value) in definitions {
         let name = helpers::just_root_expression(helpers::identifier(name));
-        let value = super::vomit(env, *value);
-        let statement = Is { name, value };
-        statements.push(Statement::Is(statement));
+        let mut value = super::vomit(env, *value);
+        value
+            .pres
+            .push(helpers::single_expr_construct("target", name));
+        statements.push(Statement::Expression(value));
     }
     statements
 }
