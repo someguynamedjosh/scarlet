@@ -41,13 +41,24 @@ impl Environment {
                 if id == target {
                     let value_type = self.get_type(value);
                     if !self.type_is_base_of_other(typee, value_type) {
+                        println!("{:#?}", self);
                         todo!("Nice error, {:?} is not base of {:?}", value_type, typee);
                     }
                     value
                 } else {
-                    let typee = self.substitute(typee, target, value);
-                    let value = Value::Any { id, typee };
-                    self.gpv(value)
+                    let type_vars = self.get_from_variables(typee);
+                    if type_vars.contains_key(&target) {
+                        let value = Value::Substituting {
+                            base,
+                            target,
+                            value,
+                        };
+                        self.gpv(value)
+                    } else {
+                        let typee = self.substitute(typee, target, value);
+                        let value = Value::Any { id, typee };
+                        self.gpv(value)
+                    }
                 }
             }
             Value::BuiltinOperation(_) => todo!(),

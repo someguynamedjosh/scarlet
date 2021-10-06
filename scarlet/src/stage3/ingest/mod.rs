@@ -135,7 +135,13 @@ impl<'e, 'i> Context<'e, 'i> {
                 // Skip adding a path for the base item again.
                 return child.ingest(*base);
             }
-            s2::Item::From { base, value } => todo!(),
+            s2::Item::From { base, value } => {
+                let (base, value) = (*base, *value);
+                let value = self.ingest(value);
+                let variables = self.environment.dependencies(value);
+                let base = self.ingest(base);
+                self.environment.with_from_variables(base, &variables[..])
+            }
             s2::Item::Identifier(name) => {
                 let mut result = None;
                 for scope in &self.parent_scopes {

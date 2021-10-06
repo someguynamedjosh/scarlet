@@ -44,7 +44,7 @@ impl Value {
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(val) => format!("{:?}", val),
             Value::From { base, variable } => {
-                format!("{}\n    From{{{:?}}}", env.cfv(*base), variable)
+                format!("From{{{:?}}}\n{}", variable, env.cfv(*base))
             }
             Value::Substituting {
                 base,
@@ -52,10 +52,10 @@ impl Value {
                 value,
             } => {
                 format!(
-                    "{}\n    substituting{{\n        {:?} is {}\n    }}",
+                    "{}\nsubstituting{{\n    {:?} is {}\n}}",
                     env.cfv(*base),
                     target,
-                    indented(&indented(&env.cfv(*value)))
+                    indented(&env.cfv(*value))
                 )
             }
             Value::Variant(_) => todo!(),

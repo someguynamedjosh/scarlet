@@ -6,8 +6,8 @@ defining{
 
     var1 is any{Type}
     var2 is any{Type}
-}
-var1[
-    var1 is var2
-]
 
+    input is any{U8}
+    func is any{From{input} U8}
+}
+func[input is 3]
