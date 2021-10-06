@@ -6,10 +6,14 @@ use crate::stage1::{
 mod explicit;
 mod helpers;
 mod postfix_shorthands;
+mod prefix_shorthands;
 mod root_shorthands;
 
 fn prefix_parser<'i>() -> impl Parser<'i, Construct> {
-    explicit::parser(Position::Prefix)
+    alt((
+        explicit::parser(Position::Prefix),
+        prefix_shorthands::target_parser(),
+    ))
 }
 
 fn root_parser<'i>() -> impl Parser<'i, Construct> {

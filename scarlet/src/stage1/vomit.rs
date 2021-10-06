@@ -15,8 +15,14 @@ pub fn vomit(expr: &Expression) -> String {
 
 fn vomit_prefix_construct(construct: &Construct) -> String {
     match &construct.label[..] {
+        "target" => vomit_target(construct),
         _ => vomit_explicit_prefix_construct(construct),
     }
+}
+
+fn vomit_target(construct: &Construct) -> String {
+    let name = vomit(construct.expect_single_expression("target").unwrap());
+    format!("{} is ", name)
 }
 
 fn vomit_root_construct(construct: &Construct) -> String {

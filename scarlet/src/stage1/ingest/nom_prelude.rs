@@ -1,3 +1,4 @@
+use nom::multi::many1;
 pub use nom::{
     branch::alt,
     bytes::complete::{tag, take, take_until, take_while, take_while1},
@@ -44,6 +45,13 @@ fn ws_element<'i>() -> impl Parser<'i, ()> {
         single_line_comment(),
         map(one_of(" \t\r\n"), |_| ()),
     ))
+}
+
+pub fn nonempty_ws<'i>() -> impl Parser<'i, ()> {
+    |input| {
+        let (input, _) = many1(ws_element())(input)?;
+        Ok((input, ()))
+    }
 }
 
 pub fn ws<'i>() -> impl Parser<'i, ()> {

@@ -2,9 +2,9 @@ defining{
     # TYPE is builtin_item{TYPE}
 
     defining{
-        target{asdf} 123
+        asdf is 123
     }
-    target{U8}
+    U8 is
     builtin_item{UnsignedInteger8}
 
     # Type is any{TYPE}

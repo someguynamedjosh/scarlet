@@ -4,11 +4,11 @@
 	"patterns": [
 		{
 			"name": "keyword.control",
-			"match": "(s|substituting|d|defining|Type|From|any|the|i32|integer|int|o|on_variants|p|pick|pick_first_true_condition|variant|identifier|info|builtin_item)[ \\r\\n\\t]*(?=\\{)"
+			"match": "(s|substituting|d|defining|Type|From|any|the|i32|integer|int|o|on_variants|p|pick|pick_first_true_condition|variant_of|identifier|info|builtin_item|target)[ \\r\\n\\t]*(?=\\{)"
 		},
 		{
 			"name": "invalid.illegal",
-			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*(?=\\{)"
+			"match": "\\b[^ \\r\\n\\t]+[ \\r\\n\\t]*(?=\\{)"
 		},
 		{
 			"name": "punctuation",
@@ -16,7 +16,7 @@
 		},
 		{
 			"name": "keyword.other",
-			"match": "\\b(is|variant_of|is_variant_of|variant|vn|bt|if|elif|else)\\b"
+			"match": "\\b(is|variant_of|vn|bt|else)\\b"
 		},
 		{
 			"name": "keyword.operator",
@@ -24,11 +24,11 @@
 		},
 		{
 			"name": "entity.name.type",
-			"match": "\\b[A-Z][a-zA-Z0-9]*\\b"
+			"match": "\\b[A-Z][^ \\r\\n\\t]*\\b"
 		},
 		{
 			"name": "entity.name.function",
-			"match": "\\b[a-zA-Z0-9]+[ \\r\\n\\t]*(?=\\[)\\b"
+			"match": "\\b[^ \\r\\n\\t]+[ \\r\\n\\t]*(?=\\[)\\b"
 		},
 		{
 			"name": "constant.numeric",
@@ -36,7 +36,7 @@
 		},
 		{
 			"name": "variable",
-			"match": "\\b[a-zA-Z0-9]+\\b"
+			"match": "\\b[^ \\r\\n\\t]+\\b"
 		},
 		{
 			"name": "comment.line",
