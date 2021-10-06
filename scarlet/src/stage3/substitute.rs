@@ -57,6 +57,11 @@ impl Environment {
                 let base = self.substitute(base, target, value);
                 if variable == target {
                     let value_deps = self.dependencies(value);
+                    let already_included = self.get_from_variables(base);
+                    let value_deps: Vec<_> = value_deps
+                        .into_iter()
+                        .filter(|dep| !already_included.contains_key(dep))
+                        .collect();
                     self.with_from_variables(base, &value_deps[..])
                 } else {
                     self.gpv(Value::From { base, variable })

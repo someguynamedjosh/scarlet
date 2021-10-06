@@ -21,10 +21,10 @@ fn main() {
     println!("{:#?}", environment);
     println!("root {:#?}", root);
 
-    // println!("Doing reduction");
-    // environment.reduce_all();
-    // println!("{:#?}", environment);
-    // println!("root {:#?}", root);
+    println!("Doing reduction");
+    environment.reduce_all();
+    println!("{:#?}", environment);
+    println!("root {:#?}", root);
 
     // println!(
     //     "\nRESULT:\n{}",

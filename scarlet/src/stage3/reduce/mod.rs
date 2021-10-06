@@ -53,6 +53,8 @@ impl Environment {
             self.values[reduced].cached_reduction = Some(reduced);
             debug_assert_eq!(self.reduce(reduced), reduced);
             let typee = self.get_type(of);
+            println!("{:#?}", self);
+            println!("Reducing {:?} to {:?}", of, reduced);
             debug_assert_eq!(typee, self.get_type(reduced));
             self.values[reduced].cached_type = Some(typee);
             reduced
