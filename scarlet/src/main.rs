@@ -3,7 +3,7 @@ mod rust_analyzer_actions;
 mod shared;
 mod stage1;
 mod stage2;
-// mod stage3;
+mod stage3;
 mod util;
 
 fn main() {
@@ -16,10 +16,10 @@ fn main() {
     println!("root: {:?}", root);
     println!("vomited root:\n{}", stage2::completely_vomit_item(&environment, root));
 
-    // println!("Doing stage 3");
-    // let (mut environment, root) = stage3::ingest(&environment, root);
-    // println!("{:#?}", environment);
-    // println!("root {:#?}", root);
+    println!("Doing stage 3");
+    let (mut environment, root) = stage3::ingest(&environment, root);
+    println!("{:#?}", environment);
+    println!("root {:#?}", root);
 
     // println!("Doing reduction");
     // environment.reduce_all();

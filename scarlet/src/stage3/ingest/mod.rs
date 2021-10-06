@@ -1,7 +1,10 @@
 use std::{borrow::Borrow, collections::HashMap};
 
 use super::structure::{Environment, Path};
-use crate::{stage2::structure as s2, stage3::structure as s3};
+use crate::{
+    stage2::structure::{self as s2, ItemId},
+    stage3::structure as s3,
+};
 
 pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, s3::ValueId) {
     let mut environment = s3::Environment::new();
@@ -31,7 +34,7 @@ struct Context<'e, 'i> {
 
 struct ItemBeingResolved<'i> {
     base: &'i s2::Item,
-    reps: Vec<s2::Substitutions>,
+    reps: Vec<(ItemId, ItemId)>,
 }
 
 impl<'i> ItemBeingResolved<'i> {
@@ -132,7 +135,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 // Skip adding a path for the base item again.
                 return child.ingest(*base);
             }
-            s2::Item::From { base, values } => todo!(),
+            s2::Item::From { base, value } => todo!(),
             s2::Item::Identifier(name) => {
                 let mut result = None;
                 for scope in &self.parent_scopes {
@@ -149,21 +152,19 @@ impl<'e, 'i> Context<'e, 'i> {
             }
             s2::Item::Substituting {
                 base,
-                substitutions,
+                target,
+                value,
             } => {
-                let mut result = self.ingest(*base);
-                for (target, value) in substitutions {
-                    let target = self
-                        .resolve_variable(*target)
-                        .expect("TODO: Nice error, not a variable");
-                    let value = self.ingest(*value);
-                    result = self.gpv(s3::Value::Substituting {
-                        base: result,
-                        target,
-                        value,
-                    })
-                }
-                result
+                let result = self.ingest(*base);
+                let target = self
+                    .resolve_variable(*target)
+                    .expect("TODO: Nice error, not a variable");
+                let value = self.ingest(*value);
+                self.gpv(s3::Value::Substituting {
+                    base: result,
+                    target,
+                    value,
+                })
             }
             s2::Item::Variant { typee, id } => {
                 todo!()

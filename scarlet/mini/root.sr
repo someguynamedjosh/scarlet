@@ -3,13 +3,9 @@ defining{
     U8 is builtin_item{UnsignedInteger8}
 
     Type is any{TYPE}
+
     var1 is any{Type}
     var2 is any{Type}
-
-    SomeFnType is From{var1} U8
-}
-defining{
-    another is any{Type}
 }
 var1[
     var1 is var2
