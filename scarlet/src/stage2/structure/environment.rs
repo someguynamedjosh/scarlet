@@ -7,31 +7,24 @@ pub struct Variable;
 #[derive(Clone, Debug)]
 pub struct Variant;
 
-pub type VariableId = Id<Variable, 'V'>;
-pub type VariantId = Id<Variant, 'T'>;
+pub type OpaqueId = Id<(), 'O'>;
 
 #[derive(Clone, Debug)]
 pub struct Environment {
     pub items: Pool<Item, 'I'>,
-    pub variables: Pool<Variable, 'V'>,
-    pub variants: Pool<Variant, 'T'>,
+    pub opaque_value_ids: Pool<(), 'O'>,
 }
 
 impl Environment {
     pub fn new() -> Self {
         Self {
             items: Pool::new(),
-            variables: Pool::new(),
-            variants: Pool::new(),
+            opaque_value_ids: Pool::new(),
         }
     }
 
-    pub fn new_variable(&mut self) -> VariableId {
-        self.variables.push(Variable)
-    }
-
-    pub fn new_variant(&mut self) -> VariantId {
-        self.variants.push(Variant)
+    pub fn new_opaque_value(&mut self) -> OpaqueId {
+        self.opaque_value_ids.push(())
     }
 
     pub fn push_item(&mut self, item: Item) -> ItemId {

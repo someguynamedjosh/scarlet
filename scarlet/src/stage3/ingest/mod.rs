@@ -16,8 +16,7 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
     let mut ctx = Context {
         environment: &mut environment,
         ingest_map: &mut HashMap::new(),
-        variable_map: &mut HashMap::new(),
-        variant_map: &mut HashMap::new(),
+        opaque_map: &mut HashMap::new(),
         path: Some(s3::Path::new()),
         input: s2_env,
         parent_scopes: Vec::new(),
@@ -45,7 +44,6 @@ impl<'e, 'i> Context<'e, 'i> {
             return *result;
         }
         let result = match &self.input.items[input] {
-            s2::Item::Any { typee, id } => self.ingest_any(id, typee),
             s2::Item::BuiltinOperation(op) => {
                 let op = op.map(|input| self.child().without_path().ingest(input));
                 self.gpv(s3::Value::BuiltinOperation(op))
@@ -73,12 +71,12 @@ impl<'e, 'i> Context<'e, 'i> {
                     None => todo!("Nice error, no member {} in {:?}", name, base),
                 }
             }
+            s2::Item::Opaque { class, typee, id } => self.ingest_opaque(class, id, typee),
             s2::Item::Substituting {
                 base,
                 target,
                 value,
             } => self.ingest_substituting(base, target, value),
-            s2::Item::Variant { typee, id } => self.ingest_variant(id, typee),
         };
         self.ingest_map.insert(input, result);
         result

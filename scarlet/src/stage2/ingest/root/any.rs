@@ -1,4 +1,5 @@
 use crate::{
+    shared::OpaqueClass,
     stage1::structure::construct::Construct,
     stage2::{
         self,
@@ -11,6 +12,10 @@ pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
         .expect_single_expression("any")
         .expect("TODO: Nice error");
     let typee = stage2::ingest_expression(env, typee.clone());
-    let id = env.new_variable();
-    env.push_item(Item::Any { typee, id })
+    let id = env.new_opaque_value();
+    env.push_item(Item::Opaque {
+        class: OpaqueClass::Variable,
+        id,
+        typee,
+    })
 }

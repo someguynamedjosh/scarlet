@@ -1,5 +1,6 @@
 use super::helpers;
 use crate::{
+    shared::OpaqueClass,
     stage1::structure::{construct::Construct, expression::Expression},
     stage2::{
         completely_vomit_item,
@@ -14,7 +15,6 @@ mod substituting;
 pub fn vomit(env: &Environment, item: ItemId) -> Expression {
     let item = &env.items[item];
     match item {
-        Item::Any { typee, .. } => vomit_any(env, *typee),
         Item::BuiltinOperation(op) => vomit_operation(env, op),
         Item::BuiltinValue(val) => vomit_builtin_value(val),
         Item::Defining { base, definitions } => defining::vomit(env, definitions, *base),
@@ -22,12 +22,12 @@ pub fn vomit(env: &Environment, item: ItemId) -> Expression {
         Item::Identifier(name) => vomit_identifier(name),
         Item::Match { base, cases } => vomit_match(env, *base, cases),
         Item::Member { base, name } => member::vomit(env, *base, name),
+        Item::Opaque { class, typee, .. } => vomit_opaque(env, *class, *typee),
         Item::Substituting {
             base,
             target,
             value,
         } => substituting::vomit(env, *target, *value, *base),
-        Item::Variant { typee, .. } => vomit_variant(env, *typee),
     }
 }
 
@@ -86,8 +86,12 @@ fn vomit_case(env: &Environment, (case, value): &(ItemId, ItemId)) -> Expression
     result
 }
 
-fn vomit_variant(env: &Environment, typee: ItemId) -> Expression {
+fn vomit_opaque(env: &Environment, class: OpaqueClass, typee: ItemId) -> Expression {
     let typee = vomit(env, typee);
-    let construct = helpers::single_expr_construct("variant", typee);
+    let label = match class {
+        OpaqueClass::Variable => "any",
+        OpaqueClass::Variant => "variant",
+    };
+    let construct = helpers::single_expr_construct(label, typee);
     helpers::just_root_expression(construct)
 }

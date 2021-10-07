@@ -1,15 +1,9 @@
-use super::structure::{Environment, ValueId, VariableId, Variables};
-use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
+use super::structure::{Environment, ValueId, Variables};
+use crate::{shared::OpaqueClass, stage2::structure::BuiltinValue, stage3::structure::Value};
 
 impl Environment {
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of].value {
-            Value::Any { id, typee } => {
-                let (variable, typee) = (*id, *typee);
-                let type_deps = self.dependencies(typee);
-                let base = self.with_from_variables(typee, &type_deps[..]);
-                self.gpv(Value::From { base, variable })
-            }
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(val) => match val {
                 BuiltinValue::OriginType | &BuiltinValue::U8Type => self.gp_origin_type(),
@@ -20,6 +14,16 @@ impl Environment {
                 let base_type = self.get_type(base);
                 self.remove_from_variable(base_type, variable)
             }
+            Value::Opaque { class, id, typee } => {
+                let (class, variable, typee) = (*class, *id, *typee);
+                let type_deps = self.dependencies(typee);
+                let base = self.with_from_variables(typee, &type_deps[..]);
+                if class == OpaqueClass::Variable {
+                    self.gpv(Value::From { base, variable })
+                } else {
+                    base
+                }
+            }
             Value::Substituting {
                 base,
                 target,
@@ -28,11 +32,6 @@ impl Environment {
                 let (base, target, value) = (*base, *target, *value);
                 let base_type = self.get_type(base);
                 self.substitute(base_type, target, value)
-            }
-            Value::Variant { typee, .. } => {
-                let typee = *typee;
-                let type_deps = self.dependencies(typee);
-                self.with_from_variables(typee, &type_deps[..])
             }
         }
     }

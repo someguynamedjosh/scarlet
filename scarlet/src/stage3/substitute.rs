@@ -1,5 +1,5 @@
-use super::structure::{Environment, ValueId, VariableId};
-use crate::stage3::structure::Value;
+use super::structure::{Environment, OpaqueId, ValueId};
+use crate::{shared::OpaqueClass, stage3::structure::Value};
 
 impl Environment {
     pub fn type_is_base_of_other(&self, base_id: ValueId, other_id: ValueId) -> bool {
@@ -33,10 +33,14 @@ impl Environment {
     }
 
     /// Replaces $target with $value in $base.
-    pub fn substitute(&mut self, base: ValueId, target: VariableId, value: ValueId) -> ValueId {
+    pub fn substitute(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
         let base = self.reduce(base);
         match &self.values[base].value {
-            Value::Any { id, typee } => {
+            Value::Opaque {
+                class: OpaqueClass::Variable,
+                id,
+                typee,
+            } => {
                 let (id, typee) = (*id, *typee);
                 if id == target {
                     let value_type = self.get_type(value);
@@ -56,7 +60,11 @@ impl Environment {
                         self.gpv(value)
                     } else {
                         let typee = self.substitute(typee, target, value);
-                        let value = Value::Any { id, typee };
+                        let value = Value::Opaque {
+                            class: OpaqueClass::Variable,
+                            id,
+                            typee,
+                        };
                         self.gpv(value)
                     }
                 }
@@ -94,7 +102,11 @@ impl Environment {
                 };
                 self.gpv(value)
             }
-            Value::Variant { id, typee } => {
+            Value::Opaque {
+                class: OpaqueClass::Variant,
+                id,
+                typee,
+            } => {
                 let (id, typee) = (*id, *typee);
                 let type_vars = self.get_from_variables(typee);
                 if type_vars.contains_key(&target) {
@@ -106,7 +118,11 @@ impl Environment {
                     self.gpv(value)
                 } else {
                     let typee = self.substitute(typee, target, value);
-                    let value = Value::Variant { id, typee };
+                    let value = Value::Opaque {
+                        class: OpaqueClass::Variant,
+                        id,
+                        typee,
+                    };
                     self.gpv(value)
                 }
             }

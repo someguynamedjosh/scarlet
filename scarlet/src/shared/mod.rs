@@ -8,3 +8,9 @@ pub use ordered_map::*;
 pub use pool::*;
 pub use pool_id::*;
 pub use terminal_utilities::*;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum OpaqueClass {
+    Variable,
+    Variant,
+}

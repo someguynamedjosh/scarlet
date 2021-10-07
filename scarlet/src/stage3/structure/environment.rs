@@ -3,7 +3,7 @@ use std::{
     fmt::{self, Debug},
 };
 
-use super::{AnnotatedValue, Value, ValueId, Variable, Variant};
+use super::{AnnotatedValue, OpaqueValue, Value, ValueId};
 use crate::shared::Pool;
 
 #[derive(Clone, Debug)]
@@ -48,19 +48,17 @@ impl Paths {
     }
 }
 
-#[derive(Clone, )]
+#[derive(Clone)]
 pub struct Environment {
     pub values: Pool<AnnotatedValue, 'L'>,
-    pub variables: Pool<Variable, 'V'>,
-    pub variants: Pool<Variant, 'T'>,
+    pub opaque_values: Pool<OpaqueValue, 'O'>,
 }
 
 impl Environment {
     pub fn new() -> Self {
         Self {
             values: Pool::new(),
-            variables: Pool::new(),
-            variants: Pool::new(),
+            opaque_values: Pool::new(),
         }
     }
 

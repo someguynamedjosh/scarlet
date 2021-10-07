@@ -1,4 +1,4 @@
-use super::structure::{Environment, ValueId, VariableId, Variables};
+use super::structure::{Environment, OpaqueId, ValueId, Variables};
 use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
 
 impl Environment {
@@ -19,11 +19,7 @@ impl Environment {
         self.get_or_push_value(value)
     }
 
-    pub fn remove_from_variable(
-        &mut self,
-        inn: ValueId,
-        variable_to_remove: VariableId,
-    ) -> ValueId {
+    pub fn remove_from_variable(&mut self, inn: ValueId, variable_to_remove: OpaqueId) -> ValueId {
         match &self.values[inn].value {
             Value::From { base, variable } => {
                 let (base, variable) = (*base, *variable);
@@ -61,7 +57,7 @@ impl Environment {
         result
     }
 
-    pub fn with_from_variables(&mut self, base: ValueId, variables: &[VariableId]) -> ValueId {
+    pub fn with_from_variables(&mut self, base: ValueId, variables: &[OpaqueId]) -> ValueId {
         if variables.len() == 0 {
             base
         } else {
@@ -71,7 +67,7 @@ impl Environment {
         }
     }
 
-    pub fn dependencies(&mut self, value: ValueId) -> Vec<VariableId> {
+    pub fn dependencies(&mut self, value: ValueId) -> Vec<OpaqueId> {
         let value_type = self.get_type(value);
         let value_deps = self.get_from_variables(value_type);
         value_deps.into_iter().map(|i| i.0).collect()

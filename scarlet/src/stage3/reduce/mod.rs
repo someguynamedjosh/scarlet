@@ -16,18 +16,18 @@ impl Environment {
 
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of].value {
-            Value::Any { id, typee } => {
-                let (id, typee) = (*id, *typee);
-                let typee = self.reduce(typee);
-                let value = Value::Any { id, typee };
-                self.gpv(value)
-            }
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => of,
             Value::From { base, variable } => {
                 let (base, variable) = (*base, *variable);
                 let base = self.reduce(base);
                 let value = Value::From { base, variable };
+                self.gpv(value)
+            }
+            Value::Opaque { class, id, typee } => {
+                let (class, id, typee) = (*class, *id, *typee);
+                let typee = self.reduce(typee);
+                let value = Value::Opaque { class, id, typee };
                 self.gpv(value)
             }
             Value::Substituting {
@@ -39,12 +39,6 @@ impl Environment {
                 let rbase = self.reduce(base);
                 let rvalue = self.reduce(value);
                 self.substitute(rbase, target, rvalue)
-            }
-            Value::Variant { id, typee } => {
-                let (id, typee) = (*id, *typee);
-                let typee = self.reduce(typee);
-                let value = Value::Variant { id, typee };
-                self.gpv(value)
             }
         }
     }

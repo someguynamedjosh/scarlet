@@ -1,15 +1,11 @@
-use super::{BuiltinOperation, BuiltinValue, VariableId, VariantId};
-use crate::shared::{Id, OrderedMap};
+use super::{BuiltinOperation, BuiltinValue, OpaqueId};
+use crate::shared::{Id, OpaqueClass, OrderedMap};
 
 pub type Definitions = OrderedMap<String, ItemId>;
 pub type ItemId = Id<Item, 'I'>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Item {
-    Any {
-        typee: ItemId,
-        id: VariableId,
-    },
     BuiltinOperation(BuiltinOperation<ItemId>),
     BuiltinValue(BuiltinValue),
     Defining {
@@ -29,13 +25,14 @@ pub enum Item {
         base: ItemId,
         name: String,
     },
+    Opaque {
+        class: OpaqueClass,
+        id: OpaqueId,
+        typee: ItemId,
+    },
     Substituting {
         base: ItemId,
         target: ItemId,
         value: ItemId,
-    },
-    Variant {
-        typee: ItemId,
-        id: VariantId,
     },
 }

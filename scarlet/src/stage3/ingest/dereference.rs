@@ -3,7 +3,7 @@ use crate::{stage2::structure as s2, stage3::structure as s3};
 
 pub(super) struct DereferencedItem {
     pub base: s2::ItemId,
-    pub subs: Vec<(s3::VariableId, s3::ValueId)>,
+    pub subs: Vec<(s3::OpaqueId, s3::ValueId)>,
 }
 
 impl DereferencedItem {
