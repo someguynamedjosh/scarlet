@@ -12,6 +12,7 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
     // let mut variant_map = HashMap::new();
     let mut ctx = Context {
         environment: &mut environment,
+        ingest_map: &mut HashMap::new(),
         variable_map: &mut HashMap::new(),
         variant_map: &mut HashMap::new(),
         path: Some(Path::new()),
@@ -25,6 +26,7 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
 #[derive(Debug)]
 struct Context<'e, 'i> {
     environment: &'e mut s3::Environment,
+    ingest_map: &'e mut HashMap<s2::ItemId, s3::ValueId>,
     variable_map: &'e mut HashMap<s2::VariableId, (s3::VariableId, s3::ValueId)>,
     variant_map: &'e mut HashMap<s2::VariantId, (s3::VariantId, s3::ValueId)>,
     path: Option<Path>,
@@ -32,25 +34,31 @@ struct Context<'e, 'i> {
     parent_scopes: Vec<&'i s2::Definitions>,
 }
 
-struct ItemBeingResolved<'i> {
-    base: &'i s2::Item,
-    reps: Vec<(ItemId, ItemId)>,
+struct DereferencedItem {
+    base: s2::ItemId,
+    subs: Vec<(s3::VariableId, s3::ValueId)>,
 }
 
-impl<'i> ItemBeingResolved<'i> {
+impl DereferencedItem {
     fn wrapped_with(self, other: Self) -> Self {
         Self {
             base: self.base,
-            reps: [self.reps, other.reps].concat(),
+            subs: [self.subs, other.subs].concat(),
         }
     }
 }
 
-impl<'i> From<&'i s2::Item> for ItemBeingResolved<'i> {
-    fn from(value: &'i s2::Item) -> Self {
+impl From<&s2::ItemId> for DereferencedItem {
+    fn from(value: &s2::ItemId) -> Self {
+        (*value).into()
+    }
+}
+
+impl From<s2::ItemId> for DereferencedItem {
+    fn from(value: s2::ItemId) -> Self {
         Self {
-            base: value.borrow(),
-            reps: Vec::new(),
+            base: value,
+            subs: Vec::new(),
         }
     }
 }
@@ -59,6 +67,7 @@ impl<'e, 'i> Context<'e, 'i> {
     pub fn child<'e2>(&'e2 mut self) -> Context<'e2, 'i> {
         Context {
             environment: self.environment,
+            ingest_map: self.ingest_map,
             variable_map: self.variable_map,
             variant_map: self.variant_map,
             path: self.path.clone(),
@@ -71,6 +80,13 @@ impl<'e, 'i> Context<'e, 'i> {
         // Search this one before other parents.
         self.parent_scopes.insert(0, scope);
         self
+    }
+
+    pub fn exclude_scopes(&mut self, number_of_scopes_to_exclude: usize) {
+        for _ in 0..number_of_scopes_to_exclude {
+            // O(n^2) but who gives a fuck anyway?
+            self.parent_scopes.remove(0);
+        }
     }
 
     pub fn with_additional_path_component(self, component: s3::PathComponent) -> Self {
@@ -103,8 +119,71 @@ impl<'e, 'i> Context<'e, 'i> {
         self.extract_variable(value)
     }
 
+    fn dereference_identifier(&mut self, name: &String) -> DereferencedItem {
+        for index in 0..self.parent_scopes.len() {
+            let scope = &self.parent_scopes[index];
+            if let Some(item) = scope.get(name) {
+                let result = item.into();
+                self.exclude_scopes(index);
+                return result;
+            }
+        }
+        todo!(
+            "Nice error, no identifier {} in {:#?}",
+            name,
+            self.parent_scopes
+        )
+    }
+
+    fn dereference_member(&mut self, base: s2::ItemId, name: &String) -> Option<DereferencedItem> {
+        match &self.input.items[base] {
+            s2::Item::Defining { base, definitions } => {
+                self.parent_scopes.push(definitions);
+                if let Some(result) = self.dereference_member(*base, name) {
+                    return Some(result);
+                }
+                for (candidate, item) in definitions {
+                    if candidate == name {
+                        return Some(item.into());
+                    }
+                }
+                None
+            }
+            s2::Item::From { base, .. } => self.dereference_member(*base, name),
+            s2::Item::Identifier(ident) => {
+                let ident = self.dereference_identifier(ident);
+                let err = format!("No member {} in {:?}", name, ident.base);
+                let member = self.dereference_member(ident.base, name).expect(&err);
+                Some(member.wrapped_with(ident))
+            }
+            s2::Item::Member { base, name } => todo!(),
+            s2::Item::Substituting {
+                base,
+                target,
+                value,
+            } => todo!(),
+            _ => None,
+        }
+    }
+
+    fn ingest_dereferenced(&mut self, item: DereferencedItem) -> s3::ValueId {
+        let base = self.ingest(item.base);
+        let mut result = base;
+        for (target, value) in item.subs {
+            result = self.gpv(s3::Value::Substituting {
+                base: result,
+                target,
+                value,
+            });
+        }
+        result
+    }
+
     pub fn ingest(&mut self, input: s2::ItemId) -> s3::ValueId {
-        match &self.input.items[input] {
+        if let Some(result) = self.ingest_map.get(&input) {
+            return *result;
+        }
+        let result = match &self.input.items[input] {
             s2::Item::Any { typee, id } => {
                 let (id, typee) = if let Some(var) = self.variable_map.get(id) {
                     *var
@@ -126,14 +205,21 @@ impl<'e, 'i> Context<'e, 'i> {
             s2::Item::BuiltinValue(value) => self.gpv(s3::Value::BuiltinValue(*value)),
             s2::Item::Defining { base, definitions } => {
                 let mut child = self.child().with_additional_parent_scope(definitions);
-                for (name, def) in definitions {
+                let (base, definitions) = (*base, definitions.clone());
+                let rbase = child.ingest(base);
+                // Manually insert this now so that we don't enter infinite loops when
+                // processing children.
+                self.ingest_map.insert(base, rbase);
+                self.ingest_map.insert(input, rbase);
+                let mut child = self.child().with_additional_parent_scope(&definitions);
+                for (name, def) in &definitions {
                     child
                         .child()
                         .with_additional_path_component(s3::PathComponent::Member(name.clone()))
                         .ingest(*def);
                 }
                 // Skip adding a path for the base item again.
-                return child.ingest(*base);
+                return rbase;
             }
             s2::Item::From { base, value } => {
                 let (base, value) = (*base, *value);
@@ -143,35 +229,21 @@ impl<'e, 'i> Context<'e, 'i> {
                 self.environment.with_from_variables(base, &variables[..])
             }
             s2::Item::Identifier(name) => {
-                let mut result = None;
-                for scope in &self.parent_scopes {
-                    if let Some(item) = scope.get(name) {
-                        let item = *item;
-                        result = Some(self.ingest(item));
-                        break;
-                    }
-                }
-                result.expect("TOOO: Nice error")
+                let dereffed = self.dereference_identifier(name);
+                self.ingest_dereferenced(dereffed)
             }
             s2::Item::Member { base, name } => {
-                todo!()
+                let dereffed = self.dereference_member(*base, name);
+                match dereffed {
+                    Some(dereffed) => self.ingest_dereferenced(dereffed),
+                    None => todo!("Nice error, no member {} in {:?}", name, base),
+                }
             }
             s2::Item::Substituting {
                 base,
                 target,
                 value,
-            } => {
-                let result = self.ingest(*base);
-                let target = self
-                    .resolve_variable(*target)
-                    .expect("TODO: Nice error, not a variable");
-                let value = self.ingest(*value);
-                self.gpv(s3::Value::Substituting {
-                    base: result,
-                    target,
-                    value,
-                })
-            }
+            } => self.ingest_substituting(base, target, value),
             s2::Item::Variant { typee, id } => {
                 let (id, typee) = if let Some(vnt) = self.variant_map.get(id) {
                     *vnt
@@ -186,6 +258,26 @@ impl<'e, 'i> Context<'e, 'i> {
                 };
                 self.gpv(s3::Value::Variant { id, typee })
             }
-        }
+        };
+        self.ingest_map.insert(input, result);
+        result
+    }
+
+    fn ingest_substituting(
+        &mut self,
+        base: &s2::ItemId,
+        target: &s2::ItemId,
+        value: &s2::ItemId,
+    ) -> s3::ValueId {
+        let result = self.ingest(*base);
+        let target = self
+            .resolve_variable(*target)
+            .expect("TODO: Nice error, not a variable");
+        let value = self.ingest(*value);
+        self.gpv(s3::Value::Substituting {
+            base: result,
+            target,
+            value,
+        })
     }
 }

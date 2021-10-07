@@ -8,7 +8,7 @@
 		},
 		{
 			"name": "invalid.illegal",
-			"match": "\\b[^ \\r\\n\\t]+[ \\r\\n\\t]*(?=\\{)"
+			"match": "\\b[^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]+[ \\r\\n\\t]*(?=\\{)"
 		},
 		{
 			"name": "punctuation",
@@ -24,11 +24,11 @@
 		},
 		{
 			"name": "entity.name.type",
-			"match": "\\b[A-Z][^ \\r\\n\\t]*\\b"
+			"match": "\\b[A-Z][^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]*\\b"
 		},
 		{
 			"name": "entity.name.function",
-			"match": "\\b[^ \\r\\n\\t]+[ \\r\\n\\t]*(?=\\[)\\b"
+			"match": "\\b[^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]+[ \\r\\n\\t\\{\\}\\(\\)\\[\\]]*(?=\\[)\\b"
 		},
 		{
 			"name": "constant.numeric",
@@ -36,7 +36,7 @@
 		},
 		{
 			"name": "variable",
-			"match": "\\b[^ \\r\\n\\t]+\\b"
+			"match": "\\b[^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]+\\b"
 		},
 		{
 			"name": "comment.line",

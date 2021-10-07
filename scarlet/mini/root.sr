@@ -1,12 +1,10 @@
 defining{
-    # TYPE is builtin_item{TYPE}
+    TYPE is builtin_item{TYPE}
 
     defining{
-        asdf is 123
+        zero is variant_of{Bit}
+        one is variant_of{Bit}
     }
-    U8 is
-    builtin_item{UnsignedInteger8}
-
-    # Type is any{TYPE}
+    Bit is variant_of{TYPE}
 }
-0
+Bit::zero
