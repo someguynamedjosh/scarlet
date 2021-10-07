@@ -51,47 +51,47 @@ impl<'e, 'i> Context<'e, 'i> {
             s2::Item::BuiltinValue(value) => self.gpv(s3::Value::BuiltinValue(*value)),
             s2::Item::Defining { base, definitions } => {
                 referenced = true;
-                self.ingest_defining(definitions, base, input)
+                self.child().ingest_defining(definitions, base, input)
             }
             s2::Item::From { base, value } => {
                 let (base, value) = (*base, *value);
-                let value = self.ingest(value);
+                let value = self.child().ingest(value);
                 let variables = self.environment.dependencies(value);
-                let base = self.ingest(base);
+                let base = self.child().ingest(base);
                 self.environment.with_from_variables(base, &variables[..])
             }
             s2::Item::Identifier(name) => {
                 referenced = true;
-                let dereffed = self.dereference_identifier(name);
+                let dereffed = self.child().dereference_identifier(name);
                 self.ingest_dereferenced(dereffed)
             }
             s2::Item::Match {
                 base,
                 cases: in_cases,
             } => {
-                let base = self.ingest(*base);
+                let base = self.child().ingest(*base);
                 let mut cases = Vec::new();
                 for (condition, value) in in_cases {
-                    let condition = self.ingest(*condition);
-                    let value = self.ingest(*value);
+                    let condition = self.child().ingest(*condition);
+                    let value = self.child().ingest(*value);
                     cases.push((condition, value));
                 }
                 self.gpv(s3::Value::Match { base, cases })
             }
             s2::Item::Member { base, name } => {
                 referenced = true;
-                let dereffed = self.dereference_member(*base, name);
+                let dereffed = self.child().dereference_member(*base, name);
                 match dereffed {
-                    Some(dereffed) => self.ingest_dereferenced(dereffed),
+                    Some(dereffed) => self.child().ingest_dereferenced(dereffed),
                     None => todo!("Nice error, no member {} in {:?}", name, base),
                 }
             }
-            s2::Item::Opaque { class, typee, id } => self.ingest_opaque(class, id, typee),
+            s2::Item::Opaque { class, typee, id } => self.child().ingest_opaque(class, id, typee),
             s2::Item::Substituting {
                 base,
                 target,
                 value,
-            } => self.ingest_substituting(base, target, value),
+            } => self.child().ingest_substituting(base, target, value),
         };
         self.ingest_map.insert(input, result);
         if referenced {

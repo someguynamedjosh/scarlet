@@ -57,9 +57,14 @@ impl Environment {
         if variables.len() == 0 {
             base
         } else {
-            let variable = variables[0];
             let base = self.with_from_variables(base, &variables[1..]);
-            self.gpv(Value::From { base, variable })
+            let existing_vars = self.get_from_variables(base);
+            let variable = variables[0];
+            if existing_vars.contains_key(&variable) {
+                base
+            } else {
+                self.gpv(Value::From { base, variable })
+            }
         }
     }
 

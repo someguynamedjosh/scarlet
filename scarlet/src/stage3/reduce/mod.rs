@@ -108,8 +108,14 @@ impl Environment {
             }
             debug_assert_eq!(self.reduce(reduced), reduced);
             let typee = self.get_type(of);
-            debug_assert_eq!(typee, self.get_type(reduced));
-            self.values[reduced].cached_type = Some(typee);
+            let rtype = self.get_type(reduced);
+            if !self.type_is_base_of_other(rtype, typee) {
+                println!("{:#?}", self);
+                println!("{:?} was reduced to {:?}", of, reduced);
+                println!("but the new type {:?}", rtype);
+                println!("is not a base of the original type {:?}", typee);
+                panic!();
+            }
             reduced
         }
     }

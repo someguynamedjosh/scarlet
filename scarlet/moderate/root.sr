@@ -1,0 +1,33 @@
+defining{
+    TYPE is builtin_item{TYPE}
+
+    defining{
+        zero is variant_of{Bit}
+        one is variant_of{Bit}
+
+        defining{
+            x is any{Bit}
+        }
+        not is x
+        matching{
+            on{Bit::zero} Bit::one
+            on{Bit::one} Bit::zero
+        }
+
+        defining{
+            x is any{Bit}
+            y is any{Bit}
+        }
+        and is x
+        matching{
+            on{Bit::zero} Bit::zero
+            on{Bit::one} y
+        }
+    }
+    Bit is variant_of{TYPE} 
+}
+Bit::and[
+    Bit::and::x is Bit::zero
+    Bit::and::y is Bit::one
+] 
+displayed{}

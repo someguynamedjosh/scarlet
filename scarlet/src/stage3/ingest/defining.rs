@@ -7,8 +7,11 @@ impl<'e, 'i> Context<'e, 'i> {
         base: &s2::ItemId,
         input: s2::ItemId,
     ) -> s3::ValueId {
-        let mut child = self.child().with_additional_parent_scope(definitions);
         let (base, definitions) = (*base, definitions.clone());
+        if base.index == 16 {
+            println!("HERE");
+        }
+        let mut child = self.child().with_additional_parent_scope(&definitions);
         let rbase = child.ingest(base);
         self.ingest_map.insert(base, rbase);
         self.ingest_map.insert(input, rbase);

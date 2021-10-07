@@ -1,6 +1,4 @@
 defining{
-    TYPE is builtin_item{TYPE}
-
     defining{
         zero is variant_of{Bit}
         one is variant_of{Bit}
@@ -8,12 +6,13 @@ defining{
         defining{
             x is any{Bit}
         }
-        not is x
+        thing is x 
         matching{
-            on{Bit::zero} Bit::one
-            on{Bit::one} Bit::zero
+            on{Bit::zero} Bit::zero
+            on{Bit::one} x
         }
     }
-    Bit is variant_of{TYPE}
+    Bit is variant_of{builtin_item{TYPE}}
 }
-Bit::not[Bit::not::x is Bit::zero] displayed{}
+Bit::thing
+displayed{}
