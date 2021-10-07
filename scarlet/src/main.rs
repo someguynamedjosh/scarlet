@@ -11,26 +11,29 @@ fn main() {
     println!("Reading source from {}", path);
 
     println!("Doing stages 1 and 2");
-    let (environment, root) = entry::start_from_root(&path).unwrap();
-    println!("{:#?}", environment);
-    println!("root: {:?}", root);
-    println!("vomited root:\n{}", stage2::completely_vomit_item(&environment, root));
+    let (mut s2_environment, s2_root) = entry::start_from_root(&path).unwrap();
+    println!("{:#?}", s2_environment);
+    println!("root: {:?}", s2_root);
+    println!(
+        "vomited root:\n{}",
+        stage2::completely_vomit_item(&s2_environment, s2_root)
+    );
 
     println!("Doing stage 3");
-    let (mut environment, root) = stage3::ingest(&environment, root);
-    println!("{:#?}", environment);
-    println!("root {:#?}", root);
+    let (mut s3_environment, s3_root) = stage3::ingest(&s2_environment, s2_root);
+    println!("{:#?}", s3_environment);
+    println!("root {:#?}", s3_root);
 
     println!("Doing reduction");
-    environment.reduce_all();
-    println!("{:#?}", environment);
-    println!("root {:#?}", root);
+    s3_environment.reduce_all();
+    println!("{:#?}", s3_environment);
+    println!("root {:#?}", s3_root);
 
-    // println!(
-    //     "\nRESULT:\n{}",
-    //     stage3::completely_vomit_item(&environment, root)
-    // );
-
-    // println!("Infos:");
-    // environment.display_infos();
+    println!("\nDisplays:");
+    let displays = s3_environment.display_all(&mut s2_environment, s2_root);
+    for display in displays {
+        println!("\n{} is", display.value_name);
+        let value = stage2::completely_vomit_item(&s2_environment, display.vomited_root);
+        println!("{}", value);
+    }
 }

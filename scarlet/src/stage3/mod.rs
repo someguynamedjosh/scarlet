@@ -1,8 +1,9 @@
-pub mod structure;
-pub mod ingest;
 mod elaborate_types;
-mod reduce;
-mod substitute;
 mod helpers;
+pub mod ingest;
+mod reduce;
+pub mod structure;
+mod substitute;
+mod vomit;
 
 pub use ingest::ingest;
