@@ -2,5 +2,5 @@ defining{
     b0 is Bit::zero
     b1 is Bit::one
 }
-Bit::not[b0] 
+Bit::xor[b0 b1] 
 displayed{}
