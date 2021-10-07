@@ -6,7 +6,7 @@ use crate::{shared::OpaqueClass, stage2::structure as s2, stage3::structure as s
 pub(super) struct Context<'e, 'i> {
     pub environment: &'e mut s3::Environment,
     pub ingest_map: &'e mut HashMap<s2::ItemId, s3::ValueId>,
-    pub opaque_map: &'e mut HashMap<s2::OpaqueId, (s3::OpaqueId, s3::ValueId)>,
+    pub opaque_map: &'e mut HashMap<s2::OpaqueId, (s3::OpaqueId, s2::ItemId)>,
     pub input: &'i s2::Environment,
     pub parent_scopes: Vec<&'i s2::Definitions>,
 }

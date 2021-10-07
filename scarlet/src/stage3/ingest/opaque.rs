@@ -11,14 +11,14 @@ impl<'e, 'i> Context<'e, 'i> {
         let (id, typee) = if let Some(var) = self.opaque_map.get(id) {
             *var
         } else {
-            let typee = self.child().ingest(*typee);
             let new_id = self
                 .environment
                 .opaque_values
                 .push(s3::OpaqueValue { stage2_id: *id });
-            self.opaque_map.insert(*id, (new_id, typee));
-            (new_id, typee)
+            self.opaque_map.insert(*id, (new_id, *typee));
+            (new_id, *typee)
         };
+        let typee = self.child().ingest(typee);
         self.gpv(s3::Value::Opaque { class, id, typee })
     }
 }

@@ -8,9 +8,6 @@ impl<'e, 'i> Context<'e, 'i> {
         input: s2::ItemId,
     ) -> s3::ValueId {
         let (base, definitions) = (*base, definitions.clone());
-        if base.index == 16 {
-            println!("HERE");
-        }
         let mut child = self.child().with_additional_parent_scope(&definitions);
         let rbase = child.ingest(base);
         self.ingest_map.insert(base, rbase);
