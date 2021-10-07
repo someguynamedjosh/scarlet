@@ -20,6 +20,7 @@ pub fn vomit(env: &Environment, item: ItemId) -> Expression {
         Item::Defining { base, definitions } => defining::vomit(env, definitions, *base),
         Item::From { base, value } => return vomit_from(env, *value, *base),
         Item::Identifier(name) => vomit_identifier(name),
+        Item::Match { base, cases } => vomit_match(env, *base, cases),
         Item::Member { base, name } => member::vomit(env, *base, name),
         Item::Substituting {
             base,
@@ -67,6 +68,21 @@ fn vomit_from(env: &Environment, value: ItemId, base: ItemId) -> Expression {
     result
         .pres
         .insert(0, helpers::expressions_construct("FromValues", expressions));
+    result
+}
+
+fn vomit_match(env: &Environment, base: ItemId, cases: &[(ItemId, ItemId)]) -> Expression {
+    let expressions = cases.iter().map(|c| vomit_case(env, c)).collect();
+    let mut result = vomit(env, base);
+    let match_construct = helpers::expressions_construct("match", expressions);
+    result.posts.push(match_construct);
+    result
+}
+
+fn vomit_case(env: &Environment, (case, value): &(ItemId, ItemId)) -> Expression {
+    let case = vomit(env, *case);
+    let mut result = vomit(env, *value);
+    result.pres.push(helpers::single_expr_construct("on", case));
     result
 }
 

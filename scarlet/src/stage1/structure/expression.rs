@@ -17,18 +17,24 @@ impl Expression {
         self.root.expect_ident()
     }
 
-    pub fn extract_target(&mut self) -> Result<Option<Expression>, String> {
+    pub fn extract(&mut self, label: &str) -> Option<Construct> {
         for index in 0..self.pres.len() {
-            if self.pres[index].label == "target" {
-                return Ok(Some(
-                    self.pres
-                        .remove(index)
-                        .expect_single_expression("target")?
-                        .clone(),
-                ));
+            if self.pres[index].label == label {
+                return Some(self.pres.remove(index));
             }
         }
-        Ok(None)
+        None
+    }
+
+    pub fn extract_single_expression(&mut self, label: &str) -> Result<Option<Expression>, String> {
+        match self.extract(label) {
+            Some(con) => Ok(Some(con.expect_single_expression(label)?.clone())),
+            None => Ok(None),
+        }
+    }
+
+    pub fn extract_target(&mut self) -> Result<Option<Expression>, String> {
+        self.extract_single_expression("target")
     }
 }
 

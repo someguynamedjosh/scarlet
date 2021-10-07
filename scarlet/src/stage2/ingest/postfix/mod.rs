@@ -8,10 +8,12 @@ use crate::{
 
 mod member;
 mod substituting;
+mod matchh;
 
 pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> ItemId {
     let base = ingest_expression(env, remainder);
     match &post.label[..] {
+        "match" => matchh::ingest(env, base, post),
         "member" => member::ingest(env, base, post),
         "substituting" => substituting::ingest(env, base, post),
         "type_is" => todo!(),

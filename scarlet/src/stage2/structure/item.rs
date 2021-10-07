@@ -21,6 +21,10 @@ pub enum Item {
         value: ItemId,
     },
     Identifier(String),
+    Match {
+        base: ItemId,
+        cases: Vec<(ItemId, ItemId)>,
+    },
     Member {
         base: ItemId,
         name: String,

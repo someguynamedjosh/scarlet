@@ -232,6 +232,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 let dereffed = self.dereference_identifier(name);
                 self.ingest_dereferenced(dereffed)
             }
+            s2::Item::Match { .. } => todo!(),
             s2::Item::Member { base, name } => {
                 let dereffed = self.dereference_member(*base, name);
                 match dereffed {

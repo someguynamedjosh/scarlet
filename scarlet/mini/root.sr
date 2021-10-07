@@ -4,6 +4,15 @@ defining{
     defining{
         zero is variant_of{Bit}
         one is variant_of{Bit}
+
+        defining{
+            x is any{Bit}
+        }
+        neg is x
+        match{
+            on{Bit::zero} Bit::one
+            on{Bit::one} Bit::zero
+        }
     }
     Bit is variant_of{TYPE}
 }
