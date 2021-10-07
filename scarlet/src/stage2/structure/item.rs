@@ -32,7 +32,7 @@ pub enum Item {
     },
     Substituting {
         base: ItemId,
-        target: ItemId,
+        target: Option<ItemId>,
         value: ItemId,
     },
 }

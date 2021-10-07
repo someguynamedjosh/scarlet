@@ -4,16 +4,18 @@ use crate::{
     stage2::structure::{Environment, ItemId},
 };
 
-pub fn vomit(env: &Environment, target: ItemId, value: ItemId, base: ItemId) -> Expression {
+pub fn vomit(env: &Environment, target: Option<ItemId>, value: ItemId, base: ItemId) -> Expression {
     let expression = build_expression(env, target, value);
     build_replacing_expr(env, vec![expression], base)
 }
 
-fn build_expression(env: &Environment, target: ItemId, value: ItemId) -> Expression {
-    let target = super::vomit(env, target);
-    let target = helpers::single_expr_construct("target", target);
+fn build_expression(env: &Environment, target: Option<ItemId>, value: ItemId) -> Expression {
     let mut value = super::vomit(env, value);
-    value.pres.push(target);
+    if let Some(target) = target {
+        let target = super::vomit(env, target);
+        let target = helpers::single_expr_construct("target", target);
+        value.pres.push(target);
+    }
     value
 }
 

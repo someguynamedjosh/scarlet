@@ -12,7 +12,11 @@ pub fn ingest(env: &mut Environment, base: ItemId, post: Construct) -> ItemId {
     let mut result = base;
     for expr in exprs {
         let mut expr = expr.clone();
-        let target = stage2::ingest_expression(env, expr.extract_target().unwrap().unwrap());
+        let target = if let Some(target) = expr.extract_target() {
+            Some(stage2::ingest_expression(env, target.unwrap()))
+        } else {
+            None
+        };
         let value = stage2::ingest_expression(env, expr.clone());
         result = env.push_item(Item::Substituting {
             base: result,

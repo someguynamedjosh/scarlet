@@ -10,8 +10,8 @@ defining{
         }
         not is x
         matching{
-            on{Bit::zero} Bit::one
-            on{Bit::one} Bit::zero
+            on{b0} b1
+            on{b1} b0
         }
 
         defining{
@@ -20,14 +20,34 @@ defining{
         }
         and is x
         matching{
-            on{Bit::zero} Bit::zero
-            on{Bit::one} y
+            on{b0} b0
+            on{b1} y
+        }
+
+        defining{
+            x is any{Bit}
+            y is any{Bit}
+        }
+        or is x
+        matching{
+            on{b0} y
+            on{b1} b1
+        }
+
+        defining{
+            x is any{Bit}
+            y is any{Bit}
+        }
+        xor is x
+        matching{
+            on{b0} y
+            on{b1} not[y]
         }
     }
     Bit is variant_of{TYPE} 
+
+    b0 is Bit::zero
+    b1 is Bit::one
 }
-Bit::and[
-    Bit::and::x is Bit::zero
-    Bit::and::y is Bit::one
-] 
+Bit::xor[b0 b0] 
 displayed{}

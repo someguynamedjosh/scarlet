@@ -26,14 +26,14 @@ impl Expression {
         None
     }
 
-    pub fn extract_single_expression(&mut self, label: &str) -> Result<Option<Expression>, String> {
+    pub fn extract_single_expression(&mut self, label: &str) -> Option<Result<Expression, String>> {
         match self.extract(label) {
-            Some(con) => Ok(Some(con.expect_single_expression(label)?.clone())),
-            None => Ok(None),
+            Some(con) => Some(con.expect_single_expression(label).map(Clone::clone)),
+            None => None,
         }
     }
 
-    pub fn extract_target(&mut self) -> Result<Option<Expression>, String> {
+    pub fn extract_target(&mut self) -> Option<Result<Expression, String>> {
         self.extract_single_expression("target")
     }
 }
