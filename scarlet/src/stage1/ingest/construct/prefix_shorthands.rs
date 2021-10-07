@@ -1,6 +1,6 @@
 use crate::stage1::{
     ingest::{
-        construct::{explicit, helpers, root_shorthands},
+        construct::{explicit, helpers, postfix_shorthands, root_shorthands},
         nom_prelude::*,
     },
     structure::{
@@ -15,6 +15,10 @@ pub fn target_parser<'i>() -> impl Parser<'i, Construct> {
             explicit::parser(Position::Root),
             root_shorthands::ident_parser(),
         ))(input)?;
+        let (input, posts) = many0(alt((
+            explicit::parser(Position::Postfix),
+            postfix_shorthands::member_parser(),
+        )))(input)?;
         let (input, _) = nonempty_ws()(input)?;
         let (input, _) = tag("is")(input)?;
         let (input, _) = nonempty_ws()(input)?;
@@ -22,7 +26,7 @@ pub fn target_parser<'i>() -> impl Parser<'i, Construct> {
         let expression = Expression {
             pres: vec![],
             root,
-            posts: vec![],
+            posts,
         };
         let construct = Construct::from_expression("target", expression);
         Ok((input, construct))

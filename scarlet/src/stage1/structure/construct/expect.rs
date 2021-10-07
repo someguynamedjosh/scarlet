@@ -39,7 +39,7 @@ impl Construct {
             Ok(&body[0])
         } else {
             Err(format!(
-                "Expected a single expression, got {} statements instead.",
+                "Expected a single expression, got {} expressions instead.",
                 body.len()
             ))
         }

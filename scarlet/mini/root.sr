@@ -15,5 +15,11 @@ defining{
         # }
     }
     Bit is variant_of{TYPE}
+
+    defining{
+        x is any{Bit}
+        new is variant_of{From{x} BitContainer}
+    }
+    BitContainer is variant_of{TYPE}
 }
-Bit::zero
+BitContainer[BitContainer::x is Bit::zero]
