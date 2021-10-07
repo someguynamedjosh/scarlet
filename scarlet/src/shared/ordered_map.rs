@@ -72,6 +72,10 @@ impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
         self.len() == 0
     }
 
+    pub fn take(&mut self) -> Self {
+        std::mem::take(self)
+    }
+
     pub fn union(mut self, other: Self) -> Self {
         for (key, value) in other {
             self.insert_or_replace(key, value);

@@ -100,6 +100,11 @@ impl<'e, 'i> Context<'e, 'i> {
             &mut self.environment.values[result].defined_at
         }
         .insert_or_replace(input, ());
+        if self.input.display_requests.contains(&input) {
+            self.environment.values[result]
+                .display_requested_from
+                .insert_or_replace(input, ());
+        }
         result
     }
 }

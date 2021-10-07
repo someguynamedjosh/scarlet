@@ -8,7 +8,7 @@ defining{
         defining{
             x is any{Bit}
         }
-        neg is x
+        not is x
         matching{
             on{Bit::zero} Bit::one
             on{Bit::one} Bit::zero
@@ -16,4 +16,4 @@ defining{
     }
     Bit is variant_of{TYPE}
 }
-Bit::neg[Bit::neg::x is Bit::zero]
+Bit::not[Bit::not::x is Bit::zero] displayed{}

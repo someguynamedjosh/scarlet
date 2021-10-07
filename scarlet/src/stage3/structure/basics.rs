@@ -91,6 +91,7 @@ pub struct AnnotatedValue {
     pub cached_reduction: Option<ValueId>,
     pub defined_at: OrderedSet<stage2::structure::ItemId>,
     pub referenced_at: OrderedSet<stage2::structure::ItemId>,
+    pub display_requested_from: OrderedSet<stage2::structure::ItemId>,
     pub value: Value,
 }
 
@@ -103,12 +104,15 @@ impl AnnotatedValue {
         for (item, _) in &self.referenced_at {
             result.push_str(&format!("referenced at {:?}\n", item));
         }
+        for (item, _) in &self.display_requested_from {
+            result.push_str(&format!("display requested from {:?}\n", item));
+        }
+        if let Some(value) = self.cached_reduction {
+            result.push_str(&format!("reduces to {:?}\n", value));
+        }
         result.push_str(&self.value.contextual_fmt(env));
         if let Some(typee) = self.cached_type {
             result.push_str(&format!("\n:{}", env.cfv(typee)));
-        }
-        if let Some(value) = self.cached_reduction {
-            result.push_str(&format!("\nreduces to {:?}", value));
         }
         result
     }

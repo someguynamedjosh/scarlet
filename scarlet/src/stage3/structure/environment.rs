@@ -28,6 +28,7 @@ impl Environment {
             cached_type: None,
             defined_at: OrderedSet::new(),
             referenced_at: OrderedSet::new(),
+            display_requested_from: OrderedSet::new(),
             value,
         })
     }

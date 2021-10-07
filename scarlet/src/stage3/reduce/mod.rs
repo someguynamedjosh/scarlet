@@ -97,6 +97,15 @@ impl Environment {
             let reduced = self.reduce_from_scratch(of);
             self.values[of].cached_reduction = Some(reduced);
             self.values[reduced].cached_reduction = Some(reduced);
+            self.values[reduced].referenced_at = self.values[reduced]
+                .referenced_at
+                .clone()
+                .union(self.values[of].referenced_at.clone());
+            for (from, _) in self.values[of].display_requested_from.take() {
+                self.values[reduced]
+                    .display_requested_from
+                    .insert_or_replace(from, ());
+            }
             debug_assert_eq!(self.reduce(reduced), reduced);
             let typee = self.get_type(of);
             debug_assert_eq!(typee, self.get_type(reduced));
