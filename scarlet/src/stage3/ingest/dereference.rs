@@ -72,7 +72,17 @@ impl<'e, 'i> Context<'e, 'i> {
                 let member = self.dereference_member(ident.base, name).expect(&err);
                 Some(member.wrapped_with(ident))
             }
-            s2::Item::Member { .. } => todo!(),
+            s2::Item::Member {
+                base: that_base,
+                name: that_name,
+            } => {
+                let that = self
+                    .dereference_member(*that_base, that_name)
+                    .expect("TODO: Nice error");
+                let err = format!("No member {} in {:?}", name, that.base);
+                let member = self.dereference_member(that.base, name).expect(&err);
+                Some(member.wrapped_with(that))
+            }
             s2::Item::Substituting { .. } => todo!(),
             _ => None,
         }

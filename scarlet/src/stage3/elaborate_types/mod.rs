@@ -14,6 +14,7 @@ impl Environment {
                 let base_type = self.get_type(base);
                 self.remove_from_variable(base_type, variable)
             }
+            Value::Match { .. } => todo!(),
             Value::Opaque { class, id, typee } => {
                 let (class, variable, typee) = (*class, *id, *typee);
                 let type_deps = self.dependencies(typee);

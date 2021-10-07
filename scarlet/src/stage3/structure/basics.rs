@@ -22,6 +22,10 @@ pub enum Value {
         base: ValueId,
         variable: OpaqueId,
     },
+    Match {
+        base: ValueId,
+        cases: Vec<(ValueId, ValueId)>,
+    },
     Opaque {
         class: OpaqueClass,
         id: OpaqueId,
@@ -42,17 +46,18 @@ impl Value {
             Value::From { base, variable } => {
                 format!("From{{{:?}}}\n{}", variable, env.cfv(*base))
             }
-            Value::Substituting {
-                base,
-                target,
-                value,
-            } => {
-                format!(
-                    "{}\nsubstituting{{\n    {:?} is {}\n}}",
-                    env.cfv(*base),
-                    target,
-                    indented(&env.cfv(*value))
-                )
+            Value::Match { base, cases } => {
+                let mut result = format!("{}\nmatch{{", env.cfv(*base));
+                for (condition, value) in cases {
+                    let condition = indented(&indented(&env.cfv(*condition)));
+                    let value = indented(&env.cfv(*value));
+                    result.push_str(&format!(
+                        "\n    on{{\n        {}\n    }}\n    {}\n",
+                        condition, value
+                    ));
+                }
+                result.push_str("}");
+                result
             }
             Value::Opaque { class, id, typee } => {
                 format!(
@@ -63,6 +68,18 @@ impl Value {
                     },
                     indented(&env.cfv(*typee)),
                     id
+                )
+            }
+            Value::Substituting {
+                base,
+                target,
+                value,
+            } => {
+                format!(
+                    "{}\nsubstituting{{\n    {:?} is {}\n}}",
+                    env.cfv(*base),
+                    target,
+                    indented(&env.cfv(*value))
                 )
             }
         }

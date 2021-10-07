@@ -79,6 +79,7 @@ impl Environment {
                     self.gpv(Value::From { base, variable })
                 }
             }
+            Value::Match { .. } => todo!(),
             Value::Substituting {
                 base: other_base,
                 target: other_target,

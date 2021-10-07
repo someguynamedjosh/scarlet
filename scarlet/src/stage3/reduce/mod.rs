@@ -24,6 +24,7 @@ impl Environment {
                 let value = Value::From { base, variable };
                 self.gpv(value)
             }
+            Value::Match { .. } => todo!(),
             Value::Opaque { class, id, typee } => {
                 let (class, id, typee) = (*class, *id, *typee);
                 let typee = self.reduce(typee);

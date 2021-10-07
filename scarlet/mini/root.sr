@@ -9,10 +9,10 @@ defining{
             x is any{Bit}
         }
         neg is x
-        # match{
-        #     on{Bit::zero} Bit::one
-        #     on{Bit::one} Bit::zero
-        # }
+        match{
+            on{Bit::zero} Bit::one
+            on{Bit::one} Bit::zero
+        }
     }
     Bit is variant_of{TYPE}
 
@@ -22,4 +22,4 @@ defining{
     }
     BitContainer is variant_of{TYPE}
 }
-BitContainer[BitContainer::x is Bit::zero]
+Bit::neg[Bit::neg::x is Bit::zero]

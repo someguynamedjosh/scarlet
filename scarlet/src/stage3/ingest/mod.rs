@@ -63,7 +63,16 @@ impl<'e, 'i> Context<'e, 'i> {
                 let dereffed = self.dereference_identifier(name);
                 self.ingest_dereferenced(dereffed)
             }
-            s2::Item::Match { .. } => todo!(),
+            s2::Item::Match { base, cases: in_cases } => {
+                let base = self.ingest(*base);
+                let mut cases = Vec::new();
+                for (condition, value) in in_cases {
+                    let condition = self.ingest(*condition);
+                    let value = self.ingest(*value);
+                    cases.push((condition, value));
+                }
+                self.gpv(s3::Value::Match { base, cases })
+            }
             s2::Item::Member { base, name } => {
                 let dereffed = self.dereference_member(*base, name);
                 match dereffed {
