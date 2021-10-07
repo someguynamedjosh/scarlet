@@ -74,7 +74,7 @@ fn vomit_from(env: &Environment, value: ItemId, base: ItemId) -> Expression {
 fn vomit_match(env: &Environment, base: ItemId, cases: &[(ItemId, ItemId)]) -> Expression {
     let expressions = cases.iter().map(|c| vomit_case(env, c)).collect();
     let mut result = vomit(env, base);
-    let match_construct = helpers::expressions_construct("match", expressions);
+    let match_construct = helpers::expressions_construct("matching", expressions);
     result.posts.push(match_construct);
     result
 }

@@ -8,7 +8,7 @@ use crate::{
 
 pub fn ingest(env: &mut Environment, base: ItemId, post: Construct) -> ItemId {
     let mut cases = Vec::new();
-    for expr in post.expect_expressions("match").unwrap() {
+    for expr in post.expect_expressions("matching").unwrap() {
         let mut expr = expr.clone();
         let case = expr
             .extract_single_expression("on")

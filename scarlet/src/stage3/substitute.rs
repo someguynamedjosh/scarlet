@@ -79,7 +79,17 @@ impl Environment {
                     self.gpv(Value::From { base, variable })
                 }
             }
-            Value::Match { .. } => todo!(),
+            Value::Match { base, cases } => {
+                let (base, old_cases) = (*base, cases.clone());
+                let base = self.substitute(base, target, value);
+                let mut cases = Vec::new();
+                for (condition, case_value) in old_cases {
+                    // Don't substitute condition because it can bind variables.
+                    let case_value = self.substitute(case_value, target, value);
+                    cases.push((condition, case_value))
+                }
+                self.gpv(Value::Match { base, cases })
+            }
             Value::Substituting {
                 base: other_base,
                 target: other_target,

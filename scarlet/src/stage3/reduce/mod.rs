@@ -1,4 +1,5 @@
 use super::structure::{Environment, Value, ValueId};
+use crate::shared::OpaqueClass;
 
 impl Environment {
     pub fn reduce_all(&mut self) {
@@ -14,6 +15,26 @@ impl Environment {
         }
     }
 
+    fn matches(&mut self, base: ValueId, condition: ValueId) -> Option<bool> {
+        let base_def = &self.values[base];
+        let condition_def = &self.values[condition];
+        match (&base_def.value, &condition_def.value) {
+            (
+                Value::Opaque {
+                    class: OpaqueClass::Variant,
+                    id: base_id,
+                    ..
+                },
+                Value::Opaque {
+                    class: OpaqueClass::Variant,
+                    id: condition_id,
+                    ..
+                },
+            ) => Some(base_id == condition_id),
+            _ => None,
+        }
+    }
+
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
         match &self.values[of].value {
             Value::BuiltinOperation(_) => todo!(),
@@ -24,7 +45,31 @@ impl Environment {
                 let value = Value::From { base, variable };
                 self.gpv(value)
             }
-            Value::Match { .. } => todo!(),
+            Value::Match { base, cases } => {
+                let (base, old_cases) = (*base, cases.clone());
+                let base = self.reduce(base);
+                let mut cases = Vec::new();
+                for (condition, value) in old_cases {
+                    let condition = self.reduce(condition);
+                    match self.matches(base, condition) {
+                        Some(true) => {
+                            if cases.len() == 0 {
+                                return self.reduce(value);
+                            } else {
+                                let value = self.reduce(value);
+                                cases.push((condition, value));
+                                break;
+                            }
+                        }
+                        Some(false) => (),
+                        None => {
+                            let value = self.reduce(value);
+                            cases.push((condition, value));
+                        }
+                    }
+                }
+                self.gpv(Value::Match { base, cases })
+            }
             Value::Opaque { class, id, typee } => {
                 let (class, id, typee) = (*class, *id, *typee);
                 let typee = self.reduce(typee);
@@ -39,7 +84,8 @@ impl Environment {
                 let (base, target, value) = (*base, *target, *value);
                 let rbase = self.reduce(base);
                 let rvalue = self.reduce(value);
-                self.substitute(rbase, target, rvalue)
+                let subbed = self.substitute(rbase, target, rvalue);
+                self.reduce(subbed)
             }
         }
     }

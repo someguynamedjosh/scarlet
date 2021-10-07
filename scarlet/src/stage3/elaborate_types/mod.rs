@@ -14,7 +14,23 @@ impl Environment {
                 let base_type = self.get_type(base);
                 self.remove_from_variable(base_type, variable)
             }
-            Value::Match { .. } => todo!(),
+            Value::Match { base, cases } => {
+                let (base, cases) = (*base, cases.clone());
+                let base_type = self.get_type(base);
+                let mut variables = self.get_from_variables(base_type);
+                let mut the_value_type = None;
+                for (condition, value) in cases {
+                    // TODO: type check
+                    let condition_type = self.get_type(condition);
+                    let value_type = self.get_type(value);
+                    variables = variables.union(self.get_from_variables(value_type));
+                    the_value_type = Some(value_type)
+                }
+                // TODO: Never type.
+                let value_type = the_value_type.unwrap();
+                let variables: Vec<_> = variables.into_iter().map(|x| x.0).collect();
+                self.with_from_variables(value_type, &variables[..])
+            },
             Value::Opaque { class, id, typee } => {
                 let (class, variable, typee) = (*class, *id, *typee);
                 let type_deps = self.dependencies(typee);

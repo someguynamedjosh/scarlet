@@ -9,17 +9,11 @@ defining{
             x is any{Bit}
         }
         neg is x
-        match{
+        matching{
             on{Bit::zero} Bit::one
             on{Bit::one} Bit::zero
         }
     }
     Bit is variant_of{TYPE}
-
-    defining{
-        x is any{Bit}
-        new is variant_of{From{x} BitContainer}
-    }
-    BitContainer is variant_of{TYPE}
 }
 Bit::neg[Bit::neg::x is Bit::zero]
