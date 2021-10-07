@@ -1,0 +1,5 @@
+defining{
+    zero is variant_of{Bit}
+    one is variant_of{Bit}
+}
+variant_of{TYPE} 

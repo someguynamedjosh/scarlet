@@ -23,13 +23,11 @@ fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
     for entry in std::fs::read_dir(at).unwrap() {
         let entry = entry.unwrap();
         let mut name = entry.file_name().to_string_lossy().to_string();
-        if name.ends_with(".sr") {
-            name = name[..name.len() - 3].to_owned();
-        }
-        if name == "SELF" {
+        if !name.ends_with(".sr") {
             continue;
         }
-        if let Some(item) = read_path(&entry.path()) {
+        name = name[..name.len() - 3].to_owned();
+        if let Some(item) = read_path(&entry.path().with_extension("")) {
             results.push((name, item))
         }
     }
@@ -37,22 +35,16 @@ fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
 }
 
 fn read_path(at: &Path) -> Option<FileNode> {
-    let sr_extension = OsString::from_str("sr").unwrap();
-    let sr_extension = Some(sr_extension.as_os_str());
-    if at.is_dir() && at.extension() != sr_extension {
-        let self_file = at.join("SELF.sr");
-        if self_file.exists() {
-            Some(FileNode {
-                self_def: self_file,
-                children: read_folder_contents(at),
-            })
-        } else {
-            None
+    let folder_path = at;
+    let file_path = at.with_extension("sr");
+    if file_path.exists() && file_path.is_file() {
+        let mut children = Vec::new();
+        if folder_path.exists() && folder_path.is_dir() {
+            children = read_folder_contents(folder_path);
         }
-    } else if at.is_file() && at.extension() == sr_extension {
         Some(FileNode {
-            self_def: at.to_owned(),
-            children: vec![],
+            self_def: file_path.to_owned(),
+            children,
         })
     } else {
         None
@@ -60,9 +52,8 @@ fn read_path(at: &Path) -> Option<FileNode> {
 }
 
 fn read_root(at: &Path) -> Option<FileNode> {
-    let root_file = at.join("root.sr");
-    let root_folder = at.join("root");
-    read_path(&root_file).or(read_path(&root_folder))
+    let root_path = at.join("root");
+    read_path(&root_path)
 }
 
 fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
@@ -98,6 +89,7 @@ fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<ItemId, Str
 
 pub fn start_from_root(path: &str) -> Result<(Environment, ItemId), String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
+    println!("{:#?}", tree);
     let mut env = Environment::new();
     let item = ingest_file_tree(&mut env, tree)?;
     Ok((env, item))

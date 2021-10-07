@@ -16,6 +16,6 @@ pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> 
             let base = ingest_expression(env, remainder);
             from_values::ingest(env, base, post)
         }
-        _ => todo!("nice error"),
+        other => todo!("nice error, unexpected label {}", other),
     }
 }

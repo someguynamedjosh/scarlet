@@ -22,6 +22,7 @@ impl<K, V> OrderedMap<K, V> {
 
 impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
     #[inline]
+    #[track_caller]
     fn insert_impl(&mut self, key: K, value: V, allow_replacement: bool) {
         if let Some(existing_idx) = self.entries.iter().position(|i| i.0 == key) {
             if !allow_replacement {

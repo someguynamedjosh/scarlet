@@ -1,53 +1,6 @@
 defining{
-    TYPE is builtin_item{TYPE}
-
-    defining{
-        zero is variant_of{Bit}
-        one is variant_of{Bit}
-
-        defining{
-            x is any{Bit}
-        }
-        not is x
-        matching{
-            on{b0} b1
-            on{b1} b0
-        }
-
-        defining{
-            x is any{Bit}
-            y is any{Bit}
-        }
-        and is x
-        matching{
-            on{b0} b0
-            on{b1} y
-        }
-
-        defining{
-            x is any{Bit}
-            y is any{Bit}
-        }
-        or is x
-        matching{
-            on{b0} y
-            on{b1} b1
-        }
-
-        defining{
-            x is any{Bit}
-            y is any{Bit}
-        }
-        xor is x
-        matching{
-            on{b0} y
-            on{b1} not[y]
-        }
-    }
-    Bit is variant_of{TYPE} 
-
     b0 is Bit::zero
     b1 is Bit::one
 }
-Bit::xor[b0 b0] 
+Bit::not[b0] 
 displayed{}
