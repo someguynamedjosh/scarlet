@@ -7,7 +7,6 @@ pub(super) struct Context<'e, 'i> {
     pub environment: &'e mut s3::Environment,
     pub ingest_map: &'e mut HashMap<s2::ItemId, s3::ValueId>,
     pub opaque_map: &'e mut HashMap<s2::OpaqueId, (s3::OpaqueId, s3::ValueId)>,
-    pub path: Option<s3::Path>,
     pub input: &'i s2::Environment,
     pub parent_scopes: Vec<&'i s2::Definitions>,
 }
@@ -18,7 +17,6 @@ impl<'e, 'i> Context<'e, 'i> {
             environment: self.environment,
             ingest_map: self.ingest_map,
             opaque_map: self.opaque_map,
-            path: self.path.clone(),
             input: self.input,
             parent_scopes: self.parent_scopes.clone(),
         }
@@ -35,17 +33,6 @@ impl<'e, 'i> Context<'e, 'i> {
             // O(n^2) but who gives a fuck anyway?
             self.parent_scopes.remove(0);
         }
-    }
-
-    pub fn with_additional_path_component(self, component: s3::PathComponent) -> Self {
-        Self {
-            path: self.path.map(|p| [p, vec![component]].concat()),
-            ..self
-        }
-    }
-
-    pub fn without_path(self) -> Self {
-        Self { path: None, ..self }
     }
 
     /// Get or push value
@@ -70,7 +57,7 @@ impl<'e, 'i> Context<'e, 'i> {
     }
 
     pub fn resolve_variable(&mut self, item: s2::ItemId) -> Option<s3::OpaqueId> {
-        let value = self.child().without_path().ingest(item);
+        let value = self.child().ingest(item);
         self.extract_variable(value)
     }
 }

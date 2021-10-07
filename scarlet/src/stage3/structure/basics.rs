@@ -8,7 +8,6 @@ use crate::{
     util::indented,
 };
 
-pub type Substitution = (OpaqueId, ValueId);
 pub type Variables = OrderedSet<OpaqueId>;
 
 pub type ValueId = Id<AnnotatedValue, 'L'>;
@@ -90,18 +89,23 @@ impl Value {
 pub struct AnnotatedValue {
     pub cached_type: Option<ValueId>,
     pub cached_reduction: Option<ValueId>,
-    pub defined_at: Option<stage2::structure::ItemId>,
+    pub defined_at: OrderedSet<stage2::structure::ItemId>,
+    pub referenced_at: OrderedSet<stage2::structure::ItemId>,
     pub value: Value,
 }
 
 impl AnnotatedValue {
     pub fn contextual_fmt(&self, env: &Environment) -> String {
-        let mut result = self.value.contextual_fmt(env);
+        let mut result = String::new();
+        for (item, _) in &self.defined_at {
+            result.push_str(&format!("defined at {:?}\n", item));
+        }
+        for (item, _) in &self.referenced_at {
+            result.push_str(&format!("referenced at {:?}\n", item));
+        }
+        result.push_str(&self.value.contextual_fmt(env));
         if let Some(typee) = self.cached_type {
             result.push_str(&format!("\n:{}", env.cfv(typee)));
-        }
-        if let Some(definition) = self.defined_at {
-            result.push_str(&format!("\ndefined at {:?}", definition));
         }
         if let Some(value) = self.cached_reduction {
             result.push_str(&format!("\nreduces to {:?}", value));

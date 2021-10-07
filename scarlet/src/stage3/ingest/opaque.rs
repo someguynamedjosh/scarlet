@@ -11,7 +11,7 @@ impl<'e, 'i> Context<'e, 'i> {
         let (id, typee) = if let Some(var) = self.opaque_map.get(id) {
             *var
         } else {
-            let typee = self.child().without_path().ingest(*typee);
+            let typee = self.child().ingest(*typee);
             let new_id = self
                 .environment
                 .opaque_values

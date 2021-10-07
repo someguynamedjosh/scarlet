@@ -42,11 +42,7 @@ impl Environment {
                 assert!(!vars.contains_key(&variable));
                 vars.insert_no_replace(variable, ());
             }
-            Value::Substituting {
-                base,
-                target,
-                value,
-            } => todo!(),
+            Value::Substituting { .. } => todo!(),
             _ => (),
         }
     }

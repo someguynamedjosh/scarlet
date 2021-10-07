@@ -13,11 +13,8 @@ impl<'e, 'i> Context<'e, 'i> {
         self.ingest_map.insert(base, rbase);
         self.ingest_map.insert(input, rbase);
         let mut child = self.child().with_additional_parent_scope(&definitions);
-        for (name, def) in &definitions {
-            child
-                .child()
-                .with_additional_path_component(s3::PathComponent::Member(name.clone()))
-                .ingest(*def);
+        for (_, def) in &definitions {
+            child.ingest(*def);
         }
         rbase
     }

@@ -17,7 +17,6 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
         environment: &mut environment,
         ingest_map: &mut HashMap::new(),
         opaque_map: &mut HashMap::new(),
-        path: Some(s3::Path::new()),
         input: s2_env,
         parent_scopes: Vec::new(),
     };
@@ -43,13 +42,15 @@ impl<'e, 'i> Context<'e, 'i> {
         if let Some(result) = self.ingest_map.get(&input) {
             return *result;
         }
+        let mut referenced = false;
         let result = match &self.input.items[input] {
             s2::Item::BuiltinOperation(op) => {
-                let op = op.map(|input| self.child().without_path().ingest(input));
+                let op = op.map(|input| self.child().ingest(input));
                 self.gpv(s3::Value::BuiltinOperation(op))
             }
             s2::Item::BuiltinValue(value) => self.gpv(s3::Value::BuiltinValue(*value)),
             s2::Item::Defining { base, definitions } => {
+                referenced = true;
                 self.ingest_defining(definitions, base, input)
             }
             s2::Item::From { base, value } => {
@@ -60,10 +61,14 @@ impl<'e, 'i> Context<'e, 'i> {
                 self.environment.with_from_variables(base, &variables[..])
             }
             s2::Item::Identifier(name) => {
+                referenced = true;
                 let dereffed = self.dereference_identifier(name);
                 self.ingest_dereferenced(dereffed)
             }
-            s2::Item::Match { base, cases: in_cases } => {
+            s2::Item::Match {
+                base,
+                cases: in_cases,
+            } => {
                 let base = self.ingest(*base);
                 let mut cases = Vec::new();
                 for (condition, value) in in_cases {
@@ -74,6 +79,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 self.gpv(s3::Value::Match { base, cases })
             }
             s2::Item::Member { base, name } => {
+                referenced = true;
                 let dereffed = self.dereference_member(*base, name);
                 match dereffed {
                     Some(dereffed) => self.ingest_dereferenced(dereffed),
@@ -88,6 +94,12 @@ impl<'e, 'i> Context<'e, 'i> {
             } => self.ingest_substituting(base, target, value),
         };
         self.ingest_map.insert(input, result);
+        if referenced {
+            &mut self.environment.values[result].referenced_at
+        } else {
+            &mut self.environment.values[result].defined_at
+        }
+        .insert_or_replace(input, ());
         result
     }
 }
