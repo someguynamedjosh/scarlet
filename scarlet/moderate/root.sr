@@ -13,5 +13,5 @@ defining{
     holder2 is any{Bit}
     holder3 is any{Bit}
 }
-BitContainer::new[holder1 holder2 holder3]
+BitContainer::new[holder1 holder2][holder3]
 displayed{}
