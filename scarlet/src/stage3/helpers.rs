@@ -37,9 +37,8 @@ impl Environment {
     fn split_from_type_impl(&self, typee: ValueId, vars: &mut Variables) -> ValueId {
         match &self.values[typee].value {
             &Value::From { base, variable } => {
-                self.split_from_type_impl(base, vars);
-                assert!(!vars.contains_key(&variable));
                 vars.insert_no_replace(variable, ());
+                self.split_from_type_impl(base, vars);
                 base
             }
             _ => typee,
@@ -56,20 +55,29 @@ impl Environment {
         self.split_from_type(typee).1
     }
 
-    pub fn with_from_variables(&mut self, base: ValueId, variables: &[OpaqueId]) -> ValueId {
+    fn with_from_variables_impl(&mut self, base: ValueId, variables: &[OpaqueId]) -> ValueId {
         if variables.len() == 0 {
             base
         } else {
-            let last = variables.len() - 1;
-            let base = self.with_from_variables(base, &variables[..last]);
+            let base = self.with_from_variables_impl(base, &variables[1..]);
             let existing_vars = self.get_from_variables(base);
-            let variable = variables[last];
+            let variable = variables[0];
             if existing_vars.contains_key(&variable) {
                 base
             } else {
                 self.gpv(Value::From { base, variable })
             }
         }
+    }
+
+    pub fn with_from_variables(&mut self, base: ValueId, variables: &[OpaqueId]) -> ValueId {
+        let (base_base, existing_vars) = self.split_from_type(base);
+        let variables = [
+            existing_vars.into_iter().map(|x| x.0).collect(),
+            variables.to_owned(),
+        ]
+        .concat();
+        self.with_from_variables_impl(base_base, &variables[..])
     }
 
     pub fn dependencies(&mut self, value: ValueId) -> Vec<OpaqueId> {

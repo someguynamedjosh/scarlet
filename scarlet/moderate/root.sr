@@ -14,6 +14,6 @@ defining{
 }
 BitContainer::new[Bit::zero Bit::one]
 matching{
-    on{BitContainer::new[holder1 holder2]} holder1
+    on{BitContainer::new[holder1 holder2]} holder2
 }
 displayed{}
