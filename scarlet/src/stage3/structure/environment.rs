@@ -1,9 +1,9 @@
-use std::fmt::{self, Debug};
+use std::{fmt::Debug, path::PathBuf, str::FromStr};
 
 use super::{AnnotatedValue, OpaqueValue, Value, ValueId};
 use crate::shared::{OrderedSet, Pool};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Environment {
     pub values: Pool<AnnotatedValue, 'L'>,
     pub opaque_values: Pool<OpaqueValue, 'O'>,
@@ -33,18 +33,9 @@ impl Environment {
         })
     }
 
-    /// Contextually format value
-    pub fn cfv(&self, id: ValueId) -> String {
-        self.values[id].value.contextual_fmt(self)
-    }
-}
-
-impl Debug for Environment {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (id, value) in &self.values {
-            let value = value.contextual_fmt(self);
-            write!(f, "\n{:?} is\n{}\n", id, value)?;
-        }
-        Ok(())
+    pub fn write_debug_info(&self) {
+        let out_path = PathBuf::from_str("ROOT.sir").unwrap();
+        let contents = format!("{:#?}", self);
+        std::fs::write(&out_path, contents).unwrap();
     }
 }

@@ -37,54 +37,6 @@ pub enum Value {
     },
 }
 
-impl Value {
-    pub fn contextual_fmt(&self, env: &Environment) -> String {
-        match self {
-            Value::BuiltinOperation(_) => todo!(),
-            Value::BuiltinValue(val) => format!("{:?}", val),
-            Value::From { base, variable } => {
-                format!("From{{{:?}}}\n{}", variable, env.cfv(*base))
-            }
-            Value::Match { base, cases } => {
-                let mut result = format!("{}\nmatch{{", env.cfv(*base));
-                for (condition, value) in cases {
-                    let condition = indented(&indented(&env.cfv(*condition)));
-                    let value = indented(&env.cfv(*value));
-                    result.push_str(&format!(
-                        "\n    on{{\n        {}\n    }}\n    {}\n",
-                        condition, value
-                    ));
-                }
-                result.push_str("}");
-                result
-            }
-            Value::Opaque { class, id, typee } => {
-                format!(
-                    "{}{{\n    {}\n}} at {:?}",
-                    match class {
-                        OpaqueClass::Variable => "any",
-                        OpaqueClass::Variant => "variant_of",
-                    },
-                    indented(&env.cfv(*typee)),
-                    id
-                )
-            }
-            Value::Substituting {
-                base,
-                target,
-                value,
-            } => {
-                format!(
-                    "{}\nsubstituting{{\n    {:?} is {}\n}}",
-                    env.cfv(*base),
-                    target,
-                    indented(&env.cfv(*value))
-                )
-            }
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct AnnotatedValue {
     pub cached_type: Option<ValueId>,
@@ -93,29 +45,6 @@ pub struct AnnotatedValue {
     pub referenced_at: OrderedSet<stage2::structure::ItemId>,
     pub display_requested_from: OrderedSet<stage2::structure::ItemId>,
     pub value: Value,
-}
-
-impl AnnotatedValue {
-    pub fn contextual_fmt(&self, env: &Environment) -> String {
-        let mut result = String::new();
-        for (item, _) in &self.defined_at {
-            result.push_str(&format!("defined at {:?}\n", item));
-        }
-        for (item, _) in &self.referenced_at {
-            result.push_str(&format!("referenced at {:?}\n", item));
-        }
-        for (item, _) in &self.display_requested_from {
-            result.push_str(&format!("display requested from {:?}\n", item));
-        }
-        if let Some(value) = self.cached_reduction {
-            result.push_str(&format!("reduces to {:?}\n", value));
-        }
-        result.push_str(&self.value.contextual_fmt(env));
-        if let Some(typee) = self.cached_type {
-            result.push_str(&format!("\n:{}", env.cfv(typee)));
-        }
-        result
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

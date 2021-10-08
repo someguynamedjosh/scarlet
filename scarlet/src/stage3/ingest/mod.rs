@@ -41,6 +41,7 @@ impl<'e, 'i> Context<'e, 'i> {
         if let Some(result) = self.ingest_map.get(&input) {
             return *result;
         }
+        self.environment.write_debug_info();
         let mut referenced = false;
         let result = match &self.input.items[input].item {
             s2::Item::BuiltinOperation(op) => {

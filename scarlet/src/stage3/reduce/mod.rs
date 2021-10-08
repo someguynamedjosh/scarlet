@@ -250,6 +250,7 @@ impl Environment {
         if let Some(cached) = self.values[of].cached_reduction {
             cached
         } else {
+            self.write_debug_info();
             let reduced = self.reduce_from_scratch(of);
             self.values[of].cached_reduction = Some(reduced);
             self.values[reduced].cached_reduction = Some(reduced);
@@ -266,8 +267,10 @@ impl Environment {
                     .insert_or_replace(from, ());
             }
             debug_assert_eq!(self.reduce(reduced), reduced);
+            self.write_debug_info();
             let typee = self.get_type(of);
             let rtype = self.get_type(reduced);
+            self.write_debug_info();
             if !self.type_is_base_of_other(rtype, typee) {
                 println!("{:#?}", self);
                 println!("{:?} was reduced to {:?}", of, reduced);
