@@ -1,6 +1,11 @@
-use crate::{stage2::structure as s2, stage3::structure as s3};
+use super::structure::OpaqueId;
+use crate::{
+    shared::OpaqueClass,
+    stage2::structure::{self as s2, Item, ItemId},
+    stage3::structure as s3,
+};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum RelativePath {
     Just(s2::ItemId),
     DefiningBase {
@@ -161,6 +166,70 @@ fn path_to_string(path: RelativePath, root_is: s2::ItemId) -> Option<String> {
     }
 }
 
+fn vomit_opaque(
+    env: &s3::Environment,
+    value: OpaqueId,
+    target_env: &mut s2::Environment,
+    display_path: &RelativePath,
+) -> ItemId {
+    for (_, env_value) in &env.values {
+        if let &s3::Value::Opaque { id: value, .. } = &env_value.value {
+            return vomit_value(env, env_value, target_env, display_path);
+        }
+    }
+    unreachable!()
+}
+
+fn vomit_value_as_code(
+    env: &s3::Environment,
+    value: &s3::AnnotatedValue,
+    target_env: &mut s2::Environment,
+    display_path: &RelativePath,
+) -> ItemId {
+    match &value.value {
+        s3::Value::BuiltinOperation(_) => todo!(),
+        s3::Value::BuiltinValue(_) => todo!(),
+        s3::Value::From { base, variable } => todo!(),
+        s3::Value::Match { base, cases } => todo!(),
+        &s3::Value::Opaque { class, id, typee } => {
+            let id = target_env.new_opaque_value();
+            let typee = vomit_value(env, &env.values[typee], target_env, display_path);
+            target_env.push_item(Item::Opaque { class, id, typee })
+        }
+        &s3::Value::Substituting {
+            base,
+            target,
+            value,
+        } => {
+            let base = vomit_value(env, &env.values[base], target_env, display_path);
+            let target = vomit_opaque(env, target, target_env, display_path);
+            let value = vomit_value(env, &env.values[value], target_env, display_path);
+            target_env.push_item(Item::Substituting {
+                base,
+                target: Some(target),
+                value,
+            })
+        }
+    }
+}
+
+fn vomit_value(
+    env: &s3::Environment,
+    value: &s3::AnnotatedValue,
+    target: &mut s2::Environment,
+    display_path: &RelativePath,
+) -> ItemId {
+    let &(definition, _) = value.defined_at.iter().next().unwrap();
+    let definition_path = get_full_path(target, definition);
+    if &definition_path == display_path {
+        vomit_value_as_code(env, value, target, display_path)
+    } else {
+        let (_, definition_path) =
+            truncate_paths_to_common_ancestor(display_path.clone(), definition_path);
+        path_to_item(target, definition_path)
+    }
+}
+
 fn vomit(
     env: &s3::Environment,
     value: &s3::AnnotatedValue,
@@ -171,10 +240,7 @@ fn vomit(
     let display_path = get_full_path(target, display_at);
     let name = path_to_string(display_path.clone(), original_root);
 
-    let &(definition, _) = value.defined_at.iter().next().unwrap();
-    let definition_path = get_full_path(target, definition);
-    let (_, definition_path) = truncate_paths_to_common_ancestor(display_path, definition_path);
-    let id = path_to_item(target, definition_path);
+    let id = vomit_value(env, value, target, &display_path);
     DisplayResult {
         value_name: name.unwrap_or(format!("anonymous")),
         vomited_root: id,
