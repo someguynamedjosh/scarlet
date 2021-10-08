@@ -174,7 +174,6 @@ impl Environment {
 
     fn matches(&mut self, base: ValueId, condition: ValueId) -> MatchResult {
         let condition_target = self.condition_target(condition, vec![]);
-        println!("CONDITION: {:?}", condition);
         let result = self.matches_target(base, condition_target.clone());
         result
     }

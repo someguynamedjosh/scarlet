@@ -244,7 +244,6 @@ fn vomit_value(
     target: &mut s2::Environment,
     display_path: &RelativePath,
 ) -> ItemId {
-    println!("{:#?}\n\n{:#?}", env, value);
     if let Some(&(definition, _)) = value.defined_at.iter().next() {
         let definition_path = get_full_path(target, definition);
         if &definition_path == display_path {

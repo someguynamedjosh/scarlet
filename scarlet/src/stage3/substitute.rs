@@ -34,6 +34,20 @@ impl Environment {
 
     /// Replaces $target with $value in $base.
     pub fn substitute(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
+        let base = self.do_substitution(base, target, value);
+        if self.dependencies(base).contains(&target) {
+            let value = Value::Substituting {
+                base,
+                target,
+                value,
+            };
+            self.gpv(value)
+        } else {
+            base
+        }
+    }
+
+    fn do_substitution(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
         let base = self.reduce(base);
         match &self.values[base].value {
             Value::Opaque { class, id, typee } => {
@@ -48,18 +62,12 @@ impl Environment {
                     value
                 } else {
                     let type_vars = self.get_from_variables(typee);
-                    if type_vars.contains_key(&target) {
-                        let value = Value::Substituting {
-                            base,
-                            target,
-                            value,
-                        };
-                        self.gpv(value)
-                    } else {
-                        let typee = self.substitute(typee, target, value);
-                        let value = Value::Opaque { class, id, typee };
-                        self.gpv(value)
+                    let mut typee = typee;
+                    if !type_vars.contains_key(&target) {
+                        typee = self.substitute(typee, target, value);
                     }
+                    let value = Value::Opaque { class, id, typee };
+                    self.gpv(value)
                 }
             }
             Value::BuiltinOperation(_) => todo!(),
@@ -95,22 +103,13 @@ impl Environment {
                 target: other_target,
                 value: other_value,
             } => {
-                let other_value = self.substitute(other_value, target, value);
-                let sub_base = self.substitute(other_base, other_target, other_value);
-                if sub_base == base {
-                    if self.dependencies(base).contains(&target) {
-                        let value = Value::Substituting {
-                            base,
-                            target,
-                            value,
-                        };
-                        self.gpv(value)
-                    } else {
-                        base
-                    }
-                } else {
-                    self.substitute(sub_base, target, value)
-                }
+                let other_base = self.do_substitution(other_base, target, value);
+                let other_value = self.do_substitution(other_value, target, value);
+                self.gpv(Value::Substituting {
+                    base: other_base,
+                    target: other_target,
+                    value: other_value,
+                })
             }
         }
     }
