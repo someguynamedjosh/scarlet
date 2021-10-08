@@ -90,21 +90,22 @@ impl Environment {
                 }
                 self.gpv(Value::Match { base, cases })
             }
-            Value::Substituting {
+            &Value::Substituting {
                 base: other_base,
                 target: other_target,
                 value: other_value,
             } => {
-                let (other_base, other_target, other_value) =
-                    (*other_base, *other_target, *other_value);
-                let sub_base = self.substitute(other_base, target, value);
-                let sub_value = self.substitute(other_value, target, value);
-                let value = Value::Substituting {
-                    base: sub_base,
-                    target: other_target,
-                    value: sub_value,
-                };
-                self.gpv(value)
+                let sub_base = self.substitute(other_base, other_target, other_value);
+                if sub_base == base {
+                    let value = Value::Substituting {
+                        base: sub_base,
+                        target,
+                        value,
+                    };
+                    self.gpv(value)
+                } else {
+                    self.substitute(sub_base, target, value)
+                }
             }
         }
     }

@@ -90,7 +90,7 @@ fn vomit_opaque(env: &Environment, class: OpaqueClass, typee: ItemId) -> Express
     let typee = vomit(env, typee);
     let label = match class {
         OpaqueClass::Variable => "any",
-        OpaqueClass::Variant => "variant",
+        OpaqueClass::Variant => "variant_of",
     };
     let construct = helpers::single_expr_construct(label, typee);
     helpers::just_root_expression(construct)

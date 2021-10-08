@@ -1,7 +1,7 @@
 use super::structure::OpaqueId;
 use crate::{
     shared::OpaqueClass,
-    stage2::structure::{self as s2, Item, ItemId},
+    stage2::structure::{self as s2, BuiltinValue, Item, ItemId},
     stage3::structure as s3,
 };
 
@@ -35,6 +35,25 @@ impl RelativePath {
             RelativePath::Just(result) => *result,
             RelativePath::DefiningBase { parent, .. }
             | RelativePath::DefiningMember { parent, .. } => parent.topmost_id(),
+        }
+    }
+
+    fn visually_equals(&self, other: &Self) -> bool {
+        self.visual_flatten() == other.visual_flatten()
+    }
+
+    /// Like flatten, but does not include defining base dereferences.
+    fn visual_flatten(&self) -> Vec<s2::ItemId> {
+        match self {
+            RelativePath::Just(result) => vec![*result],
+            RelativePath::DefiningBase { parent, result } => {
+                let mut retval = parent.flatten();
+                retval[0] = *result;
+                retval
+            }
+            RelativePath::DefiningMember { parent, result, .. } => {
+                [vec![*result], parent.flatten()].concat()
+            }
         }
     }
 
@@ -85,18 +104,22 @@ impl RelativePath {
     }
 }
 
-fn get_full_path(original_s2: &s2::Environment, item: s2::ItemId) -> RelativePath {
-    for (id, maybe_parent) in &original_s2.items {
-        match &maybe_parent.item {
+fn get_full_path(original_s2: &s2::Environment, item_id: s2::ItemId) -> RelativePath {
+    let item = &original_s2.items[item_id];
+    if let Some(parent) = item.parent_scope {
+        let parent_path = get_full_path(original_s2, parent);
+        match &original_s2.items[parent].item {
+            s2::Item::Substituting { .. } => {
+                return parent_path;
+            }
             s2::Item::Defining { base, definitions } => {
-                let result = item;
-                if *base == item {
-                    let parent = Box::new(get_full_path(original_s2, id));
+                let result = item_id;
+                let parent = Box::new(parent_path);
+                if *base == item_id {
                     return RelativePath::DefiningBase { parent, result };
                 }
                 for (member_name, member) in definitions {
-                    if *member == item {
-                        let parent = Box::new(get_full_path(original_s2, id));
+                    if *member == item_id {
                         return RelativePath::DefiningMember {
                             member: member_name.clone(),
                             parent,
@@ -108,7 +131,7 @@ fn get_full_path(original_s2: &s2::Environment, item: s2::ItemId) -> RelativePat
             _ => (),
         }
     }
-    RelativePath::Just(item)
+    RelativePath::Just(item_id)
 }
 
 fn truncate_paths_to_common_ancestor(
@@ -173,8 +196,10 @@ fn vomit_opaque(
     display_path: &RelativePath,
 ) -> ItemId {
     for (_, env_value) in &env.values {
-        if let &s3::Value::Opaque { id: value, .. } = &env_value.value {
-            return vomit_value(env, env_value, target_env, display_path);
+        if let &s3::Value::Opaque { id, .. } = &env_value.value {
+            if id == value {
+                return vomit_value(env, env_value, target_env, display_path);
+            }
         }
     }
     unreachable!()
@@ -188,8 +213,10 @@ fn vomit_value_as_code(
 ) -> ItemId {
     match &value.value {
         s3::Value::BuiltinOperation(_) => todo!(),
-        s3::Value::BuiltinValue(_) => todo!(),
-        s3::Value::From { base, variable } => todo!(),
+        &s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
+        s3::Value::From { base, variable } => {
+            target_env.push_item(Item::BuiltinValue(BuiltinValue::OriginType))
+        }
         s3::Value::Match { base, cases } => todo!(),
         &s3::Value::Opaque { class, id, typee } => {
             let id = target_env.new_opaque_value();

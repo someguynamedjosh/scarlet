@@ -1,18 +1,8 @@
 defining{
-    defining{
-        zero is variant_of{Bit}
-        one is variant_of{Bit}
-
-        defining{
-            x is any{Bit}
-        }
-        thing is x 
-        matching{
-            on{Bit::zero} Bit::zero
-            on{Bit::one} x
-        }
-    }
-    Bit is variant_of{builtin_item{TYPE}}
+    TYPE is builtin_item{TYPE}
+    A is any{TYPE}
+    B is any{TYPE}
+    Bit is variant_of{From{A} From{B} TYPE}
 }
-Bit::thing
+Bit[TYPE TYPE]
 displayed{}
