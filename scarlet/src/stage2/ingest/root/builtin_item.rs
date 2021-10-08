@@ -9,7 +9,12 @@ use crate::{
 pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
     let args = ingest_args(&root);
     let (name, args) = reduce_args(env, args);
-    env.push_item(ingest_builtin_value(&name, args))
+    let args2 = args.clone();
+    let result = env.push_item(ingest_builtin_value(&name, args));
+    for arg in args2 {
+        env.set_parent_scope(arg, result);
+    }
+    result
 }
 
 fn ingest_args(root: &Construct) -> Vec<Expression> {

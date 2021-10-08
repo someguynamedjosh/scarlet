@@ -18,5 +18,12 @@ pub fn ingest(env: &mut Environment, base: ItemId, post: Construct) -> ItemId {
         let expr = stage2::ingest_expression(env, expr);
         cases.push((case, expr));
     }
-    env.push_item(Item::Match { base, cases })
+    let cases2 = cases.clone();
+    let result = env.push_item(Item::Match { base, cases });
+    env.set_parent_scope(base, result);
+    for (condition, value) in cases2 {
+        env.set_parent_scope(condition, result);
+        env.set_parent_scope(value, result);
+    }
+    result
 }

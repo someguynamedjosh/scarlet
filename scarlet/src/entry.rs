@@ -83,8 +83,14 @@ fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<ItemId, Str
     }
     let definitions = children;
 
+    let definitions2 = definitions.clone();
     let item = Item::Defining { base, definitions };
-    Ok(env.push_item(item))
+    let result = env.push_item(item);
+    env.set_parent_scope(base, result);
+    for (_, def) in definitions2 {
+        env.set_parent_scope(def, result);
+    }
+    Ok(result)
 }
 
 pub fn start_from_root(path: &str) -> Result<(Environment, ItemId), String> {

@@ -9,7 +9,13 @@ use crate::{
 pub fn ingest(env: &mut Environment, remainder: Expression, post: Construct) -> ItemId {
     let base = stage2::ingest_expression(env, remainder);
     let definitions = ingest_definitions(env, post);
-    env.push_item(Item::Defining { base, definitions })
+    let definitions2 = definitions.clone();
+    let result = env.push_item(Item::Defining { base, definitions });
+    env.set_parent_scope(base, result);
+    for (_, def) in definitions2 {
+        env.set_parent_scope(def, result);
+    }
+    result
 }
 
 fn ingest_definitions(env: &mut Environment, post: Construct) -> Definitions {

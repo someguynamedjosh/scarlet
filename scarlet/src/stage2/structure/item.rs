@@ -1,8 +1,7 @@
-use super::{BuiltinOperation, BuiltinValue, OpaqueId};
+use super::{BuiltinOperation, BuiltinValue, ItemId, OpaqueId};
 use crate::shared::{Id, OpaqueClass, OrderedMap};
 
 pub type Definitions = OrderedMap<String, ItemId>;
-pub type ItemId = Id<Item, 'I'>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Item {

@@ -5,10 +5,12 @@ use crate::{
 
 pub fn ingest(env: &mut Environment, base: ItemId, post: Construct) -> ItemId {
     let the_name = ingest_ident_name(post);
-    env.push_item(Item::Member {
+    let result = env.push_item(Item::Member {
         base,
         name: the_name,
-    })
+    });
+    env.set_parent_scope(base, result);
+    result
 }
 
 fn ingest_ident_name(post: Construct) -> String {

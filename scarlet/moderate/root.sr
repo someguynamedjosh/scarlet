@@ -1,6 +1,12 @@
 defining{
     b0 is Bit::zero
     b1 is Bit::one
+
+    defining{
+        bit is any{Bit}
+        new is variant_of{From{bit} BitContainer}
+    }
+    BitContainer is variant_of{TYPE}
 }
-Bit::xor[b0 b1] 
+BitContainer::new
 displayed{}

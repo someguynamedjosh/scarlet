@@ -14,7 +14,7 @@ mod substituting;
 
 pub fn vomit(env: &Environment, item: ItemId) -> Expression {
     let item = &env.items[item];
-    match item {
+    match &item.item {
         Item::BuiltinOperation(op) => vomit_operation(env, op),
         Item::BuiltinValue(val) => vomit_builtin_value(val),
         Item::Defining { base, definitions } => defining::vomit(env, definitions, *base),

@@ -52,7 +52,7 @@ impl<'e, 'i> Context<'e, 'i> {
         base: s2::ItemId,
         name: &String,
     ) -> Option<DereferencedItem> {
-        match &self.input.items[base] {
+        match &self.input.items[base].item {
             s2::Item::Defining { base, definitions } => {
                 self.parent_scopes.push(definitions);
                 if let Some(result) = self.dereference_member(*base, name) {

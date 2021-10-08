@@ -43,7 +43,7 @@ impl<'e, 'i> Context<'e, 'i> {
             return *result;
         }
         let mut referenced = false;
-        let result = match &self.input.items[input] {
+        let result = match &self.input.items[input].item {
             s2::Item::BuiltinOperation(op) => {
                 let op = op.map(|input| self.child().ingest(input));
                 self.gpv(s3::Value::BuiltinOperation(op))
@@ -100,7 +100,7 @@ impl<'e, 'i> Context<'e, 'i> {
             &mut self.environment.values[result].defined_at
         }
         .insert_or_replace(input, ());
-        if self.input.display_requests.contains(&input) {
+        if self.input.items[input].display_requested {
             self.environment.values[result]
                 .display_requested_from
                 .insert_or_replace(input, ());

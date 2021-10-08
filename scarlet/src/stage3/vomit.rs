@@ -82,7 +82,7 @@ impl RelativePath {
 
 fn get_full_path(original_s2: &s2::Environment, item: s2::ItemId) -> RelativePath {
     for (id, maybe_parent) in &original_s2.items {
-        match maybe_parent {
+        match &maybe_parent.item {
             s2::Item::Defining { base, definitions } => {
                 let result = item;
                 if *base == item {
@@ -129,12 +129,12 @@ fn path_to_item(target: &mut s2::Environment, path: RelativePath) -> s2::ItemId 
         RelativePath::DefiningMember { parent, member, .. } => {
             if let RelativePath::Just(..) = &*parent {
                 let item = s2::Item::Identifier(member);
-                target.items.get_or_push(item)
+                target.push_item(item)
             } else {
                 let base = path_to_item(target, *parent);
                 let name = member;
                 let item = s2::Item::Member { base, name };
-                target.items.get_or_push(item)
+                target.push_item(item)
             }
         }
     }

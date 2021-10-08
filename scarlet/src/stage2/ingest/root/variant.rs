@@ -13,9 +13,11 @@ pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
         .expect("TODO: Nice error");
     let typee = stage2::ingest_expression(env, typee.clone());
     let id = env.new_opaque_value();
-    env.push_item(Item::Opaque {
+    let result = env.push_item(Item::Opaque {
         class: OpaqueClass::Variant,
         id,
         typee,
-    })
+    });
+    env.set_parent_scope(typee, result);
+    result
 }
