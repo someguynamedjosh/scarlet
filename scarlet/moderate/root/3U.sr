@@ -1,0 +1,13 @@
+defining{
+    b0 is any{Bit}
+    b1 is any{Bit}
+    b2 is any{Bit}
+
+    new is variant_of{
+        From{b0} 
+        From{b1} 
+        From{b2} 
+        3U
+    }
+}
+variant_of{TYPE}

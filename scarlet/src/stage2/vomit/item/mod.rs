@@ -25,9 +25,8 @@ pub fn vomit(env: &Environment, item: ItemId) -> Expression {
         Item::Opaque { class, typee, .. } => vomit_opaque(env, *class, *typee),
         Item::Substituting {
             base,
-            target,
-            value,
-        } => substituting::vomit(env, *target, *value, *base),
+            substitutions,
+        } => substituting::vomit(env, substitutions, *base),
     }
 }
 

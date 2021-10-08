@@ -1,0 +1,10 @@
+defining{
+    x is any{3U}
+}
+x matching{
+    on{3U::new} 3U::new[
+        Bit::not[3U::b0]
+        Bit::not[3U::b1]
+        Bit::not[3U::b2]
+    ]
+}

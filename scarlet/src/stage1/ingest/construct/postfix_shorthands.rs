@@ -37,7 +37,6 @@ fn followed_by_nonempty_whitespace<'i, T>(og: impl Parser<'i, T>) -> impl Parser
 fn type_is_symbol_parser<'i>() -> impl Parser<'i, bool> {
     alt((
         value(true, tag(":")),
-        value(true, followed_by_nonempty_whitespace(tag("t"))),
         value(false, followed_by_nonempty_whitespace(tag("bt"))),
     ))
 }

@@ -1,17 +1,8 @@
 defining{
-    b0 is Bit::zero
-    b1 is Bit::one
+    f is Bit::zero
+    t is Bit::one
 
-    defining{
-        bit0 is any{Bit}
-        bit1 is any{Bit}
-        new is variant_of{From{bit1} From{bit0} BitContainer}
-    }
-    BitContainer is variant_of{TYPE}
-
-    holder1 is any{Bit}
-    holder2 is any{Bit}
-    holder3 is any{Bit}
+    one is 3U::new[f f t]
 }
-BitContainer::new[holder1 holder2][holder3]
+3U::not[one]
 displayed{}

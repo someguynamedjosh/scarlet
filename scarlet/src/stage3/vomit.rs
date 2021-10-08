@@ -231,8 +231,7 @@ fn vomit_value_as_code(
             let value = vomit_value(env, &env.values[value], target_env, display_path);
             target_env.push_item(Item::Substituting {
                 base,
-                target: Some(target),
-                value,
+                substitutions: vec![(Some(target), value)],
             })
         }
     }

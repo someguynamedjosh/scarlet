@@ -88,9 +88,8 @@ impl<'e, 'i> Context<'e, 'i> {
             s2::Item::Opaque { class, typee, id } => self.ingest_opaque(class, id, typee),
             s2::Item::Substituting {
                 base,
-                target,
-                value,
-            } => self.ingest_substituting(base, target, value),
+                substitutions,
+            } => self.ingest_substituting(base, substitutions),
         };
         self.ingest_map.insert(input, result);
         if referenced {

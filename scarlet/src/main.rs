@@ -12,22 +12,22 @@ fn main() {
 
     println!("Doing stages 1 and 2");
     let (mut s2_environment, s2_root) = entry::start_from_root(&path).unwrap();
-    println!("{:#?}", s2_environment);
-    println!("root: {:?}", s2_root);
-    println!(
-        "vomited root:\n{}",
-        stage2::completely_vomit_item(&s2_environment, s2_root)
-    );
+    // println!("{:#?}", s2_environment);
+    // println!("root: {:?}", s2_root);
+    // println!(
+    //     "vomited root:\n{}",
+    //     stage2::completely_vomit_item(&s2_environment, s2_root)
+    // );
 
     println!("Doing stage 3");
     let (mut s3_environment, s3_root) = stage3::ingest(&s2_environment, s2_root);
-    println!("{:#?}", s3_environment);
-    println!("root {:#?}", s3_root);
+    // println!("{:#?}", s3_environment);
+    // println!("root {:#?}", s3_root);
 
     println!("Doing reduction");
     s3_environment.reduce_all();
-    println!("{:#?}", s3_environment);
-    println!("root {:#?}", s3_root);
+    // println!("{:#?}", s3_environment);
+    // println!("root {:#?}", s3_root);
 
     println!("\nDisplays:");
     let displays = s3_environment.display_all(&mut s2_environment, s2_root);

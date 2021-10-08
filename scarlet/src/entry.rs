@@ -70,7 +70,6 @@ fn parse_file_to_stage1(file: &FileNode) -> Result<Expression, String> {
 fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<ItemId, String> {
     println!("Parsing {:?}", tree.self_def);
     let stage1_expression = parse_file_to_stage1(&tree)?;
-    println!("{}", stage1::vomit(&stage1_expression));
 
     // This item is the actual code written in the file.
     let base = stage2::ingest_expression(env, stage1_expression);
@@ -95,7 +94,6 @@ fn ingest_file_tree(env: &mut Environment, tree: FileNode) -> Result<ItemId, Str
 
 pub fn start_from_root(path: &str) -> Result<(Environment, ItemId), String> {
     let tree = read_root(&PathBuf::from_str(path).unwrap()).unwrap();
-    println!("{:#?}", tree);
     let mut env = Environment::new();
     let item = ingest_file_tree(&mut env, tree)?;
     Ok((env, item))
