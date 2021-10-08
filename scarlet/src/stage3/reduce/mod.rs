@@ -85,6 +85,11 @@ impl Environment {
                 let rbase = self.reduce(base);
                 let rvalue = self.reduce(value);
                 let subbed = self.substitute(rbase, target, rvalue);
+                if subbed == of {
+                    // Hacky way of preventing infinite loops when subbing
+                    // things in opaque values.
+                    return subbed;
+                }
                 self.reduce(subbed)
             }
         }
