@@ -2,7 +2,7 @@ defining{
     TYPE is builtin_item{TYPE}
     A is any{TYPE}
     B is any{TYPE}
-    Bit is variant_of{From{A} From{B} TYPE}
+    Bit is variant_of{From{A} TYPE}
 }
-Bit[TYPE TYPE]
+Bit[B TYPE]
 displayed{}

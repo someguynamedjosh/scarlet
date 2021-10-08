@@ -11,9 +11,7 @@ defining{
 
     holder1 is any{Bit}
     holder2 is any{Bit}
+    holder3 is any{Bit}
 }
-BitContainer::new[Bit::zero Bit::one]
-matching{
-    on{BitContainer::new[holder1 holder2]} holder2
-}
+BitContainer::new[holder1 holder2 holder3]
 displayed{}

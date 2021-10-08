@@ -1,2 +1,3 @@
 - Visibility
-- Move lang -> core
+- Match Thing[var1 var1] uses the last instance of var1
+- Match Thing[var1 var2 var1] doesn't work as expected

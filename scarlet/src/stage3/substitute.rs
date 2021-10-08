@@ -95,14 +95,19 @@ impl Environment {
                 target: other_target,
                 value: other_value,
             } => {
+                let other_value = self.substitute(other_value, target, value);
                 let sub_base = self.substitute(other_base, other_target, other_value);
                 if sub_base == base {
-                    let value = Value::Substituting {
-                        base: sub_base,
-                        target,
-                        value,
-                    };
-                    self.gpv(value)
+                    if self.dependencies(base).contains(&target) {
+                        let value = Value::Substituting {
+                            base,
+                            target,
+                            value,
+                        };
+                        self.gpv(value)
+                    } else {
+                        base
+                    }
                 } else {
                     self.substitute(sub_base, target, value)
                 }

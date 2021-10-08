@@ -244,14 +244,18 @@ fn vomit_value(
     target: &mut s2::Environment,
     display_path: &RelativePath,
 ) -> ItemId {
-    let &(definition, _) = value.defined_at.iter().next().unwrap();
-    let definition_path = get_full_path(target, definition);
-    if &definition_path == display_path {
-        vomit_value_as_code(env, value, target, display_path)
+    println!("{:#?}\n\n{:#?}", env, value);
+    if let Some(&(definition, _)) = value.defined_at.iter().next() {
+        let definition_path = get_full_path(target, definition);
+        if &definition_path == display_path {
+            vomit_value_as_code(env, value, target, display_path)
+        } else {
+            let (_, definition_path) =
+                truncate_paths_to_common_ancestor(display_path.clone(), definition_path);
+            path_to_item(target, definition_path)
+        }
     } else {
-        let (_, definition_path) =
-            truncate_paths_to_common_ancestor(display_path.clone(), definition_path);
-        path_to_item(target, definition_path)
+        vomit_value_as_code(env, value, target, display_path)
     }
 }
 

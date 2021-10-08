@@ -174,6 +174,7 @@ impl Environment {
 
     fn matches(&mut self, base: ValueId, condition: ValueId) -> MatchResult {
         let condition_target = self.condition_target(condition, vec![]);
+        println!("CONDITION: {:?}", condition);
         let result = self.matches_target(base, condition_target.clone());
         result
     }
@@ -253,6 +254,9 @@ impl Environment {
             let reduced = self.reduce_from_scratch(of);
             self.values[of].cached_reduction = Some(reduced);
             self.values[reduced].cached_reduction = Some(reduced);
+            if self.values[reduced].defined_at.is_empty() {
+                self.values[reduced].defined_at = self.values[of].defined_at.clone();
+            }
             self.values[reduced].referenced_at = self.values[reduced]
                 .referenced_at
                 .clone()
