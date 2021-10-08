@@ -31,20 +31,26 @@ impl From<s2::ItemId> for DereferencedItem {
 }
 
 impl<'e, 'i> Context<'e, 'i> {
-    pub fn dereference_identifier(&mut self, name: &String) -> DereferencedItem {
-        for index in 0..self.parent_scopes.len() {
-            let scope = &self.parent_scopes[index];
-            if let Some(item) = scope.get(name) {
-                let result = item.into();
-                self.exclude_scopes(index);
-                return result;
+    pub fn dereference_identifier(
+        &mut self,
+        name: &String,
+        in_scope: s2::ItemId,
+    ) -> DereferencedItem {
+        let scope = &self.input.items[in_scope];
+        if let s2::Item::Defining { base, definitions } = &scope.item {
+            for (candidate, definition) in definitions {
+                if candidate == name {
+                    return DereferencedItem {
+                        base: *definition,
+                        subs: Vec::new(),
+                    };
+                }
             }
         }
-        todo!(
-            "Nice error, no identifier {} in {:#?}",
-            name,
-            self.parent_scopes
-        )
+        match scope.parent_scope {
+            Some(parent_scope) => self.dereference_identifier(name, parent_scope),
+            None => todo!("Nice error, failed to find identifier {:?}", name),
+        }
     }
 
     pub fn dereference_member(
@@ -54,7 +60,6 @@ impl<'e, 'i> Context<'e, 'i> {
     ) -> Option<DereferencedItem> {
         match &self.input.items[base].item {
             s2::Item::Defining { base, definitions } => {
-                self.parent_scopes.push(definitions);
                 if let Some(result) = self.dereference_member(*base, name) {
                     return Some(result);
                 }
@@ -67,7 +72,7 @@ impl<'e, 'i> Context<'e, 'i> {
             }
             s2::Item::From { base, .. } => self.dereference_member(*base, name),
             s2::Item::Identifier(ident) => {
-                let ident = self.dereference_identifier(ident);
+                let ident = self.dereference_identifier(ident, base);
                 let err = format!("No member {} in {:?}", name, ident.base);
                 let member = self.dereference_member(ident.base, name).expect(&err);
                 Some(member.wrapped_with(ident))

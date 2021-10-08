@@ -18,7 +18,7 @@ impl<'e, 'i> Context<'e, 'i> {
             self.opaque_map.insert(*id, (new_id, *typee));
             (new_id, *typee)
         };
-        let typee = self.child().ingest(typee);
+        let typee = self.ingest(typee);
         self.gpv(s3::Value::Opaque { class, id, typee })
     }
 }

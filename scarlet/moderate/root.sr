@@ -8,5 +8,5 @@ defining{
     }
     BitContainer is variant_of{TYPE}
 }
-BitContainer::new
+BitContainer::new[Bit::zero]
 displayed{}
