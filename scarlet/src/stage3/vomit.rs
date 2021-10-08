@@ -214,9 +214,7 @@ fn vomit_value_as_code(
     match &value.value {
         s3::Value::BuiltinOperation(_) => todo!(),
         &s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
-        s3::Value::From { base, variable } => {
-            target_env.push_item(Item::BuiltinValue(BuiltinValue::OriginType))
-        }
+        s3::Value::From { base, variable } => todo!(),
         s3::Value::Match { base, cases } => todo!(),
         &s3::Value::Opaque { class, id, typee } => {
             let id = target_env.new_opaque_value();

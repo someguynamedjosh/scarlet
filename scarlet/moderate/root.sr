@@ -5,13 +5,15 @@ defining{
     defining{
         bit0 is any{Bit}
         bit1 is any{Bit}
-        new is variant_of{From{bit0} From{bit1} BitContainer}
+        new is variant_of{From{bit1} From{bit0} BitContainer}
     }
     BitContainer is variant_of{TYPE}
+
+    holder1 is any{Bit}
+    holder2 is any{Bit}
 }
-BitContainer::new
-# BitContainer::new[Bit::zero]
-# matching{
-#     on{BitContainer::new} BitContainer::bit0
-# }
+BitContainer::new[Bit::zero Bit::one]
+matching{
+    on{BitContainer::new[holder1 holder2]} holder1
+}
 displayed{}

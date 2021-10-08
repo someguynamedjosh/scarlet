@@ -34,32 +34,36 @@ impl Environment {
         }
     }
 
-    fn get_from_variables_impl(&self, typee: ValueId, vars: &mut Variables) {
+    fn split_from_type_impl(&self, typee: ValueId, vars: &mut Variables) -> ValueId {
         match &self.values[typee].value {
-            Value::From { base, variable } => {
-                let (base, variable) = (*base, *variable);
-                self.get_from_variables_impl(base, vars);
+            &Value::From { base, variable } => {
+                self.split_from_type_impl(base, vars);
                 assert!(!vars.contains_key(&variable));
                 vars.insert_no_replace(variable, ());
+                base
             }
-            Value::Substituting { .. } => todo!(),
-            _ => (),
+            _ => typee,
         }
     }
 
-    pub fn get_from_variables(&self, typee: ValueId) -> Variables {
+    pub fn split_from_type(&self, typee: ValueId) -> (ValueId, Variables) {
         let mut result = Variables::new();
-        self.get_from_variables_impl(typee, &mut result);
-        result
+        let base = self.split_from_type_impl(typee, &mut result);
+        (base, result)
+    }
+
+    pub fn get_from_variables(&self, typee: ValueId) -> Variables {
+        self.split_from_type(typee).1
     }
 
     pub fn with_from_variables(&mut self, base: ValueId, variables: &[OpaqueId]) -> ValueId {
         if variables.len() == 0 {
             base
         } else {
-            let base = self.with_from_variables(base, &variables[1..]);
+            let last = variables.len() - 1;
+            let base = self.with_from_variables(base, &variables[..last]);
             let existing_vars = self.get_from_variables(base);
-            let variable = variables[0];
+            let variable = variables[last];
             if existing_vars.contains_key(&variable) {
                 base
             } else {

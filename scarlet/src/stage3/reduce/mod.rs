@@ -67,11 +67,16 @@ impl Environment {
                     Target::Variant { id, values }
                 }
             },
-            Value::Substituting {
+            &Value::Substituting {
                 base,
                 target,
                 value,
-            } => todo!(),
+            } => {
+                let value = self.condition_target(value, vec![]);
+                let mut targets_so_far = targets_so_far;
+                targets_so_far.push((target, value));
+                self.condition_target(base, targets_so_far)
+            }
             _ => {
                 if targets_so_far.len() == 0 {
                     Target::LiteralValue(condition)
@@ -170,7 +175,6 @@ impl Environment {
     fn matches(&mut self, base: ValueId, condition: ValueId) -> MatchResult {
         let condition_target = self.condition_target(condition, vec![]);
         let result = self.matches_target(base, condition_target.clone());
-        println!("{:?} matches {:?}? {:?}", base, condition_target, result);
         result
     }
 
