@@ -1,0 +1,36 @@
+defining{
+    x is any{3U}
+    x0 is any{Bit}
+    x1 is any{Bit}
+    x2 is any{Bit}
+
+    y is any{3U}
+    y0 is any{Bit}
+    y1 is any{Bit}
+    y2 is any{Bit}
+
+    a is any{Bit}
+    b is any{Bit}
+    c is any{Bit}
+
+    half_sum_x is
+    Bit::xor[a b]
+
+    half_sum_c is
+    Bit::and[a b]
+
+    full_sum_x is
+    half_sum_x[half_sum_x c]
+
+    # full_sum_c is
+    # Bit::or[half_sum_c half_sum_c[half_sum_x c]]
+}
+x matching{ 
+    on{3U::new[x0 x1 x2]} 
+    y matching{
+        on{3U::new[y0 y1 y2]}
+        3U::new[
+            x0 x1 x2
+        ]
+    }
+}

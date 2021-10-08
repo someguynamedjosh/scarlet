@@ -3,6 +3,8 @@ defining{
     t is Bit::one
 
     one is 3U::new[f f t]
+    two is 3U::new[f t f]
+    three is 3U::new[f t t]
 }
-3U::not[one]
+3U::sum[one two]
 displayed{}
