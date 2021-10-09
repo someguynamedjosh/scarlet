@@ -22,11 +22,11 @@ defining{
     Holder is instance_of{TYPE}
 
     anyh is any{Holder}
+    anyb is any{Bit}
 
-    extract is anyh
-    matching{
-        on{Holder::new} Holder::bit1
-    }
 }
-extract[Holder::new[Bit::zero]]
+Holder::new[Bit::zero][Bit::one]
+matching{
+    on{Holder::new} Holder::bit2
+}
 displayed{}

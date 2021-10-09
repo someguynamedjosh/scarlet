@@ -102,10 +102,27 @@ impl Environment {
                     let value = self.substitute(value, substitutions);
                     subbed_subs.insert_no_replace(target, value);
                 }
-                self.gpv(Value::Substituting {
-                    base: subbed_base,
-                    substitutions: subbed_subs,
-                })
+                let subbed_base_val = self.values[subbed_base].value.clone();
+                if let Value::Substituting {
+                    base,
+                    mut substitutions,
+                } = subbed_base_val
+                {
+                    for (target, value) in subbed_subs {
+                        if !substitutions.contains_key(&target) {
+                            substitutions.insert_no_replace(target, value);
+                        }
+                    }
+                    self.gpv(Value::Substituting {
+                        base,
+                        substitutions,
+                    })
+                } else {
+                    self.gpv(Value::Substituting {
+                        base: subbed_base,
+                        substitutions: subbed_subs,
+                    })
+                }
             }
         }
     }
