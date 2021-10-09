@@ -9,10 +9,6 @@
 			"path": "vscode-syntax"
 		},
 		{
-			"name": "sire",
-			"path": "sire"
-		},
-		{
 			"name": "root",
 			"path": "."
 		}

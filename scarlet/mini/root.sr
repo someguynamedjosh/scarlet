@@ -19,7 +19,6 @@ defining{
     a is any{Bit}
     b is any{Bit}
     c is any{Bit}
-    bop is any{From{a} From{b} Bit}
 
     half_sum_x is
     Bit::xor[a b]

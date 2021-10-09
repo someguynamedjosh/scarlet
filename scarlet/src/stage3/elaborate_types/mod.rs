@@ -30,7 +30,7 @@ impl Environment {
                 let value_type = the_value_type.unwrap();
                 let variables: Vec<_> = variables.into_iter().map(|x| x.0).collect();
                 self.with_from_variables(value_type, &variables[..])
-            },
+            }
             Value::Opaque { class, id, typee } => {
                 let (class, variable, typee) = (*class, *id, *typee);
                 let type_deps = self.dependencies(typee);
@@ -57,11 +57,9 @@ impl Environment {
         if let Some(cached) = self.values[of].cached_type {
             cached
         } else {
-            self.put_debug_info();
             let typee = self.elaborate_type_from_scratch(of);
             let typee = self.reduce(typee);
             self.values[of].cached_type = Some(typee);
-            self.put_debug_info();
             typee
         }
     }

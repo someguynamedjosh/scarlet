@@ -1,5 +1,5 @@
 use super::structure::{AnnotatedValue, Environment, OpaqueId, Value, ValueId};
-use crate::{dbg, shared::OpaqueClass};
+use crate::shared::OpaqueClass;
 
 type Substitutions = Vec<(OpaqueId, ValueId)>;
 type Targets = Vec<(OpaqueId, Target)>;
@@ -247,12 +247,9 @@ impl Environment {
     }
 
     pub fn reduce(&mut self, of: ValueId) -> ValueId {
-        dbg::enter("reduce", &of);
         if let Some(cached) = self.values[of].cached_reduction {
-            dbg::leave("reduce");
             cached
         } else {
-            self.put_debug_info();
             let reduced = self.reduce_from_scratch(of);
             self.values[of].cached_reduction = Some(reduced);
             self.values[reduced].cached_reduction = Some(reduced);
@@ -269,10 +266,8 @@ impl Environment {
                     .insert_or_replace(from, ());
             }
             debug_assert_eq!(self.reduce(reduced), reduced);
-            self.put_debug_info();
             let typee = self.get_type(of);
             let rtype = self.get_type(reduced);
-            self.put_debug_info();
             if !self.type_is_base_of_other(rtype, typee) {
                 println!("{:#?}", self);
                 println!("{:?} was reduced to {:?}", of, reduced);
@@ -280,7 +275,6 @@ impl Environment {
                 println!("is not a base of the original type {:?}", typee);
                 panic!();
             }
-            dbg::leave("reduce");
             reduced
         }
     }

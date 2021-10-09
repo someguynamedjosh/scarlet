@@ -3,10 +3,7 @@ use std::{fmt::Debug, path::PathBuf, str::FromStr};
 use serde::Serialize;
 
 use super::{AnnotatedValue, OpaqueValue, Value, ValueId};
-use crate::{
-    dbg,
-    shared::{OrderedSet, Pool},
-};
+use crate::shared::{OrderedSet, Pool};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Environment {
@@ -36,9 +33,5 @@ impl Environment {
             display_requested_from: OrderedSet::new(),
             value,
         })
-    }
-
-    pub fn put_debug_info(&self) {
-        dbg::put("stage3", self);
     }
 }
