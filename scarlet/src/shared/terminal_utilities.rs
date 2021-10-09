@@ -1,9 +1,5 @@
-// pub fn set_color(r: u8, g: u8, b: u8) -> String {
-//     format!("\x1b[38;2;{};{};{}m", r, g, b)
-// }
-
 pub fn set_color(r: u8, g: u8, b: u8) -> String {
-    format!("")
+    format!("\x1b[38;2;{};{};{}m", r, g, b)
 }
 
 // Tweaked resistor color code.
@@ -20,10 +16,6 @@ pub fn set_color_index(index: usize) -> String {
     set_color(r as _, g as _, b as _)
 }
 
-// pub fn reset_color() -> &'static str {
-//     "\x1b[0m"
-// }
-
 pub fn reset_color() -> &'static str {
-    ""
+    "\x1b[0m"
 }

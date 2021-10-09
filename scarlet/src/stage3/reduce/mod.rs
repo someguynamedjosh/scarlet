@@ -1,7 +1,6 @@
-use super::structure::{AnnotatedValue, Environment, OpaqueId, Value, ValueId};
+use super::structure::{AnnotatedValue, Environment, OpaqueId, Substitutions, Value, ValueId};
 use crate::shared::OpaqueClass;
 
-type Substitutions = Vec<(OpaqueId, ValueId)>;
 type Targets = Vec<(OpaqueId, Target)>;
 
 #[derive(Clone, Debug)]
@@ -14,7 +13,9 @@ enum MatchResult {
 impl From<bool> for MatchResult {
     fn from(cond: bool) -> Self {
         if cond {
-            Self::Match { subs: vec![] }
+            Self::Match {
+                subs: Substitutions::new(),
+            }
         } else {
             Self::NoMatch
         }
@@ -42,6 +43,7 @@ impl Environment {
         if let Some(start) = self.values.first() {
             let mut id = start;
             loop {
+                println!("{:#?}", self);
                 self.reduce(id);
                 match self.values.next(id) {
                     Some(next) => id = next,
@@ -97,7 +99,7 @@ impl Environment {
             // (base, subs)
             todo!()
         } else {
-            (base, vec![])
+            (base, Substitutions::new())
         }
     }
 
@@ -128,7 +130,7 @@ impl Environment {
     fn matches_target(&mut self, base: ValueId, target: Target) -> MatchResult {
         match target {
             Target::BoundVariable(var) => {
-                let subs = vec![(var, base)];
+                let subs = std::iter::once((var, base)).collect();
                 MatchResult::Match { subs }
             }
             Target::LiteralValue(val) => self.are_def_equal(base, val).into(),
@@ -151,22 +153,12 @@ impl Environment {
                 for (dep, _) in self.get_from_variables(typee) {
                     if !base_subs.iter().any(|x| x.0 == dep) {
                         let (var, _) = self.values.iter().find(|v| self.is_var(v.1, dep)).unwrap();
-                        base_subs.push((dep, var));
+                        base_subs.insert_no_replace(dep, var);
                     }
                 }
                 // Not sure yet when this would be false.
                 assert_eq!(values.len(), base_subs.len());
-                let mut total_subs = Vec::new();
-                for (var, target) in values {
-                    let index = base_subs.iter().position(|x| x.0 == var).unwrap();
-                    let value = base_subs.remove(index).1;
-                    match self.matches_target(value, target) {
-                        MatchResult::Match { mut subs } => total_subs.append(&mut subs),
-                        MatchResult::NoMatch => return MatchResult::NoMatch,
-                        MatchResult::Uncertain => return MatchResult::Uncertain,
-                    }
-                }
-                MatchResult::Match { subs: total_subs }
+                todo!()
             }
         }
     }
@@ -178,21 +170,16 @@ impl Environment {
     }
 
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
-        match &self.values[of].value {
+        match self.values[of].value.clone() {
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => of,
             Value::From { base, variable } => {
-                let (base, variable) = (*base, *variable);
                 let base = self.reduce(base);
                 let value = Value::From { base, variable };
                 self.gpv(value)
             }
-            Value::Match { base, cases } => {
-                let (base, old_cases) = (*base, cases.clone());
-                self.reduce_match(base, old_cases)
-            }
+            Value::Match { base, cases } => self.reduce_match(base, cases),
             Value::Opaque { class, id, typee } => {
-                let (class, id, typee) = (*class, *id, *typee);
                 let typee = self.reduce(typee);
                 let value = Value::Opaque { class, id, typee };
                 self.gpv(value)
@@ -201,17 +188,9 @@ impl Environment {
                 base,
                 substitutions,
             } => {
-                // let (base, target, value) = (*base, *target, *value);
-                // let rbase = self.reduce(base);
-                // let rvalue = self.reduce(value);
-                // let subbed = self.substitute(rbase, target, rvalue);
-                // if subbed == of {
-                //     // Hacky way of preventing infinite loops when subbing
-                //     // things in opaque values.
-                //     return subbed;
-                // }
-                // self.reduce(subbed)
-                todo!()
+                println!("{:#?}", self);
+                let subbed = self.substitute(base, &substitutions);
+                self.reduce(subbed)
             }
         }
     }
@@ -225,9 +204,7 @@ impl Environment {
                 MatchResult::Match { subs } => {
                     if cases.len() == 0 {
                         let mut value = value;
-                        for (target, sub) in subs {
-                            value = self.substitute(value, target, sub);
-                        }
+                        value = self.substitute(value, &subs);
                         return self.reduce(value);
                     } else {
                         let value = self.reduce(value);

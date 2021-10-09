@@ -4,27 +4,19 @@ defining{
     defining{
         zero is variant_of{Bit}
         one is variant_of{Bit}
-
-        x is any{Bit}
-        y is any{Bit}
-
-        xor is 
-        x matching{
-            on{zero} one
-            on{one} y
-        }
     }
     Bit is variant_of{TYPE}
 
-    a is any{Bit}
-    b is any{Bit}
-    c is any{Bit}
+    x is any{Bit}
+    not is 
+    x matching{
+        on{Bit::zero} Bit::one
+        on{Bit::one} Bit::zero
+    }
 
-    half_sum_x is
-    Bit::xor[a b]
-
-    full_sum_x is
-    half_sum_x[half_sum_x c]
+    identity is 
+    not[not]
+    displayed{}
 }
-Bit
+identity[Bit::zero]
 displayed{}

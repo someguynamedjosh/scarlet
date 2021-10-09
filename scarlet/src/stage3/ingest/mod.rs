@@ -26,10 +26,14 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
 impl<'e, 'i> Context<'e, 'i> {
     fn ingest_dereferenced(&mut self, item: DereferencedItem) -> s3::ValueId {
         let base = self.ingest(item.base);
-        self.gpv(s3::Value::Substituting {
-            base,
-            substitutions: item.subs,
-        })
+        if item.subs.len() == 0 {
+            base
+        } else {
+            self.gpv(s3::Value::Substituting {
+                base,
+                substitutions: item.subs,
+            })
+        }
     }
 
     pub fn ingest(&mut self, input: s2::ItemId) -> s3::ValueId {

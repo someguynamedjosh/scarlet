@@ -3,19 +3,17 @@ use crate::{shared::OpaqueClass, stage2::structure::BuiltinValue, stage3::struct
 
 impl Environment {
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
-        match &self.values[of].value {
+        match self.values[of].value.clone() {
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(val) => match val {
-                BuiltinValue::OriginType | &BuiltinValue::U8Type => self.gp_origin_type(),
+                BuiltinValue::OriginType | BuiltinValue::U8Type => self.gp_origin_type(),
                 BuiltinValue::U8(..) => self.gp_u8_type(),
             },
             Value::From { base, variable } => {
-                let (base, variable) = (*base, *variable);
                 let base_type = self.get_type(base);
                 self.remove_from_variable(base_type, variable)
             }
             Value::Match { base, cases } => {
-                let (base, cases) = (*base, cases.clone());
                 let base_type = self.get_type(base);
                 let mut variables = self.get_from_variables(base_type);
                 let mut the_value_type = None;
@@ -32,10 +30,10 @@ impl Environment {
                 self.with_from_variables(value_type, &variables[..])
             }
             Value::Opaque { class, id, typee } => {
-                let (class, variable, typee) = (*class, *id, *typee);
                 let type_deps = self.dependencies(typee);
                 let base = self.with_from_variables(typee, &type_deps[..]);
                 if class == OpaqueClass::Variable {
+                    let variable = id;
                     self.gpv(Value::From { base, variable })
                 } else {
                     base
@@ -45,7 +43,8 @@ impl Environment {
                 base,
                 substitutions,
             } => {
-                todo!()
+                let base_type = self.get_type(base);
+                self.substitute(base_type, &substitutions)
             }
         }
     }

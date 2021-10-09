@@ -215,7 +215,18 @@ fn vomit_value_as_code(
         s3::Value::BuiltinOperation(_) => todo!(),
         s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
         s3::Value::From { base, variable } => todo!(),
-        s3::Value::Match { base, cases } => todo!(),
+        s3::Value::Match { base, cases } => {
+            let base = vomit_value(env, &env.values[base], target_env, display_path);
+            let mut vom_cases = Vec::new();
+            for (target, value) in cases {
+                vom_cases.push((
+                    vomit_value(env, &env.values[target], target_env, display_path),
+                    vomit_value(env, &env.values[value], target_env, display_path),
+                ))
+            }
+            let cases = vom_cases;
+            target_env.push_item(Item::Match { base, cases })
+        }
         s3::Value::Opaque { class, id, typee } => {
             let id = target_env.new_opaque_value();
             let typee = vomit_value(env, &env.values[typee], target_env, display_path);

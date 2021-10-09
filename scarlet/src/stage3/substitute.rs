@@ -1,4 +1,4 @@
-use super::structure::{Environment, OpaqueId, ValueId};
+use super::structure::{Environment, OpaqueId, Substitutions, ValueId};
 use crate::{shared::OpaqueClass, stage3::structure::Value};
 
 impl Environment {
@@ -32,27 +32,11 @@ impl Environment {
         }
     }
 
-    /// Replaces $target with $value in $base.
-    pub fn substitute(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
-        let base = self.do_substitution(base, target, value);
-        if self.dependencies(base).contains(&target) {
-            // let value = Value::Substituting {
-            //     base,
-            //     target,
-            //     value,
-            // };
-            // self.gpv(value)
-            todo!()
-        } else {
-            base
-        }
-    }
-
-    fn do_substitution(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
+    pub fn substitute(&mut self, base: ValueId, substitutions: &Substitutions) -> ValueId {
         let base = self.reduce(base);
         match self.values[base].value.clone() {
             Value::Opaque { class, id, typee } => {
-                if id == target {
+                if let Some(&value) = substitutions.get(&id) {
                     debug_assert_eq!(class, OpaqueClass::Variable);
                     let value_type = self.get_type(value);
                     if !self.type_is_base_of_other(typee, value_type) {
@@ -61,20 +45,29 @@ impl Environment {
                     }
                     value
                 } else {
-                    let type_vars = self.get_from_variables(typee);
-                    let mut typee = typee;
-                    if !type_vars.contains_key(&target) {
-                        typee = self.substitute(typee, target, value);
+                    let from_vars = self.get_from_variables(typee);
+                    let mut keep_subs = Substitutions::new();
+                    for &(target, value) in substitutions {
+                        if from_vars.contains_key(&target) {
+                            keep_subs.insert_no_replace(target, value);
+                        }
                     }
-                    let value = Value::Opaque { class, id, typee };
-                    self.gpv(value)
+                    if keep_subs.len() == 0 {
+                        base
+                    } else {
+                        let value = Value::Substituting {
+                            base,
+                            substitutions: keep_subs,
+                        };
+                        self.gpv(value)
+                    }
                 }
             }
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => base,
             Value::From { base, variable } => {
-                let base = self.substitute(base, target, value);
-                if variable == target {
+                let base = self.substitute(base, substitutions);
+                if let Some(&value) = substitutions.get(&variable) {
                     let value_deps = self.dependencies(value);
                     let already_included = self.get_from_variables(base);
                     let value_deps: Vec<_> = value_deps
@@ -90,27 +83,29 @@ impl Environment {
                 base,
                 cases: old_cases,
             } => {
-                let base = self.substitute(base, target, value);
+                let base = self.substitute(base, substitutions);
                 let mut cases = Vec::new();
                 for (condition, case_value) in old_cases {
                     // Don't substitute condition because it can bind variables.
-                    let case_value = self.substitute(case_value, target, value);
+                    let case_value = self.substitute(case_value, substitutions);
                     cases.push((condition, case_value))
                 }
                 self.gpv(Value::Match { base, cases })
             }
             Value::Substituting {
                 base: other_base,
-                substitutions,
+                substitutions: other_substitutions,
             } => {
-                // let other_base = self.do_substitution(other_base, target, value);
-                // let other_value = self.do_substitution(other_value, target, value);
-                // self.gpv(Value::Substituting {
-                //     base: other_base,
-                //     target: other_target,
-                //     value: other_value,
-                // })
-                todo!()
+                let subbed_base = self.substitute(other_base, substitutions);
+                let mut subbed_subs = Substitutions::new();
+                for (target, value) in other_substitutions {
+                    let value = self.substitute(value, substitutions);
+                    subbed_subs.insert_no_replace(target, value);
+                }
+                self.gpv(Value::Substituting {
+                    base: subbed_base,
+                    substitutions: subbed_subs,
+                })
             }
         }
     }
