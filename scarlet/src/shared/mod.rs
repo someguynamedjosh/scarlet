@@ -14,5 +14,5 @@ pub use terminal_utilities::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 pub enum OpaqueClass {
     Variable,
-    Variant,
+    Instance,
 }

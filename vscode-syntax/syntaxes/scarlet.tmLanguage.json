@@ -4,7 +4,7 @@
 	"patterns": [
 		{
 			"name": "keyword.control",
-			"match": "(sub|substituting|def|defining|Type|From|any|the|i32|integer|int|mat|matching|on|pick|pick_first_true_condition|variant_of|identifier|dis|displayed|builtin_item|target)[ \\r\\n\\t]*(?=\\{)"
+			"match": "(sub|substituting|def|defining|Type|From|any|the|i32|integer|int|mat|matching|on|pick|pick_first_true_condition|instance_of|identifier|dis|displayed|builtin_item|target)[ \\r\\n\\t]*(?=\\{)"
 		},
 		{
 			"name": "invalid.illegal",
@@ -16,7 +16,7 @@
 		},
 		{
 			"name": "keyword.other",
-			"match": "\\b(is|variant_of|vn|bt|else)\\b"
+			"match": "\\b(is|instance_of|vn|bt|else)\\b"
 		},
 		{
 			"name": "keyword.operator",

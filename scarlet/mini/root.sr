@@ -2,10 +2,10 @@ defining{
     TYPE is builtin_item{TYPE}
 
     defining{
-        zero is variant_of{Bit}
-        one is variant_of{Bit}
+        zero is instance_of{Bit}
+        one is instance_of{Bit}
     }
-    Bit is variant_of{TYPE}
+    Bit is instance_of{TYPE}
 
     x is any{Bit}
     not is 
@@ -14,9 +14,11 @@ defining{
         on{Bit::one} Bit::zero
     }
 
-    identity is 
-    not[not[not]]
-    displayed{}
+    defining{
+        bit is any{Bit}
+        new is instance_of{From{bit} Holder}
+    }
+    Holder is instance_of{TYPE}
 }
-identity[Bit::zero]
+Holder::new[Bit::zero]
 displayed{}

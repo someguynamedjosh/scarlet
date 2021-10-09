@@ -101,12 +101,12 @@ impl Environment {
             }
             (
                 Value::Opaque {
-                    class: OpaqueClass::Variant,
+                    class: OpaqueClass::Instance,
                     id: base_id,
                     ..
                 },
                 Value::Opaque {
-                    class: OpaqueClass::Variant,
+                    class: OpaqueClass::Instance,
                     id: condition_id,
                     ..
                 },
@@ -118,6 +118,32 @@ impl Environment {
                 } else {
                     MatchResult::NoMatch
                 }
+            }
+            (
+                Value::Substituting {
+                    base,
+                    substitutions,
+                },
+                Value::Opaque {
+                    class: OpaqueClass::Instance,
+                    typee,
+                    ..
+                },
+            ) => {
+                let mut result_subs = self.matches(base, condition, vars_to_bind)?;
+                let type_vars = self.get_from_variables(typee);
+                for (target, value) in substitutions {
+                    if !type_vars.contains_key(&target) {
+                        continue;
+                    } else if result_subs.contains_key(&target) {
+                        todo!("Nice error, cannot bind to the same variable multiple times.");
+                    } else if vars_to_bind.contains(&target) {
+                        result_subs.insert_no_replace(target, value);
+                    } else {
+                        return MatchResult::Uncertain;
+                    }
+                }
+                todo!()
             }
             _ => MatchResult::Uncertain,
         }

@@ -7,7 +7,7 @@ mod any;
 mod builtin_item;
 mod identifier;
 mod u8;
-mod variant;
+mod instance;
 
 pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
     match &root.label[..] {
@@ -15,7 +15,7 @@ pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
         "builtin_item" => builtin_item::ingest(env, root),
         "identifier" => identifier::ingest(env, root),
         "u8" => u8::ingest(env, root),
-        "variant_of" => variant::ingest(env, root),
+        "instance_of" => instance::ingest(env, root),
         _ => todo!("Nice error"),
     }
 }

@@ -12,7 +12,7 @@ mod substituting;
 pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, s3::ValueId) {
     let mut environment = s3::Environment::new();
     // let mut variable_map = HashMap::new();
-    // let mut variant_map = HashMap::new();
+    // let mut instance_map = HashMap::new();
     let mut ctx = Context {
         environment: &mut environment,
         ingest_map: HashMap::new(),

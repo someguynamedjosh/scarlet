@@ -3,11 +3,11 @@ defining{
     b1 is any{Bit}
     b2 is any{Bit}
 
-    new is variant_of{
+    new is instance_of{
         From{b0} 
         From{b1} 
         From{b2} 
         3U
     }
 }
-variant_of{TYPE}
+instance_of{TYPE}

@@ -1,5 +1,5 @@
 defining{
-    zero is variant_of{Bit}
-    one is variant_of{Bit}
+    zero is instance_of{Bit}
+    one is instance_of{Bit}
 }
-variant_of{TYPE} 
+instance_of{TYPE} 
