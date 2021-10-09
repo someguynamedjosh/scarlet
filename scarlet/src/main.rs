@@ -1,3 +1,5 @@
+#![feature(try_trait_v2)]
+
 mod entry;
 mod rust_analyzer_actions;
 mod shared;

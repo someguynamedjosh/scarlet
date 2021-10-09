@@ -15,7 +15,7 @@ defining{
     }
 
     identity is 
-    not[not]
+    not[not[not]]
     displayed{}
 }
 identity[Bit::zero]
