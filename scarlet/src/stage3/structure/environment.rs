@@ -1,9 +1,14 @@
 use std::{fmt::Debug, path::PathBuf, str::FromStr};
 
-use super::{AnnotatedValue, OpaqueValue, Value, ValueId};
-use crate::shared::{OrderedSet, Pool};
+use serde::Serialize;
 
-#[derive(Clone, Debug)]
+use super::{AnnotatedValue, OpaqueValue, Value, ValueId};
+use crate::{
+    dbg,
+    shared::{OrderedSet, Pool},
+};
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Environment {
     pub values: Pool<AnnotatedValue, 'L'>,
     pub opaque_values: Pool<OpaqueValue, 'O'>,
@@ -33,9 +38,7 @@ impl Environment {
         })
     }
 
-    pub fn write_debug_info(&self) {
-        let out_path = PathBuf::from_str("ROOT.sir").unwrap();
-        let contents = format!("{:#?}", self);
-        std::fs::write(&out_path, contents).unwrap();
+    pub fn put_debug_info(&self) {
+        dbg::put("stage3", self);
     }
 }

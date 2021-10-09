@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 use super::Environment;
 use crate::{
     shared::{Id, OpaqueClass, OrderedSet},
@@ -13,7 +15,7 @@ pub type Variables = OrderedSet<OpaqueId>;
 pub type ValueId = Id<AnnotatedValue, 'L'>;
 pub type OpaqueId = Id<OpaqueValue, 'O'>;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize)]
 pub enum Value {
     BuiltinOperation(BuiltinOperation<ValueId>),
     BuiltinValue(BuiltinValue),
@@ -37,7 +39,7 @@ pub enum Value {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct AnnotatedValue {
     pub cached_type: Option<ValueId>,
     pub cached_reduction: Option<ValueId>,
@@ -47,7 +49,7 @@ pub struct AnnotatedValue {
     pub value: Value,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct OpaqueValue {
     pub stage2_id: crate::stage2::structure::OpaqueId,
 }

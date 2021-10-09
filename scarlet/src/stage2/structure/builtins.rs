@@ -1,4 +1,6 @@
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+use serde::Serialize;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize)]
 pub enum BuiltinOperation<ValueId> {
     Cast {
         equality_proof: ValueId,
@@ -39,7 +41,7 @@ impl<ValueId: Clone> BuiltinOperation<ValueId> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 pub enum BuiltinValue {
     OriginType,
     U8Type,

@@ -4,6 +4,7 @@ use std::{
 };
 
 use lazy_static::lazy_static;
+use serde::Serialize;
 
 use super::Id;
 
@@ -11,6 +12,7 @@ lazy_static! {
     static ref POOL_ID_COUNTER: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
 }
 
+#[derive(Serialize)]
 pub struct Pool<T, const C: char> {
     pub(super) id: u64,
     pub(super) items: Vec<T>,

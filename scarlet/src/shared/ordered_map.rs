@@ -3,11 +3,13 @@ use std::{
     iter::FromIterator,
 };
 
+use serde::Serialize;
+
 use crate::util::indented;
 
 pub type OrderedSet<K> = OrderedMap<K, ()>;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize)]
 pub struct OrderedMap<K, V> {
     entries: Vec<(K, V)>,
 }

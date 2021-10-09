@@ -4,8 +4,11 @@ use std::{
     marker::PhantomData,
 };
 
+use serde::Serialize;
+
 use crate::shared::{reset_color, set_color_index};
 
+#[derive(Serialize)]
 pub struct Id<T, const C: char> {
     pub(super) pool_id: u64,
     pub index: usize,

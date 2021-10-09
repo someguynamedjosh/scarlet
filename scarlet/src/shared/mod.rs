@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 mod ordered_map;
 mod pool;
 mod pool_id;
@@ -9,7 +11,7 @@ pub use pool::*;
 pub use pool_id::*;
 pub use terminal_utilities::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 pub enum OpaqueClass {
     Variable,
     Variant,

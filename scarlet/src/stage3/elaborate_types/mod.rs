@@ -57,11 +57,11 @@ impl Environment {
         if let Some(cached) = self.values[of].cached_type {
             cached
         } else {
-            self.write_debug_info();
+            self.put_debug_info();
             let typee = self.elaborate_type_from_scratch(of);
             let typee = self.reduce(typee);
             self.values[of].cached_type = Some(typee);
-            self.write_debug_info();
+            self.put_debug_info();
             typee
         }
     }
