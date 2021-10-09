@@ -58,7 +58,6 @@ impl Environment {
         if let Some(start) = self.values.first() {
             let mut id = start;
             loop {
-                println!("{:#?}", self);
                 self.reduce(id);
                 match self.values.next(id) {
                     Some(next) => id = next,
@@ -143,7 +142,7 @@ impl Environment {
                         return MatchResult::Uncertain;
                     }
                 }
-                todo!()
+                MatchResult::Match { subs: result_subs }
             }
             _ => MatchResult::Uncertain,
         }
@@ -196,9 +195,12 @@ impl Environment {
                 base,
                 substitutions,
             } => {
-                println!("{:#?}", self);
                 let subbed = self.substitute(base, &substitutions);
-                self.reduce(subbed)
+                if subbed == of {
+                    subbed
+                } else {
+                    self.reduce(subbed)
+                }
             }
         }
     }

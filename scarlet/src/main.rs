@@ -37,5 +37,7 @@ fn main() {
         println!("\n{} is", display.value_name);
         let value = stage2::completely_vomit_item(&s2_environment, display.vomited_root);
         println!("{}", value);
+        let value = stage2::completely_vomit_item(&s2_environment, display.vomited_type);
+        println!(":{}", value);
     }
 }

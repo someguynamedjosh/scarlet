@@ -20,9 +20,11 @@ impl Environment {
                 for (condition, value) in cases {
                     // TODO: type check
                     let condition_type = self.get_type(condition);
+                    let condition_vars = self.get_from_variables(condition_type);
                     let value_type = self.get_type(value);
-                    variables = variables.union(self.get_from_variables(value_type));
-                    the_value_type = Some(value_type)
+                    let value_vars = self.get_from_variables(value_type);
+                    variables = variables.union(value_vars.difference(&condition_vars));
+                    the_value_type = Some(self.remove_from_variables(value_type, condition_vars))
                 }
                 // TODO: Never type.
                 let value_type = the_value_type.unwrap();
@@ -30,14 +32,16 @@ impl Environment {
                 self.with_from_variables(value_type, &variables[..])
             }
             Value::Opaque { class, id, typee } => {
-                let type_deps = self.dependencies(typee);
-                let base = self.with_from_variables(typee, &type_deps[..]);
-                if class == OpaqueClass::Variable {
-                    let variable = id;
-                    self.gpv(Value::From { base, variable })
-                } else {
-                    base
+                let mut type_deps = self.dependencies(typee);
+                let (base, base_from) = self.split_from_type(typee);
+                for (id, _) in base_from {
+                    type_deps.push(id);
                 }
+                if class == OpaqueClass::Variable {
+                    type_deps.push(id);
+                    println!("{:#?}", type_deps);
+                }
+                self.with_from_variables(base, &type_deps[..])
             }
             Value::Substituting {
                 base,

@@ -19,6 +19,18 @@ impl Environment {
         self.get_or_push_value(value)
     }
 
+    pub fn remove_from_variables(
+        &mut self,
+        inn: ValueId,
+        variables_to_remove: Variables,
+    ) -> ValueId {
+        let mut result = inn;
+        for (var, _) in variables_to_remove {
+            result = self.remove_from_variable(result, var);
+        }
+        result
+    }
+
     pub fn remove_from_variable(&mut self, inn: ValueId, variable_to_remove: OpaqueId) -> ValueId {
         match &self.values[inn].value {
             Value::From { base, variable } => {

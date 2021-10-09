@@ -214,7 +214,11 @@ fn vomit_value_as_code(
     match value.value.clone() {
         s3::Value::BuiltinOperation(_) => todo!(),
         s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
-        s3::Value::From { base, variable } => todo!(),
+        s3::Value::From { base, variable } => {
+            let base = vomit_value(env, &env.values[base], target_env, display_path);
+            let value = vomit_opaque(env, variable, target_env, display_path);
+            target_env.push_item(Item::From { base, value })
+        }
         s3::Value::Match { base, cases } => {
             let base = vomit_value(env, &env.values[base], target_env, display_path);
             let mut vom_cases = Vec::new();
@@ -282,15 +286,19 @@ fn vomit(
     let name = path_to_string(display_path.clone(), original_root);
 
     let id = vomit_value(env, value, target, &display_path);
+    let typee = &env.values[value.cached_type.unwrap()];
+    let typee = vomit_value(env, typee, target, &display_path);
     DisplayResult {
         value_name: name.unwrap_or(format!("anonymous")),
         vomited_root: id,
+        vomited_type: typee,
     }
 }
 
 pub struct DisplayResult {
     pub value_name: String,
     pub vomited_root: s2::ItemId,
+    pub vomited_type: s2::ItemId,
 }
 
 impl s3::Environment {

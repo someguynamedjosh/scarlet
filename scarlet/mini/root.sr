@@ -15,10 +15,18 @@ defining{
     }
 
     defining{
-        bit is any{Bit}
-        new is instance_of{From{bit} Holder}
+        bit1 is any{Bit}
+        bit2 is any{Bit}
+        new is instance_of{From{bit1} From{bit2} Holder}
     }
     Holder is instance_of{TYPE}
+
+    anyh is any{Holder}
+
+    extract is anyh
+    matching{
+        on{Holder::new} Holder::bit1
+    }
 }
-Holder::new[Bit::zero]
+extract[Holder::new[Bit::zero]]
 displayed{}
