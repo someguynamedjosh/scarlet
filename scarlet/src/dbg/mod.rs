@@ -26,16 +26,21 @@ impl DebugTrace {
     }
 
     fn write(&mut self) {
-        let out_path = format!("debug/{:05}.sir", self.index);
+        let out_path = format!("debug/{}.sir", self.index);
         self.index += 1;
         let mut contents = format!(
             r#"{{
-  "trace": ["#
+  "events": ["#
         );
+        let mut first = true;
         for line in &self.trace {
+            if first {
+                first = false;
+            } else {
+                contents.push_str(",");
+            }
             contents.push_str("\n    ");
             contents.push_str(line);
-            contents.push_str(",");
         }
         contents.push_str("\n  ]");
         for (name, datum) in &self.data {
