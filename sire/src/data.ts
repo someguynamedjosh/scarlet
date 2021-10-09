@@ -19,6 +19,24 @@ export type StructuredEvent =
         body: Array<StructuredEvent>;
     };
 
+export type Id = { pool_id: number; index: number; }
+export type Value =
+| { BuiltinOperation: '' }
+| { BuiltinValue: 'OriginType' }
+| { From: { base: Id; variable: Id }}
+| { Match: { base: Id; cases: Array<[Id, Id]> }}
+| { Opaque: { class: 'Variable' | 'Variant', id: Id, typee: Id }}
+| { Substituting: { base: Id; target: Id, value: Id }}
+export type AnnotatedValue = {
+  cached_type: Id | null;
+  cached_reduction: Id | null;
+  value: Value;
+}
+export type Pool<T> = {id: number, items: Array<T>}
+export class Environment {
+  values: Map<Id, Value> = new Map()
+}
+
 function unflattenEvents (source: Array<InputEvent>): Array<StructuredEvent> {
   const c = {
     source,
@@ -64,16 +82,25 @@ function unflattenEvents (source: Array<InputEvent>): Array<StructuredEvent> {
 
 interface InputTrace {
     events: Array<InputEvent>;
+    stage3: {
+      values: Pool<Value>
+    }
 }
 
 export interface StructuredTrace {
     events: Array<StructuredEvent>;
+    stage3: {
+      values: Pool<Value>
+    }
 }
 
 export async function getTrace (): Promise<StructuredTrace> {
   const trace = await fetch('http://localhost:8000/1000.sir')
   const traceData: InputTrace = await trace.json()
   return {
-    events: unflattenEvents(traceData.events)
+    events: unflattenEvents(traceData.events),
+    stage3: {
+      values: traceData.stage3.values
+    }
   }
 }

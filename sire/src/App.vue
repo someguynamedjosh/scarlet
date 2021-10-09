@@ -20,4 +20,16 @@ export default defineComponent({
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
+
+.grey {
+  background: #ccc;
+}
+
+.green {
+  background: #bfb;
+}
+
+.spacer {
+  height: 5px;
+}
 </style>
