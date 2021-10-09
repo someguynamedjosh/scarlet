@@ -8,16 +8,20 @@ impl<'e, 'i> Context<'e, 'i> {
     ) -> s3::ValueId {
         let base = self.ingest(*base);
         let mut deps = self.environment.dependencies(base);
-        let mut result = base;
+        let mut new_subs = s3::Substitutions::new();
         for (target, value) in substitutions {
-            self.ingest_substitution(&mut result, &mut deps, target, value);
+            self.ingest_substitution(&mut new_subs, &mut deps, target, value);
         }
-        result
+        let value = s3::Value::Substituting {
+            base,
+            substitutions: new_subs,
+        };
+        self.gpv(value)
     }
 
     fn ingest_substitution(
         &mut self,
-        result: &mut s3::ValueId,
+        new_subs: &mut s3::Substitutions,
         deps: &mut Vec<s3::OpaqueId>,
         target: &Option<s2::ItemId>,
         value: &s2::ItemId,
@@ -35,10 +39,9 @@ impl<'e, 'i> Context<'e, 'i> {
             }
         };
         let value = self.ingest(*value);
-        *result = self.gpv(s3::Value::Substituting {
-            base: *result,
-            target,
-            value,
-        });
+        if new_subs.contains_key(&target) {
+            todo!("Nice error, same var replaced twice.");
+        }
+        new_subs.insert_no_replace(target, value);
     }
 }

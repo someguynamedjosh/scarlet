@@ -52,30 +52,29 @@ impl Environment {
     }
 
     fn condition_target(&mut self, condition: ValueId, targets_so_far: Targets) -> Target {
-        match &self.values[condition].value {
+        match self.values[condition].value.clone() {
             Value::Opaque { class, id, typee } => match class {
-                OpaqueClass::Variable => Target::BoundVariable(*id),
+                OpaqueClass::Variable => Target::BoundVariable(id),
                 OpaqueClass::Variant => {
-                    let deps = self.get_from_variables(*typee);
+                    let deps = self.get_from_variables(typee);
                     let mut values = targets_so_far;
                     for (dep, _) in deps {
                         if !values.iter().any(|(t, _)| *t == dep) {
                             values.push((dep, Target::BoundVariable(dep)));
                         }
                     }
-                    let id = *id;
                     Target::Variant { id, values }
                 }
             },
-            &Value::Substituting {
+            Value::Substituting {
                 base,
-                target,
-                value,
+                substitutions,
             } => {
-                let value = self.condition_target(value, vec![]);
-                let mut targets_so_far = targets_so_far;
-                targets_so_far.push((target, value));
-                self.condition_target(base, targets_so_far)
+                // let value = self.condition_target(value, vec![]);
+                // let mut targets_so_far = targets_so_far;
+                // targets_so_far.push((target, value));
+                // self.condition_target(base, targets_so_far)
+                todo!()
             }
             _ => {
                 if targets_so_far.len() == 0 {
@@ -88,15 +87,15 @@ impl Environment {
     }
 
     fn dereference_subs(&mut self, base: ValueId) -> (ValueId, Substitutions) {
-        if let &Value::Substituting {
+        if let Value::Substituting {
             base,
-            target,
-            value,
-        } = &self.values[base].value
+            substitutions,
+        } = self.values[base].value.clone()
         {
-            let (base, mut subs) = self.dereference_subs(base);
-            subs.push((target, value));
-            (base, subs)
+            // let (base, mut subs) = self.dereference_subs(base);
+            // subs.push((target, value));
+            // (base, subs)
+            todo!()
         } else {
             (base, vec![])
         }
@@ -200,19 +199,19 @@ impl Environment {
             }
             Value::Substituting {
                 base,
-                target,
-                value,
+                substitutions,
             } => {
-                let (base, target, value) = (*base, *target, *value);
-                let rbase = self.reduce(base);
-                let rvalue = self.reduce(value);
-                let subbed = self.substitute(rbase, target, rvalue);
-                if subbed == of {
-                    // Hacky way of preventing infinite loops when subbing
-                    // things in opaque values.
-                    return subbed;
-                }
-                self.reduce(subbed)
+                // let (base, target, value) = (*base, *target, *value);
+                // let rbase = self.reduce(base);
+                // let rvalue = self.reduce(value);
+                // let subbed = self.substitute(rbase, target, rvalue);
+                // if subbed == of {
+                //     // Hacky way of preventing infinite loops when subbing
+                //     // things in opaque values.
+                //     return subbed;
+                // }
+                // self.reduce(subbed)
+                todo!()
             }
         }
     }

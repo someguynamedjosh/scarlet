@@ -36,12 +36,13 @@ impl Environment {
     pub fn substitute(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
         let base = self.do_substitution(base, target, value);
         if self.dependencies(base).contains(&target) {
-            let value = Value::Substituting {
-                base,
-                target,
-                value,
-            };
-            self.gpv(value)
+            // let value = Value::Substituting {
+            //     base,
+            //     target,
+            //     value,
+            // };
+            // self.gpv(value)
+            todo!()
         } else {
             base
         }
@@ -49,9 +50,8 @@ impl Environment {
 
     fn do_substitution(&mut self, base: ValueId, target: OpaqueId, value: ValueId) -> ValueId {
         let base = self.reduce(base);
-        match &self.values[base].value {
+        match self.values[base].value.clone() {
             Value::Opaque { class, id, typee } => {
-                let (class, id, typee) = (*class, *id, *typee);
                 if id == target {
                     debug_assert_eq!(class, OpaqueClass::Variable);
                     let value_type = self.get_type(value);
@@ -73,7 +73,6 @@ impl Environment {
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => base,
             Value::From { base, variable } => {
-                let (base, variable) = (*base, *variable);
                 let base = self.substitute(base, target, value);
                 if variable == target {
                     let value_deps = self.dependencies(value);
@@ -87,8 +86,10 @@ impl Environment {
                     self.gpv(Value::From { base, variable })
                 }
             }
-            Value::Match { base, cases } => {
-                let (base, old_cases) = (*base, cases.clone());
+            Value::Match {
+                base,
+                cases: old_cases,
+            } => {
                 let base = self.substitute(base, target, value);
                 let mut cases = Vec::new();
                 for (condition, case_value) in old_cases {
@@ -98,18 +99,18 @@ impl Environment {
                 }
                 self.gpv(Value::Match { base, cases })
             }
-            &Value::Substituting {
+            Value::Substituting {
                 base: other_base,
-                target: other_target,
-                value: other_value,
+                substitutions,
             } => {
-                let other_base = self.do_substitution(other_base, target, value);
-                let other_value = self.do_substitution(other_value, target, value);
-                self.gpv(Value::Substituting {
-                    base: other_base,
-                    target: other_target,
-                    value: other_value,
-                })
+                // let other_base = self.do_substitution(other_base, target, value);
+                // let other_value = self.do_substitution(other_value, target, value);
+                // self.gpv(Value::Substituting {
+                //     base: other_base,
+                //     target: other_target,
+                //     value: other_value,
+                // })
+                todo!()
             }
         }
     }

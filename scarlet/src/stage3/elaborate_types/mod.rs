@@ -43,12 +43,9 @@ impl Environment {
             }
             Value::Substituting {
                 base,
-                target,
-                value,
+                substitutions,
             } => {
-                let (base, target, value) = (*base, *target, *value);
-                let base_type = self.get_type(base);
-                self.substitute(base_type, target, value)
+                todo!()
             }
         }
     }

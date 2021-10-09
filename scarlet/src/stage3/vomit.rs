@@ -211,27 +211,30 @@ fn vomit_value_as_code(
     target_env: &mut s2::Environment,
     display_path: &RelativePath,
 ) -> ItemId {
-    match &value.value {
+    match value.value.clone() {
         s3::Value::BuiltinOperation(_) => todo!(),
-        &s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
+        s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
         s3::Value::From { base, variable } => todo!(),
         s3::Value::Match { base, cases } => todo!(),
-        &s3::Value::Opaque { class, id, typee } => {
+        s3::Value::Opaque { class, id, typee } => {
             let id = target_env.new_opaque_value();
             let typee = vomit_value(env, &env.values[typee], target_env, display_path);
             target_env.push_item(Item::Opaque { class, id, typee })
         }
-        &s3::Value::Substituting {
+        s3::Value::Substituting {
             base,
-            target,
-            value,
+            substitutions,
         } => {
             let base = vomit_value(env, &env.values[base], target_env, display_path);
-            let target = vomit_opaque(env, target, target_env, display_path);
-            let value = vomit_value(env, &env.values[value], target_env, display_path);
+            let mut vomited_subs = Vec::new();
+            for (target, value) in substitutions {
+                let target = vomit_opaque(env, target, target_env, display_path);
+                let value = vomit_value(env, &env.values[value], target_env, display_path);
+                vomited_subs.push((Some(target), value));
+            }
             target_env.push_item(Item::Substituting {
                 base,
-                substitutions: vec![(Some(target), value)],
+                substitutions: vomited_subs,
             })
         }
     }

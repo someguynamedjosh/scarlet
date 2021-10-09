@@ -1,16 +1,19 @@
 use super::context::Context;
-use crate::{stage2::structure as s2, stage3::structure as s3};
+use crate::{
+    stage2::structure::{self as s2},
+    stage3::structure as s3,
+};
 
 pub(super) struct DereferencedItem {
     pub base: s2::ItemId,
-    pub subs: Vec<(s3::OpaqueId, s3::ValueId)>,
+    pub subs: s3::Substitutions,
 }
 
 impl DereferencedItem {
     fn wrapped_with(self, other: Self) -> Self {
         Self {
             base: self.base,
-            subs: [self.subs, other.subs].concat(),
+            subs: self.subs.union(other.subs),
         }
     }
 }
@@ -25,7 +28,7 @@ impl From<s2::ItemId> for DereferencedItem {
     fn from(value: s2::ItemId) -> Self {
         Self {
             base: value,
-            subs: Vec::new(),
+            subs: s3::Substitutions::new(),
         }
     }
 }
@@ -42,7 +45,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 if candidate == name {
                     return DereferencedItem {
                         base: *definition,
-                        subs: Vec::new(),
+                        subs: s3::Substitutions::new(),
                     };
                 }
             }

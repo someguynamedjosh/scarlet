@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use super::Environment;
 use crate::{
-    shared::{Id, OpaqueClass, OrderedSet},
+    shared::{Id, OpaqueClass, OrderedMap, OrderedSet},
     stage2::{
         self,
         structure::{BuiltinOperation, BuiltinValue},
@@ -10,6 +10,7 @@ use crate::{
     util::indented,
 };
 
+pub type Substitutions = OrderedMap<OpaqueId, ValueId>;
 pub type Variables = OrderedSet<OpaqueId>;
 
 pub type ValueId = Id<AnnotatedValue, 'L'>;
@@ -34,8 +35,7 @@ pub enum Value {
     },
     Substituting {
         base: ValueId,
-        target: OpaqueId,
-        value: ValueId,
+        substitutions: Substitutions,
     },
 }
 
