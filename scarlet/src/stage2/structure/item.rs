@@ -34,4 +34,8 @@ pub enum Item {
         base: ItemId,
         substitutions: Substitutions,
     },
+    TypeIs {
+        base: ItemId,
+        typee: ItemId,
+    }
 }

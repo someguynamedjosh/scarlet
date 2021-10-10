@@ -33,6 +33,7 @@ pub enum Value {
         id: OpaqueId,
         typee: ValueId,
     },
+    Placeholder(stage2::structure::ItemId),
     Substituting {
         base: ValueId,
         substitutions: Substitutions,

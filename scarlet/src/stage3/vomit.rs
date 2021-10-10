@@ -236,6 +236,7 @@ fn vomit_value_as_code(
             let typee = vomit_value(env, &env.values[typee], target_env, display_path);
             target_env.push_item(Item::Opaque { class, id, typee })
         }
+        s3::Value::Placeholder(..) => unreachable!(),
         s3::Value::Substituting {
             base,
             substitutions,

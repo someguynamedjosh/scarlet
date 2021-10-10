@@ -8,6 +8,7 @@ pub(super) struct Context<'e, 'i> {
     pub ingest_map: HashMap<s2::ItemId, s3::ValueId>,
     pub opaque_map: HashMap<s2::OpaqueId, (s3::OpaqueId, s2::ItemId)>,
     pub input: &'i s2::Environment,
+    pub stack: Vec<s2::ItemId>,
 }
 
 impl<'e, 'i> Context<'e, 'i> {
@@ -23,11 +24,6 @@ impl<'e, 'i> Context<'e, 'i> {
                 id,
                 ..
             } => Some(*id),
-            // TODO: This is dumb
-            s3::Value::Substituting { base, .. } => {
-                let base = *base;
-                self.extract_variable(base)
-            }
             _ => None,
         }
     }

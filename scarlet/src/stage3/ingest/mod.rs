@@ -18,6 +18,7 @@ pub fn ingest(s2_env: &s2::Environment, input: s2::ItemId) -> (s3::Environment, 
         ingest_map: HashMap::new(),
         opaque_map: HashMap::new(),
         input: s2_env,
+        stack: Vec::new(),
     };
     let value = ctx.ingest(input);
     (environment, value)
@@ -37,9 +38,13 @@ impl<'e, 'i> Context<'e, 'i> {
     }
 
     pub fn ingest(&mut self, input: s2::ItemId) -> s3::ValueId {
+        if self.stack.contains(&input) {
+            return self.environment.gpv(s3::Value::Placeholder(input));
+        }
         if let Some(result) = self.ingest_map.get(&input) {
             return *result;
         }
+        self.stack.push(input);
         let mut referenced = false;
         let result = match &self.input.items[input].item {
             s2::Item::BuiltinOperation(op) => {
@@ -89,6 +94,13 @@ impl<'e, 'i> Context<'e, 'i> {
                 base,
                 substitutions,
             } => self.ingest_substituting(base, substitutions),
+            s2::Item::TypeIs { base, typee } => {
+                let base = self.ingest(*base);
+                let typee = self.ingest(*typee);
+                let typee = self.environment.reduce(typee);
+                self.environment.values[base].cached_type = Some(typee);
+                base
+            }
         };
         self.ingest_map.insert(input, result);
         if referenced {
@@ -102,6 +114,8 @@ impl<'e, 'i> Context<'e, 'i> {
                 .display_requested_from
                 .insert_or_replace(input, ());
         }
+        let popped = self.stack.pop();
+        debug_assert_eq!(popped, Some(input));
         result
     }
 }

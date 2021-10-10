@@ -67,6 +67,16 @@ impl Environment {
         }
     }
 
+    pub fn reduce(&mut self, id: ValueId) -> ValueId {
+        let mut reducer = Reducer {
+            env: self,
+            stack: Vec::new(),
+        };
+        let reduced = reducer.reduce(id);
+        debug_assert_eq!(reducer.stack.len(), 0);
+        reduced
+    }
+
     fn split_into_base_and_substitutions(
         &mut self,
         unsplit: ValueId,
@@ -185,18 +195,25 @@ impl Environment {
             _ => MatchResult::Uncertain,
         }
     }
+}
 
+struct Reducer<'a> {
+    env: &'a mut Environment,
+    stack: Vec<ValueId>,
+}
+
+impl<'a> Reducer<'a> {
     fn reduce_match(&mut self, base: ValueId, old_cases: Vec<(ValueId, ValueId)>) -> ValueId {
         let base = self.reduce(base);
         let mut cases = Vec::new();
         for (condition, value) in old_cases {
             let condition = self.reduce(condition);
-            let condition_deps = self.dependencies(condition);
-            match self.matches(base, condition, &condition_deps) {
+            let condition_deps = self.env.dependencies(condition);
+            match self.env.matches(base, condition, &condition_deps) {
                 MatchResult::Match { subs } => {
                     if cases.len() == 0 {
                         let mut value = value;
-                        value = self.substitute(value, &subs);
+                        value = self.env.substitute(value, &subs);
                         return self.reduce(value);
                     } else {
                         let value = self.reduce(value);
@@ -211,24 +228,25 @@ impl Environment {
                 }
             }
         }
-        self.gpv(Value::Match { base, cases })
+        self.env.gpv(Value::Match { base, cases })
     }
 
     fn reduce_from_scratch(&mut self, of: ValueId) -> ValueId {
-        match self.values[of].value.clone() {
+        match self.env.values[of].value.clone() {
             Value::BuiltinOperation(_) => todo!(),
             Value::BuiltinValue(..) => of,
             Value::From { base, variable } => {
                 let base = self.reduce(base);
                 let value = Value::From { base, variable };
-                self.gpv(value)
+                self.env.gpv(value)
             }
             Value::Match { base, cases } => self.reduce_match(base, cases),
             Value::Opaque { class, id, typee } => {
                 let typee = self.reduce(typee);
                 let value = Value::Opaque { class, id, typee };
-                self.gpv(value)
+                self.env.gpv(value)
             }
+            Value::Placeholder(..) => unreachable!(),
             Value::Substituting {
                 base,
                 substitutions,
@@ -237,7 +255,7 @@ impl Environment {
                     .into_iter()
                     .map(|(t, v)| (t, self.reduce(v)))
                     .collect();
-                let subbed = self.substitute(base, &rsubs);
+                let subbed = self.env.substitute(base, &rsubs);
                 if subbed == of {
                     subbed
                 } else {
@@ -248,34 +266,38 @@ impl Environment {
     }
 
     pub fn reduce(&mut self, of: ValueId) -> ValueId {
-        if let Some(cached) = self.values[of].cached_reduction {
+        if self.stack.contains(&of) {
+            of
+        } else if let Some(cached) = self.env.values[of].cached_reduction {
             cached
         } else {
+            self.stack.push(of);
             let reduced = self.reduce_from_scratch(of);
-            self.values[of].cached_reduction = Some(reduced);
-            self.values[reduced].cached_reduction = Some(reduced);
-            if self.values[reduced].defined_at.is_empty() {
-                self.values[reduced].defined_at = self.values[of].defined_at.clone();
+            self.env.values[of].cached_reduction = Some(reduced);
+            self.env.values[reduced].cached_reduction = Some(reduced);
+            if self.env.values[reduced].defined_at.is_empty() {
+                self.env.values[reduced].defined_at = self.env.values[of].defined_at.clone();
             }
-            self.values[reduced].referenced_at = self.values[reduced]
+            self.env.values[reduced].referenced_at = self.env.values[reduced]
                 .referenced_at
                 .clone()
-                .union(self.values[of].referenced_at.clone());
-            for (from, _) in self.values[of].display_requested_from.take() {
-                self.values[reduced]
+                .union(self.env.values[of].referenced_at.clone());
+            for (from, _) in self.env.values[of].display_requested_from.take() {
+                self.env.values[reduced]
                     .display_requested_from
                     .insert_or_replace(from, ());
             }
             debug_assert_eq!(self.reduce(reduced), reduced);
-            let typee = self.get_type(of);
-            let rtype = self.get_type(reduced);
-            if !self.type_is_base_of_other(rtype, typee) {
-                println!("{:#?}", self);
+            let typee = self.env.get_type(of);
+            let rtype = self.env.get_type(reduced);
+            if !self.env.type_is_base_of_other(rtype, typee) {
+                println!("{:#?}", self.env);
                 println!("{:?} was reduced to {:?}", of, reduced);
                 println!("but the new type {:?}", rtype);
                 println!("is not a base of the original type {:?}", typee);
                 panic!();
             }
+            self.stack.pop();
             reduced
         }
     }

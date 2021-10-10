@@ -27,6 +27,7 @@ pub fn vomit(env: &Environment, item: ItemId) -> Expression {
             base,
             substitutions,
         } => substituting::vomit(env, substitutions, *base),
+        Item::TypeIs { base, typee } => vomit_type_is(env, *base, *typee),
     }
 }
 
@@ -93,4 +94,12 @@ fn vomit_opaque(env: &Environment, class: OpaqueClass, typee: ItemId) -> Express
     };
     let construct = helpers::single_expr_construct(label, typee);
     helpers::just_root_expression(construct)
+}
+
+fn vomit_type_is(env: &Environment, base: ItemId, typee: ItemId) -> Expression {
+    let mut expr = vomit(env, base);
+    let typee = vomit(env, typee);
+    let construct = helpers::single_expr_construct("type_is", typee);
+    expr.posts.push(construct);
+    expr
 }

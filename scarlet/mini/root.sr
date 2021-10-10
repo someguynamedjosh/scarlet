@@ -2,44 +2,25 @@ defining{
     TYPE is builtin_item{TYPE}
 
     defining{
-        zero is instance_of{Bit}
-        one is instance_of{Bit}
+        zero is instance_of{PeanoNumber}
+        defining{
+            of is any{PeanoNumber}
+        }
+        succ is instance_of{From{of} PeanoNumber}
+
+        defining{
+            x is any{PeanoNumber}
+            xm1 is any{PeanoNumber}
+            y is any{PeanoNumber}
+        }
+        sum is x 
+        matching{
+            on{zero} zero
+            on{succ[xm1]} sum[xm1 y]
+        }
+        type_is{From{x} From{y} PeanoNumber}
     }
-    Bit is instance_of{TYPE}
-
-    x is any{Bit}
-    not is 
-    x matching{
-        on{Bit::zero} Bit::one
-        on{Bit::one} Bit::zero
-    }
-
-    defining{
-        bit1 is any{Bit}
-        bit2 is any{Bit}
-        new is instance_of{From{bit1} From{bit2} Holder}
-    }
-    Holder is instance_of{TYPE}
-
-    defining{
-        holder is any{Holder}
-        bit is any{Bit}
-        new is instance_of{From{holder} From{bit} MetaHolder}
-    }
-    MetaHolder is instance_of{TYPE}
-
-    anyh is any{Holder}
-    a is any{Bit}
-    b is any{Bit}
-    c is any{Bit}
-
+    PeanoNumber is instance_of{TYPE}
 }
-MetaHolder::new
-matching{
-    on{MetaHolder::new[Holder::new[a b] c]} c
-}
-[
-    Holder::new[Bit::zero b]
-    a
-]
+TYPE
 displayed{}
