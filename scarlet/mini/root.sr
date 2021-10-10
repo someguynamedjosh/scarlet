@@ -23,17 +23,23 @@ defining{
 
     defining{
         holder is any{Holder}
-        new is instance_of{From{holder} MetaHolder}
+        bit is any{Bit}
+        new is instance_of{From{holder} From{bit} MetaHolder}
     }
     MetaHolder is instance_of{TYPE}
 
     anyh is any{Holder}
     a is any{Bit}
     b is any{Bit}
+    c is any{Bit}
 
 }
-MetaHolder::new[Holder::new[Bit::zero Bit::one]]
+MetaHolder::new
 matching{
-    on{MetaHolder::new[Holder::new[a b]]} b
+    on{MetaHolder::new[Holder::new[a b] c]} c
 }
+[
+    Holder::new[Bit::zero b]
+    a
+]
 displayed{}

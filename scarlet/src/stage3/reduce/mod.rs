@@ -1,6 +1,6 @@
 use std::ops::{ControlFlow, FromResidual, Try};
 
-use super::structure::{AnnotatedValue, Environment, OpaqueId, Substitutions, Value, ValueId};
+use super::structure::{Environment, OpaqueId, Substitutions, Value, ValueId};
 use crate::shared::{OpaqueClass, OrderedMap};
 
 #[derive(Clone, Debug)]
@@ -67,13 +67,6 @@ impl Environment {
         }
     }
 
-    fn is_var(&self, value: &AnnotatedValue, var: OpaqueId) -> bool {
-        match &value.value {
-            Value::Opaque { id, .. } => *id == var,
-            _ => false,
-        }
-    }
-
     fn split_into_base_and_substitutions(
         &mut self,
         unsplit: ValueId,
@@ -97,6 +90,45 @@ impl Environment {
             }
             _ => (unsplit, Default::default()),
         }
+    }
+
+    fn substitution_matches_condition(
+        &mut self,
+        base: ValueId,
+        substitutions: Substitutions,
+        condition: ValueId,
+        vars_to_bind: &[OpaqueId],
+    ) -> MatchResult {
+        let (base_cond, cond_vars) = self.split_into_base_and_substitutions(condition);
+        let mut result_subs = self.matches(base, base_cond, vars_to_bind)?;
+        for (target, cond_value) in cond_vars {
+            if let Some(&substitution) = substitutions.get(&target) {
+                // If the base being matched replaces target with substitution...
+                if let Some(cond_value) = cond_value {
+                    // If the condition replaces target with cond_value...
+                    // Then try to match substitution using cond_value as the condition.
+                    let subs_here = self.matches(substitution, cond_value, vars_to_bind)?;
+                    for (target, value) in subs_here {
+                        if result_subs.contains_key(&target) {
+                            todo!("Nice error, pattern contains same variable twice.");
+                        }
+                        result_subs.insert_no_replace(target, value);
+                    }
+                } else {
+                    // If the condition is just a variable...
+                    if result_subs.contains_key(&target) {
+                        todo!("Nice error, pattern contains same variable twice.");
+                    }
+                    // Then just replace that variable with the base value.
+                    result_subs.insert_no_replace(target, substitution);
+                }
+            } else if cond_value.is_some() {
+                return MatchResult::Uncertain;
+            } else {
+                continue;
+            }
+        }
+        MatchResult::Match { subs: result_subs }
     }
 
     fn matches(
@@ -149,38 +181,7 @@ impl Environment {
                     substitutions,
                 },
                 _,
-            ) => {
-                let (base_cond, cond_vars) = self.split_into_base_and_substitutions(condition);
-                let mut result_subs = self.matches(base, base_cond, vars_to_bind)?;
-                for (target, cond_value) in cond_vars {
-                    if let Some(&substitution) = substitutions.get(&target) {
-                        // If the base being matched replaces target with substitution...
-                        if let Some(cond_value) = cond_value {
-                            // If the condition replaces target with cond_value...
-                            // Then try to match substitution using cond_value as the condition.
-                            let subs_here = self.matches(substitution, cond_value, vars_to_bind)?;
-                            for (target, value) in subs_here {
-                                if result_subs.contains_key(&target) {
-                                    todo!("Nice error, pattern contains same variable twice.");
-                                }
-                                result_subs.insert_no_replace(target, value);
-                            }
-                        } else {
-                            // If the condition is just a variable...
-                            if result_subs.contains_key(&target) {
-                                todo!("Nice error, pattern contains same variable twice.");
-                            }
-                            // Then just replace that variable with the base value.
-                            result_subs.insert_no_replace(target, substitution);
-                        }
-                    } else if cond_value.is_some() {
-                        return MatchResult::Uncertain;
-                    } else {
-                        continue;
-                    }
-                }
-                MatchResult::Match { subs: result_subs }
-            }
+            ) => self.substitution_matches_condition(base, substitutions, condition, vars_to_bind),
             _ => MatchResult::Uncertain,
         }
     }
@@ -232,7 +233,11 @@ impl Environment {
                 base,
                 substitutions,
             } => {
-                let subbed = self.substitute(base, &substitutions);
+                let rsubs = substitutions
+                    .into_iter()
+                    .map(|(t, v)| (t, self.reduce(v)))
+                    .collect();
+                let subbed = self.substitute(base, &rsubs);
                 if subbed == of {
                     subbed
                 } else {

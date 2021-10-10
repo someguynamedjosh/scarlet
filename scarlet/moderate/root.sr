@@ -6,5 +6,5 @@ defining{
     two is 3U::new[f t f]
     three is 3U::new[f t t]
 }
-3U::sum[one two]
+3U::sum[3U::sum[two two] one]
 displayed{}
