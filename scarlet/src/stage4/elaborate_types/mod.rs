@@ -43,6 +43,10 @@ impl Environment {
                 }
                 self.with_from_variables(base, &type_deps[..])
             }
+            Value::SelfReference { .. } => {
+                println!("{:#?}", self);
+                todo!("{:?}", of)
+            },
             Value::Substituting {
                 base,
                 substitutions,

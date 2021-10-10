@@ -92,6 +92,7 @@ impl Environment {
                 }
                 self.gpv(Value::Match { base, cases })
             }
+            Value::SelfReference { .. } => todo!(),
             Value::Substituting {
                 base: other_base,
                 substitutions: other_substitutions,

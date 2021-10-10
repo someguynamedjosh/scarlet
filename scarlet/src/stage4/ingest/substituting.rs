@@ -7,10 +7,9 @@ impl<'e, 'i> Context<'e, 'i> {
         substitutions: s3::Substitutions,
     ) -> s4::ValueId {
         let base = self.ingest(base);
-        let mut deps = self.environment.dependencies(base);
         let mut new_subs = s4::Substitutions::new();
         for (target, value) in substitutions {
-            self.ingest_substitution(&mut new_subs, &mut deps, target, value);
+            self.ingest_substitution(&mut new_subs, target, value);
         }
         let value = s4::Value::Substituting {
             base,
@@ -22,26 +21,11 @@ impl<'e, 'i> Context<'e, 'i> {
     fn ingest_substitution(
         &mut self,
         new_subs: &mut s4::Substitutions,
-        deps: &mut Vec<s4::OpaqueId>,
         target: Option<s3::ValueId>,
         value: s3::ValueId,
     ) {
-        let target = if let Some(target) = target {
-            self.resolve_variable(target)
-                .expect("TODO: Nice error, not a variable")
-        } else {
-            if deps.len() == 0 {
-                return;
-            } else {
-                let target = deps[0];
-                deps.remove(0);
-                target
-            }
-        };
+        let target = target.map(|t| self.ingest(t));
         let value = self.ingest(value);
-        if new_subs.contains_key(&target) {
-            todo!("Nice error, same var replaced twice.");
-        }
-        new_subs.insert_no_replace(target, value);
+        new_subs.push((target, value));
     }
 }

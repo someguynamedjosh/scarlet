@@ -36,8 +36,10 @@ impl<'e, 'i> Context<'e, 'i> {
             return *result;
         }
         if self.stack.contains(&input) {
-            println!("{:#?}", self);
-            // todo!()
+            return self.gpv(s4::Value::SelfReference {
+                original_id: input,
+                self_id: None,
+            });
         }
         self.stack.push(input);
         let result = match self.input.values[input].value.clone().unwrap() {
@@ -47,10 +49,9 @@ impl<'e, 'i> Context<'e, 'i> {
             }
             s3::Value::BuiltinValue(value) => self.gpv(s4::Value::BuiltinValue(value)),
             s3::Value::From { base, value } => {
-                let value = self.ingest(value);
-                let variables = self.environment.dependencies(value);
                 let base = self.ingest(base);
-                self.environment.with_from_variables(base, &variables[..])
+                let value = self.ingest(value);
+                self.gpv(s4::Value::From { base, value })
             }
             s3::Value::Match {
                 base,
@@ -73,7 +74,9 @@ impl<'e, 'i> Context<'e, 'i> {
             s3::Value::TypeIs { base, typee } => {
                 let base = self.ingest(base);
                 let typee = self.ingest(typee);
-                let typee = self.environment.reduce(typee);
+                if self.environment.values[base].cached_type.is_some() {
+                    todo!()
+                }
                 self.environment.values[base].cached_type = Some(typee);
                 base
             }

@@ -246,6 +246,7 @@ impl<'a> Reducer<'a> {
                 let value = Value::Opaque { class, id, typee };
                 self.env.gpv(value)
             }
+            Value::SelfReference { .. } => todo!(),
             Value::Substituting {
                 base,
                 substitutions,

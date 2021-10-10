@@ -3,9 +3,10 @@ use serde::Serialize;
 use crate::{
     shared::{Id, OpaqueClass, OrderedMap, OrderedSet},
     stage2::structure::{BuiltinOperation, BuiltinValue},
+    stage3,
 };
 
-pub type Substitutions = OrderedMap<OpaqueId, ValueId>;
+pub type Substitutions = Vec<(Option<ValueId>, ValueId)>;
 pub type Variables = OrderedSet<OpaqueId>;
 
 pub type ValueId = Id<AnnotatedValue, 'L'>;
@@ -17,7 +18,7 @@ pub enum Value {
     BuiltinValue(BuiltinValue),
     From {
         base: ValueId,
-        variable: OpaqueId,
+        value: ValueId,
     },
     Match {
         base: ValueId,
@@ -27,6 +28,10 @@ pub enum Value {
         class: OpaqueClass,
         id: OpaqueId,
         typee: ValueId,
+    },
+    SelfReference {
+        original_id: stage3::structure::ValueId,
+        self_id: Option<ValueId>,
     },
     Substituting {
         base: ValueId,
