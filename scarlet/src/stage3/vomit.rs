@@ -1,7 +1,6 @@
 use super::structure::OpaqueId;
 use crate::{
-    shared::OpaqueClass,
-    stage2::structure::{self as s2, BuiltinValue, Item, ItemId},
+    stage2::structure::{self as s2, Item, ItemId},
     stage3::structure as s3,
 };
 
@@ -231,7 +230,11 @@ fn vomit_value_as_code(
             let cases = vom_cases;
             target_env.push_item(Item::Match { base, cases })
         }
-        s3::Value::Opaque { class, id, typee } => {
+        s3::Value::Opaque {
+            class,
+            id: _,
+            typee,
+        } => {
             let id = target_env.new_opaque_value();
             let typee = vomit_value(env, &env.values[typee], target_env, display_path);
             target_env.push_item(Item::Opaque { class, id, typee })

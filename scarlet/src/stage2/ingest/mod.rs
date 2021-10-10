@@ -1,4 +1,4 @@
-use super::structure::{Environment, Item, ItemId};
+use super::structure::{Environment, ItemId};
 use crate::stage1::structure::{construct::Construct, expression::Expression};
 
 mod postfix;

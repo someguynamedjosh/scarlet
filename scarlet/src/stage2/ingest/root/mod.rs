@@ -6,8 +6,8 @@ use crate::{
 mod any;
 mod builtin_item;
 mod identifier;
-mod u8;
 mod instance;
+mod u8;
 
 pub fn ingest(env: &mut Environment, root: Construct) -> ItemId {
     match &root.label[..] {

@@ -1,11 +1,8 @@
 use super::helpers;
 use crate::{
     shared::OpaqueClass,
-    stage1::structure::{construct::Construct, expression::Expression},
-    stage2::{
-        completely_vomit_item,
-        structure::{BuiltinOperation, BuiltinValue, Environment, Item, ItemId},
-    },
+    stage1::structure::expression::Expression,
+    stage2::structure::{BuiltinOperation, BuiltinValue, Environment, Item, ItemId},
 };
 
 mod defining;

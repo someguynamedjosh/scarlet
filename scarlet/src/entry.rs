@@ -1,5 +1,4 @@
 use std::{
-    ffi::OsString,
     path::{Path, PathBuf},
     str::FromStr,
 };

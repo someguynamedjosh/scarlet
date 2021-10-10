@@ -1,13 +1,11 @@
 use serde::Serialize;
 
-use super::Environment;
 use crate::{
     shared::{Id, OpaqueClass, OrderedMap, OrderedSet},
     stage2::{
         self,
         structure::{BuiltinOperation, BuiltinValue},
     },
-    util::indented,
 };
 
 pub type Substitutions = OrderedMap<OpaqueId, ValueId>;

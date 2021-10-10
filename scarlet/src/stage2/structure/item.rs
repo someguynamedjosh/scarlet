@@ -1,5 +1,5 @@
 use super::{BuiltinOperation, BuiltinValue, ItemId, OpaqueId};
-use crate::shared::{Id, OpaqueClass, OrderedMap, OrderedSet};
+use crate::shared::{OpaqueClass, OrderedMap};
 
 pub type Definitions = OrderedMap<String, ItemId>;
 pub type Substitutions = Vec<(Option<ItemId>, ItemId)>;
@@ -37,5 +37,5 @@ pub enum Item {
     TypeIs {
         base: ItemId,
         typee: ItemId,
-    }
+    },
 }

@@ -1,4 +1,4 @@
-use super::structure::{Environment, ValueId, Variables};
+use super::structure::{Environment, ValueId};
 use crate::{shared::OpaqueClass, stage2::structure::BuiltinValue, stage3::structure::Value};
 
 impl Environment {

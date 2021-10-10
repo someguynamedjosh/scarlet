@@ -1,6 +1,6 @@
 use crate::stage1::{
     ingest::{
-        construct::{explicit, helpers, postfix_shorthands, root_shorthands},
+        construct::{explicit, postfix_shorthands, root_shorthands},
         nom_prelude::*,
     },
     structure::{

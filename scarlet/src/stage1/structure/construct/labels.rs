@@ -1,6 +1,13 @@
 pub const PREFIX_CONSTRUCT_LABELS: &[&str] = &["defining", "FromValues", "on", "target"];
-pub const ROOT_CONSTRUCT_LABELS: &[&str] = &["identifier", "any", "u8", "instance_of", "builtin_item"];
-pub const POSTFIX_CONSTRUCT_LABELS: &[&str] = &["displayed", "matching", "same_instance", "substituting", "type_is"];
+pub const ROOT_CONSTRUCT_LABELS: &[&str] =
+    &["identifier", "any", "u8", "instance_of", "builtin_item"];
+pub const POSTFIX_CONSTRUCT_LABELS: &[&str] = &[
+    "displayed",
+    "matching",
+    "same_instance",
+    "substituting",
+    "type_is",
+];
 const TEXT_CONSTRUCT_LABELS: &[&str] = &["identifier", "u8"];
 const ALIASES: &[(&str, &str)] = &[
     ("def", "defining"),

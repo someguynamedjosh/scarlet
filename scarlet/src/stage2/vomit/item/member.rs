@@ -1,5 +1,8 @@
 use super::helpers;
-use crate::{stage1::structure::expression::Expression, stage2::structure::{Environment, Item, ItemId}};
+use crate::{
+    stage1::structure::expression::Expression,
+    stage2::structure::{Environment, ItemId},
+};
 
 pub fn vomit(env: &Environment, base: ItemId, name: &String) -> Expression {
     let mut base = super::vomit(env, base);

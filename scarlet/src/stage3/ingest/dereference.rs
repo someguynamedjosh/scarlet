@@ -40,7 +40,11 @@ impl<'e, 'i> Context<'e, 'i> {
         in_scope: s2::ItemId,
     ) -> DereferencedItem {
         let scope = &self.input.items[in_scope];
-        if let s2::Item::Defining { base, definitions } = &scope.item {
+        if let s2::Item::Defining {
+            base: _,
+            definitions,
+        } = &scope.item
+        {
             for (candidate, definition) in definitions {
                 if candidate == name {
                     return DereferencedItem {
