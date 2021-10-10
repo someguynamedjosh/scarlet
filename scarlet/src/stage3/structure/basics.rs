@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-pub type Substitutions = OrderedMap<OpaqueId, ValueId>;
+pub type Substitutions = Vec<(Option<ValueId>, ValueId)>;
 pub type Variables = OrderedSet<OpaqueId>;
 
 pub type ValueId = Id<AnnotatedValue, 'L'>;
@@ -20,7 +20,7 @@ pub enum Value {
     BuiltinValue(BuiltinValue),
     From {
         base: ValueId,
-        variable: OpaqueId,
+        value: ValueId,
     },
     Match {
         base: ValueId,
@@ -35,6 +35,10 @@ pub enum Value {
         base: ValueId,
         substitutions: Substitutions,
     },
+    TypeIs {
+        base: ValueId,
+        typee: ValueId,
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize)]
