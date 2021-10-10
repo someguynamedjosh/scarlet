@@ -1,7 +1,7 @@
 use std::ops::{ControlFlow, FromResidual, Try};
 
 use super::structure::{AnnotatedValue, Environment, OpaqueId, Substitutions, Value, ValueId};
-use crate::shared::OpaqueClass;
+use crate::shared::{OpaqueClass, OrderedMap};
 
 #[derive(Clone, Debug)]
 enum MatchResult {
@@ -74,6 +74,31 @@ impl Environment {
         }
     }
 
+    fn split_into_base_and_substitutions(
+        &mut self,
+        unsplit: ValueId,
+    ) -> (ValueId, OrderedMap<OpaqueId, Option<ValueId>>) {
+        match self.values[unsplit].value.clone() {
+            Value::Opaque { .. } => {
+                let deps = self.dependencies(unsplit);
+                let deps_as_subs = deps.into_iter().map(|d| (d, None)).collect();
+                (unsplit, deps_as_subs)
+            }
+            Value::Substituting {
+                base,
+                substitutions,
+            } => {
+                let (full_base, base_subs) = self.split_into_base_and_substitutions(base);
+                let substitutions = substitutions
+                    .into_iter()
+                    .map(|s| (s.0, Some(s.1)))
+                    .collect();
+                (full_base, base_subs.union(substitutions))
+            }
+            _ => (unsplit, Default::default()),
+        }
+    }
+
     fn matches(
         &mut self,
         base: ValueId,
@@ -123,23 +148,35 @@ impl Environment {
                     base,
                     substitutions,
                 },
-                Value::Opaque {
-                    class: OpaqueClass::Instance,
-                    typee,
-                    ..
-                },
+                _,
             ) => {
-                let mut result_subs = self.matches(base, condition, vars_to_bind)?;
-                let type_vars = self.get_from_variables(typee);
-                for (target, value) in substitutions {
-                    if !type_vars.contains_key(&target) {
-                        continue;
-                    } else if result_subs.contains_key(&target) {
-                        todo!("Nice error, cannot bind to the same variable multiple times.");
-                    } else if vars_to_bind.contains(&target) {
-                        result_subs.insert_no_replace(target, value);
-                    } else {
+                let (base_cond, cond_vars) = self.split_into_base_and_substitutions(condition);
+                let mut result_subs = self.matches(base, base_cond, vars_to_bind)?;
+                for (target, cond_value) in cond_vars {
+                    if let Some(&substitution) = substitutions.get(&target) {
+                        // If the base being matched replaces target with substitution...
+                        if let Some(cond_value) = cond_value {
+                            // If the condition replaces target with cond_value...
+                            // Then try to match substitution using cond_value as the condition.
+                            let subs_here = self.matches(substitution, cond_value, vars_to_bind)?;
+                            for (target, value) in subs_here {
+                                if result_subs.contains_key(&target) {
+                                    todo!("Nice error, pattern contains same variable twice.");
+                                }
+                                result_subs.insert_no_replace(target, value);
+                            }
+                        } else {
+                            // If the condition is just a variable...
+                            if result_subs.contains_key(&target) {
+                                todo!("Nice error, pattern contains same variable twice.");
+                            }
+                            // Then just replace that variable with the base value.
+                            result_subs.insert_no_replace(target, substitution);
+                        }
+                    } else if cond_value.is_some() {
                         return MatchResult::Uncertain;
+                    } else {
+                        continue;
                     }
                 }
                 MatchResult::Match { subs: result_subs }
