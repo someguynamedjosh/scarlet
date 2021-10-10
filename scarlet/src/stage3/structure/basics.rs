@@ -43,12 +43,7 @@ pub enum Value {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct AnnotatedValue {
-    pub cached_type: Option<ValueId>,
-    pub cached_reduction: Option<ValueId>,
-    pub defined_at: OrderedSet<stage2::structure::ItemId>,
-    pub referenced_at: OrderedSet<stage2::structure::ItemId>,
-    pub display_requested_from: OrderedSet<stage2::structure::ItemId>,
-    pub value: Value,
+    pub value: Option<Value>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]

@@ -21,17 +21,19 @@ impl Environment {
 
     pub fn get_or_push_value(&mut self, value: Value) -> ValueId {
         for (id, candidate) in &self.values {
-            if candidate.value == value {
+            if candidate.value.as_ref() == Some(&value) {
                 return id;
             }
         }
-        self.values.push(AnnotatedValue {
-            cached_reduction: None,
-            cached_type: None,
-            defined_at: OrderedSet::new(),
-            referenced_at: OrderedSet::new(),
-            display_requested_from: OrderedSet::new(),
-            value,
-        })
+        self.values.push(AnnotatedValue { value: Some(value) })
+    }
+
+    pub fn push_undefined_value(&mut self) -> ValueId {
+        self.values.push(AnnotatedValue { value: None })
+    }
+
+    pub fn define_value(&mut self, id: ValueId, definition: Value) {
+        assert!(self.values[id].value.is_none());
+        self.values[id].value = Some(definition)
     }
 }
