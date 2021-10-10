@@ -1,5 +1,5 @@
 use super::structure::{Environment, ValueId};
-use crate::{shared::OpaqueClass, stage2::structure::BuiltinValue, stage3::structure::Value};
+use crate::{shared::OpaqueClass, stage2::structure::BuiltinValue, stage4::structure::Value};
 
 impl Environment {
     fn elaborate_type_from_scratch(&mut self, of: ValueId) -> ValueId {
@@ -43,7 +43,7 @@ impl Environment {
                 }
                 self.with_from_variables(base, &type_deps[..])
             }
-            Value::Placeholder(..) => unreachable!(),
+            Value::Placeholder(id) => unreachable!("{:?}", id),
             Value::Substituting {
                 base,
                 substitutions,

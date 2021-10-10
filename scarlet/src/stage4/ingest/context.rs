@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{shared::OpaqueClass, stage2::structure as s2, stage3::structure as s3};
+use crate::{shared::OpaqueClass, stage2::structure as s2, stage4::structure as s3};
 
 #[derive(Debug)]
 pub(super) struct Context<'e, 'i> {

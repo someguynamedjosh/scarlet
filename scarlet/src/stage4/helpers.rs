@@ -1,5 +1,5 @@
 use super::structure::{Environment, OpaqueId, ValueId, Variables};
-use crate::{stage2::structure::BuiltinValue, stage3::structure::Value};
+use crate::{stage2::structure::BuiltinValue, stage4::structure::Value};
 
 impl Environment {
     pub fn gp_builtin_value(&mut self, value: BuiltinValue) -> ValueId {

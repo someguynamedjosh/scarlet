@@ -1,7 +1,7 @@
 use super::structure::OpaqueId;
 use crate::{
     stage2::structure::{self as s2, Item, ItemId},
-    stage3::structure as s3,
+    stage4::structure as s3,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -1,7 +1,7 @@
 use super::context::Context;
 use crate::{
     stage2::structure::{self as s2},
-    stage3::structure as s3,
+    stage4::structure as s3,
 };
 
 pub(super) struct DereferencedItem {

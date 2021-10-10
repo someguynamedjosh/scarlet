@@ -1,5 +1,5 @@
 use super::structure::{Environment, Substitutions, ValueId};
-use crate::{shared::OpaqueClass, stage3::structure::Value};
+use crate::{shared::OpaqueClass, stage4::structure::Value};
 
 impl Environment {
     pub fn type_is_base_of_other(&self, base_id: ValueId, other_id: ValueId) -> bool {

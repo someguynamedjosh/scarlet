@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use self::{context::Context, dereference::DereferencedItem};
-use crate::{stage2::structure as s2, stage3::structure as s3};
+use crate::{stage2::structure as s2, stage4::structure as s3};
 
 mod context;
 mod defining;
@@ -38,11 +38,11 @@ impl<'e, 'i> Context<'e, 'i> {
     }
 
     pub fn ingest(&mut self, input: s2::ItemId) -> s3::ValueId {
-        if self.stack.contains(&input) {
-            return self.environment.gpv(s3::Value::Placeholder(input));
-        }
         if let Some(result) = self.ingest_map.get(&input) {
             return *result;
+        }
+        if self.stack.contains(&input) {
+            return self.environment.gpv(s3::Value::Placeholder(input));
         }
         self.stack.push(input);
         let mut referenced = false;

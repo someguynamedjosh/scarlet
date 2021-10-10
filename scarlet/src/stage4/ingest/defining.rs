@@ -1,5 +1,5 @@
 use super::context::Context;
-use crate::{stage2::structure as s2, stage3::structure as s3};
+use crate::{stage2::structure as s2, stage4::structure as s3};
 impl<'e, 'i> Context<'e, 'i> {
     pub fn ingest_defining(
         &mut self,

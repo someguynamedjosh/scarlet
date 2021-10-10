@@ -5,7 +5,7 @@ mod rust_analyzer_actions;
 mod shared;
 mod stage1;
 mod stage2;
-mod stage3;
+mod stage4;
 mod util;
 
 fn main() {
@@ -22,7 +22,7 @@ fn main() {
     );
 
     println!("Doing stage 3");
-    let (mut s3_environment, s3_root) = stage3::ingest(&s2_environment, s2_root);
+    let (mut s3_environment, s3_root) = stage4::ingest(&s2_environment, s2_root);
     println!("{:#?}", s3_environment);
     println!("root {:#?}", s3_root);
 
