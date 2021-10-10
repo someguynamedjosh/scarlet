@@ -1,18 +1,18 @@
 use super::context::Context;
-use crate::{stage2::structure as s2, stage4::structure as s3};
+use crate::{stage2::structure as s3, stage4::structure as s4};
 impl<'e, 'i> Context<'e, 'i> {
     pub fn ingest_substituting(
         &mut self,
-        base: &s2::ItemId,
-        substitutions: &s2::Substitutions,
-    ) -> s3::ValueId {
+        base: &s3::ItemId,
+        substitutions: &s3::Substitutions,
+    ) -> s4::ValueId {
         let base = self.ingest(*base);
         let mut deps = self.environment.dependencies(base);
-        let mut new_subs = s3::Substitutions::new();
+        let mut new_subs = s4::Substitutions::new();
         for (target, value) in substitutions {
             self.ingest_substitution(&mut new_subs, &mut deps, target, value);
         }
-        let value = s3::Value::Substituting {
+        let value = s4::Value::Substituting {
             base,
             substitutions: new_subs,
         };
@@ -21,10 +21,10 @@ impl<'e, 'i> Context<'e, 'i> {
 
     fn ingest_substitution(
         &mut self,
-        new_subs: &mut s3::Substitutions,
-        deps: &mut Vec<s3::OpaqueId>,
-        target: &Option<s2::ItemId>,
-        value: &s2::ItemId,
+        new_subs: &mut s4::Substitutions,
+        deps: &mut Vec<s4::OpaqueId>,
+        target: &Option<s3::ItemId>,
+        value: &s3::ItemId,
     ) {
         let target = if let Some(target) = target {
             self.resolve_variable(*target)

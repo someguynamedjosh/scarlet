@@ -1,26 +1,26 @@
 use super::structure::OpaqueId;
 use crate::{
-    stage2::structure::{self as s2, Item, ItemId},
-    stage4::structure as s3,
+    stage2::structure::{self as s3, Item, ItemId},
+    stage4::structure as s4,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum RelativePath {
-    Just(s2::ItemId),
+    Just(s3::ItemId),
     DefiningBase {
         parent: Box<RelativePath>,
-        result: s2::ItemId,
+        result: s3::ItemId,
     },
     DefiningMember {
         parent: Box<RelativePath>,
         member: String,
-        result: s2::ItemId,
+        result: s3::ItemId,
     },
 }
 
 impl RelativePath {
     /// The ID you get if you follow this entire path.
-    fn final_id(&self) -> s2::ItemId {
+    fn final_id(&self) -> s3::ItemId {
         match self {
             RelativePath::Just(result) => *result,
             RelativePath::DefiningBase { result, .. }
@@ -29,7 +29,7 @@ impl RelativePath {
     }
 
     /// The ID you get if you only follow the first component of this path.
-    fn topmost_id(&self) -> s2::ItemId {
+    fn topmost_id(&self) -> s3::ItemId {
         match self {
             RelativePath::Just(result) => *result,
             RelativePath::DefiningBase { parent, .. }
@@ -42,7 +42,7 @@ impl RelativePath {
     }
 
     /// Like flatten, but does not include defining base dereferences.
-    fn visual_flatten(&self) -> Vec<s2::ItemId> {
+    fn visual_flatten(&self) -> Vec<s3::ItemId> {
         match self {
             RelativePath::Just(result) => vec![*result],
             RelativePath::DefiningBase { parent, result } => {
@@ -58,7 +58,7 @@ impl RelativePath {
 
     /// Returns the IDs you get starting with the full path's ID, then the ID of
     /// its parent, then the ID of that ID's parent, and so on.
-    fn flatten(&self) -> Vec<s2::ItemId> {
+    fn flatten(&self) -> Vec<s3::ItemId> {
         match self {
             RelativePath::Just(result) => vec![*result],
             RelativePath::DefiningBase { parent, result }
@@ -103,15 +103,15 @@ impl RelativePath {
     }
 }
 
-fn get_full_path(original_s2: &s2::Environment, item_id: s2::ItemId) -> RelativePath {
+fn get_full_path(original_s2: &s3::Environment, item_id: s3::ItemId) -> RelativePath {
     let item = &original_s2.items[item_id];
     if let Some(parent) = item.parent_scope {
         let parent_path = get_full_path(original_s2, parent);
         match &original_s2.items[parent].item {
-            s2::Item::Substituting { .. } => {
+            s3::Item::Substituting { .. } => {
                 return parent_path;
             }
-            s2::Item::Defining { base, definitions } => {
+            s3::Item::Defining { base, definitions } => {
                 let result = item_id;
                 let parent = Box::new(parent_path);
                 if *base == item_id {
@@ -149,25 +149,25 @@ fn truncate_paths_to_common_ancestor(
     (a, b)
 }
 
-fn path_to_item(target: &mut s2::Environment, path: RelativePath) -> s2::ItemId {
+fn path_to_item(target: &mut s3::Environment, path: RelativePath) -> s3::ItemId {
     match path {
         RelativePath::Just(item) => item,
         RelativePath::DefiningBase { parent, .. } => path_to_item(target, *parent),
         RelativePath::DefiningMember { parent, member, .. } => {
             if let RelativePath::Just(..) = &*parent {
-                let item = s2::Item::Identifier(member);
+                let item = s3::Item::Identifier(member);
                 target.push_item(item)
             } else {
                 let base = path_to_item(target, *parent);
                 let name = member;
-                let item = s2::Item::Member { base, name };
+                let item = s3::Item::Member { base, name };
                 target.push_item(item)
             }
         }
     }
 }
 
-fn path_to_string(path: RelativePath, root_is: s2::ItemId) -> Option<String> {
+fn path_to_string(path: RelativePath, root_is: s3::ItemId) -> Option<String> {
     match path {
         RelativePath::Just(id) => {
             if id == root_is {
@@ -189,13 +189,13 @@ fn path_to_string(path: RelativePath, root_is: s2::ItemId) -> Option<String> {
 }
 
 fn vomit_opaque(
-    env: &s3::Environment,
+    env: &s4::Environment,
     value: OpaqueId,
-    target_env: &mut s2::Environment,
+    target_env: &mut s3::Environment,
     display_path: &RelativePath,
 ) -> ItemId {
     for (_, env_value) in &env.values {
-        if let &s3::Value::Opaque { id, .. } = &env_value.value {
+        if let &s4::Value::Opaque { id, .. } = &env_value.value {
             if id == value {
                 return vomit_value(env, env_value, target_env, display_path);
             }
@@ -205,20 +205,20 @@ fn vomit_opaque(
 }
 
 fn vomit_value_as_code(
-    env: &s3::Environment,
-    value: &s3::AnnotatedValue,
-    target_env: &mut s2::Environment,
+    env: &s4::Environment,
+    value: &s4::AnnotatedValue,
+    target_env: &mut s3::Environment,
     display_path: &RelativePath,
 ) -> ItemId {
     match value.value.clone() {
-        s3::Value::BuiltinOperation(_) => todo!(),
-        s3::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
-        s3::Value::From { base, variable } => {
+        s4::Value::BuiltinOperation(_) => todo!(),
+        s4::Value::BuiltinValue(value) => target_env.push_item(Item::BuiltinValue(value)),
+        s4::Value::From { base, variable } => {
             let base = vomit_value(env, &env.values[base], target_env, display_path);
             let value = vomit_opaque(env, variable, target_env, display_path);
             target_env.push_item(Item::From { base, value })
         }
-        s3::Value::Match { base, cases } => {
+        s4::Value::Match { base, cases } => {
             let base = vomit_value(env, &env.values[base], target_env, display_path);
             let mut vom_cases = Vec::new();
             for (target, value) in cases {
@@ -230,7 +230,7 @@ fn vomit_value_as_code(
             let cases = vom_cases;
             target_env.push_item(Item::Match { base, cases })
         }
-        s3::Value::Opaque {
+        s4::Value::Opaque {
             class,
             id: _,
             typee,
@@ -239,8 +239,8 @@ fn vomit_value_as_code(
             let typee = vomit_value(env, &env.values[typee], target_env, display_path);
             target_env.push_item(Item::Opaque { class, id, typee })
         }
-        s3::Value::Placeholder(..) => unreachable!(),
-        s3::Value::Substituting {
+        s4::Value::Placeholder(..) => unreachable!(),
+        s4::Value::Substituting {
             base,
             substitutions,
         } => {
@@ -260,9 +260,9 @@ fn vomit_value_as_code(
 }
 
 fn vomit_value(
-    env: &s3::Environment,
-    value: &s3::AnnotatedValue,
-    target: &mut s2::Environment,
+    env: &s4::Environment,
+    value: &s4::AnnotatedValue,
+    target: &mut s3::Environment,
     display_path: &RelativePath,
 ) -> ItemId {
     if let Some(&(definition, _)) = value.defined_at.iter().next() {
@@ -280,11 +280,11 @@ fn vomit_value(
 }
 
 fn vomit(
-    env: &s3::Environment,
-    value: &s3::AnnotatedValue,
-    display_at: s2::ItemId,
-    target: &mut s2::Environment,
-    original_root: s2::ItemId,
+    env: &s4::Environment,
+    value: &s4::AnnotatedValue,
+    display_at: s3::ItemId,
+    target: &mut s3::Environment,
+    original_root: s3::ItemId,
 ) -> DisplayResult {
     let display_path = get_full_path(target, display_at);
     let name = path_to_string(display_path.clone(), original_root);
@@ -301,15 +301,15 @@ fn vomit(
 
 pub struct DisplayResult {
     pub value_name: String,
-    pub vomited_root: s2::ItemId,
-    pub vomited_type: s2::ItemId,
+    pub vomited_root: s3::ItemId,
+    pub vomited_type: s3::ItemId,
 }
 
-impl s3::Environment {
+impl s4::Environment {
     pub fn display_all(
         &self,
-        target: &mut s2::Environment,
-        original_root: s2::ItemId,
+        target: &mut s3::Environment,
+        original_root: s3::ItemId,
     ) -> Vec<DisplayResult> {
         let mut displays = Vec::new();
         for (_, value) in &self.values {

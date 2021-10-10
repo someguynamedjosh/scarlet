@@ -1,12 +1,12 @@
 use super::context::Context;
 use crate::{
-    stage2::structure::{self as s2},
-    stage4::structure as s3,
+    stage2::structure::{self as s3},
+    stage4::structure as s4,
 };
 
 pub(super) struct DereferencedItem {
-    pub base: s2::ItemId,
-    pub subs: s3::Substitutions,
+    pub base: s3::ItemId,
+    pub subs: s4::Substitutions,
 }
 
 impl DereferencedItem {
@@ -18,17 +18,17 @@ impl DereferencedItem {
     }
 }
 
-impl From<&s2::ItemId> for DereferencedItem {
-    fn from(value: &s2::ItemId) -> Self {
+impl From<&s3::ItemId> for DereferencedItem {
+    fn from(value: &s3::ItemId) -> Self {
         (*value).into()
     }
 }
 
-impl From<s2::ItemId> for DereferencedItem {
-    fn from(value: s2::ItemId) -> Self {
+impl From<s3::ItemId> for DereferencedItem {
+    fn from(value: s3::ItemId) -> Self {
         Self {
             base: value,
-            subs: s3::Substitutions::new(),
+            subs: s4::Substitutions::new(),
         }
     }
 }
@@ -37,10 +37,10 @@ impl<'e, 'i> Context<'e, 'i> {
     pub fn dereference_identifier(
         &mut self,
         name: &String,
-        in_scope: s2::ItemId,
+        in_scope: s3::ItemId,
     ) -> DereferencedItem {
         let scope = &self.input.items[in_scope];
-        if let s2::Item::Defining {
+        if let s3::Item::Defining {
             base: _,
             definitions,
         } = &scope.item
@@ -49,7 +49,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 if candidate == name {
                     return DereferencedItem {
                         base: *definition,
-                        subs: s3::Substitutions::new(),
+                        subs: s4::Substitutions::new(),
                     };
                 }
             }
@@ -62,11 +62,11 @@ impl<'e, 'i> Context<'e, 'i> {
 
     pub fn dereference_member(
         &mut self,
-        base: s2::ItemId,
+        base: s3::ItemId,
         name: &String,
     ) -> Option<DereferencedItem> {
         match &self.input.items[base].item {
-            s2::Item::Defining { base, definitions } => {
+            s3::Item::Defining { base, definitions } => {
                 if let Some(result) = self.dereference_member(*base, name) {
                     return Some(result);
                 }
@@ -77,14 +77,14 @@ impl<'e, 'i> Context<'e, 'i> {
                 }
                 None
             }
-            s2::Item::From { base, .. } => self.dereference_member(*base, name),
-            s2::Item::Identifier(ident) => {
+            s3::Item::From { base, .. } => self.dereference_member(*base, name),
+            s3::Item::Identifier(ident) => {
                 let ident = self.dereference_identifier(ident, base);
                 let err = format!("No member {} in {:?}", name, ident.base);
                 let member = self.dereference_member(ident.base, name).expect(&err);
                 Some(member.wrapped_with(ident))
             }
-            s2::Item::Member {
+            s3::Item::Member {
                 base: that_base,
                 name: that_name,
             } => {
@@ -95,7 +95,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 let member = self.dereference_member(that.base, name).expect(&err);
                 Some(member.wrapped_with(that))
             }
-            s2::Item::Substituting { .. } => todo!(),
+            s3::Item::Substituting { .. } => todo!(),
             _ => None,
         }
     }

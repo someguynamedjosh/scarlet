@@ -7,6 +7,7 @@ mod stage1;
 mod stage2;
 mod stage4;
 mod util;
+mod stage3;
 
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
