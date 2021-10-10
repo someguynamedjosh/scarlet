@@ -43,7 +43,6 @@ impl Environment {
                 }
                 self.with_from_variables(base, &type_deps[..])
             }
-            Value::Placeholder(id) => unreachable!("{:?}", id),
             Value::Substituting {
                 base,
                 substitutions,

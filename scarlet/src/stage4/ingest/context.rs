@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
-use crate::{shared::OpaqueClass, stage2::structure as s3, stage4::structure as s4};
+use crate::{shared::OpaqueClass, stage3::structure as s3, stage4::structure as s4};
 
 #[derive(Debug)]
 pub(super) struct Context<'e, 'i> {
     pub environment: &'e mut s4::Environment,
-    pub ingest_map: HashMap<s3::ItemId, s4::ValueId>,
-    pub opaque_map: HashMap<s3::OpaqueId, (s4::OpaqueId, s3::ItemId)>,
+    pub ingest_map: HashMap<s3::ValueId, s4::ValueId>,
+    pub opaque_map: HashMap<s3::OpaqueId, (s4::OpaqueId, s3::ValueId)>,
     pub input: &'i s3::Environment,
-    pub stack: Vec<s3::ItemId>,
+    pub stack: Vec<s3::ValueId>,
 }
 
 impl<'e, 'i> Context<'e, 'i> {
@@ -28,7 +28,7 @@ impl<'e, 'i> Context<'e, 'i> {
         }
     }
 
-    pub fn resolve_variable(&mut self, item: s3::ItemId) -> Option<s4::OpaqueId> {
+    pub fn resolve_variable(&mut self, item: s3::ValueId) -> Option<s4::OpaqueId> {
         let value = self.ingest(item);
         self.extract_variable(value)
     }

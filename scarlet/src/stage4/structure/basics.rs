@@ -2,10 +2,7 @@ use serde::Serialize;
 
 use crate::{
     shared::{Id, OpaqueClass, OrderedMap, OrderedSet},
-    stage2::{
-        self,
-        structure::{BuiltinOperation, BuiltinValue},
-    },
+    stage2::structure::{BuiltinOperation, BuiltinValue},
 };
 
 pub type Substitutions = OrderedMap<OpaqueId, ValueId>;
@@ -31,7 +28,6 @@ pub enum Value {
         id: OpaqueId,
         typee: ValueId,
     },
-    Placeholder(stage2::structure::ItemId),
     Substituting {
         base: ValueId,
         substitutions: Substitutions,
@@ -42,13 +38,10 @@ pub enum Value {
 pub struct AnnotatedValue {
     pub cached_type: Option<ValueId>,
     pub cached_reduction: Option<ValueId>,
-    pub defined_at: OrderedSet<stage2::structure::ItemId>,
-    pub referenced_at: OrderedSet<stage2::structure::ItemId>,
-    pub display_requested_from: OrderedSet<stage2::structure::ItemId>,
     pub value: Value,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 pub struct OpaqueValue {
-    pub stage2_id: crate::stage2::structure::OpaqueId,
+    pub stage3_id: crate::stage3::structure::OpaqueId,
 }

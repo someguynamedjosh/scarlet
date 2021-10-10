@@ -27,6 +27,11 @@ fn main() {
     println!("{:#?}", s3_environment);
     println!("root {:#?}", s3_root);
 
+    println!("Doing stage 4");
+    let (mut s4_environment, s4_root) = stage4::ingest(&s3_environment, s3_root);
+    println!("{:#?}", s4_environment);
+    println!("root {:#?}", s4_root);
+
     // println!("Doing reduction");
     // s3_environment.reduce_all();
     // println!("{:#?}", s3_environment);

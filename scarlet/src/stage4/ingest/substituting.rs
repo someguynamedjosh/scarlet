@@ -1,12 +1,12 @@
 use super::context::Context;
-use crate::{stage2::structure as s3, stage4::structure as s4};
+use crate::{stage3::structure as s3, stage4::structure as s4};
 impl<'e, 'i> Context<'e, 'i> {
     pub fn ingest_substituting(
         &mut self,
-        base: &s3::ItemId,
-        substitutions: &s3::Substitutions,
+        base: s3::ValueId,
+        substitutions: s3::Substitutions,
     ) -> s4::ValueId {
-        let base = self.ingest(*base);
+        let base = self.ingest(base);
         let mut deps = self.environment.dependencies(base);
         let mut new_subs = s4::Substitutions::new();
         for (target, value) in substitutions {
@@ -23,11 +23,11 @@ impl<'e, 'i> Context<'e, 'i> {
         &mut self,
         new_subs: &mut s4::Substitutions,
         deps: &mut Vec<s4::OpaqueId>,
-        target: &Option<s3::ItemId>,
-        value: &s3::ItemId,
+        target: Option<s3::ValueId>,
+        value: s3::ValueId,
     ) {
         let target = if let Some(target) = target {
-            self.resolve_variable(*target)
+            self.resolve_variable(target)
                 .expect("TODO: Nice error, not a variable")
         } else {
             if deps.len() == 0 {
@@ -38,7 +38,7 @@ impl<'e, 'i> Context<'e, 'i> {
                 target
             }
         };
-        let value = self.ingest(*value);
+        let value = self.ingest(value);
         if new_subs.contains_key(&target) {
             todo!("Nice error, same var replaced twice.");
         }

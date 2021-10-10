@@ -92,7 +92,6 @@ impl Environment {
                 }
                 self.gpv(Value::Match { base, cases })
             }
-            Value::Placeholder(..) => unreachable!(),
             Value::Substituting {
                 base: other_base,
                 substitutions: other_substitutions,

@@ -43,6 +43,10 @@ impl<T, const C: char> Pool<T, C> {
         self.id == id.pool_id
     }
 
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
     /// Abuse unsafe here to tell people that you really shouldn't use this
     /// function unless you know what you're doing.
     pub(super) unsafe fn next_id(&self) -> Id<T, C> {

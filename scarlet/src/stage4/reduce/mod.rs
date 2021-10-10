@@ -246,7 +246,6 @@ impl<'a> Reducer<'a> {
                 let value = Value::Opaque { class, id, typee };
                 self.env.gpv(value)
             }
-            Value::Placeholder(..) => unreachable!(),
             Value::Substituting {
                 base,
                 substitutions,
@@ -275,18 +274,18 @@ impl<'a> Reducer<'a> {
             let reduced = self.reduce_from_scratch(of);
             self.env.values[of].cached_reduction = Some(reduced);
             self.env.values[reduced].cached_reduction = Some(reduced);
-            if self.env.values[reduced].defined_at.is_empty() {
-                self.env.values[reduced].defined_at = self.env.values[of].defined_at.clone();
-            }
-            self.env.values[reduced].referenced_at = self.env.values[reduced]
-                .referenced_at
-                .clone()
-                .union(self.env.values[of].referenced_at.clone());
-            for (from, _) in self.env.values[of].display_requested_from.take() {
-                self.env.values[reduced]
-                    .display_requested_from
-                    .insert_or_replace(from, ());
-            }
+            // if self.env.values[reduced].defined_at.is_empty() {
+            //     self.env.values[reduced].defined_at = self.env.values[of].defined_at.clone();
+            // }
+            // self.env.values[reduced].referenced_at = self.env.values[reduced]
+            //     .referenced_at
+            //     .clone()
+            //     .union(self.env.values[of].referenced_at.clone());
+            // for (from, _) in self.env.values[of].display_requested_from.take() {
+            //     self.env.values[reduced]
+            //         .display_requested_from
+            //         .insert_or_replace(from, ());
+            // }
             debug_assert_eq!(self.reduce(reduced), reduced);
             let typee = self.env.get_type(of);
             let rtype = self.env.get_type(reduced);

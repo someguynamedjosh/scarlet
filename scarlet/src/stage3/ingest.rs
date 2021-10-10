@@ -137,5 +137,7 @@ pub fn ingest(input: &s2::Environment, root: s2::ItemId) -> (s3::Environment, s3
     }
     .ingest_into_new(root);
 
+    let new_root = output.dedup(new_root);
+
     (output, new_root)
 }

@@ -28,9 +28,6 @@ impl Environment {
         self.values.push(AnnotatedValue {
             cached_reduction: None,
             cached_type: None,
-            defined_at: OrderedSet::new(),
-            referenced_at: OrderedSet::new(),
-            display_requested_from: OrderedSet::new(),
             value,
         })
     }
