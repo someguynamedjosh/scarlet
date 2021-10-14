@@ -26,6 +26,15 @@ pub fn ingest(s3_env: &s3::Environment, root: s3::ValueId) -> (s4::Environment, 
             None => break,
         }
     }
+    for (_, value) in &mut ctx.environment.values {
+        if let s4::Value::SelfReference {
+            original_id,
+            self_id,
+        } = &mut value.value
+        {
+            *self_id = Some(*ctx.ingest_map.get(&*original_id).unwrap());
+        }
+    }
     let new_root = ctx.ingest(root);
     (environment, new_root)
 }
