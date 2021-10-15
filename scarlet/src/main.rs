@@ -1,7 +1,6 @@
 #![feature(try_trait_v2)]
 
 mod entry;
-pub mod nom_prelude;
 mod rust_analyzer_actions;
 mod shared;
 mod stage1;
@@ -13,6 +12,7 @@ fn main() {
 
     let root = entry::read_root(&path).unwrap();
     let stage1 = stage1::ingest(&root);
+    let stage1 = stage1::transform_module(stage1);
     println!("{:#?}", stage1);
 
     // println!("Doing reduction");
