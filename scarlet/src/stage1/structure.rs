@@ -2,16 +2,19 @@ use std::fmt::{self, Debug, Formatter};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum Token<'i> {
-    Compound(Vec<Token<'i>>),
+    Compound {
+        label: &'i str,
+        body: Vec<Token<'i>>,
+    },
     Symbol(&'i str),
 }
 
 impl<'i> Debug for Token<'i> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Compound(rules) => {
-                write!(f, "c")?;
-                f.debug_list().entries(rules).finish()
+            Self::Compound { label, body } => {
+                write!(f, "c {}", label)?;
+                f.debug_list().entries(body).finish()
             }
             Self::Symbol(text) => write!(f, "s {}", text),
         }
