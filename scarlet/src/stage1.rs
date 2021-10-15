@@ -5,15 +5,15 @@ use crate::entry::FileNode;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum AtomicRule<'i> {
-    Fundamental(Vec<AtomicRule<'i>>),
+    Composite(Vec<AtomicRule<'i>>),
     Symbol(&'i str),
 }
 
 impl<'i> Debug for AtomicRule<'i> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Fundamental(rules) => {
-                write!(f, "f")?;
+            Self::Composite(rules) => {
+                write!(f, "c")?;
                 f.debug_list().entries(rules).finish()
             }
             Self::Symbol(text) => write!(f, "s {}", text),
@@ -22,33 +22,7 @@ impl<'i> Debug for AtomicRule<'i> {
 }
 
 impl<'i> AtomicRule<'i> {
-    fn fundamental_tag<'a>() -> impl Parser<'a, ()> {
-        map(alt((tag("fundamental"), tag("f"))), |_| ())
-    }
-
-    fn parse_fundamental<'a>() -> impl Parser<'a, AtomicRule<'a>> {
-        |input| {
-            let (input, _) = Self::fundamental_tag()(input)?;
-            let (input, _) = after_ws(tag("{"))(input)?;
-            let mut brace_count = 1;
-            let mut rules = Vec::new();
-            let mut input = input;
-            while brace_count > 0 {
-                let (input_now, next) = after_ws(Self::parse())(input)?;
-                input = input_now;
-                if next == AtomicRule::Symbol("{") {
-                    brace_count += 1
-                } else if next == AtomicRule::Symbol("}") {
-                    brace_count -= 1;
-                }
-                rules.push(next);
-            }
-            rules.pop().unwrap();
-            Ok((input, AtomicRule::Fundamental(rules)))
-        }
-    }
-
-    fn parse_symbol<'a>() -> impl Parser<'a, AtomicRule<'a>> {
+    fn parse<'a>() -> impl Parser<'a, AtomicRule<'a>> {
         |input| {
             let split_on = "{}[]().:!@$%^&*-=+\\|;'\",<>/?";
             let whitespace_indicators = " \t\r\n#";
@@ -58,10 +32,6 @@ impl<'i> AtomicRule<'i> {
             ))(input)?;
             Ok((input, AtomicRule::Symbol(text)))
         }
-    }
-
-    fn parse<'a>() -> impl Parser<'a, AtomicRule<'a>> {
-        alt((Self::parse_fundamental(), Self::parse_symbol()))
     }
 }
 
