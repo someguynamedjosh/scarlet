@@ -4,6 +4,7 @@ mod rust_analyzer_actions;
 mod shared;
 mod util;
 mod entry;
+mod stage1;
 
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
