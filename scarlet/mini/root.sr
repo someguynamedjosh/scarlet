@@ -4,3 +4,6 @@ struct{
     field1 is value1
 }
 (hello world)
+match{
+    on{thing} do whatever
+}

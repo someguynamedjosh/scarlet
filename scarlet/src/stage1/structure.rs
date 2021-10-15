@@ -16,6 +16,27 @@ impl<'i> Token<'i> {
             body: vec![self.clone()],
         }
     }
+
+    pub fn is_compound(&self, required_label: &str) -> bool {
+        match self {
+            Token::Compound { label, .. } => *label == required_label,
+            Token::Symbol(..) => false,
+        }
+    }
+
+    pub fn change_compound(&mut self, new_label: &'i str) {
+        match self {
+            Token::Compound { label, .. } => *label = new_label,
+            Token::Symbol(..) => panic!("Not a compound"),
+        }
+    }
+
+    pub fn is_symbol(&self, required_contents: &str) -> bool {
+        match self {
+            Token::Compound { .. } => false,
+            Token::Symbol(contents) => *contents == required_contents,
+        }
+    }
 }
 
 impl<'i> Debug for Token<'i> {
@@ -26,7 +47,7 @@ impl<'i> Debug for Token<'i> {
                 if body.len() == 0 {
                     write!(f, "[]")
                 } else if body.len() == 1 {
-                    write!(f, "[{:?}]", &body[0])
+                    write!(f, "[{:#?}]", &body[0])
                 } else {
                     f.debug_list().entries(body).finish()
                 }

@@ -355,7 +355,7 @@ struct{fields*}
 (x)
 
 x.ident
-x replace{replacements*}
+x(substitutions*)
 x match{conditions*}
 
 var pattern

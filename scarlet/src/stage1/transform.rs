@@ -9,14 +9,11 @@ impl<'s, 't: 's, O, T> Parser<'s, 't, O> for T where
 
 fn tag<'s, 't: 's>(expect: &'s str) -> impl Parser<'s, 't, ()> {
     move |input: &'s [Token<'t>]| {
-        if !input.is_empty() {
-            if let Token::Symbol(sym) = &input[0] {
-                if *sym == expect {
-                    return Some((&input[1..], ()));
-                }
-            }
+        if !input.is_empty() && input[0].is_symbol(expect) {
+            Some((&input[1..], ()))
+        } else {
+            None
         }
-        None
     }
 }
 
@@ -119,7 +116,7 @@ fn builtin<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
         if body.len() < 1 {
             return None;
         }
-        body[0].wrap("name");
+        body[0].wrap("builtin_name");
         let token = Token::Compound { label, body };
         Some((input, vec![token]))
     })
@@ -150,8 +147,53 @@ fn field<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
         if &input[1] != &Token::Symbol(".") {
             return None;
         }
-        todo!()
-        // Some((&input[3..], token))
+        let token = Token::Compound {
+            label: "field",
+            body: vec![input[0].clone(), input[2].clone()],
+        };
+        Some((&input[3..], vec![token]))
+    })
+}
+
+fn substitute_shorthand<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        if input.len() < 2 {
+            return None;
+        }
+        if !input[1].is_compound("parenthesis_group") {
+            return None;
+        }
+        let mut base = input[0].clone();
+        base.wrap("substitution_target");
+        let mut args = input[1].clone();
+        args.wrap("substitutions");
+        let token = Token::Compound {
+            label: "substitute",
+            body: vec![base, args],
+        };
+        Some((&input[2..], vec![token]))
+    })
+}
+
+fn matchh<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        if input.len() < 4 {
+            return None;
+        }
+        if !input[1].is_symbol("match") {
+            return None;
+        }
+        let base = input[0].clone();
+        let (input, cases) = curly_bracket_group()(input)?;
+        let cases = Token::Compound {
+            label: "cases",
+            body: cases.body.to_owned(),
+        };
+        let token = Token::Compound {
+            label: "match",
+            body: vec![base, cases],
+        };
+        Some((input, vec![token]))
     })
 }
 
@@ -162,6 +204,11 @@ fn make_transformers<'s, 't: 's>(precedence: u8) -> Vec<Box<Transformer<'s, 't>>
             builtin::<'s, 't>(),
             structt::<'s, 't>(),
             parentheses::<'s, 't>(),
+        ],
+        10 => vec![
+            field::<'s, 't>(),
+            substitute_shorthand::<'s, 't>(),
+            matchh::<'s, 't>(),
         ],
         _ => vec![],
     }
