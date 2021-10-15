@@ -349,16 +349,22 @@ the dependencies form a DAG it's fine!
 
 So we need to define:
 ```
+compound{name args*}
 builtin{name args*}
 struct{fields*}
+(x)
+
 x.ident
-var{pattern}
-raise{vars*} x
-x match{conditions*}
 x replace{replacements*}
-target is x
-on{condition} x
+x match{conditions*}
+
+var pattern
+raise{vars*} x
 else x
+
+target is x
+
+on{condition} x
 ```
 ```
 builtin is

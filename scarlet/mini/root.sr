@@ -1,7 +1,6 @@
 asdf fdsa
-compound{
-    compound{
-        123 456
-    }
-    asldkf
+builtin{something}
+struct{
+    field1 is value1
 }
+(hello world)

@@ -64,23 +64,67 @@ fn bracket_group<'s, 't: 's>() -> impl Parser<'s, 't, BracketGroup<'s, 't>> {
     }
 }
 
-pub fn compound<'s, 't: 's>() -> impl Parser<'s, 't, Vec<Token<'t>>> {
-    move |input: &'s [Token<'t>]| {
-        let (input, _) = tag(&Token::Symbol("compound"))(input)?;
+fn labeled_curly_bracket_group<'s, 't: 's>(label: &'t Token) -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        let (input, _) = tag(&label)(input)?;
         let (input, brackets) = bracket_group()(input)?;
         if brackets.start != &Token::Symbol("{") || brackets.end != &Token::Symbol("}") {
             return None;
         }
         let token = Token::Compound(brackets.body.to_owned());
         Some((input, vec![token]))
-    }
+    })
+}
+
+fn curly_bracket_compound_with_label<'s, 't: 's>(label: &'t Token) -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        let (input, _) = tag(&label)(input)?;
+        let (input, brackets) = bracket_group()(input)?;
+        if brackets.start != &Token::Symbol("{") || brackets.end != &Token::Symbol("}") {
+            return None;
+        }
+        let mut body = brackets.body.to_owned();
+        body.insert(0, label.clone());
+        let token = Token::Compound(body);
+        Some((input, vec![token]))
+    })
 }
 
 type Transformer<'s, 't> = dyn Parser<'s, 't, Vec<Token<'t>>> + 's;
 
+fn compound<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    labeled_curly_bracket_group(&Token::Symbol("compound"))
+}
+
+fn builtin<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    curly_bracket_compound_with_label(&Token::Symbol("builtin"))
+}
+
+fn structt<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    curly_bracket_compound_with_label(&Token::Symbol("struct"))
+}
+
+fn parentheses<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        let (input, brackets) = bracket_group()(input)?;
+        if brackets.start != &Token::Symbol("(") || brackets.end != &Token::Symbol(")") {
+            return None;
+        }
+        let mut body = brackets.body.to_owned();
+        body.insert(0, Token::Symbol("parenthesis_group"));
+        let token = Token::Compound(body);
+        Some((input, vec![token]))
+    })
+}
+
 fn make_transformers<'s, 't: 's>(precedence: u8) -> Vec<Box<Transformer<'s, 't>>> {
     match precedence {
-        0 => vec![Box::new(compound::<'s, 't>())],
+        0 => vec![
+            compound::<'s, 't>(),
+            builtin::<'s, 't>(),
+            structt::<'s, 't>(),
+            parentheses::<'s, 't>(),
+        ],
         _ => vec![],
     }
 }
