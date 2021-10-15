@@ -9,14 +9,29 @@ pub enum Token<'i> {
     Symbol(&'i str),
 }
 
+impl<'i> Token<'i> {
+    pub fn wrap(&mut self, compound_label: &'i str) {
+        *self = Self::Compound {
+            label: compound_label,
+            body: vec![self.clone()],
+        }
+    }
+}
+
 impl<'i> Debug for Token<'i> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Compound { label, body } => {
-                write!(f, "c {}", label)?;
-                f.debug_list().entries(body).finish()
+                write!(f, "c.{}", label)?;
+                if body.len() == 0 {
+                    write!(f, "[]")
+                } else if body.len() == 1 {
+                    write!(f, "[{:?}]", &body[0])
+                } else {
+                    f.debug_list().entries(body).finish()
+                }
             }
-            Self::Symbol(text) => write!(f, "s {}", text),
+            Self::Symbol(text) => write!(f, "s.{}", text),
         }
     }
 }

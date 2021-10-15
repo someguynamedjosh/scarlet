@@ -67,13 +67,20 @@ fn bracket_group<'s, 't: 's>() -> impl Parser<'s, 't, BracketGroup<'s, 't>> {
     }
 }
 
-fn curly_bracket_compound_with_label<'s, 't: 's>(label: &'static str) -> Box<Transformer<'s, 't>> {
-    Box::new(move |input: &'s [Token<'t>]| {
-        let (input, _) = tag(label)(input)?;
+fn curly_bracket_group<'s, 't: 's>() -> impl Parser<'s, 't, BracketGroup<'s, 't>> {
+    |input| {
         let (input, brackets) = bracket_group()(input)?;
         if brackets.start != &Token::Symbol("{") || brackets.end != &Token::Symbol("}") {
             return None;
         }
+        Some((input, brackets))
+    }
+}
+
+fn curly_bracket_compound_with_label<'s, 't: 's>(label: &'static str) -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        let (input, _) = tag(label)(input)?;
+        let (input, brackets) = curly_bracket_group()(input)?;
         let body = brackets.body.to_owned();
         let token = Token::Compound { label, body };
         Some((input, vec![token]))
@@ -104,7 +111,18 @@ fn compound<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
 }
 
 fn builtin<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
-    curly_bracket_compound_with_label("builtin")
+    let label = "builtin";
+    Box::new(move |input: &'s [Token<'t>]| {
+        let (input, _) = tag(label)(input)?;
+        let (input, brackets) = curly_bracket_group()(input)?;
+        let mut body = brackets.body.to_owned();
+        if body.len() < 1 {
+            return None;
+        }
+        body[0].wrap("name");
+        let token = Token::Compound { label, body };
+        Some((input, vec![token]))
+    })
 }
 
 fn structt<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
@@ -121,6 +139,19 @@ fn parentheses<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
         let label = "parenthesis_group";
         let token = Token::Compound { body, label };
         Some((input, vec![token]))
+    })
+}
+
+fn field<'s, 't: 's>() -> Box<Transformer<'s, 't>> {
+    Box::new(move |input: &'s [Token<'t>]| {
+        if input.len() < 3 {
+            return None;
+        }
+        if &input[1] != &Token::Symbol(".") {
+            return None;
+        }
+        todo!()
+        // Some((&input[3..], token))
     })
 }
 
