@@ -1,17 +1,19 @@
 #![feature(try_trait_v2)]
 
+mod entry;
+pub mod nom_prelude;
 mod rust_analyzer_actions;
 mod shared;
-mod util;
-mod entry;
 mod stage1;
+mod util;
 
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
     let root = entry::read_root(&path).unwrap();
-    println!("{:#?}", root);
+    let stage1 = stage1::ingest(&root);
+    println!("{:#?}", stage1);
 
     // println!("Doing reduction");
     // s3_environment.reduce_all();

@@ -5,8 +5,8 @@ use std::{
 
 #[derive(Debug, Clone)]
 pub struct FileNode {
-    self_def: PathBuf,
-    children: Vec<(String, FileNode)>,
+    pub self_content: String,
+    pub children: Vec<(String, FileNode)>,
 }
 
 fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
@@ -33,8 +33,9 @@ fn read_path(at: &Path) -> Option<FileNode> {
         if folder_path.exists() && folder_path.is_dir() {
             children = read_folder_contents(folder_path);
         }
+        let content = std::fs::read_to_string(file_path).unwrap();
         Some(FileNode {
-            self_def: file_path.to_owned(),
+            self_content: content,
             children,
         })
     } else {
