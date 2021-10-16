@@ -568,40 +568,182 @@ ident =0
 a+b(c)
 ```
 ```
-push #0
-a
-push 0 ident (#0)
+push 0 ident a
 0
-push #1
-0 +
-push #2
-0 + b
-push 1 ident (#2)
-0 + 1
-push 2 add (0 #1 1)
-2
-push #3
-2 (
-push #4
-2 ( c
-push 3 ident (#4)
-2 ( 3
-push #5
-2 ( 3 )
-push 4 paren(#3 3 #5)
-2 4
-open 2
-0 + 1 4
-push 5 call(1 4)
-0 + 5
-push 6 add(0 #1 5)
-6
+push 1 ident +
+0 1
+push 2 ident b
+0 1 2
+push 3 add (0 1 2)
+3
+push 4 ident (
+3 4
+push 5 ident c
+3 4 5
+push 6 ident )
+3 4 5 6
+push 7 paren(4 5 6)
+3 7
+open 3
+0 1 2 7
+push 8 call(2 7)
+0 1 8
+push 9 add(0 1 8)
+9
 ```
 Insert `open`s when a rule cannot initially be matched but can be matched using
 previously bundled inputs to another rule, and those inputs can be replaced with
 the rule being matched.
 
+I don't like `open`.
+Maybe there's a way to keep add "open" until we know for sure that it's the
+right analysis to make?
 ```
-a*b+c
+a+b(c)
+```
+```
+push #0
+a
+push #1
+a +
+push #2
+a + b
+push 2 add (#0 #1 #2)
+22222
+a + b
+push #3
+22222
+a + b (
+push #4
+22222
+a + b ( c
+push #5
+22222
+a + b ( c )
+push 4 paren(#3 #4 #5)
+22222 44444
+a + b ( c )
+push 5 call(#3 4)
+22222222222
+    5555555
+      44444
+a + b ( c )
 ```
 
+```
+a+b*c^d
+```
+```
+push 0 ident a
+0
+push 1 ident +
+0 1
+push 2 ident b
+0 1 2
+push 3 add(0 1 2)
+3
+push 4 ident *
+3 4
+push 5 ident c
+3 4 5
+open 3
+0 1 2 4 5
+push 6 mul(2 4 5)
+0 1 6
+push 7 add(0 1 6)
+7
+```
+
+What if we can detect if the next rule fits "inside" of the previous rule?
+
+Or how about this: the stack is across all levels of organization and things can
+be matched across different levels of organization.
+
+```
+Plus triggers after >= 9 after + after >= 10
+
+70: V V V
+80:     V V V
+90: a + b * c
+```
+```
+a
+
+a +
+
+a + b
+    ^ Plus
+
+a + b *
+    ^ Plus
+
+a + b * c
+        ^ Mul
+    ^ Plus
+```
+```
+(
+
+(a
+
+(a+
+
+(a+b
+   ^ Plus
+
+(a+b)
+   ^ Plus
+    ^ Paren
+
+(a+b)*
+   ^ Plus
+    ^ Paren
+
+(a+b)*c
+   ^ Plus: 2
+    ^ Paren: 0
+      ^ Mul: 1
+```
+```
+Plus  is (30 > "+" > 29) > 30
+Mul   is (20 > "*" > 19) > 20
+Exp   is ( 9 > "^" > 10) > 10
+Paren is ("(" > any* > ")") > 1
+
+a+b
+  ^ Plus
+
+a+b+c
+  ^ Plus
+    ^ Plus
+
+a*b
+  ^Mul
+
+a*b+c
+  ^Mul
+    ^Plus
+
+a+b
+  ^Plus
+
+a+b*c
+    ^Mul
+  ^Plus
+```
+```
+a*(b+c
+     ^Add
+
+a*(b+c)
+     ^Add
+      ^Paren
+      ^Mul
+```
+```
+a^b
+  ^Exp
+a^b^c
+    ^Exp
+  ^Exp
+```
