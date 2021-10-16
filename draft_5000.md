@@ -409,3 +409,157 @@ construct[
 okay maybe just have these builtin to start with :P
 But the general idea is good, have some way to express arbitrary syntactic
 constructs, which can also be used to define prefix, postfix, infix, etc.
+
+How to parse
+```
+4 + 5 * 6
+```
+correctly?
+
+How to parse (pretend)
+```
+if 1 + 2 then 3 + 4 * 5 else 6 * 7 + 8
+```
+correctly?
+
+```
+if{
+    condition: op[1 + 2]
+    value: op{
+        left: 3
+        op: +
+        right: op[4 * 5]
+    }
+    else_value: op{
+        left: op[6 * 7]
+        op: +
+        right: 8
+    }
+}
+```
+```
+a + b * c
+
+((a)) + ((b)*(c))
+```
+
+```
+if
+(
+  (
+    (
+      1
+    )
+  )
+  +
+  (
+    (
+      2
+    )
+  )
+)
+then
+(
+  (
+    (
+      3 
+    )
+  )
+  +
+  (
+    ( 
+      4 
+    )
+    *
+    ( 
+      5
+    )
+  )
+)
+else(((
+
+)))
+```
+```
+if
+      1
+  +
+      2
+then
+      3
+  +
+      4
+    *
+      5
+else
+      6
+    *
+      7
+  +
+      8
+```
+```
+|   if
+||   1
+||   +
+||   2
+|   then
+||   (
+|||   3
+|||   +
+||||   4
+||||   *
+||||   5
+||   )
+|   else
+|||   6
+|||   *
+|||   7
+||   +
+||   8
+```
+
+```
+3
+V
+3+4*5
+```
+```
+x+x
+3
+ V
+3+4*5
+```
+```
+x+x
+3 4
+  V
+3+4*5
+```
+```
+x+xxx
+  x*x
+3 4
+   V
+3+4*5
+```
+plus =20
+- pops <=20
+- detects "+"
+- get <=19 :start -> end
+times =10
+- pops <=10
+- detects "*"
+- get <=9 :start -> end
+neg =5
+- detects "neg"
+- get <=4 :start -> end
+call =2
+- pops <=2
+- detects "("
+- get any :start -> start
+- get close paren :start -> end
+paren =1
+- detects "("
+- get any :start -> start
+- get close paren :start -> end
