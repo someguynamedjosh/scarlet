@@ -544,22 +544,64 @@ x+xxx
 3+4*5
 ```
 plus =20
-- pops <=20
-- detects "+"
-- get <=19 :start -> end
+- take <=20 :0 -> 1
+- take "+"  :1 -> 2
+- take <=19 :2 -> end
 times =10
-- pops <=10
-- detects "*"
-- get <=9 :start -> end
-neg =5
-- detects "neg"
-- get <=4 :start -> end
+- take <=10 :0 -> 1
+- take "*"  :1 -> 2
+- take <=9  :2 -> end
+neg =5 
+- take "neg" :0 -> 1
+- take <=4   :1 -> end
 call =2
-- pops <=2
-- detects "("
-- get any :start -> start
-- get close paren :start -> end
+- take <=2   :0 -> 1
+- take paren :1 -> end
 paren =1
-- detects "("
-- get any :start -> start
-- get close paren :start -> end
+- take "("   :0 -> 1
+- take <=any :1 -> 1
+- take ")"   :1 -> end
+ident =0
+- take any token :0 -> end
+
+```
+a+b(c)
+```
+```
+push #0
+a
+push 0 ident (#0)
+0
+push #1
+0 +
+push #2
+0 + b
+push 1 ident (#2)
+0 + 1
+push 2 add (0 #1 1)
+2
+push #3
+2 (
+push #4
+2 ( c
+push 3 ident (#4)
+2 ( 3
+push #5
+2 ( 3 )
+push 4 paren(#3 3 #5)
+2 4
+open 2
+0 + 1 4
+push 5 call(1 4)
+0 + 5
+push 6 add(0 #1 5)
+6
+```
+Insert `open`s when a rule cannot initially be matched but can be matched using
+previously bundled inputs to another rule, and those inputs can be replaced with
+the rule being matched.
+
+```
+a*b+c
+```
+

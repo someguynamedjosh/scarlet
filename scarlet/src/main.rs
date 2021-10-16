@@ -12,7 +12,7 @@ fn main() {
 
     let root = entry::read_root(&path).unwrap();
     let stage1 = stage1::ingest(&root);
-    let stage1 = stage1::transform_module(stage1);
+    // let stage1 = stage1::transform_module(stage1);
     println!("{:#?}", stage1);
 
     // println!("Doing reduction");
