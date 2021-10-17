@@ -13,8 +13,10 @@ fn main() {
 
     let root = entry::read_root(&path).unwrap();
     let stage1 = stage1::ingest(&root);
-    // let stage1 = stage1::transform_module(stage1);
     println!("{:#?}", stage1);
+
+    let stage2 = stage2::ingest(&stage1.self_content);
+    println!("{:#?}", stage2);
 
     // println!("Doing reduction");
     // s3_environment.reduce_all();

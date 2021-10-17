@@ -747,3 +747,17 @@ a^b^c
     ^Exp
   ^Exp
 ```
+Go backwards?
+```
+Plus  is (30 > "+" > 29) > 30
+Mul   is (20 > "*" > 19) > 20
+Exp   is ( 9 > "^" > 10) > 10
+Paren is ("(" > any* > ")") > 1
+
+b+c
+^Add
+
+a+b+c
+^Add
+  ^Add
+```

@@ -1,9 +1,1 @@
-asdf fdsa
-builtin{something}
-struct{
-    field1 is value1
-}
-(hello world)
-match{
-    on{thing} do whatever
-}
+1 + 2 + 3
