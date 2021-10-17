@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 pub type Token<'i> = &'i str;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TokenTree<'i> {
     Token(Token<'i>),
     Group {

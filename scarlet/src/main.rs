@@ -1,4 +1,5 @@
 #![feature(try_trait_v2)]
+#![feature(never_type)]
 
 mod entry;
 mod rust_analyzer_actions;
@@ -12,11 +13,11 @@ fn main() {
     println!("Reading source from {}", path);
 
     let root = entry::read_root(&path).unwrap();
-    let stage1 = stage1::ingest(&root);
+    let mut stage1 = stage1::ingest(&root);
+    stage1::transformers::apply_transformers(&mut stage1.self_content);
     println!("{:#?}", stage1);
 
     // let stage2 = stage2::ingest(&stage1.self_content);
     // println!("{:?}", stage2);
     // println!("{:#?}", stage2);
-
 }
