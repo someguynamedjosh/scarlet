@@ -1,10 +1,10 @@
 use super::{
     nom_prelude::*,
-    structure::{Module, TokenTree},
+    structure::{Module, Token, TokenTree},
 };
 use crate::entry::FileNode;
 
-fn parse_token<'a>() -> impl Parser<'a, TokenTree<'a>> {
+fn parse_token<'a>() -> impl Parser<'a, Token<'a>> {
     |input: &'a str| {
         let parens = "{[()]}";
         let split_on = ".:!@$%^&*-=+\\|;'\",<>/?";
@@ -20,7 +20,7 @@ fn parse_token<'a>() -> impl Parser<'a, TokenTree<'a>> {
                 return fail(input);
             }
         }
-        Ok((input, TokenTree::Token(token)))
+        Ok((input, token))
     }
 }
 
@@ -33,8 +33,17 @@ fn parse_group<'a>() -> impl Parser<'a, TokenTree<'a>> {
     })
 }
 
+fn parse_primitive_rule<'a>() -> impl Parser<'a, TokenTree<'a>> {
+    let begin = tuple((tag("primitive"), ws(), tag("{"), ws()));
+    let name = preceded(begin, parse_token());
+    let body = delimited(ws(), parse(), tag("}"));
+    let data = tuple((name, body));
+    map(data, |(name, body)| TokenTree::PrimitiveRule { name, body })
+}
+
 fn parse_tree<'a>() -> impl Parser<'a, TokenTree<'a>> {
-    alt((parse_group(), parse_token()))
+    let token = map(parse_token(), TokenTree::Token);
+    alt((parse_primitive_rule(), parse_group(), token))
 }
 
 fn parse<'a>() -> impl Parser<'a, Vec<TokenTree<'a>>> {

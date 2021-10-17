@@ -9,7 +9,11 @@ pub enum TokenTree<'i> {
         start: Token<'i>,
         end: Token<'i>,
         body: Vec<TokenTree<'i>>,
-    }
+    },
+    PrimitiveRule {
+        name: Token<'i>,
+        body: Vec<TokenTree<'i>>,
+    },
 }
 
 #[derive(Clone, Debug)]
