@@ -65,6 +65,40 @@ macro_rules! binary_operator {
     };
 }
 
+fn expect_bracket_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>> {
+    if let TokenTree::Group {
+        start: "{",
+        end: "}",
+        body,
+    } = tt
+    {
+        body
+    } else {
+        todo!("nice error, expected curly brackets")
+    }
+}
+
+macro_rules! root_construct {
+    ($StructName:ident, $label:expr, $extras:expr) => {
+        struct $StructName;
+        impl Transformer for $StructName {
+            fn should_be_applied_at(&self, tt: &TokenTree) -> bool {
+                tt == &TokenTree::Token($label)
+            }
+
+            fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+                let mut body = expect_bracket_group(&to[at + 1]).clone();
+                let extras: Extras = $extras;
+                apply_transformers(&mut body, &extras);
+                TransformerResult {
+                    replace_range: at..=at + 1,
+                    with: TokenTree::PrimitiveRule { name: $label, body },
+                }
+            }
+        }
+    };
+}
+
 macro_rules! tfers {
     ($($transformer:expr),*) => {
         vec![$(Box::new($transformer) as BoxedTransformer),*]
@@ -76,34 +110,8 @@ binary_operator!(Asterisk, "mul", "*");
 binary_operator!(Plus, "add", "+");
 binary_operator!(Is, "target", "is");
 
-struct Struct;
-impl Transformer for Struct {
-    fn should_be_applied_at(&self, tt: &TokenTree) -> bool {
-        tt == &TokenTree::Token("struct")
-    }
-
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let right = to[at + 1].clone();
-        if let TokenTree::Group {
-            start: "{",
-            end: "}",
-            mut body,
-        } = right
-        {
-            let extras: Extras = hashmap![160 => tfers![Is]];
-            apply_transformers(&mut body, &extras);
-            TransformerResult {
-                replace_range: at..=at + 1,
-                with: TokenTree::PrimitiveRule {
-                    name: "struct",
-                    body,
-                },
-            }
-        } else {
-            todo!("nice error, bad struct rule")
-        }
-    }
-}
+root_construct!(Builtin, "builtin", hashmap![]);
+root_construct!(Struct, "struct", hashmap![160 => tfers![Is]]);
 
 pub type Precedence = u8;
 
@@ -121,8 +129,7 @@ fn build_transformers<'e>(
     extras: &'e Extras<'e>,
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
-        10 => tfers![Parentheses],
-        30 => tfers![Struct],
+        10 => tfers![Parentheses, Builtin, Struct],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus],

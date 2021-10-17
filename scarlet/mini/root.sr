@@ -1,3 +1,4 @@
 struct{
     a is c + d
 }
+builtin{asdf_sum}
