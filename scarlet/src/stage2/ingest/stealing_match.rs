@@ -42,7 +42,9 @@ impl<'x, 't> RuleMatcher<'x, 't> {
         }
         let last = elements.len() - 1;
         let before_steal = self.composite_is_plain_match(&elements[..last], remaining_output)?;
+        println!("Started with: {:?}", remaining_output);
         let remaining_output = &remaining_output[before_steal.len()..];
+        println!("Remainder: {:?}", remaining_output);
         let steal =
             self.pattern_is_stealing_match(&elements[last], remaining_output, parent_rule)?;
         Some([before_steal, steal].concat())
