@@ -1,1 +1,3 @@
-d + a ^ b + e ^ c
+struct{
+    a is c + d
+}

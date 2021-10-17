@@ -1,4 +1,9 @@
-use std::ops::{Range, RangeInclusive};
+use std::{
+    collections::HashMap,
+    ops::{Range, RangeInclusive},
+};
+
+use maplit::hashmap;
 
 use super::structure::TokenTree;
 
@@ -25,7 +30,7 @@ impl Transformer for Parentheses {
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
         if let TokenTree::Group { body, .. } = &to[at] {
             let mut body = body.clone();
-            apply_transformers(&mut body);
+            apply_transformers(&mut body, &Default::default());
             let name = "paren";
             TransformerResult {
                 replace_range: at..=at,
@@ -60,17 +65,77 @@ macro_rules! binary_operator {
     };
 }
 
+macro_rules! tfers {
+    ($($transformer:expr),*) => {
+        vec![$(Box::new($transformer) as BoxedTransformer),*]
+    }
+}
+
 binary_operator!(Caret, "pow", "^");
 binary_operator!(Asterisk, "mul", "*");
 binary_operator!(Plus, "add", "+");
+binary_operator!(Is, "target", "is");
 
-fn build_transformers(precedence: u8) -> Vec<Box<dyn Transformer>> {
-    match precedence {
-        10 => vec![Box::new(Parentheses)],
-        61 => vec![Box::new(Caret)],
-        70 => vec![Box::new(Asterisk)],
-        80 => vec![Box::new(Plus)],
-        _ => vec![],
+struct Struct;
+impl Transformer for Struct {
+    fn should_be_applied_at(&self, tt: &TokenTree) -> bool {
+        tt == &TokenTree::Token("struct")
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        let right = to[at + 1].clone();
+        if let TokenTree::Group {
+            start: "{",
+            end: "}",
+            mut body,
+        } = right
+        {
+            let extras: Extras = hashmap![160 => tfers![Is]];
+            apply_transformers(&mut body, &extras);
+            TransformerResult {
+                replace_range: at..=at + 1,
+                with: TokenTree::PrimitiveRule {
+                    name: "struct",
+                    body,
+                },
+            }
+        } else {
+            todo!("nice error, bad struct rule")
+        }
+    }
+}
+
+pub type Precedence = u8;
+
+pub enum Either<First, Second> {
+    Fst(First),
+    Snd(Second),
+}
+
+type BoxedTransformer = Box<dyn Transformer>;
+type Extras<'e> = HashMap<Precedence, Vec<Box<dyn Transformer + 'e>>>;
+type SomeTransformer<'e> = Either<Box<dyn Transformer>, &'e dyn Transformer>;
+
+fn build_transformers<'e>(
+    precedence: Precedence,
+    extras: &'e Extras<'e>,
+) -> Vec<SomeTransformer<'e>> {
+    let basics: Vec<Box<dyn Transformer>> = match precedence {
+        10 => tfers![Parentheses],
+        30 => tfers![Struct],
+        61 => tfers![Caret],
+        70 => tfers![Asterisk],
+        80 => tfers![Plus],
+        _ => tfers![],
+    };
+    let basics: Vec<_> = basics.into_iter().map(Either::Fst).collect();
+    if let Some(extras) = extras.get(&precedence) {
+        let mut extras: Vec<_> = extras.iter().map(|x| &**x).map(Either::Snd).collect();
+        let mut total = basics;
+        total.append(&mut extras);
+        total
+    } else {
+        basics
     }
 }
 
@@ -118,13 +183,24 @@ fn apply_transformer_rtl<'t>(
     }
 }
 
-pub fn apply_transformers<'t>(to: &mut Vec<TokenTree<'t>>) {
+fn transformer_ref<'f>(from: &'f SomeTransformer) -> &'f dyn Transformer {
+    match from {
+        Either::Fst(boxed) => &**boxed,
+        Either::Snd(plain) => *plain,
+    }
+}
+
+pub fn apply_transformers<'e, 't>(
+    to: &mut Vec<TokenTree<'t>>,
+    extras: &'e HashMap<Precedence, Vec<Box<dyn Transformer + 'e>>>,
+) {
     for precedence in 0..=u8::MAX {
-        for transformer in build_transformers(precedence) {
+        for transformer in build_transformers(precedence, extras) {
+            let transformer = transformer_ref(&transformer);
             if precedence % 2 == 0 {
-                apply_transformer_ltr(to, &*transformer);
+                apply_transformer_ltr(to, transformer);
             } else {
-                apply_transformer_rtl(to, &*transformer);
+                apply_transformer_rtl(to, transformer);
             }
         }
     }

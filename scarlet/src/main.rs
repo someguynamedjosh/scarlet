@@ -14,7 +14,7 @@ fn main() {
 
     let root = entry::read_root(&path).unwrap();
     let mut stage1 = stage1::ingest(&root);
-    stage1::transformers::apply_transformers(&mut stage1.self_content);
+    stage1::transformers::apply_transformers(&mut stage1.self_content, &Default::default());
     println!("{:#?}", stage1);
 
     // let stage2 = stage2::ingest(&stage1.self_content);
