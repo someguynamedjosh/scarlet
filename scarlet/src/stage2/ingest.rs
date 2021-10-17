@@ -6,14 +6,15 @@ mod structs;
 
 use self::{
     rule::{build_rules, Rule},
-    structs::{MatchComp, RuleMatcher},
+    structs::{MatchComp, RuleMatch, RuleMatcher},
 };
+use super::structure::SyntaxNode;
 use crate::stage1::structure::Token;
 
-pub fn ingest<'a, 't>(tokens: &'a [Token<'t>]) -> RuleMatcher<'a, 't> {
+pub fn ingest<'a, 't>(tokens: &'a [Token<'t>]) -> SyntaxNode<'t> {
     let mut matcher = RuleMatcher::new(tokens);
     matcher.process();
-    matcher
+    matcher.finalize()
 }
 
 impl<'a, 't> RuleMatcher<'a, 't> {
@@ -60,5 +61,27 @@ impl<'a, 't> RuleMatcher<'a, 't> {
             self.output.insert(0, MatchComp::Token(token_index));
             self.try_rules(&rules[..]);
         }
+    }
+
+    fn eject_rule(&self, rule: &RuleMatch) -> SyntaxNode<'t> {
+        let elements = rule
+            .elements
+            .iter()
+            .map(|x| self.eject_component(x.1))
+            .collect();
+        let name = rule.name.clone();
+        SyntaxNode::Rule { elements, name }
+    }
+
+    fn eject_component(&self, component: MatchComp) -> SyntaxNode<'t> {
+        match component {
+            MatchComp::Token(token) => SyntaxNode::Token(self.tokens[token]),
+            MatchComp::RuleMatch(match_index) => self.eject_rule(&self.matches[match_index]),
+        }
+    }
+
+    fn finalize(&self) -> SyntaxNode<'t> {
+        assert_eq!(self.output.len(), 1);
+        self.eject_component(self.output[0])
     }
 }
