@@ -21,12 +21,12 @@ pub fn ingest<'a, 't>(tokens: &'a [Token<'t>]) -> SyntaxNode<'t> {
 impl<'x, 't> RuleMatcher<'x, 't> {
     fn try_rules(&mut self) {
         for rule in self.rules {
-            if let Some(matchh) = self.rule_is_plain_match(rule) {
-                self.push_plain_match(matchh);
+            if let Some(matchh) = self.rule_is_stealing_match(rule) {
+                self.push_stolen_match(matchh);
                 self.try_rules();
                 return;
-            } else if let Some(matchh) = self.rule_is_stealing_match(rule) {
-                self.push_stolen_match(matchh);
+            } else if let Some(matchh) = self.rule_is_plain_match(rule) {
+                self.push_plain_match(matchh);
                 self.try_rules();
                 return;
             }
@@ -34,6 +34,7 @@ impl<'x, 't> RuleMatcher<'x, 't> {
     }
 
     fn push_stolen_match(&mut self, matchh: structs::RuleMatch<'x, 't>) {
+        println!("{:#?}", matchh);
         for _ in 0..matchh.elements.len() - 1 {
             self.output.remove(0);
         }
@@ -50,13 +51,15 @@ impl<'x, 't> RuleMatcher<'x, 't> {
             self.output.remove(0);
         }
         let comp = MatchComp::RuleMatch(matchh);
-        self.output.push(comp);
+        self.output.insert(0, comp);
     }
 
     fn process(&mut self) {
         for token in self.tokens.iter().rev() {
             self.output.insert(0, MatchComp::Token(*token));
             self.try_rules();
+            println!("Pushed {}", token);
+            println!("{:#?}", self.output);
         }
     }
 
@@ -78,7 +81,7 @@ impl<'x, 't> RuleMatcher<'x, 't> {
     }
 
     fn finalize(&self) -> SyntaxNode<'t> {
-        println!("{:#?}", &self.tokens);
+        println!("{:#?}", &self.output);
         assert_eq!(self.output.len(), 1);
         self.eject_component(&self.output[0])
     }

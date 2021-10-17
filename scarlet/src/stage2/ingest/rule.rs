@@ -1,6 +1,6 @@
 use crate::{
     pattern,
-    stage2::ingest::pattern::{rep, Pattern},
+    stage2::ingest::pattern::{any, difference, rep, Pattern},
 };
 
 pub type Precedence = u8;
@@ -15,7 +15,7 @@ pub fn build_rules() -> Vec<Rule> {
     vec![
         Rule {
             name: format!("paren"),
-            pattern: pattern!(["(", rep(255), ")"]),
+            pattern: pattern!(["(", rep(difference(any(), ")")), ")"]),
             result_precedence: 1,
         },
         Rule {

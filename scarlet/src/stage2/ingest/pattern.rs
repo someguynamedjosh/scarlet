@@ -14,6 +14,19 @@ pub enum Pattern {
     Repeat(Box<Pattern>),
 }
 
+pub fn any() -> Pattern {
+    Pattern::Atomic(Box::new(|_| true))
+}
+
+pub fn difference(base: impl Into<Pattern>, except: impl Into<Pattern>) -> Pattern {
+    if let Pattern::Atomic(except) = except.into() {
+        if let Pattern::Atomic(base) = base.into() {
+            return Pattern::Atomic(Box::new(move |comp| base(comp) && !except(comp)));
+        }
+    }
+    panic!()
+}
+
 pub fn rep(base: impl Into<Pattern>) -> Pattern {
     Pattern::Repeat(Box::new(base.into()))
 }

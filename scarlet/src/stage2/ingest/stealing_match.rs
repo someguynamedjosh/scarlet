@@ -1,6 +1,6 @@
 use super::{
     pattern::{AtomicPat, Pattern},
-    rule::{Precedence, Rule},
+    rule::Rule,
     structs::{MatchComp, PatternMatch, RuleMatch, RuleMatcher},
 };
 
@@ -19,8 +19,9 @@ impl<'x, 't> RuleMatcher<'x, 't> {
                     elements: vec![],
                 });
                 let we_could_replace_first_element = first_element.0(&hypothetical_result);
-                if we_could_replace_first_element {
-                    Some(component)
+                let first_element_matches_original_pattern = pattern(&first_element.1);
+                if we_could_replace_first_element && first_element_matches_original_pattern {
+                    Some(&first_element.1)
                 } else {
                     None
                 }

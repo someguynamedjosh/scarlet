@@ -1,10 +1,12 @@
+use std::fmt::{self, Debug, Formatter};
+
 use super::{
     pattern::AtomicPat,
     rule::{Precedence, Rule},
 };
 use crate::stage1::structure::Token;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MatchComp<'r, 't> {
     Token(Token<'t>),
     RuleMatch(RuleMatch<'r, 't>),
@@ -30,6 +32,24 @@ impl<'r, 't> PartialEq for RuleMatch<'r, 't> {
         }
         self.rule.name == other.rule.name
             && self.rule.result_precedence == other.rule.result_precedence
+    }
+}
+
+struct ElementDebugHelp<'s, 'r, 't>(&'s PatternMatch<'r, 't>);
+
+impl<'s, 'r, 't> Debug for ElementDebugHelp<'s, 'r, 't> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(self.0.iter().map(|x| &x.1)).finish()
+    }
+}
+
+impl<'r, 't> Debug for RuleMatch<'r, 't> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RuleMatch")
+            .field("rule_name", &self.rule.name)
+            .field("rule_precedence", &self.rule.result_precedence)
+            .field("elements", &ElementDebugHelp(&self.elements))
+            .finish()
     }
 }
 
