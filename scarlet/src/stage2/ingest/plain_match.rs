@@ -5,37 +5,31 @@ use super::{
 };
 
 impl<'a, 't> RuleMatcher<'a, 't> {
-    pub(super) fn atomic_is_plain_match(
+    pub(super) fn atomic_is_plain_match<'b>(
         &self,
         pattern: &AtomicPat,
-        component: MatchComp,
-    ) -> Option<MatchComp> {
-        match (pattern, component) {
-            (AtomicPat::ExactToken(expected), MatchComp::Token(index)) => {
-                if self.tokens[index] == *expected {
-                    Some(component)
-                } else {
-                    None
-                }
+        component: &'b MatchComp<'t>,
+    ) -> Option<&'b MatchComp<'t>> {
+        let matches = match (pattern, component) {
+            (AtomicPat::ExactToken(expected), MatchComp::Token(actual)) => expected == actual,
+            (AtomicPat::Expression { .. }, MatchComp::Token(..)) => true,
+            (AtomicPat::Expression { max_precedence }, MatchComp::RuleMatch(matchh)) => {
+                matchh.precedence <= *max_precedence
             }
-            (AtomicPat::Expression { .. }, MatchComp::Token(..)) => Some(component),
-            (AtomicPat::Expression { max_precedence }, MatchComp::RuleMatch(matchh_index)) => {
-                let matchh = &self.matches[matchh_index];
-                if matchh.precedence <= *max_precedence {
-                    Some(component)
-                } else {
-                    None
-                }
-            }
-            _ => None,
+            _ => false,
+        };
+        if matches {
+            Some(component)
+        } else {
+            None
         }
     }
 
     pub(super) fn composite_is_plain_match(
         &self,
         elements: &[Pattern],
-        remaining_output: &[MatchComp],
-    ) -> Option<PatternMatch> {
+        remaining_output: &[MatchComp<'t>],
+    ) -> Option<PatternMatch<'t>> {
         if elements.len() > remaining_output.len() {
             return None;
         }
@@ -52,8 +46,8 @@ impl<'a, 't> RuleMatcher<'a, 't> {
     pub(super) fn repeat_is_plain_match(
         &self,
         repeated: &Pattern,
-        remaining_output: &[MatchComp],
-    ) -> Option<PatternMatch> {
+        remaining_output: &[MatchComp<'t>],
+    ) -> Option<PatternMatch<'t>> {
         let mut result = PatternMatch::new();
         let mut remaining_output = remaining_output;
         while let Some(mut matchh) = self.pattern_is_plain_match(repeated, remaining_output) {
@@ -66,14 +60,14 @@ impl<'a, 't> RuleMatcher<'a, 't> {
     pub(super) fn pattern_is_plain_match(
         &self,
         pattern: &Pattern,
-        remaining_output: &[MatchComp],
-    ) -> Option<PatternMatch> {
+        remaining_output: &[MatchComp<'t>],
+    ) -> Option<PatternMatch<'t>> {
         match pattern {
             Pattern::Atomic(pat) => {
                 if remaining_output.len() == 0 {
                     None
                 } else {
-                    let matchh = self.atomic_is_plain_match(pat, remaining_output[0])?;
+                    let matchh = self.atomic_is_plain_match(pat, &remaining_output[0])?.clone();
                     Some(vec![(pat.clone(), matchh)])
                 }
             }
@@ -86,7 +80,7 @@ impl<'a, 't> RuleMatcher<'a, 't> {
 
     /// Returns a RuleMatch if the given rule matches the current output
     /// without stealing from any existing rule matches.
-    pub(super) fn rule_is_plain_match(&self, rule: &Rule) -> Option<RuleMatch> {
+    pub(super) fn rule_is_plain_match(&self, rule: &Rule) -> Option<RuleMatch<'t>> {
         self.pattern_is_plain_match(&rule.pattern, &self.output[..])
             .map(|matchh| RuleMatch {
                 elements: matchh,

@@ -32,57 +32,54 @@ impl<'a, 't> RuleMatcher<'a, 't> {
         }
     }
 
-    fn push_stolen_match(&mut self, matchh: structs::RuleMatch) {
+    fn push_stolen_match(&mut self, matchh: structs::RuleMatch<'t>) {
         for _ in 0..matchh.elements.len() - 1 {
             self.output.remove(0);
         }
-        let comp = MatchComp::RuleMatch(self.matches.len());
-        self.matches.push(matchh);
-        let steal_from = if let MatchComp::RuleMatch(index) = self.output[0] {
-            &mut self.matches[index]
+        let steal_from = if let MatchComp::RuleMatch(matchh) = &mut self.output[0] {
+            matchh
         } else {
             unreachable!()
         };
-        steal_from.elements[0].1 = comp;
+        steal_from.elements[0].1 = MatchComp::RuleMatch(matchh);
     }
 
-    fn push_plain_match(&mut self, matchh: structs::RuleMatch) {
+    fn push_plain_match(&mut self, matchh: structs::RuleMatch<'t>) {
         for _ in 0..matchh.elements.len() {
             self.output.remove(0);
         }
-        let comp = MatchComp::RuleMatch(self.matches.len());
-        self.matches.push(matchh);
+        let comp = MatchComp::RuleMatch(matchh);
         self.output.push(comp);
     }
 
     fn process(&mut self) {
         let rules = build_rules();
-        for token_index in (0..self.tokens.len()).rev() {
-            self.output.insert(0, MatchComp::Token(token_index));
+        for token in self.tokens.iter().rev() {
+            self.output.insert(0, MatchComp::Token(*token));
             self.try_rules(&rules[..]);
         }
     }
 
-    fn eject_rule(&self, rule: &RuleMatch) -> SyntaxNode<'t> {
+    fn eject_rule(&self, rule: &RuleMatch<'t>) -> SyntaxNode<'t> {
         let elements = rule
             .elements
             .iter()
-            .map(|x| self.eject_component(x.1))
+            .map(|x| self.eject_component(&x.1))
             .collect();
         let name = rule.name.clone();
         SyntaxNode::Rule { elements, name }
     }
 
-    fn eject_component(&self, component: MatchComp) -> SyntaxNode<'t> {
+    fn eject_component(&self, component: &MatchComp<'t>) -> SyntaxNode<'t> {
         match component {
-            MatchComp::Token(token) => SyntaxNode::Token(self.tokens[token]),
-            MatchComp::RuleMatch(match_index) => self.eject_rule(&self.matches[match_index]),
+            MatchComp::Token(token) => SyntaxNode::Token(token),
+            MatchComp::RuleMatch(rule_match) => self.eject_rule(rule_match),
         }
     }
 
     fn finalize(&self) -> SyntaxNode<'t> {
         println!("{:#?}", self);
         assert_eq!(self.output.len(), 1);
-        self.eject_component(self.output[0])
+        self.eject_component(&self.output[0])
     }
 }
