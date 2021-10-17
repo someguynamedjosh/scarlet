@@ -1,23 +1,44 @@
 use super::{
     nom_prelude::*,
-    structure::{Module, Token},
+    structure::{Module, TokenTree},
 };
 use crate::entry::FileNode;
 
-fn parse_token<'a>() -> impl Parser<'a, Token<'a>> {
-    |input| {
-        let split_on = "{}[]().:!@$%^&*-=+\\|;'\",<>/?";
+fn parse_token<'a>() -> impl Parser<'a, TokenTree<'a>> {
+    |input: &'a str| {
+        let parens = "{[()]}";
+        let split_on = ".:!@$%^&*-=+\\|;'\",<>/?";
         let whitespace_indicators = " \t\r\n#";
         let (input, token) = alt((
             recognize(one_of(split_on)),
-            take_while1(|c| !split_on.contains(c) && !whitespace_indicators.contains(c)),
+            take_while1(|c| {
+                !split_on.contains(c) && !parens.contains(c) && !whitespace_indicators.contains(c)
+            }),
         ))(input)?;
-        Ok((input, token))
+        for c in "{}()[]".chars() {
+            if token.contains(c) {
+                return fail(input);
+            }
+        }
+        Ok((input, TokenTree::Token(token)))
     }
 }
 
-fn parse<'a>() -> impl Parser<'a, Vec<Token<'a>>> {
-    terminated(many0(after_ws(parse_token())), ws())
+fn parse_group<'a>() -> impl Parser<'a, TokenTree<'a>> {
+    let data = tuple((recognize(one_of("{[(")), parse(), recognize(one_of("}])"))));
+    map(data, |(start, body, end)| TokenTree::Group {
+        start,
+        end,
+        body,
+    })
+}
+
+fn parse_tree<'a>() -> impl Parser<'a, TokenTree<'a>> {
+    alt((parse_group(), parse_token()))
+}
+
+fn parse<'a>() -> impl Parser<'a, Vec<TokenTree<'a>>> {
+    |input| terminated(many0(after_ws(parse_tree())), ws())(input)
 }
 
 pub fn ingest(file_tree: &FileNode) -> Module {

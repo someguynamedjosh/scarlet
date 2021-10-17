@@ -4,7 +4,7 @@ mod entry;
 mod rust_analyzer_actions;
 mod shared;
 mod stage1;
-mod stage2;
+// mod stage2;
 mod util;
 
 fn main() {
@@ -15,22 +15,8 @@ fn main() {
     let stage1 = stage1::ingest(&root);
     println!("{:#?}", stage1);
 
-    let stage2 = stage2::ingest(&stage1.self_content);
-    println!("{:?}", stage2);
-    println!("{:#?}", stage2);
+    // let stage2 = stage2::ingest(&stage1.self_content);
+    // println!("{:?}", stage2);
+    // println!("{:#?}", stage2);
 
-    // println!("Doing reduction");
-    // s3_environment.reduce_all();
-    // println!("{:#?}", s3_environment);
-    // println!("root {:#?}", s3_root);
-
-    // println!("\nDisplays:");
-    // let displays = s3_environment.display_all(&mut s2_environment, s2_root);
-    // for display in displays {
-    //     println!("\n{} is", display.value_name);
-    //     let value = stage2::completely_vomit_item(&s2_environment,
-    // display.vomited_root);     println!("{}", value);
-    //     let value = stage2::completely_vomit_item(&s2_environment,
-    // display.vomited_type);     println!(":{}", value);
-    // }
 }
