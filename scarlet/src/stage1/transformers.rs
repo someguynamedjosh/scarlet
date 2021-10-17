@@ -37,28 +37,36 @@ impl Transformer for Parentheses {
     }
 }
 
-struct Plus;
-impl Transformer for Plus {
-    fn should_be_applied_at(&self, tt: &TokenTree) -> bool {
-        tt == &TokenTree::Token("+")
-    }
+macro_rules! binary_operator {
+    ($StructName:ident, $internal_name:expr, $operator:expr) => {
+        struct $StructName;
+        impl Transformer for $StructName {
+            fn should_be_applied_at(&self, tt: &TokenTree) -> bool {
+                tt == &TokenTree::Token($operator)
+            }
 
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let left = to[at - 1].clone();
-        let right = to[at + 1].clone();
-        TransformerResult {
-            replace_range: at - 1..=at + 1,
-            with: TokenTree::PrimitiveRule {
-                name: "add",
-                body: vec![left, right],
-            },
+            fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+                let left = to[at - 1].clone();
+                let right = to[at + 1].clone();
+                TransformerResult {
+                    replace_range: at - 1..=at + 1,
+                    with: TokenTree::PrimitiveRule {
+                        name: $internal_name,
+                        body: vec![left, right],
+                    },
+                }
+            }
         }
-    }
+    };
 }
+
+binary_operator!(Asterisk, "mul", "*");
+binary_operator!(Plus, "add", "+");
 
 fn build_transformers(precedence: u8) -> Vec<Box<dyn Transformer>> {
     match precedence {
         10 => vec![Box::new(Parentheses)],
+        70 => vec![Box::new(Asterisk)],
         80 => vec![Box::new(Plus)],
         _ => vec![],
     }
