@@ -1,13 +1,13 @@
-use super::rule::Precedence;
+use super::{rule::Precedence, structs::MatchComp};
 use crate::stage1::structure::Token;
 
-#[derive(Clone, Debug)]
-pub enum AtomicPat {
-    ExactToken(Token<'static>),
-    Expression { max_precedence: Precedence },
-}
+// pub enum AtomicPat {
+//     ExactToken(Token<'static>),
+//     Expression { max_precedence: Precedence },
+// }
 
-#[derive(Clone, Debug)]
+pub type AtomicPat = Box<dyn Fn(&MatchComp) -> bool>;
+
 pub enum Pattern {
     Atomic(AtomicPat),
     Composite(Vec<Pattern>),
@@ -20,13 +20,19 @@ pub fn rep(base: impl Into<Pattern>) -> Pattern {
 
 impl From<Token<'static>> for Pattern {
     fn from(token: Token<'static>) -> Self {
-        Self::Atomic(AtomicPat::ExactToken(token))
+        Self::Atomic(Box::new(move |test_against| match test_against {
+            MatchComp::Token(actual_token) => token == *actual_token,
+            MatchComp::RuleMatch(_) => false,
+        }))
     }
 }
 
 impl From<Precedence> for Pattern {
     fn from(max_precedence: Precedence) -> Self {
-        Self::Atomic(AtomicPat::Expression { max_precedence })
+        Self::Atomic(Box::new(move |test_against| match test_against {
+            MatchComp::Token(_) => true,
+            MatchComp::RuleMatch(matchh) => matchh.rule.result_precedence <= max_precedence,
+        }))
     }
 }
 

@@ -1,22 +1,24 @@
-use super::{pattern::AtomicPat, rule::Precedence};
+use super::{
+    pattern::AtomicPat,
+    rule::{Precedence, Rule},
+};
 use crate::stage1::structure::Token;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum MatchComp<'t> {
+#[derive(Clone, PartialEq, Eq)]
+pub enum MatchComp<'r, 't> {
     Token(Token<'t>),
-    RuleMatch(RuleMatch<'t>),
+    RuleMatch(RuleMatch<'r, 't>),
 }
 
-pub type PatternMatch<'t> = Vec<(AtomicPat, MatchComp<'t>)>;
+pub type PatternMatch<'r, 't> = Vec<(&'r AtomicPat, MatchComp<'r, 't>)>;
 
-#[derive(Clone, Debug)]
-pub struct RuleMatch<'t> {
-    pub elements: PatternMatch<'t>,
-    pub name: String,
-    pub precedence: Precedence,
+#[derive(Clone)]
+pub struct RuleMatch<'r, 't> {
+    pub rule: &'r Rule,
+    pub elements: PatternMatch<'r, 't>,
 }
 
-impl<'t> PartialEq for RuleMatch<'t> {
+impl<'r, 't> PartialEq for RuleMatch<'r, 't> {
     fn eq(&self, other: &Self) -> bool {
         if self.elements.len() != other.elements.len() {
             return false;
@@ -26,22 +28,24 @@ impl<'t> PartialEq for RuleMatch<'t> {
                 return false;
             }
         }
-        self.name == other.name && self.precedence == other.precedence
+        self.rule.name == other.rule.name
+            && self.rule.result_precedence == other.rule.result_precedence
     }
 }
 
-impl<'t> Eq for RuleMatch<'t> {}
+impl<'r, 't> Eq for RuleMatch<'r, 't> {}
 
-#[derive(Clone, Debug)]
-pub struct RuleMatcher<'a, 't> {
-    pub output: Vec<MatchComp<'t>>,
-    pub tokens: &'a [Token<'t>],
+pub struct RuleMatcher<'x, 't> {
+    pub output: Vec<MatchComp<'x, 't>>,
+    pub rules: &'x [Rule],
+    pub tokens: &'x [Token<'t>],
 }
 
-impl<'a, 't> RuleMatcher<'a, 't> {
-    pub(super) fn new(tokens: &'a [Token<'t>]) -> Self {
+impl<'x, 't> RuleMatcher<'x, 't> {
+    pub(super) fn new(rules: &'x [Rule], tokens: &'x [Token<'t>]) -> Self {
         Self {
             output: Vec::new(),
+            rules,
             tokens,
         }
     }

@@ -5,7 +5,6 @@ use crate::{
 
 pub type Precedence = u8;
 
-#[derive(Clone, Debug)]
 pub struct Rule {
     pub name: String,
     pub pattern: Pattern,
