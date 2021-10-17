@@ -26,10 +26,21 @@ fn parse_token<'a>() -> impl Parser<'a, Token<'a>> {
 
 fn parse_group<'a>() -> impl Parser<'a, TokenTree<'a>> {
     let data = tuple((recognize(one_of("{[(")), parse(), recognize(one_of("}])"))));
-    map(data, |(start, body, end)| TokenTree::Group {
-        start,
-        end,
-        body,
+    map(data, |(start, body, end)| {
+        // I'm dedicated.
+        let name = match (start, end) {
+            ("{", "}") => "group{}",
+            ("{", "]") => "group{]",
+            ("{", ")") => "group{)",
+            ("[", "}") => "group[}",
+            ("[", "]") => "group[]",
+            ("[", ")") => "group[)",
+            ("(", "}") => "group(}",
+            ("(", "]") => "group(]",
+            ("(", ")") => "group()",
+            _ => unreachable!(),
+        };
+        TokenTree::PrimitiveRule { name, body }
     })
 }
 

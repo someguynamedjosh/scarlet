@@ -22,13 +22,13 @@ struct Parentheses;
 impl Transformer for Parentheses {
     fn should_be_applied_at(&self, tt: &TokenTree) -> bool {
         match tt {
-            TokenTree::Group { start, end, .. } => *start == "(" && *end == ")",
+            TokenTree::PrimitiveRule { name, .. } => *name == "group()",
             _ => false,
         }
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        if let TokenTree::Group { body, .. } = &to[at] {
+        if let TokenTree::PrimitiveRule { body, .. } = &to[at] {
             let mut body = body.clone();
             apply_transformers(&mut body, &Default::default());
             let name = "paren";
@@ -66,9 +66,8 @@ macro_rules! binary_operator {
 }
 
 fn expect_bracket_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>> {
-    if let TokenTree::Group {
-        start: "{",
-        end: "}",
+    if let TokenTree::PrimitiveRule {
+        name: "group{}",
         body,
     } = tt
     {
