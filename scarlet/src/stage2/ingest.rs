@@ -81,6 +81,7 @@ impl<'a, 't> RuleMatcher<'a, 't> {
     }
 
     fn finalize(&self) -> SyntaxNode<'t> {
+        println!("{:#?}", self);
         assert_eq!(self.output.len(), 1);
         self.eject_component(self.output[0])
     }

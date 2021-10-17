@@ -16,6 +16,7 @@ fn main() {
     println!("{:#?}", stage1);
 
     let stage2 = stage2::ingest(&stage1.self_content);
+    println!("{:?}", stage2);
     println!("{:#?}", stage2);
 
     // println!("Doing reduction");

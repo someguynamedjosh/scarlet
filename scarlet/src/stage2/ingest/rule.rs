@@ -15,6 +15,11 @@ pub struct Rule {
 pub fn build_rules() -> Vec<Rule> {
     vec![
         Rule {
+            name: format!("paren"),
+            pattern: pattern!(["(", rep(255), ")"]),
+            result_precedence: 1,
+        },
+        Rule {
             name: format!("+"),
             pattern: pattern!([80, "+", 79]),
             result_precedence: 80,
@@ -28,11 +33,6 @@ pub fn build_rules() -> Vec<Rule> {
             name: format!("^"),
             pattern: pattern!([59, "^", 60]),
             result_precedence: 60,
-        },
-        Rule {
-            name: format!("paren"),
-            pattern: pattern!(["(", rep(pattern!(255)), ")"]),
-            result_precedence: 1,
         },
     ]
 }

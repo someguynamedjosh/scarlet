@@ -14,8 +14,8 @@ pub enum Pattern {
     Repeat(Box<Pattern>),
 }
 
-pub fn rep(base: Pattern) -> Pattern {
-    Pattern::Repeat(Box::new(base))
+pub fn rep(base: impl Into<Pattern>) -> Pattern {
+    Pattern::Repeat(Box::new(base.into()))
 }
 
 impl From<Token<'static>> for Pattern {
