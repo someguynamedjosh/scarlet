@@ -1,39 +1,53 @@
-use std::fmt::{self, Debug, Formatter};
+use crate::{shared::{Id, OrderedMap, Pool}, stage1::structure as s1};
 
-use crate::{stage1::structure::Token, util::indented};
-
-#[derive(Clone)]
-pub enum SyntaxNode<'a> {
-    Token(Token<'a>),
-    Rule {
-        name: String,
-        elements: Vec<SyntaxNode<'a>>,
-    },
+#[derive(Clone, Debug)]
+pub struct StructField<'x> {
+    pub name: Option<String>,
+    pub value: ItemId<'x>,
 }
 
-impl<'a> Debug for SyntaxNode<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Token(token) => write!(f, "{:?}", token),
-            Self::Rule { name, elements } => {
-                write!(f, "({}:", name)?;
-                let sep = match f.alternate() {
-                    true => "\n    ",
-                    false => " ",
-                };
-                for element in elements {
-                    write!(f, "{}", sep)?;
-                    let text = match f.alternate() {
-                        true => format!("{:#?}", element),
-                        false => format!("{:?}", element),
-                    };
-                    write!(f, "{}", indented(&text))?;
-                }
-                match f.alternate() {
-                    true => write!(f, "\n)"),
-                    false => write!(f, ")"),
-                }
-            }
-        }
-    }
+#[derive(Clone, Debug)]
+pub struct Substitution<'x> {
+    pub target: Option<ItemId<'x>>,
+    pub value: ItemId<'x>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Condition<'x> {
+    pub condition: ItemId<'x>,
+    pub value: ItemId<'x>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Definition<'x> {
+    // BuiltinValue(BuiltinValue),
+    // BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
+    Match {
+        base: ItemId<'x>,
+        conditions: Vec<Condition<'x>>,
+        else_value: ItemId<'x>,
+    },
+    Member(ItemId<'x>, String),
+    Struct(Vec<StructField<'x>>),
+    Substitute(ItemId<'x>, Vec<Substitution<'x>>),
+    Variable(VariableId<'x>)
+}
+
+#[derive(Clone, Debug)]
+pub struct Environment<'x> {
+    pub items: Pool<Item<'x>, 'I'>,
+    pub vars: Pool<Variable<'x>, 'I'>,
+}
+
+pub type ItemId<'x> = Id<Item<'x>, 'I'>;
+#[derive(Clone, Debug)]
+pub struct Item<'x> {
+    pub original_definition: &'x s1::TokenTree<'x>,
+    pub definition: Option<Definition<'x>>,
+}
+
+pub type VariableId<'x> = Id<Variable<'x>, 'I'>;
+#[derive(Clone, Debug)]
+pub struct Variable<'x> {
+    pub pattern: Item<'x>
 }

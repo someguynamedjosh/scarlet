@@ -767,3 +767,26 @@ a+b+c
 ^Add
   ^Add
 ```
+```
+10
+compound{name args*}
+builtin{name args*}
+struct{fields*}
+(x)
+
+30
+x.ident
+x(substitutions*)
+x match{conditions*}
+
+160
+target is x
+var PATTERN
+
+171
+after{vars*} x
+
+172
+else x
+on{condition} x
+```
