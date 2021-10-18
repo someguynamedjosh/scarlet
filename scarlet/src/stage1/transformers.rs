@@ -99,8 +99,8 @@ macro_rules! tfers {
     }
 }
 
-struct Parentheses;
-impl Transformer for Parentheses {
+struct Struct;
+impl Transformer for Struct {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
         if let TokenTree::PrimitiveRule { name, .. } = &to[at] {
             *name == "group()"
@@ -114,7 +114,7 @@ impl Transformer for Parentheses {
             let mut body = body.clone();
             let extras = hashmap![160 => tfers![Is]];
             apply_transformers(&mut body, &extras);
-            let name = "paren";
+            let name = "struct";
             TransformerResult {
                 replace_range: at..=at,
                 with: TokenTree::PrimitiveRule { name, body },
@@ -126,7 +126,6 @@ impl Transformer for Parentheses {
 }
 
 root_construct!(Builtin, "builtin", hashmap![]);
-root_construct!(Struct, "struct", hashmap![160 => tfers![Is]]);
 
 binary_operator!(Member, "member", ".");
 
@@ -261,7 +260,7 @@ fn build_transformers<'e>(
     extras: &'e Extras<'e>,
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
-        10 => tfers![Parentheses, Builtin, Struct],
+        10 => tfers![Struct, Builtin],
         20 => tfers![Match, Member, Substitution],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
