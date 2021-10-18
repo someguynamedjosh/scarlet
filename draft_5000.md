@@ -358,13 +358,13 @@ x.ident
 x(substitutions*)
 x match{conditions*}
 
-var pattern
-raise{vars*} x
-else x
-
 target is x
+var PATTERN
 
+defining{definitions*} x
+after{vars*} x
 on{condition} x
+else x
 ```
 ```
 builtin is

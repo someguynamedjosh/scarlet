@@ -1,4 +1,2 @@
-struct{
-    a is c + d
-}
-builtin{asdf_sum}
+
+a[123 is 123 asdf is 456]
