@@ -364,11 +364,13 @@ x match{conditions*}
 target is x
 var PATTERN
 
-170
-defining{definitions*} x
+171
 after{vars*} x
-on{condition} x
+defining{definitions*} x
+
+172
 else x
+on{condition} x
 ```
 ```
 builtin is

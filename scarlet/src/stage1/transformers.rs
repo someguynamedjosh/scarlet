@@ -15,31 +15,6 @@ pub trait Transformer {
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t>;
 }
 
-struct Parentheses;
-impl Transformer for Parentheses {
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        if let TokenTree::PrimitiveRule { name, .. } = &to[at] {
-            *name == "group()"
-        } else {
-            false
-        }
-    }
-
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        if let TokenTree::PrimitiveRule { body, .. } = &to[at] {
-            let mut body = body.clone();
-            apply_transformers(&mut body, &Default::default());
-            let name = "paren";
-            TransformerResult {
-                replace_range: at..=at,
-                with: TokenTree::PrimitiveRule { name, body },
-            }
-        } else {
-            unreachable!("Checked in should_be_applied_at")
-        }
-    }
-}
-
 macro_rules! binary_operator {
     ($StructName:ident, $internal_name:expr, $operator:expr) => {
         struct $StructName;
@@ -124,6 +99,32 @@ macro_rules! tfers {
     }
 }
 
+struct Parentheses;
+impl Transformer for Parentheses {
+    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+        if let TokenTree::PrimitiveRule { name, .. } = &to[at] {
+            *name == "group()"
+        } else {
+            false
+        }
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        if let TokenTree::PrimitiveRule { body, .. } = &to[at] {
+            let mut body = body.clone();
+            let extras = hashmap![160 => tfers![Is]];
+            apply_transformers(&mut body, &extras);
+            let name = "paren";
+            TransformerResult {
+                replace_range: at..=at,
+                with: TokenTree::PrimitiveRule { name, body },
+            }
+        } else {
+            unreachable!("Checked in should_be_applied_at")
+        }
+    }
+}
+
 root_construct!(Builtin, "builtin", hashmap![]);
 root_construct!(Struct, "struct", hashmap![160 => tfers![Is]]);
 
@@ -138,7 +139,7 @@ impl Transformer for Match {
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
         let base = to[at - 1].clone();
         let mut patterns = expect_bracket_group(&to[at + 1]).clone();
-        let extras: Extras = hashmap![170 => tfers![OnPattern, Else]];
+        let extras: Extras = hashmap![172 => tfers![OnPattern, Else]];
         apply_transformers(&mut patterns, &extras);
         let patterns = TokenTree::PrimitiveRule {
             name: "patterns",

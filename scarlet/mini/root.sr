@@ -1,2 +1,6 @@
 
-var PATTERN
+(
+    a is 1
+    b is 2
+    a + b
+)
