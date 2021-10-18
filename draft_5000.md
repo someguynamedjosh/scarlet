@@ -349,18 +349,22 @@ the dependencies form a DAG it's fine!
 
 So we need to define:
 ```
+10
 compound{name args*}
 builtin{name args*}
 struct{fields*}
 (x)
 
+30
 x.ident
 x(substitutions*)
 x match{conditions*}
 
+160
 target is x
 var PATTERN
 
+170
 defining{definitions*} x
 after{vars*} x
 on{condition} x
