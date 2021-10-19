@@ -3,11 +3,8 @@ use std::collections::HashMap;
 use crate::{
     stage1::structure::TokenTree,
     stage2::{
-        ingest::{top_level, util},
-        structure::{
-            BuiltinValue, Condition, Definition, Environment, Item, ItemId, StructField,
-            Substitution, Variable,
-        },
+        ingest::top_level,
+        structure::{Condition, Definition, Environment, ItemId},
     },
 };
 
