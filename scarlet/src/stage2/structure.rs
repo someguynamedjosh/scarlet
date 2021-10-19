@@ -62,8 +62,8 @@ pub struct Item<'x> {
     pub definition: Option<Definition<'x>>,
 }
 
-pub type VariableId<'x> = Id<Variable<'x>, 'I'>;
+pub type VariableId<'x> = Id<Variable<'x>, 'V'>;
 #[derive(Clone, Debug)]
 pub struct Variable<'x> {
-    pub pattern: Item<'x>
+    pub pattern: ItemId<'x>
 }
