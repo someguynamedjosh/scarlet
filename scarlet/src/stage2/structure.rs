@@ -1,4 +1,7 @@
-use crate::{shared::{Id, OrderedMap, Pool}, stage1::structure as s1};
+use crate::{
+    shared::{Id, OrderedMap, Pool},
+    stage1::structure as s1,
+};
 
 #[derive(Clone, Debug)]
 pub struct StructField<'x> {
@@ -35,9 +38,10 @@ pub enum Definition<'x> {
         else_value: ItemId<'x>,
     },
     Member(ItemId<'x>, String),
+    Other(ItemId<'x>),
     Struct(Vec<StructField<'x>>),
     Substitute(ItemId<'x>, Vec<Substitution<'x>>),
-    Variable(VariableId<'x>)
+    Variable(VariableId<'x>),
 }
 
 #[derive(Clone, Debug)]
@@ -65,5 +69,5 @@ pub struct Item<'x> {
 pub type VariableId<'x> = Id<Variable<'x>, 'V'>;
 #[derive(Clone, Debug)]
 pub struct Variable<'x> {
-    pub pattern: ItemId<'x>
+    pub pattern: ItemId<'x>,
 }
