@@ -1,4 +1,6 @@
 (
-    asdf is fdsa
-    fdsa is var 123
+    asdf is 123 match{
+        on{123} 456
+        else 123
+    }
 )
