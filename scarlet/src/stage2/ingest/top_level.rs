@@ -5,9 +5,7 @@ use crate::{
     stage1::structure::{Module, TokenTree},
     stage2::{
         ingest::util,
-        structure::{
-            BuiltinValue, Definition, Environment, Item, ItemId, StructField, Variable,
-        },
+        structure::{Environment, ItemId},
     },
 };
 

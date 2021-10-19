@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Id, OrderedMap, Pool},
+    shared::{Id, Pool},
     stage1::structure as s1,
 };
 

@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage1::structure::{Module, TokenTree},
-    stage2::structure::{
-        BuiltinValue, Definition, Environment, Item, ItemId, StructField, Variable,
-    },
+    stage1::structure::TokenTree,
+    stage2::structure::{Environment, Item, ItemId},
 };
 
 pub struct MaybeTarget<'x> {
