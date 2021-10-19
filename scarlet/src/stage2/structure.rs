@@ -17,7 +17,7 @@ pub struct Substitution<'x> {
 
 #[derive(Clone, Debug)]
 pub struct Condition<'x> {
-    pub condition: ItemId<'x>,
+    pub pattern: ItemId<'x>,
     pub value: ItemId<'x>,
 }
 

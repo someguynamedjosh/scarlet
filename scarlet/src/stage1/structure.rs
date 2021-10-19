@@ -20,6 +20,22 @@ impl<'i> TokenTree<'i> {
             _ => None,
         }
     }
+
+    pub fn unwrap_primitive(&self, expected_name: Token<'i>) -> &[TokenTree<'i>] {
+        match self {
+            Self::PrimitiveRule { name, body } => {
+                if *name == expected_name {
+                    &body[..]
+                } else {
+                    panic!(
+                        "The actual name {} does not match the expected name {}",
+                        name, expected_name
+                    )
+                }
+            }
+            _ => panic!("Expected a primitive rule, found a token instead."),
+        }
+    }
 }
 
 impl<'i> Debug for TokenTree<'i> {
