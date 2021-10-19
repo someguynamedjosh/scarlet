@@ -5,8 +5,8 @@ mod entry;
 mod rust_analyzer_actions;
 mod shared;
 mod stage1;
-mod util;
 mod stage2;
+mod util;
 
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
@@ -17,7 +17,9 @@ fn main() {
     stage1::transformers::apply_transformers(&mut stage1.self_content, &Default::default());
     println!("{:#?}", stage1);
 
-    // let stage2 = stage2::ingest(&stage1.self_content);
-    // println!("{:?}", stage2);
-    // println!("{:#?}", stage2);
+    if stage1.self_content.len() != 1 {
+        todo!()
+    }
+    let stage2 = stage2::ingest(&stage1);
+    println!("{:#?}", stage2);
 }

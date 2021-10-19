@@ -18,9 +18,16 @@ pub struct Condition<'x> {
     pub value: ItemId<'x>,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum BuiltinValue {
+    GodPattern,
+    U32Pattern,
+    U32(u32),
+}
+
 #[derive(Clone, Debug)]
 pub enum Definition<'x> {
-    // BuiltinValue(BuiltinValue),
+    BuiltinValue(BuiltinValue),
     // BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     Match {
         base: ItemId<'x>,
@@ -36,7 +43,16 @@ pub enum Definition<'x> {
 #[derive(Clone, Debug)]
 pub struct Environment<'x> {
     pub items: Pool<Item<'x>, 'I'>,
-    pub vars: Pool<Variable<'x>, 'I'>,
+    pub vars: Pool<Variable<'x>, 'V'>,
+}
+
+impl<'x> Environment<'x> {
+    pub fn new() -> Self {
+        Self {
+            items: Pool::new(),
+            vars: Pool::new(),
+        }
+    }
 }
 
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;

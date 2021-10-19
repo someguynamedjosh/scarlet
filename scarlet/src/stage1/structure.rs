@@ -13,6 +13,15 @@ pub enum TokenTree<'i> {
     },
 }
 
+impl<'i> TokenTree<'i> {
+    pub fn as_token(&self) -> Option<Token<'i>> {
+        match self {
+            TokenTree::Token(token) => Some(token),
+            _ => None,
+        }
+    }
+}
+
 impl<'i> Debug for TokenTree<'i> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
