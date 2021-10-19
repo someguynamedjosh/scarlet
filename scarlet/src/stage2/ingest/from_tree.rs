@@ -1,3 +1,8 @@
+mod match_def;
+mod others;
+mod struct_def;
+mod substitute_def;
+
 use std::collections::HashMap;
 
 use crate::{
@@ -17,33 +22,27 @@ pub fn definition_from_tree<'x>(
     in_scopes: &[&HashMap<&str, ItemId<'x>>],
 ) -> Definition<'x> {
     match src {
-        TokenTree::Token(token) => token_def(token, in_scopes),
+        TokenTree::Token(token) => others::token_def(token, in_scopes),
         TokenTree::PrimitiveRule {
             name: "match",
             body,
-        } => match_def(body, env, in_scopes),
+        } => match_def::ingest(body, env, in_scopes),
         TokenTree::PrimitiveRule {
             name: "member",
             body,
-        } => {
-            assert_eq!(body.len(), 2);
-            let base = &body[0];
-            let base = top_level::ingest_tree(base, env, in_scopes);
-            let name = body[1].as_token().unwrap().to_owned();
-            Definition::Member(base, name)
-        }
+        } => others::member_def(body, env, in_scopes),
         TokenTree::PrimitiveRule {
             name: "struct",
             body,
-        } => struct_def(body, in_scopes, env),
+        } => struct_def::ingest(body, in_scopes, env),
         TokenTree::PrimitiveRule {
             name: "substitute",
             body,
-        } => substitute_def(body, env, in_scopes),
+        } => substitute_def::ingest(body, env, in_scopes),
         TokenTree::PrimitiveRule {
             name: "variable",
             body,
-        } => variable_def(body, env, in_scopes),
+        } => others::variable_def(body, env, in_scopes),
         TokenTree::PrimitiveRule {
             name: "ANY_PATTERN",
             ..
@@ -53,137 +52,4 @@ pub fn definition_from_tree<'x>(
         }
         TokenTree::PrimitiveRule { name, .. } => todo!("{}", name),
     }
-}
-
-fn match_def<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
-) -> Definition<'x> {
-    assert_eq!(body.len(), 2);
-    let base = &body[0];
-    let base = top_level::ingest_tree(base, env, in_scopes);
-    let condition_source = body[1].unwrap_primitive("patterns");
-    let mut conditions = Vec::new();
-    let mut else_value = None;
-    for item in condition_source {
-        match item {
-            TokenTree::PrimitiveRule { name: "on", body } => {
-                assert_eq!(body.len(), 2);
-                let pattern = body[0].unwrap_primitive("pattern");
-                assert_eq!(pattern.len(), 1);
-                let pattern = top_level::ingest_tree(&pattern[0], env, in_scopes);
-                let value = top_level::ingest_tree(&body[1], env, in_scopes);
-                conditions.push(Condition { pattern, value })
-            }
-            TokenTree::PrimitiveRule { name: "else", body } => {
-                assert_eq!(body.len(), 1);
-                let value = top_level::ingest_tree(&body[0], env, in_scopes);
-                else_value = Some(value);
-            }
-            _ => unreachable!(),
-        }
-    }
-    let else_value = else_value.expect("TODO: Nice error, no else specified.");
-    Definition::Match {
-        base,
-        conditions,
-        else_value,
-    }
-}
-
-fn substitute_def<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
-) -> Definition<'x> {
-    assert_eq!(body.len(), 2);
-    let base = &body[0];
-    let base = top_level::ingest_tree(base, env, in_scopes);
-    let substitution_source = body[1].unwrap_primitive("substitutions");
-    let mut substitutions = Vec::new();
-    for item in substitution_source {
-        match item {
-            TokenTree::PrimitiveRule {
-                name: "target",
-                body,
-            } => {
-                assert_eq!(body.len(), 2);
-                let target = &body[0];
-                let target = top_level::ingest_tree(&target, env, in_scopes);
-                let target = Some(target);
-                let value = top_level::ingest_tree(&body[1], env, in_scopes);
-                substitutions.push(Substitution { target, value })
-            }
-            _ => {
-                let target = None;
-                let value = top_level::ingest_tree(item, env, in_scopes);
-                substitutions.push(Substitution { target, value })
-            }
-        }
-    }
-    Definition::Substitute(base, substitutions)
-}
-
-fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> Definition<'x> {
-    if let Ok(num) = token.parse() {
-        Definition::BuiltinValue(BuiltinValue::U32(num))
-    } else {
-        let mut result = None;
-        // Reversed so we search more local scopes first.
-        for scope in in_scopes.iter().rev() {
-            if let Some(id) = scope.get(token) {
-                result = Some(*id);
-                break;
-            }
-        }
-        let id = result.expect("TODO: Nice error, bad ident");
-        Definition::Other(id)
-    }
-}
-
-fn struct_def<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
-    env: &mut Environment<'x>,
-) -> Definition<'x> {
-    let fields: Vec<_> = body.iter().map(util::maybe_target).collect();
-    let ids: Vec<_> = fields
-        .iter()
-        .map(|target| Item {
-            original_definition: target.value,
-            definition: None,
-        })
-        .map(|item| env.items.push(item))
-        .collect();
-    let mut scope_map = HashMap::new();
-    for (field, id) in fields.iter().zip(ids.iter()) {
-        if let Some((_, name)) = &field.target {
-            scope_map.insert(*name, *id);
-        }
-    }
-    let new_scopes = util::with_extra_scope(in_scopes, &scope_map);
-    for (field, id) in fields.iter().zip(ids.iter()) {
-        top_level::ingest_tree_into(field.value, env, *id, &new_scopes[..]);
-    }
-    let mut labeled_fields = Vec::new();
-    for (field, id) in fields.iter().zip(ids.iter()) {
-        let name = field.target.clone().map(|x| x.1.to_owned());
-        labeled_fields.push(StructField { name, value: *id });
-    }
-    Definition::Struct(labeled_fields)
-}
-
-fn variable_def<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
-) -> Definition<'x> {
-    if body.len() != 1 {
-        todo!("Nice error");
-    }
-    let pattern = &body[0];
-    let pattern = top_level::ingest_tree(pattern, env, in_scopes);
-    let var = env.vars.push(Variable { pattern });
-    Definition::Variable(var)
 }
