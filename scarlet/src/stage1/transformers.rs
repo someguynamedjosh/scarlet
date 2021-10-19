@@ -28,7 +28,7 @@ macro_rules! binary_operator {
                 let right = to[at + 1].clone();
                 TransformerResult {
                     replace_range: at - 1..=at + 1,
-                    with: TokenTree::PrimitiveRule {
+                    with: TokenTree::BuiltinRule {
                         name: $internal_name,
                         body: vec![left, right],
                     },
@@ -50,7 +50,7 @@ macro_rules! prefix_operator {
                 let right = to[at + 1].clone();
                 TransformerResult {
                     replace_range: at..=at + 1,
-                    with: TokenTree::PrimitiveRule {
+                    with: TokenTree::BuiltinRule {
                         name: $internal_name,
                         body: vec![right],
                     },
@@ -61,7 +61,7 @@ macro_rules! prefix_operator {
 }
 
 fn expect_bracket_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>> {
-    if let TokenTree::PrimitiveRule {
+    if let TokenTree::BuiltinRule {
         name: "group{}",
         body,
     } = tt
@@ -81,7 +81,7 @@ macro_rules! tfers {
 struct Struct;
 impl Transformer for Struct {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        if let TokenTree::PrimitiveRule { name, .. } = &to[at] {
+        if let TokenTree::BuiltinRule { name, .. } = &to[at] {
             *name == "group()"
         } else {
             false
@@ -89,14 +89,14 @@ impl Transformer for Struct {
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        if let TokenTree::PrimitiveRule { body, .. } = &to[at] {
+        if let TokenTree::BuiltinRule { body, .. } = &to[at] {
             let mut body = body.clone();
             let extras = hashmap![160 => tfers![Is]];
             apply_transformers(&mut body, &extras);
             let name = "struct";
             TransformerResult {
                 replace_range: at..=at,
-                with: TokenTree::PrimitiveRule { name, body },
+                with: TokenTree::BuiltinRule { name, body },
             }
         } else {
             unreachable!("Checked in should_be_applied_at")
@@ -117,7 +117,7 @@ impl Transformer for Builtin {
         apply_transformers(&mut body, &Default::default());
         TransformerResult {
             replace_range: at..=at + 1,
-            with: TokenTree::PrimitiveRule { name, body },
+            with: TokenTree::BuiltinRule { name, body },
         }
     }
 }
@@ -135,13 +135,13 @@ impl Transformer for Match {
         let mut patterns = expect_bracket_group(&to[at + 1]).clone();
         let extras: Extras = hashmap![172 => tfers![OnPattern, Else]];
         apply_transformers(&mut patterns, &extras);
-        let patterns = TokenTree::PrimitiveRule {
+        let patterns = TokenTree::BuiltinRule {
             name: "patterns",
             body: patterns,
         };
         TransformerResult {
             replace_range: at - 1..=at + 1,
-            with: TokenTree::PrimitiveRule {
+            with: TokenTree::BuiltinRule {
                 name: "match",
                 body: vec![base, patterns],
             },
@@ -154,7 +154,7 @@ impl Transformer for Substitution {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
         if at == 0 {
             false
-        } else if let TokenTree::PrimitiveRule {
+        } else if let TokenTree::BuiltinRule {
             name: "group[]", ..
         } = &to[at]
         {
@@ -166,17 +166,17 @@ impl Transformer for Substitution {
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
         let base = to[at - 1].clone();
-        if let TokenTree::PrimitiveRule { body, .. } = &to[at] {
+        if let TokenTree::BuiltinRule { body, .. } = &to[at] {
             let mut substitutions = body.clone();
             let extras = hashmap![160 => tfers![Is]];
             apply_transformers(&mut substitutions, &extras);
-            let substitutions = TokenTree::PrimitiveRule {
+            let substitutions = TokenTree::BuiltinRule {
                 name: "substitutions",
                 body: substitutions,
             };
             TransformerResult {
                 replace_range: at - 1..=at,
-                with: TokenTree::PrimitiveRule {
+                with: TokenTree::BuiltinRule {
                     name: "substitute",
                     body: vec![base, substitutions],
                 },
@@ -206,14 +206,14 @@ impl Transformer for OnPattern {
         if pattern.len() != 1 {
             todo!("Nice error");
         }
-        let pattern = TokenTree::PrimitiveRule {
+        let pattern = TokenTree::BuiltinRule {
             name: "pattern",
             body: pattern,
         };
         let value = to[at + 2].clone();
         TransformerResult {
             replace_range: at..=at + 2,
-            with: TokenTree::PrimitiveRule {
+            with: TokenTree::BuiltinRule {
                 name: "on",
                 body: vec![pattern, value],
             },
@@ -231,7 +231,7 @@ impl Transformer for Else {
         let value = to[at + 1].clone();
         TransformerResult {
             replace_range: at..=at + 1,
-            with: TokenTree::PrimitiveRule {
+            with: TokenTree::BuiltinRule {
                 name: "else",
                 body: vec![value],
             },

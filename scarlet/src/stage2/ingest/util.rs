@@ -11,7 +11,7 @@ pub struct MaybeTarget<'x> {
 }
 
 pub fn maybe_target<'x>(input: &'x TokenTree<'x>) -> MaybeTarget<'x> {
-    if let TokenTree::PrimitiveRule {
+    if let TokenTree::BuiltinRule {
         name: "target",
         body,
     } = input

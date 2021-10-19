@@ -7,7 +7,7 @@ pub type Token<'i> = &'i str;
 #[derive(Clone, PartialEq, Eq)]
 pub enum TokenTree<'i> {
     Token(Token<'i>),
-    PrimitiveRule {
+    BuiltinRule {
         name: Token<'i>,
         body: Vec<TokenTree<'i>>,
     },
@@ -23,7 +23,7 @@ impl<'i> TokenTree<'i> {
 
     pub fn unwrap_primitive(&self, expected_name: Token<'i>) -> &[TokenTree<'i>] {
         match self {
-            Self::PrimitiveRule { name, body } => {
+            Self::BuiltinRule { name, body } => {
                 if *name == expected_name {
                     &body[..]
                 } else {
@@ -33,7 +33,7 @@ impl<'i> TokenTree<'i> {
                     )
                 }
             }
-            _ => panic!("Expected a primitive rule, found a token instead."),
+            _ => panic!("Expected a builtin rule, found a token instead."),
         }
     }
 }
@@ -42,15 +42,15 @@ impl<'i> Debug for TokenTree<'i> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             TokenTree::Token(text) => write!(f, "{:?}", text),
-            TokenTree::PrimitiveRule { name, body } => {
-                write!(f, "{}{{", name)?;
+            TokenTree::BuiltinRule { name, body } => {
+                write!(f, "builtin{{{}", name)?;
                 for tt in body {
                     match f.alternate() {
                         true => write!(f, "\n    {}", indented(&format!("{:#?}", tt)))?,
                         false => write!(f, " {:?}", tt)?,
                     }
                 }
-                match f.alternate() {
+                match f.alternate() && body.len() > 0 {
                     true => write!(f, "\n}}"),
                     false => write!(f, "}}"),
                 }

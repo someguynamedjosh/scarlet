@@ -21,7 +21,7 @@ pub fn ingest<'x>(
     let mut else_value = None;
     for item in condition_source {
         match item {
-            TokenTree::PrimitiveRule { name: "on", body } => {
+            TokenTree::BuiltinRule { name: "on", body } => {
                 assert_eq!(body.len(), 2);
                 let pattern = body[0].unwrap_primitive("pattern");
                 assert_eq!(pattern.len(), 1);
@@ -29,7 +29,7 @@ pub fn ingest<'x>(
                 let value = top_level::ingest_tree(&body[1], env, in_scopes);
                 conditions.push(Condition { pattern, value })
             }
-            TokenTree::PrimitiveRule { name: "else", body } => {
+            TokenTree::BuiltinRule { name: "else", body } => {
                 assert_eq!(body.len(), 1);
                 let value = top_level::ingest_tree(&body[0], env, in_scopes);
                 else_value = Some(value);

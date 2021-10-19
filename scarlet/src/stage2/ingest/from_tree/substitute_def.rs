@@ -20,7 +20,7 @@ pub fn ingest<'x>(
     let mut substitutions = Vec::new();
     for item in substitution_source {
         match item {
-            TokenTree::PrimitiveRule {
+            TokenTree::BuiltinRule {
                 name: "target",
                 body,
             } => {

@@ -40,7 +40,7 @@ fn parse_group<'a>() -> impl Parser<'a, TokenTree<'a>> {
             ("(", ")") => "group()",
             _ => unreachable!(),
         };
-        TokenTree::PrimitiveRule { name, body }
+        TokenTree::BuiltinRule { name, body }
     })
 }
 
@@ -49,7 +49,7 @@ fn parse_primitive_rule<'a>() -> impl Parser<'a, TokenTree<'a>> {
     let name = preceded(begin, parse_token());
     let body = delimited(ws(), parse(), tag("}"));
     let data = tuple((name, body));
-    map(data, |(name, body)| TokenTree::PrimitiveRule { name, body })
+    map(data, |(name, body)| TokenTree::BuiltinRule { name, body })
 }
 
 fn parse_tree<'a>() -> impl Parser<'a, TokenTree<'a>> {

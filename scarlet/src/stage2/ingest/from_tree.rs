@@ -17,33 +17,35 @@ pub fn definition_from_tree<'x>(
 ) -> Definition<'x> {
     match src {
         TokenTree::Token(token) => others::token_def(token, in_scopes),
-        TokenTree::PrimitiveRule {
+        TokenTree::BuiltinRule {
             name: "match",
             body,
         } => match_def::ingest(body, env, in_scopes),
-        TokenTree::PrimitiveRule {
+        TokenTree::BuiltinRule {
             name: "member",
             body,
         } => others::member_def(body, env, in_scopes),
-        TokenTree::PrimitiveRule {
+        TokenTree::BuiltinRule {
             name: "struct",
             body,
         } => struct_def::ingest(body, in_scopes, env),
-        TokenTree::PrimitiveRule {
+        TokenTree::BuiltinRule {
             name: "substitute",
             body,
         } => substitute_def::ingest(body, env, in_scopes),
-        TokenTree::PrimitiveRule {
+        TokenTree::BuiltinRule {
             name: "variable",
             body,
         } => others::variable_def(body, env, in_scopes),
-        TokenTree::PrimitiveRule {
+
+        TokenTree::BuiltinRule {
             name: "ANY_PATTERN",
             ..
         } => Definition::BuiltinValue(BuiltinValue::GodPattern),
-        TokenTree::PrimitiveRule { name: "32U", .. } => {
+        TokenTree::BuiltinRule { name: "32U", .. } => {
             Definition::BuiltinValue(BuiltinValue::U32Pattern)
         }
-        TokenTree::PrimitiveRule { name, .. } => todo!("{}", name),
+
+        TokenTree::BuiltinRule { name, .. } => todo!("Nice error, unrecognized builtin {}", name),
     }
 }
