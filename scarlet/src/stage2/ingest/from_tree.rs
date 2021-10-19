@@ -44,6 +44,13 @@ pub fn definition_from_tree<'x>(
             name: "variable",
             body,
         } => variable_def(body, env, in_scopes),
+        TokenTree::PrimitiveRule {
+            name: "ANY_PATTERN",
+            ..
+        } => Definition::BuiltinValue(BuiltinValue::GodPattern),
+        TokenTree::PrimitiveRule { name: "32U", .. } => {
+            Definition::BuiltinValue(BuiltinValue::U32Pattern)
+        }
         TokenTree::PrimitiveRule { name, .. } => todo!("{}", name),
     }
 }

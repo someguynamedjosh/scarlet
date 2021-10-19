@@ -72,27 +72,6 @@ fn expect_bracket_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>>
     }
 }
 
-macro_rules! root_construct {
-    ($StructName:ident, $label:expr, $extras:expr) => {
-        struct $StructName;
-        impl Transformer for $StructName {
-            fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-                &to[at] == &TokenTree::Token($label)
-            }
-
-            fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-                let mut body = expect_bracket_group(&to[at + 1]).clone();
-                let extras: Extras = $extras;
-                apply_transformers(&mut body, &extras);
-                TransformerResult {
-                    replace_range: at..=at + 1,
-                    with: TokenTree::PrimitiveRule { name: $label, body },
-                }
-            }
-        }
-    };
-}
-
 macro_rules! tfers {
     ($($transformer:expr),*) => {
         vec![$(Box::new($transformer) as BoxedTransformer),*]
@@ -125,7 +104,23 @@ impl Transformer for Struct {
     }
 }
 
-root_construct!(Builtin, "builtin", hashmap![]);
+struct Builtin;
+impl Transformer for Builtin {
+    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+        &to[at] == &TokenTree::Token("builtin")
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        let mut body = expect_bracket_group(&to[at + 1]).clone();
+        assert!(body.len() >= 1);
+        let name = body.remove(0).as_token().unwrap();
+        apply_transformers(&mut body, &Default::default());
+        TransformerResult {
+            replace_range: at..=at + 1,
+            with: TokenTree::PrimitiveRule { name, body },
+        }
+    }
+}
 
 binary_operator!(Member, "member", ".");
 
