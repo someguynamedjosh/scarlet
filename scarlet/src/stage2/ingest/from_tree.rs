@@ -5,7 +5,8 @@ use crate::{
     stage2::{
         ingest::{top_level, util},
         structure::{
-            BuiltinValue, Condition, Definition, Environment, Item, ItemId, StructField, Variable,
+            BuiltinValue, Condition, Definition, Environment, Item, ItemId, StructField,
+            Substitution, Variable,
         },
     },
 };
@@ -22,9 +23,23 @@ pub fn definition_from_tree<'x>(
             body,
         } => match_def(body, env, in_scopes),
         TokenTree::PrimitiveRule {
+            name: "member",
+            body,
+        } => {
+            assert_eq!(body.len(), 2);
+            let base = &body[0];
+            let base = top_level::ingest_tree(base, env, in_scopes);
+            let name = body[1].as_token().unwrap().to_owned();
+            Definition::Member(base, name)
+        }
+        TokenTree::PrimitiveRule {
             name: "struct",
             body,
         } => struct_def(body, in_scopes, env),
+        TokenTree::PrimitiveRule {
+            name: "substitute",
+            body,
+        } => substitute_def(body, env, in_scopes),
         TokenTree::PrimitiveRule {
             name: "variable",
             body,
@@ -68,6 +83,39 @@ fn match_def<'x>(
         conditions,
         else_value,
     }
+}
+
+fn substitute_def<'x>(
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+) -> Definition<'x> {
+    assert_eq!(body.len(), 2);
+    let base = &body[0];
+    let base = top_level::ingest_tree(base, env, in_scopes);
+    let substitution_source = body[1].unwrap_primitive("substitutions");
+    let mut substitutions = Vec::new();
+    for item in substitution_source {
+        match item {
+            TokenTree::PrimitiveRule {
+                name: "target",
+                body,
+            } => {
+                assert_eq!(body.len(), 2);
+                let target = &body[0];
+                let target = top_level::ingest_tree(&target, env, in_scopes);
+                let target = Some(target);
+                let value = top_level::ingest_tree(&body[1], env, in_scopes);
+                substitutions.push(Substitution { target, value })
+            }
+            _ => {
+                let target = None;
+                let value = top_level::ingest_tree(item, env, in_scopes);
+                substitutions.push(Substitution { target, value })
+            }
+        }
+    }
+    Definition::Substitute(base, substitutions)
 }
 
 fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> Definition<'x> {
