@@ -3,38 +3,38 @@ use crate::{
     stage1::structure as s1,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructField<'x> {
     pub name: Option<String>,
     pub value: ItemId<'x>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Substitution<'x> {
     pub target: Option<ItemId<'x>>,
     pub value: ItemId<'x>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Condition<'x> {
     pub pattern: ItemId<'x>,
     pub value: ItemId<'x>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinOperation {
     Sum32U,
     Dif32U,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinValue {
     GodPattern,
     _32UPattern,
     _32U(u32),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
