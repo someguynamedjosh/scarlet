@@ -122,8 +122,6 @@ impl Transformer for Builtin {
     }
 }
 
-binary_operator!(Member, "member", ".");
-
 struct Match;
 impl Transformer for Match {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
@@ -187,12 +185,15 @@ impl Transformer for Substitution {
     }
 }
 
-binary_operator!(Caret, "pow", "^");
-binary_operator!(Asterisk, "mul", "*");
-binary_operator!(Plus, "add", "+");
+binary_operator!(Caret, "pow_32u", "^");
+binary_operator!(Asterisk, "prod_32u", "*");
+binary_operator!(Plus, "sum_32u", "+");
+binary_operator!(Minus, "dif_32u", "-");
 
+binary_operator!(Member, "member", ".");
 binary_operator!(Is, "target", "is");
-prefix_operator!(Variable, "variable", "var");
+
+prefix_operator!(Variable, "any", "any");
 
 struct OnPattern;
 impl Transformer for OnPattern {
@@ -259,7 +260,7 @@ fn build_transformers<'e>(
         20 => tfers![Match, Member, Substitution],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
-        80 => tfers![Plus],
+        80 => tfers![Plus, Minus],
         160 => tfers![Variable],
         _ => tfers![],
     };

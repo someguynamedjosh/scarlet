@@ -22,7 +22,7 @@ pub fn member_def<'x>(
 
 pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> Definition<'x> {
     if let Ok(num) = token.parse() {
-        Definition::BuiltinValue(BuiltinValue::U32(num))
+        Definition::BuiltinValue(BuiltinValue::_32U(num))
     } else {
         let mut result = None;
         // Reversed so we search more local scopes first.
@@ -32,7 +32,7 @@ pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> 
                 break;
             }
         }
-        let id = result.expect("TODO: Nice error, bad ident");
+        let id = result.expect(&format!("TODO: Nice error, bad ident {}", token));
         Definition::Other(id)
     }
 }

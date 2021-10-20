@@ -1,3 +1,10 @@
 (
-    something is builtin{32U}
+    32U is builtin{32U}
+
+    x is any 32U
+    fib is x match{
+        on{0} 1
+        on{1} 1
+        else fib[x - 1] + fib[x - 2]
+    }
 )

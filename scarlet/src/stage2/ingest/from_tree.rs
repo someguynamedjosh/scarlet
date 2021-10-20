@@ -7,7 +7,10 @@ use std::collections::HashMap;
 
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinValue, Definition, Environment, ItemId},
+    stage2::{
+        ingest::top_level,
+        structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId},
+    },
 };
 
 pub fn definition_from_tree<'x>(
@@ -33,19 +36,37 @@ pub fn definition_from_tree<'x>(
             name: "substitute",
             body,
         } => substitute_def::ingest(body, env, in_scopes),
-        TokenTree::BuiltinRule {
-            name: "variable",
-            body,
-        } => others::variable_def(body, env, in_scopes),
+        TokenTree::BuiltinRule { name: "any", body } => others::variable_def(body, env, in_scopes),
 
         TokenTree::BuiltinRule {
             name: "ANY_PATTERN",
             ..
         } => Definition::BuiltinValue(BuiltinValue::GodPattern),
         TokenTree::BuiltinRule { name: "32U", .. } => {
-            Definition::BuiltinValue(BuiltinValue::U32Pattern)
+            Definition::BuiltinValue(BuiltinValue::_32UPattern)
         }
+        TokenTree::BuiltinRule {
+            name: "sum_32u",
+            body,
+        } => builtin_op_def(BuiltinOperation::Sum32U, body, env, in_scopes),
+        TokenTree::BuiltinRule {
+            name: "dif_32u",
+            body,
+        } => builtin_op_def(BuiltinOperation::Dif32U, body, env, in_scopes),
 
         TokenTree::BuiltinRule { name, .. } => todo!("Nice error, unrecognized builtin {}", name),
     }
+}
+
+fn builtin_op_def<'x>(
+    op: BuiltinOperation,
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+) -> Definition<'x> {
+    let args: Vec<_> = body
+        .iter()
+        .map(|tt| top_level::ingest_tree(tt, env, in_scopes))
+        .collect();
+    Definition::BuiltinOperation(op, args)
 }
