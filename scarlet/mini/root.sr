@@ -6,5 +6,5 @@
 
     something is x + y
 
-    sum is something[x is 1 y is 2]
+    sum is something[x is x+1][y is 2]
 )
