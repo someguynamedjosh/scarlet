@@ -1,7 +1,7 @@
 use super::structure::{BuiltinValue, Condition, Definition, Environment, ItemId, VariableId};
 use crate::{
     shared::{OrderedMap, OrderedSet},
-    stage2::structure::{BuiltinOperation, StructField},
+    stage2::structure::{BuiltinOperation, StructField, Substitution},
 };
 
 impl<'x> Environment<'x> {
@@ -37,13 +37,30 @@ impl<'x> Environment<'x> {
         &mut self,
         original: ItemId<'x>,
         substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
-    ) -> ItemId<'x> {
-        match self.items[original].definition.clone().unwrap() {
+    ) -> Option<ItemId<'x>> {
+        if self.query_stack_contains(original) && self.get_deps(original).len() > 0 {
+            println!("{:#?}", self);
+            println!("Early exit from {:?}", original);
+            None
+        } else {
+            println!("Substituting {:?} in {:?}", substitutions, original);
+            self.with_query_stack_frame(original, |this| {
+                this.substitute_impl(original, substitutions)
+            })
+        }
+    }
+
+    fn substitute_impl(
+        &mut self,
+        original: ItemId<'x>,
+        substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
+    ) -> Option<ItemId<'x>> {
+        Some(match self.items[original].definition.clone().unwrap() {
             Definition::BuiltinOperation(op, args) => {
                 let args = args
                     .into_iter()
                     .map(|i| self.substitute(i, substitutions))
-                    .collect();
+                    .collect::<Option<_>>()?;
                 let def = Definition::BuiltinOperation(op, args);
                 self.item_with_new_definition(original, def, true)
             }
@@ -53,15 +70,17 @@ impl<'x> Environment<'x> {
                 conditions,
                 else_value,
             } => {
-                let base = self.substitute(base, substitutions);
-                let else_value = self.substitute(else_value, substitutions);
+                let base = self.substitute(base, substitutions)?;
+                let else_value = self.substitute(else_value, substitutions)?;
                 let conditions = conditions
                     .into_iter()
-                    .map(|c| Condition {
-                        pattern: self.substitute(c.pattern, substitutions),
-                        value: self.substitute(c.value, substitutions),
+                    .map(|c| {
+                        Some(Condition {
+                            pattern: self.substitute(c.pattern, substitutions)?,
+                            value: self.substitute(c.value, substitutions)?,
+                        })
                     })
-                    .collect();
+                    .collect::<Option<_>>()?;
                 let def = Definition::Match {
                     base,
                     conditions,
@@ -70,7 +89,7 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::Member(base, name) => {
-                let base = self.substitute(base, substitutions);
+                let base = self.substitute(base, substitutions)?;
                 let def = Definition::Member(base, name);
                 self.item_with_new_definition(original, def, true)
             }
@@ -80,14 +99,42 @@ impl<'x> Environment<'x> {
                     .into_iter()
                     .map(|f| {
                         let name = f.name;
-                        let value = self.substitute(f.value, substitutions);
-                        StructField { name, value }
+                        let value = self.substitute(f.value, substitutions)?;
+                        Some(StructField { name, value })
                     })
-                    .collect();
+                    .collect::<Option<_>>()?;
                 let def = Definition::Struct(fields);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::Substitute(_, _) => todo!(),
+            Definition::Substitute(base, original_subs) => {
+                let mut subs_for_base = OrderedMap::new();
+                for &(target, value) in substitutions {
+                    if original_subs
+                        .iter()
+                        .any(|sub| self.item_as_variable(sub.target.unwrap()) == target)
+                    {
+                        continue;
+                    } else {
+                        subs_for_base.insert_no_replace(target, value)
+                    }
+                }
+                let base = if subs_for_base.len() > 0 {
+                    self.substitute(base, &subs_for_base)?
+                } else {
+                    base
+                };
+                let original_subs = original_subs
+                    .into_iter()
+                    .map(|sub| {
+                        Some(Substitution {
+                            target: sub.target,
+                            value: self.substitute(sub.value, substitutions)?,
+                        })
+                    })
+                    .collect::<Option<_>>()?;
+                let def = Definition::Substitute(base, original_subs);
+                self.item_with_new_definition(original, def, true)
+            }
             Definition::Variable(var_id) => {
                 if let Some(sub) = substitutions.get(&var_id) {
                     *sub
@@ -95,7 +142,7 @@ impl<'x> Environment<'x> {
                     original
                 }
             }
-        }
+        })
     }
 
     pub fn item_as_variable(&self, item: ItemId<'x>) -> VariableId<'x> {
@@ -187,7 +234,7 @@ impl<'x> Environment<'x> {
                 let base = self.reduce(base);
                 let mut new_conditions = Vec::new();
                 let mut else_value = else_value;
-                for condition in conditions {
+                for condition in conditions.clone() {
                     let pattern = self.reduce(condition.pattern);
                     // Don't reduce yet as that might lead to needless infinite recursion.
                     let value = condition.value;
@@ -204,6 +251,7 @@ impl<'x> Environment<'x> {
                         None => new_conditions.push(Condition { pattern, value }),
                     }
                 }
+                println!("{:#?} becomes {:#?}", conditions, new_conditions);
                 if new_conditions.len() == 0 {
                     self.reduce(else_value)
                 } else {
@@ -222,12 +270,11 @@ impl<'x> Environment<'x> {
                     final_subs.insert_no_replace(target, sub.value);
                 }
                 let base = self.reduce(base);
-                let subbed = self.substitute(base, &final_subs);
-                println!("{:?} with {:?} becomes {:?}", base, final_subs, subbed);
-                if subbed == base {
-                    subbed
-                } else {
+                let subbed = self.with_fresh_query_stack(|this| this.substitute(base, &final_subs));
+                if let Some(subbed) = subbed {
                     self.reduce(subbed)
+                } else {
+                    original
                 }
             }
             _ => {
@@ -241,12 +288,25 @@ impl<'x> Environment<'x> {
         if let Some(reduction) = &self.items[original].cached_reduction {
             *reduction
         } else {
-            let result = self.reduce_from_scratch(original);
+            let result =
+                self.with_query_stack_frame(original, |this| this.reduce_from_scratch(original));
             self.items[original].cached_reduction = Some(result);
-            self.reduce(result);
-            debug_assert_eq!(self.reduce(result), result);
+            self.get_deps(original);
+            // println!("{:#?}", self);
+            // println!("{:?} becomes {:?}", original, result);
+            assert!(self.get_deps(result).len() <= self.get_deps(original).len());
+            assert_eq!(self.reduce(result), result);
             result
         }
+    }
+
+    pub fn reduce_root(&mut self) {
+        let id = if let Some((id, _)) = self.items.iter().next() {
+            id
+        } else {
+            return;
+        };
+        self.reduce(id);
     }
 
     pub fn reduce_all(&mut self) {
@@ -259,6 +319,7 @@ impl<'x> Environment<'x> {
         let mut id = id;
         while let Some(next) = self.items.next(id) {
             id = next;
+            println!("{:#?}", self);
             self.reduce(id);
         }
     }

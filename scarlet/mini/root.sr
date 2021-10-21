@@ -2,18 +2,26 @@
     32U is builtin{32U any 32U}
 
     x is any 32U
-    y is any 32U
 
-    something is x + y
+    recount is match x {
+        on{0} 0
+        else recount[x is x - 1]
+    }
+
+    something is recount[x is 5]
+
+    # something is recount[x is 5]
+
+    # something is x + y
 
     # sum is something[x is x+1][y is 2]
 
-    index is any 32U
-    fibb is match index {
-        on{0} 1
-        on{1} 1
-        else 0
-    }
+    # index is any 32U
+    # fibb is match index {
+    #     on{0} 1
+    #     on{1} 1
+    #     else fibb[index is index-1]
+    # }
 
-    fifth is fibb[index is 5]
+    # fifth is fibb[index is 5]
 )

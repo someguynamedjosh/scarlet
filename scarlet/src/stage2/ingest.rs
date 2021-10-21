@@ -16,7 +16,7 @@ pub fn ingest<'x>(src: &'x Module) -> Environment<'x> {
             break;
         }
     }
-    env.reduce_all();
+    env.reduce_root();
     env.find_all_dependencies();
     env
 }

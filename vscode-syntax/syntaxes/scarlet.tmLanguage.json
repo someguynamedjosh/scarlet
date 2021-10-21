@@ -4,27 +4,19 @@
 	"patterns": [
 		{
 			"name": "keyword.control",
-			"match": "(sub|substituting|def|defining|Type|From|any|the|i32|integer|int|mat|matching|on|pick|pick_first_true_condition|instance_of|identifier|dis|displayed|builtin_item|target)[ \\r\\n\\t]*(?=\\{)"
-		},
-		{
-			"name": "invalid.illegal",
-			"match": "\\b[^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]+[ \\r\\n\\t]*(?=\\{)"
+			"match": "(is|any|builtin|match|on|else)"
 		},
 		{
 			"name": "punctuation",
 			"match": "[\\{\\}\\[\\]\\(\\)]"
 		},
 		{
-			"name": "keyword.other",
-			"match": "\\b(is|instance_of|vn|bt|else)\\b"
-		},
-		{
 			"name": "keyword.operator",
-			"match": "\\b(:|::|\\.)\\b"
+			"match": "\\b(:|::|\\.|\\+|-|\\*|\\/)\\b"
 		},
 		{
 			"name": "entity.name.type",
-			"match": "\\b[A-Z][^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]*\\b"
+			"match": "\\b[0-9A-Z_]+\\b"
 		},
 		{
 			"name": "entity.name.function",

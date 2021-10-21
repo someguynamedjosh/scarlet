@@ -63,6 +63,7 @@ pub enum Definition<'x> {
 pub struct Environment<'x> {
     pub items: Pool<Item<'x>, 'I'>,
     pub vars: Pool<Variable<'x>, 'V'>,
+    query_stack: Vec<ItemId<'x>>,
 }
 
 impl<'x> Environment<'x> {
@@ -70,7 +71,31 @@ impl<'x> Environment<'x> {
         Self {
             items: Pool::new(),
             vars: Pool::new(),
+            query_stack: Vec::new(),
         }
+    }
+
+    pub(super) fn with_fresh_query_stack<T>(&mut self, op: impl FnOnce(&mut Self) -> T) -> T {
+        let old = std::mem::take(&mut self.query_stack);
+        let result = op(self);
+        debug_assert_eq!(self.query_stack.len(), 0);
+        self.query_stack = old;
+        result
+    }
+
+    pub(super) fn with_query_stack_frame<T>(
+        &mut self,
+        frame: ItemId<'x>,
+        op: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        self.query_stack.push(frame);
+        let result = op(self);
+        debug_assert_eq!(self.query_stack.pop(), Some(frame));
+        result
+    }
+
+    pub(super) fn query_stack_contains(&self, item: ItemId<'x>) -> bool {
+        self.query_stack.contains(&item)
     }
 }
 
