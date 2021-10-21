@@ -42,8 +42,8 @@ pub fn definition_from_tree<'x>(
             name: "ANY_PATTERN",
             ..
         } => Definition::BuiltinValue(BuiltinValue::GodPattern),
-        TokenTree::BuiltinRule { name: "32U", .. } => {
-            Definition::BuiltinValue(BuiltinValue::_32UPattern)
+        TokenTree::BuiltinRule { name: "32U", body } => {
+            builtin_op_def(BuiltinOperation::_32UPattern, body, env, in_scopes)
         }
         TokenTree::BuiltinRule {
             name: "sum_32u",

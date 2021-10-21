@@ -33,6 +33,8 @@ pub fn maybe_target<'x>(input: &'x TokenTree<'x>) -> MaybeTarget<'x> {
 
 pub fn begin_item<'x>(src: &'x TokenTree<'x>, env: &mut Environment<'x>) -> ItemId<'x> {
     env.items.push(Item {
+        after: vec![],
+        dependencies: None,
         original_definition: src,
         definition: None,
     })

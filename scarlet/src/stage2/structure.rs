@@ -25,12 +25,12 @@ pub struct Condition<'x> {
 pub enum BuiltinOperation {
     Sum32U,
     Dif32U,
+    _32UPattern,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinValue {
     GodPattern,
-    _32UPattern,
     _32U(u32),
 }
 
@@ -70,6 +70,11 @@ pub type ItemId<'x> = Id<Item<'x>, 'I'>;
 pub struct Item<'x> {
     pub original_definition: &'x s1::TokenTree<'x>,
     pub definition: Option<Definition<'x>>,
+    /// The variables this item's definition is dependent on.
+    pub dependencies: Option<Vec<VariableId<'x>>>,
+    /// The variables that should remain dependencies when doing pattern
+    /// matching.
+    pub after: Vec<VariableId<'x>>,
 }
 
 pub type VariableId<'x> = Id<Variable<'x>, 'V'>;

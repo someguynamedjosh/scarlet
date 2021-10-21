@@ -16,11 +16,7 @@ pub fn ingest<'x>(
     let fields: Vec<_> = body.iter().map(util::maybe_target).collect();
     let ids: Vec<_> = fields
         .iter()
-        .map(|target| Item {
-            original_definition: target.value,
-            definition: None,
-        })
-        .map(|item| env.items.push(item))
+        .map(|target| util::begin_item(&target.value, env))
         .collect();
     let mut scope_map = HashMap::new();
     for (field, id) in fields.iter().zip(ids.iter()) {
