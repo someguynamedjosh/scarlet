@@ -32,7 +32,26 @@ impl<'x> Environment<'x> {
                 }
                 base
             }
-            Definition::Substitute(_, _) => todo!(),
+            Definition::Substitute(base, subs) => {
+                let base_deps = self.get_deps(base);
+                let mut final_deps = OrderedSet::new();
+                // For each dependency of the base expression...
+                'deps: for (dep, _) in base_deps.clone() {
+                    for sub in &subs {
+                        // If there is a substitution targeting that dependency...
+                        if dep == self.item_as_variable(sub.target.unwrap()) {
+                            // Then push all the substituted value's dependencies.
+                            final_deps = final_deps.union(self.get_deps(sub.value).clone());
+                            // And don't bother pushing the original dependency.
+                            continue 'deps
+                        }
+                    }
+                    // Otherwise, if it is not replaced, the new expression is
+                    // still dependant on it.
+                    final_deps.insert_or_replace(dep, ());
+                }
+                final_deps
+            },
             Definition::Variable(var) => {
                 let mut base: OrderedSet<VariableId<'x>> = self.items[of]
                     .after

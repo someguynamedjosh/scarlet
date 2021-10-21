@@ -1,5 +1,8 @@
-use super::structure::{BuiltinValue, Definition, Environment, ItemId};
-use crate::stage2::structure::{BuiltinOperation, StructField};
+use super::structure::{BuiltinValue, Definition, Environment, ItemId, VariableId};
+use crate::{
+    shared::{OrderedMap, OrderedSet},
+    stage2::structure::{BuiltinOperation, StructField},
+};
 
 impl<'x> Environment<'x> {
     fn args_as_builtin_values(&mut self, args: &[ItemId<'x>]) -> Option<Vec<BuiltinValue>> {
@@ -13,6 +16,74 @@ impl<'x> Environment<'x> {
             }
         }
         Some(result)
+    }
+
+    fn item_with_new_definition(
+        &mut self,
+        original: ItemId<'x>,
+        new_def: Definition<'x>,
+    ) -> ItemId<'x> {
+        let mut new_item = self.items[original].clone();
+        new_item.definition = Some(new_def);
+        self.items.get_or_push(new_item)
+    }
+
+    fn substitute(
+        &mut self,
+        original: ItemId<'x>,
+        substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
+    ) -> ItemId<'x> {
+        match self.items[original].definition.clone().unwrap() {
+            Definition::BuiltinOperation(op, args) => {
+                let args = args
+                    .into_iter()
+                    .map(|i| self.substitute(i, substitutions))
+                    .collect();
+                let def = Definition::BuiltinOperation(op, args);
+                self.item_with_new_definition(original, def)
+            }
+            Definition::BuiltinValue(..) => original,
+            Definition::Match {
+                base,
+                conditions,
+                else_value,
+            } => todo!(),
+            Definition::Member(base, name) => {
+                let base = self.substitute(base, substitutions);
+                let def = Definition::Member(base, name);
+                self.item_with_new_definition(original, def)
+            }
+            Definition::Other(..) => unreachable!(),
+            Definition::Struct(fields) => {
+                let fields = fields
+                    .into_iter()
+                    .map(|f| {
+                        let name = f.name;
+                        let value = self.substitute(f.value, substitutions);
+                        StructField { name, value }
+                    })
+                    .collect();
+                let def = Definition::Struct(fields);
+                self.item_with_new_definition(original, def)
+            }
+            Definition::Substitute(_, _) => todo!(),
+            Definition::Variable(var_id) => {
+                if let Some(sub) = substitutions.get(&var_id) {
+                    *sub
+                } else {
+                    original
+                }
+            }
+        }
+    }
+
+    pub fn item_as_variable(&self, item: ItemId<'x>) -> VariableId<'x> {
+        match self.items[item].definition.as_ref().unwrap() {
+            Definition::Member(_, _) => todo!(),
+            Definition::Other(..) => unreachable!(),
+            Definition::Variable(id) => *id,
+            _ => todo!("Nice error, {:?} is not a variable", item),
+        }
     }
 
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
@@ -57,8 +128,32 @@ impl<'x> Environment<'x> {
                     .collect();
                 Definition::Struct(new_fields)
             }
-            Definition::Substitute(_, _) => todo!(),
+            Definition::Substitute(..) => unreachable!(),
             Definition::Variable(..) => def,
+        }
+    }
+
+    fn reduce_from_scratch(&mut self, original: ItemId<'x>) -> ItemId<'x> {
+        let definition = self.items[original].definition.clone().unwrap();
+        match definition {
+            Definition::Substitute(base, subs) => {
+                let mut final_subs = OrderedMap::new();
+                for sub in subs {
+                    let target = self.item_as_variable(sub.target.unwrap());
+                    final_subs.insert_no_replace(target, sub.value);
+                }
+                let base = self.reduce(base);
+                let subbed = self.substitute(base, &final_subs);
+                if subbed == base {
+                    subbed
+                } else {
+                    self.reduce(subbed)
+                }
+            }
+            _ => {
+                let reduced_definition = self.reduce_definition(definition);
+                self.item_with_new_definition(original, reduced_definition)
+            }
         }
     }
 
@@ -66,11 +161,7 @@ impl<'x> Environment<'x> {
         if let Some(reduction) = &self.items[original].cached_reduction {
             *reduction
         } else {
-            let definition = self.items[original].definition.clone().unwrap();
-            let reduced_definition = self.reduce_definition(definition);
-            let mut reduced_item = self.items[original].clone();
-            reduced_item.definition = Some(reduced_definition);
-            let result = self.items.get_or_push(reduced_item);
+            let result = self.reduce_from_scratch(original);
             self.items[original].cached_reduction = Some(result);
             self.reduce(result);
             debug_assert_eq!(self.reduce(result), result);
