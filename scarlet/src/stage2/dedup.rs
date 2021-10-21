@@ -24,6 +24,7 @@ pub fn dedup<'x>(env: Environment<'x>) -> Environment<'x> {
                 definition,
                 dependencies: item.dependencies,
                 original_definition,
+                cached_reduction: None,
             };
             let inserted = new_env.items.push(new_item);
             let original_def = item.definition.unwrap();

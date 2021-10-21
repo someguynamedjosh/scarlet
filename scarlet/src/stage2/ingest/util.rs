@@ -37,6 +37,7 @@ pub fn begin_item<'x>(src: &'x TokenTree<'x>, env: &mut Environment<'x>) -> Item
         dependencies: None,
         original_definition: src,
         definition: None,
+        cached_reduction: None,
     })
 }
 

@@ -34,6 +34,15 @@ pub enum BuiltinValue {
     _32U(u32),
 }
 
+impl BuiltinValue {
+    pub fn unwrap_32u(&self) -> u32 {
+        match self {
+            Self::_32U(value) => *value,
+            _ => panic!("Expected 32U, got {:?} instead", self),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
@@ -66,7 +75,7 @@ impl<'x> Environment<'x> {
 }
 
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Item<'x> {
     pub original_definition: &'x s1::TokenTree<'x>,
     pub definition: Option<Definition<'x>>,
@@ -75,6 +84,7 @@ pub struct Item<'x> {
     /// The variables that should remain dependencies when doing pattern
     /// matching.
     pub after: Vec<VariableId<'x>>,
+    pub cached_reduction: Option<ItemId<'x>>,
 }
 
 pub type VariableId<'x> = Id<Variable<'x>, 'V'>;
