@@ -1,5 +1,5 @@
 use crate::{
-    shared::{Id, Pool},
+    shared::{Id, OrderedSet, Pool},
     stage1::structure as s1,
 };
 
@@ -71,7 +71,7 @@ pub struct Item<'x> {
     pub original_definition: &'x s1::TokenTree<'x>,
     pub definition: Option<Definition<'x>>,
     /// The variables this item's definition is dependent on.
-    pub dependencies: Option<Vec<VariableId<'x>>>,
+    pub dependencies: Option<OrderedSet<VariableId<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
     pub after: Vec<VariableId<'x>>,

@@ -1,3 +1,8 @@
 (
     32U is builtin{32U any 32U}
+
+    x is any 32U
+    y is any 32U
+
+    something is x + y
 )

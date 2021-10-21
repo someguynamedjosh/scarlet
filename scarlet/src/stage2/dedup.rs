@@ -12,7 +12,9 @@ pub fn dedup<'x>(env: Environment<'x>) -> Environment<'x> {
     let mut reps = HashMap::new();
 
     for (id, item) in env.items {
-        if let Some(existing) = inserted_items.get(item.definition.as_ref().unwrap()) {
+        if let Definition::Other(..) = item.definition.as_ref().unwrap() {
+            continue;
+        } else if let Some(existing) = inserted_items.get(item.definition.as_ref().unwrap()) {
             reps.insert(id, *existing);
         } else {
             let definition = None;
