@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
+    shared::OrderedSet,
     stage1::structure::TokenTree,
     stage2::structure::{Environment, Item, ItemId},
 };
@@ -33,7 +34,7 @@ pub fn maybe_target<'x>(input: &'x TokenTree<'x>) -> MaybeTarget<'x> {
 
 pub fn begin_item<'x>(src: &'x TokenTree<'x>, env: &mut Environment<'x>) -> ItemId<'x> {
     env.items.push(Item {
-        after: vec![],
+        after: OrderedSet::new(),
         dependencies: None,
         original_definition: src,
         definition: None,

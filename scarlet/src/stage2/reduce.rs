@@ -1,4 +1,4 @@
-use super::structure::{BuiltinValue, Definition, Environment, ItemId, VariableId};
+use super::structure::{BuiltinValue, Condition, Definition, Environment, ItemId, VariableId};
 use crate::{
     shared::{OrderedMap, OrderedSet},
     stage2::structure::{BuiltinOperation, StructField},
@@ -119,7 +119,9 @@ impl<'x> Environment<'x> {
                 base,
                 conditions,
                 else_value,
-            } => todo!(),
+            } => {
+                unreachable!()
+            }
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
             Definition::Struct(fields) => {
@@ -138,9 +140,65 @@ impl<'x> Environment<'x> {
         }
     }
 
+    fn matches(&mut self, pattern: ItemId<'x>, value: ItemId<'x>) -> Option<bool> {
+        match self.items[pattern].definition.as_ref().unwrap() {
+            Definition::BuiltinOperation(_, _) => todo!(),
+            Definition::BuiltinValue(pv) => match self.items[value].definition.as_ref().unwrap() {
+                Definition::BuiltinValue(vv) => Some(pv == vv),
+                Definition::Struct(..) => Some(false),
+                _ => None,
+            },
+            Definition::Match { .. } => None,
+            Definition::Member(_, _) => todo!(),
+            Definition::Other(..) => unreachable!(),
+            Definition::Struct(_) => todo!(),
+            Definition::Substitute(..) => None,
+            Definition::Variable(var) => {
+                let var_pattern = self.vars[*var].pattern;
+                self.matches(var_pattern, value)
+            }
+        }
+    }
+
     fn reduce_from_scratch(&mut self, original: ItemId<'x>) -> ItemId<'x> {
         let definition = self.items[original].definition.clone().unwrap();
         match definition {
+            Definition::Match {
+                base,
+                conditions,
+                else_value,
+            } => {
+                let base = self.reduce(base);
+                let mut new_conditions = Vec::new();
+                let mut else_value = else_value;
+                for condition in conditions {
+                    let pattern = self.reduce(condition.pattern);
+                    // Don't reduce yet as that might lead to needless infinite recursion.
+                    let value = condition.value;
+                    match self.matches(pattern, base) {
+                        Some(true) => {
+                            // If the match is always true, no need to evaluate further conditions.
+                            // This should always be used when the previous conditions fail.
+                            else_value = condition.value;
+                            break;
+                        }
+                        // If the match will never occur, skip it.
+                        Some(false) => (),
+                        // If the match might occur, save it for later.
+                        None => new_conditions.push(Condition { pattern, value }),
+                    }
+                }
+                if new_conditions.len() == 0 {
+                    self.reduce(else_value)
+                } else {
+                    let def = Definition::Match {
+                        base,
+                        conditions: new_conditions,
+                        else_value,
+                    };
+                    self.item_with_new_definition(original, def, true)
+                }
+            }
             Definition::Substitute(base, subs) => {
                 let mut final_subs = OrderedMap::new();
                 for sub in subs {

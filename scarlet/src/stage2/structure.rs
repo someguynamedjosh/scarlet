@@ -83,7 +83,7 @@ pub struct Item<'x> {
     pub dependencies: Option<OrderedSet<VariableId<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: Vec<VariableId<'x>>,
+    pub after: OrderedSet<VariableId<'x>>,
     pub cached_reduction: Option<ItemId<'x>>,
 }
 

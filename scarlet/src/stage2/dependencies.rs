@@ -19,7 +19,14 @@ impl<'x> Environment<'x> {
                 base,
                 conditions,
                 else_value,
-            } => todo!(),
+            } => {
+                let mut deps = self.get_deps(base).clone();
+                for condition in conditions {
+                    deps = deps.union(self.items[condition.pattern].after.clone());
+                    deps = deps.union(self.get_deps(condition.value).clone());
+                }
+                deps.union(self.get_deps(else_value).clone())
+            }
             Definition::Member(base, _) => {
                 // TODO: Do better than this
                 self.get_deps(base).clone()
@@ -43,7 +50,7 @@ impl<'x> Environment<'x> {
                             // Then push all the substituted value's dependencies.
                             final_deps = final_deps.union(self.get_deps(sub.value).clone());
                             // And don't bother pushing the original dependency.
-                            continue 'deps
+                            continue 'deps;
                         }
                     }
                     // Otherwise, if it is not replaced, the new expression is
@@ -51,14 +58,9 @@ impl<'x> Environment<'x> {
                     final_deps.insert_or_replace(dep, ());
                 }
                 final_deps
-            },
+            }
             Definition::Variable(var) => {
-                let mut base: OrderedSet<VariableId<'x>> = self.items[of]
-                    .after
-                    .iter()
-                    .cloned()
-                    .map(|x| (x, ()))
-                    .collect();
+                let mut base: OrderedSet<VariableId<'x>> = self.items[of].after.clone();
                 base.insert_or_replace(var, ());
                 base
             }
