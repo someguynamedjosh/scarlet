@@ -1,10 +1,59 @@
 (
-    32U is builtin{32U}
+    32U is builtin{32U any 32U}
 
-    x is any 32U
-    fib is x match{
-        on{0} 1
-        on{1} 1
-        else fib[x is x - 1] + fib[x is x - 2]
-    }
+    INT_HOLDER is (
+        int is any 32U
+    )
+
+    (int is 123) matches INT_HOLDER
+    INT_HOLDER[123] matches INT_HOLDER
+
+    # Not allowed: ih[123]
+    ih is any INT_HOLDER
+    ih matches INT_HOLDER
+    ih.int
+
+    ih[INT_HOLDER[123]]
+
+    # Same as "ih2 is any INT_HOLDER"
+    ih2 is any ih
+    depends_on{ih2}
+
+    ih2[INT_HOLDER[123]]
+
+    ihl is any INT_HOLDER
+    depends_on{ihl}
+    ihl matches INT_HOLDER
+
+    ihl2 is after{ihl} any ihl
+    depends_on{ihl ihl2}
+    ihl2 matches ihl
+    ihl2[INT_HOLDER] matches INT_HOLDER
+    ihl2[INT_HOLDER[123]] matches INT_HOLDER[123]
+    # Error: INT_HOLDER[456] does not match INT_HOLDER[123]
+    ihl2[INT_HOLDER[123] INT_HOLDER[456]]
+    ihl2[INT_HOLDER INT_HOLDER[456]]
+
+    # Having 32U not match 32U breaks reflexivity. Can we reinstate it?
+
+    # Why do we want it to not match in the first place? Because 32U should not
+    # be a unique value of 32U in addition to all the other numbers. It needs to
+    # be a general instance of 32U, not some specific instance. 
+
+    # How does this work for other types?
+    # This matches itself, but has a variable that makes it be no specific
+    # instance of that pattern.
+    MY_PAT is (field is any 32U)
+
+    # If something expects an instance of MY_PAT and you literally plug in
+    # MY_PAT, the result should depend on the value of MY_PAT.field.
+
+    # So what if we make primitive patterns be dependant on a single variable
+    # that matches the primitive pattern? Or what if we make it dependant on
+    # opaque data, which is an instance of itself?
+
+    # Approach 1.
+    32U[x] is x
+    32U is builtin{32U any 32U}
+
 )
