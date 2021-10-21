@@ -52,7 +52,23 @@ impl<'x> Environment<'x> {
                 base,
                 conditions,
                 else_value,
-            } => todo!(),
+            } => {
+                let base = self.substitute(base, substitutions);
+                let else_value = self.substitute(else_value, substitutions);
+                let conditions = conditions
+                    .into_iter()
+                    .map(|c| Condition {
+                        pattern: self.substitute(c.pattern, substitutions),
+                        value: self.substitute(c.value, substitutions),
+                    })
+                    .collect();
+                let def = Definition::Match {
+                    base,
+                    conditions,
+                    else_value,
+                };
+                self.item_with_new_definition(original, def, true)
+            }
             Definition::Member(base, name) => {
                 let base = self.substitute(base, substitutions);
                 let def = Definition::Member(base, name);

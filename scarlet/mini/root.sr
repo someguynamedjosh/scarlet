@@ -10,6 +10,10 @@
 
     index is any 32U
     fibb is match index {
-
+        on{0} 1
+        on{1} 1
+        else 0
     }
+
+    fifth is fibb[index is 5]
 )
