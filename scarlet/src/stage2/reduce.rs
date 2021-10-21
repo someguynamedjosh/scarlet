@@ -22,9 +22,14 @@ impl<'x> Environment<'x> {
         &mut self,
         original: ItemId<'x>,
         new_def: Definition<'x>,
+        wipe_deps_and_replacement: bool,
     ) -> ItemId<'x> {
         let mut new_item = self.items[original].clone();
         new_item.definition = Some(new_def);
+        if wipe_deps_and_replacement {
+            new_item.dependencies = None;
+            new_item.cached_reduction = None;
+        }
         self.items.get_or_push(new_item)
     }
 
@@ -40,7 +45,7 @@ impl<'x> Environment<'x> {
                     .map(|i| self.substitute(i, substitutions))
                     .collect();
                 let def = Definition::BuiltinOperation(op, args);
-                self.item_with_new_definition(original, def)
+                self.item_with_new_definition(original, def, true)
             }
             Definition::BuiltinValue(..) => original,
             Definition::Match {
@@ -51,7 +56,7 @@ impl<'x> Environment<'x> {
             Definition::Member(base, name) => {
                 let base = self.substitute(base, substitutions);
                 let def = Definition::Member(base, name);
-                self.item_with_new_definition(original, def)
+                self.item_with_new_definition(original, def, true)
             }
             Definition::Other(..) => unreachable!(),
             Definition::Struct(fields) => {
@@ -64,7 +69,7 @@ impl<'x> Environment<'x> {
                     })
                     .collect();
                 let def = Definition::Struct(fields);
-                self.item_with_new_definition(original, def)
+                self.item_with_new_definition(original, def, true)
             }
             Definition::Substitute(_, _) => todo!(),
             Definition::Variable(var_id) => {
@@ -144,6 +149,7 @@ impl<'x> Environment<'x> {
                 }
                 let base = self.reduce(base);
                 let subbed = self.substitute(base, &final_subs);
+                println!("{:?} with {:?} becomes {:?}", base, final_subs, subbed);
                 if subbed == base {
                     subbed
                 } else {
@@ -152,7 +158,7 @@ impl<'x> Environment<'x> {
             }
             _ => {
                 let reduced_definition = self.reduce_definition(definition);
-                self.item_with_new_definition(original, reduced_definition)
+                self.item_with_new_definition(original, reduced_definition, false)
             }
         }
     }

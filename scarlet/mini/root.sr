@@ -4,5 +4,7 @@
     x is any 32U
     y is any 32U
 
-    something is x[x is 0]
+    something is x + y
+
+    sum is something[x is 1 y is 2]
 )
