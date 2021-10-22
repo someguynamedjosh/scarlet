@@ -25,7 +25,7 @@ pub fn ingest_tree_into<'x>(
     into: ItemId<'x>,
     in_scopes: &[&HashMap<&str, ItemId<'x>>],
 ) {
-    let definition = from_tree::definition_from_tree(src, env, in_scopes);
+    let definition = from_tree::definition_from_tree(src, env, in_scopes, into);
     env.items.get_mut(into).definition = Some(definition);
 }
 

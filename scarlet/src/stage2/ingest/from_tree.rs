@@ -17,9 +17,12 @@ pub fn definition_from_tree<'x>(
     src: &'x TokenTree<'x>,
     env: &mut Environment<'x>,
     in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    into: ItemId<'x>,
 ) -> Definition<'x> {
     match src {
         TokenTree::Token(token) => others::token_def(token, in_scopes),
+
+        TokenTree::BuiltinRule { name: "any", body } => others::variable_def(body, env, in_scopes),
         TokenTree::BuiltinRule {
             name: "match",
             body,
@@ -28,6 +31,7 @@ pub fn definition_from_tree<'x>(
             name: "member",
             body,
         } => others::member_def(body, env, in_scopes),
+        TokenTree::BuiltinRule { name: "show", body } => others::show(body, env, in_scopes, into),
         TokenTree::BuiltinRule {
             name: "struct",
             body,
@@ -36,7 +40,6 @@ pub fn definition_from_tree<'x>(
             name: "substitute",
             body,
         } => substitute_def::ingest(body, env, in_scopes),
-        TokenTree::BuiltinRule { name: "any", body } => others::variable_def(body, env, in_scopes),
 
         TokenTree::BuiltinRule {
             name: "ANY_PATTERN",

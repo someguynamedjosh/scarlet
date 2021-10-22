@@ -20,6 +20,21 @@ pub fn member_def<'x>(
     Definition::Member(base, name)
 }
 
+pub fn show<'x>(
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    into: ItemId<'x>,
+) -> Definition<'x> {
+    if body.len() != 1 {
+        todo!("Nice error");
+    }
+    let value = &body[0];
+    let value = top_level::ingest_tree(value, env, in_scopes);
+    env.items[value].shown_from.push(into);
+    Definition::Other(value)
+}
+
 pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> Definition<'x> {
     if let Ok(num) = token.parse() {
         Definition::BuiltinValue(BuiltinValue::_32U(num))

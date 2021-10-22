@@ -110,6 +110,7 @@ pub struct Item<'x> {
     /// matching.
     pub after: OrderedSet<VariableId<'x>>,
     pub cached_reduction: Option<ItemId<'x>>,
+    pub shown_from: Vec<ItemId<'x>>,
 }
 
 pub type VariableId<'x> = Id<Variable<'x>, 'V'>;

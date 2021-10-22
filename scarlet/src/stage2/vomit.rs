@@ -6,7 +6,21 @@ type Parents<'x> = Vec<Parent<'x>>;
 type Path<'x> = Vec<Parent<'x>>;
 
 impl<'x> Environment<'x> {
+    pub fn show_all(&self) {
+        for (id, item) in &self.items {
+            for &context in &item.shown_from {
+                println!("{}", self.show(id, context));
+            }
+        }
+    }
+
+    pub fn show(&self, item: ItemId<'x>, context: ItemId<'x>) -> String {
+        self.get_name(item, context);
+        todo!()
+    }
+
     pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> String {
+        println!("{:?} {:?}", of, context);
         println!("{:#?}", self.get_paths(of));
         todo!()
     }
@@ -24,6 +38,7 @@ impl<'x> Environment<'x> {
     fn get_paths(&self, item: ItemId<'x>) -> Vec<Path<'x>> {
         let mut result = vec![];
         for parent in self.get_parents(item) {
+            result.push(vec![parent.clone()]);
             for path in self.get_paths(parent.0) {
                 result.push([path, vec![parent.clone()]].concat());
             }

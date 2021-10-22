@@ -178,13 +178,7 @@ impl<'x> Environment<'x> {
                 BuiltinOperation::_32UPattern => Definition::BuiltinOperation(op, args),
             },
             Definition::BuiltinValue(..) => def,
-            Definition::Match {
-                base,
-                conditions,
-                else_value,
-            } => {
-                unreachable!()
-            }
+            Definition::Match { .. } => unreachable!(),
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
             Definition::Struct(fields) => {
@@ -297,30 +291,6 @@ impl<'x> Environment<'x> {
             assert!(self.get_deps(result).len() <= self.get_deps(original).len());
             assert_eq!(self.reduce(result), result);
             result
-        }
-    }
-
-    pub fn reduce_root(&mut self) {
-        let id = if let Some((id, _)) = self.items.iter().next() {
-            id
-        } else {
-            return;
-        };
-        self.reduce(id);
-    }
-
-    pub fn reduce_all(&mut self) {
-        let id = if let Some((id, _)) = self.items.iter().next() {
-            id
-        } else {
-            return;
-        };
-        self.reduce(id);
-        let mut id = id;
-        while let Some(next) = self.items.next(id) {
-            id = next;
-            println!("{:#?}", self);
-            self.reduce(id);
         }
     }
 }

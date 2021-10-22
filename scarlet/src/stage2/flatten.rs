@@ -32,10 +32,19 @@ pub fn flatten(env: &mut Environment) {
         flat_reps.insert(target, replace_with);
     }
 
+    drop(reps);
+
     for (_, item) in &mut env.items {
-        replace::apply_reps_to_def(&reps, item.definition.as_mut().unwrap());
+        replace::apply_reps_to_def(&flat_reps, item.definition.as_mut().unwrap());
+        for context in &mut item.shown_from {
+            replace::apply_reps(&flat_reps, context);
+        }
     }
     for (_, var) in &mut env.vars {
-        replace::apply_reps(&reps, &mut var.pattern);
+        replace::apply_reps(&flat_reps, &mut var.pattern);
+    }
+    for (source, target) in flat_reps {
+        let mut shown_from = env.items[source].shown_from.clone();
+        env.items[target].shown_from.append(&mut shown_from);
     }
 }

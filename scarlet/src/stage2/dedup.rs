@@ -25,12 +25,19 @@ pub fn dedup<'x>(env: Environment<'x>, old_root: ItemId<'x>) -> (Environment<'x>
                 dependencies: item.dependencies,
                 original_definition,
                 cached_reduction: None,
+                shown_from: item.shown_from,
             };
             let inserted = new_env.items.push(new_item);
             let original_def = item.definition.unwrap();
             inserted_items.insert(original_def.clone(), inserted);
             defs_to_set.push((inserted, original_def));
             reps.insert(id, inserted);
+        }
+    }
+
+    for (_, item) in &mut new_env.items {
+        for context in &mut item.shown_from {
+            replace::apply_reps(&reps, context);
         }
     }
 

@@ -147,6 +147,24 @@ impl Transformer for Match {
     }
 }
 
+struct Show;
+impl Transformer for Show {
+    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+        &to[at] == &TokenTree::Token("show")
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        let value = to[at + 1].clone();
+        TransformerResult {
+            replace_range: at..=at + 1,
+            with: TokenTree::BuiltinRule {
+                name: "show",
+                body: vec![value],
+            },
+        }
+    }
+}
+
 struct Substitution;
 impl Transformer for Substitution {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
@@ -261,7 +279,7 @@ fn build_transformers<'e>(
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
-        160 => tfers![Variable],
+        160 => tfers![Variable, Show],
         _ => tfers![],
     };
     let basics: Vec<_> = basics.into_iter().map(Either::Fst).collect();
