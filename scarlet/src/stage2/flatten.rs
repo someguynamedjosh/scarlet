@@ -44,7 +44,7 @@ pub fn flatten(env: &mut Environment) {
         replace::apply_reps(&flat_reps, &mut var.pattern);
     }
     for (source, target) in flat_reps {
-        let mut shown_from = env.items[source].shown_from.clone();
+        let mut shown_from = std::mem::take(&mut env.items[source].shown_from);
         env.items[target].shown_from.append(&mut shown_from);
     }
 }

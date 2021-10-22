@@ -3,14 +3,12 @@
 
     x is any 32U
     
-    y is show x
+    recount is match x {
+        on{0} 0
+        else recount[x is x - 1] + 1
+    }
 
-    # recount is match x {
-    #     on{0} 0
-    #     else recount[x is x - 1] + 1
-    # }
-
-    # thing is show recount[x is 1]
+    thing is show recount[x is 8]
 
     # something is show recount[x is 5]
 
