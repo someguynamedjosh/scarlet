@@ -8,7 +8,7 @@
         else recount[x is x - 1] + 1
     }
 
-    something is recount[x is 5]
+    something is show recount[x is 5]
 
     # something is recount[x is 5]
 
