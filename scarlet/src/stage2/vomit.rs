@@ -14,7 +14,7 @@ impl<'x> Environment<'x> {
     pub fn show_all(&self) {
         for (id, item) in &self.items {
             for &context in &item.shown_from {
-                println!("{:?}", self.get_code(id, context));
+                println!("{:#?}", self.get_code(id, context));
             }
         }
     }
@@ -58,7 +58,32 @@ impl<'x> Environment<'x> {
                 conditions,
                 else_value,
             } => {
-                todo!()
+                let base = self.get_name_or_code(*base, context);
+
+                let mut patterns = Vec::new();
+                for cond in conditions {
+                    let pattern = self.get_name_or_code(cond.pattern, context);
+                    let value = self.get_name_or_code(cond.value, context);
+                    patterns.push(TokenTree::BuiltinRule {
+                        name: "on",
+                        body: vec![pattern, value],
+                    });
+                }
+
+                let else_value = self.get_name_or_code(*else_value, context);
+                patterns.push(TokenTree::BuiltinRule {
+                    name: "else",
+                    body: vec![else_value],
+                });
+
+                let patterns = TokenTree::BuiltinRule {
+                    name: "patterns",
+                    body: patterns,
+                };
+                TokenTree::BuiltinRule {
+                    name: "match",
+                    body: vec![base, patterns],
+                }
             }
             Definition::Member(base, name) => {
                 let base = self.get_name_or_code(*base, context);
@@ -70,7 +95,30 @@ impl<'x> Environment<'x> {
             }
             Definition::Other(_) => todo!(),
             Definition::Struct(_) => todo!(),
-            Definition::Substitute(_, _) => todo!(),
+            Definition::Substitute(base, subs) => {
+                let base = self.get_name_or_code(*base, context);
+                let mut tt_subs = Vec::new();
+                for sub in subs {
+                    let value = self.get_name_or_code(sub.value, context);
+                    if let Some(target) = sub.target {
+                        let target = self.get_name_or_code(target, context);
+                        tt_subs.push(TokenTree::BuiltinRule {
+                            name: "target",
+                            body: vec![target, value],
+                        })
+                    } else {
+                        todo!()
+                    }
+                }
+                let tt_subs = TokenTree::BuiltinRule {
+                    name: "substitutions",
+                    body: tt_subs,
+                };
+                TokenTree::BuiltinRule {
+                    name: "substitute",
+                    body: vec![base, tt_subs],
+                }
+            }
             Definition::Variable(var) => {
                 let pattern = self.vars[*var].pattern;
                 let pattern = self.get_name_or_code(pattern, context);
