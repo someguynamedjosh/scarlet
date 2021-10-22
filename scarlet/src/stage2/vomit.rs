@@ -93,7 +93,7 @@ impl<'x> Environment<'x> {
                     body: vec![base, member],
                 }
             }
-            Definition::Other(_) => todo!(),
+            Definition::Other(..) => unreachable!(),
             Definition::Struct(_) => todo!(),
             Definition::Substitute(base, subs) => {
                 let base = self.get_name_or_code(*base, context);

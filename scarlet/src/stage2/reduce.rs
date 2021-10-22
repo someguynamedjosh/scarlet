@@ -22,11 +22,11 @@ impl<'x> Environment<'x> {
         &mut self,
         original: ItemId<'x>,
         new_def: Definition<'x>,
-        wipe_deps_and_replacement: bool,
+        is_fundamentally_different: bool,
     ) -> ItemId<'x> {
         let mut new_item = self.items[original].clone();
         new_item.definition = Some(new_def);
-        if wipe_deps_and_replacement {
+        if is_fundamentally_different {
             new_item.dependencies = None;
             new_item.cached_reduction = None;
         }
@@ -44,9 +44,10 @@ impl<'x> Environment<'x> {
             None
         } else {
             println!("Substituting {:?} in {:?}", substitutions, original);
-            self.with_query_stack_frame(original, |this| {
+            let result = self.with_query_stack_frame(original, |this| {
                 this.substitute_impl(original, substitutions)
-            })
+            });
+            result
         }
     }
 
@@ -281,6 +282,8 @@ impl<'x> Environment<'x> {
                 let base = self.reduce(base);
                 let subbed = self.with_fresh_query_stack(|this| this.substitute(base, &final_subs));
                 if let Some(subbed) = subbed {
+                    let shown_from = self.items[original].shown_from.clone();
+                    self.items[subbed].shown_from = shown_from;
                     self.reduce(subbed)
                 } else {
                     original
