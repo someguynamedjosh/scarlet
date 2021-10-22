@@ -5,11 +5,13 @@ use crate::{
     },
 };
 
+pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
+
 impl<'x> Environment<'x> {
     pub(super) fn substitute(
         &mut self,
         original: ItemId<'x>,
-        substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
+        substitutions: &Substitutions<'x>,
     ) -> Option<ItemId<'x>> {
         if self.query_stack_contains(original) && self.get_deps(original).len() > 0 {
             println!("{:#?}", self);

@@ -1,6 +1,9 @@
 use crate::{
     shared::OrderedMap,
-    stage2::structure::{Condition, Definition, Environment, ItemId, Substitution},
+    stage2::{
+        reduce::matchh::MatchResult,
+        structure::{Condition, Definition, Environment, ItemId, Substitution},
+    },
 };
 
 impl<'x> Environment<'x> {
@@ -18,17 +21,20 @@ impl<'x> Environment<'x> {
             let pattern = self.reduce(condition.pattern);
             // Don't reduce yet as that might lead to needless infinite recursion.
             let value = condition.value;
-            match self.matches(pattern, base) {
-                Some(true) => {
+            match self.matches(base, base, pattern) {
+                MatchResult::Match(subs) => {
+                    if subs.len() > 0 {
+                        todo!()
+                    }
                     // If the match is always true, no need to evaluate further conditions.
                     // This should always be used when the previous conditions fail.
                     else_value = condition.value;
                     break;
                 }
                 // If the match will never occur, skip it.
-                Some(false) => (),
+                MatchResult::NoMatch => (),
                 // If the match might occur, save it for later.
-                None => new_conditions.push(Condition { pattern, value }),
+                MatchResult::Unknown => new_conditions.push(Condition { pattern, value }),
             }
         }
         println!("{:#?} becomes {:#?}", conditions, new_conditions);
