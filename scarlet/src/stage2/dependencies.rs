@@ -69,7 +69,7 @@ impl<'x> Environment<'x> {
                 // TODO: Do better than this
                 self.dep_query(base)
             }
-            Definition::Other(..) => unreachable!(),
+            Definition::Other(item) => self.dep_query(item),
             Definition::Struct(fields) => {
                 let mut base = DepQueryResult::new();
                 for field in fields {

@@ -181,7 +181,7 @@ impl<'x> Environment<'x> {
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),
             Definition::Member(..) => unreachable!(),
-            Definition::Other(_) => todo!(),
+            Definition::Other(..) => unreachable!(),
             Definition::Struct(fields) => {
                 let new_fields = fields
                     .into_iter()
@@ -273,6 +273,7 @@ impl<'x> Environment<'x> {
                     todo!()
                 }
             }
+            Definition::Other(item) => self.reduce(item),
             Definition::Substitute(base, subs) => {
                 let mut final_subs = OrderedMap::new();
                 for sub in subs {

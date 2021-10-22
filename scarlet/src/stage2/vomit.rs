@@ -20,11 +20,17 @@ impl<'x> Environment<'x> {
     }
 
     pub fn get_name_or_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
+        let mut item = item;
         if let Some(name) = self.get_name(item, context) {
-            name
-        } else {
-            self.get_code(item, context)
+            return name
         }
+        while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
+            item = *other;
+            if let Some(name) = self.get_name(item, context) {
+                return name
+            }
+        }
+        self.get_code(item, context)
     }
 
     fn token(&self, of: String) -> &str {
@@ -93,7 +99,7 @@ impl<'x> Environment<'x> {
                     body: vec![base, member],
                 }
             }
-            Definition::Other(..) => unreachable!(),
+            Definition::Other(item) => self.get_code(*item, context),
             Definition::Struct(_) => todo!(),
             Definition::Substitute(base, subs) => {
                 let base = self.get_name_or_code(*base, context);
