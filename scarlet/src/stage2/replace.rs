@@ -1,8 +1,6 @@
-use std::{collections::HashMap, mem::replace};
+use std::collections::HashMap;
 
-use crate::stage2::structure::{
-    Condition, Definition, Environment, ItemId, StructField, Substitution,
-};
+use crate::stage2::structure::{Condition, Definition, ItemId, StructField, Substitution};
 
 pub type Reps<'x> = HashMap<ItemId<'x>, ItemId<'x>>;
 

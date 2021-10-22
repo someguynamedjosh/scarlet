@@ -1,6 +1,6 @@
 use crate::{
-    shared::{OrderedMap, OrderedSet},
-    stage2::structure::{Definition, Environment, ItemId, Variable, VariableId},
+    shared::OrderedSet,
+    stage2::structure::{ItemId, VariableId},
 };
 
 #[derive(Debug)]

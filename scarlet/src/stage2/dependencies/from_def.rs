@@ -1,7 +1,7 @@
 use super::structures::DepQueryResult;
 use crate::{
-    shared::{OrderedMap, OrderedSet},
-    stage2::structure::{Definition, Environment, ItemId, Variable, VariableId},
+    shared::OrderedSet,
+    stage2::structure::{Definition, Environment, ItemId, VariableId},
 };
 
 impl<'x> Environment<'x> {

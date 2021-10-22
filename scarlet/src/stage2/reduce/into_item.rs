@@ -1,9 +1,6 @@
 use crate::{
-    shared::{OrderedMap, OrderedSet},
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Condition, Definition, Environment, ItemId,
-        StructField, Substitution, VariableId,
-    },
+    shared::OrderedMap,
+    stage2::structure::{Condition, Definition, Environment, ItemId, Substitution},
 };
 
 impl<'x> Environment<'x> {

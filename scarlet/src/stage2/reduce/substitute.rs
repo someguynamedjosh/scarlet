@@ -1,8 +1,7 @@
 use crate::{
-    shared::{OrderedMap, OrderedSet},
+    shared::OrderedMap,
     stage2::structure::{
-        BuiltinOperation, BuiltinValue, Condition, Definition, Environment, ItemId,
-        StructField, Substitution, VariableId,
+        Condition, Definition, Environment, ItemId, StructField, Substitution, VariableId,
     },
 };
 

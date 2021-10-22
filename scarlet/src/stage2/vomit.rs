@@ -22,12 +22,12 @@ impl<'x> Environment<'x> {
     pub fn get_name_or_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
         let mut item = item;
         if let Some(name) = self.get_name(item, context) {
-            return name
+            return name;
         }
         while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
             item = *other;
             if let Some(name) = self.get_name(item, context) {
-                return name
+                return name;
             }
         }
         self.get_code(item, context)

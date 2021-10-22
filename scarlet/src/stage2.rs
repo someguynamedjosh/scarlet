@@ -1,9 +1,9 @@
-pub mod ingest;
-pub mod structure;
-mod flatten;
-mod replace;
 mod dependencies;
+mod flatten;
+pub mod ingest;
 mod reduce;
+mod replace;
+pub mod structure;
 mod vomit;
 
 pub use ingest::ingest;

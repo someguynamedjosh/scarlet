@@ -1,10 +1,4 @@
-use crate::{
-    shared::{OrderedMap, OrderedSet},
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Condition, Definition, Environment, ItemId, StructField,
-        Substitution, VariableId,
-    },
-};
+use crate::stage2::structure::{BuiltinValue, Definition, Environment, ItemId, VariableId};
 
 impl<'x> Environment<'x> {
     pub(super) fn args_as_builtin_values(
