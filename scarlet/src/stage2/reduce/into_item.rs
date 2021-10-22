@@ -52,7 +52,7 @@ impl<'x> Environment<'x> {
 
     pub(super) fn reduce_member(&mut self, base: ItemId<'x>, member: String) -> ItemId<'x> {
         let rbase = self.reduce(base);
-        if let Definition::Struct(fields) = self.items[rbase].definition.as_ref().unwrap() {
+        if let Definition::Struct(fields) = self.definition_of(rbase) {
             for field in fields {
                 if let Some(name) = &field.name {
                     if name == &member {
@@ -74,8 +74,15 @@ impl<'x> Environment<'x> {
     ) -> ItemId<'x> {
         let mut final_subs = OrderedMap::new();
         for sub in subs {
-            let target = self.item_as_variable(sub.target.unwrap());
-            final_subs.insert_no_replace(target, sub.value);
+            match self.matches(sub.value, sub.value, sub.target.unwrap()) {
+                MatchResult::Match(subs) => final_subs = final_subs.union(subs),
+                MatchResult::NoMatch => {
+                    todo!("Nice error, argument will definitely not match what it is assigned to.")
+                }
+                MatchResult::Unknown => {
+                    todo!("Nice error, argument might not match what it is assigned to.")
+                }
+            }
         }
         let base = self.reduce(base);
         let subbed = self.with_fresh_query_stack(|this| this.substitute(base, &final_subs));

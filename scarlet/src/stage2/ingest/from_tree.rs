@@ -42,7 +42,7 @@ pub fn definition_from_tree<'x>(
         } => substitute_def::ingest(body, env, in_scopes),
 
         TokenTree::BuiltinRule {
-            name: "ANY_PATTERN",
+            name: "PATTERN",
             ..
         } => Definition::BuiltinValue(BuiltinValue::GodPattern),
         TokenTree::BuiltinRule { name: "32U", body } => {

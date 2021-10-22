@@ -1,7 +1,13 @@
 (
     32U is builtin{32U any 32U}
+    PATTERN is builtin{PATTERN}
 
     x is any 32U
+    p is any PATTERN
+
+    increment is x + 1
+
+    something is show increment[x is 123]
     
     # recount is match x {
     #     on{0} 0
