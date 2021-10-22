@@ -5,7 +5,7 @@ use super::{
     structure::{Definition, Environment, Item, ItemId, Variable},
 };
 
-pub fn dedup<'x>(env: Environment<'x>) -> Environment<'x> {
+pub fn dedup<'x>(env: Environment<'x>, old_root: ItemId<'x>) -> (Environment<'x>, ItemId<'x>) {
     let mut new_env = Environment::new();
     let mut inserted_items = HashMap::new();
     let mut defs_to_set = Vec::new();
@@ -42,5 +42,5 @@ pub fn dedup<'x>(env: Environment<'x>) -> Environment<'x> {
 
     new_env.vars = env.vars;
 
-    new_env
+    (new_env, *reps.get(&old_root).unwrap())
 }

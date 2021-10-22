@@ -20,6 +20,7 @@ fn main() {
     if stage1.self_content.len() != 1 {
         todo!()
     }
-    let stage2 = stage2::ingest(&stage1);
+    let (stage2, s2_root) = stage2::ingest(&stage1);
     println!("{:#?}", stage2);
+    println!("Root: {:?}", s2_root);
 }

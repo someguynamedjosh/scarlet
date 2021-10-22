@@ -53,10 +53,10 @@ pub fn ingest_module<'x>(
     }
 }
 
-pub fn ingest<'x>(src: &'x Module) -> Environment<'x> {
+pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
     assert_eq!(src.self_content.len(), 1);
     let mut env = Environment::new();
     let into = util::begin_item(&src.self_content[0], &mut env);
     ingest_module(src, &mut env, into, &[]);
-    env
+    (env, into)
 }
