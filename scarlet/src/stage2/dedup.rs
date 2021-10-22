@@ -49,5 +49,9 @@ pub fn dedup<'x>(env: Environment<'x>, old_root: ItemId<'x>) -> (Environment<'x>
 
     new_env.vars = env.vars;
 
+    for (_, var) in &mut new_env.vars {
+        replace::apply_reps(&reps, &mut var.pattern);
+    }
+
     (new_env, *reps.get(&old_root).unwrap())
 }

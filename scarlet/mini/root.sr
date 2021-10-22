@@ -1,8 +1,14 @@
 (
     32U is builtin{32U any 32U}
 
-    x is any 32U
-    y is show x
+    mod is (
+        x is thing.x
+        thing is (
+            x is any 32U
+        )
+    )
+    # z is mod.x
+    y is show mod.thing.x + 1
 
     # recount is match x {
     #     on{0} 0

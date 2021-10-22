@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+
+use typed_arena::Arena;
+
 use crate::{
     shared::{Id, OrderedSet, Pool},
     stage1::structure as s1,
@@ -59,11 +63,20 @@ pub enum Definition<'x> {
     Variable(VariableId<'x>),
 }
 
-#[derive(Clone, Debug)]
+pub struct WrappedArena<T>(pub Arena<T>);
+
+impl<T> Debug for WrappedArena<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "arena")
+    }
+}
+
+#[derive(Debug)]
 pub struct Environment<'x> {
     pub items: Pool<Item<'x>, 'I'>,
     pub vars: Pool<Variable<'x>, 'V'>,
     query_stack: Vec<ItemId<'x>>,
+    pub(super) vomited_tokens: WrappedArena<String>,
 }
 
 impl<'x> Environment<'x> {
@@ -72,6 +85,7 @@ impl<'x> Environment<'x> {
             items: Pool::new(),
             vars: Pool::new(),
             query_stack: Vec::new(),
+            vomited_tokens: WrappedArena(Arena::new()),
         }
     }
 

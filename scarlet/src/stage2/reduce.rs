@@ -179,7 +179,7 @@ impl<'x> Environment<'x> {
             },
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),
-            Definition::Member(_, _) => todo!(),
+            Definition::Member(..) => unreachable!(),
             Definition::Other(_) => todo!(),
             Definition::Struct(fields) => {
                 let new_fields = fields
@@ -255,6 +255,21 @@ impl<'x> Environment<'x> {
                         else_value,
                     };
                     self.item_with_new_definition(original, def, true)
+                }
+            }
+            Definition::Member(base, member) => {
+                let rbase = self.reduce(base);
+                if let Definition::Struct(fields) = self.items[rbase].definition.as_ref().unwrap() {
+                    for field in fields {
+                        if let Some(name) = &field.name {
+                            if name == &member {
+                                return field.value;
+                            }
+                        }
+                    }
+                    todo!("Nice error, no member named {:?}", member)
+                } else {
+                    todo!()
                 }
             }
             Definition::Substitute(base, subs) => {
