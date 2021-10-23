@@ -37,7 +37,7 @@ impl<'x> Environment<'x> {
                 }
                 result
             }
-            Definition::Substitute(_, _) => todo!(),
+            Definition::Substitute(..) => DepQueryResult::new(),
             Definition::Variable(var) => self.after_query(self.vars[var].pattern),
         }
     }

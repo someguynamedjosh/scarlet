@@ -88,7 +88,9 @@ impl<'x> Environment<'x> {
     ) -> ItemId<'x> {
         let mut final_subs = OrderedMap::new();
         for sub in subs {
-            match self.matches(sub.value, sub.target.unwrap()) {
+            let target = sub.target.unwrap();
+            let target = self.reduce(target);
+            match self.matches(sub.value, target) {
                 MatchResult::Match(subs) => final_subs = final_subs.union(subs),
                 MatchResult::NoMatch => {
                     todo!("Nice error, argument will definitely not match what it is assigned to.")

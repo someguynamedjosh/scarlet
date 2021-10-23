@@ -7,9 +7,9 @@
     y is any 32U
 
     xy_eq is x match{
-        on after{x} x 123
+        on after{y} y 123
         else 456
     }
 
-    show xy_eq[x is 1 y is 1]
+    show xy_eq(x is 2 y is 1)
 ]
