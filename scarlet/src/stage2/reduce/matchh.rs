@@ -29,15 +29,22 @@ impl<'x> Environment<'x> {
                 BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => {
                     todo!("Nice error, unimplemented pattern.")
                 }
-                BuiltinOperation::_32UPattern => match self.definition_of(value_pattern) {
-                    Definition::BuiltinValue(BuiltinValue::_32U(..)) => non_capturing_match(),
-                    Definition::BuiltinOperation(BuiltinOperation::_32UPattern, _) => {
+                BuiltinOperation::_32UPattern | &BuiltinOperation::BoolPattern => {
+                    let matches = match self.definition_of(value_pattern) {
+                        Definition::BuiltinValue(v) => match v {
+                            BuiltinValue::Bool(..) => op == &BuiltinOperation::BoolPattern,
+                            BuiltinValue::_32U(..) => op == &BuiltinOperation::_32UPattern,
+                            BuiltinValue::GodPattern => false,
+                        },
+                        Definition::BuiltinOperation(other_op, _) => other_op == op,
+                        _ => return Unknown,
+                    };
+                    if matches {
                         non_capturing_match()
+                    } else {
+                        NoMatch
                     }
-                    Definition::BuiltinValue(..) => NoMatch,
-                    Definition::BuiltinOperation(..) => NoMatch,
-                    _ => Unknown,
-                },
+                }
             },
             Definition::BuiltinValue(pv) => match self.definition_of(value_pattern) {
                 Definition::BuiltinValue(vv) => {

@@ -45,6 +45,7 @@ impl<'x> Environment<'x> {
                     BuiltinOperation::Sum32U => "sum_32u",
                     BuiltinOperation::Dif32U => "dif_32u",
                     BuiltinOperation::_32UPattern => "32U",
+                    BuiltinOperation::BoolPattern => "BOOL",
                 };
                 let body = args
                     .into_iter()
@@ -58,6 +59,10 @@ impl<'x> Environment<'x> {
                     body: vec![],
                 },
                 BuiltinValue::_32U(val) => TokenTree::Token(self.token(format!("{}", val))),
+                BuiltinValue::Bool(val) => match *val {
+                    true => TokenTree::Token("true"),
+                    false => TokenTree::Token("false"),
+                },
             },
             Definition::Match {
                 base,

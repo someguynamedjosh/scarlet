@@ -27,7 +27,9 @@ impl<'x> Environment<'x> {
                     Definition::BuiltinOperation(op, args)
                 }
             }
-            BuiltinOperation::_32UPattern => Definition::BuiltinOperation(op, args),
+            BuiltinOperation::_32UPattern | BuiltinOperation::BoolPattern => {
+                Definition::BuiltinOperation(op, args)
+            }
         }
     }
 

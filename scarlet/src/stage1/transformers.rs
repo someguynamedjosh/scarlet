@@ -129,8 +129,8 @@ impl Transformer for Match {
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let base = to[at + 1].clone();
-        let mut patterns = expect_bracket_group(&to[at + 2]).clone();
+        let base = to[at - 1].clone();
+        let mut patterns = expect_bracket_group(&to[at + 1]).clone();
         let extras: Extras = hashmap![172 => tfers![OnPattern, Else]];
         apply_transformers(&mut patterns, &extras);
         let patterns = TokenTree::BuiltinRule {
@@ -138,7 +138,7 @@ impl Transformer for Match {
             body: patterns,
         };
         TransformerResult {
-            replace_range: at..=at + 2,
+            replace_range: at - 1..=at + 1,
             with: TokenTree::BuiltinRule {
                 name: "match",
                 body: vec![base, patterns],
@@ -220,14 +220,10 @@ impl Transformer for OnPattern {
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let mut pattern = expect_bracket_group(&to[at + 1]).clone();
-        apply_transformers(&mut pattern, &hashmap![]);
-        if pattern.len() != 1 {
-            todo!("Nice error");
-        }
+        let pattern = to[at + 1].clone();
         let pattern = TokenTree::BuiltinRule {
             name: "pattern",
-            body: pattern,
+            body: vec![pattern],
         };
         let value = to[at + 2].clone();
         TransformerResult {

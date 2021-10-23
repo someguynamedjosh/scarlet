@@ -42,11 +42,13 @@ pub fn definition_from_tree<'x>(
         } => substitute_def::ingest(body, env, in_scopes),
 
         TokenTree::BuiltinRule {
-            name: "PATTERN",
-            ..
+            name: "PATTERN", ..
         } => Definition::BuiltinValue(BuiltinValue::GodPattern),
         TokenTree::BuiltinRule { name: "32U", body } => {
             builtin_op_def(BuiltinOperation::_32UPattern, body, env, in_scopes)
+        }
+        TokenTree::BuiltinRule { name: "BOOL", body } => {
+            builtin_op_def(BuiltinOperation::BoolPattern, body, env, in_scopes)
         }
         TokenTree::BuiltinRule {
             name: "sum_32u",

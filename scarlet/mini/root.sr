@@ -1,13 +1,16 @@
 (
+    BOOL is builtin{BOOL any BOOL}
     32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
 
-    x is any 32U
-    p is any PATTERN
+    x is any BOOL
 
-    increment is x + 1
+    increment is show x match{
+        on true 123
+        else 456
+    }
 
-    something is show increment[x is 123]
+    something is increment[x is true]
     
     # recount is match x {
     #     on{0} 0

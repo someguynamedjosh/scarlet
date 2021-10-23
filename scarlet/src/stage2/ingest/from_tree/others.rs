@@ -38,6 +38,10 @@ pub fn show<'x>(
 pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> Definition<'x> {
     if let Ok(num) = token.parse() {
         Definition::BuiltinValue(BuiltinValue::_32U(num))
+    } else if token == &"true" {
+        Definition::BuiltinValue(BuiltinValue::Bool(true))
+    } else if token == &"false" {
+        Definition::BuiltinValue(BuiltinValue::Bool(false))
     } else {
         let mut result = None;
         // Reversed so we search more local scopes first.
