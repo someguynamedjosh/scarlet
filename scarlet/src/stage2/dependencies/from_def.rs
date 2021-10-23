@@ -7,7 +7,6 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
-            Definition::After { .. } => todo!(),
             Definition::BuiltinOperation(op, args) => {
                 if op == BuiltinOperation::Matches {
                     todo!()
@@ -26,8 +25,9 @@ impl<'x> Environment<'x> {
             } => {
                 let mut deps = self.dep_query(base);
                 for condition in conditions {
-                    deps.vars = deps.vars.union(self.items[condition.pattern].after.clone());
-                    deps.append(self.dep_query(condition.value));
+                    todo!()
+                    // deps.vars = deps.vars.union(self.items[condition.pattern].after.clone());
+                    // deps.append(self.dep_query(condition.value));
                 }
                 deps.append(self.dep_query(else_value));
                 deps
@@ -65,9 +65,10 @@ impl<'x> Environment<'x> {
                 final_deps
             }
             Definition::Variable(var) => {
-                let mut base: OrderedSet<VariableId<'x>> = self.items[of].after.clone();
-                base.insert_or_replace(var, ());
-                DepQueryResult::full(base)
+                todo!();
+                // let mut base: OrderedSet<VariableId<'x>> = self.items[of].after.clone();
+                // base.insert_or_replace(var, ());
+                // DepQueryResult::full(base)
             }
         }
     }

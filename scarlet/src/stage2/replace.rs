@@ -12,9 +12,6 @@ pub fn apply_reps<'x>(reps: &Reps<'x>, to: &mut ItemId<'x>) {
 
 pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
     match to {
-        Definition::After { after, base } => {
-            apply_reps_to_after(reps, after, base);
-        }
         Definition::BuiltinOperation(_, args) => {
             apply_reps_to_builtin_op(args, reps);
         }

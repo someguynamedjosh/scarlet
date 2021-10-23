@@ -32,7 +32,6 @@ impl<'x> Environment<'x> {
         substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
     ) -> Option<ItemId<'x>> {
         Some(match self.items[original].definition.clone().unwrap() {
-            Definition::After { .. } => todo!(),
             Definition::BuiltinOperation(op, args) => {
                 let args = args
                     .into_iter()

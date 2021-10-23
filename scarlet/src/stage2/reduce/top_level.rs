@@ -3,7 +3,6 @@ use crate::stage2::structure::{Definition, Environment, ItemId};
 impl<'x> Environment<'x> {
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
         match def {
-            Definition::After { .. } => todo!(),
             Definition::BuiltinOperation(op, args) => self.reduce_builtin_op(op, args),
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),

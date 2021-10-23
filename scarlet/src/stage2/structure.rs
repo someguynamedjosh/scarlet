@@ -52,10 +52,6 @@ impl BuiltinValue {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
-    After {
-        after: ItemId<'x>,
-        base: ItemId<'x>,
-    },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
@@ -120,6 +116,13 @@ impl<'x> Environment<'x> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum After<'x> {
+    Unknown,
+    Items(Vec<ItemId<'x>>),
+    Vars(OrderedSet<VariableId<'x>>),
+}
+
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Item<'x> {
@@ -129,7 +132,7 @@ pub struct Item<'x> {
     pub dependencies: Option<OrderedSet<VariableId<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: OrderedSet<VariableId<'x>>,
+    pub after: After<'x>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

@@ -4,6 +4,21 @@ use crate::{
     stage2::structure::{Environment, ItemId, VariableId},
 };
 
+// let after_deps = self.dep_query(after);
+// let base_deps = self.dep_query(base);
+
+// if base_deps.partial_over.len() == 0 && after_deps.partial_over.len() == 0 {
+//     for (dep, _) in &after_deps.vars {
+//         if !base_deps.vars.contains_key(dep) {
+//             todo!("Nice error, base {:?} is not dependent on {:?}", base,
+// dep);         }
+//     }
+// }
+
+// let mut result = after_deps;
+// result.append(base_deps);
+// result
+
 impl<'x> Environment<'x> {
     pub(super) fn dep_query(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         if self.items[of].dependencies.is_none() {

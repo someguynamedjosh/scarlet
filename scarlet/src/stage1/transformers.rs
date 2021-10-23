@@ -302,8 +302,7 @@ fn build_transformers<'e>(
         80 => tfers![Plus, Minus],
         100 => tfers![Matches],
         140 => tfers![Match],
-        160 => tfers![Variable, Show],
-        170 => tfers![After],
+        161 => tfers![Variable, After, Show],
         _ => tfers![],
     };
     let basics: Vec<_> = basics.into_iter().map(Either::Fst).collect();
