@@ -1,4 +1,4 @@
-(
+[
     BOOL is builtin{BOOL any BOOL}
     32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
@@ -35,4 +35,4 @@
     # }
 
     # fifth is show fibb[index is 7]
-)
+]

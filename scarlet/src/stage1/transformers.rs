@@ -82,7 +82,7 @@ struct Struct;
 impl Transformer for Struct {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
         if let TokenTree::BuiltinRule { name, .. } = &to[at] {
-            *name == "group()"
+            *name == "group[]"
         } else {
             false
         }
@@ -171,7 +171,7 @@ impl Transformer for Substitution {
         if at == 0 {
             false
         } else if let TokenTree::BuiltinRule {
-            name: "group[]", ..
+            name: "group()", ..
         } = &to[at]
         {
             true
