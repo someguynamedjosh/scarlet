@@ -7,18 +7,38 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn get_afters_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
-            Definition::BuiltinOperation(_, _) => todo!(),
-            Definition::BuiltinValue(_) => todo!(),
+            Definition::BuiltinOperation(_, args) => {
+                let mut result = DepQueryResult::new();
+                for arg in args {
+                    result.append(self.after_query(arg));
+                }
+                result
+            }
+            Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,
                 conditions,
                 else_value,
-            } => todo!(),
-            Definition::Member(_, _) => todo!(),
-            Definition::Other(_) => todo!(),
-            Definition::Struct(_) => todo!(),
+            } => {
+                let mut result = self.after_query(base);
+                result.append(self.after_query(else_value));
+                for cond in conditions {
+                    result.append(self.after_query(cond.pattern));
+                    result.append(self.after_query(cond.value));
+                }
+                result
+            }
+            Definition::Member(base, _) => self.after_query(base),
+            Definition::Other(other) => self.after_query(other),
+            Definition::Struct(fields) => {
+                let mut result = DepQueryResult::new();
+                for field in fields {
+                    result.append(self.after_query(field.value));
+                }
+                result
+            }
             Definition::Substitute(_, _) => todo!(),
-            Definition::Variable(_) => todo!(),
+            Definition::Variable(var) => self.after_query(self.vars[var].pattern),
         }
     }
 }

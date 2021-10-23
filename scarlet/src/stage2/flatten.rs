@@ -18,11 +18,18 @@ fn flatten_id<'x>(reps: &Reps<'x>, id: ItemId<'x>) -> ItemId<'x> {
 }
 
 pub fn flatten(env: &mut Environment) {
-    let mut reps = HashMap::new();
+    let mut possible_reps = HashMap::new();
 
     for (id, item) in &env.items {
         if let Definition::Other(replace_with) = item.definition.as_ref().unwrap() {
-            reps.insert(id, *replace_with);
+            possible_reps.insert(id, *replace_with);
+        }
+    }
+
+    let mut reps = HashMap::new();
+    for (rep, with) in possible_reps {
+        if env.get_afters(rep) == env.get_afters(with) {
+            reps.insert(rep, with);
         }
     }
 

@@ -63,7 +63,10 @@ impl<'x> Environment<'x> {
                 final_deps
             }
             Definition::Variable(var) => {
-                todo!();
+                let pattern = self.vars[var].pattern;
+                let mut afters = self.after_query(pattern);
+                afters.vars.insert_or_replace(var, ());
+                afters
             }
         }
     }
