@@ -21,7 +21,7 @@ impl<'i> TokenTree<'i> {
         }
     }
 
-    pub fn unwrap_primitive(&self, expected_name: Token<'i>) -> &[TokenTree<'i>] {
+    pub fn unwrap_builtin(&self, expected_name: Token<'i>) -> &[TokenTree<'i>] {
         match self {
             Self::BuiltinRule { name, body } => {
                 if *name == expected_name {

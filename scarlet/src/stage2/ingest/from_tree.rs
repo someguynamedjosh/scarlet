@@ -22,6 +22,8 @@ pub fn definition_from_tree<'x>(
     match src {
         TokenTree::Token(token) => others::token_def(token, in_scopes),
 
+        TokenTree::BuiltinRule { name: "after", body } => others::after_def(body, env, in_scopes, into),
+
         TokenTree::BuiltinRule { name: "any", body } => others::variable_def(body, env, in_scopes),
         TokenTree::BuiltinRule {
             name: "match",

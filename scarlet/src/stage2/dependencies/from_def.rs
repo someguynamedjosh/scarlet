@@ -7,6 +7,7 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
+            Definition::After { .. } => todo!(),
             Definition::BuiltinOperation(op, args) => {
                 if op == BuiltinOperation::Matches {
                     todo!()

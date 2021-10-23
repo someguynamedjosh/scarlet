@@ -16,7 +16,7 @@ pub fn ingest<'x>(
     assert_eq!(body.len(), 2);
     let base = &body[0];
     let base = top_level::ingest_tree(base, env, in_scopes);
-    let substitution_source = body[1].unwrap_primitive("substitutions");
+    let substitution_source = body[1].unwrap_builtin("substitutions");
     let mut substitutions = Vec::new();
     for item in substitution_source {
         match item {

@@ -1,12 +1,36 @@
 use std::collections::HashMap;
 
+use super::definition_from_tree;
 use crate::{
     stage1::structure::TokenTree,
     stage2::{
-        ingest::top_level,
+        ingest::{top_level, util::begin_item},
         structure::{BuiltinValue, Definition, Environment, ItemId, Variable},
     },
 };
+
+pub fn after_def<'x>(
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    into: ItemId<'x>,
+) -> Definition<'x> {
+    if body.len() != 2 {
+        todo!("Nice error");
+    }
+    let mut result = top_level::ingest_tree(&body[1], env, in_scopes);
+    for tt in body[0].unwrap_builtin("vals").iter().rev() {
+        let after = top_level::ingest_tree(tt, env, in_scopes);
+
+        let item = begin_item(tt, env);
+        env.items[item].definition = Some(Definition::After {
+            after,
+            base: result,
+        });
+        result = item;
+    }
+    Definition::Other(result)
+}
 
 pub fn member_def<'x>(
     body: &'x Vec<TokenTree<'x>>,

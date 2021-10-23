@@ -25,6 +25,7 @@ impl<'x> Environment<'x> {
             return self.matches(original_value, var_pattern, match_against);
         }
         match self.definition_of(match_against) {
+            Definition::After { .. } => todo!(),
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Matches | BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => {
                     Unknown

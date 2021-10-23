@@ -91,7 +91,7 @@ impl Transformer for Struct {
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
         if let TokenTree::BuiltinRule { body, .. } = &to[at] {
             let mut body = body.clone();
-            let extras = hashmap![160 => tfers![Is]];
+            let extras = hashmap![200 => tfers![Is]];
             apply_transformers(&mut body, &extras);
             let name = "struct";
             TransformerResult {
@@ -165,6 +165,30 @@ impl Transformer for Show {
     }
 }
 
+struct After;
+impl Transformer for After {
+    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+        &to[at] == &TokenTree::Token("after")
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        let mut vals = expect_bracket_group(&to[at + 1]).clone();
+        apply_transformers(&mut vals, &Default::default());
+        let vals = TokenTree::BuiltinRule {
+            name: "vals",
+            body: vals,
+        };
+        let base = to[at + 2].clone();
+        TransformerResult {
+            replace_range: at..=at + 2,
+            with: TokenTree::BuiltinRule {
+                name: "after",
+                body: vec![vals, base],
+            },
+        }
+    }
+}
+
 struct Substitution;
 impl Transformer for Substitution {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
@@ -184,7 +208,7 @@ impl Transformer for Substitution {
         let base = to[at - 1].clone();
         if let TokenTree::BuiltinRule { body, .. } = &to[at] {
             let mut substitutions = body.clone();
-            let extras = hashmap![160 => tfers![Is]];
+            let extras = hashmap![200 => tfers![Is]];
             apply_transformers(&mut substitutions, &extras);
             let substitutions = TokenTree::BuiltinRule {
                 name: "substitutions",
@@ -279,6 +303,7 @@ fn build_transformers<'e>(
         100 => tfers![Matches],
         140 => tfers![Match],
         160 => tfers![Variable, Show],
+        170 => tfers![After],
         _ => tfers![],
     };
     let basics: Vec<_> = basics.into_iter().map(Either::Fst).collect();

@@ -52,6 +52,10 @@ impl BuiltinValue {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
+    After {
+        after: ItemId<'x>,
+        base: ItemId<'x>,
+    },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
