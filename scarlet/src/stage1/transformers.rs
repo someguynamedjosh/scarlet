@@ -272,11 +272,12 @@ fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![Struct, Builtin],
-        20 => tfers![Match, Member, Substitution],
+        20 => tfers![Member, Substitution],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
-        140 => tfers![Matches],
+        100 => tfers![Matches],
+        140 => tfers![Match],
         160 => tfers![Variable, Show],
         _ => tfers![],
     };

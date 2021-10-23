@@ -3,14 +3,19 @@
     32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
 
-    x is any BOOL
+    x is any PATTERN
+    y is any PATTERN
 
-    increment is x match{
-        on true 123
-        else 456
+    equal is 
+    x matches y 
+    match{
+        on true 
+        y matches x
+
+        else false
     }
 
-    something is show 123 matches 32U
+    # something is show equal(x is 123 y is 321)
     
     # recount is match x {
     #     on{0} 0

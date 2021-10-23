@@ -1,13 +1,16 @@
 use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{Definition, Environment, ItemId, VariableId},
+    stage2::structure::{BuiltinOperation, Definition, Environment, ItemId, VariableId},
 };
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
-            Definition::BuiltinOperation(_, args) => {
+            Definition::BuiltinOperation(op, args) => {
+                if op == BuiltinOperation::Matches {
+                    todo!()
+                }
                 let mut base = DepQueryResult::new();
                 for arg in args {
                     base.append(self.dep_query(arg));

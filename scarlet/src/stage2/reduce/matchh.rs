@@ -46,6 +46,7 @@ impl<'x> Environment<'x> {
                     }
                 }
             },
+            Definition::BuiltinValue(BuiltinValue::GodPattern) => non_capturing_match(),
             Definition::BuiltinValue(pv) => match self.definition_of(value_pattern) {
                 Definition::BuiltinValue(vv) => {
                     if pv == vv {
