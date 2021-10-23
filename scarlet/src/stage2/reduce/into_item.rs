@@ -93,7 +93,12 @@ impl<'x> Environment<'x> {
             match self.matches(sub.value, target) {
                 MatchResult::Match(subs) => final_subs = final_subs.union(subs),
                 MatchResult::NoMatch => {
-                    todo!("Nice error, argument will definitely not match what it is assigned to.")
+                    println!("{:#?}", self);
+                    todo!(
+                        "Nice error, argument {:?} will definitely not match {:?}",
+                        sub.value,
+                        target
+                    )
                 }
                 MatchResult::Unknown => {
                     todo!("Nice error, argument might not match what it is assigned to.")

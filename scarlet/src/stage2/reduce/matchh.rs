@@ -56,7 +56,14 @@ impl<'x> Environment<'x> {
                             BuiltinValue::_32U(..) => op == &BuiltinOperation::_32UPattern,
                             BuiltinValue::GodPattern => false,
                         },
-                        Definition::BuiltinOperation(other_op, _) => other_op == op,
+                        Definition::BuiltinOperation(value_op, _) => match value_op {
+                            BuiltinOperation::BoolPattern | BuiltinOperation::Matches => {
+                                *op == BuiltinOperation::BoolPattern
+                            }
+                            BuiltinOperation::_32UPattern
+                            | BuiltinOperation::Sum32U
+                            | BuiltinOperation::Dif32U => *op == BuiltinOperation::_32UPattern,
+                        },
                         _ => return Unknown,
                     };
                     if matches {

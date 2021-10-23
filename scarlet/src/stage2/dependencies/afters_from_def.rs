@@ -7,12 +7,16 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn get_afters_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
-            Definition::BuiltinOperation(_, args) => {
-                let mut result = DepQueryResult::new();
-                for arg in args {
-                    result.append(self.after_query(arg));
+            Definition::BuiltinOperation(op, args) => {
+                if op == BuiltinOperation::Matches {
+                    self.after_query(args[0])
+                } else {
+                    let mut result = DepQueryResult::new();
+                    for arg in args {
+                        result.append(self.after_query(arg));
+                    }
+                    result
                 }
-                result
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {

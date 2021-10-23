@@ -9,13 +9,17 @@ impl<'x> Environment<'x> {
         match self.items[of].definition.clone().unwrap() {
             Definition::BuiltinOperation(op, args) => {
                 if op == BuiltinOperation::Matches {
-                    todo!()
+                    assert_eq!(args.len(), 2);
+                    let mut base = self.dep_query(args[0]);
+                    base.append(self.after_query(args[1]));
+                    base
+                } else {
+                    let mut base = DepQueryResult::new();
+                    for arg in args {
+                        base.append(self.dep_query(arg));
+                    }
+                    base
                 }
-                let mut base = DepQueryResult::new();
-                for arg in args {
-                    base.append(self.dep_query(arg));
-                }
-                base
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
@@ -50,7 +54,9 @@ impl<'x> Environment<'x> {
                 'deps: for (base_dep, _) in base_deps.vars.clone() {
                     for sub in &subs {
                         // If there is a substitution targeting that dependency...
-                        if base_dep == self.item_as_variable(sub.target.unwrap()) {
+                        let target = sub.target.unwrap();
+                        let rtarget = self.reduce(target);
+                        if base_dep == self.item_as_variable(rtarget) {
                             // Then push all the substituted value's dependencies.
                             final_deps.append(self.dep_query(sub.value));
                             // And don't bother pushing the original dependency.

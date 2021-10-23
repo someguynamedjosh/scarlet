@@ -1,15 +1,38 @@
 [
-    # BOOL is builtin{BOOL any BOOL}
+    BOOL is builtin{BOOL any BOOL}
     32U is builtin{32U any 32U}
-    # PATTERN is builtin{PATTERN}
+    PATTERN is builtin{PATTERN}
 
-    x is any 32U
-    y is any 32U
+    logic is [
+        left is any BOOL
+        right is any BOOL
 
-    xy_eq is x match{
-        on after{y} y 123
-        else 456
-    }
+        and is
+        left match{
+            on true right
+            else false
+        }
 
-    show xy_eq(x is 2 y is 1)
+        or is
+        left match{
+            on true true
+            else right
+        }
+    ]
+
+    left is any PATTERN
+    right is any PATTERN
+
+    equal is 
+    logic.and(
+        logic.left is 
+        left matches after{right} right
+
+        logic.right is 
+        right matches after{left} left
+    )
+
+    any_int is any 32U
+
+    show equal
 ]

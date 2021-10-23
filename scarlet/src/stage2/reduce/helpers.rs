@@ -1,4 +1,4 @@
-use crate::stage2::structure::{BuiltinValue, Definition, Environment, ItemId, VariableId};
+use crate::stage2::structure::{After, BuiltinValue, Definition, Environment, ItemId, VariableId};
 
 impl<'x> Environment<'x> {
     pub fn definition_of(&self, item: ItemId<'x>) -> &Definition<'x> {
@@ -30,6 +30,7 @@ impl<'x> Environment<'x> {
         let mut new_item = self.items[original].clone();
         new_item.definition = Some(new_def);
         if is_fundamentally_different {
+            new_item.after = After::Unknown;
             new_item.dependencies = None;
             new_item.cached_reduction = None;
         }

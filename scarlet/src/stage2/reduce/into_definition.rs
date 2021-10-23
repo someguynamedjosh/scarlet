@@ -6,7 +6,7 @@ use crate::stage2::{
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn reduce_builtin_op(
+    fn reduce_finite_builtin_op(
         &mut self,
         op: BuiltinOperation,
         args: Vec<ItemId<'x>>,
@@ -36,8 +36,21 @@ impl<'x> Environment<'x> {
                 }
             }
             BuiltinOperation::_32UPattern | BuiltinOperation::BoolPattern => {
-                Definition::BuiltinOperation(op, args)
+                unreachable!()
             }
+        }
+    }
+
+    pub(super) fn reduce_builtin_op(
+        &mut self,
+        op: BuiltinOperation,
+        args: Vec<ItemId<'x>>,
+    ) -> Definition<'x> {
+        if let BuiltinOperation::_32UPattern | BuiltinOperation::BoolPattern = op {
+            Definition::BuiltinOperation(op, args)
+        } else {
+            let args = args.into_iter().map(|arg| self.reduce(arg)).collect();
+            self.reduce_finite_builtin_op(op, args)
         }
     }
 

@@ -69,7 +69,7 @@ impl<'x> Environment<'x> {
                 let def = Definition::Member(base, name);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::Other(..) => unreachable!(),
+            Definition::Other(id) => self.substitute_impl(id, substitutions)?,
             Definition::Struct(fields) => {
                 let fields = fields
                     .into_iter()
