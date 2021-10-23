@@ -26,8 +26,8 @@ impl<'x> Environment<'x> {
         }
         match self.definition_of(match_against) {
             Definition::BuiltinOperation(op, _) => match op {
-                BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => {
-                    todo!("Nice error, unimplemented pattern.")
+                BuiltinOperation::Matches | BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => {
+                    Unknown
                 }
                 BuiltinOperation::_32UPattern | &BuiltinOperation::BoolPattern => {
                     let matches = match self.definition_of(value_pattern) {

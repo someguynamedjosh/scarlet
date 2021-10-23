@@ -42,6 +42,7 @@ impl<'x> Environment<'x> {
         match self.items[item].definition.as_ref().unwrap() {
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
+                    BuiltinOperation::Matches => "matches",
                     BuiltinOperation::Sum32U => "sum_32u",
                     BuiltinOperation::Dif32U => "dif_32u",
                     BuiltinOperation::_32UPattern => "32U",

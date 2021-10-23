@@ -210,6 +210,7 @@ binary_operator!(Minus, "dif_32u", "-");
 
 binary_operator!(Member, "member", ".");
 binary_operator!(Is, "target", "is");
+binary_operator!(Matches, "matches", "matches");
 
 prefix_operator!(Variable, "any", "any");
 
@@ -275,6 +276,7 @@ fn build_transformers<'e>(
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
+        140 => tfers![Matches],
         160 => tfers![Variable, Show],
         _ => tfers![],
     };

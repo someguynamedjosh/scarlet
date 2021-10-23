@@ -1,5 +1,6 @@
-use crate::stage2::structure::{
-    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField,
+use crate::stage2::{
+    reduce::matchh::MatchResult,
+    structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField},
 };
 
 impl<'x> Environment<'x> {
@@ -9,6 +10,11 @@ impl<'x> Environment<'x> {
         args: Vec<ItemId<'x>>,
     ) -> Definition<'x> {
         match op {
+            BuiltinOperation::Matches => match self.matches(args[0], args[0], args[1]) {
+                MatchResult::Match(..) => Definition::BuiltinValue(BuiltinValue::Bool(true)),
+                MatchResult::NoMatch => Definition::BuiltinValue(BuiltinValue::Bool(false)),
+                MatchResult::Unknown => Definition::BuiltinOperation(op, args),
+            },
             BuiltinOperation::Sum32U => {
                 if let Some(arg_values) = self.args_as_builtin_values(&args[..]) {
                     Definition::BuiltinValue(BuiltinValue::_32U(

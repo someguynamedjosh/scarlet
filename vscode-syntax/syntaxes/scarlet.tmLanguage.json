@@ -4,7 +4,7 @@
 	"patterns": [
 		{
 			"name": "keyword.control",
-			"match": "(is|any|builtin|match|on|else)"
+			"match": "(is|any|builtin|matches|match|on|else|show)"
 		},
 		{
 			"name": "punctuation",
@@ -15,16 +15,16 @@
 			"match": "\\b(:|::|\\.|\\+|-|\\*|\\/)\\b"
 		},
 		{
+			"name": "constant.numeric",
+			"match": "\\b[0-9_]+\\b"
+		},
+		{
 			"name": "entity.name.type",
 			"match": "\\b[0-9A-Z_]+\\b"
 		},
 		{
 			"name": "entity.name.function",
 			"match": "\\b[^ \\r\\n\\t\\{\\}\\(\\)\\[\\]]+[ \\r\\n\\t\\{\\}\\(\\)\\[\\]]*(?=\\[)\\b"
-		},
-		{
-			"name": "constant.numeric",
-			"match": "\\b[0-9_]+\\b"
 		},
 		{
 			"name": "variable",

@@ -5,12 +5,12 @@
 
     x is any BOOL
 
-    increment is show x match{
+    increment is x match{
         on true 123
         else 456
     }
 
-    something is increment[x is true]
+    something is show 123 matches 32U
     
     # recount is match x {
     #     on{0} 0

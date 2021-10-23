@@ -58,6 +58,10 @@ pub fn definition_from_tree<'x>(
             name: "dif_32u",
             body,
         } => builtin_op_def(BuiltinOperation::Dif32U, body, env, in_scopes),
+        TokenTree::BuiltinRule {
+            name: "matches",
+            body,
+        } => builtin_op_def(BuiltinOperation::Matches, body, env, in_scopes),
 
         TokenTree::BuiltinRule { name, .. } => todo!("Nice error, unrecognized builtin {}", name),
     }
