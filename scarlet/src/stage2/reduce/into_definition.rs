@@ -1,6 +1,8 @@
 use crate::stage2::{
     reduce::matchh::MatchResult,
-    structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField},
+    structure::{
+        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VariableId,
+    },
 };
 
 impl<'x> Environment<'x> {
@@ -10,7 +12,7 @@ impl<'x> Environment<'x> {
         args: Vec<ItemId<'x>>,
     ) -> Definition<'x> {
         match op {
-            BuiltinOperation::Matches => match self.matches(args[0], args[0], args[1]) {
+            BuiltinOperation::Matches => match self.matches(args[0], args[1]) {
                 MatchResult::Match(..) => Definition::BuiltinValue(BuiltinValue::Bool(true)),
                 MatchResult::NoMatch => Definition::BuiltinValue(BuiltinValue::Bool(false)),
                 MatchResult::Unknown => Definition::BuiltinOperation(op, args),
@@ -49,5 +51,16 @@ impl<'x> Environment<'x> {
             })
             .collect();
         Definition::Struct(new_fields)
+    }
+
+    pub(super) fn reduce_var(
+        &mut self,
+        var: VariableId<'x>,
+        def: Definition<'x>,
+    ) -> Definition<'x> {
+        let pattern = self.vars[var].pattern;
+        let pattern = self.reduce(pattern);
+        self.vars[var].pattern = pattern;
+        def
     }
 }

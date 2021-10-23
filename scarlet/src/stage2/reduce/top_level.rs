@@ -10,7 +10,7 @@ impl<'x> Environment<'x> {
             Definition::Other(..) => unreachable!(),
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::Substitute(..) => unreachable!(),
-            Definition::Variable(..) => def,
+            Definition::Variable(var) => self.reduce_var(var, def),
         }
     }
 
@@ -23,7 +23,7 @@ impl<'x> Environment<'x> {
                 else_value,
             } => self.reduce_match(base, else_value, conditions, original),
             Definition::Member(base, member) => self.reduce_member(base, member),
-            Definition::Other(item) => self.reduce(item),
+            Definition::Other(item) => self.reduce_other(original, item),
             Definition::Substitute(base, subs) => self.reduce_substitution(subs, base, original),
             _ => {
                 let reduced_definition = self.reduce_definition(definition);
@@ -43,6 +43,7 @@ impl<'x> Environment<'x> {
             // println!("{:#?}", self);
             // println!("{:?} becomes {:?}", original, result);
             assert!(self.get_deps(result).len() <= self.get_deps(original).len());
+            // println!("{:#?}", self);
             assert_eq!(self.reduce(result), result);
             result
         }

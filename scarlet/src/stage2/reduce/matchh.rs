@@ -1,5 +1,10 @@
 use super::substitute::Substitutions;
-use crate::stage2::structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId};
+use crate::{
+    shared::OrderedSet,
+    stage2::structure::{
+        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VariableId,
+    },
+};
 
 pub enum MatchResult<'x> {
     Match(Substitutions<'x>),
@@ -17,12 +22,27 @@ impl<'x> Environment<'x> {
     pub(super) fn matches(
         &mut self,
         original_value: ItemId<'x>,
-        value_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
+        self.matches_impl(
+            original_value,
+            original_value,
+            match_against,
+            Default::default(),
+        )
+    }
+
+    fn matches_impl(
+        &mut self,
+        original_value: ItemId<'x>,
+        value_pattern: ItemId<'x>,
+        match_against: ItemId<'x>,
+        after: OrderedSet<VariableId<'x>>,
+    ) -> MatchResult<'x> {
+        let after = after.union(self.get_afters(match_against));
         if let Definition::Variable(var) = self.definition_of(value_pattern) {
             let var_pattern = self.vars[*var].pattern;
-            return self.matches(original_value, var_pattern, match_against);
+            return self.matches_impl(original_value, var_pattern, match_against, after);
         }
         match self.definition_of(match_against) {
             Definition::BuiltinOperation(op, _) => match op {
@@ -65,12 +85,17 @@ impl<'x> Environment<'x> {
             Definition::Substitute(..) => Unknown,
             Definition::Variable(var) => {
                 let var = *var;
+                let allow_binding = !after.contains_key(&var);
                 let var_pattern = self.vars[var].pattern;
-                match self.matches(original_value, value_pattern, var_pattern) {
+                match self.matches_impl(original_value, value_pattern, var_pattern, after) {
                     Match(..) => {
-                        let mut subs = Substitutions::new();
-                        subs.insert_no_replace(var, original_value);
-                        Match(subs)
+                        if allow_binding {
+                            let mut subs = Substitutions::new();
+                            subs.insert_no_replace(var, original_value);
+                            Match(subs)
+                        } else {
+                            Unknown
+                        }
                     }
                     other => other,
                 }

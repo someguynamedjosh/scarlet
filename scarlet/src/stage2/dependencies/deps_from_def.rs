@@ -25,7 +25,8 @@ impl<'x> Environment<'x> {
             } => {
                 let mut deps = self.dep_query(base);
                 for condition in conditions {
-                    todo!()
+                    deps.append(self.after_query(condition.pattern));
+                    deps.append(self.dep_query(condition.value));
                 }
                 deps.append(self.dep_query(else_value));
                 deps

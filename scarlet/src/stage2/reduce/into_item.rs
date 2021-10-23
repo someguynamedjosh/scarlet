@@ -2,7 +2,7 @@ use crate::{
     shared::OrderedMap,
     stage2::{
         reduce::matchh::MatchResult,
-        structure::{Condition, Definition, Environment, ItemId, Substitution},
+        structure::{After, Condition, Definition, Environment, Item, ItemId, Substitution},
     },
 };
 
@@ -21,7 +21,7 @@ impl<'x> Environment<'x> {
             let pattern = self.reduce(condition.pattern);
             // Don't reduce yet as that might lead to needless infinite recursion.
             let value = condition.value;
-            match self.matches(base, base, pattern) {
+            match self.matches(base, pattern) {
                 MatchResult::Match(subs) => {
                     if subs.len() > 0 {
                         todo!()
@@ -37,7 +37,7 @@ impl<'x> Environment<'x> {
                 MatchResult::Unknown => new_conditions.push(Condition { pattern, value }),
             }
         }
-        println!("{:#?} becomes {:#?}", conditions, new_conditions);
+        let is_fundamentally_different = conditions != new_conditions;
         if new_conditions.len() == 0 {
             self.reduce(else_value)
         } else {
@@ -46,7 +46,7 @@ impl<'x> Environment<'x> {
                 conditions: new_conditions,
                 else_value,
             };
-            self.item_with_new_definition(original, def, true)
+            self.item_with_new_definition(original, def, is_fundamentally_different)
         }
     }
 
@@ -66,6 +66,20 @@ impl<'x> Environment<'x> {
         }
     }
 
+    pub(super) fn reduce_other(&mut self, original: ItemId<'x>, base: ItemId<'x>) -> ItemId<'x> {
+        if self.get_afters(original) == self.get_afters(base) {
+            self.reduce(base)
+        } else {
+            let base = self.reduce(base);
+            let base = self.items[base].clone();
+            let mut result = base;
+            result.cached_reduction = None;
+            result.dependencies = None;
+            result.after = After::AllVars(self.get_afters(original));
+            self.items.get_or_push(result)
+        }
+    }
+
     pub(super) fn reduce_substitution(
         &mut self,
         subs: Vec<Substitution<'x>>,
@@ -74,7 +88,7 @@ impl<'x> Environment<'x> {
     ) -> ItemId<'x> {
         let mut final_subs = OrderedMap::new();
         for sub in subs {
-            match self.matches(sub.value, sub.value, sub.target.unwrap()) {
+            match self.matches(sub.value, sub.target.unwrap()) {
                 MatchResult::Match(subs) => final_subs = final_subs.union(subs),
                 MatchResult::NoMatch => {
                     todo!("Nice error, argument will definitely not match what it is assigned to.")

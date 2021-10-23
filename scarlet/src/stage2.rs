@@ -1,5 +1,4 @@
 mod dependencies;
-mod flatten;
 pub mod ingest;
 mod reduce;
 mod replace;
