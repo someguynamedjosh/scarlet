@@ -1,7 +1,7 @@
 use crate::stage2::structure::{BuiltinValue, Definition, Environment, ItemId, VariableId};
 
 impl<'x> Environment<'x> {
-    pub(super) fn definition_of(&self, item: ItemId<'x>) -> &Definition<'x> {
+    pub fn definition_of(&self, item: ItemId<'x>) -> &Definition<'x> {
         self.items[item].definition.as_ref().unwrap()
     }
 

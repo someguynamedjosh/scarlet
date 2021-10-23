@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
-use super::structure::{Environment, ItemId, StructField};
+use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, BuiltinValue, Definition},
+    stage2::structure::{After, BuiltinOperation, BuiltinValue, Definition},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -14,23 +14,33 @@ impl<'x> Environment<'x> {
     pub fn show_all(&self) {
         for (id, item) in &self.items {
             for &context in &item.shown_from {
-                println!("{:#?}", self.get_code(id, context));
+                println!(
+                    "{:?} is\n{:#?}",
+                    self.get_name(id, context)
+                        .unwrap_or(TokenTree::Token("anonymous")),
+                    self.get_code(id, context)
+                );
             }
         }
     }
 
     pub fn get_name_or_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
-        let mut item = item;
         if let Some(name) = self.get_name(item, context) {
-            return name;
+            name
+        } else {
+            self.get_code(item, context)
         }
-        while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
-            item = *other;
-            if let Some(name) = self.get_name(item, context) {
-                return name;
+    }
+
+    pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ItemId<'x>) -> TokenTree {
+        for (item_id, _) in &self.items {
+            if let Definition::Variable(var_id) = self.definition_of(item_id) {
+                if *var_id == var {
+                    return self.get_name_or_code(item_id, context);
+                }
             }
         }
-        self.get_code(item, context)
+        unreachable!()
     }
 
     fn token(&self, of: String) -> &str {
@@ -39,7 +49,7 @@ impl<'x> Environment<'x> {
 
     pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
         let item = self.items[item].cached_reduction.unwrap_or(item);
-        match self.items[item].definition.as_ref().unwrap() {
+        let tree = match self.items[item].definition.as_ref().unwrap() {
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
                     BuiltinOperation::Matches => "matches",
@@ -139,10 +149,50 @@ impl<'x> Environment<'x> {
                     body: vec![pattern],
                 }
             }
+        };
+        let vals = match &self.items[item].after {
+            After::Unknown => vec![],
+            After::PartialItems(items) => items
+                .iter()
+                .map(|item| self.get_name_or_code(*item, context))
+                .collect(),
+            After::AllVars(vars) => vars
+                .iter()
+                .map(|var| self.get_var_name_or_code(var.0, context))
+                .collect(),
+        };
+        if vals.len() == 0 {
+            tree
+        } else {
+            let vals = TokenTree::BuiltinRule {
+                name: "vals",
+                body: vals,
+            };
+            TokenTree::BuiltinRule {
+                name: "after",
+                body: vec![vals, tree],
+            }
         }
     }
 
     pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
+        let mut of = of;
+        if let Some(name) = self.get_name_impl(of, context) {
+            return Some(name);
+        }
+        while let Definition::Other(other) = self.items[of].definition.as_ref().unwrap() {
+            if &self.items[of].after != &self.items[*other].after {
+                break;
+            }
+            of = *other;
+            if let Some(name) = self.get_name_impl(of, context) {
+                return Some(name);
+            }
+        }
+        None
+    }
+
+    pub fn get_name_impl(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
         let of = self.items[of].cached_reduction.unwrap_or(of);
         let all_context_parents: HashSet<ItemId<'x>> = self
             .get_paths(context)

@@ -25,7 +25,7 @@ pub fn after_def<'x>(
         .iter()
         .map(|tt| top_level::ingest_tree(tt, env, in_scopes))
         .collect();
-    let items = After::Items(items);
+    let items = After::PartialItems(items);
     env.items[into].after = items;
 
     result

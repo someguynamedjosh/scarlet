@@ -119,8 +119,8 @@ impl<'x> Environment<'x> {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum After<'x> {
     Unknown,
-    Items(Vec<ItemId<'x>>),
-    Vars(OrderedSet<VariableId<'x>>),
+    PartialItems(Vec<ItemId<'x>>),
+    AllVars(OrderedSet<VariableId<'x>>),
 }
 
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;

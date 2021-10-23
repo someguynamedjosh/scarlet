@@ -5,5 +5,6 @@
 
     x is any 32U
 
-    y is show after{x} x
+    y is after{x} x
+    show y
 ]

@@ -26,8 +26,6 @@ impl<'x> Environment<'x> {
                 let mut deps = self.dep_query(base);
                 for condition in conditions {
                     todo!()
-                    // deps.vars = deps.vars.union(self.items[condition.pattern].after.clone());
-                    // deps.append(self.dep_query(condition.value));
                 }
                 deps.append(self.dep_query(else_value));
                 deps
@@ -66,9 +64,6 @@ impl<'x> Environment<'x> {
             }
             Definition::Variable(var) => {
                 todo!();
-                // let mut base: OrderedSet<VariableId<'x>> = self.items[of].after.clone();
-                // base.insert_or_replace(var, ());
-                // DepQueryResult::full(base)
             }
         }
     }

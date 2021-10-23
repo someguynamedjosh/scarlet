@@ -1,25 +1,55 @@
 use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{Environment, ItemId, VariableId},
+    stage2::structure::{After, Environment, ItemId, VariableId},
 };
 
-// let after_deps = self.dep_query(after);
-// let base_deps = self.dep_query(base);
-
-// if base_deps.partial_over.len() == 0 && after_deps.partial_over.len() == 0 {
-//     for (dep, _) in &after_deps.vars {
-//         if !base_deps.vars.contains_key(dep) {
-//             todo!("Nice error, base {:?} is not dependent on {:?}", base,
-// dep);         }
-//     }
-// }
-
-// let mut result = after_deps;
-// result.append(base_deps);
-// result
-
 impl<'x> Environment<'x> {
+    fn compute_afters(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
+        let mut expected_vars = OrderedSet::new();
+        if let After::PartialItems(items) = &self.items[of].after {
+            for item in items.clone() {
+                expected_vars = expected_vars.union(self.get_deps(item));
+            }
+        }
+
+        let deps = self.dep_query(of);
+        if deps.partial_over.len() == 0 {
+            for (var, _) in &expected_vars {
+                if !deps.vars.contains_key(var) {
+                    todo!("Nice error, {:?} is not dependent on {:?}", of, var);
+                }
+            }
+        }
+
+        let mut afters = self.get_afters_from_def(of);
+        afters.vars = expected_vars.union(afters.vars);
+        afters.remove_partial(of);
+        if afters.partial_over.is_empty() {
+            self.items[of].after = After::AllVars(afters.vars.clone());
+        }
+        afters
+    }
+
+    pub(super) fn after_query(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
+        match &self.items[of].after {
+            After::Unknown | After::PartialItems(..) => {
+                if self.query_stack_contains(of) {
+                    DepQueryResult::empty(vec![(of, ())].into_iter().collect())
+                } else {
+                    self.with_query_stack_frame(of, |this| this.compute_afters(of))
+                }
+            }
+            After::AllVars(vars) => DepQueryResult::full(vars.clone()),
+        }
+    }
+
+    pub fn get_afters(&mut self, of: ItemId<'x>) -> OrderedSet<VariableId<'x>> {
+        let result = self.with_fresh_query_stack(|this| this.after_query(of));
+        assert!(result.partial_over.is_empty());
+        result.vars
+    }
+
     pub(super) fn dep_query(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         if self.items[of].dependencies.is_none() {
             if self.query_stack_contains(of) {
