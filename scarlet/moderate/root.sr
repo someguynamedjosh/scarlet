@@ -42,8 +42,16 @@
     index match{
         on 0 [1 1]
 
-        else [prev.1 prev.0 + prev.1]
-        using [prev is better_fibb(index - 1)]
+        else 
+        [
+            prev.1 
+            prev.0 + prev.1
+        ]
+        using 
+        [
+            prev is better_fibb(prev_index)
+            prev_index is index - 1
+        ]
     }
 
     show better_fibb(30).0

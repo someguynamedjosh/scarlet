@@ -75,7 +75,8 @@ impl<'x> Environment<'x> {
         for (dep, _) in &*deps {
             let dep = *dep;
             let pattern = self.vars[dep].pattern;
-            if let MatchResult::Match(..) = self.matches(sub.value, pattern) {
+            let value = self.reduce(sub.value);
+            if let MatchResult::Match(..) = self.matches(value, pattern) {
                 success = true;
                 deps.remove(&dep);
                 sub.target = Target::ResolvedVariable(dep);
@@ -83,6 +84,7 @@ impl<'x> Environment<'x> {
             }
         }
         if !success {
+            println!("{:#?}", self);
             todo!(
                 "Nice error, the argument {:?} cannot be assigned to any of {:?}",
                 sub.value,
