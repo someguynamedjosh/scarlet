@@ -39,7 +39,6 @@ pub fn member_def<'x>(
     assert_eq!(body.len(), 2);
     let base = &body[0];
     let base = top_level::ingest_tree(base, env, in_scopes);
-    println!("{:#?}", body);
     let name = body[1].as_token().unwrap().to_owned();
     Definition::Member(base, name)
 }

@@ -304,6 +304,8 @@ impl<'x> Environment<'x> {
 }
 
 fn field_name(field: &StructField, index: i32) -> String {
-    let name = field.name.clone().unwrap_or(format!("{}", index));
-    name
+    field
+        .name
+        .map(ToOwned::to_owned)
+        .unwrap_or(format!("{}", index))
 }

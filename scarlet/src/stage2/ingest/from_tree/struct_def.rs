@@ -30,7 +30,7 @@ pub fn ingest<'x>(
     }
     let mut labeled_fields = Vec::new();
     for (field, id) in fields.iter().zip(ids.iter()) {
-        let name = field.target.clone().map(|x| x.1.to_owned());
+        let name = field.target.clone().map(|x| x.1);
         labeled_fields.push(StructField { name, value: *id });
     }
     Definition::Struct(labeled_fields)

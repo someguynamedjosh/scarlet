@@ -23,7 +23,7 @@
     left is any PATTERN
     right is any PATTERN
 
-    equal is 
+    equal is
     logic.and(
         left matches after{right} right
         right matches after{left} left
@@ -31,23 +31,20 @@
 
     index is any 32U
 
-    fibb is 
+    fibb is
     index match{
         on 0 1
         on 1 1
         else fibb(index - 1) + fibb(index - 2)
     }
 
-    # better_fibb is
-    # index match{
-    #     on 0 [1 1]
-    #     else [better_fibb(index - 1).1]
-    # }
+    better_fibb is
+    index match{
+        on 0 [1 1]
 
-    pm is [
-        index + 1
-        index - 1
-    ]
+        else [prev.1 prev.0 + prev.1]
+        using [prev is better_fibb(index - 1)]
+    }
 
-    show pm(5).1
+    show better_fibb(30).0
 ]

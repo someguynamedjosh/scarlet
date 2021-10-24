@@ -14,11 +14,8 @@ impl<'x> Environment<'x> {
         substitutions: &Substitutions<'x>,
     ) -> Option<ItemId<'x>> {
         if self.query_stack_contains(original) && self.get_deps(original).len() > 0 {
-            println!("{:#?}", self);
-            println!("Early exit from {:?}", original);
             None
         } else {
-            println!("Substituting {:?} in {:?}", substitutions, original);
             let result = self.with_query_stack_frame(original, |this| {
                 this.substitute_impl(original, substitutions)
             });

@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructField<'x> {
-    pub name: Option<String>,
+    pub name: Option<Token<'x>>,
     pub value: ItemId<'x>,
 }
 

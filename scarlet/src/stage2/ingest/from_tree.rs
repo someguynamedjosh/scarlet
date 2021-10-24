@@ -2,6 +2,7 @@ mod match_def;
 mod others;
 mod struct_def;
 mod substitute_def;
+mod using;
 
 use std::collections::HashMap;
 
@@ -45,6 +46,10 @@ pub fn definition_from_tree<'x>(
             name: "substitute",
             body,
         } => substitute_def::ingest(body, env, in_scopes),
+        TokenTree::BuiltinRule {
+            name: "using",
+            body,
+        } => using::ingest(body, env, in_scopes),
 
         TokenTree::BuiltinRule {
             name: "PATTERN", ..

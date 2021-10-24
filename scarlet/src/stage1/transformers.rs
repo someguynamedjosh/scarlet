@@ -233,8 +233,9 @@ binary_operator!(Plus, "sum_32u", "+");
 binary_operator!(Minus, "dif_32u", "-");
 
 binary_operator!(Member, "member", ".");
-binary_operator!(Is, "target", "is");
 binary_operator!(Matches, "matches", "matches");
+binary_operator!(Using, "using", "using");
+binary_operator!(Is, "target", "is");
 
 prefix_operator!(Variable, "any", "any");
 
@@ -303,6 +304,7 @@ fn build_transformers<'e>(
         91 => tfers![After],
         100 => tfers![Matches],
         140 => tfers![Match],
+        150 => tfers![Using],
         161 => tfers![Variable, Show],
         _ => tfers![],
     };
