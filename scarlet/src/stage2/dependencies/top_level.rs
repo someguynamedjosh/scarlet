@@ -6,41 +6,34 @@ use crate::{
 
 impl<'x> Environment<'x> {
     fn compute_afters(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
-        let mut expected_vars = OrderedSet::new();
-        if let After::PartialItems(items) = &self.items[of].after {
-            for item in items.clone() {
-                expected_vars = expected_vars.union(self.get_deps(item));
-            }
-        }
+        let mut afters = self.get_afters_from_def(of);
 
         let deps = self.dep_query(of);
         if deps.partial_over.len() == 0 {
-            for (var, _) in &expected_vars {
+            for (var, _) in &afters.vars {
                 if !deps.vars.contains_key(var) {
                     todo!("Nice error, {:?} is not dependent on {:?}", of, var);
                 }
             }
         }
 
-        let mut afters = self.get_afters_from_def(of);
-        afters.vars = expected_vars.union(afters.vars);
         afters.remove_partial(of);
         if afters.partial_over.is_empty() {
-            self.items[of].after = After::AllVars(afters.vars.clone());
+            self.items[of].after = Some(afters.vars.clone());
         }
         afters
     }
 
     pub(super) fn after_query(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match &self.items[of].after {
-            After::Unknown | After::PartialItems(..) => {
+            None => {
                 if self.query_stack_contains(of) {
                     DepQueryResult::empty(vec![(of, ())].into_iter().collect())
                 } else {
                     self.with_query_stack_frame(of, |this| this.compute_afters(of))
                 }
             }
-            After::AllVars(vars) => DepQueryResult::full(vars.clone()),
+            Some(vars) => DepQueryResult::full(vars.clone()),
         }
     }
 

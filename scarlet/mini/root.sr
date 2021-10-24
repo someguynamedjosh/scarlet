@@ -2,15 +2,4 @@
     BOOL is builtin{BOOL any BOOL}
     32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
-
-    input is any 32U
-    increment is input + 1
-
-    asdf is whatever
-    using [
-        whatever is 123
-        something is increment(whatever)
-    ]
-
-    show asdf
 ]

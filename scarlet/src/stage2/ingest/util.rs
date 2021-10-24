@@ -44,7 +44,7 @@ pub fn begin_item<'x>(
         }
     }
     env.items.push(Item {
-        after: After::Unknown,
+        after: None,
         dependencies: None,
         original_definition: src,
         definition: None,

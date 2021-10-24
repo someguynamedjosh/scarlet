@@ -30,7 +30,7 @@ impl<'x> Environment<'x> {
         let mut new_item = self.items[original].clone();
         new_item.definition = Some(new_def);
         if is_fundamentally_different {
-            new_item.after = After::Unknown;
+            new_item.after = None;
             new_item.dependencies = None;
             new_item.cached_reduction = None;
         }

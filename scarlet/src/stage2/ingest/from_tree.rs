@@ -26,7 +26,7 @@ pub fn definition_from_tree<'x>(
         TokenTree::BuiltinRule {
             name: "after",
             body,
-        } => others::after_def(body, env, in_scopes, into),
+        } => others::after_def(body, env, in_scopes),
 
         TokenTree::BuiltinRule { name: "any", body } => others::variable_def(body, env, in_scopes),
         TokenTree::BuiltinRule {

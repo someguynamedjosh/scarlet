@@ -45,6 +45,11 @@ impl<'x> Environment<'x> {
             return self.matches_impl(original_value, var_pattern, match_against, after);
         }
         match self.definition_of(match_against) {
+            Definition::After { base, .. } => {
+                // Afters already included using above code.
+                let base = *base;
+                self.matches_impl(original_value, value_pattern, base, after)
+            }
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Matches | BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => {
                     Unknown

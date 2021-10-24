@@ -58,7 +58,22 @@ impl<'x> Environment<'x> {
 
     pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
         let item = self.items[item].cached_reduction.unwrap_or(item);
-        let tree = match self.items[item].definition.as_ref().unwrap() {
+        match self.items[item].definition.as_ref().unwrap() {
+            Definition::After { base, vals } => {
+                let vals = vals
+                    .into_iter()
+                    .map(|val| self.get_name_or_code(*val, context))
+                    .collect();
+                let vals = TokenTree::BuiltinRule {
+                    name: "vals",
+                    body: vals,
+                };
+                let base = self.get_name_or_code(*base, context);
+                TokenTree::BuiltinRule {
+                    name: "after",
+                    body: vec![vals, base],
+                }
+            }
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
                     BuiltinOperation::Matches => "matches",
@@ -174,19 +189,7 @@ impl<'x> Environment<'x> {
                     body: vec![pattern],
                 }
             }
-        };
-        let afters = match &self.items[item].after {
-            After::Unknown => vec![],
-            After::PartialItems(items) => items
-                .iter()
-                .map(|item| self.get_name_or_code(*item, context))
-                .collect(),
-            After::AllVars(vars) => vars
-                .iter()
-                .map(|var| self.get_var_name_or_code(var.0, context))
-                .collect(),
-        };
-        self.prepend_afters(tree, afters)
+        }
     }
 
     fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> (ItemId<'x>, Vec<TokenTree>) {
@@ -194,13 +197,8 @@ impl<'x> Environment<'x> {
         let mut afters = Vec::new();
         while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
             match self.items[item].after.clone() {
-                After::Unknown => (),
-                After::PartialItems(items) => {
-                    for item in items {
-                        afters.push(self.get_name_or_code(item, context))
-                    }
-                }
-                After::AllVars(vars) => {
+                None => (),
+                Some(vars) => {
                     for (var, _) in vars {
                         afters.push(self.get_var_name_or_code(var, context))
                     }

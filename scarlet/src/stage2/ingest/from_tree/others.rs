@@ -12,23 +12,20 @@ pub fn after_def<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
     in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-    into: ItemId<'x>,
 ) -> Definition<'x> {
     if body.len() != 2 {
         todo!("Nice error");
     }
 
-    let mut result = super::definition_from_tree(&body[1], env, in_scopes, into);
+    let base = top_level::ingest_tree(&body[1], env, in_scopes);
 
-    let items = body[0]
+    let vals = body[0]
         .unwrap_builtin("vals")
         .iter()
         .map(|tt| top_level::ingest_tree(tt, env, in_scopes))
         .collect();
-    let items = After::PartialItems(items);
-    env.items[into].after = items;
 
-    result
+    Definition::After { base, vals }
 }
 
 pub fn member_def<'x>(
@@ -58,7 +55,10 @@ pub fn show<'x>(
     Definition::Other(value)
 }
 
-pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>]) -> Definition<'x> {
+pub fn token_def<'x>(
+    token: &&str,
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
+) -> Definition<'x> {
     if let Ok(num) = token.parse() {
         Definition::BuiltinValue(BuiltinValue::_32U(num))
     } else if token == &"true" {

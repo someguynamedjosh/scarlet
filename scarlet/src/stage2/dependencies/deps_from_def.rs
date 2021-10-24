@@ -7,6 +7,12 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
+            Definition::After { base, .. } => {
+                // Checked in after query, if this is a valid after, the deps should show up
+                // again in the base.
+                self.after_query(of);
+                self.dep_query(base)
+            }
             Definition::BuiltinOperation(op, args) => {
                 if op == BuiltinOperation::Matches {
                     assert_eq!(args.len(), 2);

@@ -66,6 +66,10 @@ pub struct Substitution<'x> {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
+    After {
+        base: ItemId<'x>,
+        vals: Vec<ItemId<'x>>,
+    },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
@@ -147,7 +151,7 @@ pub struct Item<'x> {
     pub dependencies: Option<OrderedSet<VariableId<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: After<'x>,
+    pub after: Option<OrderedSet<VariableId<'x>>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

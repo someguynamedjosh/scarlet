@@ -37,6 +37,15 @@ impl<'x> Environment<'x> {
         substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
     ) -> Option<ItemId<'x>> {
         Some(match self.items[original].definition.clone().unwrap() {
+            Definition::After { base, vals } => {
+                let base = self.substitute(base, substitutions)?;
+                let vals = vals
+                    .into_iter()
+                    .map(|i| self.substitute(i, substitutions))
+                    .collect::<Option<_>>()?;
+                let def = Definition::After { base, vals };
+                self.item_with_new_definition(original, def, true)
+            }
             Definition::BuiltinOperation(op, args) => {
                 let args = args
                     .into_iter()

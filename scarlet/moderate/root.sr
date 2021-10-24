@@ -25,9 +25,12 @@
 
     equal is
     logic.and(
-        left matches after{right} right
         right matches after{left} left
+        left matches after{right} right
     )
+
+    # show better_fibb(30).0
+    show equal(left is 123)
 
     index is any 32U
 
@@ -53,6 +56,4 @@
             prev_index is index - 1
         ]
     }
-
-    show better_fibb(30).0
 ]

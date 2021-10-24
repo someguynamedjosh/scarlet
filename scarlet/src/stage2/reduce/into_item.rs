@@ -9,6 +9,31 @@ use crate::{
 };
 
 impl<'x> Environment<'x> {
+    pub(super) fn reduce_after(
+        &mut self,
+        original: ItemId<'x>,
+        base: ItemId<'x>,
+        vals: Vec<ItemId<'x>>,
+    ) -> ItemId<'x> {
+        let base = self.reduce(base);
+        let vals: Vec<_> = vals.into_iter().map(|i| self.reduce(i)).collect();
+        let mut vals_with_deps = Vec::new();
+        for val in vals {
+            if self.get_deps(val).len() > 0 {
+                vals_with_deps.push(val);
+            }
+        }
+        if vals_with_deps.len() == 0 {
+            base
+        } else {
+            let def = Definition::After {
+                base,
+                vals: vals_with_deps,
+            };
+            self.item_with_new_definition(original, def, false)
+        }
+    }
+
     pub(super) fn reduce_match(
         &mut self,
         base: ItemId<'x>,
@@ -72,17 +97,7 @@ impl<'x> Environment<'x> {
     }
 
     pub(super) fn reduce_other(&mut self, original: ItemId<'x>, base: ItemId<'x>) -> ItemId<'x> {
-        if self.get_afters(original) == self.get_afters(base) {
-            self.reduce(base)
-        } else {
-            let base = self.reduce(base);
-            let base = self.items[base].clone();
-            let mut result = base;
-            result.cached_reduction = None;
-            result.dependencies = None;
-            result.after = After::AllVars(self.get_afters(original));
-            self.items.get_or_push(result)
-        }
+        self.reduce(base)
     }
 
     pub(super) fn reduce_substitution(
