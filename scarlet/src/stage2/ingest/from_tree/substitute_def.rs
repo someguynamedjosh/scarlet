@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage1::structure::TokenTree,
+    stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{Definition, Environment, ItemId, Substitution},
+        structure::{Definition, Environment, ItemId, Substitution, Target},
     },
 };
 
 pub fn ingest<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
 ) -> Definition<'x> {
     assert_eq!(body.len(), 2);
     let base = &body[0];
@@ -26,13 +26,20 @@ pub fn ingest<'x>(
             } => {
                 assert_eq!(body.len(), 2);
                 let target = &body[0];
-                let target = top_level::ingest_tree(&target, env, in_scopes);
-                let target = Some(target);
+                let name = match target {
+                    &TokenTree::Token(token) => Some(token),
+                    _ => None,
+                };
+                let possible_meaning = top_level::ingest_tree(&target, env, in_scopes);
+                let target = Target::Unresolved {
+                    name,
+                    possible_meaning,
+                };
                 let value = top_level::ingest_tree(&body[1], env, in_scopes);
                 substitutions.push(Substitution { target, value })
             }
             _ => {
-                let target = None;
+                let target = Target::UnresolvedAnonymous;
                 let value = top_level::ingest_tree(item, env, in_scopes);
                 substitutions.push(Substitution { target, value })
             }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     shared::OrderedSet,
-    stage1::structure::TokenTree,
+    stage1::structure::{Token, TokenTree},
     stage2::structure::{After, Environment, Item, ItemId},
 };
 
@@ -32,12 +32,23 @@ pub fn maybe_target<'x>(input: &'x TokenTree<'x>) -> MaybeTarget<'x> {
     }
 }
 
-pub fn begin_item<'x>(src: &'x TokenTree<'x>, env: &mut Environment<'x>) -> ItemId<'x> {
+pub fn begin_item<'x>(
+    src: &'x TokenTree<'x>,
+    env: &mut Environment<'x>,
+    parent_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
+) -> ItemId<'x> {
+    let mut total_scope = HashMap::new();
+    for scope in parent_scopes {
+        for (ident, value) in *scope {
+            total_scope.insert(*ident, *value);
+        }
+    }
     env.items.push(Item {
         after: After::Unknown,
         dependencies: None,
         original_definition: src,
         definition: None,
+        scope: total_scope,
         cached_reduction: None,
         shown_from: Vec::new(),
     })

@@ -1,7 +1,7 @@
 use crate::{
-    shared::OrderedMap,
+    shared::{OrderedMap, OrderedSet},
     stage2::structure::{
-        Condition, Definition, Environment, ItemId, StructField, Substitution, VariableId,
+        Condition, Definition, Environment, ItemId, StructField, Substitution, Target, VariableId,
     },
 };
 
@@ -23,6 +23,14 @@ impl<'x> Environment<'x> {
                 this.substitute_impl(original, substitutions)
             });
             result
+        }
+    }
+
+    pub fn target_deps(&mut self, target: &Target<'x>) -> OrderedSet<VariableId<'x>> {
+        match target {
+            Target::ResolvedItem(item) => self.get_deps(*item),
+            Target::ResolvedVariable(var) => std::iter::once((*var, ())).collect(),
+            _ => unreachable!(),
         }
     }
 
@@ -84,15 +92,13 @@ impl<'x> Environment<'x> {
             }
             Definition::Substitute(base, original_subs) => {
                 let mut subs_for_base = OrderedMap::new();
-                for &(target, value) in substitutions {
-                    if original_subs
-                        .iter()
-                        .any(|sub| self.item_as_variable(sub.target.unwrap()) == target)
-                    {
-                        continue;
-                    } else {
-                        subs_for_base.insert_no_replace(target, value)
+                'outer_subs: for &(target, value) in substitutions {
+                    for orsub in &original_subs {
+                        if self.target_deps(&orsub.target).contains_key(&target) {
+                            continue 'outer_subs;
+                        }
                     }
+                    subs_for_base.insert_no_replace(target, value)
                 }
                 let base = if subs_for_base.len() > 0 {
                     self.substitute(base, &subs_for_base)?

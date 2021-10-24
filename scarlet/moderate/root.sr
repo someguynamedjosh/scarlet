@@ -34,5 +34,14 @@
 
     any_int is any 32U
 
-    show equal
+    index is any 32U
+
+    fibb is 
+    index match{
+        on 0 1
+        on 1 1
+        else fibb(index is index - 1) + fibb(index is index - 2)
+    }
+
+    show fibb(index is 5)
 ]

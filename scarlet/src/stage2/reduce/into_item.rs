@@ -1,8 +1,10 @@
 use crate::{
     shared::OrderedMap,
     stage2::{
-        reduce::matchh::MatchResult,
-        structure::{After, Condition, Definition, Environment, Item, ItemId, Substitution},
+        matchh::MatchResult,
+        structure::{
+            After, Condition, Definition, Environment, Item, ItemId, Substitution, Target,
+        },
     },
 };
 
@@ -88,21 +90,41 @@ impl<'x> Environment<'x> {
     ) -> ItemId<'x> {
         let mut final_subs = OrderedMap::new();
         for sub in subs {
-            let target = sub.target.unwrap();
-            let target = self.reduce(target);
-            match self.matches(sub.value, target) {
-                MatchResult::Match(subs) => final_subs = final_subs.union(subs),
-                MatchResult::NoMatch => {
-                    println!("{:#?}", self);
-                    todo!(
-                        "Nice error, argument {:?} will definitely not match {:?}",
-                        sub.value,
-                        target
-                    )
+            if let Target::ResolvedItem(target) = sub.target {
+                let target = self.reduce(target);
+                match self.matches(sub.value, target) {
+                    MatchResult::Match(subs) => final_subs = final_subs.union(subs),
+                    MatchResult::NoMatch => {
+                        todo!(
+                            "Nice error, argument {:?} will definitely not match {:?}",
+                            sub.value,
+                            target
+                        )
+                    }
+                    MatchResult::Unknown => {
+                        todo!("Nice error, argument might not match what it is assigned to.")
+                    }
                 }
-                MatchResult::Unknown => {
-                    todo!("Nice error, argument might not match what it is assigned to.")
+            } else if let Target::ResolvedVariable(target) = sub.target {
+                let target_pattern = self.vars[target].pattern;
+                match self.matches(sub.value, target_pattern) {
+                    MatchResult::Match(subs) => {
+                        final_subs = final_subs.union(subs);
+                        final_subs.insert_no_replace(target, sub.value);
+                    }
+                    MatchResult::NoMatch => {
+                        todo!(
+                            "Nice error, argument {:?} will definitely not match {:?}",
+                            sub.value,
+                            target
+                        )
+                    }
+                    MatchResult::Unknown => {
+                        todo!("Nice error, argument might not match what it is assigned to.")
+                    }
                 }
+            } else {
+                unreachable!()
             }
         }
         let base = self.reduce(base);

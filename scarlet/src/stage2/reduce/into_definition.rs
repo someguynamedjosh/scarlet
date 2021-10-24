@@ -1,5 +1,5 @@
 use crate::stage2::{
-    reduce::matchh::MatchResult,
+    matchh::MatchResult,
     structure::{
         BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VariableId,
     },

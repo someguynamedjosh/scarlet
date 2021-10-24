@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage1::structure::TokenTree,
+    stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
         structure::{Condition, Definition, Environment, ItemId},
@@ -11,7 +11,7 @@ use crate::{
 pub fn ingest<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
 ) -> Definition<'x> {
     assert_eq!(body.len(), 2);
     let base = &body[0];

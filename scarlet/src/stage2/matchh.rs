@@ -1,8 +1,8 @@
-use super::substitute::Substitutions;
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VariableId,
+    stage2::{
+        reduce::substitute::Substitutions,
+        structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VariableId},
     },
 };
 
@@ -19,7 +19,7 @@ fn non_capturing_match<'x>() -> MatchResult<'x> {
 }
 
 impl<'x> Environment<'x> {
-    pub(super) fn matches(
+    pub fn matches(
         &mut self,
         original_value: ItemId<'x>,
         match_against: ItemId<'x>,
@@ -87,7 +87,10 @@ impl<'x> Environment<'x> {
             },
             Definition::Match { .. } => Unknown,
             Definition::Member(_, _) => Unknown,
-            Definition::Other(..) => unreachable!(),
+            Definition::Other(other) => {
+                let other = *other;
+                self.matches_impl(original_value, value_pattern, other, after)
+            }
             Definition::Struct(_) => todo!(),
             Definition::Substitute(..) => Unknown,
             Definition::Variable(var) => {

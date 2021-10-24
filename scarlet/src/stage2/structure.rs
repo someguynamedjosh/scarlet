@@ -1,21 +1,15 @@
-use std::fmt::Debug;
+use std::{collections::HashMap, fmt::Debug};
 
 use typed_arena::Arena;
 
 use crate::{
     shared::{Id, OrderedSet, Pool},
-    stage1::structure as s1,
+    stage1::structure::{self as s1, Token},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructField<'x> {
     pub name: Option<String>,
-    pub value: ItemId<'x>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Substitution<'x> {
-    pub target: Option<ItemId<'x>>,
     pub value: ItemId<'x>,
 }
 
@@ -48,6 +42,26 @@ impl BuiltinValue {
             _ => panic!("Expected 32U, got {:?} instead", self),
         }
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Target<'x> {
+    UnresolvedAnonymous,
+    Unresolved {
+        /// If it was an identifier, $name is that identifier.
+        name: Option<Token<'x>>,
+        /// What the name resolves to in the scope where the substitution was
+        /// first used.
+        possible_meaning: ItemId<'x>,
+    },
+    ResolvedItem(ItemId<'x>),
+    ResolvedVariable(VariableId<'x>),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Substitution<'x> {
+    pub target: Target<'x>,
+    pub value: ItemId<'x>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -128,6 +142,7 @@ pub type ItemId<'x> = Id<Item<'x>, 'I'>;
 pub struct Item<'x> {
     pub original_definition: &'x s1::TokenTree<'x>,
     pub definition: Option<Definition<'x>>,
+    pub scope: HashMap<Token<'x>, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableId<'x>>>,
     /// The variables that should remain dependencies when doing pattern

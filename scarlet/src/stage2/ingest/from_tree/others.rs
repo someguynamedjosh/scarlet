@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage1::structure::TokenTree,
+    stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
         structure::{After, BuiltinValue, Definition, Environment, ItemId, Variable},
@@ -11,7 +11,7 @@ use crate::{
 pub fn after_def<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
     into: ItemId<'x>,
 ) -> Definition<'x> {
     if body.len() != 2 {
@@ -34,7 +34,7 @@ pub fn after_def<'x>(
 pub fn member_def<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
 ) -> Definition<'x> {
     assert_eq!(body.len(), 2);
     let base = &body[0];
@@ -46,7 +46,7 @@ pub fn member_def<'x>(
 pub fn show<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
     into: ItemId<'x>,
 ) -> Definition<'x> {
     if body.len() != 1 {
@@ -58,7 +58,7 @@ pub fn show<'x>(
     Definition::Other(value)
 }
 
-pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> Definition<'x> {
+pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>]) -> Definition<'x> {
     if let Ok(num) = token.parse() {
         Definition::BuiltinValue(BuiltinValue::_32U(num))
     } else if token == &"true" {
@@ -82,7 +82,7 @@ pub fn token_def<'x>(token: &&str, in_scopes: &[&HashMap<&str, ItemId<'x>>]) -> 
 pub fn variable_def<'x>(
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
 ) -> Definition<'x> {
     if body.len() != 1 {
         todo!("Nice error");

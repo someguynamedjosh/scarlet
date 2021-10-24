@@ -54,9 +54,8 @@ impl<'x> Environment<'x> {
                 'deps: for (base_dep, _) in base_deps.vars.clone() {
                     for sub in &subs {
                         // If there is a substitution targeting that dependency...
-                        let target = sub.target.unwrap();
-                        let rtarget = self.reduce(target);
-                        if base_dep == self.item_as_variable(rtarget) {
+                        let target_deps = self.target_deps(&sub.target);
+                        if target_deps.contains_key(&base_dep) {
                             // Then push all the substituted value's dependencies.
                             final_deps.append(self.dep_query(sub.value));
                             // And don't bother pushing the original dependency.

@@ -3,7 +3,10 @@
     32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
 
-    asdf is any PATTERN
+    stuff is [
+        val is any 32U
+        increment is val + 1
+    ]
 
-    show asdf matches after{asdf} asdf
+    show stuff.increment(val is 5)
 ]

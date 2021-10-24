@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    stage1::structure::TokenTree,
+    stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::{top_level, util},
         structure::{Definition, Environment, ItemId, StructField},
@@ -10,13 +10,13 @@ use crate::{
 
 pub fn ingest<'x>(
     body: &'x Vec<TokenTree<'x>>,
-    in_scopes: &[&HashMap<&str, ItemId<'x>>],
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
     env: &mut Environment<'x>,
 ) -> Definition<'x> {
     let fields: Vec<_> = body.iter().map(util::maybe_target).collect();
     let ids: Vec<_> = fields
         .iter()
-        .map(|target| util::begin_item(&target.value, env))
+        .map(|target| util::begin_item(&target.value, env, in_scopes))
         .collect();
     let mut scope_map = HashMap::new();
     for (field, id) in fields.iter().zip(ids.iter()) {

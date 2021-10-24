@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::structure::Target;
 use crate::stage2::structure::{Condition, Definition, ItemId, StructField, Substitution};
 
 pub type Reps<'x> = HashMap<ItemId<'x>, ItemId<'x>>;
@@ -47,7 +48,9 @@ fn apply_reps_to_substitution<'x>(
 ) {
     apply_reps(reps, base);
     for sub in subs {
-        sub.target.as_mut().map(|target| apply_reps(reps, target));
+        if let Target::ResolvedItem(item) = &mut sub.target {
+            apply_reps(reps, item);
+        }
         apply_reps(reps, &mut sub.value);
     }
 }
