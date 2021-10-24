@@ -3,36 +3,7 @@
     32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
 
-    logic is [
-        left is any BOOL
-        right is any BOOL
+    asdf is any PATTERN
 
-        and is
-        left match{
-            on true right
-            else false
-        }
-
-        or is
-        left match{
-            on true true
-            else right
-        }
-    ]
-
-    left is any PATTERN
-    right is any PATTERN
-
-    equal is 
-    logic.and(
-        logic.left is 
-        left matches after{right} right
-
-        logic.right is 
-        right matches after{left} left
-    )
-
-    any_int is any 32U
-
-    show equal
+    show asdf matches after{asdf} asdf
 ]

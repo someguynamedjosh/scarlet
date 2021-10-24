@@ -36,6 +36,15 @@ impl<'x> Environment<'x> {
         for (item_id, _) in &self.items {
             if let Definition::Variable(var_id) = self.definition_of(item_id) {
                 if *var_id == var {
+                    if let Some(name) = self.get_name(item_id, context) {
+                        return name;
+                    }
+                }
+            }
+        }
+        for (item_id, _) in &self.items {
+            if let Definition::Variable(var_id) = self.definition_of(item_id) {
+                if *var_id == var {
                     return self.get_name_or_code(item_id, context);
                 }
             }
@@ -150,7 +159,7 @@ impl<'x> Environment<'x> {
                 }
             }
         };
-        let vals = match &self.items[item].after {
+        let afters = match &self.items[item].after {
             After::Unknown => vec![],
             After::PartialItems(items) => items
                 .iter()
@@ -161,46 +170,65 @@ impl<'x> Environment<'x> {
                 .map(|var| self.get_var_name_or_code(var.0, context))
                 .collect(),
         };
-        if vals.len() == 0 {
-            tree
+        self.prepend_afters(tree, afters)
+    }
+
+    fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> (ItemId<'x>, Vec<TokenTree>) {
+        let mut item = item;
+        let mut afters = Vec::new();
+        while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
+            match self.items[item].after.clone() {
+                After::Unknown => (),
+                After::PartialItems(items) => {
+                    for item in items {
+                        afters.push(self.get_name_or_code(item, context))
+                    }
+                }
+                After::AllVars(vars) => {
+                    for (var, _) in vars {
+                        afters.push(self.get_var_name_or_code(var, context))
+                    }
+                }
+            }
+            item = *other;
+        }
+        if let Some(reduced) = self.items[item].cached_reduction {
+            if reduced != item {
+                return self.dereference(reduced, context);
+            }
+        }
+        (item, afters)
+    }
+
+    fn prepend_afters<'a>(&'a self, base: TokenTree<'a>, afters: Vec<TokenTree<'a>>) -> TokenTree {
+        if afters.len() == 0 {
+            base
         } else {
             let vals = TokenTree::BuiltinRule {
                 name: "vals",
-                body: vals,
+                body: afters,
             };
             TokenTree::BuiltinRule {
                 name: "after",
-                body: vec![vals, tree],
+                body: vec![vals, base],
             }
         }
     }
 
     pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
-        let mut of = of;
-        if let Some(name) = self.get_name_impl(of, context) {
-            return Some(name);
-        }
-        while let Definition::Other(other) = self.items[of].definition.as_ref().unwrap() {
-            if &self.items[of].after != &self.items[*other].after {
-                break;
-            }
-            of = *other;
-            if let Some(name) = self.get_name_impl(of, context) {
-                return Some(name);
-            }
-        }
-        None
+        let (of, afters) = self.dereference(of, context);
+        let name = self.get_name_impl(of, context);
+        name.map(|name| self.prepend_afters(name, afters))
     }
 
     pub fn get_name_impl(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
-        let of = self.items[of].cached_reduction.unwrap_or(of);
         let all_context_parents: HashSet<ItemId<'x>> = self
-            .get_paths(context)
+            .get_paths(context, context)
             .into_iter()
             .map(|p| p[0].0)
             .collect();
         let reachable_paths = self
-            .get_paths(of)
+            .get_paths(of, context)
             .into_iter()
             .filter(|p| all_context_parents.contains(&p[0].0));
         let path = reachable_paths.min_by_key(|p| p.len());
@@ -217,41 +245,45 @@ impl<'x> Environment<'x> {
         })
     }
 
-    fn get_parents(&self, of: ItemId<'x>) -> Parents<'x> {
+    fn get_parents(&self, of: ItemId<'x>, context: ItemId<'x>) -> Parents<'x> {
         let mut parents = Parents::new();
         for (candidate_id, candidate) in &self.items {
             if let Definition::Struct(fields) = candidate.definition.as_ref().unwrap() {
-                note_occurences_of_item(&mut parents, of, candidate_id, &fields[..]);
+                self.note_occurences_of_item(&mut parents, of, context, candidate_id, &fields[..]);
             }
         }
         parents
     }
 
-    fn get_paths(&self, item: ItemId<'x>) -> Vec<Path<'x>> {
+    fn note_occurences_of_item(
+        &self,
+        parents: &mut Parents<'x>,
+        item: ItemId<'x>,
+        context: ItemId<'x>,
+        struct_id: ItemId<'x>,
+        fields: &[StructField],
+    ) {
+        let (item, _) = self.dereference(item, context);
+        let mut index = 0;
+        for field in fields {
+            let value = self.dereference(field.value, context).0;
+            if self.definition_of(value) == self.definition_of(item) {
+                let name = field_name(field, index);
+                parents.push((struct_id, name))
+            }
+            index += 1;
+        }
+    }
+
+    fn get_paths(&self, item: ItemId<'x>, context: ItemId<'x>) -> Vec<Path<'x>> {
         let mut result = vec![];
-        for parent in self.get_parents(item) {
+        for parent in self.get_parents(item, context) {
             result.push(vec![parent.clone()]);
-            for path in self.get_paths(parent.0) {
+            for path in self.get_paths(parent.0, context) {
                 result.push([path, vec![parent.clone()]].concat());
             }
         }
         result
-    }
-}
-
-fn note_occurences_of_item<'x>(
-    parents: &mut Parents<'x>,
-    item: ItemId<'x>,
-    struct_id: ItemId<'x>,
-    fields: &[StructField],
-) {
-    let mut index = 0;
-    for field in fields {
-        if field.value == item {
-            let name = field_name(field, index);
-            parents.push((struct_id, name))
-        }
-        index += 1;
     }
 }
 
