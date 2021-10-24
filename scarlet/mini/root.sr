@@ -1,5 +1,10 @@
 [
-    BOOL is builtin{BOOL any BOOL}
-    32U is builtin{32U any 32U}
+    # BOOL is builtin{BOOL any BOOL}
+    # 32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
+
+    left is any PATTERN
+    right is any PATTERN
+
+    eq is left matches after{right} right
 ]

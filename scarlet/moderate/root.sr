@@ -29,9 +29,6 @@
         left matches after{right} right
     )
 
-    # show better_fibb(30).0
-    show equal(left is 123)
-
     index is any 32U
 
     fibb is

@@ -82,8 +82,18 @@ impl<'x> Environment<'x> {
             Definition::BuiltinValue(pv) => match self.definition_of(value_pattern) {
                 Definition::BuiltinValue(vv) => {
                     if pv == vv {
+                        // If the pattern of the value being matched is exactly
+                        // the pattern we're looking for, it matches.
                         non_capturing_match()
+                    } else if *vv == BuiltinValue::GodPattern {
+                        // Otherwise, if it is the only super pattern possible
+                        // in BuiltinValue, then we don't know if the actual
+                        // value (matching PATTERN) matches the specific pattern
+                        // we're looking for.
+                        Unknown
                     } else {
+                        // Otherwise, the value matches a specific pattern which
+                        // is not a sub-pattern of what we're looking for.
                         NoMatch
                     }
                 }
