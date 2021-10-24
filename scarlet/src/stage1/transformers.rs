@@ -296,7 +296,7 @@ fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![Struct, Builtin],
-        20 => tfers![Member, Substitution],
+        20 => tfers![Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
@@ -317,46 +317,44 @@ fn build_transformers<'e>(
     }
 }
 
-fn apply_transformer_ltr<'t>(
-    to: &mut Vec<TokenTree<'t>>,
-    transformer: &(impl Transformer + ?Sized),
-) {
+fn apply_transformers_ltr<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn Transformer]) {
     let mut index = 0;
     while index < to.len() {
-        if transformer.should_be_applied_at(&to, index) {
-            let result = transformer.apply(to, index);
-            if !result.replace_range.contains(&index) {
-                panic!(
-                    "Transformer wants to replace {:?}, \
+        for transformer in transformers {
+            if transformer.should_be_applied_at(&to, index) {
+                let result = transformer.apply(to, index);
+                if !result.replace_range.contains(&index) {
+                    panic!(
+                        "Transformer wants to replace {:?}, \
                     which does not contain the original index {}.",
-                    result.replace_range, index
-                );
+                        result.replace_range, index
+                    );
+                }
+                index = *result.replace_range.start();
+                to.splice(result.replace_range, std::iter::once(result.with));
             }
-            index = *result.replace_range.start();
-            to.splice(result.replace_range, std::iter::once(result.with));
         }
         index += 1;
     }
 }
 
-fn apply_transformer_rtl<'t>(
-    to: &mut Vec<TokenTree<'t>>,
-    transformer: &(impl Transformer + ?Sized),
-) {
+fn apply_transformers_rtl<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn Transformer]) {
     let mut index = to.len();
     while index > 0 {
         index -= 1;
-        if transformer.should_be_applied_at(&to, index) {
-            let result = transformer.apply(to, index);
-            if !result.replace_range.contains(&index) {
-                panic!(
-                    "Transformer wants to replace {:?}, \
+        for transformer in transformers {
+            if transformer.should_be_applied_at(&to, index) {
+                let result = transformer.apply(to, index);
+                if !result.replace_range.contains(&index) {
+                    panic!(
+                        "Transformer wants to replace {:?}, \
                     which does not contain the original index {}.",
-                    result.replace_range, index
-                );
+                        result.replace_range, index
+                    );
+                }
+                index = *result.replace_range.start();
+                to.splice(result.replace_range, std::iter::once(result.with));
             }
-            index = *result.replace_range.start();
-            to.splice(result.replace_range, std::iter::once(result.with));
         }
     }
 }
@@ -373,13 +371,12 @@ pub fn apply_transformers<'e, 't>(
     extras: &'e HashMap<Precedence, Vec<Box<dyn Transformer + 'e>>>,
 ) {
     for precedence in 0..=u8::MAX {
-        for transformer in build_transformers(precedence, extras) {
-            let transformer = transformer_ref(&transformer);
-            if precedence % 2 == 0 {
-                apply_transformer_ltr(to, transformer);
-            } else {
-                apply_transformer_rtl(to, transformer);
-            }
+        let transformers = build_transformers(precedence, extras);
+        let transformers: Vec<_> = transformers.iter().map(transformer_ref).collect();
+        if precedence % 2 == 0 {
+            apply_transformers_ltr(to, &transformers);
+        } else {
+            apply_transformers_rtl(to, &transformers);
         }
     }
 }

@@ -62,6 +62,9 @@ impl<'x> Environment<'x> {
                     }
                 }
             }
+            if let Ok(index) = member.parse::<usize>() {
+                return fields[index].value;
+            }
             todo!("Nice error, no member named {:?}", member)
         } else {
             todo!()

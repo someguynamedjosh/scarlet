@@ -25,14 +25,9 @@
 
     equal is 
     logic.and(
-        logic.left is 
         left matches after{right} right
-
-        logic.right is 
         right matches after{left} left
     )
-
-    any_int is any 32U
 
     index is any 32U
 
@@ -40,8 +35,19 @@
     index match{
         on 0 1
         on 1 1
-        else fibb(index is index - 1) + fibb(index is index - 2)
+        else fibb(index - 1) + fibb(index - 2)
     }
 
-    show fibb(index is 5)
+    # better_fibb is
+    # index match{
+    #     on 0 [1 1]
+    #     else [better_fibb(index - 1).1]
+    # }
+
+    pm is [
+        index + 1
+        index - 1
+    ]
+
+    show pm(5).1
 ]

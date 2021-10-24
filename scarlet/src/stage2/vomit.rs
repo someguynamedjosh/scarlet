@@ -125,7 +125,23 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Other(item) => self.get_code(*item, context),
-            Definition::Struct(_) => todo!(),
+            Definition::Struct(fields) => {
+                let mut body = Vec::new();
+                for field in fields {
+                    let value = self.get_name_or_code(field.value, context);
+                    body.push(match &field.name {
+                        Some(name) => TokenTree::BuiltinRule {
+                            name: "target",
+                            body: vec![TokenTree::Token(name), value],
+                        },
+                        None => value,
+                    })
+                }
+                TokenTree::BuiltinRule {
+                    name: "struct",
+                    body,
+                }
+            }
             Definition::Substitute(base, subs) => {
                 let base = self.get_name_or_code(*base, context);
                 let mut tt_subs = Vec::new();
