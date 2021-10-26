@@ -16,15 +16,11 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::BuiltinOperation(op, args) => {
-                if op == BuiltinOperation::Matches {
-                    self.after_query(args[0])
-                } else {
-                    let mut result = DepQueryResult::new();
-                    for arg in args {
-                        result.append(self.after_query(arg));
-                    }
-                    result
+                let mut result = DepQueryResult::new();
+                for arg in args {
+                    result.append(self.after_query(arg));
                 }
+                result
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {

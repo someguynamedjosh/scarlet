@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
-        ingest::top_level,
-        structure::{Condition, Definition, Environment, ItemId},
+        ingest::{top_level, util::begin_item},
+        structure::{BuiltinValue, Condition, Definition, Environment, ItemId},
     },
 };
 
@@ -42,5 +42,31 @@ pub fn ingest<'x>(
         base,
         conditions,
         else_value,
+    }
+}
+
+pub fn ingest_matches<'x>(
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
+) -> Definition<'x> {
+    assert_eq!(body.len(), 2);
+    let base = &body[0];
+    let base = top_level::ingest_tree(base, env, in_scopes);
+    let pattern = top_level::ingest_tree(&body[1], env, in_scopes);
+
+    let truee = begin_item(&body[1], env, in_scopes);
+    env.items[truee].definition = Some(Definition::BuiltinValue(BuiltinValue::Bool(true)));
+    let falsee = begin_item(&body[1], env, in_scopes);
+    env.items[falsee].definition = Some(Definition::BuiltinValue(BuiltinValue::Bool(false)));
+
+    let condition = Condition {
+        pattern,
+        value: truee,
+    };
+    Definition::Match {
+        base,
+        conditions: vec![condition],
+        else_value: falsee,
     }
 }

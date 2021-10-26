@@ -21,7 +21,7 @@ fn main() {
         todo!()
     }
     let (stage2, s2_root) = stage2::ingest(&stage1);
-    // println!("{:#?}", stage2);
+    println!("{:#?}", stage2);
     println!("Root: {:?}", s2_root);
     stage2.show_all();
 }

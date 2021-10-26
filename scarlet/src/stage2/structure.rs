@@ -21,7 +21,6 @@ pub struct Condition<'x> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinOperation {
-    Matches,
     Sum32U,
     Dif32U,
     _32UPattern,

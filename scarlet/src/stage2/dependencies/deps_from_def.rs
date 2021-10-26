@@ -13,19 +13,12 @@ impl<'x> Environment<'x> {
                 self.after_query(of);
                 self.dep_query(base)
             }
-            Definition::BuiltinOperation(op, args) => {
-                if op == BuiltinOperation::Matches {
-                    assert_eq!(args.len(), 2);
-                    let mut base = self.dep_query(args[0]);
-                    base.append(self.after_query(args[1]));
-                    base
-                } else {
-                    let mut base = DepQueryResult::new();
-                    for arg in args {
-                        base.append(self.dep_query(arg));
-                    }
-                    base
+            Definition::BuiltinOperation(_, args) => {
+                let mut base = DepQueryResult::new();
+                for arg in args {
+                    base.append(self.dep_query(arg));
                 }
+                base
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {

@@ -76,7 +76,6 @@ impl<'x> Environment<'x> {
             }
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
-                    BuiltinOperation::Matches => "matches",
                     BuiltinOperation::Sum32U => "sum_32u",
                     BuiltinOperation::Dif32U => "dif_32u",
                     BuiltinOperation::_32UPattern => "32U",

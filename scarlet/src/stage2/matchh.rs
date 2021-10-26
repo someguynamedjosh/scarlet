@@ -51,9 +51,7 @@ impl<'x> Environment<'x> {
                 self.matches_impl(original_value, value_pattern, base, after)
             }
             Definition::BuiltinOperation(op, _) => match op {
-                BuiltinOperation::Matches | BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => {
-                    Unknown
-                }
+                BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
                 BuiltinOperation::_32UPattern | &BuiltinOperation::BoolPattern => {
                     let matches = match self.definition_of(value_pattern) {
                         Definition::BuiltinValue(v) => match v {
@@ -62,9 +60,7 @@ impl<'x> Environment<'x> {
                             BuiltinValue::GodPattern => false,
                         },
                         Definition::BuiltinOperation(value_op, _) => match value_op {
-                            BuiltinOperation::BoolPattern | BuiltinOperation::Matches => {
-                                *op == BuiltinOperation::BoolPattern
-                            }
+                            BuiltinOperation::BoolPattern => *op == BuiltinOperation::BoolPattern,
                             BuiltinOperation::_32UPattern
                             | BuiltinOperation::Sum32U
                             | BuiltinOperation::Dif32U => *op == BuiltinOperation::_32UPattern,
