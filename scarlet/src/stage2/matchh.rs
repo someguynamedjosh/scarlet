@@ -9,6 +9,7 @@ use crate::{
     },
 };
 
+#[derive(Clone, Debug)]
 pub enum MatchResult<'x> {
     Match(Substitutions<'x>),
     NoMatch,
@@ -16,6 +17,8 @@ pub enum MatchResult<'x> {
 }
 
 use MatchResult::*;
+
+use super::structure::VariableItemIds;
 
 fn non_capturing_match<'x>() -> MatchResult<'x> {
     Match(Substitutions::new())
@@ -40,10 +43,10 @@ impl<'x> Environment<'x> {
         original_value: ItemId<'x>,
         value_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
-        after: OrderedSet<(VariableId<'x>, ItemId<'x>)>,
+        after: OrderedSet<VariableItemIds<'x>>,
     ) -> MatchResult<'x> {
         let after = after.union(self.get_afters(match_against));
-        if let Definition::Variable { var, matches } = self.definition_of(value_pattern) {
+        if let Definition::Variable { matches, .. } = self.definition_of(value_pattern) {
             let matches = *matches;
             return self.matches_impl(original_value, matches, match_against, after);
         }
@@ -120,7 +123,13 @@ impl<'x> Environment<'x> {
             Definition::Substitute(..) => Unknown,
             Definition::Variable { var, matches } => {
                 let (var, matches) = (*var, *matches);
-                let allow_binding = !after.contains_key(&(var, match_against));
+                let mut allow_binding = true;
+                for (after, _) in &after {
+                    if after.var == var {
+                        allow_binding = false;
+                        break;
+                    }
+                }
                 match self.matches_impl(original_value, value_pattern, matches, after) {
                     Match(..) => {
                         if allow_binding {

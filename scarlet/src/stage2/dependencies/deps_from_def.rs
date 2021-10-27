@@ -3,6 +3,7 @@ use crate::{
     shared::OrderedSet,
     stage2::structure::{
         BuiltinOperation, BuiltinPattern, Definition, Environment, ItemId, VariableId,
+        VariableItemIds,
     },
 };
 
@@ -64,7 +65,7 @@ impl<'x> Environment<'x> {
                     for sub in &subs {
                         // If there is a substitution targeting that dependency...
                         let target_deps = self.target_deps(&sub.target);
-                        if target_deps.contains_key(&base_dep.0) {
+                        if target_deps.contains_key(&base_dep.var) {
                             // Then push all the substituted value's dependencies.
                             final_deps.append(self.dep_query(sub.value));
                             // And don't bother pushing the original dependency.
@@ -79,7 +80,13 @@ impl<'x> Environment<'x> {
             }
             Definition::Variable { var, matches } => {
                 let mut afters = self.after_query(matches);
-                afters.deps.insert_or_replace((var, of), ());
+                let matches = self.reduce(matches);
+                let var_item = VariableItemIds {
+                    var,
+                    var_item: of,
+                    matches,
+                };
+                afters.deps.insert_or_replace(var_item, ());
                 afters
             }
         }

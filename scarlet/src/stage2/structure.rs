@@ -59,7 +59,13 @@ pub enum Target<'x> {
         possible_meaning: ItemId<'x>,
     },
     ResolvedItem(ItemId<'x>),
-    ResolvedVariable(VariableId<'x>),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct VariableItemIds<'x> {
+    pub var_item: ItemId<'x>,
+    pub var: VariableId<'x>,
+    pub matches: ItemId<'x>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -156,10 +162,10 @@ pub struct Item<'x> {
     pub definition: Option<Definition<'x>>,
     pub scope: HashMap<Token<'x>, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
-    pub dependencies: Option<OrderedSet<(VariableId<'x>, ItemId<'x>)>>,
+    pub dependencies: Option<OrderedSet<VariableItemIds<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: Option<OrderedSet<(VariableId<'x>, ItemId<'x>)>>,
+    pub after: Option<OrderedSet<VariableItemIds<'x>>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

@@ -28,9 +28,8 @@ impl<'x> Environment<'x> {
             Target::ResolvedItem(item) => self
                 .get_deps(*item)
                 .into_iter()
-                .map(|x| (x.0 .0, ()))
+                .map(|x| (x.0.var, ()))
                 .collect(),
-            Target::ResolvedVariable(var) => std::iter::once((*var, ())).collect(),
             _ => unreachable!(),
         }
     }

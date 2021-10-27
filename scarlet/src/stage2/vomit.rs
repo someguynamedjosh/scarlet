@@ -180,8 +180,6 @@ impl<'x> Environment<'x> {
                     let value = self.get_name_or_code(sub.value, context);
                     let target = if let Target::ResolvedItem(target) = sub.target {
                         self.get_name_or_code(target, context)
-                    } else if let Target::ResolvedVariable(target) = sub.target {
-                        self.get_var_name_or_code(target, context)
                     } else {
                         unreachable!()
                     };
@@ -217,7 +215,7 @@ impl<'x> Environment<'x> {
                 None => (),
                 Some(vars) => {
                     for (var, _) in vars {
-                        afters.push(self.get_var_name_or_code(var.0, context))
+                        afters.push(self.get_var_name_or_code(var.var, context))
                     }
                 }
             }

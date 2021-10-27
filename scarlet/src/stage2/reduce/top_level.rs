@@ -43,8 +43,8 @@ impl<'x> Environment<'x> {
                 self.with_query_stack_frame(original, |this| this.reduce_from_scratch(original));
             self.items[original].cached_reduction = Some(result);
             self.get_deps(original);
-            println!("{:#?}", self);
-            println!("{:?} becomes {:?}", original, result);
+            // println!("{:#?}", self);
+            // println!("{:?} becomes {:?}", original, result);
             assert!(self.get_deps(result).len() <= self.get_deps(original).len());
             // println!("{:#?}", self);
             assert_eq!(self.reduce(result), result);

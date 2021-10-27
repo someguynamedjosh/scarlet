@@ -124,10 +124,6 @@ impl<'x> Environment<'x> {
                         todo!("Nice error, argument might not match what it is assigned to.")
                     }
                 }
-            } else if let Target::ResolvedVariable(target) = sub.target {
-                // Finding out whether or not the value is a match is the job of
-                // resolve_targets.
-                final_subs.insert_no_replace(target, sub.value);
             } else {
                 unreachable!()
             }
