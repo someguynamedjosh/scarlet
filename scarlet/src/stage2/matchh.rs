@@ -56,10 +56,21 @@ impl<'x> Environment<'x> {
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
             },
-            Definition::BuiltinPattern(pat) => {
-                if pat == &BuiltinPattern::God {
-                    return non_capturing_match();
+            Definition::BuiltinPattern(BuiltinPattern::God) => non_capturing_match(),
+            Definition::BuiltinPattern(BuiltinPattern::And(left, right)) => {
+                let (left, right) = (*left, *right);
+                let matches_left =
+                    self.matches_impl(original_value, value_pattern, left, after.clone());
+                let matches_right = self.matches_impl(original_value, value_pattern, right, after);
+                match (matches_left, matches_right) {
+                    (MatchResult::Match(left), MatchResult::Match(right)) => {
+                        MatchResult::Match(left.union(right))
+                    }
+                    (MatchResult::NoMatch, _) | (_, MatchResult::NoMatch) => MatchResult::NoMatch,
+                    _ => MatchResult::Unknown,
                 }
+            }
+            Definition::BuiltinPattern(pat) => {
                 let matches = match self.definition_of(value_pattern) {
                     Definition::BuiltinValue(v) => match v {
                         BuiltinValue::Bool(..) => pat == &BuiltinPattern::Bool,
@@ -69,6 +80,7 @@ impl<'x> Environment<'x> {
                         BuiltinPattern::God => return Unknown,
                         BuiltinPattern::Bool => *pat == BuiltinPattern::Bool,
                         BuiltinPattern::_32U => *pat == BuiltinPattern::_32U,
+                        BuiltinPattern::And(..) => todo!(),
                     },
                     Definition::BuiltinOperation(value_op, _) => match value_op {
                         BuiltinOperation::Sum32U | BuiltinOperation::Dif32U => {

@@ -1,7 +1,9 @@
 use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{BuiltinOperation, Definition, Environment, ItemId, VariableId},
+    stage2::structure::{
+        BuiltinOperation, BuiltinPattern, Definition, Environment, ItemId, VariableId,
+    },
 };
 
 impl<'x> Environment<'x> {
@@ -20,7 +22,14 @@ impl<'x> Environment<'x> {
                 }
                 base
             }
-            Definition::BuiltinPattern(..) => DepQueryResult::new(),
+            Definition::BuiltinPattern(pat) => match pat {
+                BuiltinPattern::And(left, right) => {
+                    let mut result = self.dep_query(left);
+                    result.append(self.dep_query(right));
+                    result
+                }
+                _ => DepQueryResult::new(),
+            },
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,

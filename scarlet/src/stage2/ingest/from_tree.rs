@@ -69,6 +69,7 @@ pub fn definition_from_tree<'x>(
         TokenTree::BuiltinRule { name: "BOOL", body } => {
             builtin_pattern_def(BuiltinPattern::Bool, src, body, env, in_scopes)
         }
+        TokenTree::BuiltinRule { name: "AND", body } => and_pattern_def(src, body, env, in_scopes),
 
         TokenTree::BuiltinRule {
             name: "sum_32u",
@@ -96,18 +97,30 @@ fn builtin_op_def<'x>(
     Definition::BuiltinOperation(op, args)
 }
 
-fn builtin_pattern_def<'x>(
-    builtin_pattern: BuiltinPattern,
+fn and_pattern_def<'x>(
     src: &'x TokenTree<'x>,
     body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
     in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
 ) -> Definition<'x> {
-    assert_eq!(
-        body.len(),
-        0,
-        "TODO: Nice error, expected zero argument to builtin."
-    );
+    assert_eq!(body.len(), 2);
+    let left = top_level::ingest_tree(&body[0], env, in_scopes);
+    let right = top_level::ingest_tree(&body[1], env, in_scopes);
+    builtin_pattern_def(BuiltinPattern::And(left, right), src, body, env, in_scopes)
+}
+
+fn builtin_pattern_def<'x>(
+    builtin_pattern: BuiltinPattern<'x>,
+    src: &'x TokenTree<'x>,
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
+) -> Definition<'x> {
+    // assert_eq!(
+    //     body.len(),
+    //     0,
+    //     "TODO: Nice error, expected zero argument to builtin."
+    // );
     let pattern = begin_item(src, env, in_scopes);
     env.items[pattern].definition = Some(Definition::BuiltinPattern(builtin_pattern));
     let var = Variable { pattern };

@@ -232,8 +232,10 @@ binary_operator!(Asterisk, "prod_32u", "*");
 binary_operator!(Plus, "sum_32u", "+");
 binary_operator!(Minus, "dif_32u", "-");
 
-binary_operator!(Member, "member", ".");
 binary_operator!(Matches, "matches", "matches");
+binary_operator!(PatternAnd, "AND", "AND");
+
+binary_operator!(Member, "member", ".");
 binary_operator!(Using, "using", "using");
 binary_operator!(Is, "target", "is");
 
@@ -302,6 +304,7 @@ fn build_transformers<'e>(
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
         91 => tfers![After],
+        96 => tfers![PatternAnd],
         100 => tfers![Matches],
         140 => tfers![Match],
         150 => tfers![Using],

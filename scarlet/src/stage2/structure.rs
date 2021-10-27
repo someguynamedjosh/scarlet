@@ -26,10 +26,11 @@ pub enum BuiltinOperation {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum BuiltinPattern {
+pub enum BuiltinPattern<'x> {
     God,
     _32U,
     Bool,
+    And(ItemId<'x>, ItemId<'x>),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -74,7 +75,7 @@ pub enum Definition<'x> {
         vals: Vec<ItemId<'x>>,
     },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
-    BuiltinPattern(BuiltinPattern),
+    BuiltinPattern(BuiltinPattern<'x>),
     BuiltinValue(BuiltinValue),
     Match {
         base: ItemId<'x>,

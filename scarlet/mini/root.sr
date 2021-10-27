@@ -1,9 +1,10 @@
 [
     BOOL is builtin{BOOL}
-    # 32U is builtin{32U any 32U}
+    32U is builtin{32U any 32U}
     PATTERN is builtin{PATTERN}
 
-    bool is any BOOL
+    value is any 32U
+    value_is_eight is value + 3 AND 8
 
-    show bool matches BOOL
+    show value_is_eight(1)
 ]

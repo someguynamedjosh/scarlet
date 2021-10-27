@@ -1,7 +1,8 @@
 use crate::stage2::{
     matchh::MatchResult,
     structure::{
-        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VariableId,
+        BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
+        StructField, VariableId,
     },
 };
 
@@ -40,6 +41,20 @@ impl<'x> Environment<'x> {
     ) -> Definition<'x> {
         let args = args.into_iter().map(|arg| self.reduce(arg)).collect();
         self.reduce_finite_builtin_op(op, args)
+    }
+
+    pub(super) fn reduce_builtin_pattern(&mut self, pat: BuiltinPattern<'x>) -> Definition<'x> {
+        match pat {
+            BuiltinPattern::Bool | BuiltinPattern::_32U | BuiltinPattern::God => {
+                Definition::BuiltinPattern(pat)
+            }
+            BuiltinPattern::And(left, right) => {
+                let left = self.reduce(left);
+                let right = self.reduce(right);
+                let pat = BuiltinPattern::And(left, right);
+                Definition::BuiltinPattern(pat)
+            }
+        }
     }
 
     pub(super) fn reduce_struct(&mut self, fields: Vec<StructField<'x>>) -> Definition<'x> {

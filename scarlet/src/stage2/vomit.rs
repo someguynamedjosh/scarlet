@@ -1,7 +1,12 @@
 use std::collections::HashSet;
 
 use super::structure::{Environment, ItemId, StructField, VariableId};
-use crate::{stage1::structure::TokenTree, stage2::structure::{After, BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Target}};
+use crate::{
+    stage1::structure::TokenTree,
+    stage2::structure::{
+        After, BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Target,
+    },
+};
 
 type Parent<'x> = (ItemId<'x>, String);
 type Parents<'x> = Vec<Parent<'x>>;
@@ -82,13 +87,27 @@ impl<'x> Environment<'x> {
                     .collect();
                 TokenTree::BuiltinRule { name, body }
             }
-            Definition::BuiltinPattern(pat) => {
-                match pat {
-                    BuiltinPattern::God => TokenTree::Token("PATTERN"),
-                    BuiltinPattern::_32U => TokenTree::Token("32U"),
-                    BuiltinPattern::Bool => TokenTree::Token("BOOL"),
-                }
-            }
+            Definition::BuiltinPattern(pat) => match pat {
+                BuiltinPattern::God => TokenTree::BuiltinRule {
+                    name: "God",
+                    body: vec![],
+                },
+                BuiltinPattern::_32U => TokenTree::BuiltinRule {
+                    name: "32U",
+                    body: vec![],
+                },
+                BuiltinPattern::Bool => TokenTree::BuiltinRule {
+                    name: "Bool",
+                    body: vec![],
+                },
+                BuiltinPattern::And(left, right) => TokenTree::BuiltinRule {
+                    name: "AND",
+                    body: vec![
+                        self.get_name_or_code(*left, context),
+                        self.get_name_or_code(*right, context),
+                    ],
+                },
+            },
             Definition::BuiltinValue(val) => match val {
                 BuiltinValue::_32U(val) => TokenTree::Token(self.token(format!("{}", val))),
                 BuiltinValue::Bool(val) => match *val {
@@ -159,15 +178,17 @@ impl<'x> Environment<'x> {
                 let mut tt_subs = Vec::new();
                 for sub in subs {
                     let value = self.get_name_or_code(sub.value, context);
-                    if let Target::ResolvedItem(target) = sub.target {
-                        let target = self.get_name_or_code(target, context);
-                        tt_subs.push(TokenTree::BuiltinRule {
-                            name: "target",
-                            body: vec![target, value],
-                        })
+                    let target = if let Target::ResolvedItem(target) = sub.target {
+                        self.get_name_or_code(target, context)
+                    } else if let Target::ResolvedVariable(target) = sub.target {
+                        self.get_var_name_or_code(target, context)
                     } else {
-                        todo!()
-                    }
+                        unreachable!()
+                    };
+                    tt_subs.push(TokenTree::BuiltinRule {
+                        name: "target",
+                        body: vec![target, value],
+                    })
                 }
                 let tt_subs = TokenTree::BuiltinRule {
                     name: "substitutions",
