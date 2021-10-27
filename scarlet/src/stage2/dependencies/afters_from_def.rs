@@ -15,13 +15,14 @@ impl<'x> Environment<'x> {
                 result.append(self.after_query(base));
                 result
             }
-            Definition::BuiltinOperation(op, args) => {
+            Definition::BuiltinOperation(_, args) => {
                 let mut result = DepQueryResult::new();
                 for arg in args {
                     result.append(self.after_query(arg));
                 }
                 result
             }
+            Definition::BuiltinPattern(..) => DepQueryResult::new(),
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,

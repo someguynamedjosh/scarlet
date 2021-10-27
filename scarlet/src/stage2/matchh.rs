@@ -2,7 +2,10 @@ use crate::{
     shared::OrderedSet,
     stage2::{
         reduce::substitute::Substitutions,
-        structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VariableId},
+        structure::{
+            BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
+            VariableId,
+        },
     },
 };
 
@@ -52,41 +55,40 @@ impl<'x> Environment<'x> {
             }
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
-                BuiltinOperation::_32UPattern | &BuiltinOperation::BoolPattern => {
-                    let matches = match self.definition_of(value_pattern) {
-                        Definition::BuiltinValue(v) => match v {
-                            BuiltinValue::Bool(..) => op == &BuiltinOperation::BoolPattern,
-                            BuiltinValue::_32U(..) => op == &BuiltinOperation::_32UPattern,
-                            BuiltinValue::GodPattern => false,
-                        },
-                        Definition::BuiltinOperation(value_op, _) => match value_op {
-                            BuiltinOperation::BoolPattern => *op == BuiltinOperation::BoolPattern,
-                            BuiltinOperation::_32UPattern
-                            | BuiltinOperation::Sum32U
-                            | BuiltinOperation::Dif32U => *op == BuiltinOperation::_32UPattern,
-                        },
-                        _ => return Unknown,
-                    };
-                    if matches {
-                        non_capturing_match()
-                    } else {
-                        NoMatch
-                    }
-                }
             },
-            Definition::BuiltinValue(BuiltinValue::GodPattern) => non_capturing_match(),
+            Definition::BuiltinPattern(pat) => {
+                if pat == &BuiltinPattern::God {
+                    return non_capturing_match();
+                }
+                let matches = match self.definition_of(value_pattern) {
+                    Definition::BuiltinValue(v) => match v {
+                        BuiltinValue::Bool(..) => pat == &BuiltinPattern::Bool,
+                        BuiltinValue::_32U(..) => pat == &BuiltinPattern::_32U,
+                    },
+                    Definition::BuiltinPattern(value_pat) => match value_pat {
+                        BuiltinPattern::God => return Unknown,
+                        BuiltinPattern::Bool => *pat == BuiltinPattern::Bool,
+                        BuiltinPattern::_32U => *pat == BuiltinPattern::_32U,
+                    },
+                    Definition::BuiltinOperation(value_op, _) => match value_op {
+                        BuiltinOperation::Sum32U | BuiltinOperation::Dif32U => {
+                            *pat == BuiltinPattern::_32U
+                        }
+                    },
+                    _ => return Unknown,
+                };
+                if matches {
+                    non_capturing_match()
+                } else {
+                    NoMatch
+                }
+            }
             Definition::BuiltinValue(pv) => match self.definition_of(value_pattern) {
                 Definition::BuiltinValue(vv) => {
                     if pv == vv {
                         // If the pattern of the value being matched is exactly
                         // the pattern we're looking for, it matches.
                         non_capturing_match()
-                    } else if *vv == BuiltinValue::GodPattern {
-                        // Otherwise, if it is the only super pattern possible
-                        // in BuiltinValue, then we don't know if the actual
-                        // value (matching PATTERN) matches the specific pattern
-                        // we're looking for.
-                        Unknown
                     } else {
                         // Otherwise, the value matches a specific pattern which
                         // is not a sub-pattern of what we're looking for.

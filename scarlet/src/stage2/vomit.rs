@@ -1,10 +1,7 @@
 use std::collections::HashSet;
 
 use super::structure::{Environment, ItemId, StructField, VariableId};
-use crate::{
-    stage1::structure::TokenTree,
-    stage2::structure::{After, BuiltinOperation, BuiltinValue, Definition, Target},
-};
+use crate::{stage1::structure::TokenTree, stage2::structure::{After, BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Target}};
 
 type Parent<'x> = (ItemId<'x>, String);
 type Parents<'x> = Vec<Parent<'x>>;
@@ -78,8 +75,6 @@ impl<'x> Environment<'x> {
                 let name = match op {
                     BuiltinOperation::Sum32U => "sum_32u",
                     BuiltinOperation::Dif32U => "dif_32u",
-                    BuiltinOperation::_32UPattern => "32U",
-                    BuiltinOperation::BoolPattern => "BOOL",
                 };
                 let body = args
                     .into_iter()
@@ -87,11 +82,14 @@ impl<'x> Environment<'x> {
                     .collect();
                 TokenTree::BuiltinRule { name, body }
             }
+            Definition::BuiltinPattern(pat) => {
+                match pat {
+                    BuiltinPattern::God => TokenTree::Token("PATTERN"),
+                    BuiltinPattern::_32U => TokenTree::Token("32U"),
+                    BuiltinPattern::Bool => TokenTree::Token("BOOL"),
+                }
+            }
             Definition::BuiltinValue(val) => match val {
-                BuiltinValue::GodPattern => TokenTree::BuiltinRule {
-                    name: "PATTERN",
-                    body: vec![],
-                },
                 BuiltinValue::_32U(val) => TokenTree::Token(self.token(format!("{}", val))),
                 BuiltinValue::Bool(val) => match *val {
                     true => TokenTree::Token("true"),

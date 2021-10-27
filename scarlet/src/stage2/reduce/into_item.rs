@@ -50,12 +50,13 @@ impl<'x> Environment<'x> {
             let value = condition.value;
             match self.matches(base, pattern) {
                 MatchResult::Match(subs) => {
-                    if subs.len() > 0 {
-                        todo!()
-                    }
                     // If the match is always true, no need to evaluate further conditions.
                     // This should always be used when the previous conditions fail.
-                    else_value = condition.value;
+                    if subs.len() > 0 {
+                        else_value = self.substitute(condition.value, &subs).unwrap();
+                    } else {
+                        else_value = condition.value;
+                    }
                     break;
                 }
                 // If the match will never occur, skip it.

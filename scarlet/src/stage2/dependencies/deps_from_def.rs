@@ -20,6 +20,7 @@ impl<'x> Environment<'x> {
                 }
                 base
             }
+            Definition::BuiltinPattern(..) => DepQueryResult::new(),
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,

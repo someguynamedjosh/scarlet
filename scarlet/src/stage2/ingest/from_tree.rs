@@ -6,11 +6,15 @@ mod using;
 
 use std::collections::HashMap;
 
+use super::util::begin_item;
 use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId},
+        structure::{
+            BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
+            Variable,
+        },
     },
 };
 
@@ -56,14 +60,16 @@ pub fn definition_from_tree<'x>(
         } => using::ingest(body, env, in_scopes),
 
         TokenTree::BuiltinRule {
-            name: "PATTERN", ..
-        } => Definition::BuiltinValue(BuiltinValue::GodPattern),
+            name: "PATTERN",
+            body,
+        } => builtin_pattern_def(BuiltinPattern::God, src, body, env, in_scopes),
         TokenTree::BuiltinRule { name: "32U", body } => {
-            builtin_op_def(BuiltinOperation::_32UPattern, body, env, in_scopes)
+            builtin_pattern_def(BuiltinPattern::_32U, src, body, env, in_scopes)
         }
         TokenTree::BuiltinRule { name: "BOOL", body } => {
-            builtin_op_def(BuiltinOperation::BoolPattern, body, env, in_scopes)
+            builtin_pattern_def(BuiltinPattern::Bool, src, body, env, in_scopes)
         }
+
         TokenTree::BuiltinRule {
             name: "sum_32u",
             body,
@@ -88,4 +94,23 @@ fn builtin_op_def<'x>(
         .map(|tt| top_level::ingest_tree(tt, env, in_scopes))
         .collect();
     Definition::BuiltinOperation(op, args)
+}
+
+fn builtin_pattern_def<'x>(
+    builtin_pattern: BuiltinPattern,
+    src: &'x TokenTree<'x>,
+    body: &'x Vec<TokenTree<'x>>,
+    env: &mut Environment<'x>,
+    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
+) -> Definition<'x> {
+    assert_eq!(
+        body.len(),
+        0,
+        "TODO: Nice error, expected zero argument to builtin."
+    );
+    let pattern = begin_item(src, env, in_scopes);
+    env.items[pattern].definition = Some(Definition::BuiltinPattern(builtin_pattern));
+    let var = Variable { pattern };
+    let var = env.vars.push(var);
+    Definition::Variable(var)
 }

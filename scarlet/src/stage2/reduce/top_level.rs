@@ -5,6 +5,7 @@ impl<'x> Environment<'x> {
         match def {
             Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(op, args) => self.reduce_builtin_op(op, args),
+            Definition::BuiltinPattern(..) => def,
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),
             Definition::Member(..) => unreachable!(),

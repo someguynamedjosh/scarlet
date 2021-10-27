@@ -30,9 +30,6 @@ impl<'x> Environment<'x> {
                     Definition::BuiltinOperation(op, args)
                 }
             }
-            BuiltinOperation::_32UPattern | BuiltinOperation::BoolPattern => {
-                unreachable!()
-            }
         }
     }
 
@@ -41,12 +38,8 @@ impl<'x> Environment<'x> {
         op: BuiltinOperation,
         args: Vec<ItemId<'x>>,
     ) -> Definition<'x> {
-        if let BuiltinOperation::_32UPattern | BuiltinOperation::BoolPattern = op {
-            Definition::BuiltinOperation(op, args)
-        } else {
-            let args = args.into_iter().map(|arg| self.reduce(arg)).collect();
-            self.reduce_finite_builtin_op(op, args)
-        }
+        let args = args.into_iter().map(|arg| self.reduce(arg)).collect();
+        self.reduce_finite_builtin_op(op, args)
     }
 
     pub(super) fn reduce_struct(&mut self, fields: Vec<StructField<'x>>) -> Definition<'x> {

@@ -23,13 +23,17 @@ pub struct Condition<'x> {
 pub enum BuiltinOperation {
     Sum32U,
     Dif32U,
-    _32UPattern,
-    BoolPattern,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum BuiltinPattern {
+    God,
+    _32U,
+    Bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinValue {
-    GodPattern,
     _32U(u32),
     Bool(bool),
 }
@@ -70,6 +74,7 @@ pub enum Definition<'x> {
         vals: Vec<ItemId<'x>>,
     },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
+    BuiltinPattern(BuiltinPattern),
     BuiltinValue(BuiltinValue),
     Match {
         base: ItemId<'x>,

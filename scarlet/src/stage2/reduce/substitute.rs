@@ -54,6 +54,7 @@ impl<'x> Environment<'x> {
                 let def = Definition::BuiltinOperation(op, args);
                 self.item_with_new_definition(original, def, true)
             }
+            Definition::BuiltinPattern(..) => original,
             Definition::BuiltinValue(..) => original,
             Definition::Match {
                 base,

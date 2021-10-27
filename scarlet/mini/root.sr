@@ -1,5 +1,9 @@
 [
-    BOOL is builtin{BOOL any BOOL}
+    BOOL is builtin{BOOL}
     # 32U is builtin{32U any 32U}
-    # PATTERN is builtin{PATTERN}
+    PATTERN is builtin{PATTERN}
+
+    bool is any BOOL
+
+    show bool matches BOOL
 ]
