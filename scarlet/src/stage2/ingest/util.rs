@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use crate::{
-    shared::OrderedSet,
     stage1::structure::{Token, TokenTree},
-    stage2::structure::{After, Environment, Item, ItemId},
+    stage2::structure::{Environment, Item, ItemId},
 };
 
 pub struct MaybeTarget<'x> {

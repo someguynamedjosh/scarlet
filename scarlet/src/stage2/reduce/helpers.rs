@@ -1,4 +1,4 @@
-use crate::stage2::structure::{After, BuiltinValue, Definition, Environment, ItemId, VariableId};
+use crate::stage2::structure::{BuiltinValue, Definition, Environment, ItemId};
 
 impl<'x> Environment<'x> {
     pub fn definition_of(&self, item: ItemId<'x>) -> &Definition<'x> {

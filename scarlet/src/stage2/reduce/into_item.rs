@@ -2,9 +2,7 @@ use crate::{
     shared::OrderedMap,
     stage2::{
         matchh::MatchResult,
-        structure::{
-            After, Condition, Definition, Environment, Item, ItemId, Substitution, Target,
-        },
+        structure::{Condition, Definition, Environment, ItemId, Substitution, Target},
     },
 };
 
@@ -97,7 +95,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(super) fn reduce_other(&mut self, original: ItemId<'x>, base: ItemId<'x>) -> ItemId<'x> {
+    pub(super) fn reduce_other(&mut self, _original: ItemId<'x>, base: ItemId<'x>) -> ItemId<'x> {
         self.reduce(base)
     }
 

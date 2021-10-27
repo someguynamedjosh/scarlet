@@ -1,14 +1,9 @@
-use std::collections::HashSet;
-
-use super::structure::{
-    Environment, ItemId, StructField, Substitution, VariableId, VariableItemIds,
-};
+use super::structure::{Environment, ItemId, Substitution, VariableItemIds};
 use crate::{
     shared::OrderedSet,
-    stage1::structure::TokenTree,
     stage2::{
         matchh::MatchResult,
-        structure::{After, BuiltinOperation, BuiltinValue, Definition, Target},
+        structure::{Definition, Target},
     },
 };
 
@@ -78,7 +73,7 @@ impl<'x> Environment<'x> {
             let dep = *dep;
             let matches = dep.matches;
             let value = self.reduce(sub.value);
-            let result = self.matches(value, matches) ;
+            let result = self.matches(value, matches);
             println!("{:?} matches {:?}? {:?}", value, matches, result);
             if let MatchResult::Match(..) = result {
                 success = true;

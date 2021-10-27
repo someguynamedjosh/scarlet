@@ -1,7 +1,7 @@
-use super::structures::{DepQueryResult, QueryResult};
+use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{After, Environment, ItemId, VariableId, VariableItemIds},
+    stage2::structure::{Environment, ItemId, VariableItemIds},
 };
 
 impl<'x> Environment<'x> {

@@ -1,9 +1,6 @@
-use crate::stage2::{
-    matchh::MatchResult,
-    structure::{
-        BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
-        StructField, VariableId,
-    },
+use crate::stage2::structure::{
+    BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId, StructField,
+    VariableId,
 };
 
 impl<'x> Environment<'x> {
@@ -73,7 +70,7 @@ impl<'x> Environment<'x> {
         &mut self,
         var: VariableId<'x>,
         matches: ItemId<'x>,
-        def: Definition<'x>,
+        _def: Definition<'x>,
     ) -> Definition<'x> {
         let matches = self.reduce(matches);
         Definition::Variable { var, matches }

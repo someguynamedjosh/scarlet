@@ -4,7 +4,6 @@ use crate::{
         reduce::substitute::Substitutions,
         structure::{
             BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
-            VariableId,
         },
     },
 };

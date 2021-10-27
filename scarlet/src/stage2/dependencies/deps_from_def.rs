@@ -1,11 +1,5 @@
-use super::structures::{DepQueryResult, QueryResult};
-use crate::{
-    shared::OrderedSet,
-    stage2::structure::{
-        BuiltinOperation, BuiltinPattern, Definition, Environment, ItemId, VariableId,
-        VariableItemIds,
-    },
-};
+use super::structures::DepQueryResult;
+use crate::stage2::structure::{BuiltinPattern, Definition, Environment, ItemId, VariableItemIds};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {

@@ -4,7 +4,7 @@ use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{After, BuiltinValue, Definition, Environment, ItemId, Variable},
+        structure::{BuiltinValue, Definition, Environment, ItemId, Variable},
     },
 };
 

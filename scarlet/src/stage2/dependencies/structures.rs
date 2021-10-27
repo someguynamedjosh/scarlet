@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{ItemId, VariableId, VariableItemIds},
+    stage2::structure::{ItemId, VariableItemIds},
 };
 
 #[derive(Debug)]

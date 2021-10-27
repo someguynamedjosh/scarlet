@@ -11,10 +11,7 @@ use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{
-            BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
-            Variable,
-        },
+        structure::{BuiltinOperation, BuiltinPattern, Definition, Environment, ItemId, Variable},
     },
 };
 
@@ -112,7 +109,7 @@ fn and_pattern_def<'x>(
 fn builtin_pattern_def<'x>(
     builtin_pattern: BuiltinPattern<'x>,
     src: &'x TokenTree<'x>,
-    body: &'x Vec<TokenTree<'x>>,
+    _body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
     in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
 ) -> Definition<'x> {

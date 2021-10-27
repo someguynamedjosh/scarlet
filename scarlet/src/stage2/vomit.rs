@@ -3,9 +3,7 @@ use std::collections::HashSet;
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{
-        After, BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Target,
-    },
+    stage2::structure::{BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Target},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -197,7 +195,7 @@ impl<'x> Environment<'x> {
                     body: vec![base, tt_subs],
                 }
             }
-            Definition::Variable { var, matches } => {
+            Definition::Variable { var: _, matches } => {
                 let matches = self.get_name_or_code(*matches, context);
                 TokenTree::BuiltinRule {
                     name: "any",

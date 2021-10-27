@@ -1,10 +1,10 @@
 mod dependencies;
 pub mod ingest;
+mod matchh;
 mod reduce;
 mod replace;
+mod resolve_targets;
 pub mod structure;
 mod vomit;
-mod resolve_targets;
-mod matchh;
 
 pub use ingest::ingest;
