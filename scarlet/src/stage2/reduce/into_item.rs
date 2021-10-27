@@ -125,23 +125,9 @@ impl<'x> Environment<'x> {
                     }
                 }
             } else if let Target::ResolvedVariable(target) = sub.target {
-                let target_pattern = self.vars[target].pattern;
-                match self.matches(sub.value, target_pattern) {
-                    MatchResult::Match(subs) => {
-                        final_subs = final_subs.union(subs);
-                        final_subs.insert_no_replace(target, sub.value);
-                    }
-                    MatchResult::NoMatch => {
-                        todo!(
-                            "Nice error, argument {:?} will definitely not match {:?}",
-                            sub.value,
-                            target
-                        )
-                    }
-                    MatchResult::Unknown => {
-                        todo!("Nice error, argument might not match what it is assigned to.")
-                    }
-                }
+                // Finding out whether or not the value is a match is the job of
+                // resolve_targets.
+                final_subs.insert_no_replace(target, sub.value);
             } else {
                 unreachable!()
             }

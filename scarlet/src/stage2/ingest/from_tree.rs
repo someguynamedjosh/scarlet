@@ -4,7 +4,7 @@ mod struct_def;
 mod substitute_def;
 mod using;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, marker::PhantomData};
 
 use super::util::begin_item;
 use crate::{
@@ -121,9 +121,9 @@ fn builtin_pattern_def<'x>(
     //     0,
     //     "TODO: Nice error, expected zero argument to builtin."
     // );
-    let pattern = begin_item(src, env, in_scopes);
-    env.items[pattern].definition = Some(Definition::BuiltinPattern(builtin_pattern));
-    let var = Variable { pattern };
+    let matches = begin_item(src, env, in_scopes);
+    env.items[matches].definition = Some(Definition::BuiltinPattern(builtin_pattern));
+    let var = Variable { pd: PhantomData };
     let var = env.vars.push(var);
-    Definition::Variable(var)
+    Definition::Variable { var, matches }
 }

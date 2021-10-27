@@ -36,7 +36,7 @@ impl<'x> Environment<'x> {
 
     pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ItemId<'x>) -> TokenTree {
         for (item_id, _) in &self.items {
-            if let Definition::Variable(var_id) = self.definition_of(item_id) {
+            if let Definition::Variable { var: var_id, .. } = self.definition_of(item_id) {
                 if *var_id == var {
                     if let Some(name) = self.get_name(item_id, context) {
                         return name;
@@ -45,7 +45,7 @@ impl<'x> Environment<'x> {
             }
         }
         for (item_id, _) in &self.items {
-            if let Definition::Variable(var_id) = self.definition_of(item_id) {
+            if let Definition::Variable { var: var_id, .. } = self.definition_of(item_id) {
                 if *var_id == var {
                     return self.get_name_or_code(item_id, context);
                 }
@@ -199,12 +199,11 @@ impl<'x> Environment<'x> {
                     body: vec![base, tt_subs],
                 }
             }
-            Definition::Variable(var) => {
-                let pattern = self.vars[*var].pattern;
-                let pattern = self.get_name_or_code(pattern, context);
+            Definition::Variable { var, matches } => {
+                let matches = self.get_name_or_code(*matches, context);
                 TokenTree::BuiltinRule {
                     name: "any",
-                    body: vec![pattern],
+                    body: vec![matches],
                 }
             }
         }
@@ -218,7 +217,7 @@ impl<'x> Environment<'x> {
                 None => (),
                 Some(vars) => {
                     for (var, _) in vars {
-                        afters.push(self.get_var_name_or_code(var, context))
+                        afters.push(self.get_var_name_or_code(var.0, context))
                     }
                 }
             }

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, marker::PhantomData};
 
 use crate::{
     stage1::structure::{Token, TokenTree},
@@ -87,8 +87,8 @@ pub fn variable_def<'x>(
     if body.len() != 1 {
         todo!("Nice error");
     }
-    let pattern = &body[0];
-    let pattern = top_level::ingest_tree(pattern, env, in_scopes);
-    let var = env.vars.push(Variable { pattern });
-    Definition::Variable(var)
+    let matches = &body[0];
+    let matches = top_level::ingest_tree(matches, env, in_scopes);
+    let var = env.vars.push(Variable { pd: PhantomData });
+    Definition::Variable { var, matches }
 }

@@ -1,4 +1,4 @@
-use super::structures::DepQueryResult;
+use super::structures::{DepQueryResult, QueryResult};
 use crate::{
     shared::OrderedSet,
     stage2::structure::{After, Environment, ItemId, VariableId},
@@ -10,8 +10,8 @@ impl<'x> Environment<'x> {
 
         let deps = self.dep_query(of);
         if deps.partial_over.len() == 0 {
-            for (var, _) in &afters.vars {
-                if !deps.vars.contains_key(var) {
+            for (var, _) in &afters.deps {
+                if !deps.deps.contains_key(var) {
                     todo!("Nice error, {:?} is not dependent on {:?}", of, var);
                 }
             }
@@ -19,7 +19,7 @@ impl<'x> Environment<'x> {
 
         afters.remove_partial(of);
         if afters.partial_over.is_empty() {
-            self.items[of].after = Some(afters.vars.clone());
+            self.items[of].after = Some(afters.deps.clone());
         }
         afters
     }
@@ -37,10 +37,10 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_afters(&mut self, of: ItemId<'x>) -> OrderedSet<VariableId<'x>> {
+    pub fn get_afters(&mut self, of: ItemId<'x>) -> OrderedSet<(VariableId<'x>, ItemId<'x>)> {
         let result = self.with_fresh_query_stack(|this| this.after_query(of));
         assert!(result.partial_over.is_empty());
-        result.vars
+        result.deps
     }
 
     pub(super) fn dep_query(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
@@ -52,7 +52,7 @@ impl<'x> Environment<'x> {
                     let mut deps = this.get_deps_from_def(of);
                     deps.remove_partial(of);
                     if deps.partial_over.is_empty() {
-                        this.items[of].dependencies = Some(deps.vars.clone());
+                        this.items[of].dependencies = Some(deps.deps.clone());
                     }
                     deps
                 })
@@ -63,9 +63,9 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_deps(&mut self, of: ItemId<'x>) -> OrderedSet<VariableId<'x>> {
+    pub fn get_deps(&mut self, of: ItemId<'x>) -> OrderedSet<(VariableId<'x>, ItemId<'x>)> {
         let result = self.with_fresh_query_stack(|this| this.dep_query(of));
         assert!(result.partial_over.is_empty());
-        result.vars
+        result.deps
     }
 }

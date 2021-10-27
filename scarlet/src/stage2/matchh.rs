@@ -40,12 +40,12 @@ impl<'x> Environment<'x> {
         original_value: ItemId<'x>,
         value_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
-        after: OrderedSet<VariableId<'x>>,
+        after: OrderedSet<(VariableId<'x>, ItemId<'x>)>,
     ) -> MatchResult<'x> {
         let after = after.union(self.get_afters(match_against));
-        if let Definition::Variable(var) = self.definition_of(value_pattern) {
-            let var_pattern = self.vars[*var].pattern;
-            return self.matches_impl(original_value, var_pattern, match_against, after);
+        if let Definition::Variable { var, matches } = self.definition_of(value_pattern) {
+            let matches = *matches;
+            return self.matches_impl(original_value, matches, match_against, after);
         }
         match self.definition_of(match_against) {
             Definition::After { base, .. } => {
@@ -118,11 +118,10 @@ impl<'x> Environment<'x> {
             }
             Definition::Struct(_) => todo!(),
             Definition::Substitute(..) => Unknown,
-            Definition::Variable(var) => {
-                let var = *var;
-                let allow_binding = !after.contains_key(&var);
-                let var_pattern = self.vars[var].pattern;
-                match self.matches_impl(original_value, value_pattern, var_pattern, after) {
+            Definition::Variable { var, matches } => {
+                let (var, matches) = (*var, *matches);
+                let allow_binding = !after.contains_key(&(var, match_against));
+                match self.matches_impl(original_value, value_pattern, matches, after) {
                     Match(..) => {
                         if allow_binding {
                             let mut subs = Substitutions::new();

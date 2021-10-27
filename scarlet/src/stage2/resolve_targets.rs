@@ -51,7 +51,7 @@ impl<'x> Environment<'x> {
         possible_meaning: ItemId<'x>,
         name: Option<&str>,
         base: ItemId<'x>,
-        deps: &mut OrderedSet<VariableId<'x>>,
+        deps: &mut OrderedSet<(VariableId<'x>, ItemId<'x>)>,
         sub: &mut Substitution<'x>,
     ) {
         let mut resolved = possible_meaning;
@@ -68,18 +68,18 @@ impl<'x> Environment<'x> {
 
     fn resolve_anonymous_target(
         &mut self,
-        deps: &mut OrderedSet<VariableId<'x>>,
+        deps: &mut OrderedSet<(VariableId<'x>, ItemId<'x>)>,
         sub: &mut Substitution<'x>,
     ) {
         let mut success = false;
         for (dep, _) in &*deps {
             let dep = *dep;
-            let pattern = self.vars[dep].pattern;
+            let matches = todo!();
             let value = self.reduce(sub.value);
-            if let MatchResult::Match(..) = self.matches(value, pattern) {
+            if let MatchResult::Match(..) = self.matches(value, matches) {
                 success = true;
                 deps.remove(&dep);
-                sub.target = Target::ResolvedVariable(dep);
+                sub.target = Target::ResolvedItem(dep.1);
                 break;
             }
         }

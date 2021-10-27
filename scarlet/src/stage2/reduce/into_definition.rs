@@ -72,11 +72,10 @@ impl<'x> Environment<'x> {
     pub(super) fn reduce_var(
         &mut self,
         var: VariableId<'x>,
+        matches: ItemId<'x>,
         def: Definition<'x>,
     ) -> Definition<'x> {
-        let pattern = self.vars[var].pattern;
-        let pattern = self.reduce(pattern);
-        self.vars[var].pattern = pattern;
-        def
+        let matches = self.reduce(matches);
+        Definition::Variable { var, matches }
     }
 }

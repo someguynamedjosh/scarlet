@@ -1,4 +1,4 @@
-use super::structures::DepQueryResult;
+use super::structures::{DepQueryResult, QueryResult};
 use crate::{
     shared::OrderedSet,
     stage2::structure::{
@@ -60,11 +60,11 @@ impl<'x> Environment<'x> {
                 let base_deps = self.dep_query(base);
                 let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
                 // For each dependency of the base expression...
-                'deps: for (base_dep, _) in base_deps.vars.clone() {
+                'deps: for (base_dep, _) in base_deps.deps.clone() {
                     for sub in &subs {
                         // If there is a substitution targeting that dependency...
                         let target_deps = self.target_deps(&sub.target);
-                        if target_deps.contains_key(&base_dep) {
+                        if target_deps.contains_key(&base_dep.0) {
                             // Then push all the substituted value's dependencies.
                             final_deps.append(self.dep_query(sub.value));
                             // And don't bother pushing the original dependency.
@@ -73,14 +73,13 @@ impl<'x> Environment<'x> {
                     }
                     // Otherwise, if it is not replaced, the new expression is
                     // still dependant on it.
-                    final_deps.vars.insert_or_replace(base_dep, ());
+                    final_deps.deps.insert_or_replace(base_dep, ());
                 }
                 final_deps
             }
-            Definition::Variable(var) => {
-                let pattern = self.vars[var].pattern;
-                let mut afters = self.after_query(pattern);
-                afters.vars.insert_or_replace(var, ());
+            Definition::Variable { var, matches } => {
+                let mut afters = self.after_query(matches);
+                afters.deps.insert_or_replace((var, of), ());
                 afters
             }
         }

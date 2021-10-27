@@ -1,4 +1,4 @@
-use super::structures::DepQueryResult;
+use super::structures::{DepQueryResult, QueryResult};
 use crate::{
     shared::OrderedSet,
     stage2::structure::{
@@ -25,10 +25,10 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::BuiltinPattern(..) => {
-                let vars = self.get_deps(of);
+                let deps = self.get_deps(of);
                 DepQueryResult {
                     partial_over: Default::default(),
-                    vars,
+                    deps,
                 }
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
@@ -55,7 +55,7 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::Substitute(..) => DepQueryResult::new(),
-            Definition::Variable(var) => self.after_query(self.vars[var].pattern),
+            Definition::Variable { matches, .. } => self.after_query(matches),
         }
     }
 }

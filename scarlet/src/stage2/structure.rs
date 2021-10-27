@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, marker::PhantomData};
 
 use typed_arena::Arena;
 
@@ -86,7 +86,10 @@ pub enum Definition<'x> {
     Other(ItemId<'x>),
     Struct(Vec<StructField<'x>>),
     Substitute(ItemId<'x>, Vec<Substitution<'x>>),
-    Variable(VariableId<'x>),
+    Variable {
+        var: VariableId<'x>,
+        matches: ItemId<'x>,
+    },
 }
 
 pub struct WrappedArena<T>(pub Arena<T>);
@@ -153,10 +156,10 @@ pub struct Item<'x> {
     pub definition: Option<Definition<'x>>,
     pub scope: HashMap<Token<'x>, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
-    pub dependencies: Option<OrderedSet<VariableId<'x>>>,
+    pub dependencies: Option<OrderedSet<(VariableId<'x>, ItemId<'x>)>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: Option<OrderedSet<VariableId<'x>>>,
+    pub after: Option<OrderedSet<(VariableId<'x>, ItemId<'x>)>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }
@@ -164,5 +167,5 @@ pub struct Item<'x> {
 pub type VariableId<'x> = Id<Variable<'x>, 'V'>;
 #[derive(Clone, Debug)]
 pub struct Variable<'x> {
-    pub pattern: ItemId<'x>,
+    pub pd: PhantomData<&'x ()>,
 }

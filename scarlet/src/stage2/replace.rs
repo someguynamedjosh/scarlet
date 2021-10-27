@@ -26,7 +26,7 @@ pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
         Definition::Other(..) => (),
         Definition::Struct(fields) => apply_reps_to_struct(fields, reps),
         Definition::Substitute(base, subs) => apply_reps_to_substitution(reps, base, subs),
-        Definition::Variable(..) => (),
+        Definition::Variable { .. } => (),
     }
 }
 

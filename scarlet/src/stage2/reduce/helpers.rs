@@ -36,13 +36,4 @@ impl<'x> Environment<'x> {
         }
         self.items.get_or_push(new_item)
     }
-
-    pub fn item_as_variable(&self, item: ItemId<'x>) -> VariableId<'x> {
-        match self.items[item].definition.as_ref().unwrap() {
-            Definition::Member(_, _) => todo!(),
-            Definition::Other(id) => self.item_as_variable(*id),
-            Definition::Variable(id) => *id,
-            _ => todo!("Nice error, {:?} is not a variable", item),
-        }
-    }
 }

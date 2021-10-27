@@ -25,7 +25,11 @@ impl<'x> Environment<'x> {
 
     pub fn target_deps(&mut self, target: &Target<'x>) -> OrderedSet<VariableId<'x>> {
         match target {
-            Target::ResolvedItem(item) => self.get_deps(*item),
+            Target::ResolvedItem(item) => self
+                .get_deps(*item)
+                .into_iter()
+                .map(|x| (x.0 .0, ()))
+                .collect(),
             Target::ResolvedVariable(var) => std::iter::once((*var, ())).collect(),
             _ => unreachable!(),
         }
@@ -124,11 +128,13 @@ impl<'x> Environment<'x> {
                 let def = Definition::Substitute(base, original_subs);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::Variable(var_id) => {
-                if let Some(sub) = substitutions.get(&var_id) {
+            Definition::Variable { var, matches } => {
+                if let Some(sub) = substitutions.get(&var) {
                     *sub
                 } else {
-                    original
+                    let matches = self.substitute(matches, substitutions)?;
+                    let def = Definition::Variable { var, matches };
+                    self.item_with_new_definition(original, def, true)
                 }
             }
         })

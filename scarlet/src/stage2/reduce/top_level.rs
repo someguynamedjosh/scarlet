@@ -12,7 +12,7 @@ impl<'x> Environment<'x> {
             Definition::Other(..) => unreachable!(),
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::Substitute(..) => unreachable!(),
-            Definition::Variable(var) => self.reduce_var(var, def),
+            Definition::Variable { var, matches } => self.reduce_var(var, matches, def),
         }
     }
 
