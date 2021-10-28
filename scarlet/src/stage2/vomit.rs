@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Target},
+    stage2::structure::{BuiltinOperation, BuiltinPattern, BuiltinValue, Definition},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -171,16 +171,36 @@ impl<'x> Environment<'x> {
                     body,
                 }
             }
-            Definition::Substitute(base, subs) => {
+            Definition::UnresolvedSubstitute(base, subs) => {
                 let base = self.get_name_or_code(*base, context);
                 let mut tt_subs = Vec::new();
                 for sub in subs {
                     let value = self.get_name_or_code(sub.value, context);
-                    let target = if let Target::ResolvedItem(target) = sub.target {
-                        self.get_name_or_code(target, context)
+                    if let Some(target) = sub.target_meaning {
+                        let target = self.get_name_or_code(target, context);
+                        tt_subs.push(TokenTree::BuiltinRule {
+                            name: "target",
+                            body: vec![target, value],
+                        })
                     } else {
-                        unreachable!()
+                        tt_subs.push(value)
                     };
+                }
+                let tt_subs = TokenTree::BuiltinRule {
+                    name: "substitutions",
+                    body: tt_subs,
+                };
+                TokenTree::BuiltinRule {
+                    name: "substitute",
+                    body: vec![base, tt_subs],
+                }
+            }
+            Definition::ResolvedSubstitute(base, subs) => {
+                let base = self.get_name_or_code(*base, context);
+                let mut tt_subs = Vec::new();
+                for &(target, value) in subs {
+                    let value = self.get_name_or_code(value, context);
+                    let target = self.get_var_name_or_code(target, context);
                     tt_subs.push(TokenTree::BuiltinRule {
                         name: "target",
                         body: vec![target, value],

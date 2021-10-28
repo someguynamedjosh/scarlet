@@ -4,7 +4,7 @@ use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{Definition, Environment, ItemId, Substitution, Target},
+        structure::{Definition, Environment, ItemId, UnresolvedSubstitution},
     },
 };
 
@@ -26,24 +26,29 @@ pub fn ingest<'x>(
             } => {
                 assert_eq!(body.len(), 2);
                 let target = &body[0];
-                let name = match target {
+                let target_name = match target {
                     &TokenTree::Token(token) => Some(token),
                     _ => None,
                 };
-                let possible_meaning = top_level::ingest_tree(&target, env, in_scopes);
-                let target = Target::Unresolved {
-                    name,
-                    possible_meaning,
-                };
+                let target_meaning = Some(top_level::ingest_tree(&target, env, in_scopes));
                 let value = top_level::ingest_tree(&body[1], env, in_scopes);
-                substitutions.push(Substitution { target, value })
+                substitutions.push(UnresolvedSubstitution {
+                    target_name,
+                    target_meaning,
+                    value,
+                })
             }
             _ => {
-                let target = Target::UnresolvedAnonymous;
+                let target_name = None;
+                let target_meaning = None;
                 let value = top_level::ingest_tree(item, env, in_scopes);
-                substitutions.push(Substitution { target, value })
+                substitutions.push(UnresolvedSubstitution {
+                    target_name,
+                    target_meaning,
+                    value,
+                })
             }
         }
     }
-    Definition::Substitute(base, substitutions)
+    Definition::UnresolvedSubstitute(base, substitutions)
 }

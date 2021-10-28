@@ -1,12 +1,10 @@
 use crate::{
     shared::{OrderedMap, OrderedSet},
     stage2::structure::{
-        BuiltinPattern, Condition, Definition, Environment, ItemId, StructField, Substitution,
-        Target, VariableId,
+        BuiltinPattern, Condition, Definition, Environment, ItemId, StructField, Substitutions,
+        VariableId,
     },
 };
-
-pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 impl<'x> Environment<'x> {
     pub fn substitute(
@@ -21,17 +19,6 @@ impl<'x> Environment<'x> {
                 this.substitute_impl(original, substitutions)
             });
             result
-        }
-    }
-
-    pub fn target_deps(&mut self, target: &Target<'x>) -> OrderedSet<VariableId<'x>> {
-        match target {
-            Target::ResolvedItem(item) => self
-                .get_deps(*item)
-                .into_iter()
-                .map(|x| (x.0.var, ()))
-                .collect(),
-            _ => unreachable!(),
         }
     }
 
@@ -97,23 +84,14 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::Other(id) => self.substitute_impl(id, substitutions)?,
-            Definition::Struct(fields) => {
-                let fields = fields
-                    .into_iter()
-                    .map(|f| {
-                        let name = f.name;
-                        let value = self.substitute(f.value, substitutions)?;
-                        Some(StructField { name, value })
-                    })
-                    .collect::<Option<_>>()?;
-                let def = Definition::Struct(fields);
-                self.item_with_new_definition(original, def, true)
-            }
-            Definition::Substitute(base, original_subs) => {
+            Definition::ResolvedSubstitute(base, original_subs) => {
+                // The substitutions that we are currently doing that should be
+                // applied to the base, because $original_subs does not override
+                // them.
                 let mut subs_for_base = OrderedMap::new();
                 'outer_subs: for &(target, value) in substitutions {
-                    for orsub in &original_subs {
-                        if self.target_deps(&orsub.target).contains_key(&target) {
+                    for &(orsub_target, _) in &original_subs {
+                        if orsub_target == target {
                             continue 'outer_subs;
                         }
                     }
@@ -126,16 +104,24 @@ impl<'x> Environment<'x> {
                 };
                 let original_subs = original_subs
                     .into_iter()
-                    .map(|sub| {
-                        Some(Substitution {
-                            target: sub.target,
-                            value: self.substitute(sub.value, substitutions)?,
-                        })
-                    })
+                    .map(|(target, value)| Some((target, self.substitute(value, substitutions)?)))
                     .collect::<Option<_>>()?;
-                let def = Definition::Substitute(base, original_subs);
+                let def = Definition::ResolvedSubstitute(base, original_subs);
                 self.item_with_new_definition(original, def, true)
             }
+            Definition::Struct(fields) => {
+                let fields = fields
+                    .into_iter()
+                    .map(|f| {
+                        let name = f.name;
+                        let value = self.substitute(f.value, substitutions)?;
+                        Some(StructField { name, value })
+                    })
+                    .collect::<Option<_>>()?;
+                let def = Definition::Struct(fields);
+                self.item_with_new_definition(original, def, true)
+            }
+            Definition::UnresolvedSubstitute(..) => unreachable!(),
             Definition::Variable { var, matches } => {
                 if let Some(sub) = substitutions.get(&var) {
                     *sub

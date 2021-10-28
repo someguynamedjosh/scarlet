@@ -1,5 +1,8 @@
 use super::structures::DepQueryResult;
-use crate::{shared::OrderedMap, stage2::structure::{BuiltinPattern, Definition, Environment, ItemId, VariableItemIds}};
+use crate::{
+    shared::OrderedMap,
+    stage2::structure::{BuiltinPattern, Definition, Environment, ItemId, VariableItemIds},
+};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
@@ -44,28 +47,16 @@ impl<'x> Environment<'x> {
                 self.dep_query(base)
             }
             Definition::Other(item) => self.dep_query(item),
-            Definition::Struct(fields) => {
-                let mut base = DepQueryResult::new();
-                for field in fields {
-                    base.append(self.dep_query(field.value));
-                }
-                base
-            }
-            Definition::Substitute(base, subs) => {
+            Definition::ResolvedSubstitute(base, subs) => {
                 let base_deps = self.dep_query(base);
-                let mut sub_map = OrderedMap::new();
-                for sub in &subs {
-                    sub_map.insert_no_replace(sub.target, sub.value);
-                }
                 let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
                 // For each dependency of the base expression...
                 'deps: for (base_dep, _) in base_deps.deps.clone() {
                     for sub in &subs {
                         // If there is a substitution targeting that dependency...
-                        let target_deps = self.target_deps(&sub.target);
-                        if target_deps.contains_key(&base_dep.var) {
+                        if sub.0 == base_dep.var {
                             // Then push all the substituted value's dependencies.
-                            final_deps.append(self.dep_query(sub.value));
+                            final_deps.append(self.dep_query(sub.1));
                             // And don't bother pushing the original dependency.
                             continue 'deps;
                         }
@@ -76,6 +67,14 @@ impl<'x> Environment<'x> {
                 }
                 final_deps
             }
+            Definition::Struct(fields) => {
+                let mut base = DepQueryResult::new();
+                for field in fields {
+                    base.append(self.dep_query(field.value));
+                }
+                base
+            }
+            Definition::UnresolvedSubstitute(..) => unreachable!(),
             Definition::Variable { var, matches } => {
                 let mut afters = self.after_query(matches);
                 let matches = self.reduce(matches);

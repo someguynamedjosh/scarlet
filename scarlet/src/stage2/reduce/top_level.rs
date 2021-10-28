@@ -10,8 +10,9 @@ impl<'x> Environment<'x> {
             Definition::Match { .. } => unreachable!(),
             Definition::Member(..) => unreachable!(),
             Definition::Other(..) => unreachable!(),
+            Definition::ResolvedSubstitute(..) => unreachable!(),
             Definition::Struct(fields) => self.reduce_struct(fields),
-            Definition::Substitute(..) => unreachable!(),
+            Definition::UnresolvedSubstitute(..) => unreachable!(),
             Definition::Variable { var, matches } => self.reduce_var(var, matches, def),
         }
     }
@@ -27,7 +28,7 @@ impl<'x> Environment<'x> {
             } => self.reduce_match(base, else_value, conditions, original),
             Definition::Member(base, member) => self.reduce_member(base, member),
             Definition::Other(item) => self.reduce_other(original, item),
-            Definition::Substitute(base, subs) => self.reduce_substitution(subs, base, original),
+            Definition::ResolvedSubstitute(base, subs) => self.reduce_substitution(subs, base, original),
             _ => {
                 let reduced_definition = self.reduce_definition(definition);
                 self.item_with_new_definition(original, reduced_definition, false)

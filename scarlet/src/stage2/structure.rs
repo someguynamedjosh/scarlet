@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Debug, marker::PhantomData};
 use typed_arena::Arena;
 
 use crate::{
-    shared::{Id, OrderedSet, Pool},
+    shared::{Id, OrderedMap, OrderedSet, Pool},
     stage1::structure::{self as s1, Token},
 };
 
@@ -48,23 +48,6 @@ impl BuiltinValue {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum Target<'x> {
-    UnresolvedAnonymous,
-    Unresolved {
-        /// If it was an identifier, $name is that identifier.
-        name: Option<Token<'x>>,
-        /// What the name resolves to in the scope where the substitution was
-        /// first used.
-        possible_meaning: ItemId<'x>,
-    },
-    ResolvedItem(ItemId<'x>),
-}
-
-impl<'x> Target<'x> {
-
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct VariableItemIds<'x> {
     pub var_item: ItemId<'x>,
@@ -73,10 +56,16 @@ pub struct VariableItemIds<'x> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Substitution<'x> {
-    pub target: Target<'x>,
+pub struct UnresolvedSubstitution<'x> {
+    /// If the target was an identifier, $name is that identifier.
+    pub target_name: Option<Token<'x>>,
+    /// What the name resolves to in the scope where the substitution was
+    /// first used.
+    pub target_meaning: Option<ItemId<'x>>,
     pub value: ItemId<'x>,
 }
+
+pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
@@ -95,7 +84,8 @@ pub enum Definition<'x> {
     Member(ItemId<'x>, String),
     Other(ItemId<'x>),
     Struct(Vec<StructField<'x>>),
-    Substitute(ItemId<'x>, Vec<Substitution<'x>>),
+    UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
+    ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),
     Variable {
         var: VariableId<'x>,
         matches: ItemId<'x>,

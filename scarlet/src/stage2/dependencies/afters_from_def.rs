@@ -42,6 +42,7 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(base, _) => self.after_query(base),
             Definition::Other(other) => self.after_query(other),
+            Definition::ResolvedSubstitute(..) => DepQueryResult::new(),
             Definition::Struct(fields) => {
                 let mut result = DepQueryResult::new();
                 for field in fields {
@@ -49,7 +50,7 @@ impl<'x> Environment<'x> {
                 }
                 result
             }
-            Definition::Substitute(..) => DepQueryResult::new(),
+            Definition::UnresolvedSubstitute(..) => DepQueryResult::new(),
             Definition::Variable { matches, .. } => self.after_query(matches),
         }
     }

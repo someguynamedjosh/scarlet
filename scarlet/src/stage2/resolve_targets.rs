@@ -1,10 +1,9 @@
-use super::structure::{Environment, ItemId, Substitution, VariableItemIds};
+use super::structure::{
+    Environment, ItemId, Substitutions, UnresolvedSubstitution, VariableItemIds,
+};
 use crate::{
     shared::OrderedSet,
-    stage2::{
-        matchh::MatchResult,
-        structure::{Definition, Target},
-    },
+    stage2::{matchh::MatchResult, structure::Definition},
 };
 
 impl<'x> Environment<'x> {
@@ -17,30 +16,38 @@ impl<'x> Environment<'x> {
     }
 
     fn resolve_targets_in_item(&mut self, id: ItemId<'x>) {
-        if let Definition::Substitute(base, subs) = self.definition_of(id) {
+        if let Definition::UnresolvedSubstitute(base, subs) = self.definition_of(id) {
             let base = *base;
             let mut subs = subs.clone();
-            self.resolve_targets_in_sub(base, &mut subs);
-            self.items[id].definition = Some(Definition::Substitute(base, subs));
+            let new_subs = self.resolve_targets_in_sub(base, &mut subs);
+            self.items[id].definition = Some(Definition::ResolvedSubstitute(base, new_subs));
         }
     }
 
-    fn resolve_targets_in_sub(&mut self, base: ItemId<'x>, subs: &mut [Substitution<'x>]) {
+    fn resolve_targets_in_sub(
+        &mut self,
+        base: ItemId<'x>,
+        subs: &mut [UnresolvedSubstitution<'x>],
+    ) -> Substitutions<'x> {
+        let mut new_subs = Substitutions::new();
         let mut deps = self.get_deps(base);
         for sub in &mut *subs {
-            if let &Target::Unresolved {
-                name,
-                possible_meaning,
-            } = &sub.target
-            {
-                self.resolve_named_target(possible_meaning, name, base, &mut deps, sub);
+            if let Some(possible_meaning) = sub.target_meaning {
+                new_subs = new_subs.union(self.resolve_named_target(
+                    possible_meaning,
+                    sub.target_name,
+                    base,
+                    sub.value,
+                    &mut deps,
+                ));
             }
         }
         for sub in &mut *subs {
-            if let Target::UnresolvedAnonymous = &sub.target {
-                self.resolve_anonymous_target(&mut deps, sub);
+            if sub.target_meaning.is_none() {
+                self.resolve_anonymous_target(&mut deps, sub.value);
             }
         }
+        new_subs
     }
 
     fn resolve_named_target(
@@ -48,47 +55,52 @@ impl<'x> Environment<'x> {
         possible_meaning: ItemId<'x>,
         name: Option<&str>,
         base: ItemId<'x>,
+        value: ItemId<'x>,
         deps: &mut OrderedSet<VariableItemIds<'x>>,
-        sub: &mut Substitution<'x>,
-    ) {
-        let mut resolved = possible_meaning;
+    ) -> Substitutions<'x> {
+        let mut resolved_target = possible_meaning;
         if let Some(name) = name {
             if let Some(value) = self.items[base].scope.get(name) {
-                resolved = *value;
+                resolved_target = *value;
             }
         }
-        for (dep, _) in self.get_deps(resolved) {
-            deps.remove(&dep);
+        match self.matches(value, resolved_target) {
+            MatchResult::Match(subs) => {
+                for &(target, _) in &subs {
+                    for (entry, _) in &*deps {
+                        if entry.var == target {
+                            let entry = *entry;
+                            deps.remove(&entry);
+                            break;
+                        }
+                    }
+                }
+                subs
+            }
+            MatchResult::NoMatch => todo!(),
+            MatchResult::Unknown => todo!(),
         }
-        sub.target = Target::ResolvedItem(resolved);
     }
 
     fn resolve_anonymous_target(
         &mut self,
         deps: &mut OrderedSet<VariableItemIds<'x>>,
-        sub: &mut Substitution<'x>,
-    ) {
-        let mut success = false;
+        value: ItemId<'x>,
+    ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
             let dep = *dep;
             let matches = dep.matches;
-            let value = self.reduce(sub.value);
+            let value = self.reduce(value);
             let result = self.matches(value, matches);
-            println!("{:?} matches {:?}? {:?}", value, matches, result);
-            if let MatchResult::Match(..) = result {
-                success = true;
+            if let MatchResult::Match(matched_subs) = result {
                 deps.remove(&dep);
-                sub.target = Target::ResolvedItem(dep.var_item);
-                break;
+                return matched_subs;
             }
         }
-        if !success {
-            // println!("{:#?}", self);
-            todo!(
-                "Nice error, the argument {:?} cannot be assigned to any of {:?}",
-                sub.value,
-                deps
-            );
-        }
+        todo!(
+            "Nice error, the argument {:?} cannot be assigned to any of {:?}",
+            value,
+            deps
+        )
     }
 }

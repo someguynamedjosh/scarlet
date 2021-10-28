@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use super::structure::Target;
-use crate::stage2::structure::{Condition, Definition, ItemId, StructField, Substitution};
+use super::structure::{Substitutions, UnresolvedSubstitution};
+use crate::stage2::structure::{Condition, Definition, ItemId, StructField};
 
 pub type Reps<'x> = HashMap<ItemId<'x>, ItemId<'x>>;
 
@@ -24,8 +24,13 @@ pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
         } => apply_reps_to_match(reps, base, conditions, else_value),
         Definition::Member(base, ..) => apply_reps(reps, base),
         Definition::Other(..) => (),
+        Definition::ResolvedSubstitute(base, subs) => {
+            apply_reps_to_resolved_substitution(reps, base, subs)
+        }
         Definition::Struct(fields) => apply_reps_to_struct(fields, reps),
-        Definition::Substitute(base, subs) => apply_reps_to_substitution(reps, base, subs),
+        Definition::UnresolvedSubstitute(base, subs) => {
+            apply_reps_to_unresolved_substitution(reps, base, subs)
+        }
         Definition::Variable { .. } => (),
     }
 }
@@ -37,17 +42,28 @@ fn apply_reps_to_after<'x>(reps: &Reps<'x>, base: &mut ItemId<'x>, vals: &mut Ve
     }
 }
 
-fn apply_reps_to_substitution<'x>(
+fn apply_reps_to_unresolved_substitution<'x>(
     reps: &Reps<'x>,
     base: &mut ItemId<'x>,
-    subs: &mut Vec<Substitution<'x>>,
+    subs: &mut Vec<UnresolvedSubstitution<'x>>,
 ) {
     apply_reps(reps, base);
     for sub in subs {
-        if let Target::ResolvedItem(item) = &mut sub.target {
+        if let Some(item) = &mut sub.target_meaning {
             apply_reps(reps, item);
         }
         apply_reps(reps, &mut sub.value);
+    }
+}
+
+fn apply_reps_to_resolved_substitution<'x>(
+    reps: &Reps<'x>,
+    base: &mut ItemId<'x>,
+    subs: &mut Substitutions<'x>,
+) {
+    apply_reps(reps, base);
+    for (_, value) in subs {
+        apply_reps(reps, value);
     }
 }
 

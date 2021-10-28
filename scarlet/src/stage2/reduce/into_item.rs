@@ -1,9 +1,6 @@
-use crate::{
-    shared::OrderedMap,
-    stage2::{
-        matchh::MatchResult,
-        structure::{Condition, Definition, Environment, ItemId, Substitution, Target},
-    },
+use crate::stage2::{
+    matchh::MatchResult,
+    structure::{Condition, Definition, Environment, ItemId, Substitutions},
 };
 
 impl<'x> Environment<'x> {
@@ -101,33 +98,12 @@ impl<'x> Environment<'x> {
 
     pub(super) fn reduce_substitution(
         &mut self,
-        subs: Vec<Substitution<'x>>,
+        subs: Substitutions<'x>,
         base: ItemId<'x>,
         original: ItemId<'x>,
     ) -> ItemId<'x> {
-        let mut final_subs = OrderedMap::new();
-        for sub in subs {
-            if let Target::ResolvedItem(target) = sub.target {
-                let target = self.reduce(target);
-                match self.matches(sub.value, target) {
-                    MatchResult::Match(subs) => final_subs = final_subs.union(subs),
-                    MatchResult::NoMatch => {
-                        todo!(
-                            "Nice error, argument {:?} will definitely not match {:?}",
-                            sub.value,
-                            target
-                        )
-                    }
-                    MatchResult::Unknown => {
-                        todo!("Nice error, argument might not match what it is assigned to.")
-                    }
-                }
-            } else {
-                unreachable!()
-            }
-        }
         let base = self.reduce(base);
-        let subbed = self.with_fresh_query_stack(|this| this.substitute(base, &final_subs));
+        let subbed = self.with_fresh_query_stack(|this| this.substitute(base, &subs));
         if let Some(subbed) = subbed {
             let shown_from = self.items[original].shown_from.clone();
             self.items[subbed].shown_from = shown_from;

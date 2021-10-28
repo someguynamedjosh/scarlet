@@ -1,10 +1,8 @@
+use super::structure::{Substitutions, VariableItemIds};
 use crate::{
     shared::OrderedSet,
-    stage2::{
-        reduce::substitute::Substitutions,
-        structure::{
-            BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
-        },
+    stage2::structure::{
+        BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId,
     },
 };
 
@@ -16,8 +14,6 @@ pub enum MatchResult<'x> {
 }
 
 use MatchResult::*;
-
-use super::structure::VariableItemIds;
 
 fn non_capturing_match<'x>() -> MatchResult<'x> {
     Match(Substitutions::new())
@@ -118,8 +114,9 @@ impl<'x> Environment<'x> {
                 let other = *other;
                 self.matches_impl(original_value, value_pattern, other, after)
             }
+            Definition::ResolvedSubstitute(..) => Unknown,
             Definition::Struct(_) => todo!(),
-            Definition::Substitute(..) => Unknown,
+            Definition::UnresolvedSubstitute(..) => Unknown,
             Definition::Variable { var, matches } => {
                 let (var, matches) = (*var, *matches);
                 let mut allow_binding = true;
