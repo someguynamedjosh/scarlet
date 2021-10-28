@@ -4,8 +4,7 @@
     PATTERN is builtin{PATTERN}
 
     value is any 32U
-    more_value is value + 1
-    # value_is_eight is value + 3 AND 8
+    value_is_eight is value + 3 AND 8
 
-    show more_value(1)
+    show value_is_eight(5)
 ]

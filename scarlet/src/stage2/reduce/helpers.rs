@@ -27,6 +27,9 @@ impl<'x> Environment<'x> {
         new_def: Definition<'x>,
         is_fundamentally_different: bool,
     ) -> ItemId<'x> {
+        if &new_def == self.definition_of(original) {
+            return original;
+        }
         let mut new_item = self.items[original].clone();
         new_item.definition = Some(new_def);
         if is_fundamentally_different {

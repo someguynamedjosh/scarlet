@@ -45,8 +45,8 @@ impl<'x> Environment<'x> {
             self.items[original].cached_reduction = Some(result);
             self.get_deps(original);
             self.get_deps(result);
-            println!("{:#?}", self);
-            println!("{:?} becomes {:?}", original, result);
+            // println!("{:#?}", self);
+            // println!("{:?} becomes {:?}", original, result);
             assert!(self.get_deps(result).len() <= self.get_deps(original).len());
             // println!("{:#?}", self);
             assert_eq!(self.reduce(result), result);

@@ -44,7 +44,8 @@ impl<'x> Environment<'x> {
         }
         for sub in &mut *subs {
             if sub.target_meaning.is_none() {
-                self.resolve_anonymous_target(&mut deps, sub.value);
+                let additions = self.resolve_anonymous_target(&mut deps, &new_subs, sub.value);
+                new_subs = new_subs.union(additions);
             }
         }
         new_subs
@@ -85,15 +86,25 @@ impl<'x> Environment<'x> {
     fn resolve_anonymous_target(
         &mut self,
         deps: &mut OrderedSet<VariableItemIds<'x>>,
+        previous_subs: &Substitutions<'x>,
         value: ItemId<'x>,
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
             let dep = *dep;
-            let matches = dep.matches;
+            let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
+            let subbed_dep = self.reduce(subbed_dep);
             let value = self.reduce(value);
-            let result = self.matches(value, matches);
+            let result = self.matches(value, subbed_dep);
             if let MatchResult::Match(matched_subs) = result {
-                deps.remove(&dep);
+                for (matched_dep, _) in &matched_subs {
+                    for (dep, _) in &*deps {
+                        if dep.var == *matched_dep {
+                            let dep = *dep;
+                            deps.remove(&dep);
+                            break;
+                        }
+                    }
+                }
                 return matched_subs;
             }
         }

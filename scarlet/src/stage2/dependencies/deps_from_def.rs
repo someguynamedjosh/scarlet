@@ -61,9 +61,20 @@ impl<'x> Environment<'x> {
                             continue 'deps;
                         }
                     }
+                    let subbed_dep = self.substitute(base_dep.var_item, &subs).unwrap();
+                    let def = self.definition_of(subbed_dep);
+                    let subbed_dep = if let &Definition::Variable { var, matches } = def {
+                        VariableItemIds {
+                            var_item: subbed_dep,
+                            var,
+                            matches,
+                        }
+                    } else {
+                        unreachable!()
+                    };
                     // Otherwise, if it is not replaced, the new expression is
                     // still dependant on it.
-                    final_deps.deps.insert_or_replace(base_dep, ());
+                    final_deps.deps.insert_or_replace(subbed_dep, ());
                 }
                 final_deps
             }
