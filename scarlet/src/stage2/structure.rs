@@ -61,6 +61,10 @@ pub enum Target<'x> {
     ResolvedItem(ItemId<'x>),
 }
 
+impl<'x> Target<'x> {
+
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct VariableItemIds<'x> {
     pub var_item: ItemId<'x>,

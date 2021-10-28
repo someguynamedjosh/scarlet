@@ -1,14 +1,15 @@
 use crate::{
     shared::{OrderedMap, OrderedSet},
     stage2::structure::{
-        Condition, Definition, Environment, ItemId, StructField, Substitution, Target, VariableId,
+        BuiltinPattern, Condition, Definition, Environment, ItemId, StructField, Substitution,
+        Target, VariableId,
     },
 };
 
 pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 impl<'x> Environment<'x> {
-    pub(super) fn substitute(
+    pub fn substitute(
         &mut self,
         original: ItemId<'x>,
         substitutions: &Substitutions<'x>,
@@ -57,7 +58,15 @@ impl<'x> Environment<'x> {
                 let def = Definition::BuiltinOperation(op, args);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::BuiltinPattern(..) => original,
+            Definition::BuiltinPattern(pat) => match pat {
+                BuiltinPattern::And(left, right) => {
+                    let left = self.substitute(left, substitutions)?;
+                    let right = self.substitute(right, substitutions)?;
+                    let def = Definition::BuiltinPattern(BuiltinPattern::And(left, right));
+                    self.item_with_new_definition(original, def, true)
+                }
+                _ => original,
+            },
             Definition::BuiltinValue(..) => original,
             Definition::Match {
                 base,

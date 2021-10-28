@@ -67,6 +67,10 @@ impl<K: PartialEq + Eq + Debug, V> OrderedMap<K, V> {
         self.into_iter()
     }
 
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut (K, V)> {
+        self.into_iter()
+    }
+
     pub fn len(&self) -> usize {
         self.entries.len()
     }
@@ -137,6 +141,15 @@ impl<'a, K, V> IntoIterator for &'a OrderedMap<K, V> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.entries.iter()
+    }
+}
+
+impl<'a, K, V> IntoIterator for &'a mut OrderedMap<K, V> {
+    type IntoIter = std::slice::IterMut<'a, (K, V)>;
+    type Item = &'a mut (K, V);
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.iter_mut()
     }
 }
 

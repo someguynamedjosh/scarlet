@@ -1,5 +1,5 @@
 use super::structures::DepQueryResult;
-use crate::stage2::structure::{BuiltinPattern, Definition, Environment, ItemId, VariableItemIds};
+use crate::{shared::OrderedMap, stage2::structure::{BuiltinPattern, Definition, Environment, ItemId, VariableItemIds}};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
@@ -53,6 +53,10 @@ impl<'x> Environment<'x> {
             }
             Definition::Substitute(base, subs) => {
                 let base_deps = self.dep_query(base);
+                let mut sub_map = OrderedMap::new();
+                for sub in &subs {
+                    sub_map.insert_no_replace(sub.target, sub.value);
+                }
                 let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
                 // For each dependency of the base expression...
                 'deps: for (base_dep, _) in base_deps.deps.clone() {
