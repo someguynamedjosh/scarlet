@@ -1,62 +1,66 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use super::from_tree;
 use crate::{
     stage1::structure::{Module, Token, TokenTree},
     stage2::{
         ingest::util,
-        structure::{Environment, ItemId},
+        structure::{Environment, ItemId, VariableId},
     },
 };
 
-pub fn ingest_tree<'x>(
-    src: &'x TokenTree<'x>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> ItemId<'x> {
-    let into = util::begin_item(src, env, in_scopes);
-    ingest_tree_into(src, env, into, in_scopes);
-    into
+pub(super) struct IngestionContext<'e, 'x> {
+    pub env: &'e mut Environment<'x>,
+    pub in_scopes: &'e [&'e HashMap<Token<'x>, ItemId<'x>>],
+    pub without_consuming: &'e HashSet<VariableId<'x>>,
 }
 
-pub fn ingest_tree_into<'x>(
-    src: &'x TokenTree<'x>,
-    env: &mut Environment<'x>,
-    into: ItemId<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) {
-    let definition = from_tree::definition_from_tree(src, env, in_scopes, into);
-    env.items.get_mut(into).definition = Some(definition);
-}
-
-pub fn ingest_module<'x>(
-    src: &'x Module,
-    env: &mut Environment<'x>,
-    into: ItemId<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) {
-    let mut children = Vec::new();
-    for (name, module) in &src.children {
-        assert_eq!(module.self_content.len(), 1);
-        let src = &module.self_content[0];
-        children.push((&name[..], module, util::begin_item(src, env, in_scopes)));
+impl<'e, 'x> IngestionContext<'e, 'x> {
+    pub(super) fn ingest_tree(&mut self, src: &'x TokenTree<'x>) -> ItemId<'x> {
+        let into = self.begin_item(src);
+        self.ingest_tree_into(src, into);
+        into
     }
 
-    let scope_map: HashMap<_, _> = children.iter().map(|(name, _, id)| (*name, *id)).collect();
-    let new_scopes = util::with_extra_scope(in_scopes, &scope_map);
+    pub(super) fn ingest_tree_into(&mut self, src: &'x TokenTree<'x>, into: ItemId<'x>) {
+        let definition = self.definition_from_tree(src, into);
+        self.env.items.get_mut(into).definition = Some(definition);
+    }
 
-    assert_eq!(src.self_content.len(), 1);
-    ingest_tree_into(&src.self_content[0], env, into, in_scopes);
+    pub(super) fn ingest_module(&mut self, src: &'x Module, into: ItemId<'x>) {
+        let mut children = Vec::new();
+        for (name, module) in &src.children {
+            assert_eq!(module.self_content.len(), 1);
+            let src = &module.self_content[0];
+            children.push((&name[..], module, self.begin_item(src)));
+        }
 
-    for (_, src, id) in children {
-        ingest_module(src, env, id, &new_scopes[..]);
+        let scope_map: HashMap<_, _> = children.iter().map(|(name, _, id)| (*name, *id)).collect();
+        let new_scopes = util::with_extra_scope(&self.in_scopes, &scope_map);
+
+        let mut child = IngestionContext {
+            env: &mut *self.env,
+            in_scopes: &new_scopes,
+            without_consuming: &*self.without_consuming,
+        };
+
+        assert_eq!(src.self_content.len(), 1);
+        child.ingest_tree_into(&src.self_content[0], into);
+
+        for (_, src, id) in children {
+            self.ingest_module(src, id);
+        }
     }
 }
 
 pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
     assert_eq!(src.self_content.len(), 1);
     let mut env = Environment::new();
-    let into = util::begin_item(&src.self_content[0], &mut env, &[]);
-    ingest_module(src, &mut env, into, &[]);
+    let mut ctx = IngestionContext {
+        env: &mut env,
+        in_scopes: &[],
+        without_consuming: &HashSet::new(),
+    };
+    let into = ctx.begin_item(&src.self_content[0]);
+    ctx.ingest_module(src, into);
     (env, into)
 }

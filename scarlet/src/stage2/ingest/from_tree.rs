@@ -6,7 +6,7 @@ mod using;
 
 use std::{collections::HashMap, marker::PhantomData};
 
-use super::util::begin_item;
+use super::top_level::IngestionContext;
 use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
@@ -15,114 +15,99 @@ use crate::{
     },
 };
 
-pub fn definition_from_tree<'x>(
-    src: &'x TokenTree<'x>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-    into: ItemId<'x>,
-) -> Definition<'x> {
-    match src {
-        TokenTree::Token(token) => others::token_def(token, in_scopes),
+impl<'e, 'x> IngestionContext<'e, 'x> {
+    pub fn definition_from_tree(
+        &mut self,
+        src: &'x TokenTree<'x>,
+        into: ItemId<'x>,
+    ) -> Definition<'x> {
+        match src {
+            TokenTree::Token(token) => self.token_def(token),
 
-        TokenTree::BuiltinRule {
-            name: "after",
-            body,
-        } => others::after_def(body, env, in_scopes),
+            TokenTree::BuiltinRule {
+                name: "after",
+                body,
+            } => self.after_def(body),
 
-        TokenTree::BuiltinRule { name: "any", body } => others::variable_def(body, env, in_scopes),
-        TokenTree::BuiltinRule {
-            name: "match",
-            body,
-        } => match_def::ingest(body, env, in_scopes),
-        TokenTree::BuiltinRule {
-            name: "matches",
-            body,
-        } => match_def::ingest_matches(body, env, in_scopes),
-        TokenTree::BuiltinRule {
-            name: "member",
-            body,
-        } => others::member_def(body, env, in_scopes),
-        TokenTree::BuiltinRule { name: "show", body } => others::show(body, env, in_scopes, into),
-        TokenTree::BuiltinRule {
-            name: "struct",
-            body,
-        } => struct_def::ingest(body, in_scopes, env),
-        TokenTree::BuiltinRule {
-            name: "substitute",
-            body,
-        } => substitute_def::ingest(body, env, in_scopes),
-        TokenTree::BuiltinRule {
-            name: "using",
-            body,
-        } => using::ingest(body, env, in_scopes),
+            TokenTree::BuiltinRule { name: "any", body } => self.variable_def(body),
+            TokenTree::BuiltinRule {
+                name: "match",
+                body,
+            } => self.match_def(body),
+            TokenTree::BuiltinRule {
+                name: "matches",
+                body,
+            } => self.matches_def(body),
+            TokenTree::BuiltinRule {
+                name: "member",
+                body,
+            } => self.member_def(body),
+            TokenTree::BuiltinRule { name: "show", body } => self.show_def(body, into),
+            TokenTree::BuiltinRule {
+                name: "struct",
+                body,
+            } => self.struct_def(body),
+            TokenTree::BuiltinRule {
+                name: "substitute",
+                body,
+            } => self.substitute_def(body),
+            TokenTree::BuiltinRule {
+                name: "using",
+                body,
+            } => self.using_def(body),
 
-        TokenTree::BuiltinRule {
-            name: "PATTERN",
-            body,
-        } => var_with_special_type(VarType::God, src, body, env, in_scopes),
-        TokenTree::BuiltinRule { name: "32U", body } => {
-            var_with_special_type(VarType::_32U, src, body, env, in_scopes)
+            TokenTree::BuiltinRule {
+                name: "PATTERN", ..
+            } => self.var_with_special_type(VarType::God),
+            TokenTree::BuiltinRule { name: "32U", .. } => self.var_with_special_type(VarType::_32U),
+            TokenTree::BuiltinRule { name: "BOOL", .. } => {
+                self.var_with_special_type(VarType::Bool)
+            }
+            TokenTree::BuiltinRule { name: "AND", body } => self.and_pattern_def(body),
+
+            TokenTree::BuiltinRule {
+                name: "sum_32u",
+                body,
+            } => self.builtin_op_def(BuiltinOperation::Sum32U, body),
+            TokenTree::BuiltinRule {
+                name: "dif_32u",
+                body,
+            } => self.builtin_op_def(BuiltinOperation::Dif32U, body),
+
+            TokenTree::BuiltinRule { name, .. } => {
+                todo!("Nice error, unrecognized builtin {}", name)
+            }
         }
-        TokenTree::BuiltinRule { name: "BOOL", body } => {
-            var_with_special_type(VarType::Bool, src, body, env, in_scopes)
-        }
-        TokenTree::BuiltinRule { name: "AND", body } => and_pattern_def(src, body, env, in_scopes),
-
-        TokenTree::BuiltinRule {
-            name: "sum_32u",
-            body,
-        } => builtin_op_def(BuiltinOperation::Sum32U, body, env, in_scopes),
-        TokenTree::BuiltinRule {
-            name: "dif_32u",
-            body,
-        } => builtin_op_def(BuiltinOperation::Dif32U, body, env, in_scopes),
-
-        TokenTree::BuiltinRule { name, .. } => todo!("Nice error, unrecognized builtin {}", name),
     }
-}
 
-fn builtin_op_def<'x>(
-    op: BuiltinOperation,
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> Definition<'x> {
-    let args: Vec<_> = body
-        .iter()
-        .map(|tt| top_level::ingest_tree(tt, env, in_scopes))
-        .collect();
-    Definition::BuiltinOperation(op, args)
-}
+    fn builtin_op_def(
+        &mut self,
+        op: BuiltinOperation,
+        body: &'x Vec<TokenTree<'x>>,
+    ) -> Definition<'x> {
+        let args: Vec<_> = body.iter().map(|tt| self.ingest_tree(tt)).collect();
+        Definition::BuiltinOperation(op, args)
+    }
 
-fn and_pattern_def<'x>(
-    src: &'x TokenTree<'x>,
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> Definition<'x> {
-    assert_eq!(body.len(), 2);
-    let left = top_level::ingest_tree(&body[0], env, in_scopes);
-    let right = top_level::ingest_tree(&body[1], env, in_scopes);
-    var_with_special_type(VarType::And(left, right), src, body, env, in_scopes)
-}
+    fn and_pattern_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 2);
+        let left = self.ingest_tree(&body[0]);
+        let right = self.ingest_tree(&body[1]);
+        self.var_with_special_type(VarType::And(left, right))
+    }
 
-fn var_with_special_type<'x>(
-    typee: VarType<'x>,
-    src: &'x TokenTree<'x>,
-    _body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> Definition<'x> {
-    // assert_eq!(
-    //     body.len(),
-    //     0,
-    //     "TODO: Nice error, expected zero argument to builtin."
-    // );
-    let var = Variable { pd: PhantomData };
-    let var = env.vars.push(var);
-    Definition::Variable {
-        var,
-        typee,
-        consume: true,
+    fn var_with_special_type(&mut self, typee: VarType<'x>) -> Definition<'x> {
+        // assert_eq!(
+        //     body.len(),
+        //     0,
+        //     "TODO: Nice error, expected zero argument to builtin."
+        // );
+        let var = Variable { pd: PhantomData };
+        let var = self.env.vars.push(var);
+        Definition::Variable {
+            var,
+            typee,
+            consume: true,
+        }
     }
 }

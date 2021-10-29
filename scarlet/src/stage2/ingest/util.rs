@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::top_level::IngestionContext;
 use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::structure::{Environment, Item, ItemId},
@@ -31,26 +32,24 @@ pub fn maybe_target<'x>(input: &'x TokenTree<'x>) -> MaybeTarget<'x> {
     }
 }
 
-pub fn begin_item<'x>(
-    src: &'x TokenTree<'x>,
-    env: &mut Environment<'x>,
-    parent_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> ItemId<'x> {
-    let mut total_scope = HashMap::new();
-    for scope in parent_scopes {
-        for (ident, value) in *scope {
-            total_scope.insert(*ident, *value);
+impl<'e, 'x> IngestionContext<'e, 'x> {
+    pub(super) fn begin_item(&mut self, src: &'x TokenTree<'x>) -> ItemId<'x> {
+        let mut total_scope = HashMap::new();
+        for scope in self.in_scopes {
+            for (ident, value) in *scope {
+                total_scope.insert(*ident, *value);
+            }
         }
+        self.env.items.push(Item {
+            after: None,
+            dependencies: None,
+            original_definition: src,
+            definition: None,
+            scope: total_scope,
+            cached_reduction: None,
+            shown_from: Vec::new(),
+        })
     }
-    env.items.push(Item {
-        after: None,
-        dependencies: None,
-        original_definition: src,
-        definition: None,
-        scope: total_scope,
-        cached_reduction: None,
-        shown_from: Vec::new(),
-    })
 }
 
 pub fn with_extra_scope<'b, 'c, 'x>(

@@ -7,9 +7,7 @@ use crate::stage2::{
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
-            Definition::After { base, .. } => {
-                todo!()
-            }
+            Definition::After { base, .. } => self.dep_query(base),
             Definition::BuiltinOperation(_, args) => {
                 let mut base = DepQueryResult::new();
                 for arg in args {

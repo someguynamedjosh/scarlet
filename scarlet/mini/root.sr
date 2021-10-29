@@ -4,9 +4,7 @@
 
     number is any 32U
 
-    PROOF_FIVE is 
-    after{number} 
-    number matches 5 AND true
-
-    show PROOF_FIVE
+    # PROOF_FIVE is 
+    # after{number} 
+    # number matches 5 AND true
 ]

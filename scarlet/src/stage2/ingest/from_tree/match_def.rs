@@ -1,72 +1,65 @@
-use std::collections::HashMap;
-
 use crate::{
-    stage1::structure::{Token, TokenTree},
+    stage1::structure::TokenTree,
     stage2::{
-        ingest::{top_level, util::begin_item},
-        structure::{BuiltinValue, Condition, Definition, Environment, ItemId},
+        ingest::top_level::IngestionContext,
+        structure::{BuiltinValue, Condition, Definition},
     },
 };
 
-pub fn ingest<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> Definition<'x> {
-    assert_eq!(body.len(), 2);
-    let base = &body[0];
-    let base = top_level::ingest_tree(base, env, in_scopes);
-    let condition_source = body[1].unwrap_builtin("patterns");
-    let mut conditions = Vec::new();
-    let mut else_value = None;
-    for item in condition_source {
-        match item {
-            TokenTree::BuiltinRule { name: "on", body } => {
-                assert_eq!(body.len(), 2);
-                let pattern = body[0].unwrap_builtin("pattern");
-                assert_eq!(pattern.len(), 1);
-                let pattern = top_level::ingest_tree(&pattern[0], env, in_scopes);
-                let value = top_level::ingest_tree(&body[1], env, in_scopes);
-                conditions.push(Condition { pattern, value })
+impl<'e, 'x> IngestionContext<'e, 'x> {
+    pub fn match_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 2);
+        let base = &body[0];
+        let base = self.ingest_tree(base);
+        let condition_source = body[1].unwrap_builtin("patterns");
+        let mut conditions = Vec::new();
+        let mut else_value = None;
+        for item in condition_source {
+            match item {
+                TokenTree::BuiltinRule { name: "on", body } => {
+                    assert_eq!(body.len(), 2);
+                    let pattern = body[0].unwrap_builtin("pattern");
+                    assert_eq!(pattern.len(), 1);
+                    let pattern = self.ingest_tree(&pattern[0]);
+                    let value = self.ingest_tree(&body[1]);
+                    conditions.push(Condition { pattern, value })
+                }
+                TokenTree::BuiltinRule { name: "else", body } => {
+                    assert_eq!(body.len(), 1);
+                    let value = self.ingest_tree(&body[0]);
+                    else_value = Some(value);
+                }
+                _ => unreachable!(),
             }
-            TokenTree::BuiltinRule { name: "else", body } => {
-                assert_eq!(body.len(), 1);
-                let value = top_level::ingest_tree(&body[0], env, in_scopes);
-                else_value = Some(value);
-            }
-            _ => unreachable!(),
+        }
+        let else_value = else_value.expect("TODO: Nice error, no else specified.");
+        Definition::Match {
+            base,
+            conditions,
+            else_value,
         }
     }
-    let else_value = else_value.expect("TODO: Nice error, no else specified.");
-    Definition::Match {
-        base,
-        conditions,
-        else_value,
-    }
-}
 
-pub fn ingest_matches<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> Definition<'x> {
-    assert_eq!(body.len(), 2);
-    let base = &body[0];
-    let base = top_level::ingest_tree(base, env, in_scopes);
-    let pattern = top_level::ingest_tree(&body[1], env, in_scopes);
+    pub fn matches_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 2);
+        let base = &body[0];
+        let base = self.ingest_tree(base);
+        let pattern = self.ingest_tree(&body[1]);
 
-    let truee = begin_item(&body[1], env, in_scopes);
-    env.items[truee].definition = Some(Definition::BuiltinValue(BuiltinValue::Bool(true)));
-    let falsee = begin_item(&body[1], env, in_scopes);
-    env.items[falsee].definition = Some(Definition::BuiltinValue(BuiltinValue::Bool(false)));
+        let truee = self.begin_item(&body[1]);
+        self.env.items[truee].definition = Some(Definition::BuiltinValue(BuiltinValue::Bool(true)));
+        let falsee = self.begin_item(&body[1]);
+        self.env.items[falsee].definition =
+            Some(Definition::BuiltinValue(BuiltinValue::Bool(false)));
 
-    let condition = Condition {
-        pattern,
-        value: truee,
-    };
-    Definition::Match {
-        base,
-        conditions: vec![condition],
-        else_value: falsee,
+        let condition = Condition {
+            pattern,
+            value: truee,
+        };
+        Definition::Match {
+            base,
+            conditions: vec![condition],
+            else_value: falsee,
+        }
     }
 }

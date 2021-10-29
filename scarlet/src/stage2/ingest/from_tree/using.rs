@@ -3,23 +3,27 @@ use std::collections::HashMap;
 use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
-        ingest::top_level,
+        ingest::top_level::IngestionContext,
         structure::{Definition, Environment, ItemId},
     },
 };
 
-pub fn ingest<'x>(
-    body: &'x Vec<TokenTree<'x>>,
-    env: &mut Environment<'x>,
-    in_scopes: &[&HashMap<Token<'x>, ItemId<'x>>],
-) -> Definition<'x> {
-    assert_eq!(body.len(), 2, "TODO: Nice error.");
-    let used = top_level::ingest_tree(&body[1], env, in_scopes);
-    let members = env.get_members(used);
-    let mut new_in_scopes = in_scopes.to_owned();
-    new_in_scopes.push(&members);
-    let base = top_level::ingest_tree(&body[0], env, &new_in_scopes[..]);
-    Definition::Other(base)
+impl<'e, 'x> IngestionContext<'e, 'x> {
+    pub fn using_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 2, "TODO: Nice error.");
+        let used = self.ingest_tree(&body[1]);
+        let members = self.env.get_members(used);
+
+        let mut new_in_scopes = self.in_scopes.to_owned();
+        new_in_scopes.push(&members);
+        let mut child = IngestionContext {
+            env: &mut *self.env,
+            in_scopes: &new_in_scopes[..],
+            without_consuming: &*self.without_consuming,
+        };
+        let base = child.ingest_tree(&body[0]);
+        Definition::Other(base)
+    }
 }
 
 impl<'x> Environment<'x> {
