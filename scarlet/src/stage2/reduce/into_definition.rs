@@ -1,5 +1,5 @@
 use crate::stage2::structure::{
-    BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId, StructField,
+    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VarType,
     VariableId,
 };
 
@@ -40,16 +40,14 @@ impl<'x> Environment<'x> {
         self.reduce_finite_builtin_op(op, args)
     }
 
-    pub(super) fn reduce_builtin_pattern(&mut self, pat: BuiltinPattern<'x>) -> Definition<'x> {
+    pub(super) fn reduce_var_type(&mut self, pat: VarType<'x>) -> VarType<'x> {
         match pat {
-            BuiltinPattern::Bool | BuiltinPattern::_32U | BuiltinPattern::God => {
-                Definition::BuiltinPattern(pat)
-            }
-            BuiltinPattern::And(left, right) => {
+            VarType::Bool | VarType::_32U | VarType::God => pat,
+            VarType::Just(other) => VarType::Just(self.reduce(other)),
+            VarType::And(left, right) => {
                 let left = self.reduce(left);
                 let right = self.reduce(right);
-                let pat = BuiltinPattern::And(left, right);
-                Definition::BuiltinPattern(pat)
+                VarType::And(left, right)
             }
         }
     }
@@ -69,10 +67,11 @@ impl<'x> Environment<'x> {
     pub(super) fn reduce_var(
         &mut self,
         var: VariableId<'x>,
-        matches: ItemId<'x>,
+        typee: VarType<'x>,
         _def: Definition<'x>,
     ) -> Definition<'x> {
-        let matches = self.reduce(matches);
-        Definition::Variable { var, matches }
+        // let typee = self.reduce(typee);
+        // Definition::Variable { var, typee }
+        todo!()
     }
 }

@@ -5,7 +5,6 @@ impl<'x> Environment<'x> {
         match def {
             Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(op, args) => self.reduce_builtin_op(op, args),
-            Definition::BuiltinPattern(pat) => self.reduce_builtin_pattern(pat),
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),
             Definition::Member(..) => unreachable!(),
@@ -13,7 +12,7 @@ impl<'x> Environment<'x> {
             Definition::ResolvedSubstitute(..) => unreachable!(),
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, matches } => self.reduce_var(var, matches, def),
+            Definition::Variable { var, typee: matches } => self.reduce_var(var, matches, def),
         }
     }
 

@@ -11,7 +11,7 @@ use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{BuiltinOperation, BuiltinPattern, Definition, Environment, ItemId, Variable},
+        structure::{BuiltinOperation, Definition, Environment, ItemId, VarType, Variable},
     },
 };
 
@@ -59,12 +59,12 @@ pub fn definition_from_tree<'x>(
         TokenTree::BuiltinRule {
             name: "PATTERN",
             body,
-        } => builtin_pattern_def(BuiltinPattern::God, src, body, env, in_scopes),
+        } => var_with_special_type(VarType::God, src, body, env, in_scopes),
         TokenTree::BuiltinRule { name: "32U", body } => {
-            builtin_pattern_def(BuiltinPattern::_32U, src, body, env, in_scopes)
+            var_with_special_type(VarType::_32U, src, body, env, in_scopes)
         }
         TokenTree::BuiltinRule { name: "BOOL", body } => {
-            builtin_pattern_def(BuiltinPattern::Bool, src, body, env, in_scopes)
+            var_with_special_type(VarType::Bool, src, body, env, in_scopes)
         }
         TokenTree::BuiltinRule { name: "AND", body } => and_pattern_def(src, body, env, in_scopes),
 
@@ -103,11 +103,11 @@ fn and_pattern_def<'x>(
     assert_eq!(body.len(), 2);
     let left = top_level::ingest_tree(&body[0], env, in_scopes);
     let right = top_level::ingest_tree(&body[1], env, in_scopes);
-    builtin_pattern_def(BuiltinPattern::And(left, right), src, body, env, in_scopes)
+    var_with_special_type(VarType::And(left, right), src, body, env, in_scopes)
 }
 
-fn builtin_pattern_def<'x>(
-    builtin_pattern: BuiltinPattern<'x>,
+fn var_with_special_type<'x>(
+    typee: VarType<'x>,
     src: &'x TokenTree<'x>,
     _body: &'x Vec<TokenTree<'x>>,
     env: &mut Environment<'x>,
@@ -118,9 +118,7 @@ fn builtin_pattern_def<'x>(
     //     0,
     //     "TODO: Nice error, expected zero argument to builtin."
     // );
-    let matches = begin_item(src, env, in_scopes);
-    env.items[matches].definition = Some(Definition::BuiltinPattern(builtin_pattern));
     let var = Variable { pd: PhantomData };
     let var = env.vars.push(var);
-    Definition::Variable { var, matches }
+    Definition::Variable { var, typee }
 }

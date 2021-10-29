@@ -1,7 +1,7 @@
 use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedMap,
-    stage2::structure::{BuiltinPattern, Definition, Environment, ItemId, VariableItemIds},
+    stage2::structure::{Definition, Environment, ItemId, VarType, VariableItemIds},
 };
 
 impl<'x> Environment<'x> {
@@ -20,14 +20,6 @@ impl<'x> Environment<'x> {
                 }
                 base
             }
-            Definition::BuiltinPattern(pat) => match pat {
-                BuiltinPattern::And(left, right) => {
-                    let mut result = self.dep_query(left);
-                    result.append(self.dep_query(right));
-                    result
-                }
-                _ => DepQueryResult::new(),
-            },
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,
@@ -63,11 +55,11 @@ impl<'x> Environment<'x> {
                     }
                     let subbed_dep = self.substitute(base_dep.var_item, &subs).unwrap();
                     let def = self.definition_of(subbed_dep);
-                    let subbed_dep = if let &Definition::Variable { var, matches } = def {
+                    let subbed_dep = if let &Definition::Variable { var, typee } = def {
                         VariableItemIds {
                             var_item: subbed_dep,
                             var,
-                            matches,
+                            typee,
                         }
                     } else {
                         unreachable!()
@@ -86,16 +78,17 @@ impl<'x> Environment<'x> {
                 base
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, matches } => {
-                let mut afters = self.after_query(matches);
-                let matches = self.reduce(matches);
-                let var_item = VariableItemIds {
-                    var,
-                    var_item: of,
-                    matches,
-                };
-                afters.deps.insert_or_replace(var_item, ());
-                afters
+            Definition::Variable { var, typee } => {
+                // let mut afters = self.after_query(typee);
+                // let typee = self.reduce(typee);
+                // let var_item = VariableItemIds {
+                //     var,
+                //     var_item: of,
+                //     typee,
+                // };
+                // afters.deps.insert_or_replace(var_item, ());
+                // afters
+                todo!()
             }
         }
     }

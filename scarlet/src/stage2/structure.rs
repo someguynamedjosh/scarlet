@@ -26,10 +26,11 @@ pub enum BuiltinOperation {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum BuiltinPattern<'x> {
+pub enum VarType<'x> {
     God,
     _32U,
     Bool,
+    Just(ItemId<'x>),
     And(ItemId<'x>, ItemId<'x>),
 }
 
@@ -52,7 +53,7 @@ impl BuiltinValue {
 pub struct VariableItemIds<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
-    pub matches: ItemId<'x>,
+    pub typee: VarType<'x>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -74,7 +75,6 @@ pub enum Definition<'x> {
         vals: Vec<ItemId<'x>>,
     },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
-    BuiltinPattern(BuiltinPattern<'x>),
     BuiltinValue(BuiltinValue),
     Match {
         base: ItemId<'x>,
@@ -88,7 +88,7 @@ pub enum Definition<'x> {
     ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),
     Variable {
         var: VariableId<'x>,
-        matches: ItemId<'x>,
+        typee: VarType<'x>,
     },
 }
 

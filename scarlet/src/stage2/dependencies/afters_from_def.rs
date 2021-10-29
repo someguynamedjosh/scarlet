@@ -19,7 +19,6 @@ impl<'x> Environment<'x> {
                 }
                 result
             }
-            Definition::BuiltinPattern(..) => DepQueryResult::new(),
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,
@@ -55,7 +54,7 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::UnresolvedSubstitute(..) => DepQueryResult::new(),
-            Definition::Variable { matches, .. } => self.after_query(matches),
+            Definition::Variable { typee, .. } => todo!(),
         }
     }
 }

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, BuiltinPattern, BuiltinValue, Definition},
+    stage2::structure::{BuiltinOperation, VarType, BuiltinValue, Definition},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -85,27 +85,6 @@ impl<'x> Environment<'x> {
                     .collect();
                 TokenTree::BuiltinRule { name, body }
             }
-            Definition::BuiltinPattern(pat) => match pat {
-                BuiltinPattern::God => TokenTree::BuiltinRule {
-                    name: "God",
-                    body: vec![],
-                },
-                BuiltinPattern::_32U => TokenTree::BuiltinRule {
-                    name: "32U",
-                    body: vec![],
-                },
-                BuiltinPattern::Bool => TokenTree::BuiltinRule {
-                    name: "Bool",
-                    body: vec![],
-                },
-                BuiltinPattern::And(left, right) => TokenTree::BuiltinRule {
-                    name: "AND",
-                    body: vec![
-                        self.get_name_or_code(*left, context),
-                        self.get_name_or_code(*right, context),
-                    ],
-                },
-            },
             Definition::BuiltinValue(val) => match val {
                 BuiltinValue::_32U(val) => TokenTree::Token(self.token(format!("{}", val))),
                 BuiltinValue::Bool(val) => match *val {
@@ -215,12 +194,13 @@ impl<'x> Environment<'x> {
                     body: vec![base, tt_subs],
                 }
             }
-            Definition::Variable { var: _, matches } => {
-                let matches = self.get_name_or_code(*matches, context);
-                TokenTree::BuiltinRule {
-                    name: "any",
-                    body: vec![matches],
-                }
+            Definition::Variable { var: _, typee } => {
+                // let typee = self.get_name_or_code(*typee, context);
+                // TokenTree::BuiltinRule {
+                //     name: "any",
+                //     body: vec![typee],
+                // }
+                todo!()
             }
         }
     }

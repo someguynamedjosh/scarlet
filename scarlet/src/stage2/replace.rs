@@ -15,7 +15,6 @@ pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
     match to {
         Definition::After { base, vals } => apply_reps_to_after(reps, base, vals),
         Definition::BuiltinOperation(_, args) => apply_reps_to_builtin_op(args, reps),
-        Definition::BuiltinPattern(..) => (),
         Definition::BuiltinValue(..) => (),
         Definition::Match {
             base,

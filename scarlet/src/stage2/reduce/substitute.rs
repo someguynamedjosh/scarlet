@@ -1,8 +1,7 @@
 use crate::{
     shared::{OrderedMap, OrderedSet},
     stage2::structure::{
-        BuiltinPattern, Condition, Definition, Environment, ItemId, StructField, Substitutions,
-        VariableId,
+        Condition, Definition, Environment, ItemId, StructField, Substitutions, VarType, VariableId,
     },
 };
 
@@ -45,15 +44,6 @@ impl<'x> Environment<'x> {
                 let def = Definition::BuiltinOperation(op, args);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::BuiltinPattern(pat) => match pat {
-                BuiltinPattern::And(left, right) => {
-                    let left = self.substitute(left, substitutions)?;
-                    let right = self.substitute(right, substitutions)?;
-                    let def = Definition::BuiltinPattern(BuiltinPattern::And(left, right));
-                    self.item_with_new_definition(original, def, true)
-                }
-                _ => original,
-            },
             Definition::BuiltinValue(..) => original,
             Definition::Match {
                 base,
@@ -122,13 +112,14 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, matches } => {
+            Definition::Variable { var, typee } => {
                 if let Some(sub) = substitutions.get(&var) {
                     *sub
                 } else {
-                    let matches = self.substitute(matches, substitutions)?;
-                    let def = Definition::Variable { var, matches };
-                    self.item_with_new_definition(original, def, true)
+                    // let typee = self.substitute(typee, substitutions)?;
+                    // let def = Definition::Variable { var, typee };
+                    // self.item_with_new_definition(original, def, true)
+                    todo!()
                 }
             }
         })

@@ -5,7 +5,7 @@ use crate::{
     shared::OrderedSet,
     stage1::structure::TokenTree,
     stage2::structure::{
-        BuiltinOperation, BuiltinPattern, BuiltinValue, Definition, Environment, ItemId, Variable,
+        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType, Variable,
     },
 };
 
@@ -82,39 +82,19 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn get_or_push_builtin_pattern(&mut self, pat: BuiltinPattern<'x>) -> ItemId<'x> {
+    fn get_or_push_var_with_type(&mut self, expected_typee: VarType<'x>) -> ItemId<'x> {
         for (id, item) in &self.items {
-            if item.definition.as_ref().unwrap() == &Definition::BuiltinPattern(pat) {
-                return id;
-            }
-        }
-        self.items.push(Item {
-            original_definition: &TokenTree::Token("INTERNAL"),
-            definition: Some(Definition::BuiltinPattern(pat)),
-            scope: Default::default(),
-            dependencies: None,
-            after: None,
-            cached_reduction: None,
-            shown_from: vec![],
-        })
-    }
-
-    fn get_or_push_pattern(&mut self, pat: BuiltinPattern<'x>) -> ItemId<'x> {
-        for (id, item) in &self.items {
-            if let Definition::Variable { matches, .. } = item.definition.as_ref().unwrap() {
-                if self.definition_of(*matches) == &Definition::BuiltinPattern(pat) {
+            if let Definition::Variable { typee, .. } = item.definition.as_ref().unwrap() {
+                if typee == &expected_typee {
                     return id;
                 }
             }
         }
-        let builtin_pattern = self.get_or_push_builtin_pattern(pat);
         let var = self.vars.push(Variable { pd: PhantomData });
+        let typee = expected_typee;
         self.items.push(Item {
             original_definition: &TokenTree::Token("INTERNAL"),
-            definition: Some(Definition::Variable {
-                matches: builtin_pattern,
-                var,
-            }),
+            definition: Some(Definition::Variable { typee, var }),
             scope: Default::default(),
             dependencies: None,
             after: None,
@@ -128,10 +108,9 @@ impl<'x> Environment<'x> {
         match self.definition_of(super_pattern) {
             Definition::After { base, vals } => todo!(),
             Definition::BuiltinOperation(_, _) => todo!(),
-            Definition::BuiltinPattern(..) => self.get_or_push_pattern(BuiltinPattern::God),
             Definition::BuiltinValue(val) => match val {
-                BuiltinValue::_32U(..) => self.get_or_push_pattern(BuiltinPattern::_32U),
-                BuiltinValue::Bool(..) => self.get_or_push_pattern(BuiltinPattern::Bool),
+                BuiltinValue::_32U(..) => self.get_or_push_var_with_type(VarType::_32U),
+                BuiltinValue::Bool(..) => self.get_or_push_var_with_type(VarType::Bool),
             },
             Definition::Match {
                 base,
@@ -143,10 +122,11 @@ impl<'x> Environment<'x> {
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
-            Definition::Variable { matches, .. } => {
+            Definition::Variable { typee: matches, .. } => {
                 let matches = *matches;
-                let super_matches = self.as_super_pattern(matches);
-                self.parent_of_super_pattern(super_matches)
+                // let super_matches = self.as_super_pattern(matches);
+                // self.parent_of_super_pattern(super_matches)
+                todo!()
             }
         }
     }
@@ -192,10 +172,9 @@ impl<'x> Environment<'x> {
             Definition::After { base, vals } => todo!(),
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Sum32U | BuiltinOperation::Dif32U => {
-                    self.get_or_push_pattern(BuiltinPattern::_32U)
+                    self.get_or_push_var_with_type(VarType::_32U)
                 }
             },
-            Definition::BuiltinPattern(..) => of,
             Definition::BuiltinValue(..) => of,
             Definition::Match {
                 conditions,
@@ -217,9 +196,10 @@ impl<'x> Environment<'x> {
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
-            &Definition::Variable { var, matches } => {
-                let matches = self.as_super_pattern(matches);
-                self.item_with_new_definition(of, Definition::Variable { var, matches }, true)
+            &Definition::Variable { var, typee } => {
+                // let typee = self.as_super_pattern(typee);
+                // self.item_with_new_definition(of, Definition::Variable { var, typee }, true)
+                todo!()
             }
         }
     }
@@ -233,9 +213,12 @@ impl<'x> Environment<'x> {
     ) -> MatchResult<'x> {
         let after = after.union(self.get_afters(match_against));
         let value_as_super_pattern = self.as_super_pattern(value_pattern);
-        if let Definition::Variable { matches, .. } = self.definition_of(value_as_super_pattern) {
-            let matches = *matches;
-            self.matches_impl(original_value, matches, match_against, after)
+        if let Definition::Variable { typee: matches, .. } =
+            self.definition_of(value_as_super_pattern)
+        {
+            todo!()
+            // let matches = *matches;
+            // self.matches_impl(original_value, matches, match_against, after)
         } else {
             match self.definition_of(match_against) {
                 Definition::After { base, .. } => {
@@ -246,44 +229,6 @@ impl<'x> Environment<'x> {
                 Definition::BuiltinOperation(op, _) => match op {
                     BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
                 },
-                Definition::BuiltinPattern(BuiltinPattern::God) => non_capturing_match(),
-                Definition::BuiltinPattern(BuiltinPattern::And(left, right)) => {
-                    let (left, right) = (*left, *right);
-                    let matches_left =
-                        self.matches_impl(original_value, value_pattern, left, after.clone());
-                    let matches_right =
-                        self.matches_impl(original_value, value_pattern, right, after);
-                    match (matches_left, matches_right) {
-                        (MatchResult::Match(left), MatchResult::Match(right)) => {
-                            MatchResult::Match(left.union(right))
-                        }
-                        (MatchResult::NoMatch, _) | (_, MatchResult::NoMatch) => {
-                            MatchResult::NoMatch
-                        }
-                        _ => MatchResult::Unknown,
-                    }
-                }
-                Definition::BuiltinPattern(pat) => {
-                    let pat = *pat;
-                    let matches = match self.definition_of(value_as_super_pattern) {
-                        Definition::BuiltinValue(v) => match v {
-                            BuiltinValue::Bool(..) => pat == BuiltinPattern::Bool,
-                            BuiltinValue::_32U(..) => pat == BuiltinPattern::_32U,
-                        },
-                        Definition::BuiltinPattern(value_pat) => match value_pat {
-                            BuiltinPattern::God => return Unknown,
-                            BuiltinPattern::Bool => pat == BuiltinPattern::Bool,
-                            BuiltinPattern::_32U => pat == BuiltinPattern::_32U,
-                            BuiltinPattern::And(..) => todo!(),
-                        },
-                        _ => return Unknown,
-                    };
-                    if matches {
-                        non_capturing_match()
-                    } else {
-                        NoMatch
-                    }
-                }
                 Definition::BuiltinValue(pv) => match self.definition_of(value_as_super_pattern) {
                     Definition::BuiltinValue(vv) => {
                         if pv == vv {
@@ -308,9 +253,10 @@ impl<'x> Environment<'x> {
                 Definition::ResolvedSubstitute(..) => Unknown,
                 Definition::Struct(_) => todo!(),
                 Definition::UnresolvedSubstitute(..) => Unknown,
-                Definition::Variable { var, matches } => {
-                    let (var, matches) = (*var, *matches);
-                    self.matches_var_impl(original_value, value_pattern, var, matches, after)
+                Definition::Variable { var, typee } => {
+                    // let (var, typee) = (*var, *typee);
+                    // self.matches_var_impl(original_value, value_pattern, var, typee, after)
+                    todo!()
                 }
             }
         }

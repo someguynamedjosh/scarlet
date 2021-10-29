@@ -4,7 +4,7 @@ use crate::{
     stage1::structure::{Token, TokenTree},
     stage2::{
         ingest::top_level,
-        structure::{BuiltinValue, Definition, Environment, ItemId, Variable},
+        structure::{BuiltinValue, Definition, Environment, ItemId, VarType, Variable},
     },
 };
 
@@ -26,16 +26,11 @@ pub fn after_def<'x>(
         .collect();
 
     match env.definition_of(base) {
-        &Definition::Variable { var, matches } => {
-            let matches = env.item_with_new_definition(
-                matches,
-                Definition::After {
-                    base: matches,
-                    vals,
-                },
-                true,
-            );
-            Definition::Variable { var, matches }
+        &Definition::Variable { var, typee } => {
+            // let typee =
+            //     env.item_with_new_definition(typee, Definition::After { base: typee, vals
+            // }, true); Definition::Variable { var, typee }
+            todo!()
         }
         _ => Definition::After { base, vals },
     }
@@ -101,7 +96,8 @@ pub fn variable_def<'x>(
         todo!("Nice error");
     }
     let matches = &body[0];
-    let matches = top_level::ingest_tree(matches, env, in_scopes);
+    let typee = top_level::ingest_tree(matches, env, in_scopes);
+    let typee = VarType::Just(typee);
     let var = env.vars.push(Variable { pd: PhantomData });
-    Definition::Variable { var, matches }
+    Definition::Variable { var, typee }
 }
