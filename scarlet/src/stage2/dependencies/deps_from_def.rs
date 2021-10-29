@@ -73,7 +73,10 @@ impl<'x> Environment<'x> {
                 }
                 base
             }
-            Definition::UnresolvedSubstitute(..) => unreachable!(),
+            Definition::UnresolvedSubstitute(..) => {
+                self.resolve_targets_in_item(of);
+                self.get_deps_from_def(of)
+            }
             Definition::Variable { var, typee } => {
                 let mut afters = QueryResult::new();
                 match typee {

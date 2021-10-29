@@ -176,9 +176,15 @@ impl<'x> Environment<'x> {
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
             &Definition::Variable { var, typee } => {
-                // let typee = self.as_super_pattern(typee);
-                // self.item_with_new_definition(of, Definition::Variable { var, typee }, true)
-                todo!()
+                let super_type = match typee {
+                    VarType::God | VarType::_32U | VarType::Bool => typee,
+                    VarType::Just(other) => VarType::Just(self.as_super_pattern(other)),
+                    VarType::And(l, r) => {
+                        VarType::And(self.as_super_pattern(l), self.as_super_pattern(r))
+                    }
+                };
+                let typee = super_type;
+                self.item_with_new_definition(of, Definition::Variable { var, typee }, true)
             }
         }
     }
@@ -189,44 +195,46 @@ impl<'x> Environment<'x> {
         value_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
-        let value_as_super_pattern = self.as_super_pattern(value_pattern);
-        if let Definition::Variable { typee, .. } = self.definition_of(value_as_super_pattern) {
-            todo!()
-            // let matches = *matches;
-            // self.matches_impl(original_value, matches, match_against)
-        } else {
-            match self.definition_of(match_against) {
-                Definition::BuiltinOperation(op, _) => match op {
-                    BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
-                },
-                Definition::BuiltinValue(pv) => match self.definition_of(value_as_super_pattern) {
-                    Definition::BuiltinValue(vv) => {
-                        if pv == vv {
-                            // If the pattern of the value being matched is exactly
-                            // the pattern we're looking for, it matches.
-                            non_capturing_match()
-                        } else {
-                            // Otherwise, the value matches a specific pattern which
-                            // is not a sub-pattern of what we're looking for.
-                            NoMatch
-                        }
+        let value_super_pattern = self.as_super_pattern(value_pattern);
+        self.matches_def(original_value, value_super_pattern, match_against)
+    }
+
+    fn matches_def(
+        &mut self,
+        original_value: ItemId<'x>,
+        value_super_pattern: ItemId<'x>,
+        match_against: ItemId<'x>,
+    ) -> MatchResult<'x> {
+        match self.definition_of(match_against) {
+            Definition::BuiltinOperation(op, _) => match op {
+                BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
+            },
+            Definition::BuiltinValue(pv) => match self.definition_of(value_super_pattern) {
+                Definition::BuiltinValue(vv) => {
+                    if pv == vv {
+                        // If the pattern of the value being matched is exactly
+                        // the pattern we're looking for, it matches.
+                        non_capturing_match()
+                    } else {
+                        // Otherwise, the value matches a specific pattern which
+                        // is not a sub-pattern of what we're looking for.
+                        NoMatch
                     }
-                    Definition::Struct(..) => NoMatch,
-                    _ => Unknown,
-                },
-                Definition::Match { .. } => Unknown,
-                Definition::Member(..) => Unknown,
-                Definition::Other(other) => {
-                    let other = *other;
-                    self.matches_impl(original_value, value_pattern, other)
                 }
-                Definition::ResolvedSubstitute(..) => Unknown,
-                Definition::SetConsume { .. } => todo!(),
-                Definition::Struct(_) => todo!(),
-                Definition::UnresolvedSubstitute(..) => Unknown,
-                &Definition::Variable { var, typee } => {
-                    self.matches_var_type(original_value, value_pattern, var, typee)
-                }
+                Definition::Struct(..) => NoMatch,
+                _ => Unknown,
+            },
+            Definition::Match { .. } => Unknown,
+            Definition::Member(..) => Unknown,
+            &Definition::Other(other) => {
+                self.matches_def(original_value, value_super_pattern, other)
+            }
+            Definition::ResolvedSubstitute(..) => Unknown,
+            Definition::SetConsume { .. } => todo!(),
+            Definition::Struct(_) => todo!(),
+            Definition::UnresolvedSubstitute(..) => Unknown,
+            &Definition::Variable { var, typee } => {
+                self.matches_var_type(original_value, value_super_pattern, var, typee)
             }
         }
     }
@@ -234,11 +242,10 @@ impl<'x> Environment<'x> {
     fn matches_var_type(
         &mut self,
         original_value: ItemId<'x>,
-        value_pattern: ItemId<'x>,
+        value_super_pattern: ItemId<'x>,
         var: VariableId<'x>,
         typee: VarType<'x>,
     ) -> MatchResult<'x> {
-        let value_super_pattern = self.as_super_pattern(value_pattern);
         let result = match typee {
             VarType::God => non_capturing_match(),
             VarType::_32U => match self.definition_of(value_super_pattern) {
@@ -275,7 +282,7 @@ impl<'x> Environment<'x> {
                 },
                 _ => unreachable!(),
             },
-            VarType::Just(other) => self.matches_impl(original_value, value_pattern, other),
+            VarType::Just(other) => self.matches_def(original_value, value_super_pattern, other),
             VarType::And(_, _) => todo!(),
         };
         match result {

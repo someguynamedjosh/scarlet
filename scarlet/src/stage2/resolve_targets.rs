@@ -13,7 +13,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn resolve_targets_in_item(&mut self, id: ItemId<'x>) {
+    pub fn resolve_targets_in_item(&mut self, id: ItemId<'x>) {
         if let Definition::UnresolvedSubstitute(base, subs) = self.definition_of(id) {
             let base = *base;
             let mut subs = subs.clone();

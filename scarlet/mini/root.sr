@@ -12,7 +12,7 @@
         else 456
     )
 
-    pick(true)
+    pick(PATTERN)(123)
     .Shown
 
     # PROOF_FIVE is 
