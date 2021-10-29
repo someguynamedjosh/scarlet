@@ -85,8 +85,6 @@ impl<'x> Environment<'x> {
         let base = self.reduce(base);
         let subbed = self.with_fresh_query_stack(|this| this.substitute(base, &subs));
         if let Some(subbed) = subbed {
-            let shown_from = self.items[original].shown_from.clone();
-            self.items[subbed].shown_from = shown_from;
             self.reduce(subbed)
         } else {
             original

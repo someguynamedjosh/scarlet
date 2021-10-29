@@ -37,6 +37,7 @@ impl<'x> Environment<'x> {
             new_item.dependencies = None;
             new_item.cached_reduction = None;
         }
+        new_item.shown_from = vec![];
         self.items.get_or_push(new_item)
     }
 }
