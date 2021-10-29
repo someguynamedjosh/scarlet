@@ -1,10 +1,17 @@
 [
     BOOL is builtin{BOOL}
     32U is builtin{32U}
-    PATTERN is builtin{PATTERN}
+    # PATTERN is builtin{PATTERN}
 
-    value is any 32U
-    value_is_eight is value + 3 AND 8
+    condition is any BOOL
+    PROOF is after{condition} condition AND true
 
-    show value_is_eight(5)
+    FIVE_HOLDER is [
+        number is any 32U
+        proof_5 is any PROOF(number matches 5)
+    ]
+
+    show FIVE_HOLDER(5 true)
+
+    # show FIVE_HOLDER
 ]

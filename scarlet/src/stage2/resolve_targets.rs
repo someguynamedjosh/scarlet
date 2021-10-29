@@ -78,6 +78,7 @@ impl<'x> Environment<'x> {
                 }
                 subs
             }
+            MatchResult::MatchWithUnknownSubs => todo!(),
             MatchResult::NoMatch => todo!(),
             MatchResult::Unknown => todo!(),
         }
@@ -106,8 +107,11 @@ impl<'x> Environment<'x> {
                     }
                 }
                 return matched_subs;
+            } else if let MatchResult::MatchWithUnknownSubs = result {
+                todo!()
             }
         }
+        println!("{:#?}", self);
         todo!(
             "Nice error, the argument {:?} cannot be assigned to any of {:?}",
             value,

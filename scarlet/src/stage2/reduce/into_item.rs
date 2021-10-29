@@ -1,6 +1,11 @@
-use crate::stage2::{
-    matchh::MatchResult,
-    structure::{Condition, Definition, Environment, ItemId, Substitutions},
+use itertools::Itertools;
+
+use crate::{
+    shared::OrderedMap,
+    stage2::{
+        matchh::MatchResult,
+        structure::{Condition, Definition, Environment, ItemId, Substitutions},
+    },
 };
 
 impl<'x> Environment<'x> {
@@ -12,18 +17,17 @@ impl<'x> Environment<'x> {
     ) -> ItemId<'x> {
         let base = self.reduce(base);
         let vals: Vec<_> = vals.into_iter().map(|i| self.reduce(i)).collect();
-        let mut vals_with_deps = Vec::new();
+        let mut new_afters = OrderedMap::new();
         for val in vals {
-            if self.get_deps(val).len() > 0 {
-                vals_with_deps.push(val);
-            }
+            let val_deps = self.get_afters(val);
+            new_afters = new_afters.union(val_deps);
         }
-        if vals_with_deps.len() == 0 {
+        if new_afters.len() == 0 {
             base
         } else {
             let def = Definition::After {
                 base,
-                vals: vals_with_deps,
+                vals: new_afters.into_iter().map(|x| x.0.var_item).collect(),
             };
             self.item_with_new_definition(original, def, false)
         }
@@ -53,6 +57,9 @@ impl<'x> Environment<'x> {
                         else_value = condition.value;
                     }
                     break;
+                }
+                MatchResult::MatchWithUnknownSubs => {
+                    todo!()
                 }
                 // If the match will never occur, skip it.
                 MatchResult::NoMatch => (),

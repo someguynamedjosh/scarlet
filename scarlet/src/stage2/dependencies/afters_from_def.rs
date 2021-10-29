@@ -19,13 +19,7 @@ impl<'x> Environment<'x> {
                 }
                 result
             }
-            Definition::BuiltinPattern(..) => {
-                let deps = self.get_deps(of);
-                DepQueryResult {
-                    partial_over: Default::default(),
-                    deps,
-                }
-            }
+            Definition::BuiltinPattern(..) => DepQueryResult::new(),
             Definition::BuiltinValue(..) => DepQueryResult::new(),
             Definition::Match {
                 base,
@@ -42,7 +36,17 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(base, _) => self.after_query(base),
             Definition::Other(other) => self.after_query(other),
-            Definition::ResolvedSubstitute(..) => DepQueryResult::new(),
+            Definition::ResolvedSubstitute(base, subs) => {
+                let mut afters = self.after_query(base);
+                for (var, _) in afters.deps.clone() {
+                    if let Some(&sub) = subs.get(&var.var) {
+                        let replaced_afters = self.after_query(sub);
+                        afters.deps.remove(&var);
+                        afters.append(replaced_afters);
+                    }
+                }
+                afters
+            }
             Definition::Struct(fields) => {
                 let mut result = DepQueryResult::new();
                 for field in fields {

@@ -25,7 +25,20 @@ pub fn after_def<'x>(
         .map(|tt| top_level::ingest_tree(tt, env, in_scopes))
         .collect();
 
-    Definition::After { base, vals }
+    match env.definition_of(base) {
+        &Definition::Variable { var, matches } => {
+            let matches = env.item_with_new_definition(
+                matches,
+                Definition::After {
+                    base: matches,
+                    vals,
+                },
+                true,
+            );
+            Definition::Variable { var, matches }
+        }
+        _ => Definition::After { base, vals },
+    }
 }
 
 pub fn member_def<'x>(

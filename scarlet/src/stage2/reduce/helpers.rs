@@ -21,7 +21,7 @@ impl<'x> Environment<'x> {
         Some(result)
     }
 
-    pub(super) fn item_with_new_definition(
+    pub fn item_with_new_definition(
         &mut self,
         original: ItemId<'x>,
         new_def: Definition<'x>,
