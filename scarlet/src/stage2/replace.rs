@@ -13,7 +13,6 @@ pub fn apply_reps<'x>(reps: &Reps<'x>, to: &mut ItemId<'x>) {
 
 pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
     match to {
-        Definition::After { base, vals } => apply_reps_to_after(reps, base, vals),
         Definition::BuiltinOperation(_, args) => apply_reps_to_builtin_op(args, reps),
         Definition::BuiltinValue(..) => (),
         Definition::Match {
@@ -31,13 +30,6 @@ pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
             apply_reps_to_unresolved_substitution(reps, base, subs)
         }
         Definition::Variable { .. } => (),
-    }
-}
-
-fn apply_reps_to_after<'x>(reps: &Reps<'x>, base: &mut ItemId<'x>, vals: &mut Vec<ItemId<'x>>) {
-    apply_reps(reps, base);
-    for val in vals {
-        apply_reps(reps, val);
     }
 }
 

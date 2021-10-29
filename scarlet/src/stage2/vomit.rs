@@ -59,21 +59,6 @@ impl<'x> Environment<'x> {
     pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
         let item = self.items[item].cached_reduction.unwrap_or(item);
         match self.items[item].definition.as_ref().unwrap() {
-            Definition::After { base, vals } => {
-                let vals = vals
-                    .into_iter()
-                    .map(|val| self.get_name_or_code(*val, context))
-                    .collect();
-                let vals = TokenTree::BuiltinRule {
-                    name: "vals",
-                    body: vals,
-                };
-                let base = self.get_name_or_code(*base, context);
-                TokenTree::BuiltinRule {
-                    name: "after",
-                    body: vec![vals, base],
-                }
-            }
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
                     BuiltinOperation::Sum32U => "sum_32u",

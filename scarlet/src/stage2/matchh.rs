@@ -91,7 +91,6 @@ impl<'x> Environment<'x> {
     /// Returns a more vague pattern than the one given.
     fn parent_of_super_pattern(&mut self, super_pattern: ItemId<'x>) -> ItemId<'x> {
         match self.definition_of(super_pattern) {
-            Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(_, _) => todo!(),
             Definition::BuiltinValue(val) => match val {
                 BuiltinValue::_32U(..) => self.get_or_push_var_with_type(VarType::_32U),
@@ -154,7 +153,6 @@ impl<'x> Environment<'x> {
     fn as_super_pattern(&mut self, of: ItemId<'x>) -> ItemId<'x> {
         let def = self.definition_of(of);
         match def {
-            Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Sum32U | BuiltinOperation::Dif32U => {
                     self.get_or_push_var_with_type(VarType::_32U)
@@ -206,7 +204,6 @@ impl<'x> Environment<'x> {
             // self.matches_impl(original_value, matches, match_against)
         } else {
             match self.definition_of(match_against) {
-                Definition::After { .. } => unreachable!(),
                 Definition::BuiltinOperation(op, _) => match op {
                     BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
                 },

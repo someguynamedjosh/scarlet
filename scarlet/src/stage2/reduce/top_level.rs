@@ -3,7 +3,6 @@ use crate::stage2::structure::{Definition, Environment, ItemId};
 impl<'x> Environment<'x> {
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
         match def {
-            Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(op, args) => self.reduce_builtin_op(op, args),
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),
@@ -23,7 +22,6 @@ impl<'x> Environment<'x> {
     fn reduce_from_scratch(&mut self, original: ItemId<'x>) -> ItemId<'x> {
         let definition = self.items[original].definition.clone().unwrap();
         match definition {
-            Definition::After { base, vals } => unreachable!(),
             Definition::Match {
                 base,
                 conditions,

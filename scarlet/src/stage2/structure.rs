@@ -71,10 +71,6 @@ pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
-    After {
-        base: ItemId<'x>,
-        vals: Vec<ItemId<'x>>,
-    },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
