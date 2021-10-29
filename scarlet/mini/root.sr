@@ -4,7 +4,7 @@
 
     number is any 32U
 
-    show number
+    show number(5)
 
     # PROOF_FIVE is 
     # after{number} 

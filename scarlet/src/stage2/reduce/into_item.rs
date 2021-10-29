@@ -34,9 +34,6 @@ impl<'x> Environment<'x> {
                     }
                     break;
                 }
-                MatchResult::MatchWithUnknownSubs => {
-                    todo!()
-                }
                 // If the match will never occur, skip it.
                 MatchResult::NoMatch => (),
                 // If the match might occur, save it for later.

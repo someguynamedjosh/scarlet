@@ -11,7 +11,9 @@ impl<'x> Environment<'x> {
         original: ItemId<'x>,
         substitutions: &Substitutions<'x>,
     ) -> Option<ItemId<'x>> {
-        if self.query_stack_contains(original) && self.get_deps(original).len() > 0 {
+        if substitutions.len() == 0 {
+            Some(original)
+        } else if self.query_stack_contains(original) && self.get_deps(original).len() > 0 {
             None
         } else {
             let result = self.with_query_stack_frame(original, |this| {

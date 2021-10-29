@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{hash::BuildHasher, marker::PhantomData};
 
 use super::structure::{Item, Substitutions, VariableId, VariableInfo};
 use crate::{
@@ -12,12 +12,10 @@ use crate::{
 #[derive(Clone, Debug)]
 pub enum MatchResult<'x> {
     Match(Substitutions<'x>),
-    MatchWithUnknownSubs,
     NoMatch,
     Unknown,
 }
 
-use itertools::Itertools;
 use MatchResult::*;
 
 fn non_capturing_match<'x>() -> MatchResult<'x> {
@@ -226,12 +224,66 @@ impl<'x> Environment<'x> {
                 Definition::SetConsume { .. } => todo!(),
                 Definition::Struct(_) => todo!(),
                 Definition::UnresolvedSubstitute(..) => Unknown,
-                Definition::Variable { var, typee } => {
-                    // let (var, typee) = (*var, *typee);
-                    // self.matches_var_impl(original_value, value_pattern, var, typee)
-                    todo!()
+                &Definition::Variable { var, typee } => {
+                    self.matches_var_type(original_value, value_pattern, var, typee)
                 }
             }
+        }
+    }
+
+    fn matches_var_type(
+        &mut self,
+        original_value: ItemId<'x>,
+        value_pattern: ItemId<'x>,
+        var: VariableId<'x>,
+        typee: VarType<'x>,
+    ) -> MatchResult<'x> {
+        let value_super_pattern = self.as_super_pattern(value_pattern);
+        let result = match typee {
+            VarType::God => non_capturing_match(),
+            VarType::_32U => match self.definition_of(value_super_pattern) {
+                Definition::BuiltinValue(val) => {
+                    if let BuiltinValue::_32U(..) = val {
+                        non_capturing_match()
+                    } else {
+                        NoMatch
+                    }
+                }
+                Definition::Struct(_) => NoMatch,
+                Definition::Variable { typee, .. } => match typee {
+                    VarType::_32U => non_capturing_match(),
+                    VarType::Just(_) => todo!(),
+                    VarType::And(_, _) => todo!(),
+                    _ => NoMatch,
+                },
+                _ => unreachable!(),
+            },
+            VarType::Bool => match self.definition_of(value_super_pattern) {
+                Definition::BuiltinValue(val) => {
+                    if let BuiltinValue::Bool(..) = val {
+                        non_capturing_match()
+                    } else {
+                        NoMatch
+                    }
+                }
+                Definition::Struct(_) => NoMatch,
+                Definition::Variable { typee, .. } => match typee {
+                    VarType::Bool => non_capturing_match(),
+                    VarType::Just(_) => todo!(),
+                    VarType::And(_, _) => todo!(),
+                    _ => NoMatch,
+                },
+                _ => unreachable!(),
+            },
+            VarType::Just(other) => self.matches_impl(original_value, value_pattern, other),
+            VarType::And(_, _) => todo!(),
+        };
+        match result {
+            Match(mut subs) => {
+                subs.insert_no_replace(var, original_value);
+                Match(subs)
+            }
+            NoMatch | Unknown => result,
         }
     }
 }

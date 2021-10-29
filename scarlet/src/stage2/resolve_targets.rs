@@ -1,6 +1,4 @@
-use super::structure::{
-    Environment, ItemId, Substitutions, UnresolvedSubstitution, VariableInfo,
-};
+use super::structure::{Environment, ItemId, Substitutions, UnresolvedSubstitution, VariableInfo};
 use crate::{
     shared::OrderedSet,
     stage2::{matchh::MatchResult, structure::Definition},
@@ -78,7 +76,6 @@ impl<'x> Environment<'x> {
                 }
                 subs
             }
-            MatchResult::MatchWithUnknownSubs => todo!(),
             MatchResult::NoMatch => todo!(),
             MatchResult::Unknown => todo!(),
         }
@@ -107,8 +104,6 @@ impl<'x> Environment<'x> {
                     }
                 }
                 return matched_subs;
-            } else if let MatchResult::MatchWithUnknownSubs = result {
-                todo!()
             }
         }
         println!("{:#?}", self);
