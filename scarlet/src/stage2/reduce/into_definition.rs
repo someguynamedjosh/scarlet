@@ -68,9 +68,14 @@ impl<'x> Environment<'x> {
         &mut self,
         var: VariableId<'x>,
         typee: VarType<'x>,
+        consume: bool,
         _def: Definition<'x>,
     ) -> Definition<'x> {
         let typee = self.reduce_var_type(typee);
-        Definition::Variable { var, typee }
+        Definition::Variable {
+            var,
+            typee,
+            consume,
+        }
     }
 }

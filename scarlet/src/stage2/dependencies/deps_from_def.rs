@@ -1,20 +1,14 @@
 use super::structures::DepQueryResult;
-use crate::{
-    shared::OrderedMap,
-    stage2::{
-        dependencies::structures::QueryResult,
-        structure::{Definition, Environment, ItemId, VarType, VariableItemIds},
-    },
+use crate::stage2::{
+    dependencies::structures::QueryResult,
+    structure::{Definition, Environment, ItemId, VarType, VariableItemIds},
 };
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
         match self.items[of].definition.clone().unwrap() {
             Definition::After { base, .. } => {
-                // Checked in after query, if this is a valid after, the deps should show up
-                // again in the base.
-                self.after_query(of);
-                self.dep_query(base)
+                todo!()
             }
             Definition::BuiltinOperation(_, args) => {
                 let mut base = DepQueryResult::new();
@@ -31,7 +25,7 @@ impl<'x> Environment<'x> {
             } => {
                 let mut deps = self.dep_query(base);
                 for condition in conditions {
-                    deps.append(self.after_query(condition.pattern));
+                    deps.append(self.dep_query(condition.pattern).after_consumption());
                     deps.append(self.dep_query(condition.value));
                 }
                 deps.append(self.dep_query(else_value));
@@ -58,11 +52,17 @@ impl<'x> Environment<'x> {
                     }
                     let subbed_dep = self.substitute(base_dep.var_item, &subs).unwrap();
                     let def = self.definition_of(subbed_dep);
-                    let subbed_dep = if let &Definition::Variable { var, typee } = def {
+                    let subbed_dep = if let &Definition::Variable {
+                        var,
+                        typee,
+                        consume: consumable,
+                    } = def
+                    {
                         VariableItemIds {
                             var_item: subbed_dep,
                             var,
                             typee,
+                            consume: consumable,
                         }
                     } else {
                         unreachable!()
@@ -81,14 +81,20 @@ impl<'x> Environment<'x> {
                 base
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, typee } => {
+            Definition::Variable {
+                var,
+                typee,
+                consume: consumable,
+            } => {
                 let mut afters = QueryResult::new();
                 match typee {
                     VarType::God | VarType::_32U | VarType::Bool => (),
-                    VarType::Just(other) => afters.append(self.after_query(other)),
+                    VarType::Just(other) => {
+                        afters.append(self.dep_query(other).after_consumption())
+                    }
                     VarType::And(left, right) => {
-                        afters.append(self.after_query(left));
-                        afters.append(self.after_query(right));
+                        afters.append(self.dep_query(left).after_consumption());
+                        afters.append(self.dep_query(right).after_consumption());
                     }
                 }
                 let typee = self.reduce_var_type(typee);
@@ -96,6 +102,7 @@ impl<'x> Environment<'x> {
                     var,
                     var_item: of,
                     typee,
+                    consume: consumable,
                 };
                 afters.deps.insert_or_replace(var_item, ());
                 afters

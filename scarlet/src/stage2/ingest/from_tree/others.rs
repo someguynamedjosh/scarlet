@@ -26,7 +26,11 @@ pub fn after_def<'x>(
         .collect();
 
     match env.definition_of(base) {
-        &Definition::Variable { var, typee } => {
+        &Definition::Variable {
+            var,
+            typee,
+            consume: consumable,
+        } => {
             // let typee =
             //     env.item_with_new_definition(typee, Definition::After { base: typee, vals
             // }, true); Definition::Variable { var, typee }
@@ -99,5 +103,9 @@ pub fn variable_def<'x>(
     let typee = top_level::ingest_tree(matches, env, in_scopes);
     let typee = VarType::Just(typee);
     let var = env.vars.push(Variable { pd: PhantomData });
-    Definition::Variable { var, typee }
+    Definition::Variable {
+        var,
+        typee,
+        consume: true,
+    }
 }

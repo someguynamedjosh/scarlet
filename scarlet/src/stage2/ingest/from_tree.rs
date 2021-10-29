@@ -120,5 +120,9 @@ fn var_with_special_type<'x>(
     // );
     let var = Variable { pd: PhantomData };
     let var = env.vars.push(var);
-    Definition::Variable { var, typee }
+    Definition::Variable {
+        var,
+        typee,
+        consume: true,
+    }
 }

@@ -112,7 +112,11 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, typee } => {
+            Definition::Variable {
+                var,
+                typee,
+                consume,
+            } => {
                 if let Some(sub) = substitutions.get(&var) {
                     *sub
                 } else {

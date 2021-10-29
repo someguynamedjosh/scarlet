@@ -9,30 +9,6 @@ use crate::{
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn reduce_after(
-        &mut self,
-        original: ItemId<'x>,
-        base: ItemId<'x>,
-        vals: Vec<ItemId<'x>>,
-    ) -> ItemId<'x> {
-        let base = self.reduce(base);
-        let vals: Vec<_> = vals.into_iter().map(|i| self.reduce(i)).collect();
-        let mut new_afters = OrderedMap::new();
-        for val in vals {
-            let val_deps = self.get_afters(val);
-            new_afters = new_afters.union(val_deps);
-        }
-        if new_afters.len() == 0 {
-            base
-        } else {
-            let def = Definition::After {
-                base,
-                vals: new_afters.into_iter().map(|x| x.0.var_item).collect(),
-            };
-            self.item_with_new_definition(original, def, false)
-        }
-    }
-
     pub(super) fn reduce_match(
         &mut self,
         base: ItemId<'x>,

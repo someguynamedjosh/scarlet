@@ -12,14 +12,18 @@ impl<'x> Environment<'x> {
             Definition::ResolvedSubstitute(..) => unreachable!(),
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, typee: matches } => self.reduce_var(var, matches, def),
+            Definition::Variable {
+                var,
+                typee,
+                consume,
+            } => self.reduce_var(var, typee, consume, def),
         }
     }
 
     fn reduce_from_scratch(&mut self, original: ItemId<'x>) -> ItemId<'x> {
         let definition = self.items[original].definition.clone().unwrap();
         match definition {
-            Definition::After { base, vals } => self.reduce_after(original, base, vals),
+            Definition::After { base, vals } => unreachable!(),
             Definition::Match {
                 base,
                 conditions,
@@ -27,7 +31,9 @@ impl<'x> Environment<'x> {
             } => self.reduce_match(base, else_value, conditions, original),
             Definition::Member(base, member) => self.reduce_member(base, member),
             Definition::Other(item) => self.reduce_other(original, item),
-            Definition::ResolvedSubstitute(base, subs) => self.reduce_substitution(subs, base, original),
+            Definition::ResolvedSubstitute(base, subs) => {
+                self.reduce_substitution(subs, base, original)
+            }
             _ => {
                 let reduced_definition = self.reduce_definition(definition);
                 self.item_with_new_definition(original, reduced_definition, false)

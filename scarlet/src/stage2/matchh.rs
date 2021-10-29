@@ -30,56 +30,37 @@ impl<'x> Environment<'x> {
         original_value: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
-        self.matches_impl(
-            original_value,
-            original_value,
-            match_against,
-            Default::default(),
-        )
+        self.matches_impl(original_value, original_value, match_against)
     }
 
     pub fn matches_var(
         &mut self,
         original_value: ItemId<'x>,
-        var: VariableId<'x>,
-        var_pattern: ItemId<'x>,
+        var: VariableItemIds<'x>,
     ) -> MatchResult<'x> {
-        self.matches_var_impl(
-            original_value,
-            original_value,
-            var,
-            var_pattern,
-            Default::default(),
-        )
+        self.matches_var_impl(original_value, original_value, var)
     }
 
     fn matches_var_impl(
         &mut self,
         original_value: ItemId<'x>,
         value_pattern: ItemId<'x>,
-        var: VariableId<'x>,
-        var_pattern: ItemId<'x>,
-        after: OrderedSet<VariableItemIds<'x>>,
+        var: VariableItemIds<'x>,
     ) -> MatchResult<'x> {
-        let mut allow_binding = true;
-        for (after, _) in &after {
-            if after.var == var {
-                allow_binding = false;
-                break;
-            }
-        }
-        match self.matches_impl(original_value, value_pattern, var_pattern, after) {
-            Match(..) | MatchWithUnknownSubs => {
-                if allow_binding {
-                    let mut subs = Substitutions::new();
-                    subs.insert_no_replace(var, original_value);
-                    Match(subs)
-                } else {
-                    Unknown
-                }
-            }
-            other => other,
-        }
+        todo!()
+        // let mut allow_binding = var.consume;
+        // match self.matches_impl(original_value, value_pattern, var.typee) {
+        //     Match(..) | MatchWithUnknownSubs => {
+        //         if allow_binding {
+        //             let mut subs = Substitutions::new();
+        //             subs.insert_no_replace(var, original_value);
+        //             Match(subs)
+        //         } else {
+        //             Unknown
+        //         }
+        //     }
+        //     other => other,
+        // }
     }
 
     fn get_or_push_var_with_type(&mut self, expected_typee: VarType<'x>) -> ItemId<'x> {
@@ -94,7 +75,11 @@ impl<'x> Environment<'x> {
         let typee = expected_typee;
         self.items.push(Item {
             original_definition: &TokenTree::Token("INTERNAL"),
-            definition: Some(Definition::Variable { typee, var }),
+            definition: Some(Definition::Variable {
+                typee,
+                var,
+                consume: true,
+            }),
             scope: Default::default(),
             dependencies: None,
             after: None,
@@ -106,7 +91,7 @@ impl<'x> Environment<'x> {
     /// Returns a more vague pattern than the one given.
     fn parent_of_super_pattern(&mut self, super_pattern: ItemId<'x>) -> ItemId<'x> {
         match self.definition_of(super_pattern) {
-            Definition::After { base, vals } => todo!(),
+            Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(_, _) => todo!(),
             Definition::BuiltinValue(val) => match val {
                 BuiltinValue::_32U(..) => self.get_or_push_var_with_type(VarType::_32U),
@@ -169,7 +154,7 @@ impl<'x> Environment<'x> {
     fn as_super_pattern(&mut self, of: ItemId<'x>) -> ItemId<'x> {
         let def = self.definition_of(of);
         match def {
-            Definition::After { base, vals } => todo!(),
+            Definition::After { .. } => unreachable!(),
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Sum32U | BuiltinOperation::Dif32U => {
                     self.get_or_push_var_with_type(VarType::_32U)
@@ -196,7 +181,11 @@ impl<'x> Environment<'x> {
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
-            &Definition::Variable { var, typee } => {
+            &Definition::Variable {
+                var,
+                typee,
+                consume,
+            } => {
                 // let typee = self.as_super_pattern(typee);
                 // self.item_with_new_definition(of, Definition::Variable { var, typee }, true)
                 todo!()
@@ -209,23 +198,15 @@ impl<'x> Environment<'x> {
         original_value: ItemId<'x>,
         value_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
-        after: OrderedSet<VariableItemIds<'x>>,
     ) -> MatchResult<'x> {
-        let after = after.union(self.get_afters(match_against));
         let value_as_super_pattern = self.as_super_pattern(value_pattern);
-        if let Definition::Variable { typee: matches, .. } =
-            self.definition_of(value_as_super_pattern)
-        {
+        if let Definition::Variable { typee, .. } = self.definition_of(value_as_super_pattern) {
             todo!()
             // let matches = *matches;
-            // self.matches_impl(original_value, matches, match_against, after)
+            // self.matches_impl(original_value, matches, match_against)
         } else {
             match self.definition_of(match_against) {
-                Definition::After { base, .. } => {
-                    // Afters already included using above code.
-                    let base = *base;
-                    self.matches_impl(original_value, value_pattern, base, after)
-                }
+                Definition::After { .. } => unreachable!(),
                 Definition::BuiltinOperation(op, _) => match op {
                     BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
                 },
@@ -248,14 +229,18 @@ impl<'x> Environment<'x> {
                 Definition::Member(..) => Unknown,
                 Definition::Other(other) => {
                     let other = *other;
-                    self.matches_impl(original_value, value_pattern, other, after)
+                    self.matches_impl(original_value, value_pattern, other)
                 }
                 Definition::ResolvedSubstitute(..) => Unknown,
                 Definition::Struct(_) => todo!(),
                 Definition::UnresolvedSubstitute(..) => Unknown,
-                Definition::Variable { var, typee } => {
+                Definition::Variable {
+                    var,
+                    typee,
+                    consume,
+                } => {
                     // let (var, typee) = (*var, *typee);
-                    // self.matches_var_impl(original_value, value_pattern, var, typee, after)
+                    // self.matches_var_impl(original_value, value_pattern, var, typee)
                     todo!()
                 }
             }

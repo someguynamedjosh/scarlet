@@ -54,6 +54,7 @@ pub struct VariableItemIds<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
     pub typee: VarType<'x>,
+    pub consume: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -89,6 +90,7 @@ pub enum Definition<'x> {
     Variable {
         var: VariableId<'x>,
         typee: VarType<'x>,
+        consume: bool,
     },
 }
 
