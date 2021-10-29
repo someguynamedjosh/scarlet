@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, VarType, BuiltinValue, Definition},
+    stage2::structure::{BuiltinOperation, BuiltinValue, Definition, VarType},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -194,13 +194,33 @@ impl<'x> Environment<'x> {
                     body: vec![base, tt_subs],
                 }
             }
-            Definition::Variable { var: _, typee } => {
+            Definition::Variable { typee, .. } => {
                 // let typee = self.get_name_or_code(*typee, context);
-                // TokenTree::BuiltinRule {
-                //     name: "any",
-                //     body: vec![typee],
-                // }
-                todo!()
+                match typee {
+                    VarType::God => TokenTree::BuiltinRule {
+                        name: "PATTERN",
+                        body: vec![],
+                    },
+                    VarType::_32U => TokenTree::BuiltinRule {
+                        name: "32U",
+                        body: vec![],
+                    },
+                    VarType::Bool => TokenTree::BuiltinRule {
+                        name: "BOOL",
+                        body: vec![],
+                    },
+                    VarType::Just(other) => TokenTree::BuiltinRule {
+                        name: "any",
+                        body: vec![self.get_name_or_code(*other, context)],
+                    },
+                    VarType::And(left, right) => TokenTree::BuiltinRule {
+                        name: "AND",
+                        body: vec![
+                            self.get_name_or_code(*left, context),
+                            self.get_name_or_code(*right, context),
+                        ],
+                    },
+                }
             }
         }
     }

@@ -1,7 +1,10 @@
 use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedMap,
-    stage2::structure::{Definition, Environment, ItemId, VarType, VariableItemIds},
+    stage2::{
+        dependencies::structures::QueryResult,
+        structure::{Definition, Environment, ItemId, VarType, VariableItemIds},
+    },
 };
 
 impl<'x> Environment<'x> {
@@ -79,16 +82,23 @@ impl<'x> Environment<'x> {
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
             Definition::Variable { var, typee } => {
-                // let mut afters = self.after_query(typee);
-                // let typee = self.reduce(typee);
-                // let var_item = VariableItemIds {
-                //     var,
-                //     var_item: of,
-                //     typee,
-                // };
-                // afters.deps.insert_or_replace(var_item, ());
-                // afters
-                todo!()
+                let mut afters = QueryResult::new();
+                match typee {
+                    VarType::God | VarType::_32U | VarType::Bool => (),
+                    VarType::Just(other) => afters.append(self.after_query(other)),
+                    VarType::And(left, right) => {
+                        afters.append(self.after_query(left));
+                        afters.append(self.after_query(right));
+                    }
+                }
+                let typee = self.reduce_var_type(typee);
+                let var_item = VariableItemIds {
+                    var,
+                    var_item: of,
+                    typee,
+                };
+                afters.deps.insert_or_replace(var_item, ());
+                afters
             }
         }
     }

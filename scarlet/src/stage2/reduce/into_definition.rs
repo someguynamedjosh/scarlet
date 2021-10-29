@@ -4,7 +4,7 @@ use crate::stage2::structure::{
 };
 
 impl<'x> Environment<'x> {
-    fn reduce_finite_builtin_op(
+    fn reduce_builtin_op_impl(
         &mut self,
         op: BuiltinOperation,
         args: Vec<ItemId<'x>>,
@@ -37,10 +37,10 @@ impl<'x> Environment<'x> {
         args: Vec<ItemId<'x>>,
     ) -> Definition<'x> {
         let args = args.into_iter().map(|arg| self.reduce(arg)).collect();
-        self.reduce_finite_builtin_op(op, args)
+        self.reduce_builtin_op_impl(op, args)
     }
 
-    pub(super) fn reduce_var_type(&mut self, pat: VarType<'x>) -> VarType<'x> {
+    pub fn reduce_var_type(&mut self, pat: VarType<'x>) -> VarType<'x> {
         match pat {
             VarType::Bool | VarType::_32U | VarType::God => pat,
             VarType::Just(other) => VarType::Just(self.reduce(other)),
@@ -70,8 +70,7 @@ impl<'x> Environment<'x> {
         typee: VarType<'x>,
         _def: Definition<'x>,
     ) -> Definition<'x> {
-        // let typee = self.reduce(typee);
-        // Definition::Variable { var, typee }
-        todo!()
+        let typee = self.reduce_var_type(typee);
+        Definition::Variable { var, typee }
     }
 }
