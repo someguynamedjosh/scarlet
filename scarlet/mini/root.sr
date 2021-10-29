@@ -1,10 +1,19 @@
 [
-    BOOL is builtin{BOOL}
-    32U is builtin{32U}
+    PATTERN is Builtin(PATTERN)
+    BOOL is Builtin(BOOL)
+    32U is Builtin(32U)
 
-    number is any 32U
+    DATA is PATTERN.Variable
+    var is DATA.Variable
 
-    show number(5)
+    pick is
+    var.Match(
+        on true 123
+        else 456
+    )
+
+    pick(true)
+    .Shown
 
     # PROOF_FIVE is 
     # after{number} 

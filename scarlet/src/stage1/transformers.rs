@@ -38,37 +38,15 @@ macro_rules! binary_operator {
     };
 }
 
-macro_rules! prefix_operator {
-    ($StructName:ident, $internal_name:expr, $operator:expr) => {
-        struct $StructName;
-        impl Transformer for $StructName {
-            fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-                &to[at] == &TokenTree::Token($operator)
-            }
-
-            fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-                let right = to[at + 1].clone();
-                TransformerResult {
-                    replace_range: at..=at + 1,
-                    with: TokenTree::BuiltinRule {
-                        name: $internal_name,
-                        body: vec![right],
-                    },
-                }
-            }
-        }
-    };
-}
-
-fn expect_bracket_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>> {
+fn expect_paren_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>> {
     if let TokenTree::BuiltinRule {
-        name: "group{}",
+        name: "group()",
         body,
     } = tt
     {
         body
     } else {
-        todo!("nice error, expected curly brackets")
+        todo!("nice error, expected parentheses")
     }
 }
 
@@ -107,11 +85,11 @@ impl Transformer for Struct {
 struct Builtin;
 impl Transformer for Builtin {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token("builtin")
+        &to[at] == &TokenTree::Token("Builtin")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let mut body = expect_bracket_group(&to[at + 1]).clone();
+        let mut body = expect_paren_group(&to[at + 1]).clone();
         assert!(body.len() >= 1);
         let name = body.remove(0).as_token().unwrap();
         apply_transformers(&mut body, &Default::default());
@@ -125,12 +103,15 @@ impl Transformer for Builtin {
 struct Match;
 impl Transformer for Match {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token("match")
+        if at < 1 {
+            return false;
+        }
+        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("Match")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
         let base = to[at - 1].clone();
-        let mut patterns = expect_bracket_group(&to[at + 1]).clone();
+        let mut patterns = expect_paren_group(&to[at + 2]).clone();
         let extras: Extras = hashmap![172 => tfers![OnPattern, Else]];
         apply_transformers(&mut patterns, &extras);
         let patterns = TokenTree::BuiltinRule {
@@ -138,7 +119,7 @@ impl Transformer for Match {
             body: patterns,
         };
         TransformerResult {
-            replace_range: at - 1..=at + 1,
+            replace_range: at - 1..=at + 2,
             with: TokenTree::BuiltinRule {
                 name: "match",
                 body: vec![base, patterns],
@@ -147,16 +128,16 @@ impl Transformer for Match {
     }
 }
 
-struct Show;
-impl Transformer for Show {
+struct Shown;
+impl Transformer for Shown {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token("show")
+        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("Shown")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let value = to[at + 1].clone();
+        let value = to[at - 1].clone();
         TransformerResult {
-            replace_range: at..=at + 1,
+            replace_range: at - 1..=at + 1,
             with: TokenTree::BuiltinRule {
                 name: "show",
                 body: vec![value],
@@ -168,19 +149,22 @@ impl Transformer for Show {
 struct After;
 impl Transformer for After {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token("after")
+        if at < 1 {
+            return false;
+        }
+        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("WithoutConsuming")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let mut vals = expect_bracket_group(&to[at + 1]).clone();
+        let mut vals = expect_paren_group(&to[at + 2]).clone();
         apply_transformers(&mut vals, &Default::default());
         let vals = TokenTree::BuiltinRule {
             name: "vals",
             body: vals,
         };
-        let base = to[at + 2].clone();
+        let base = to[at - 1].clone();
         TransformerResult {
-            replace_range: at..=at + 2,
+            replace_range: at - 1..=at + 2,
             with: TokenTree::BuiltinRule {
                 name: "after",
                 body: vec![vals, base],
@@ -239,7 +223,28 @@ binary_operator!(Member, "member", ".");
 binary_operator!(Using, "using", "using");
 binary_operator!(Is, "target", "is");
 
-prefix_operator!(Variable, "any", "any");
+struct Variable;
+impl Transformer for Variable {
+    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+        if at < 1 {
+            return false;
+        }
+        &to[at] == &TokenTree::Token(".")
+            && (&to[at + 1] == &TokenTree::Token("Variable")
+                || &to[at + 1] == &TokenTree::Token("Var"))
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        let pattern = to[at - 1].clone();
+        TransformerResult {
+            replace_range: at - 1..=at + 1,
+            with: TokenTree::BuiltinRule {
+                name: "variable",
+                body: vec![pattern],
+            },
+        }
+    }
+}
 
 struct OnPattern;
 impl Transformer for OnPattern {
@@ -299,16 +304,13 @@ fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![Struct, Builtin],
-        20 => tfers![Substitution, Member],
+        20 => tfers![After, Match, Variable, Shown, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
         90 => tfers![PatternAnd],
-        91 => tfers![After],
         100 => tfers![Matches],
-        140 => tfers![Match],
         150 => tfers![Using],
-        161 => tfers![Variable, Show],
         _ => tfers![],
     };
     let basics: Vec<_> = basics.into_iter().map(Either::Fst).collect();

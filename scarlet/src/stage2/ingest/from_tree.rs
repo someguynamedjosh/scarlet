@@ -29,7 +29,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 body,
             } => self.after_def(body),
 
-            TokenTree::BuiltinRule { name: "any", body } => self.variable_def(body),
             TokenTree::BuiltinRule {
                 name: "match",
                 body,
@@ -55,6 +54,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 name: "using",
                 body,
             } => self.using_def(body),
+            TokenTree::BuiltinRule {
+                name: "variable",
+                body,
+            } => self.variable_def(body),
 
             TokenTree::BuiltinRule {
                 name: "PATTERN", ..
