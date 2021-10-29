@@ -1,7 +1,7 @@
 use super::structures::DepQueryResult;
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{Environment, ItemId, VariableItemIds},
+    stage2::structure::{Environment, ItemId, VariableInfo},
 };
 
 impl<'x> Environment<'x> {
@@ -25,7 +25,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_deps(&mut self, of: ItemId<'x>) -> OrderedSet<VariableItemIds<'x>> {
+    pub fn get_deps(&mut self, of: ItemId<'x>) -> OrderedSet<VariableInfo<'x>> {
         let result = self.with_fresh_query_stack(|this| this.dep_query(of));
         assert!(result.partial_over.is_empty());
         result.deps

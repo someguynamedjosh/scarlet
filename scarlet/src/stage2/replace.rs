@@ -25,6 +25,7 @@ pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
         Definition::ResolvedSubstitute(base, subs) => {
             apply_reps_to_resolved_substitution(reps, base, subs)
         }
+        Definition::SetConsume { .. } => todo!(),
         Definition::Struct(fields) => apply_reps_to_struct(fields, reps),
         Definition::UnresolvedSubstitute(base, subs) => {
             apply_reps_to_unresolved_substitution(reps, base, subs)

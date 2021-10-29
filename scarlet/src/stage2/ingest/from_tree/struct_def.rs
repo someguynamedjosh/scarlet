@@ -29,7 +29,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let mut child = IngestionContext {
             env: &mut *self.env,
             in_scopes: &new_scopes,
-            without_consuming: &*self.without_consuming,
         };
         for (field, id) in fields.iter().zip(ids.iter()) {
             child.ingest_tree_into(field.value, *id);

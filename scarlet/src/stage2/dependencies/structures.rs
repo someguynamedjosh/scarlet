@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{ItemId, VariableItemIds},
+    stage2::structure::{ItemId, VariableInfo},
 };
 
 #[derive(Debug)]
@@ -11,7 +11,7 @@ pub(super) struct QueryResult<'x, T> {
     pub(super) partial_over: OrderedSet<ItemId<'x>>,
 }
 
-pub(super) type DepQueryResult<'x> = QueryResult<'x, VariableItemIds<'x>>;
+pub(super) type DepQueryResult<'x> = QueryResult<'x, VariableInfo<'x>>;
 
 impl<'x, T: PartialEq + Eq + Hash + Debug> QueryResult<'x, T> {
     pub fn new() -> Self {

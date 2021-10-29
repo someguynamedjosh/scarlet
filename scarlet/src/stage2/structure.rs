@@ -50,7 +50,7 @@ impl BuiltinValue {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct VariableItemIds<'x> {
+pub struct VariableInfo<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
     pub typee: VarType<'x>,
@@ -80,13 +80,17 @@ pub enum Definition<'x> {
     },
     Member(ItemId<'x>, String),
     Other(ItemId<'x>),
+    SetConsume {
+        base: ItemId<'x>,
+        vals: Vec<ItemId<'x>>,
+        set_consume_to: bool,
+    },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
     ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),
     Variable {
         var: VariableId<'x>,
         typee: VarType<'x>,
-        consume: bool,
     },
 }
 
@@ -154,10 +158,10 @@ pub struct Item<'x> {
     pub definition: Option<Definition<'x>>,
     pub scope: HashMap<Token<'x>, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
-    pub dependencies: Option<OrderedSet<VariableItemIds<'x>>>,
+    pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: Option<OrderedSet<VariableItemIds<'x>>>,
+    pub after: Option<OrderedSet<VariableInfo<'x>>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

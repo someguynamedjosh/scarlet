@@ -17,26 +17,18 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             todo!("Nice error");
         }
 
+        let base = self.ingest_tree(&body[1]);
         let vals: Vec<_> = body[0]
             .unwrap_builtin("vals")
             .iter()
             .map(|tt| self.ingest_tree(tt))
             .collect();
 
-        let mut new_wcn = self.without_consuming.clone();
-        for val in vals {
-            for (dep, _) in self.env.get_deps(val) {
-                new_wcn.insert(dep.var);
-            }
+        Definition::SetConsume {
+            base,
+            vals,
+            set_consume_to: true,
         }
-
-        let mut child = IngestionContext {
-            env: &mut *self.env,
-            in_scopes: &*self.in_scopes,
-            without_consuming: &new_wcn,
-        };
-
-        Definition::Other(child.ingest_tree(&body[1]))
     }
 
     pub fn member_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
@@ -86,10 +78,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let typee = self.ingest_tree(matches);
         let typee = VarType::Just(typee);
         let var = self.env.vars.push(Variable { pd: PhantomData });
-        Definition::Variable {
-            var,
-            typee,
-            consume: true,
-        }
+        Definition::Variable { var, typee }
     }
 }

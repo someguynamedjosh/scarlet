@@ -1,7 +1,7 @@
 use super::structures::DepQueryResult;
 use crate::stage2::{
     dependencies::structures::QueryResult,
-    structure::{Definition, Environment, ItemId, VarType, VariableItemIds},
+    structure::{Definition, Environment, ItemId, VarType, VariableInfo},
 };
 
 impl<'x> Environment<'x> {
@@ -47,29 +47,25 @@ impl<'x> Environment<'x> {
                             continue 'deps;
                         }
                     }
+                    // Otherwise, if it is not replaced, the new expression is
+                    // still dependant on it.
                     let subbed_dep = self.substitute(base_dep.var_item, &subs).unwrap();
                     let def = self.definition_of(subbed_dep);
-                    let subbed_dep = if let &Definition::Variable {
-                        var,
-                        typee,
-                        consume: consumable,
-                    } = def
-                    {
-                        VariableItemIds {
+                    let subbed_dep = if let &Definition::Variable { var, typee } = def {
+                        VariableInfo {
                             var_item: subbed_dep,
                             var,
                             typee,
-                            consume: consumable,
+                            consume: base_dep.consume,
                         }
                     } else {
                         unreachable!()
                     };
-                    // Otherwise, if it is not replaced, the new expression is
-                    // still dependant on it.
                     final_deps.deps.insert_or_replace(subbed_dep, ());
                 }
                 final_deps
             }
+            Definition::SetConsume { .. } => todo!(),
             Definition::Struct(fields) => {
                 let mut base = DepQueryResult::new();
                 for field in fields {
@@ -78,11 +74,7 @@ impl<'x> Environment<'x> {
                 base
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable {
-                var,
-                typee,
-                consume: consumable,
-            } => {
+            Definition::Variable { var, typee } => {
                 let mut afters = QueryResult::new();
                 match typee {
                     VarType::God | VarType::_32U | VarType::Bool => (),
@@ -95,11 +87,11 @@ impl<'x> Environment<'x> {
                     }
                 }
                 let typee = self.reduce_var_type(typee);
-                let var_item = VariableItemIds {
+                let var_item = VariableInfo {
                     var,
                     var_item: of,
                     typee,
-                    consume: consumable,
+                    consume: true,
                 };
                 afters.deps.insert_or_replace(var_item, ());
                 afters

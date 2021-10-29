@@ -90,6 +90,13 @@ impl<'x> Environment<'x> {
                 let def = Definition::ResolvedSubstitute(base, original_subs);
                 self.item_with_new_definition(original, def, true)
             }
+            Definition::SetConsume {
+                base,
+                vals,
+                set_consume_to,
+            } => {
+                todo!()
+            }
             Definition::Struct(fields) => {
                 let fields = fields
                     .into_iter()
@@ -103,11 +110,7 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable {
-                var,
-                typee,
-                consume,
-            } => {
+            Definition::Variable { var, typee } => {
                 if let Some(sub) = substitutions.get(&var) {
                     *sub
                 } else {

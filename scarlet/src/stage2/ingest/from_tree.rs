@@ -104,10 +104,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         // );
         let var = Variable { pd: PhantomData };
         let var = self.env.vars.push(var);
-        Definition::Variable {
-            var,
-            typee,
-            consume: true,
-        }
+        Definition::Variable { var, typee }
     }
 }

@@ -11,7 +11,6 @@ use crate::{
 pub(super) struct IngestionContext<'e, 'x> {
     pub env: &'e mut Environment<'x>,
     pub in_scopes: &'e [&'e HashMap<Token<'x>, ItemId<'x>>],
-    pub without_consuming: &'e HashSet<VariableId<'x>>,
 }
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
@@ -40,7 +39,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let mut child = IngestionContext {
             env: &mut *self.env,
             in_scopes: &new_scopes,
-            without_consuming: &*self.without_consuming,
         };
 
         assert_eq!(src.self_content.len(), 1);
@@ -58,7 +56,6 @@ pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
     let mut ctx = IngestionContext {
         env: &mut env,
         in_scopes: &[],
-        without_consuming: &HashSet::new(),
     };
     let into = ctx.begin_item(&src.self_content[0]);
     ctx.ingest_module(src, into);

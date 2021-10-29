@@ -1,5 +1,5 @@
 use super::structure::{
-    Environment, ItemId, Substitutions, UnresolvedSubstitution, VariableItemIds,
+    Environment, ItemId, Substitutions, UnresolvedSubstitution, VariableInfo,
 };
 use crate::{
     shared::OrderedSet,
@@ -57,7 +57,7 @@ impl<'x> Environment<'x> {
         name: Option<&str>,
         base: ItemId<'x>,
         value: ItemId<'x>,
-        deps: &mut OrderedSet<VariableItemIds<'x>>,
+        deps: &mut OrderedSet<VariableInfo<'x>>,
     ) -> Substitutions<'x> {
         let mut resolved_target = possible_meaning;
         if let Some(name) = name {
@@ -86,7 +86,7 @@ impl<'x> Environment<'x> {
 
     fn resolve_anonymous_target(
         &mut self,
-        deps: &mut OrderedSet<VariableItemIds<'x>>,
+        deps: &mut OrderedSet<VariableInfo<'x>>,
         previous_subs: &Substitutions<'x>,
         value: ItemId<'x>,
     ) -> Substitutions<'x> {

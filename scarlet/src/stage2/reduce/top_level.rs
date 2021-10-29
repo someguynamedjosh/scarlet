@@ -9,13 +9,14 @@ impl<'x> Environment<'x> {
             Definition::Member(..) => unreachable!(),
             Definition::Other(..) => unreachable!(),
             Definition::ResolvedSubstitute(..) => unreachable!(),
+            Definition::SetConsume {
+                base,
+                vals,
+                set_consume_to,
+            } => todo!(),
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable {
-                var,
-                typee,
-                consume,
-            } => self.reduce_var(var, typee, consume, def),
+            Definition::Variable { var, typee } => self.reduce_var(var, typee, def),
         }
     }
 

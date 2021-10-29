@@ -19,7 +19,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let mut child = IngestionContext {
             env: &mut *self.env,
             in_scopes: &new_in_scopes[..],
-            without_consuming: &*self.without_consuming,
         };
         let base = child.ingest_tree(&body[0]);
         Definition::Other(base)

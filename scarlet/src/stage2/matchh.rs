@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::structure::{Item, Substitutions, VariableId, VariableItemIds};
+use super::structure::{Item, Substitutions, VariableId, VariableInfo};
 use crate::{
     shared::OrderedSet,
     stage1::structure::TokenTree,
@@ -36,7 +36,7 @@ impl<'x> Environment<'x> {
     pub fn matches_var(
         &mut self,
         original_value: ItemId<'x>,
-        var: VariableItemIds<'x>,
+        var: VariableInfo<'x>,
     ) -> MatchResult<'x> {
         self.matches_var_impl(original_value, original_value, var)
     }
@@ -45,7 +45,7 @@ impl<'x> Environment<'x> {
         &mut self,
         original_value: ItemId<'x>,
         value_pattern: ItemId<'x>,
-        var: VariableItemIds<'x>,
+        var: VariableInfo<'x>,
     ) -> MatchResult<'x> {
         todo!()
         // let mut allow_binding = var.consume;
@@ -75,11 +75,7 @@ impl<'x> Environment<'x> {
         let typee = expected_typee;
         self.items.push(Item {
             original_definition: &TokenTree::Token("INTERNAL"),
-            definition: Some(Definition::Variable {
-                typee,
-                var,
-                consume: true,
-            }),
+            definition: Some(Definition::Variable { typee, var }),
             scope: Default::default(),
             dependencies: None,
             after: None,
@@ -103,6 +99,7 @@ impl<'x> Environment<'x> {
             } => unreachable!(),
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
+            Definition::SetConsume { .. } => todo!(),
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
@@ -176,14 +173,11 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
+            Definition::SetConsume { .. } => todo!(),
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
-            &Definition::Variable {
-                var,
-                typee,
-                consume,
-            } => {
+            &Definition::Variable { var, typee } => {
                 // let typee = self.as_super_pattern(typee);
                 // self.item_with_new_definition(of, Definition::Variable { var, typee }, true)
                 todo!()
@@ -229,13 +223,10 @@ impl<'x> Environment<'x> {
                     self.matches_impl(original_value, value_pattern, other)
                 }
                 Definition::ResolvedSubstitute(..) => Unknown,
+                Definition::SetConsume { .. } => todo!(),
                 Definition::Struct(_) => todo!(),
                 Definition::UnresolvedSubstitute(..) => Unknown,
-                Definition::Variable {
-                    var,
-                    typee,
-                    consume,
-                } => {
+                Definition::Variable { var, typee } => {
                     // let (var, typee) = (*var, *typee);
                     // self.matches_var_impl(original_value, value_pattern, var, typee)
                     todo!()
