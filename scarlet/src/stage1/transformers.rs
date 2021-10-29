@@ -131,7 +131,8 @@ impl Transformer for Match {
 struct Shown;
 impl Transformer for Shown {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("Shown")
+        &to[at] == &TokenTree::Token(".")
+            && (&to[at + 1] == &TokenTree::Token("Shown") || &to[at + 1] == &TokenTree::Token("S"))
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
@@ -231,7 +232,8 @@ impl Transformer for Variable {
         }
         &to[at] == &TokenTree::Token(".")
             && (&to[at + 1] == &TokenTree::Token("Variable")
-                || &to[at + 1] == &TokenTree::Token("Var"))
+                || &to[at + 1] == &TokenTree::Token("Var")
+                || &to[at + 1] == &TokenTree::Token("V"))
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {

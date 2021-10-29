@@ -1,19 +1,23 @@
 [
     PATTERN is Builtin(PATTERN)
-    BOOL is Builtin(BOOL)
-    32U is Builtin(32U)
+    # BOOL is Builtin(BOOL)
+    # 32U is Builtin(32U)
 
-    DATA is PATTERN.Variable
-    var is DATA.Variable
+    # DATA is PATTERN.Variable
+    # var is DATA.Variable
 
-    pick is
-    var.Match(
-        on true 123
-        else 456
-    )
+    # pick is
+    # var.Match(
+    #     on true 123
+    #     else 456
+    # )
 
-    pick(PATTERN)(123)
-    .Shown
+    container is [
+        DATA is PATTERN.V
+        data is DATA.V
+    ]
+
+    container(PATTERN 123)
 
     # PROOF_FIVE is 
     # after{number} 

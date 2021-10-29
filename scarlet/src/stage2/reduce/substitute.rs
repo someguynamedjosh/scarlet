@@ -116,12 +116,26 @@ impl<'x> Environment<'x> {
                 if let Some(sub) = substitutions.get(&var) {
                     *sub
                 } else {
-                    // let typee = self.substitute(typee, substitutions)?;
-                    // let def = Definition::Variable { var, typee };
-                    // self.item_with_new_definition(original, def, true)
-                    todo!()
+                    let typee = self.substitute_var_type(typee, substitutions)?;
+                    let def = Definition::Variable { var, typee };
+                    self.item_with_new_definition(original, def, true)
                 }
             }
+        })
+    }
+
+    pub(super) fn substitute_var_type(
+        &mut self,
+        original: VarType<'x>,
+        substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
+    ) -> Option<VarType<'x>> {
+        Some(match original {
+            VarType::God | VarType::_32U | VarType::Bool => original,
+            VarType::Just(other) => VarType::Just(self.substitute(other, substitutions)?),
+            VarType::And(l, r) => VarType::And(
+                self.substitute(l, substitutions)?,
+                self.substitute(r, substitutions)?,
+            ),
         })
     }
 }
