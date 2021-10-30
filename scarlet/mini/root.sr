@@ -3,12 +3,15 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    container is [
-        DATA is PATTERN.V
-        data is DATA.V
+    condition is BOOL.V
+    PROOF is condition AND true
+
+    5holder is [
+        value is 32U.V
+        is_five is PROOF(value matches 5).V
     ]
 
-    container(32U 123).S
+    5holder(5 true).S
 
     # PROOF_FIVE is 
     # after{number} 

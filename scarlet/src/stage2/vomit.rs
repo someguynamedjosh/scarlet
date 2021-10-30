@@ -136,7 +136,13 @@ impl<'x> Environment<'x> {
                     body: vec![],
                 },
                 Pattern::Capture(_) => todo!(),
-                Pattern::And(_, _) => todo!(),
+                &Pattern::And(left, right) => TokenTree::BuiltinRule {
+                    name: "AND",
+                    body: vec![
+                        self.get_name_or_code(left, context),
+                        self.get_name_or_code(right, context),
+                    ],
+                },
             },
             Definition::Struct(fields) => {
                 let mut body = Vec::new();

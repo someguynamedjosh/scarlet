@@ -16,6 +16,7 @@ pub enum MatchResult<'x> {
     Unknown,
 }
 
+use serde::de::Unexpected;
 use MatchResult::*;
 
 fn non_capturing_match<'x>() -> MatchResult<'x> {
@@ -277,7 +278,15 @@ impl<'x> Environment<'x> {
                     NoMatch | Unknown => result,
                 }
             }
-            Pattern::And(_, _) => todo!(),
+            Pattern::And(left, right) => {
+                let matches_left = self.matches_def(original_value, value_pattern, left);
+                let matches_right = self.matches_def(original_value, value_pattern, right);
+                match (matches_left, matches_right) {
+                    (Match(left), Match(right)) => Match(left.union(right)),
+                    (NoMatch, _) | (_, NoMatch) => NoMatch,
+                    _ => Unknown,
+                }
+            }
         }
     }
 }
