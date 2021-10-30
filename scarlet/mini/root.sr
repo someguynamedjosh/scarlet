@@ -3,21 +3,12 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    # DATA is PATTERN.Variable
-    # var is DATA.Variable
+    container is [
+        DATA is PATTERN.V
+        data is DATA.V
+    ]
 
-    # pick is
-    # var.Match(
-    #     on true 123
-    #     else 456
-    # )
-
-    DATA is PATTERN.V.S
-    # container is [
-    #     data is DATA.NotEating(DATA).V
-    # ]
-
-    # container(32U 123).data.S
+    container(32U 123).S
 
     # PROOF_FIVE is 
     # after{number} 

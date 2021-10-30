@@ -91,8 +91,9 @@ impl<'x> Environment<'x> {
             let dep = *dep;
             let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
             let subbed_dep = self.reduce(subbed_dep);
+            let subbed_dep_pattern = self.as_pattern(subbed_dep);
             let value = self.reduce(value);
-            let result = self.matches(value, subbed_dep);
+            let result = self.matches(value, subbed_dep_pattern);
             if let MatchResult::Match(matched_subs) = result {
                 for (matched_dep, _) in &matched_subs {
                     for (dep, _) in &*deps {

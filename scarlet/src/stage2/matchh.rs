@@ -140,7 +140,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn as_pattern(&mut self, of: ItemId<'x>) -> ItemId<'x> {
+    pub fn as_pattern(&mut self, of: ItemId<'x>) -> ItemId<'x> {
         let def = self.definition_of(of);
         match def {
             Definition::BuiltinOperation(op, _) => match op {
@@ -166,13 +166,19 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
-            Definition::Pattern(..) => todo!(),
+            Definition::Pattern(..) => of,
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
             &Definition::Variable { var, pattern } => {
                 let pattern = self.as_pattern(pattern);
-                self.item_with_new_definition(of, Definition::Variable { var, pattern }, true)
+                let var = VariableInfo {
+                    var_item: of,
+                    var,
+                    pattern,
+                };
+                let captured = Definition::Pattern(Pattern::Capture(var));
+                self.item_with_new_definition(of, captured, true)
             }
         }
     }
@@ -192,6 +198,7 @@ impl<'x> Environment<'x> {
         value_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
+        println!("{:#?}", self);
         match self.definition_of(match_against).clone() {
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
@@ -230,13 +237,7 @@ impl<'x> Environment<'x> {
     ) -> MatchResult<'x> {
         match pattern {
             Pattern::God => non_capturing_match(),
-            Pattern::Pattern => match self.definition_of(value_pattern) {
-                Definition::BuiltinValue(val) => NoMatch,
-                Definition::Pattern(_) => non_capturing_match(),
-                Definition::Struct(_) => todo!(),
-                Definition::Variable { .. } => todo!(),
-                _ => unreachable!(),
-            },
+            Pattern::Pattern => non_capturing_match(),
             Pattern::_32U => match self.definition_of(value_pattern) {
                 Definition::BuiltinValue(val) => {
                     if let BuiltinValue::_32U(..) = val {
