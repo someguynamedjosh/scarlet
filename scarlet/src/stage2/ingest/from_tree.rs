@@ -25,11 +25,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             TokenTree::Token(token) => self.token_def(token),
 
             TokenTree::BuiltinRule {
-                name: "after",
-                body,
-            } => self.after_def(body),
-
-            TokenTree::BuiltinRule {
                 name: "match",
                 body,
             } => self.match_def(body),
@@ -41,6 +36,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 name: "member",
                 body,
             } => self.member_def(body),
+            TokenTree::BuiltinRule {
+                name: "not_eating",
+                body,
+            } => self.not_eating_def(body),
             TokenTree::BuiltinRule { name: "show", body } => self.show_def(body, into),
             TokenTree::BuiltinRule {
                 name: "struct",

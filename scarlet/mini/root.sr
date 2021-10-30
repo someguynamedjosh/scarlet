@@ -1,7 +1,7 @@
 [
     PATTERN is Builtin(PATTERN)
-    # BOOL is Builtin(BOOL)
-    # 32U is Builtin(32U)
+    BOOL is Builtin(BOOL)
+    32U is Builtin(32U)
 
     # DATA is PATTERN.Variable
     # var is DATA.Variable
@@ -12,12 +12,12 @@
     #     else 456
     # )
 
+    DATA is PATTERN.V
     container is [
-        DATA is PATTERN.V
-        data is DATA.V
+        data is DATA.NotEating(DATA).V
     ]
 
-    container(PATTERN 123)
+    container(32U 123).data.S
 
     # PROOF_FIVE is 
     # after{number} 

@@ -22,7 +22,7 @@ impl<'x> Environment<'x> {
             } => {
                 let mut deps = self.dep_query(base);
                 for condition in conditions {
-                    deps.append(self.dep_query(condition.pattern).after_consumption());
+                    deps.append(self.dep_query(condition.pattern).after_eating());
                     deps.append(self.dep_query(condition.value));
                 }
                 deps.append(self.dep_query(else_value));
@@ -56,7 +56,7 @@ impl<'x> Environment<'x> {
                             var_item: subbed_dep,
                             var,
                             typee,
-                            consume: base_dep.consume,
+                            eat: base_dep.eat,
                         }
                     } else {
                         unreachable!()
@@ -65,7 +65,26 @@ impl<'x> Environment<'x> {
                 }
                 final_deps
             }
-            Definition::SetConsume { .. } => todo!(),
+            Definition::SetEat {
+                base,
+                vals,
+                set_eat_to,
+            } => {
+                let mut base_deps = self.dep_query(base);
+                let mut vars_to_set = QueryResult::new();
+                for val in vals {
+                    vars_to_set.append(self.dep_query(val));
+                }
+                base_deps.partial_over = base_deps.partial_over.union(vars_to_set.partial_over);
+                for (var, _) in vars_to_set.deps {
+                    for (dep, _) in &mut base_deps.deps {
+                        if dep.var == var.var {
+                            dep.eat = set_eat_to;
+                        }
+                    }
+                }
+                base_deps
+            }
             Definition::Struct(fields) => {
                 let mut base = DepQueryResult::new();
                 for field in fields {
@@ -81,12 +100,10 @@ impl<'x> Environment<'x> {
                 let mut afters = QueryResult::new();
                 match typee {
                     VarType::God | VarType::_32U | VarType::Bool => (),
-                    VarType::Just(other) => {
-                        afters.append(self.dep_query(other).after_consumption())
-                    }
+                    VarType::Just(other) => afters.append(self.dep_query(other).after_eating()),
                     VarType::And(left, right) => {
-                        afters.append(self.dep_query(left).after_consumption());
-                        afters.append(self.dep_query(right).after_consumption());
+                        afters.append(self.dep_query(left).after_eating());
+                        afters.append(self.dep_query(right).after_eating());
                     }
                 }
                 let typee = self.reduce_var_type(typee);
@@ -94,7 +111,7 @@ impl<'x> Environment<'x> {
                     var,
                     var_item: of,
                     typee,
-                    consume: true,
+                    eat: true,
                 };
                 afters.deps.insert_or_replace(var_item, ());
                 afters

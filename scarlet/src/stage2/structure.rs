@@ -54,7 +54,7 @@ pub struct VariableInfo<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
     pub typee: VarType<'x>,
-    pub consume: bool,
+    pub eat: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -80,10 +80,10 @@ pub enum Definition<'x> {
     },
     Member(ItemId<'x>, String),
     Other(ItemId<'x>),
-    SetConsume {
+    SetEat {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,
-        set_consume_to: bool,
+        set_eat_to: bool,
     },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),

@@ -12,7 +12,7 @@ use crate::{
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
-    pub fn after_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+    pub fn not_eating_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
         if body.len() != 2 {
             todo!("Nice error");
         }
@@ -24,10 +24,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             .map(|tt| self.ingest_tree(tt))
             .collect();
 
-        Definition::SetConsume {
+        Definition::SetEat {
             base,
             vals,
-            set_consume_to: true,
+            set_eat_to: false,
         }
     }
 

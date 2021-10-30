@@ -51,8 +51,8 @@ impl<'x, T: PartialEq + Eq + Hash + Debug> QueryResult<'x, T> {
     }
 }
 impl<'x> DepQueryResult<'x> {
-    pub fn after_consumption(self) -> Self {
-        let deps = self.deps.into_iter().filter(|x| !x.0.consume).collect();
+    pub fn after_eating(self) -> Self {
+        let deps = self.deps.into_iter().filter(|x| !x.0.eat).collect();
         let partial_over = self.partial_over;
         Self { deps, partial_over }
     }

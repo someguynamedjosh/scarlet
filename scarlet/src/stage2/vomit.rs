@@ -118,7 +118,7 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Other(item) => self.get_code(*item, context),
-            Definition::SetConsume { .. } => todo!(),
+            Definition::SetEat { .. } => todo!(),
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {

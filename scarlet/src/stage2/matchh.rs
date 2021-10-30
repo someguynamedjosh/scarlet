@@ -97,7 +97,7 @@ impl<'x> Environment<'x> {
             } => unreachable!(),
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
-            Definition::SetConsume { .. } => todo!(),
+            Definition::SetEat { .. } => todo!(),
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
@@ -171,7 +171,7 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(_, _) => todo!(),
             Definition::Other(_) => todo!(),
-            Definition::SetConsume { .. } => todo!(),
+            Definition::SetEat { .. } => todo!(),
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
@@ -196,7 +196,7 @@ impl<'x> Environment<'x> {
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
         let value_super_pattern = self.as_super_pattern(value_pattern);
-        self.matches_def(original_value, value_super_pattern, match_against)
+        self.matches_def(original_value, value_super_pattern, match_against, vec![])
     }
 
     fn matches_def(
@@ -204,14 +204,15 @@ impl<'x> Environment<'x> {
         original_value: ItemId<'x>,
         value_super_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
+        dont_eat: Vec<VariableId<'x>>,
     ) -> MatchResult<'x> {
-        match self.definition_of(match_against) {
+        match self.definition_of(match_against).clone() {
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Dif32U | BuiltinOperation::Sum32U => Unknown,
             },
             Definition::BuiltinValue(pv) => match self.definition_of(value_super_pattern) {
                 Definition::BuiltinValue(vv) => {
-                    if pv == vv {
+                    if pv == *vv {
                         // If the pattern of the value being matched is exactly
                         // the pattern we're looking for, it matches.
                         non_capturing_match()
@@ -226,15 +227,32 @@ impl<'x> Environment<'x> {
             },
             Definition::Match { .. } => Unknown,
             Definition::Member(..) => Unknown,
-            &Definition::Other(other) => {
-                self.matches_def(original_value, value_super_pattern, other)
+            Definition::Other(other) => {
+                self.matches_def(original_value, value_super_pattern, other, dont_eat)
             }
             Definition::ResolvedSubstitute(..) => Unknown,
-            Definition::SetConsume { .. } => todo!(),
+            Definition::SetEat { base, vals, set_eat_to } => {
+                let mut vars = Vec::new();
+                for val in vals {
+                    let deps = self.get_deps(val);
+                    for (dep, _) in deps {
+                        vars.push(dep.var);
+                    }
+                }
+                if set_eat_to == true {
+                    todo!()
+                }
+                let new_dont_eat = [dont_eat, vars].concat();
+                self.matches_def(original_value, value_super_pattern, base, new_dont_eat)
+            },
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(..) => Unknown,
-            &Definition::Variable { var, typee } => {
-                self.matches_var_type(original_value, value_super_pattern, var, typee)
+            Definition::Variable { var, typee } => {
+                if dont_eat.contains(&var) {
+                    Unknown
+                } else {
+                    self.matches_var_type(original_value, value_super_pattern, var, typee, dont_eat)
+                }
             }
         }
     }
@@ -245,6 +263,7 @@ impl<'x> Environment<'x> {
         value_super_pattern: ItemId<'x>,
         var: VariableId<'x>,
         typee: VarType<'x>,
+        dont_eat: Vec<VariableId<'x>>,
     ) -> MatchResult<'x> {
         let result = match typee {
             VarType::God => non_capturing_match(),
@@ -282,7 +301,9 @@ impl<'x> Environment<'x> {
                 },
                 _ => unreachable!(),
             },
-            VarType::Just(other) => self.matches_def(original_value, value_super_pattern, other),
+            VarType::Just(other) => {
+                self.matches_def(original_value, value_super_pattern, other, dont_eat)
+            }
             VarType::And(_, _) => todo!(),
         };
         match result {

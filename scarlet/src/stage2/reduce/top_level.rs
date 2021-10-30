@@ -9,11 +9,19 @@ impl<'x> Environment<'x> {
             Definition::Member(..) => unreachable!(),
             Definition::Other(..) => unreachable!(),
             Definition::ResolvedSubstitute(..) => unreachable!(),
-            Definition::SetConsume {
+            Definition::SetEat {
                 base,
                 vals,
-                set_consume_to,
-            } => todo!(),
+                set_eat_to,
+            } => {
+                let base = self.reduce(base);
+                let vals = vals.into_iter().map(|x| self.reduce(x)).collect();
+                Definition::SetEat {
+                    base,
+                    vals,
+                    set_eat_to,
+                }
+            }
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::UnresolvedSubstitute(..) => unreachable!(),
             Definition::Variable { var, typee } => self.reduce_var(var, typee, def),

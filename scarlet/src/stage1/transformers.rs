@@ -153,7 +153,7 @@ impl Transformer for After {
         if at < 1 {
             return false;
         }
-        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("WithoutConsuming")
+        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("NotEating")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
@@ -167,7 +167,7 @@ impl Transformer for After {
         TransformerResult {
             replace_range: at - 1..=at + 2,
             with: TokenTree::BuiltinRule {
-                name: "after",
+                name: "not_eating",
                 body: vec![vals, base],
             },
         }

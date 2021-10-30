@@ -92,12 +92,30 @@ impl<'x> Environment<'x> {
                 let def = Definition::ResolvedSubstitute(base, original_subs);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::SetConsume {
+            Definition::SetEat {
                 base,
                 vals,
-                set_consume_to,
+                set_eat_to,
             } => {
-                todo!()
+                let mut new_vals = Vec::new();
+                for val in vals {
+                    for (dep, _) in self.get_deps(val) {
+                        new_vals.push(dep);
+                    }
+                }
+                for (target, _) in substitutions {
+                    if let Some(index) = new_vals.iter().position(|x| x.var == *target) {
+                        new_vals.remove(index);
+                    }
+                }
+                let new_vals = new_vals.into_iter().map(|x| x.var_item).collect();
+                let base = self.substitute(base, substitutions)?;
+                let def = Definition::SetEat {
+                    base,
+                    vals: new_vals,
+                    set_eat_to,
+                };
+                self.item_with_new_definition(original, def, true)
             }
             Definition::Struct(fields) => {
                 let fields = fields
