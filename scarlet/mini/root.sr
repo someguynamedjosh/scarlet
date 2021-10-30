@@ -1,25 +1,12 @@
-[
+{
     PATTERN is Builtin(PATTERN)
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    # DATA is PATTERN.Variable
-    # var is DATA.Variable
+    x is 32U.V
+    y is 32U.V
 
-    # pick is
-    # var.Match(
-    #     on true 123
-    #     else 456
-    # )
+    paren is PATTERN.V
 
-    DATA is PATTERN.V
-    container is [
-        data is DATA.NotEating(DATA).V
-    ]
-
-    container(32U 123).data.S
-
-    # PROOF_FIVE is 
-    # after{number} 
-    # number matches 5 AND true
-]
+    paren(After(x y) x + y).S
+}

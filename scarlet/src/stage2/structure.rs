@@ -78,6 +78,10 @@ pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
+    After {
+        base: ItemId<'x>,
+        vals: Vec<ItemId<'x>>,
+    },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
@@ -87,11 +91,6 @@ pub enum Definition<'x> {
     },
     Member(ItemId<'x>, String),
     Other(ItemId<'x>),
-    SetLifted {
-        base: ItemId<'x>,
-        vals: Vec<ItemId<'x>>,
-        set_lifted_to: Lifted,
-    },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
     ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),

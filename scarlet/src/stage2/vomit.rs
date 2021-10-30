@@ -58,7 +58,7 @@ impl<'x> Environment<'x> {
 
     pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
         let item = self.items[item].cached_reduction.unwrap_or(item);
-        match self.items[item].definition.as_ref().unwrap() {
+        match self.get_definition(item).clone() {
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
                     BuiltinOperation::Sum32U => "sum_32u",
@@ -66,13 +66,13 @@ impl<'x> Environment<'x> {
                 };
                 let body = args
                     .into_iter()
-                    .map(|arg| self.get_name_or_code(*arg, context))
+                    .map(|arg| self.get_name_or_code(arg, context))
                     .collect();
                 TokenTree::BuiltinRule { name, body }
             }
             Definition::BuiltinValue(val) => match val {
                 BuiltinValue::_32U(val) => TokenTree::Token(self.token(format!("{}", val))),
-                BuiltinValue::Bool(val) => match *val {
+                BuiltinValue::Bool(val) => match val {
                     true => TokenTree::Token("true"),
                     false => TokenTree::Token("false"),
                 },
@@ -82,7 +82,7 @@ impl<'x> Environment<'x> {
                 conditions,
                 else_value,
             } => {
-                let base = self.get_name_or_code(*base, context);
+                let base = self.get_name_or_code(base, context);
 
                 let mut patterns = Vec::new();
                 for cond in conditions {
@@ -94,7 +94,7 @@ impl<'x> Environment<'x> {
                     });
                 }
 
-                let else_value = self.get_name_or_code(*else_value, context);
+                let else_value = self.get_name_or_code(else_value, context);
                 patterns.push(TokenTree::BuiltinRule {
                     name: "else",
                     body: vec![else_value],
@@ -109,16 +109,33 @@ impl<'x> Environment<'x> {
                     body: vec![base, patterns],
                 }
             }
-            Definition::Member(base, name) => {
-                let base = self.get_name_or_code(*base, context);
+            Definition::Member(base, _) => {
+                let base = self.get_name_or_code(base, context);
+                let name = if let Definition::Member(_, name) = self.get_definition(item) {
+                    name
+                } else {
+                    unreachable!()
+                };
                 let member = TokenTree::Token(name);
                 TokenTree::BuiltinRule {
                     name: "member",
                     body: vec![base, member],
                 }
             }
-            Definition::Other(item) => self.get_code(*item, context),
-            Definition::SetLifted { .. } => todo!(),
+            Definition::Other(item) => self.get_code(item, context),
+            Definition::After { base, vals } => {
+                let vals = TokenTree::BuiltinRule {
+                    name: "vals",
+                    body: vals
+                        .into_iter()
+                        .map(|x| self.get_name_or_code(x, context))
+                        .collect(),
+                };
+                TokenTree::BuiltinRule {
+                    name: "after",
+                    body: vec![vals, self.get_name_or_code(base, context)],
+                }
+            }
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {
@@ -137,7 +154,7 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::UnresolvedSubstitute(base, subs) => {
-                let base = self.get_name_or_code(*base, context);
+                let base = self.get_name_or_code(base, context);
                 let mut tt_subs = Vec::new();
                 for sub in subs {
                     let value = self.get_name_or_code(sub.value, context);
@@ -161,9 +178,9 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::ResolvedSubstitute(base, subs) => {
-                let base = self.get_name_or_code(*base, context);
+                let base = self.get_name_or_code(base, context);
                 let mut tt_subs = Vec::new();
-                for &(target, value) in subs {
+                for (target, value) in subs {
                     let value = self.get_name_or_code(value, context);
                     let target = self.get_var_name_or_code(target, context);
                     tt_subs.push(TokenTree::BuiltinRule {
@@ -181,7 +198,7 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Variable { typee, .. } => {
-                // let typee = self.get_name_or_code(*typee, context);
+                // let typee = self.get_name_or_code(typee, context);
                 match typee {
                     VarType::God => TokenTree::BuiltinRule {
                         name: "PATTERN",
@@ -197,13 +214,13 @@ impl<'x> Environment<'x> {
                     },
                     VarType::Just(other) => TokenTree::BuiltinRule {
                         name: "any",
-                        body: vec![self.get_name_or_code(*other, context)],
+                        body: vec![self.get_name_or_code(other, context)],
                     },
                     VarType::And(left, right) => TokenTree::BuiltinRule {
                         name: "AND",
                         body: vec![
-                            self.get_name_or_code(*left, context),
-                            self.get_name_or_code(*right, context),
+                            self.get_name_or_code(left, context),
+                            self.get_name_or_code(right, context),
                         ],
                     },
                 }

@@ -60,7 +60,7 @@ struct Struct;
 impl Transformer for Struct {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
         if let TokenTree::BuiltinRule { name, .. } = &to[at] {
-            *name == "group[]"
+            *name == "group{}"
         } else {
             false
         }
@@ -106,7 +106,7 @@ impl Transformer for Match {
         if at < 1 {
             return false;
         }
-        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("Match")
+        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("Matched")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
@@ -150,24 +150,21 @@ impl Transformer for Shown {
 struct After;
 impl Transformer for After {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        if at < 1 {
-            return false;
-        }
-        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("NotEating")
+        &to[at] == &TokenTree::Token("After")
     }
 
     fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let mut vals = expect_paren_group(&to[at + 2]).clone();
+        let mut vals = expect_paren_group(&to[at + 1]).clone();
         apply_transformers(&mut vals, &Default::default());
         let vals = TokenTree::BuiltinRule {
             name: "vals",
             body: vals,
         };
-        let base = to[at - 1].clone();
+        let base = to[at + 2].clone();
         TransformerResult {
-            replace_range: at - 1..=at + 2,
+            replace_range: at..=at + 2,
             with: TokenTree::BuiltinRule {
-                name: "not_eating",
+                name: "after",
                 body: vec![vals, base],
             },
         }
@@ -183,7 +180,7 @@ impl Transformer for Substitution {
             name: "group()", ..
         } = &to[at]
         {
-            true
+            !After.should_be_applied_at(to, at - 1)
         } else {
             false
         }
@@ -306,13 +303,13 @@ fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![Struct, Builtin],
-        20 => tfers![After, Match, Variable, Shown, Substitution, Member],
+        20 => tfers![Match, Variable, Shown, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
         90 => tfers![PatternAnd],
         100 => tfers![Matches],
-        150 => tfers![Using],
+        150 => tfers![After, Using],
         _ => tfers![],
     };
     let basics: Vec<_> = basics.into_iter().map(Either::Fst).collect();
