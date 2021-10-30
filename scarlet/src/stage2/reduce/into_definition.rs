@@ -1,6 +1,6 @@
 use crate::stage2::structure::{
-    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VarType,
-    VariableId,
+    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, Pattern, StructField,
+    VariableId, VariableInfo,
 };
 
 impl<'x> Environment<'x> {
@@ -40,16 +40,21 @@ impl<'x> Environment<'x> {
         self.reduce_builtin_op_impl(op, args)
     }
 
-    pub fn reduce_var_type(&mut self, pat: VarType<'x>) -> VarType<'x> {
+    pub fn reduce_pattern(&mut self, pat: Pattern<'x>) -> Definition<'x> {
         match pat {
-            VarType::Bool | VarType::_32U | VarType::God => pat,
-            VarType::Just(other) => VarType::Just(self.reduce(other)),
-            VarType::And(left, right) => {
+            Pattern::Bool | Pattern::_32U | Pattern::God | Pattern::Pattern => pat,
+            Pattern::Capture(info) => Pattern::Capture(VariableInfo {
+                var_item: self.reduce(info.var_item),
+                var: info.var,
+                pattern: self.reduce(info.pattern),
+            }),
+            Pattern::And(left, right) => {
                 let left = self.reduce(left);
                 let right = self.reduce(right);
-                VarType::And(left, right)
+                Pattern::And(left, right)
             }
         }
+        .into()
     }
 
     pub(super) fn reduce_struct(&mut self, fields: Vec<StructField<'x>>) -> Definition<'x> {
@@ -67,10 +72,10 @@ impl<'x> Environment<'x> {
     pub(super) fn reduce_var(
         &mut self,
         var: VariableId<'x>,
-        typee: VarType<'x>,
+        pattern: ItemId<'x>,
         _def: Definition<'x>,
     ) -> Definition<'x> {
-        let typee = self.reduce_var_type(typee);
-        Definition::Variable { var, typee }
+        let pattern = self.reduce(pattern);
+        Definition::Variable { var, pattern }
     }
 }

@@ -4,15 +4,10 @@ mod struct_def;
 mod substitute_def;
 mod using;
 
-use std::{collections::HashMap, marker::PhantomData};
-
 use super::top_level::IngestionContext;
 use crate::{
-    stage1::structure::{Token, TokenTree},
-    stage2::{
-        ingest::top_level,
-        structure::{BuiltinOperation, Definition, Environment, ItemId, VarType, Variable},
-    },
+    stage1::structure::TokenTree,
+    stage2::structure::{BuiltinOperation, Definition, Environment, ItemId, Pattern, Variable},
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
@@ -36,10 +31,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 name: "member",
                 body,
             } => self.member_def(body),
-            TokenTree::BuiltinRule {
-                name: "not_eating",
-                body,
-            } => self.not_eating_def(body),
             TokenTree::BuiltinRule { name: "show", body } => self.show_def(body, into),
             TokenTree::BuiltinRule {
                 name: "struct",
@@ -60,11 +51,9 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
 
             TokenTree::BuiltinRule {
                 name: "PATTERN", ..
-            } => self.var_with_special_type(VarType::God),
-            TokenTree::BuiltinRule { name: "32U", .. } => self.var_with_special_type(VarType::_32U),
-            TokenTree::BuiltinRule { name: "BOOL", .. } => {
-                self.var_with_special_type(VarType::Bool)
-            }
+            } => Pattern::God.into(),
+            TokenTree::BuiltinRule { name: "32U", .. } => Pattern::_32U.into(),
+            TokenTree::BuiltinRule { name: "BOOL", .. } => Pattern::Bool.into(),
             TokenTree::BuiltinRule { name: "AND", body } => self.and_pattern_def(body),
 
             TokenTree::BuiltinRule {
@@ -95,17 +84,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         assert_eq!(body.len(), 2);
         let left = self.ingest_tree(&body[0]);
         let right = self.ingest_tree(&body[1]);
-        self.var_with_special_type(VarType::And(left, right))
-    }
-
-    fn var_with_special_type(&mut self, typee: VarType<'x>) -> Definition<'x> {
-        // assert_eq!(
-        //     body.len(),
-        //     0,
-        //     "TODO: Nice error, expected zero argument to builtin."
-        // );
-        let var = Variable { pd: PhantomData };
-        let var = self.env.vars.push(var);
-        Definition::Variable { var, typee }
+        Pattern::And(left, right).into()
     }
 }

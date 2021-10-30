@@ -8,23 +8,14 @@ impl<'x> Environment<'x> {
             Definition::Match { .. } => unreachable!(),
             Definition::Member(..) => unreachable!(),
             Definition::Other(..) => unreachable!(),
+            Definition::Pattern(pat) => self.reduce_pattern(pat),
             Definition::ResolvedSubstitute(..) => unreachable!(),
-            Definition::SetEat {
-                base,
-                vals,
-                set_eat_to,
-            } => {
-                let base = self.reduce(base);
-                let vals = vals.into_iter().map(|x| self.reduce(x)).collect();
-                Definition::SetEat {
-                    base,
-                    vals,
-                    set_eat_to,
-                }
-            }
             Definition::Struct(fields) => self.reduce_struct(fields),
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, typee } => self.reduce_var(var, typee, def),
+            Definition::Variable {
+                var,
+                pattern: typee,
+            } => self.reduce_var(var, typee, def),
         }
     }
 

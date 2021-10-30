@@ -7,30 +7,11 @@ use crate::{
     stage1::structure::TokenTree,
     stage2::{
         ingest::top_level::IngestionContext,
-        structure::{BuiltinValue, Definition, ItemId, VarType, Variable},
+        structure::{BuiltinValue, Definition, ItemId, Pattern, Variable},
     },
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
-    pub fn not_eating_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
-        if body.len() != 2 {
-            todo!("Nice error");
-        }
-
-        let base = self.ingest_tree(&body[1]);
-        let vals: Vec<_> = body[0]
-            .unwrap_builtin("vals")
-            .iter()
-            .map(|tt| self.ingest_tree(tt))
-            .collect();
-
-        Definition::SetEat {
-            base,
-            vals,
-            set_eat_to: false,
-        }
-    }
-
     pub fn member_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
         assert_eq!(body.len(), 2);
         let base = &body[0];
@@ -74,10 +55,9 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         if body.len() != 1 {
             todo!("Nice error");
         }
-        let matches = &body[0];
-        let typee = self.ingest_tree(matches);
-        let typee = VarType::Just(typee);
+        let pattern = &body[0];
+        let pattern = self.ingest_tree(pattern);
         let var = self.env.vars.push(Variable { pd: PhantomData });
-        Definition::Variable { var, typee }
+        Definition::Variable { var, pattern }
     }
 }

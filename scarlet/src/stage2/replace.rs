@@ -22,15 +22,15 @@ pub fn apply_reps_to_def<'x>(reps: &Reps<'x>, to: &mut Definition<'x>) {
         } => apply_reps_to_match(reps, base, conditions, else_value),
         Definition::Member(base, ..) => apply_reps(reps, base),
         Definition::Other(..) => (),
+        Definition::Pattern(pat) => todo!(),
         Definition::ResolvedSubstitute(base, subs) => {
             apply_reps_to_resolved_substitution(reps, base, subs)
         }
-        Definition::SetEat { .. } => todo!(),
         Definition::Struct(fields) => apply_reps_to_struct(fields, reps),
         Definition::UnresolvedSubstitute(base, subs) => {
             apply_reps_to_unresolved_substitution(reps, base, subs)
         }
-        Definition::Variable { .. } => (),
+        Definition::Variable { .. } => todo!(),
     }
 }
 

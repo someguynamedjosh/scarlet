@@ -147,33 +147,6 @@ impl Transformer for Shown {
     }
 }
 
-struct After;
-impl Transformer for After {
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        if at < 1 {
-            return false;
-        }
-        &to[at] == &TokenTree::Token(".") && &to[at + 1] == &TokenTree::Token("NotEating")
-    }
-
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
-        let mut vals = expect_paren_group(&to[at + 2]).clone();
-        apply_transformers(&mut vals, &Default::default());
-        let vals = TokenTree::BuiltinRule {
-            name: "vals",
-            body: vals,
-        };
-        let base = to[at - 1].clone();
-        TransformerResult {
-            replace_range: at - 1..=at + 2,
-            with: TokenTree::BuiltinRule {
-                name: "not_eating",
-                body: vec![vals, base],
-            },
-        }
-    }
-}
-
 struct Substitution;
 impl Transformer for Substitution {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
@@ -306,7 +279,7 @@ fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![Struct, Builtin],
-        20 => tfers![After, Match, Variable, Shown, Substitution, Member],
+        20 => tfers![Match, Variable, Shown, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],

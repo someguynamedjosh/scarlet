@@ -1,7 +1,7 @@
 use crate::{
     shared::{OrderedMap, OrderedSet},
     stage2::structure::{
-        Condition, Definition, Environment, ItemId, StructField, Substitutions, VarType, VariableId,
+        Condition, Definition, Environment, ItemId, Pattern, StructField, Substitutions, VariableId,
     },
 };
 
@@ -67,6 +67,19 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::Other(id) => self.substitute_impl(id, substitutions)?,
+            Definition::Pattern(pat) => match pat {
+                Pattern::God
+                | Pattern::Pattern
+                | Pattern::_32U
+                | Pattern::Bool
+                | Pattern::Capture(_) => original,
+                Pattern::And(left, right) => {
+                    let left = self.substitute(left, substitutions)?;
+                    let right = self.substitute(right, substitutions)?;
+                    let def = Pattern::And(left, right).into();
+                    self.item_with_new_definition(original, def, true)
+                }
+            },
             Definition::ResolvedSubstitute(base, original_subs) => {
                 // The substitutions that we are currently doing that should be
                 // applied to the base, because $original_subs does not override
@@ -92,31 +105,6 @@ impl<'x> Environment<'x> {
                 let def = Definition::ResolvedSubstitute(base, original_subs);
                 self.item_with_new_definition(original, def, true)
             }
-            Definition::SetEat {
-                base,
-                vals,
-                set_eat_to,
-            } => {
-                let mut new_vals = Vec::new();
-                for val in vals {
-                    for (dep, _) in self.get_deps(val) {
-                        new_vals.push(dep);
-                    }
-                }
-                for (target, _) in substitutions {
-                    if let Some(index) = new_vals.iter().position(|x| x.var == *target) {
-                        new_vals.remove(index);
-                    }
-                }
-                let new_vals = new_vals.into_iter().map(|x| x.var_item).collect();
-                let base = self.substitute(base, substitutions)?;
-                let def = Definition::SetEat {
-                    base,
-                    vals: new_vals,
-                    set_eat_to,
-                };
-                self.item_with_new_definition(original, def, true)
-            }
             Definition::Struct(fields) => {
                 let fields = fields
                     .into_iter()
@@ -130,30 +118,15 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(original, def, true)
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, typee } => {
+            Definition::Variable { var, pattern } => {
                 if let Some(sub) = substitutions.get(&var) {
                     *sub
                 } else {
-                    let typee = self.substitute_var_type(typee, substitutions)?;
-                    let def = Definition::Variable { var, typee };
+                    let pattern = self.substitute(pattern, substitutions)?;
+                    let def = Definition::Variable { var, pattern };
                     self.item_with_new_definition(original, def, true)
                 }
             }
-        })
-    }
-
-    pub(super) fn substitute_var_type(
-        &mut self,
-        original: VarType<'x>,
-        substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
-    ) -> Option<VarType<'x>> {
-        Some(match original {
-            VarType::God | VarType::_32U | VarType::Bool => original,
-            VarType::Just(other) => VarType::Just(self.substitute(other, substitutions)?),
-            VarType::And(l, r) => VarType::And(
-                self.substitute(l, substitutions)?,
-                self.substitute(r, substitutions)?,
-            ),
         })
     }
 }

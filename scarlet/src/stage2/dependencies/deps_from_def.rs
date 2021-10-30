@@ -1,8 +1,5 @@
 use super::structures::DepQueryResult;
-use crate::stage2::{
-    dependencies::structures::QueryResult,
-    structure::{Definition, Environment, ItemId, VarType, VariableInfo},
-};
+use crate::stage2::structure::{Definition, Environment, ItemId, Pattern, VariableInfo};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
@@ -22,7 +19,7 @@ impl<'x> Environment<'x> {
             } => {
                 let mut deps = self.dep_query(base);
                 for condition in conditions {
-                    deps.append(self.dep_query(condition.pattern).after_eating());
+                    deps.append(self.dep_query(condition.pattern));
                     deps.append(self.dep_query(condition.value));
                 }
                 deps.append(self.dep_query(else_value));
@@ -33,6 +30,18 @@ impl<'x> Environment<'x> {
                 self.dep_query(base)
             }
             Definition::Other(item) => self.dep_query(item),
+            Definition::Pattern(pat) => match pat {
+                Pattern::God
+                | Pattern::Pattern
+                | Pattern::_32U
+                | Pattern::Bool
+                | Pattern::Capture(..) => DepQueryResult::new(),
+                Pattern::And(left, right) => {
+                    let mut result = self.dep_query(left);
+                    result.append(self.dep_query(right));
+                    result
+                }
+            },
             Definition::ResolvedSubstitute(base, subs) => {
                 let base_deps = self.dep_query(base);
                 let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
@@ -51,12 +60,15 @@ impl<'x> Environment<'x> {
                     // still dependant on it.
                     let subbed_dep = self.substitute(base_dep.var_item, &subs).unwrap();
                     let def = self.definition_of(subbed_dep);
-                    let subbed_dep = if let &Definition::Variable { var, typee } = def {
+                    let subbed_dep = if let &Definition::Variable {
+                        var,
+                        pattern: typee,
+                    } = def
+                    {
                         VariableInfo {
                             var_item: subbed_dep,
                             var,
-                            typee,
-                            eat: base_dep.eat,
+                            pattern: typee,
                         }
                     } else {
                         unreachable!()
@@ -64,26 +76,6 @@ impl<'x> Environment<'x> {
                     final_deps.deps.insert_or_replace(subbed_dep, ());
                 }
                 final_deps
-            }
-            Definition::SetEat {
-                base,
-                vals,
-                set_eat_to,
-            } => {
-                let mut base_deps = self.dep_query(base);
-                let mut vars_to_set = QueryResult::new();
-                for val in vals {
-                    vars_to_set.append(self.dep_query(val));
-                }
-                base_deps.partial_over = base_deps.partial_over.union(vars_to_set.partial_over);
-                for (var, _) in vars_to_set.deps {
-                    for (dep, _) in &mut base_deps.deps {
-                        if dep.var == var.var {
-                            dep.eat = set_eat_to;
-                        }
-                    }
-                }
-                base_deps
             }
             Definition::Struct(fields) => {
                 let mut base = DepQueryResult::new();
@@ -96,25 +88,16 @@ impl<'x> Environment<'x> {
                 self.resolve_targets_in_item(of);
                 self.get_deps_from_def(of)
             }
-            Definition::Variable { var, typee } => {
-                let mut afters = QueryResult::new();
-                match typee {
-                    VarType::God | VarType::_32U | VarType::Bool => (),
-                    VarType::Just(other) => afters.append(self.dep_query(other).after_eating()),
-                    VarType::And(left, right) => {
-                        afters.append(self.dep_query(left).after_eating());
-                        afters.append(self.dep_query(right).after_eating());
-                    }
-                }
-                let typee = self.reduce_var_type(typee);
+            Definition::Variable { var, pattern } => {
+                let pattern = self.reduce(pattern);
                 let var_item = VariableInfo {
                     var,
                     var_item: of,
-                    typee,
-                    eat: true,
+                    pattern,
                 };
-                afters.deps.insert_or_replace(var_item, ());
-                afters
+                let mut result = self.dep_query(pattern);
+                result.deps.insert_or_replace(var_item, ());
+                result
             }
         }
     }

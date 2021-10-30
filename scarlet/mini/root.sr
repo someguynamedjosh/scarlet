@@ -12,12 +12,12 @@
     #     else 456
     # )
 
-    DATA is PATTERN.V
-    container is [
-        data is DATA.NotEating(DATA).V
-    ]
+    DATA is PATTERN.V.S
+    # container is [
+    #     data is DATA.NotEating(DATA).V
+    # ]
 
-    container(32U 123).data.S
+    # container(32U 123).data.S
 
     # PROOF_FIVE is 
     # after{number} 

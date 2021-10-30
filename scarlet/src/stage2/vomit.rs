@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, BuiltinValue, Definition, VarType},
+    stage2::structure::{BuiltinOperation, BuiltinValue, Definition, Pattern},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -118,7 +118,26 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Other(item) => self.get_code(*item, context),
-            Definition::SetEat { .. } => todo!(),
+            Definition::Pattern(pat) => match pat {
+                Pattern::God => TokenTree::BuiltinRule {
+                    name: "ANYTHING",
+                    body: vec![],
+                },
+                Pattern::Pattern => TokenTree::BuiltinRule {
+                    name: "PATTERN",
+                    body: vec![],
+                },
+                Pattern::_32U => TokenTree::BuiltinRule {
+                    name: "32U",
+                    body: vec![],
+                },
+                Pattern::Bool => TokenTree::BuiltinRule {
+                    name: "BOOL",
+                    body: vec![],
+                },
+                Pattern::Capture(_) => todo!(),
+                Pattern::And(_, _) => todo!(),
+            },
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {
@@ -180,34 +199,10 @@ impl<'x> Environment<'x> {
                     body: vec![base, tt_subs],
                 }
             }
-            Definition::Variable { typee, .. } => {
-                // let typee = self.get_name_or_code(*typee, context);
-                match typee {
-                    VarType::God => TokenTree::BuiltinRule {
-                        name: "PATTERN",
-                        body: vec![],
-                    },
-                    VarType::_32U => TokenTree::BuiltinRule {
-                        name: "32U",
-                        body: vec![],
-                    },
-                    VarType::Bool => TokenTree::BuiltinRule {
-                        name: "BOOL",
-                        body: vec![],
-                    },
-                    VarType::Just(other) => TokenTree::BuiltinRule {
-                        name: "any",
-                        body: vec![self.get_name_or_code(*other, context)],
-                    },
-                    VarType::And(left, right) => TokenTree::BuiltinRule {
-                        name: "AND",
-                        body: vec![
-                            self.get_name_or_code(*left, context),
-                            self.get_name_or_code(*right, context),
-                        ],
-                    },
-                }
-            }
+            Definition::Variable { pattern, .. } => TokenTree::BuiltinRule {
+                name: "variable",
+                body: vec![self.get_name_or_code(*pattern, context)],
+            },
         }
     }
 
