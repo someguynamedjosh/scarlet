@@ -34,7 +34,7 @@ impl<'x> Environment<'x> {
 
     pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ItemId<'x>) -> TokenTree {
         for (item_id, _) in &self.items {
-            if let Definition::Variable { var: var_id, .. } = self.definition_of(item_id) {
+            if let Definition::Variable { var: var_id, .. } = self.get_definition(item_id) {
                 if *var_id == var {
                     if let Some(name) = self.get_name(item_id, context) {
                         return name;
@@ -43,7 +43,7 @@ impl<'x> Environment<'x> {
             }
         }
         for (item_id, _) in &self.items {
-            if let Definition::Variable { var: var_id, .. } = self.definition_of(item_id) {
+            if let Definition::Variable { var: var_id, .. } = self.get_definition(item_id) {
                 if *var_id == var {
                     return self.get_name_or_code(item_id, context);
                 }
@@ -118,7 +118,7 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Other(item) => self.get_code(*item, context),
-            Definition::SetEat { .. } => todo!(),
+            Definition::SetLifted { .. } => todo!(),
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {
@@ -300,7 +300,7 @@ impl<'x> Environment<'x> {
         let mut index = 0;
         for field in fields {
             let value = self.dereference(field.value, context).0;
-            if self.definition_of(value) == self.definition_of(item) {
+            if self.get_definition(value) == self.get_definition(item) {
                 let name = field_name(field, index);
                 parents.push((struct_id, name))
             }

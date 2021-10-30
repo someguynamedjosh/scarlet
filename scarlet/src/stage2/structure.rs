@@ -50,11 +50,18 @@ impl BuiltinValue {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Lifted {
+    ExplicitlyLifted,
+    ImplicitlyLowered,
+}
+pub use Lifted::*;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct VariableInfo<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
     pub typee: VarType<'x>,
-    pub eat: bool,
+    pub lifted: Lifted,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -80,10 +87,10 @@ pub enum Definition<'x> {
     },
     Member(ItemId<'x>, String),
     Other(ItemId<'x>),
-    SetEat {
+    SetLifted {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,
-        set_eat_to: bool,
+        set_lifted_to: Lifted,
     },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),

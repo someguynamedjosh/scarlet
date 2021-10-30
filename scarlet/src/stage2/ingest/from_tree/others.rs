@@ -7,7 +7,7 @@ use crate::{
     stage1::structure::TokenTree,
     stage2::{
         ingest::top_level::IngestionContext,
-        structure::{BuiltinValue, Definition, ItemId, VarType, Variable},
+        structure::{BuiltinValue, Definition, ExplicitlyLifted, ItemId, VarType, Variable},
     },
 };
 
@@ -24,10 +24,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             .map(|tt| self.ingest_tree(tt))
             .collect();
 
-        Definition::SetEat {
+        Definition::SetLifted {
             base,
             vals,
-            set_eat_to: false,
+            set_lifted_to: ExplicitlyLifted,
         }
     }
 
