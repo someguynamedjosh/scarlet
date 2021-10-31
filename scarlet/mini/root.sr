@@ -8,5 +8,6 @@
 
     paren is PATTERN.V
 
-    paren(After(x y) x + y).S
+    thing is After(x y) x + y
+    thing.S
 }
