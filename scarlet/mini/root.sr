@@ -8,6 +8,6 @@
 
     paren is PATTERN.V
 
-    thing is After(x y) x + y
+    thing is After(x y) { thex is x they is y}
     thing.S
 }

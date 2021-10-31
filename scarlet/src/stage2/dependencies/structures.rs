@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{ExplicitlyLifted, ImplicitlyLowered, ItemId, VariableInfo},
+    stage2::structure::{ExplicitlyLifted, ImplicitlyLowered, ItemId, VariableId, VariableInfo},
 };
 
 #[derive(Debug)]
@@ -52,11 +52,11 @@ impl<'x, T: PartialEq + Eq + Hash + Debug> QueryResult<'x, T> {
 }
 
 impl<'x> DepQueryResult<'x> {
-    pub fn without_unlifted(self) -> Self {
+    pub fn with_only(self, keep: &[VariableId<'x>]) -> Self {
         let deps = self
             .deps
             .into_iter()
-            .filter(|x| x.0.lifted == ExplicitlyLifted)
+            .filter(|x| keep.contains(&x.0.var))
             .map(|(mut x, _)| {
                 x.lifted = ImplicitlyLowered;
                 (x, ())

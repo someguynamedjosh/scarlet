@@ -228,18 +228,9 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> (ItemId<'x>, Vec<TokenTree>) {
+    fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> ItemId<'x> {
         let mut item = item;
-        let mut afters = Vec::new();
         while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
-            match self.items[item].after.clone() {
-                None => (),
-                Some(vars) => {
-                    for (var, _) in vars {
-                        afters.push(self.get_var_name_or_code(var.var, context))
-                    }
-                }
-            }
             item = *other;
         }
         if let Some(reduced) = self.items[item].cached_reduction {
@@ -247,7 +238,7 @@ impl<'x> Environment<'x> {
                 return self.dereference(reduced, context);
             }
         }
-        (item, afters)
+        item
     }
 
     fn prepend_afters<'a>(&'a self, base: TokenTree<'a>, afters: Vec<TokenTree<'a>>) -> TokenTree {
@@ -266,9 +257,8 @@ impl<'x> Environment<'x> {
     }
 
     pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
-        let (of, afters) = self.dereference(of, context);
-        let name = self.get_name_impl(of, context);
-        name.map(|name| self.prepend_afters(name, afters))
+        let of = self.dereference(of, context);
+        self.get_name_impl(of, context)
     }
 
     pub fn get_name_impl(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
@@ -313,10 +303,10 @@ impl<'x> Environment<'x> {
         struct_id: ItemId<'x>,
         fields: &[StructField],
     ) {
-        let (item, _) = self.dereference(item, context);
+        let item = self.dereference(item, context);
         let mut index = 0;
         for field in fields {
-            let value = self.dereference(field.value, context).0;
+            let value = self.dereference(field.value, context);
             if self.get_definition(value) == self.get_definition(item) {
                 let name = field_name(field, index);
                 parents.push((struct_id, name))

@@ -6,47 +6,51 @@ use crate::stage2::structure::{
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
+    pub(super) fn get_deps_from_def(
+        &mut self,
+        of: ItemId<'x>,
+        after: &[VariableId<'x>],
+    ) -> DepQueryResult<'x> {
         match self.get_definition(of).clone() {
             Definition::After { base, vals } => {
                 let mut after_vars = DepQueryResult::new();
                 for val in vals {
-                    after_vars.append(self.dep_query(val));
+                    after_vars.append(self.dep_query(val, &[]));
                 }
                 let extra_partial_overs = after_vars.partial_over;
                 let after_vars = after_vars.deps.into_iter().map(|x| x.0.var).collect_vec();
 
-                let mut result = self.dep_query(base);
+                let new_after = [after.to_owned(), after_vars].concat();
+                let mut result = self.dep_query(base, &new_after[..]);
                 result.partial_over = result.partial_over.union(extra_partial_overs);
-                for (dvar, _) in after_vars.deps {}
                 result
             }
             Definition::BuiltinOperation(_, args) => {
                 let mut result = DepQueryResult::new();
                 for arg in args {
-                    result.append(self.dep_query(arg));
+                    result.append(self.dep_query(arg, &[]));
                 }
                 result
             }
-            Definition::BuiltinValue(_) => todo!(),
+            Definition::BuiltinValue(_) => DepQueryResult::new(),
             Definition::Match {
                 base,
                 conditions,
                 else_value,
             } => todo!(),
             Definition::Member(_, _) => todo!(),
-            Definition::Other(other) => self.dep_query(other),
+            Definition::Other(other) => self.dep_query(other, after),
             Definition::Struct(fields) => {
                 let mut query = DepQueryResult::new();
                 for field in fields {
-                    query.append(self.dep_query(field.value));
+                    query.append(self.dep_query(field.value, &[]).with_only(after));
                 }
                 query
             }
             Definition::UnresolvedSubstitute(_, _) => unreachable!(),
             Definition::ResolvedSubstitute(_, _) => todo!(),
             Definition::Variable { var, typee } => {
-                let mut result = self.deps_of_var_typ(typee).without_unlifted();
+                let mut result = self.deps_of_var_typ(typee, after).with_only(after);
                 let this = VariableInfo {
                     var_item: of,
                     var,
@@ -59,10 +63,14 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn deps_of_var_typ(&mut self, typee: VarType<'x>) -> DepQueryResult<'x> {
+    fn deps_of_var_typ(
+        &mut self,
+        typee: VarType<'x>,
+        after: &[VariableId<'x>],
+    ) -> DepQueryResult<'x> {
         match typee {
             VarType::God | VarType::_32U | VarType::Bool => DepQueryResult::new(),
-            VarType::Just(other) => self.dep_query(other),
+            VarType::Just(other) => self.dep_query(other, after),
             VarType::And(_, _) => todo!(),
         }
     }
