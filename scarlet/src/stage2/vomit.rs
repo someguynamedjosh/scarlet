@@ -123,19 +123,6 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Other(item) => self.get_code(item, context),
-            Definition::After { base, vals } => {
-                let vals = TokenTree::BuiltinRule {
-                    name: "vals",
-                    body: vals
-                        .into_iter()
-                        .map(|x| self.get_name_or_code(x, context))
-                        .collect(),
-                };
-                TokenTree::BuiltinRule {
-                    name: "after",
-                    body: vec![vals, self.get_name_or_code(base, context)],
-                }
-            }
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {
@@ -213,7 +200,7 @@ impl<'x> Environment<'x> {
                         body: vec![],
                     },
                     VarType::Just(other) => TokenTree::BuiltinRule {
-                        name: "any",
+                        name: "variable",
                         body: vec![self.get_name_or_code(other, context)],
                     },
                     VarType::And(left, right) => TokenTree::BuiltinRule {

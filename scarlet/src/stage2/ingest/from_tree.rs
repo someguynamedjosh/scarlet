@@ -27,7 +27,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             TokenTree::BuiltinRule {
                 name: "after",
                 body,
-            } => self.after_def(body),
+            } => self.after_def(body, into),
             TokenTree::BuiltinRule {
                 name: "match",
                 body,

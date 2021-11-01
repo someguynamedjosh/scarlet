@@ -12,19 +12,21 @@ use crate::{
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
-    pub fn after_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+    pub fn after_def(&mut self, body: &'x Vec<TokenTree<'x>>, into: ItemId<'x>) -> Definition<'x> {
         if body.len() != 2 {
             todo!("Nice error");
         }
 
-        let base = self.ingest_tree(&body[1]);
-        let vals: Vec<_> = body[0]
+        let base = self.definition_from_tree(&body[1], into);
+        let mut vals: Vec<_> = body[0]
             .unwrap_builtin("vals")
             .iter()
             .map(|tt| self.ingest_tree(tt))
             .collect();
 
-        Definition::After { base, vals }
+        self.env.items[into].after.append(&mut vals);
+
+        base
     }
 
     pub fn member_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {

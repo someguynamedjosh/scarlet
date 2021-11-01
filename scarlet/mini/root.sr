@@ -6,86 +6,8 @@
     x is 32U.V
     y is 32U.V
 
-    idy is PATTERN.V
+    idy is PATTERN.V.S
 
-    condition is BOOL.V
-    PROOF is After(condition) condition AND true
 
-    # This should not be dependant on x and y
-    {
-        the_x is x
-        the_y is y
-    }
-
-    # However, this should.
-    After(x y)
-    {
-        the_x is x
-        the_y is y
-    }
-
-    # This should be dependant on x
-    # Because x is dependant on x, so a reference to x 
-    # should also be dependant on x.
-    {
-        the_x is x
-        the_y is y
-    }
-    .the_x
-
-    # This should be dependant on x
-    After(x)
-    y.Match(
-        on x 123
-        else 456
-    )
-
-    # This should not. x should be used as "anything that can be assigned to x".
-    y.Match(
-        on x 123
-        else unreachable
-    )
-
-    # This should also be dependant on x?
-    After(x)
-    {
-        something is 
-        {
-            value is x
-        }
-    }
-
-    # What about this?
-    # I'm leaning towards "it should be dependant on x"
-    y.Match(
-        on 123 x
-        else   123
-    )
-
-    # It looks like the only place where we want that behavior prevented is in
-    # structs and patterns.
-    After(x) V(x)
-
-    # How do we express functions?
-    f.Match(
-        on 32U.From(x y) f(1 2)
-        else 123
-    )
-    f is After(x y) V(32U)
-
-    # But then how do we accept that in a struct?
-    # Wait, that's not a problem.
-    {
-        f is After(x y) V(32U)
-    }
-
-    f is After(x) V(32U)
-    # Dependant on f with type 32U! Bad?
-    # No, because the variable still remembers it's after x.
-    called_with_one is f(1)
-
-    # Reduces to 4
-    called_with_one(x + 3)
-
-    PROOF(true).S
+    # PROOF(true).S
 }

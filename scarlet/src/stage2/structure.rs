@@ -78,10 +78,6 @@ pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
-    After {
-        base: ItemId<'x>,
-        vals: Vec<ItemId<'x>>,
-    },
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
@@ -167,7 +163,7 @@ pub struct Item<'x> {
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
     /// The variables that should remain dependencies when doing pattern
     /// matching.
-    pub after: Option<OrderedSet<VariableInfo<'x>>>,
+    pub after: Vec<ItemId<'x>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

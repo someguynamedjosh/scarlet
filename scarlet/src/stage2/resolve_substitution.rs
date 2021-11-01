@@ -1,11 +1,14 @@
 use super::structure::{Substitutions, UnresolvedSubstitution};
-use crate::{shared::OrderedSet, stage2::structure::{
-    Definition, Environment, ImplicitlyLowered, ItemId, VarType, VariableId, VariableInfo,
-}};
+use crate::{
+    shared::OrderedSet,
+    stage2::structure::{
+        Definition, Environment, ImplicitlyLowered, ItemId, VarType, VariableId, VariableInfo,
+    },
+};
 
 impl<'x> Environment<'x> {
     pub(super) fn resolve_substitution(&mut self, item: ItemId<'x>) {
-        if let Definition::UnresolvedSubstitute(base, subs) = self.get_definition(id) {
+        if let Definition::UnresolvedSubstitute(base, subs) = self.get_definition(item) {
             let base = *base;
             let mut subs = subs.clone();
             let new_subs = self.resolve_targets_in_sub(base, &mut subs);
@@ -54,22 +57,23 @@ impl<'x> Environment<'x> {
                 resolved_target = *value;
             }
         }
-        match self.matches(value, resolved_target) {
-            MatchResult::Match(subs) => {
-                for &(target, _) in &subs {
-                    for (entry, _) in &*deps {
-                        if entry.var == target {
-                            let entry = *entry;
-                            deps.remove(&entry);
-                            break;
-                        }
-                    }
-                }
-                subs
-            }
-            MatchResult::NoMatch => todo!(),
-            MatchResult::Unknown => todo!(),
-        }
+        todo!()
+        // match self.matches(value, resolved_target) {
+        //     MatchResult::Match(subs) => {
+        //         for &(target, _) in &subs {
+        //             for (entry, _) in &*deps {
+        //                 if entry.var == target {
+        //                     let entry = *entry;
+        //                     deps.remove(&entry);
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //         subs
+        //     }
+        //     MatchResult::NoMatch => todo!(),
+        //     MatchResult::Unknown => todo!(),
+        // }
     }
 
     fn resolve_anonymous_target(
@@ -80,24 +84,25 @@ impl<'x> Environment<'x> {
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
             let dep = *dep;
+            todo!();
             // let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
             // let subbed_dep = self.reduce(subbed_dep);
             // let subbed_dep_pattern = self.as_pattern(subbed_dep);
             // let value = self.reduce(value);
             // let result = self.matches(value, subbed_dep_pattern);
-            let result = self.matches(value, dep);
-            if let MatchResult::Match(matched_subs) = result {
-                for (matched_dep, _) in &matched_subs {
-                    for (dep, _) in &*deps {
-                        if dep.var == *matched_dep {
-                            let dep = *dep;
-                            deps.remove(&dep);
-                            break;
-                        }
-                    }
-                }
-                return matched_subs;
-            }
+            // let result = self.matches(value, dep);
+            // if let MatchResult::Match(matched_subs) = result {
+            //     for (matched_dep, _) in &matched_subs {
+            //         for (dep, _) in &*deps {
+            //             if dep.var == *matched_dep {
+            //                 let dep = *dep;
+            //                 deps.remove(&dep);
+            //                 break;
+            //             }
+            //         }
+            //     }
+            //     return matched_subs;
+            // }
         }
         println!("{:#?}", self);
         todo!(
