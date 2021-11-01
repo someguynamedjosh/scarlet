@@ -47,7 +47,10 @@ impl<'x> Environment<'x> {
                 }
                 query
             }
-            Definition::UnresolvedSubstitute(_, _) => unreachable!(),
+            Definition::UnresolvedSubstitute(..) => {
+                self.resolve_substitution(of);
+                self.get_deps_from_def(of, after)
+            }
             Definition::ResolvedSubstitute(_, _) => todo!(),
             Definition::Variable { var, typee } => {
                 let mut result = self.deps_of_var_typ(typee, after).with_only(after);
@@ -71,7 +74,11 @@ impl<'x> Environment<'x> {
         match typee {
             VarType::God | VarType::_32U | VarType::Bool => DepQueryResult::new(),
             VarType::Just(other) => self.dep_query(other, after),
-            VarType::And(_, _) => todo!(),
+            VarType::And(left, right) => {
+                let mut result = self.dep_query(left, after);
+                result.append(self.dep_query(right, after));
+                result
+            }
         }
     }
 }

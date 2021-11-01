@@ -6,8 +6,10 @@
     x is 32U.V
     y is 32U.V
 
-    paren is PATTERN.V
+    idy is PATTERN.V
 
-    thing is After(x y) { thex is x they is y}
-    thing.S
+    condition is BOOL.V
+    PROOF is condition AND true
+
+    PROOF(true).S
 }
