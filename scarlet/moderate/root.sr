@@ -4,7 +4,7 @@
     PATTERN is builtin{PATTERN}
 
     condition is BOOL.V
-    PROOF is After(condition) condition AND true
+    PROOF is condition.Eager(Self) AND true
 
     # This should not be dependant on x and y
     {
@@ -13,11 +13,17 @@
     }
 
     # However, this should.
-    After(x y)
+    {
+        the_x is x.Eager(x)
+        the_y is y.Eager(y)
+    }
+
+    # And this? Maybe? At least not for now.
     {
         the_x is x
         the_y is y
     }
+    .Shy(x y)
 
     # This should be dependant on x
     # Because x is dependant on x, so a reference to x 
@@ -29,54 +35,42 @@
     .the_x
 
     # This should be dependant on x
-    After(x)
     y.Match(
-        on x 123
+        on x.Eager(x) 123
         else 456
     )
 
-    # This should not. x should be used as "anything that can be assigned to x".
+    # This should not.
     y.Match(
-        on x 123
+        on x.Shy(x) 123
         else unreachable
     )
 
-    # This should also be dependant on x?
-    After(x)
+    # This should also be dependant on x.
     {
         something is 
         {
-            value is x
+            value is x.Eager(x)
         }
     }
 
-    # What about this?
-    # I'm leaning towards "it should be dependant on x"
+    # This will always be dependant on x.
     y.Match(
         on 123 x
         else   123
     )
 
-    # It looks like the only place where we want that behavior prevented is in
-    # structs and patterns.
-    After(x) V(x)
+    # Depends on "x" and the new variable.
+    x.Eager(x).Var
+
+    # x.Var.Eager(All)
+    x.Var.Eager(Self)
 
     # How do we express functions?
-    f.Match(
-        on 32U.From(x y) f(1 2)
-        else 123
-    )
-    f is After(x y) V(32U)
+    f is 32U.Var(x y)
 
-    # But then how do we accept that in a struct?
-    # Wait, that's not a problem.
-    {
-        f is After(x y) V(32U)
-    }
+    f is 32U.Var(x)
 
-    f is After(x) V(32U)
-    # Dependant on f with type 32U! Bad?
-    # No, because the variable still remembers it's after x.
     called_with_one is f(1)
 
     # Reduces to 4

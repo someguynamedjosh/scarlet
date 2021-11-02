@@ -22,7 +22,7 @@ impl<'x> Environment<'x> {
                 else_value,
             } => todo!(),
             Definition::Member(_, _) => todo!(),
-            Definition::Other(other) => self.dep_query(other),
+            Definition::Other { item, .. } => self.dep_query(item),
             Definition::Struct(fields) => {
                 let mut query = DepQueryResult::new();
                 for field in fields {

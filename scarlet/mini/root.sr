@@ -6,7 +6,8 @@
     x is 32U.V
     y is 32U.V
 
-    idy is PATTERN.V.S
+    idy is After(PATTERN) PATTERN.V
+    idy.S
 
 
     # PROOF(true).S

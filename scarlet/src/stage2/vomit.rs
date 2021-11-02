@@ -122,7 +122,7 @@ impl<'x> Environment<'x> {
                     body: vec![base, member],
                 }
             }
-            Definition::Other(item) => self.get_code(item, context),
+            Definition::Other { item, .. } => self.get_code(item, context),
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {
@@ -217,7 +217,9 @@ impl<'x> Environment<'x> {
 
     fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> ItemId<'x> {
         let mut item = item;
-        while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
+        while let Definition::Other { item: other, .. } =
+            self.items[item].definition.as_ref().unwrap()
+        {
             item = *other;
         }
         if let Some(reduced) = self.items[item].cached_reduction {

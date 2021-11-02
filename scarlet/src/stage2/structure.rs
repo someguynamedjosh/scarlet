@@ -86,7 +86,10 @@ pub enum Definition<'x> {
         else_value: ItemId<'x>,
     },
     Member(ItemId<'x>, String),
-    Other(ItemId<'x>),
+    Other {
+        item: ItemId<'x>,
+        pass_after: bool,
+    },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
     ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),
