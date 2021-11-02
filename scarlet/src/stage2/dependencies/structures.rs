@@ -57,4 +57,22 @@ impl<'x> DepQueryResult<'x> {
         let partial_over = self.partial_over;
         Self { deps, partial_over }
     }
+
+    pub fn contains_var(&self, id: VariableId<'x>) -> bool {
+        for (dep, _) in &self.deps {
+            if dep.var == id {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn remove_var(&mut self, id: VariableId<'x>) {
+        self.deps = self
+            .deps
+            .take()
+            .into_iter()
+            .filter(|x| x.0.var != id)
+            .collect();
+    }
 }

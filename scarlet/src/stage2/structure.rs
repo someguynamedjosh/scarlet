@@ -67,7 +67,7 @@ pub struct UnresolvedSubstitution<'x> {
     pub value: ItemId<'x>,
 }
 
-pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
+pub type Substitutions<'x> = OrderedMap<VariableInfo<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {

@@ -1,7 +1,10 @@
 use super::structure::{Substitutions, UnresolvedSubstitution};
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{Definition, Environment, ItemId, VarType, VariableId, VariableInfo},
+    stage2::{
+        matchh::MatchResult,
+        structure::{Definition, Environment, ItemId, VarType, VariableId, VariableInfo},
+    },
 };
 
 impl<'x> Environment<'x> {
@@ -55,23 +58,22 @@ impl<'x> Environment<'x> {
                 resolved_target = *value;
             }
         }
-        todo!()
-        // match self.matches(value, resolved_target) {
-        //     MatchResult::Match(subs) => {
-        //         for &(target, _) in &subs {
-        //             for (entry, _) in &*deps {
-        //                 if entry.var == target {
-        //                     let entry = *entry;
-        //                     deps.remove(&entry);
-        //                     break;
-        //                 }
-        //             }
-        //         }
-        //         subs
-        //     }
-        //     MatchResult::NoMatch => todo!(),
-        //     MatchResult::Unknown => todo!(),
-        // }
+        match self.matches(value, resolved_target) {
+            MatchResult::Match(subs) => {
+                for &(target, _) in &subs {
+                    for (entry, _) in &*deps {
+                        if entry.var == target {
+                            let entry = *entry;
+                            deps.remove(&entry);
+                            break;
+                        }
+                    }
+                }
+                subs
+            }
+            MatchResult::NoMatch => todo!("Nice error, value will not match what it's assigned to."),
+            MatchResult::Unknown => todo!("Nice error, value might not match what it's assigned to."),
+        }
     }
 
     fn resolve_anonymous_target(

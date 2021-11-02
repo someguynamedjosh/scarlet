@@ -10,6 +10,9 @@
 
     another is just.V
 
+    # finally is another(another is 123).S
 
-    # PROOF(true).S
+    int is 32U.V
+
+    finally is int(int is 123).S
 }

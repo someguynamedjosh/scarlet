@@ -54,7 +54,18 @@ impl<'x> Environment<'x> {
                 self.resolve_substitution(of);
                 self.get_deps_from_def(of)
             }
-            Definition::ResolvedSubstitute(_, _) => todo!(),
+            Definition::ResolvedSubstitute(base, subs) => {
+                let base_deps = self.dep_query(base);
+                let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
+                for (dep, _) in base_deps.deps {
+                    if let Some(&value) = subs.get(&dep.var) {
+                        final_deps.append(self.dep_query(value));
+                    } else {
+                        final_deps.deps.insert_or_replace(dep, ());
+                    }
+                }
+                final_deps
+            },
             Definition::Variable { var, typee } => {
                 let mut result = self.deps_of_var_typ(typee).discarding_shy();
                 let this = VariableInfo {
