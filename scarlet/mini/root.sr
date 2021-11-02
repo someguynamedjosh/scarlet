@@ -6,8 +6,8 @@
     x is 32U.V
     y is 32U.V
 
-    idy is After(PATTERN) PATTERN.V
-    idy.S
+    just is PATTERN.V.Eager(just)
+    just.S
 
 
     # PROOF(true).S

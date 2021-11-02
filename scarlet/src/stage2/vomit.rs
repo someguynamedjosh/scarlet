@@ -123,6 +123,21 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Other { item, .. } => self.get_code(item, context),
+            Definition::SetEager { base, vals, eager } => {
+                let base = self.get_name_or_code(base, context);
+                let vals = vals
+                    .into_iter()
+                    .map(|v| self.get_name_or_code(v, context))
+                    .collect();
+                let vals = TokenTree::BuiltinRule {
+                    name: "vals",
+                    body: vals,
+                };
+                TokenTree::BuiltinRule {
+                    name: if eager { "eager" } else { "shy" },
+                    body: vec![vals, base],
+                }
+            }
             Definition::Struct(fields) => {
                 let mut body = Vec::new();
                 for field in fields {

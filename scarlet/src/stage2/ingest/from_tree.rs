@@ -25,9 +25,9 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             TokenTree::Token(token) => self.token_def(token),
 
             TokenTree::BuiltinRule {
-                name: "after",
+                name: "eager",
                 body,
-            } => self.after_def(body, into),
+            } => self.eagerness_def(body, true),
             TokenTree::BuiltinRule {
                 name: "match",
                 body,

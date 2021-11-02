@@ -1,8 +1,9 @@
 use itertools::Itertools;
 
 use super::structures::DepQueryResult;
-use crate::stage2::structure::{
-    Definition, Environment, ImplicitlyLowered, ItemId, VarType, VariableId, VariableInfo,
+use crate::{
+    shared::OrderedSet,
+    stage2::structure::{Definition, Environment, ItemId, VarType, VariableId, VariableInfo},
 };
 
 impl<'x> Environment<'x> {
@@ -23,6 +24,22 @@ impl<'x> Environment<'x> {
             } => todo!(),
             Definition::Member(_, _) => todo!(),
             Definition::Other { item, .. } => self.dep_query(item),
+            Definition::SetEager { base, vals, eager } => {
+                let mut deps_to_set = DepQueryResult::new();
+                for val in vals {
+                    deps_to_set.append(self.dep_query(val));
+                }
+                let mut result = self.dep_query(base);
+                result.partial_over = result.partial_over.union(deps_to_set.partial_over);
+                for (set_this, _) in deps_to_set.deps {
+                    for (target, _) in &mut result.deps {
+                        if target.var == set_this.var {
+                            target.eager = eager;
+                        }
+                    }
+                }
+                result
+            }
             Definition::Struct(fields) => {
                 let mut query = DepQueryResult::new();
                 for field in fields {
@@ -41,7 +58,7 @@ impl<'x> Environment<'x> {
                     var_item: of,
                     var,
                     typee,
-                    lifted: ImplicitlyLowered,
+                    eager: false,
                 };
                 result.deps.insert_or_replace(this, ());
                 result

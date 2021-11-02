@@ -50,18 +50,11 @@ impl BuiltinValue {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Lifted {
-    ExplicitlyLifted,
-    ImplicitlyLowered,
-}
-pub use Lifted::*;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct VariableInfo<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
     pub typee: VarType<'x>,
-    pub lifted: Lifted,
+    pub eager: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -89,6 +82,11 @@ pub enum Definition<'x> {
     Other {
         item: ItemId<'x>,
         pass_after: bool,
+    },
+    SetEager {
+        base: ItemId<'x>,
+        vals: Vec<ItemId<'x>>,
+        eager: bool,
     },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
@@ -164,9 +162,6 @@ pub struct Item<'x> {
     pub scope: HashMap<Token<'x>, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
-    /// The variables that should remain dependencies when doing pattern
-    /// matching.
-    pub after: Vec<ItemId<'x>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

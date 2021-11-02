@@ -1,15 +1,15 @@
-[
-    BOOL is builtin{BOOL any BOOL}
-    32U is builtin{32U any 32U}
-    PATTERN is builtin{PATTERN}
+{
+    BOOL is Builtin(BOOL)
+    32U is Builtin(32U)
+    PATTERN is Builtin(PATTERN)
 
     condition is BOOL.V
     PROOF is condition.Eager(Self) AND true
 
     # This should not be dependant on x and y
     {
-        the_x is x
-        the_y is y
+        the_x is x.Shy(x)
+        the_y is y.Shy(y)
     }
 
     # However, this should.
@@ -29,8 +29,8 @@
     # Because x is dependant on x, so a reference to x 
     # should also be dependant on x.
     {
-        the_x is x
-        the_y is y
+        the_x is x.Shy(x)
+        the_y is y.Shy(y)
     }
     .the_x
 
@@ -67,12 +67,9 @@
     x.Var.Eager(Self)
 
     # How do we express functions?
-    f is 32U.Var(x y)
-
     f is 32U.Var(x)
-
     called_with_one is f(1)
 
     # Reduces to 4
     called_with_one(x + 3)
-]
+}

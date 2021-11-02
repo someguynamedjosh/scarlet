@@ -41,7 +41,6 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             }
         }
         self.env.items.push(Item {
-            after: Vec::new(),
             dependencies: None,
             original_definition: src,
             definition: None,

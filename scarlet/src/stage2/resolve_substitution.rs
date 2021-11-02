@@ -1,9 +1,7 @@
 use super::structure::{Substitutions, UnresolvedSubstitution};
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{
-        Definition, Environment, ImplicitlyLowered, ItemId, VarType, VariableId, VariableInfo,
-    },
+    stage2::structure::{Definition, Environment, ItemId, VarType, VariableId, VariableInfo},
 };
 
 impl<'x> Environment<'x> {
@@ -85,14 +83,14 @@ impl<'x> Environment<'x> {
         for (dep, _) in &*deps {
             let dep = *dep;
             todo!();
-            // let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
-            // let subbed_dep = self.reduce(subbed_dep);
-            // let subbed_dep_pattern = self.as_pattern(subbed_dep);
-            // let value = self.reduce(value);
-            // let result = self.matches(value, subbed_dep_pattern);
-            // let result = self.matches(value, dep);
-            // if let MatchResult::Match(matched_subs) = result {
-            //     for (matched_dep, _) in &matched_subs {
+            // let subbed_dep = self.substitute(dep.var_item,
+            // previous_subs).unwrap(); let subbed_dep =
+            // self.reduce(subbed_dep); let subbed_dep_pattern =
+            // self.as_pattern(subbed_dep); let value =
+            // self.reduce(value); let result = self.matches(value,
+            // subbed_dep_pattern); let result = self.matches(value,
+            // dep); if let MatchResult::Match(matched_subs) =
+            // result {     for (matched_dep, _) in &matched_subs {
             //         for (dep, _) in &*deps {
             //             if dep.var == *matched_dep {
             //                 let dep = *dep;
