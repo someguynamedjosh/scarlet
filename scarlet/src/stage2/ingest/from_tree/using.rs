@@ -21,17 +21,14 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             in_scopes: &new_in_scopes[..],
         };
         let base = child.ingest_tree(&body[0]);
-        Definition::Other {
-            item: base,
-            pass_after: true,
-        }
+        Definition::Other(base)
     }
 }
 
 impl<'x> Environment<'x> {
     pub fn get_members(&self, of: ItemId<'x>) -> HashMap<Token<'x>, ItemId<'x>> {
         match self.get_definition(of) {
-            Definition::Other { item, .. } => self.get_members(*item),
+            Definition::Other(item) => self.get_members(*item),
             Definition::Struct(fields) => {
                 let mut result = HashMap::new();
                 for field in fields {

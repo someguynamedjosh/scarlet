@@ -79,10 +79,7 @@ pub enum Definition<'x> {
         else_value: ItemId<'x>,
     },
     Member(ItemId<'x>, String),
-    Other {
-        item: ItemId<'x>,
-        pass_after: bool,
-    },
+    Other(ItemId<'x>),
     SetEager {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,

@@ -5,7 +5,7 @@ use crate::{
     stage2::structure::{ItemId, VariableId, VariableInfo},
 };
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) struct QueryResult<'x, T> {
     pub(super) deps: OrderedSet<T>,
     pub(super) partial_over: OrderedSet<ItemId<'x>>,

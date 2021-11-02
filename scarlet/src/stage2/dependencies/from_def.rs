@@ -23,13 +23,16 @@ impl<'x> Environment<'x> {
                 else_value,
             } => todo!(),
             Definition::Member(_, _) => todo!(),
-            Definition::Other { item, .. } => self.dep_query(item),
+            Definition::Other(item) => self.dep_query(item),
             Definition::SetEager { base, vals, eager } => {
                 let mut deps_to_set = DepQueryResult::new();
                 for val in vals {
                     deps_to_set.append(self.dep_query(val));
                 }
                 let mut result = self.dep_query(base);
+                if deps_to_set.partial_over.contains_key(&of) {
+                    deps_to_set.append(result.clone());
+                }
                 result.partial_over = result.partial_over.union(deps_to_set.partial_over);
                 for (set_this, _) in deps_to_set.deps {
                     for (target, _) in &mut result.deps {
@@ -43,7 +46,7 @@ impl<'x> Environment<'x> {
             Definition::Struct(fields) => {
                 let mut query = DepQueryResult::new();
                 for field in fields {
-                    query.append(self.dep_query(field.value));
+                    query.append(self.dep_query(field.value).discarding_shy());
                 }
                 query
             }
@@ -53,7 +56,7 @@ impl<'x> Environment<'x> {
             }
             Definition::ResolvedSubstitute(_, _) => todo!(),
             Definition::Variable { var, typee } => {
-                let mut result = self.deps_of_var_typ(typee);
+                let mut result = self.deps_of_var_typ(typee).discarding_shy();
                 let this = VariableInfo {
                     var_item: of,
                     var,

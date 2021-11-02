@@ -7,7 +7,8 @@
     y is 32U.V
 
     just is PATTERN.V.Eager(just)
-    just.S
+
+    another is just.V
 
 
     # PROOF(true).S

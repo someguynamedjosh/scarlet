@@ -42,10 +42,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let value = &body[0];
         let item = self.ingest_tree(value);
         self.env.items[item].shown_from.push(into);
-        Definition::Other {
-            item,
-            pass_after: true,
-        }
+        Definition::Other(item)
     }
 
     pub fn token_def(&mut self, token: &&str) -> Definition<'x> {
@@ -65,10 +62,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 }
             }
             let id = result.expect(&format!("TODO: Nice error, bad ident {}", token));
-            Definition::Other {
-                item: id,
-                pass_after: false,
-            }
+            Definition::Other(id)
         }
     }
 
