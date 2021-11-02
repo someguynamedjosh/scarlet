@@ -232,7 +232,9 @@ impl<'x> Environment<'x> {
 
     fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> ItemId<'x> {
         let mut item = item;
-        while let Definition::Other(other) = self.items[item].definition.as_ref().unwrap() {
+        while let Definition::Other(other) | Definition::SetEager { base: other, .. } =
+            self.items[item].definition.as_ref().unwrap()
+        {
             item = *other;
         }
         if let Some(reduced) = self.items[item].cached_reduction {
@@ -241,21 +243,6 @@ impl<'x> Environment<'x> {
             }
         }
         item
-    }
-
-    fn prepend_afters<'a>(&'a self, base: TokenTree<'a>, afters: Vec<TokenTree<'a>>) -> TokenTree {
-        if afters.len() == 0 {
-            base
-        } else {
-            let vals = TokenTree::BuiltinRule {
-                name: "vals",
-                body: afters,
-            };
-            TokenTree::BuiltinRule {
-                name: "after",
-                body: vec![vals, base],
-            }
-        }
     }
 
     pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {

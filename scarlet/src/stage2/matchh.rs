@@ -14,6 +14,7 @@ pub enum MatchResult<'x> {
     Unknown,
 }
 
+use itertools::Itertools;
 use MatchResult::*;
 
 fn non_capturing_match<'x>() -> MatchResult<'x> {
@@ -96,6 +97,15 @@ impl<'x> Environment<'x> {
                 let result = self.matches_var_type(item, item_bounding_pattern, typee, eager_vars);
                 if let Match(mut subs) = result {
                     subs.insert_no_replace(var, item);
+                    let var_deps = self
+                        .get_deps(match_against)
+                        .into_iter()
+                        .map(|x| x.0.var)
+                        .collect_vec();
+                    let subs = subs
+                        .into_iter()
+                        .filter(|x| var_deps.contains(&x.0))
+                        .collect();
                     Match(subs)
                 } else {
                     result

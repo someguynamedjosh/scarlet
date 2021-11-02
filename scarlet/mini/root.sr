@@ -12,7 +12,8 @@
 
     # finally is another(another is 123).S
 
-    int is 32U.V
+    int is 32U.V.Eager(int)
+    var is int.V
 
-    finally is int(int is 123).S
+    finally is var(var is 123).S
 }
