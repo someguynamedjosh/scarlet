@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use super::top_level::IngestionContext;
 use crate::{
-    stage1::structure::{Token, TokenTree},
-    stage2::structure::{Environment, Item, ItemId},
+    stage1::structure::TokenTree,
+    stage2::structure::{Item, ItemId},
 };
 
 pub struct MaybeTarget<'x> {

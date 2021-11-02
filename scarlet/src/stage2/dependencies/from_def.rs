@@ -1,10 +1,5 @@
-use itertools::Itertools;
-
 use super::structures::DepQueryResult;
-use crate::{
-    shared::OrderedSet,
-    stage2::structure::{Definition, Environment, ItemId, VarType, VariableId, VariableInfo},
-};
+use crate::stage2::structure::{Definition, Environment, ItemId, VarType, VariableInfo};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
@@ -18,9 +13,9 @@ impl<'x> Environment<'x> {
             }
             Definition::BuiltinValue(_) => DepQueryResult::new(),
             Definition::Match {
-                base,
-                conditions,
-                else_value,
+                base: _,
+                conditions: _,
+                else_value: _,
             } => todo!(),
             Definition::Member(_, _) => todo!(),
             Definition::Other(item) => self.dep_query(item),
@@ -65,7 +60,7 @@ impl<'x> Environment<'x> {
                     }
                 }
                 final_deps
-            },
+            }
             Definition::Variable { var, typee } => {
                 let mut result = self.deps_of_var_typ(typee).discarding_shy();
                 let this = VariableInfo {

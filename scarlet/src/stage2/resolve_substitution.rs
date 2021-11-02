@@ -3,7 +3,7 @@ use crate::{
     shared::OrderedSet,
     stage2::{
         matchh::MatchResult,
-        structure::{Definition, Environment, ItemId, VarType, VariableId, VariableInfo},
+        structure::{Definition, Environment, ItemId, VariableInfo},
     },
 };
 
@@ -71,19 +71,23 @@ impl<'x> Environment<'x> {
                 }
                 subs
             }
-            MatchResult::NoMatch => todo!("Nice error, value will not match what it's assigned to."),
-            MatchResult::Unknown => todo!("Nice error, value might not match what it's assigned to."),
+            MatchResult::NoMatch => {
+                todo!("Nice error, value will not match what it's assigned to.")
+            }
+            MatchResult::Unknown => {
+                todo!("Nice error, value might not match what it's assigned to.")
+            }
         }
     }
 
     fn resolve_anonymous_target(
         &mut self,
         deps: &mut OrderedSet<VariableInfo<'x>>,
-        previous_subs: &Substitutions<'x>,
+        _previous_subs: &Substitutions<'x>,
         value: ItemId<'x>,
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
-            let dep = *dep;
+            let _dep = *dep;
             todo!();
             // let subbed_dep = self.substitute(dep.var_item,
             // previous_subs).unwrap(); let subbed_dep =

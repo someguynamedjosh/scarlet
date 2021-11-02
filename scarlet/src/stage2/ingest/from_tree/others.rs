@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    marker::PhantomData,
-};
+use std::marker::PhantomData;
 
 use crate::{
     stage1::structure::TokenTree,
@@ -18,7 +15,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         }
 
         let base = self.ingest_tree(&body[1]);
-        let mut vals: Vec<_> = body[0]
+        let vals: Vec<_> = body[0]
             .unwrap_builtin("vals")
             .iter()
             .map(|tt| self.ingest_tree(tt))

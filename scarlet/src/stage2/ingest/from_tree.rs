@@ -4,15 +4,12 @@ mod struct_def;
 mod substitute_def;
 mod using;
 
-use std::{collections::HashMap, marker::PhantomData};
+use std::marker::PhantomData;
 
 use super::top_level::IngestionContext;
 use crate::{
-    stage1::structure::{Token, TokenTree},
-    stage2::{
-        ingest::top_level,
-        structure::{BuiltinOperation, Definition, Environment, ItemId, VarType, Variable},
-    },
+    stage1::structure::TokenTree,
+    stage2::structure::{BuiltinOperation, Definition, ItemId, VarType, Variable},
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {

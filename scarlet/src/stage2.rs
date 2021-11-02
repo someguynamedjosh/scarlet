@@ -1,10 +1,10 @@
-pub mod ingest;
-mod replace;
-pub mod structure;
-mod vomit;
-mod util;
 mod dependencies;
-mod resolve_substitution;
+pub mod ingest;
 mod matchh;
+mod replace;
+mod resolve_substitution;
+pub mod structure;
+mod util;
+mod vomit;
 
 pub use ingest::ingest;

@@ -1,10 +1,6 @@
-use super::structure::{Substitutions, UnresolvedSubstitution};
-use crate::{
-    shared::OrderedSet,
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType, VariableId,
-        VariableInfo,
-    },
+use super::structure::Substitutions;
+use crate::stage2::structure::{
+    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType, VariableId,
 };
 
 #[derive(Clone, Debug)]
@@ -64,9 +60,9 @@ impl<'x> Environment<'x> {
                 }
             }
             Definition::Match {
-                base,
-                conditions,
-                else_value,
+                base: _,
+                conditions: _,
+                else_value: _,
             } => todo!(),
             Definition::Member(_, _) => Unknown,
             Definition::Other(match_against) => {
