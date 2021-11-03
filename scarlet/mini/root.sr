@@ -3,10 +3,10 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    # finally is another(another is 123).S
+    math is 1 + 2 + 3 - 4
 
-    int is 32U.V
-    var is int.Eager(int).V
+    # int is 32U.V
+    # var is int.Eager(int).V
 
-    finally is var(var is 123).S
+    # finally is var(var is 123).S
 }

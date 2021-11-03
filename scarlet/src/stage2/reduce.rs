@@ -3,7 +3,10 @@ use crate::{
     shared::OrderedSet,
     stage2::{
         matchh::MatchResult,
-        structure::{Definition, Environment, ItemId, StructField, VarType, VariableInfo},
+        structure::{
+            BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VarType,
+            VariableInfo,
+        },
     },
 };
 
@@ -45,13 +48,32 @@ impl<'x> Environment<'x> {
     }
 
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
-        match def {
+        match def.clone() {
             Definition::Other(_) => unreachable!(),
             Definition::ResolvedSubstitute(..) => unreachable!(),
             Definition::UnresolvedSubstitute(..) => unreachable!(),
 
-            Definition::BuiltinOperation(_, _) => todo!(),
-            Definition::BuiltinValue(_) => todo!(),
+            Definition::BuiltinOperation(op, args) => match op {
+                BuiltinOperation::Sum32U => {
+                    if let Some(args) = self.args_as_builtin_values(&args[..]) {
+                        Definition::BuiltinValue(BuiltinValue::_32U(
+                            args[0].unwrap_32u() + args[1].unwrap_32u(),
+                        ))
+                    } else {
+                        def
+                    }
+                }
+                BuiltinOperation::Dif32U => {
+                    if let Some(args) = self.args_as_builtin_values(&args[..]) {
+                        Definition::BuiltinValue(BuiltinValue::_32U(
+                            args[0].unwrap_32u() - args[1].unwrap_32u(),
+                        ))
+                    } else {
+                        def
+                    }
+                }
+            },
+            Definition::BuiltinValue(..) => def,
             Definition::Match {
                 base,
                 conditions,
