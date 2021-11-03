@@ -23,7 +23,22 @@ impl<'x> Environment<'x> {
         item: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
-        self.matches_impl(item, item, match_against, &[])
+        let mut bounding_pattern = item;
+        loop {
+            let result = self.matches_impl(item, bounding_pattern, match_against, &[]);
+            if let Unknown = result {
+                match self.get_definition(bounding_pattern) {
+                    Definition::Variable { typee, .. } => {
+                        if let &VarType::Just(other) = typee {
+                            bounding_pattern = other;
+                            continue;
+                        }
+                    }
+                    _ => (),
+                }
+            }
+            return result;
+        }
     }
 
     fn get_or_push_pattern(&mut self, requested_type: VarType<'x>) -> ItemId<'x> {
@@ -132,9 +147,9 @@ impl<'x> Environment<'x> {
                     }
                 }
                 Definition::Variable { typee, .. } => match typee {
-                    VarType::God => return Unknown,
                     VarType::_32U => true,
-                    _ => false,
+                    VarType::Bool => false,
+                    _ => return Unknown,
                 },
                 _ => return Unknown,
             },
@@ -148,16 +163,24 @@ impl<'x> Environment<'x> {
                     }
                 }
                 Definition::Variable { typee, .. } => match typee {
-                    VarType::God => return Unknown,
                     VarType::Bool => true,
-                    _ => false,
+                    VarType::_32U => false,
+                    _ => return Unknown,
                 },
                 _ => return Unknown,
             },
             VarType::Just(match_against) => {
                 return self.matches_impl(item, item_bounding_pattern, match_against, eager_vars)
             }
-            VarType::And(_, _) => todo!(),
+            VarType::And(l, r) => {
+                let l = self.matches_impl(item, item_bounding_pattern, l, eager_vars);
+                let r = self.matches_impl(item, item_bounding_pattern, r, eager_vars);
+                return match (l, r) {
+                    (Match(l), Match(r)) => Match(l.union(r)),
+                    (NoMatch, _) | (_, NoMatch) => NoMatch,
+                    _ => Unknown,
+                };
+            }
         };
         if matches {
             non_capturing_match()

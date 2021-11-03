@@ -23,7 +23,7 @@ impl<'x> Environment<'x> {
             self.get_deps(item);
             self.get_deps(result);
             // println!("{:#?}", self);
-            // println!("{:?} becomes {:?}", original, result);
+            // println!("{:?} becomes {:?}", item, result);
             assert!(self.get_deps(result).len() <= self.get_deps(item).len());
             // println!("{:#?}", self);
             assert_eq!(self.reduce(result), result);
@@ -35,7 +35,14 @@ impl<'x> Environment<'x> {
         let definition = self.items[item].definition.clone().unwrap();
         match definition {
             Definition::Other(other) => self.reduce(other),
-            Definition::ResolvedSubstitute(base, subs) => self.substitute(base, &subs).unwrap(),
+            Definition::ResolvedSubstitute(base, subs) => {
+                let subbed = self.substitute(base, &subs).unwrap();
+                if subbed == item {
+                    subbed
+                } else {
+                    self.reduce(subbed)
+                }
+            }
             Definition::UnresolvedSubstitute(_, _) => {
                 self.resolve_substitution(item);
                 self.reduce_from_scratch(item)

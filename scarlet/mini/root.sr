@@ -3,8 +3,11 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    int is 32U.V
-    var is int.Eager(int).V
+    condition is BOOL.V
 
-    finally is var(123 123).S
+    PROOF is condition.Eager(condition) AND true
+
+    something is BOOL.V
+
+    PROOF(something).S
 }

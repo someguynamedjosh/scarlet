@@ -108,7 +108,6 @@ impl<'x> Environment<'x> {
                 }
                 return matched_subs;
             }
-            todo!();
         }
         println!("{:#?}", self);
         todo!(

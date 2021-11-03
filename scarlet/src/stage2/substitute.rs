@@ -90,17 +90,13 @@ impl<'x> Environment<'x> {
             }
             Definition::SetEager { base, vals, eager } => {
                 let base = self.substitute(base, substitutions)?;
-                let vals = vals
-                    .into_iter()
-                    .map(|x| self.substitute(x, substitutions))
-                    .collect::<Option<_>>()?;
-                let mut has_any_deps_at_all = false;
+                let mut base_deps = self.get_deps(base);
                 for &val in &vals {
-                    if !self.get_deps(val).is_empty() {
-                        has_any_deps_at_all = true;
-                        break;
+                    for (dep, _) in self.get_deps(val) {
+                        base_deps.remove(&dep);
                     }
                 }
+                let has_any_deps_at_all = !base_deps.is_empty();
                 if has_any_deps_at_all {
                     Definition::SetEager { base, vals, eager }
                 } else {
