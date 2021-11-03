@@ -35,7 +35,7 @@ impl<'x> Environment<'x> {
         let definition = self.items[item].definition.clone().unwrap();
         match definition {
             Definition::Other(other) => self.reduce(other),
-            Definition::ResolvedSubstitute(base, subs) => todo!(),
+            Definition::ResolvedSubstitute(base, subs) => self.substitute(base, &subs).unwrap(),
             Definition::UnresolvedSubstitute(_, _) => {
                 self.resolve_substitution(item);
                 self.reduce_from_scratch(item)

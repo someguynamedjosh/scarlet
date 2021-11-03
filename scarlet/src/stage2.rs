@@ -7,5 +7,6 @@ pub mod structure;
 mod util;
 mod vomit;
 mod reduce;
+mod substitute;
 
 pub use ingest::ingest;

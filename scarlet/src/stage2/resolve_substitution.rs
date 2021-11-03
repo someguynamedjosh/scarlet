@@ -26,13 +26,15 @@ impl<'x> Environment<'x> {
         let mut deps = self.get_deps(base);
         for sub in &mut *subs {
             if let Some(possible_meaning) = sub.target_meaning {
-                new_subs = new_subs.union(self.resolve_named_target(
+                let additional_subs = self.resolve_named_target(
                     possible_meaning,
                     sub.target_name,
                     base,
                     sub.value,
                     &mut deps,
-                ));
+                    &new_subs,
+                );
+                new_subs = new_subs.union(additional_subs);
             }
         }
         for sub in &mut *subs {
@@ -51,6 +53,7 @@ impl<'x> Environment<'x> {
         base: ItemId<'x>,
         value: ItemId<'x>,
         deps: &mut OrderedSet<VariableInfo<'x>>,
+        new_subs: &Substitutions<'x>,
     ) -> Substitutions<'x> {
         let mut resolved_target = possible_meaning;
         if let Some(name) = name {
@@ -58,6 +61,7 @@ impl<'x> Environment<'x> {
                 resolved_target = *value;
             }
         }
+        let resolved_target = self.substitute(resolved_target, new_subs).unwrap();
         match self.matches(value, resolved_target) {
             MatchResult::Match(subs) => {
                 for &(target, _) in &subs {
@@ -83,30 +87,28 @@ impl<'x> Environment<'x> {
     fn resolve_anonymous_target(
         &mut self,
         deps: &mut OrderedSet<VariableInfo<'x>>,
-        _previous_subs: &Substitutions<'x>,
+        previous_subs: &Substitutions<'x>,
         value: ItemId<'x>,
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
             let _dep = *dep;
+            let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
+            let subbed_dep = self.reduce(subbed_dep);
+            let value = self.reduce(value);
+            let result = self.matches(value, subbed_dep);
+            if let MatchResult::Match(matched_subs) = result {
+                for (matched_dep, _) in &matched_subs {
+                    for (dep, _) in &*deps {
+                        if dep.var == *matched_dep {
+                            let dep = *dep;
+                            deps.remove(&dep);
+                            break;
+                        }
+                    }
+                }
+                return matched_subs;
+            }
             todo!();
-            // let subbed_dep = self.substitute(dep.var_item,
-            // previous_subs).unwrap(); let subbed_dep =
-            // self.reduce(subbed_dep); let subbed_dep_pattern =
-            // self.as_pattern(subbed_dep); let value =
-            // self.reduce(value); let result = self.matches(value,
-            // subbed_dep_pattern); let result = self.matches(value,
-            // dep); if let MatchResult::Match(matched_subs) =
-            // result {     for (matched_dep, _) in &matched_subs {
-            //         for (dep, _) in &*deps {
-            //             if dep.var == *matched_dep {
-            //                 let dep = *dep;
-            //                 deps.remove(&dep);
-            //                 break;
-            //             }
-            //         }
-            //     }
-            //     return matched_subs;
-            // }
         }
         println!("{:#?}", self);
         todo!(
