@@ -85,7 +85,29 @@ impl<'x> Environment<'x> {
                 base,
                 conditions,
                 else_value,
-            } => todo!(),
+            } => {
+                let base = self.reduce(base);
+                let mut new_conditions = Vec::new();
+                let mut else_value = else_value;
+
+                for condition in conditions {
+                    match self.matches(base, condition.pattern) {
+                        MatchResult::Match(subs) => {
+                            else_value = self.substitute(condition.value, &subs).unwrap();
+                            break;
+                        }
+                        MatchResult::NoMatch => (),
+                        MatchResult::Unknown => new_conditions.push(condition),
+                    }
+                }
+
+                let conditions = new_conditions;
+                Definition::Match {
+                    base,
+                    conditions,
+                    else_value,
+                }
+            }
             Definition::Member(_, _) => todo!(),
             Definition::SetEager { base, vals, eager } => {
                 let base = self.reduce(base);

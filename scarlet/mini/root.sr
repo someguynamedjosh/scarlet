@@ -7,7 +7,7 @@
 
     PROOF is condition.Eager(condition) AND true
 
-    something is BOOL.V
+    value is 32U.V
 
-    PROOF(something).S
+    PROOF(value matches 3).S
 }

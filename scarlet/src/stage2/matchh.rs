@@ -17,45 +17,75 @@ fn non_capturing_match<'x>() -> MatchResult<'x> {
     Match(Substitutions::new())
 }
 
+fn result_and<'x>(results: Vec<MatchResult<'x>>) -> MatchResult<'x> {
+    let mut subs = Substitutions::new();
+    let mut unknown = false;
+    for result in results {
+        match result {
+            Match(result_subs) => {
+                for (target, value) in result_subs {
+                    if let Some(&existing_value) = subs.get(&target) {
+                        if value != existing_value {
+                            return NoMatch;
+                        }
+                    } else {
+                        subs.insert_no_replace(target, value);
+                    }
+                }
+            }
+            NoMatch => return NoMatch,
+            Unknown => unknown = true,
+        }
+    }
+    if unknown {
+        Unknown
+    } else {
+        Match(subs)
+    }
+}
+
 impl<'x> Environment<'x> {
     pub(super) fn matches(
         &mut self,
         item: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
-        let mut bounding_pattern = item;
-        loop {
-            let result = self.matches_impl(item, bounding_pattern, match_against, &[]);
-            if let Unknown = result {
-                match self.get_definition(bounding_pattern) {
-                    Definition::Variable { typee, .. } => {
-                        if let &VarType::Just(other) = typee {
-                            bounding_pattern = other;
-                            continue;
-                        }
-                    }
-                    _ => (),
-                }
-            }
-            return result;
-        }
+        self.find_bp_then_match(item, item, match_against)
     }
 
-    fn get_or_push_pattern(&mut self, requested_type: VarType<'x>) -> ItemId<'x> {
-        for (id, item) in &self.items {
-            if let &Some(Definition::Variable { typee, .. }) = &item.definition {
-                if typee == requested_type {
-                    return id;
-                }
-            }
-        }
-        todo!()
-    }
-
-    fn matches_impl(
+    fn find_bp_then_match(
         &mut self,
         item: ItemId<'x>,
         // A pattern which $item will always match.
+        item_bounding_pattern: ItemId<'x>,
+        match_against: ItemId<'x>,
+    ) -> MatchResult<'x> {
+        match self.get_definition(item).clone() {
+            Definition::Match {
+                conditions,
+                else_value,
+                ..
+            } => {
+                let mut results = conditions
+                    .into_iter()
+                    .map(|x| self.find_bp_then_match(item, x.value, match_against))
+                    .collect_vec();
+                results.push(self.find_bp_then_match(item, else_value, match_against));
+                return result_and(results);
+            }
+            Definition::Variable { typee, .. } => {
+                if let VarType::Just(other) = typee {
+                    return self.find_bp_then_match(item, other, match_against);
+                }
+            }
+            _ => (),
+        }
+        self.value_with_bp_matches(item, item_bounding_pattern, match_against, &[])
+    }
+
+    fn value_with_bp_matches(
+        &mut self,
+        item: ItemId<'x>,
         item_bounding_pattern: ItemId<'x>,
         match_against: ItemId<'x>,
         eager_vars: &[VariableId<'x>],
@@ -81,7 +111,7 @@ impl<'x> Environment<'x> {
             } => todo!(),
             Definition::Member(_, _) => Unknown,
             Definition::Other(match_against) => {
-                self.matches_impl(item, item_bounding_pattern, match_against, eager_vars)
+                self.value_with_bp_matches(item, item_bounding_pattern, match_against, eager_vars)
             }
             Definition::SetEager { base, vals, eager } => {
                 let vars: Vec<_> = vals
@@ -99,7 +129,7 @@ impl<'x> Environment<'x> {
                         .filter(|x| !vars.contains(x))
                         .collect()
                 };
-                self.matches_impl(item, item_bounding_pattern, base, &new_eagers[..])
+                self.value_with_bp_matches(item, item_bounding_pattern, base, &new_eagers[..])
             }
             Definition::Struct(_) => todo!(),
             Definition::UnresolvedSubstitute(_, _) => todo!(),
@@ -170,16 +200,17 @@ impl<'x> Environment<'x> {
                 _ => return Unknown,
             },
             VarType::Just(match_against) => {
-                return self.matches_impl(item, item_bounding_pattern, match_against, eager_vars)
+                return self.value_with_bp_matches(
+                    item,
+                    item_bounding_pattern,
+                    match_against,
+                    eager_vars,
+                )
             }
             VarType::And(l, r) => {
-                let l = self.matches_impl(item, item_bounding_pattern, l, eager_vars);
-                let r = self.matches_impl(item, item_bounding_pattern, r, eager_vars);
-                return match (l, r) {
-                    (Match(l), Match(r)) => Match(l.union(r)),
-                    (NoMatch, _) | (_, NoMatch) => NoMatch,
-                    _ => Unknown,
-                };
+                let l = self.value_with_bp_matches(item, item_bounding_pattern, l, eager_vars);
+                let r = self.value_with_bp_matches(item, item_bounding_pattern, r, eager_vars);
+                return result_and(vec![l, r]);
             }
         };
         if matches {

@@ -13,10 +13,18 @@ impl<'x> Environment<'x> {
             }
             Definition::BuiltinValue(_) => DepQueryResult::new(),
             Definition::Match {
-                base: _,
-                conditions: _,
-                else_value: _,
-            } => todo!(),
+                base,
+                conditions,
+                else_value,
+            } => {
+                let mut result = self.dep_query(base);
+                for condition in conditions {
+                    result.append(self.dep_query(condition.pattern).discarding_shy());
+                    result.append(self.dep_query(condition.value));
+                }
+                result.append(self.dep_query(else_value));
+                result
+            }
             Definition::Member(_, _) => todo!(),
             Definition::Other(item) => self.dep_query(item),
             Definition::SetEager { base, vals, eager } => {
