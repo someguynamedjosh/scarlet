@@ -3,17 +3,10 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    x is 32U.V
-    y is 32U.V
-
-    just is PATTERN.V.Eager(just)
-
-    another is just.V
-
     # finally is another(another is 123).S
 
-    int is 32U.V.Eager(int)
-    var is int.V
+    int is 32U.V
+    var is int.Eager(int).V
 
     finally is var(var is 123).S
 }

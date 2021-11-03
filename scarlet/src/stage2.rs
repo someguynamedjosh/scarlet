@@ -6,5 +6,6 @@ mod resolve_substitution;
 pub mod structure;
 mod util;
 mod vomit;
+mod reduce;
 
 pub use ingest::ingest;
