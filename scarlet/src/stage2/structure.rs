@@ -27,6 +27,11 @@ pub enum BuiltinOperation {
     Quotient32U,
     Modulo32U,
     Power32U,
+
+    LessThan32U,
+    LessThanOrEqual32U,
+    GreaterThan32U,
+    GreaterThanOrEqual32U,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

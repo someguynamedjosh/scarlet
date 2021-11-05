@@ -65,34 +65,23 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             TokenTree::BuiltinRule { name: "AND", body } => self.and_pattern_def(body),
             TokenTree::BuiltinRule { name: "OR", body } => self.or_pattern_def(body),
 
-            TokenTree::BuiltinRule {
-                name: "sum_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Sum32U, body),
-            TokenTree::BuiltinRule {
-                name: "difference_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Difference32U, body),
-            TokenTree::BuiltinRule {
-                name: "product_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Product32U, body),
-            TokenTree::BuiltinRule {
-                name: "quotient_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Quotient32U, body),
-            TokenTree::BuiltinRule {
-                name: "modulo_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Modulo32U, body),
-            TokenTree::BuiltinRule {
-                name: "power_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Power32U, body),
+            TokenTree::BuiltinRule { name, body } => self.builtin_op_def(
+                match *name {
+                    "sum_32u" => BuiltinOperation::Sum32U,
+                    "difference_32u" => BuiltinOperation::Difference32U,
+                    "product_32u" => BuiltinOperation::Product32U,
+                    "quotient_32u" => BuiltinOperation::Quotient32U,
+                    "power_32u" => BuiltinOperation::Power32U,
+                    "modulo_32u" => BuiltinOperation::Modulo32U,
 
-            TokenTree::BuiltinRule { name, .. } => {
-                todo!("Nice error, unrecognized builtin {}", name)
-            }
+                    "greater_than_32u" => BuiltinOperation::GreaterThan32U,
+                    "greater_than_or_equal_32u" => BuiltinOperation::GreaterThanOrEqual32U,
+                    "less_than_32u" => BuiltinOperation::LessThan32U,
+                    "less_than_or_equal_32u" => BuiltinOperation::LessThanOrEqual32U,
+                    _ => todo!("Nice error, unrecognized builtin {}", name),
+                },
+                body,
+            ),
         }
     }
 

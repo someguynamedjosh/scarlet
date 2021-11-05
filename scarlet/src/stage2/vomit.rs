@@ -67,6 +67,11 @@ impl<'x> Environment<'x> {
                     BuiltinOperation::Quotient32U => "quotient_32u",
                     BuiltinOperation::Power32U => "power_32u",
                     BuiltinOperation::Modulo32U => "modulo_32u",
+
+                    BuiltinOperation::GreaterThan32U => "greater_than_32u",
+                    BuiltinOperation::GreaterThanOrEqual32U => "greater_than_or_equal_32u",
+                    BuiltinOperation::LessThan32U => "less_than_32u",
+                    BuiltinOperation::LessThanOrEqual32U => "less_than_or_equal_32u",
                 };
                 let body = args
                     .into_iter()

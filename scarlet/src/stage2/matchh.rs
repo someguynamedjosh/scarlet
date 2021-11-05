@@ -88,6 +88,10 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::Quotient32U
                 | BuiltinOperation::Modulo32U
                 | BuiltinOperation::Power32U => todo!(),
+                BuiltinOperation::LessThan32U
+                | BuiltinOperation::LessThanOrEqual32U
+                | BuiltinOperation::GreaterThan32U
+                | BuiltinOperation::GreaterThanOrEqual32U => todo!(),
             },
             Definition::BuiltinValue(..) => pattern,
             Definition::Match {

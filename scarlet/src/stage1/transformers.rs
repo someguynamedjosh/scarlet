@@ -17,17 +17,28 @@ pub trait Transformer {
 
 macro_rules! binary_operator {
     ($StructName:ident, $internal_name:expr, $operator:expr) => {
+        compound_binary_operator!($StructName, $internal_name, &[$operator]);
+    };
+}
+
+macro_rules! compound_binary_operator {
+    ($StructName:ident, $internal_name:expr, $operator:expr) => {
         struct $StructName;
         impl Transformer for $StructName {
             fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-                &to[at] == &TokenTree::Token($operator)
+                for (index, token) in $operator.iter().enumerate() {
+                    if &to[at + index] != &TokenTree::Token(token) {
+                        return false;
+                    }
+                }
+                true
             }
 
             fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
                 let left = to[at - 1].clone();
-                let right = to[at + 1].clone();
+                let right = to[at + $operator.len()].clone();
                 TransformerResult {
-                    replace_range: at - 1..=at + 1,
+                    replace_range: at - 1..=at + $operator.len(),
                     with: TokenTree::BuiltinRule {
                         name: $internal_name,
                         body: vec![left, right],
@@ -245,6 +256,11 @@ binary_operator!(Plus, "sum_32u", "+");
 binary_operator!(Minus, "difference_32u", "-");
 binary_operator!(Modulo, "modulo_32u", "mod");
 
+binary_operator!(GreaterThan, "greater_than_32u", ">");
+compound_binary_operator!(GreaterThanOrEqual, "greater_than_or_equal_32u", &[">", "="]);
+binary_operator!(LessThan, "less_than_32u", "<");
+compound_binary_operator!(LessThanOrEqual, "less_than_or_equal_32u", &["<", "="]);
+
 binary_operator!(Matches, "matches", "matches");
 binary_operator!(PatternAnd, "AND", "AND");
 binary_operator!(PatternOr, "OR", "OR");
@@ -339,9 +355,10 @@ fn build_transformers<'e>(
         61 => tfers![Caret],
         70 => tfers![Asterisk, Slash],
         80 => tfers![Plus, Minus],
-        86 => tfers![Modulo],
-        90 => tfers![PatternAnd, PatternOr],
-        100 => tfers![Matches],
+        90 => tfers![Modulo],
+        100 => tfers![GreaterThanOrEqual, GreaterThan, LessThanOrEqual, LessThan],
+        120 => tfers![PatternAnd, PatternOr],
+        130 => tfers![Matches],
         150 => tfers![Using],
         _ => tfers![],
     };
