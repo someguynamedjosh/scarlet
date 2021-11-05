@@ -8,5 +8,5 @@
 
     value is 32U.V
 
-    PROOF(value matches 5).S
+    PROOF(value matches 5)(5 true).S
 }

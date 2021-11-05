@@ -52,6 +52,19 @@ impl<'x, T: PartialEq + Eq + Hash + Debug> QueryResult<'x, T> {
 }
 
 impl<'x> DepQueryResult<'x> {
+    pub fn all_eager(self) -> Self {
+        let deps = self
+            .deps
+            .into_iter()
+            .map(|mut x| {
+                x.0.eager = true;
+                x
+            })
+            .collect();
+        let partial_over = self.partial_over;
+        Self { deps, partial_over }
+    }
+
     pub fn discarding_shy(self) -> Self {
         let deps = self.deps.into_iter().filter(|x| x.0.eager).collect();
         let partial_over = self.partial_over;

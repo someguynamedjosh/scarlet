@@ -73,7 +73,12 @@ impl<'x> Environment<'x> {
                 let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
                 for (dep, _) in base_deps.deps {
                     if let Some(&value) = subs.get(&dep.var) {
-                        final_deps.append(self.dep_query(value, num_struct_unwraps));
+                        let value_deps = self.dep_query(value, num_struct_unwraps);
+                        if dep.eager {
+                            final_deps.append(value_deps.all_eager());
+                        } else {
+                            final_deps.append(value_deps);
+                        }
                     } else {
                         final_deps.deps.insert_or_replace(dep, ());
                     }

@@ -100,8 +100,8 @@ impl Transformer for Builtin {
     }
 }
 
-struct Match;
-impl Transformer for Match {
+struct Matched;
+impl Transformer for Matched {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
         if at < 1 {
             return false;
@@ -305,7 +305,7 @@ fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![Struct, Builtin],
-        20 => tfers![Match, Variable, Shown, Eager, Substitution, Member],
+        20 => tfers![Matched, Variable, Shown, Eager, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],

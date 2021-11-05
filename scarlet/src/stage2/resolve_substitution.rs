@@ -10,8 +10,8 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn resolve_substitution(&mut self, item: ItemId<'x>) {
         if let Definition::UnresolvedSubstitute(base, subs) = self.get_definition(item) {
-            let base = *base;
-            let mut subs = subs.clone();
+            let (base, mut subs) = (*base, subs.clone());
+            let base = self.reduce(base);
             let new_subs = self.resolve_targets_in_sub(base, &mut subs);
             self.items[item].definition = Some(Definition::ResolvedSubstitute(base, new_subs));
         }

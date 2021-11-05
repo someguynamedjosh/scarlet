@@ -91,11 +91,16 @@ impl<'x> Environment<'x> {
             Definition::SetEager { base, vals, eager } => {
                 let base = self.substitute(base, substitutions)?;
                 let mut base_deps = self.get_deps(base);
+                let mut new_vals = Vec::new();
                 for &val in &vals {
                     for (dep, _) in self.get_deps(val) {
                         base_deps.remove(&dep);
                     }
+                    let subbed = self.substitute(val, substitutions)?;
+                    new_vals.push(subbed);
+                    base_deps = base_deps.union(self.get_deps(subbed));
                 }
+                let vals = new_vals;
                 let has_any_deps_at_all = !base_deps.is_empty();
                 if has_any_deps_at_all {
                     Definition::SetEager { base, vals, eager }
