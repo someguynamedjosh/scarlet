@@ -2,9 +2,7 @@ mod others;
 mod variable;
 
 use super::structures::DepQueryResult;
-use crate::stage2::structure::{
-    Condition, Definition, Environment, ItemId, Substitutions, VarType, VariableId, VariableInfo,
-};
+use crate::stage2::structure::{Definition, Environment, ItemId};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(

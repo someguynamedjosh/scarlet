@@ -3,10 +3,7 @@ mod match_impl;
 mod result;
 
 pub use crate::stage2::matchh::result::MatchResult;
-use crate::stage2::structure::{
-    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, Substitutions, VarType,
-    VariableId,
-};
+use crate::stage2::structure::{Environment, ItemId};
 
 impl<'x> Environment<'x> {
     pub(super) fn matches(

@@ -1,9 +1,6 @@
 use crate::stage2::{
     matchh::MatchResult,
-    structure::{
-        BuiltinOperation, BuiltinValue, Condition, Definition, Environment, ItemId,
-        StructField, Substitutions, VarType,
-    },
+    structure::{Condition, Definition, Environment, ItemId, Substitutions},
 };
 
 impl<'x> Environment<'x> {

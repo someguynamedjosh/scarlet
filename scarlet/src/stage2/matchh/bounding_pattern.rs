@@ -1,7 +1,4 @@
-use crate::stage2::structure::{
-    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, Substitutions, VarType,
-    VariableId,
-};
+use crate::stage2::structure::{BuiltinOperation, Definition, Environment, ItemId, VarType};
 
 impl<'x> Environment<'x> {
     pub(super) fn find_bounding_pattern(&mut self, pattern: ItemId<'x>) -> ItemId<'x> {
@@ -49,14 +46,12 @@ impl<'x> Environment<'x> {
                 let typee = match typee {
                     VarType::God | VarType::_32U | VarType::Bool => typee,
                     VarType::Just(other) => VarType::Just(self.find_bounding_pattern(other)),
-                    VarType::And(l, r) => VarType::And(
-                        self.find_bounding_pattern(l),
-                        self.find_bounding_pattern(r),
-                    ),
-                    VarType::Or(l, r) => VarType::Or(
-                        self.find_bounding_pattern(l),
-                        self.find_bounding_pattern(r),
-                    ),
+                    VarType::And(l, r) => {
+                        VarType::And(self.find_bounding_pattern(l), self.find_bounding_pattern(r))
+                    }
+                    VarType::Or(l, r) => {
+                        VarType::Or(self.find_bounding_pattern(l), self.find_bounding_pattern(r))
+                    }
                 };
                 let def = Definition::Variable { typee, var };
                 self.item_with_new_definition(pattern, def, true)

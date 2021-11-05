@@ -1,10 +1,4 @@
-use crate::stage2::{
-    matchh::MatchResult,
-    structure::{
-        BuiltinOperation, BuiltinValue, Condition, Definition, Environment, ItemId,
-        StructField, Substitutions, VarType,
-    },
-};
+use crate::stage2::structure::{BuiltinOperation, BuiltinValue, Definition, Environment, ItemId};
 
 impl<'x> Environment<'x> {
     fn reduce_op(
@@ -57,17 +51,11 @@ impl<'x> Environment<'x> {
     ) -> Definition<'x> {
         match op {
             BuiltinOperation::Sum32U => self.reduce_32u_32u_32u_op(def, args, |a, b| a + b),
-            BuiltinOperation::Difference32U => {
-                self.reduce_32u_32u_32u_op(def, args, |a, b| a - b)
-            }
+            BuiltinOperation::Difference32U => self.reduce_32u_32u_32u_op(def, args, |a, b| a - b),
             BuiltinOperation::Product32U => self.reduce_32u_32u_32u_op(def, args, |a, b| a * b),
-            BuiltinOperation::Quotient32U => {
-                self.reduce_32u_32u_32u_op(def, args, |a, b| a / b)
-            }
+            BuiltinOperation::Quotient32U => self.reduce_32u_32u_32u_op(def, args, |a, b| a / b),
             BuiltinOperation::Modulo32U => self.reduce_32u_32u_32u_op(def, args, |a, b| a % b),
-            BuiltinOperation::Power32U => {
-                self.reduce_32u_32u_32u_op(def, args, |a, b| a.pow(b))
-            }
+            BuiltinOperation::Power32U => self.reduce_32u_32u_32u_op(def, args, |a, b| a.pow(b)),
 
             BuiltinOperation::GreaterThan32U => {
                 self.reduce_32u_32u_bool_op(def, args, |a, b| a > b)
@@ -75,9 +63,7 @@ impl<'x> Environment<'x> {
             BuiltinOperation::GreaterThanOrEqual32U => {
                 self.reduce_32u_32u_bool_op(def, args, |a, b| a >= b)
             }
-            BuiltinOperation::LessThan32U => {
-                self.reduce_32u_32u_bool_op(def, args, |a, b| a < b)
-            }
+            BuiltinOperation::LessThan32U => self.reduce_32u_32u_bool_op(def, args, |a, b| a < b),
             BuiltinOperation::LessThanOrEqual32U => {
                 self.reduce_32u_32u_bool_op(def, args, |a, b| a <= b)
             }

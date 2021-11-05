@@ -1,10 +1,4 @@
-use crate::stage2::{
-    matchh::MatchResult,
-    structure::{
-        BuiltinOperation, BuiltinValue, Condition, Definition, Environment, ItemId, StructField,
-        Substitutions, VarType,
-    },
-};
+use crate::stage2::structure::{Definition, Environment, ItemId, StructField, VarType};
 
 impl<'x> Environment<'x> {
     pub fn reduce(&mut self, item: ItemId<'x>) -> ItemId<'x> {

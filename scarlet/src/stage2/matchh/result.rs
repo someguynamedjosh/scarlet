@@ -1,7 +1,4 @@
-use crate::stage2::structure::{
-    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, Substitutions, VarType,
-    VariableId,
-};
+use crate::stage2::structure::{ItemId, Substitutions, VariableId};
 
 #[derive(Clone, Debug)]
 pub enum MatchResult<'x> {

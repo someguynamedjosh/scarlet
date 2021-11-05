@@ -1,9 +1,6 @@
 use crate::stage2::{
     dependencies::structures::DepQueryResult,
-    structure::{
-        Condition, Definition, Environment, ItemId, Substitutions, VarType, VariableId,
-        VariableInfo,
-    },
+    structure::{Condition, Environment, ItemId, Substitutions},
 };
 
 impl<'x> Environment<'x> {
