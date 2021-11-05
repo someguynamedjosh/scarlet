@@ -1,11 +1,9 @@
-use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
+use std::collections::HashMap;
 
 use super::build;
 use crate::stage1::{
     structure::TokenTree,
-    transformers::basics::{
-        Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer, TransformerResult,
-    },
+    transformers::basics::{OwnedOrBorrowed, Precedence, Transformer},
 };
 
 fn apply_transformers_ltr<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn Transformer]) {

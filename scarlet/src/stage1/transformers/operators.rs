@@ -1,20 +1,6 @@
-use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
-
-use maplit::hashmap;
-
-use crate::{
-    stage1::{
-        structure::TokenTree,
-        transformers::{
-            apply,
-            basics::{
-                Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer,
-                TransformerResult,
-            },
-            helpers,
-        },
-    },
-    tfers,
+use crate::stage1::{
+    structure::TokenTree,
+    transformers::basics::{Transformer, TransformerResult},
 };
 
 macro_rules! binary_operator {

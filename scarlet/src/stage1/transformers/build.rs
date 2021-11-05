@@ -1,18 +1,10 @@
-use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
-
 use crate::{
-    stage1::{
-        structure::TokenTree,
-        transformers::{
-            basics::{
-                Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer,
-                TransformerResult,
-            },
-            operators::*,
-            roots::{Builtin, Struct, SubExpression},
-            special_members::{Eager, Matched, Shown, Variable},
-            substitution::Substitution,
-        },
+    stage1::transformers::{
+        basics::{Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer},
+        operators::*,
+        roots::{Builtin, Struct, SubExpression},
+        special_members::{Eager, Matched, Shown, Variable},
+        substitution::Substitution,
     },
     tfers,
 };

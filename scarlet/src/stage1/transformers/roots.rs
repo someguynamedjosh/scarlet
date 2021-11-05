@@ -1,5 +1,3 @@
-use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
-
 use maplit::hashmap;
 
 use crate::{
@@ -7,10 +5,7 @@ use crate::{
         structure::TokenTree,
         transformers::{
             apply,
-            basics::{
-                Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer,
-                TransformerResult,
-            },
+            basics::{Transformer, TransformerResult},
             helpers,
             operators::Is,
         },

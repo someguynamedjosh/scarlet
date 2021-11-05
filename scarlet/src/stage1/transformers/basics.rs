@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
+use std::{collections::HashMap, ops::RangeInclusive};
 
 use crate::stage1::structure::TokenTree;
 

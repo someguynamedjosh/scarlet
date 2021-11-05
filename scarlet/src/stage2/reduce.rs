@@ -157,9 +157,7 @@ impl<'x> Environment<'x> {
             BuiltinOperation::GreaterThanOrEqual32U => {
                 self.reduce_32u_32u_bool_op(def, args, |a, b| a >= b)
             }
-            BuiltinOperation::LessThan32U => {
-                self.reduce_32u_32u_bool_op(def, args, |a, b| a < b)
-            }
+            BuiltinOperation::LessThan32U => self.reduce_32u_32u_bool_op(def, args, |a, b| a < b),
             BuiltinOperation::LessThanOrEqual32U => {
                 self.reduce_32u_32u_bool_op(def, args, |a, b| a <= b)
             }
