@@ -238,10 +238,12 @@ impl Transformer for Substitution {
     }
 }
 
-binary_operator!(Caret, "pow_32u", "^");
-binary_operator!(Asterisk, "prod_32u", "*");
+binary_operator!(Caret, "power_32u", "^");
+binary_operator!(Asterisk, "product_32u", "*");
+binary_operator!(Slash, "quotient_32u", "/");
 binary_operator!(Plus, "sum_32u", "+");
-binary_operator!(Minus, "dif_32u", "-");
+binary_operator!(Minus, "difference_32u", "-");
+binary_operator!(Modulo, "modulo_32u", "mod");
 
 binary_operator!(Matches, "matches", "matches");
 binary_operator!(PatternAnd, "AND", "AND");
@@ -335,8 +337,9 @@ fn build_transformers<'e>(
         10 => tfers![SubExpression, Struct, Builtin],
         20 => tfers![Matched, Variable, Shown, Eager, Substitution, Member],
         61 => tfers![Caret],
-        70 => tfers![Asterisk],
+        70 => tfers![Asterisk, Slash],
         80 => tfers![Plus, Minus],
+        86 => tfers![Modulo],
         90 => tfers![PatternAnd, PatternOr],
         100 => tfers![Matches],
         150 => tfers![Using],

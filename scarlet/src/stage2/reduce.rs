@@ -95,6 +95,22 @@ impl<'x> Environment<'x> {
         }
     }
 
+    fn reduce_binary_32u_op(
+        &mut self,
+        original_def: Definition<'x>,
+        args: Vec<ItemId<'x>>,
+        compute: impl Fn(u32, u32) -> u32,
+    ) -> Definition<'x> {
+        if let Some(args) = self.args_as_builtin_values(&args[..]) {
+            Definition::BuiltinValue(BuiltinValue::_32U(compute(
+                args[0].unwrap_32u(),
+                args[1].unwrap_32u(),
+            )))
+        } else {
+            original_def
+        }
+    }
+
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
         match def.clone() {
             Definition::Other(_) => unreachable!(),
@@ -102,24 +118,14 @@ impl<'x> Environment<'x> {
             Definition::UnresolvedSubstitute(..) => unreachable!(),
 
             Definition::BuiltinOperation(op, args) => match op {
-                BuiltinOperation::Sum32U => {
-                    if let Some(args) = self.args_as_builtin_values(&args[..]) {
-                        Definition::BuiltinValue(BuiltinValue::_32U(
-                            args[0].unwrap_32u() + args[1].unwrap_32u(),
-                        ))
-                    } else {
-                        def
-                    }
+                BuiltinOperation::Sum32U => self.reduce_binary_32u_op(def, args, |a, b| a + b),
+                BuiltinOperation::Difference32U => {
+                    self.reduce_binary_32u_op(def, args, |a, b| a - b)
                 }
-                BuiltinOperation::Dif32U => {
-                    if let Some(args) = self.args_as_builtin_values(&args[..]) {
-                        Definition::BuiltinValue(BuiltinValue::_32U(
-                            args[0].unwrap_32u() - args[1].unwrap_32u(),
-                        ))
-                    } else {
-                        def
-                    }
-                }
+                BuiltinOperation::Product32U => self.reduce_binary_32u_op(def, args, |a, b| a * b),
+                BuiltinOperation::Quotient32U => self.reduce_binary_32u_op(def, args, |a, b| a / b),
+                BuiltinOperation::Modulo32U => self.reduce_binary_32u_op(def, args, |a, b| a % b),
+                BuiltinOperation::Power32U => self.reduce_binary_32u_op(def, args, |a, b| a.pow(b)),
             },
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),

@@ -3,5 +3,5 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    [1 * 5].S
+    [7 + 1 mod 6].S
 }

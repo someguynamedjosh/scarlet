@@ -62,7 +62,11 @@ impl<'x> Environment<'x> {
             Definition::BuiltinOperation(op, args) => {
                 let name = match op {
                     BuiltinOperation::Sum32U => "sum_32u",
-                    BuiltinOperation::Dif32U => "dif_32u",
+                    BuiltinOperation::Difference32U => "difference_32u",
+                    BuiltinOperation::Product32U => "product_32u",
+                    BuiltinOperation::Quotient32U => "quotient_32u",
+                    BuiltinOperation::Power32U => "power_32u",
+                    BuiltinOperation::Modulo32U => "modulo_32u",
                 };
                 let body = args
                     .into_iter()

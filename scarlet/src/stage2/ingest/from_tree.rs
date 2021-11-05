@@ -70,9 +70,25 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 body,
             } => self.builtin_op_def(BuiltinOperation::Sum32U, body),
             TokenTree::BuiltinRule {
-                name: "dif_32u",
+                name: "difference_32u",
                 body,
-            } => self.builtin_op_def(BuiltinOperation::Dif32U, body),
+            } => self.builtin_op_def(BuiltinOperation::Difference32U, body),
+            TokenTree::BuiltinRule {
+                name: "product_32u",
+                body,
+            } => self.builtin_op_def(BuiltinOperation::Product32U, body),
+            TokenTree::BuiltinRule {
+                name: "quotient_32u",
+                body,
+            } => self.builtin_op_def(BuiltinOperation::Quotient32U, body),
+            TokenTree::BuiltinRule {
+                name: "modulo_32u",
+                body,
+            } => self.builtin_op_def(BuiltinOperation::Modulo32U, body),
+            TokenTree::BuiltinRule {
+                name: "power_32u",
+                body,
+            } => self.builtin_op_def(BuiltinOperation::Power32U, body),
 
             TokenTree::BuiltinRule { name, .. } => {
                 todo!("Nice error, unrecognized builtin {}", name)

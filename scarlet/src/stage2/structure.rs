@@ -22,7 +22,11 @@ pub struct Condition<'x> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinOperation {
     Sum32U,
-    Dif32U,
+    Difference32U,
+    Product32U,
+    Quotient32U,
+    Modulo32U,
+    Power32U,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

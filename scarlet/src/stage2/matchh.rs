@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::structure::Substitutions;
 use crate::stage2::structure::{
     BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType, VariableId,
@@ -84,7 +82,12 @@ impl<'x> Environment<'x> {
     fn find_bounding_pattern(&mut self, pattern: ItemId<'x>) -> ItemId<'x> {
         match self.get_definition(pattern).clone() {
             Definition::BuiltinOperation(op, _) => match op {
-                BuiltinOperation::Sum32U | BuiltinOperation::Dif32U => todo!(),
+                BuiltinOperation::Sum32U
+                | BuiltinOperation::Difference32U
+                | BuiltinOperation::Product32U
+                | BuiltinOperation::Quotient32U
+                | BuiltinOperation::Modulo32U
+                | BuiltinOperation::Power32U => todo!(),
             },
             Definition::BuiltinValue(..) => pattern,
             Definition::Match {
