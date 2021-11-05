@@ -1,12 +1,7 @@
-use super::structure::{Substitutions, UnresolvedSubstitution};
-use crate::{
-    shared::OrderedSet,
-    stage2::{
-        matchh::MatchResult,
-        structure::{
-            BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VarType,
-            VariableInfo,
-        },
+use crate::stage2::{
+    matchh::MatchResult,
+    structure::{
+        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, StructField, VarType,
     },
 };
 

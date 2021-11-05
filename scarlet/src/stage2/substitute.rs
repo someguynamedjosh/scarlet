@@ -1,5 +1,5 @@
 use crate::{
-    shared::{OrderedMap, OrderedSet},
+    shared::OrderedMap,
     stage2::structure::{
         Condition, Definition, Environment, ItemId, StructField, Substitutions, VarType, VariableId,
     },

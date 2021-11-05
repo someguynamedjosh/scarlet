@@ -1,11 +1,8 @@
 use itertools::Itertools;
 
 use super::structure::Substitutions;
-use crate::{
-    stage1::structure::Token,
-    stage2::structure::{
-        BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType, VariableId,
-    },
+use crate::stage2::structure::{
+    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType, VariableId,
 };
 
 #[derive(Clone, Debug)]
@@ -104,7 +101,7 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(..) => todo!(),
             Definition::Other(other) => self.find_bounding_pattern(other),
-            Definition::ResolvedSubstitute(base, subs) => todo!(),
+            Definition::ResolvedSubstitute(_base, _subs) => todo!(),
             Definition::SetEager { base, vals, eager } => {
                 let base = self.find_bounding_pattern(base);
                 let def = Definition::SetEager { base, vals, eager };
