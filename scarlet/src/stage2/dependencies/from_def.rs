@@ -2,12 +2,16 @@ use super::structures::DepQueryResult;
 use crate::stage2::structure::{Definition, Environment, ItemId, VarType, VariableInfo};
 
 impl<'x> Environment<'x> {
-    pub(super) fn get_deps_from_def(&mut self, of: ItemId<'x>) -> DepQueryResult<'x> {
+    pub(super) fn get_deps_from_def(
+        &mut self,
+        of: ItemId<'x>,
+        num_struct_unwraps: u32,
+    ) -> DepQueryResult<'x> {
         match self.get_definition(of).clone() {
             Definition::BuiltinOperation(_, args) => {
                 let mut result = DepQueryResult::new();
                 for arg in args {
-                    result.append(self.dep_query(arg));
+                    result.append(self.dep_query(arg, num_struct_unwraps));
                 }
                 result
             }
@@ -17,22 +21,25 @@ impl<'x> Environment<'x> {
                 conditions,
                 else_value,
             } => {
-                let mut result = self.dep_query(base);
+                let mut result = self.dep_query(base, num_struct_unwraps);
                 for condition in conditions {
-                    result.append(self.dep_query(condition.pattern).discarding_shy());
-                    result.append(self.dep_query(condition.value));
+                    result.append(
+                        self.dep_query(condition.pattern, num_struct_unwraps)
+                            .discarding_shy(),
+                    );
+                    result.append(self.dep_query(condition.value, num_struct_unwraps));
                 }
-                result.append(self.dep_query(else_value));
+                result.append(self.dep_query(else_value, num_struct_unwraps));
                 result
             }
-            Definition::Member(_, _) => todo!(),
-            Definition::Other(item) => self.dep_query(item),
+            Definition::Member(base, _) => self.dep_query(base, num_struct_unwraps + 1),
+            Definition::Other(item) => self.dep_query(item, num_struct_unwraps),
             Definition::SetEager { base, vals, eager } => {
                 let mut deps_to_set = DepQueryResult::new();
                 for val in vals {
-                    deps_to_set.append(self.dep_query(val));
+                    deps_to_set.append(self.dep_query(val, num_struct_unwraps));
                 }
-                let mut result = self.dep_query(base);
+                let mut result = self.dep_query(base, num_struct_unwraps);
                 if deps_to_set.partial_over.contains_key(&of) {
                     deps_to_set.append(result.clone());
                 }
@@ -49,20 +56,24 @@ impl<'x> Environment<'x> {
             Definition::Struct(fields) => {
                 let mut query = DepQueryResult::new();
                 for field in fields {
-                    query.append(self.dep_query(field.value).discarding_shy());
+                    if num_struct_unwraps == 0 {
+                        query.append(self.dep_query(field.value, 0).discarding_shy());
+                    } else {
+                        query.append(self.dep_query(field.value, num_struct_unwraps - 1));
+                    }
                 }
                 query
             }
             Definition::UnresolvedSubstitute(..) => {
                 self.resolve_substitution(of);
-                self.get_deps_from_def(of)
+                self.get_deps_from_def(of, num_struct_unwraps)
             }
             Definition::ResolvedSubstitute(base, subs) => {
-                let base_deps = self.dep_query(base);
+                let base_deps = self.dep_query(base, num_struct_unwraps);
                 let mut final_deps = DepQueryResult::empty(base_deps.partial_over.clone());
                 for (dep, _) in base_deps.deps {
                     if let Some(&value) = subs.get(&dep.var) {
-                        final_deps.append(self.dep_query(value));
+                        final_deps.append(self.dep_query(value, num_struct_unwraps));
                     } else {
                         final_deps.deps.insert_or_replace(dep, ());
                     }
@@ -70,7 +81,9 @@ impl<'x> Environment<'x> {
                 final_deps
             }
             Definition::Variable { var, typee } => {
-                let mut result = self.deps_of_var_typ(typee).discarding_shy();
+                let mut result = self
+                    .deps_of_var_typ(typee, num_struct_unwraps)
+                    .discarding_shy();
                 let this = VariableInfo {
                     var_item: of,
                     var,
@@ -83,13 +96,17 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn deps_of_var_typ(&mut self, typee: VarType<'x>) -> DepQueryResult<'x> {
+    fn deps_of_var_typ(
+        &mut self,
+        typee: VarType<'x>,
+        num_struct_unwraps: u32,
+    ) -> DepQueryResult<'x> {
         match typee {
             VarType::God | VarType::_32U | VarType::Bool => DepQueryResult::new(),
-            VarType::Just(other) => self.dep_query(other),
-            VarType::And(left, right) => {
-                let mut result = self.dep_query(left);
-                result.append(self.dep_query(right));
+            VarType::Just(other) => self.dep_query(other, num_struct_unwraps),
+            VarType::And(left, right) | VarType::Or(left, right) => {
+                let mut result = self.dep_query(left, num_struct_unwraps);
+                result.append(self.dep_query(right, num_struct_unwraps));
                 result
             }
         }

@@ -32,6 +32,7 @@ pub enum VarType<'x> {
     Bool,
     Just(ItemId<'x>),
     And(ItemId<'x>, ItemId<'x>),
+    Or(ItemId<'x>, ItemId<'x>),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

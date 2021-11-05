@@ -34,6 +34,52 @@ impl<'x> Environment<'x> {
     fn reduce_from_scratch(&mut self, item: ItemId<'x>) -> ItemId<'x> {
         let definition = self.items[item].definition.clone().unwrap();
         match definition {
+            Definition::Match {
+                base,
+                conditions,
+                else_value,
+            } => {
+                let base = self.reduce(base);
+                let mut new_conditions = Vec::new();
+                let mut else_value = else_value;
+
+                for condition in conditions {
+                    match self.matches(base, condition.pattern) {
+                        MatchResult::Match(subs) => {
+                            else_value = self.substitute(condition.value, &subs).unwrap();
+                            break;
+                        }
+                        MatchResult::NoMatch => (),
+                        MatchResult::Unknown => new_conditions.push(condition),
+                    }
+                }
+
+                let conditions = new_conditions;
+                if conditions.len() == 0 {
+                    else_value
+                } else {
+                    let def = Definition::Match {
+                        base,
+                        conditions,
+                        else_value,
+                    };
+                    self.item_with_new_definition(item, def, false)
+                }
+            }
+            Definition::Member(base, name) => {
+                let base = self.reduce(base);
+                if let Definition::Struct(fields) = self.get_definition(base) {
+                    for (index, field) in fields.iter().enumerate() {
+                        if field.name == Some(&name) || format!("{}", index) == name {
+                            return field.value;
+                        }
+                    }
+                    todo!("Nice error, no field named {}", name)
+                } else {
+                    let def = Definition::Member(base, name);
+                    self.item_with_new_definition(item, def, false)
+                }
+            }
             Definition::Other(other) => self.reduce(other),
             Definition::ResolvedSubstitute(base, subs) => {
                 let subbed = self.substitute(base, &subs).unwrap();
@@ -81,34 +127,8 @@ impl<'x> Environment<'x> {
                 }
             },
             Definition::BuiltinValue(..) => def,
-            Definition::Match {
-                base,
-                conditions,
-                else_value,
-            } => {
-                let base = self.reduce(base);
-                let mut new_conditions = Vec::new();
-                let mut else_value = else_value;
-
-                for condition in conditions {
-                    match self.matches(base, condition.pattern) {
-                        MatchResult::Match(subs) => {
-                            else_value = self.substitute(condition.value, &subs).unwrap();
-                            break;
-                        }
-                        MatchResult::NoMatch => (),
-                        MatchResult::Unknown => new_conditions.push(condition),
-                    }
-                }
-
-                let conditions = new_conditions;
-                Definition::Match {
-                    base,
-                    conditions,
-                    else_value,
-                }
-            }
-            Definition::Member(_, _) => todo!(),
+            Definition::Match { .. } => unreachable!(),
+            Definition::Member(..) => unreachable!(),
             Definition::SetEager { base, vals, eager } => {
                 let base = self.reduce(base);
                 let vals = vals.into_iter().map(|x| self.reduce(x)).collect();
@@ -128,6 +148,7 @@ impl<'x> Environment<'x> {
                     VarType::Bool | VarType::God | VarType::_32U => typee,
                     VarType::Just(other) => VarType::Just(self.reduce(other)),
                     VarType::And(l, r) => VarType::And(self.reduce(l), self.reduce(r)),
+                    VarType::Or(l, r) => VarType::Or(self.reduce(l), self.reduce(r)),
                 };
                 Definition::Variable { var, typee }
             }

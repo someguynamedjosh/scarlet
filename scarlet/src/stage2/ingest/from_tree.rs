@@ -63,6 +63,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 self.var_with_special_type(VarType::Bool)
             }
             TokenTree::BuiltinRule { name: "AND", body } => self.and_pattern_def(body),
+            TokenTree::BuiltinRule { name: "OR", body } => self.or_pattern_def(body),
 
             TokenTree::BuiltinRule {
                 name: "sum_32u",
@@ -93,6 +94,13 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let left = self.ingest_tree(&body[0]);
         let right = self.ingest_tree(&body[1]);
         self.var_with_special_type(VarType::And(left, right))
+    }
+
+    fn or_pattern_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 2);
+        let left = self.ingest_tree(&body[0]);
+        let right = self.ingest_tree(&body[1]);
+        self.var_with_special_type(VarType::Or(left, right))
     }
 
     fn var_with_special_type(&mut self, typee: VarType<'x>) -> Definition<'x> {

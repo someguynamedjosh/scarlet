@@ -1,4 +1,7 @@
-use super::structure::{BuiltinValue, Definition, Environment, ItemId};
+use std::{collections::HashMap, marker::PhantomData};
+
+use super::structure::{BuiltinValue, Definition, Environment, Item, ItemId, VarType, Variable};
+use crate::stage1::structure::TokenTree;
 
 impl<'x> Environment<'x> {
     pub fn get_definition(&self, of: ItemId<'x>) -> &Definition<'x> {
@@ -19,6 +22,24 @@ impl<'x> Environment<'x> {
             }
         }
         Some(result)
+    }
+
+    pub(super) fn push_def(&mut self, def: Definition<'x>) -> ItemId<'x> {
+        let item = Item {
+            cached_reduction: None,
+            definition: Some(def),
+            dependencies: None,
+            original_definition: &TokenTree::Token("Internal"),
+            scope: HashMap::new(),
+            shown_from: Vec::new(),
+        };
+        self.items.push(item)
+    }
+
+    pub(super) fn push_var(&mut self, typee: VarType<'x>) -> ItemId<'x> {
+        let var = self.vars.push(Variable { pd: PhantomData });
+        let def = Definition::Variable { var, typee };
+        self.push_def(def)
     }
 
     pub(super) fn item_with_new_definition(

@@ -139,6 +139,10 @@ impl<'x> Environment<'x> {
                 self.substitute(l, substitutions)?,
                 self.substitute(r, substitutions)?,
             ),
+            VarType::Or(l, r) => VarType::Or(
+                self.substitute(l, substitutions)?,
+                self.substitute(r, substitutions)?,
+            ),
         };
         Some(typee)
     }

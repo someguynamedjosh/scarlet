@@ -217,6 +217,7 @@ binary_operator!(Minus, "dif_32u", "-");
 
 binary_operator!(Matches, "matches", "matches");
 binary_operator!(PatternAnd, "AND", "AND");
+binary_operator!(PatternOr, "OR", "OR");
 
 binary_operator!(Member, "member", ".");
 binary_operator!(Using, "using", "using");
@@ -308,7 +309,7 @@ fn build_transformers<'e>(
         61 => tfers![Caret],
         70 => tfers![Asterisk],
         80 => tfers![Plus, Minus],
-        90 => tfers![PatternAnd],
+        90 => tfers![PatternAnd, PatternOr],
         100 => tfers![Matches],
         150 => tfers![Using],
         _ => tfers![],
