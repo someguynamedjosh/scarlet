@@ -1,3 +1,3 @@
-mod deps_from_def;
+mod from_def;
 mod structures;
 mod top_level;

@@ -1,17 +1,29 @@
-use std::{
-    collections::{HashMap, HashSet},
-    marker::PhantomData,
-};
+use std::marker::PhantomData;
 
 use crate::{
     stage1::structure::TokenTree,
     stage2::{
         ingest::top_level::IngestionContext,
-        structure::{BuiltinValue, Definition, ItemId, Pattern, Variable},
+        structure::{BuiltinValue, Definition, ItemId, VarType, Variable},
     },
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
+    pub fn eagerness_def(&mut self, body: &'x Vec<TokenTree<'x>>, eager: bool) -> Definition<'x> {
+        if body.len() != 2 {
+            todo!("Nice error");
+        }
+
+        let base = self.ingest_tree(&body[1]);
+        let vals: Vec<_> = body[0]
+            .unwrap_builtin("vals")
+            .iter()
+            .map(|tt| self.ingest_tree(tt))
+            .collect();
+
+        Definition::SetEager { base, vals, eager }
+    }
+
     pub fn member_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
         assert_eq!(body.len(), 2);
         let base = &body[0];
@@ -25,9 +37,9 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             todo!("Nice error");
         }
         let value = &body[0];
-        let value = self.ingest_tree(value);
-        self.env.items[value].shown_from.push(into);
-        Definition::Other(value)
+        let item = self.ingest_tree(value);
+        self.env.items[item].shown_from.push(into);
+        Definition::Other(item)
     }
 
     pub fn token_def(&mut self, token: &&str) -> Definition<'x> {
@@ -55,9 +67,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         if body.len() != 1 {
             todo!("Nice error");
         }
-        let pattern = &body[0];
-        let pattern = self.ingest_tree(pattern);
+        let matches = &body[0];
+        let typee = self.ingest_tree(matches);
+        let typee = VarType::Just(typee);
         let var = self.env.vars.push(Variable { pd: PhantomData });
-        Definition::Variable { var, pattern }
+        Definition::Variable { var, typee }
     }
 }

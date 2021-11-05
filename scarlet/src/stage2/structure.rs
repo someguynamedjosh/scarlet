@@ -22,22 +22,36 @@ pub struct Condition<'x> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinOperation {
     Sum32U,
-    Dif32U,
+    Difference32U,
+    Product32U,
+    Quotient32U,
+    Modulo32U,
+    Power32U,
+
+    LessThan32U,
+    LessThanOrEqual32U,
+    GreaterThan32U,
+    GreaterThanOrEqual32U,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Pattern<'x> {
+pub enum VarType<'x> {
     God,
-    Pattern,
     _32U,
     Bool,
-    Capture(VariableInfo<'x>),
+    Just(ItemId<'x>),
     And(ItemId<'x>, ItemId<'x>),
+    Or(ItemId<'x>, ItemId<'x>),
 }
 
-impl<'x> Into<Definition<'x>> for Pattern<'x> {
-    fn into(self) -> Definition<'x> {
-        Definition::Pattern(self)
+impl<'x> VarType<'x> {
+    pub fn map_item_ids(self, mut by: impl FnMut(ItemId<'x>) -> ItemId<'x>) -> Self {
+        match self {
+            Self::God | Self::_32U | Self::Bool => self,
+            Self::Just(a) => Self::Just(by(a)),
+            Self::And(a, b) => Self::And(by(a), by(b)),
+            Self::Or(a, b) => Self::Or(by(a), by(b)),
+        }
     }
 }
 
@@ -60,7 +74,8 @@ impl BuiltinValue {
 pub struct VariableInfo<'x> {
     pub var_item: ItemId<'x>,
     pub var: VariableId<'x>,
-    pub pattern: ItemId<'x>,
+    pub typee: VarType<'x>,
+    pub eager: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -86,13 +101,17 @@ pub enum Definition<'x> {
     },
     Member(ItemId<'x>, String),
     Other(ItemId<'x>),
-    Pattern(Pattern<'x>),
+    SetEager {
+        base: ItemId<'x>,
+        vals: Vec<ItemId<'x>>,
+        eager: bool,
+    },
     Struct(Vec<StructField<'x>>),
     UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
     ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),
     Variable {
         var: VariableId<'x>,
-        pattern: ItemId<'x>,
+        typee: VarType<'x>,
     },
 }
 
@@ -161,9 +180,6 @@ pub struct Item<'x> {
     pub scope: HashMap<Token<'x>, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
-    /// The variables that should remain dependencies when doing pattern
-    /// matching.
-    pub after: Option<OrderedSet<VariableInfo<'x>>>,
     pub cached_reduction: Option<ItemId<'x>>,
     pub shown_from: Vec<ItemId<'x>>,
 }

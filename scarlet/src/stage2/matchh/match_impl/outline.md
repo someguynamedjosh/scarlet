@@ -1,0 +1,12 @@
+- on right AND,             recurse then and
+- on left OR,               recurse then and
+- on right OR,              recurse then or
+- on left AND,              recurse then or
+- on right shy variable,    recurse on pattern keeping subs that are deps
+- on right set_eager,       recurse on base noting eager deps
+- on left variable,         recurse on pattern
+- on left and right struct, check fields are same, recurse on fields, then and
+- on landr builtin value,   check equal
+- on landr builtin vartype, check equal
+- on l bltn val, r bltn vt, check match
+- otherwise, Unknown

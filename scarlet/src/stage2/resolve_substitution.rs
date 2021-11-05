@@ -1,24 +1,19 @@
-use super::structure::{Environment, ItemId, Substitutions, UnresolvedSubstitution, VariableInfo};
+use super::structure::{Substitutions, UnresolvedSubstitution};
 use crate::{
     shared::OrderedSet,
-    stage2::{matchh::MatchResult, structure::Definition},
+    stage2::{
+        matchh::MatchResult,
+        structure::{Definition, Environment, ItemId, VariableInfo},
+    },
 };
 
 impl<'x> Environment<'x> {
-    pub fn resolve_targets(&mut self) {
-        let mut next_id = self.items.first();
-        while let Some(id) = next_id {
-            self.resolve_targets_in_item(id);
-            next_id = self.items.next(id);
-        }
-    }
-
-    pub fn resolve_targets_in_item(&mut self, id: ItemId<'x>) {
-        if let Definition::UnresolvedSubstitute(base, subs) = self.definition_of(id) {
-            let base = *base;
-            let mut subs = subs.clone();
+    pub(super) fn resolve_substitution(&mut self, item: ItemId<'x>) {
+        if let Definition::UnresolvedSubstitute(base, subs) = self.get_definition(item) {
+            let (base, mut subs) = (*base, subs.clone());
+            let base = self.reduce(base);
             let new_subs = self.resolve_targets_in_sub(base, &mut subs);
-            self.items[id].definition = Some(Definition::ResolvedSubstitute(base, new_subs));
+            self.items[item].definition = Some(Definition::ResolvedSubstitute(base, new_subs));
         }
     }
 
@@ -31,13 +26,15 @@ impl<'x> Environment<'x> {
         let mut deps = self.get_deps(base);
         for sub in &mut *subs {
             if let Some(possible_meaning) = sub.target_meaning {
-                new_subs = new_subs.union(self.resolve_named_target(
+                let additional_subs = self.resolve_named_target(
                     possible_meaning,
                     sub.target_name,
                     base,
                     sub.value,
                     &mut deps,
-                ));
+                    &new_subs,
+                );
+                new_subs = new_subs.union(additional_subs);
             }
         }
         for sub in &mut *subs {
@@ -56,6 +53,7 @@ impl<'x> Environment<'x> {
         base: ItemId<'x>,
         value: ItemId<'x>,
         deps: &mut OrderedSet<VariableInfo<'x>>,
+        new_subs: &Substitutions<'x>,
     ) -> Substitutions<'x> {
         let mut resolved_target = possible_meaning;
         if let Some(name) = name {
@@ -63,6 +61,7 @@ impl<'x> Environment<'x> {
                 resolved_target = *value;
             }
         }
+        let resolved_target = self.substitute(resolved_target, new_subs).unwrap();
         match self.matches(value, resolved_target) {
             MatchResult::Match(subs) => {
                 for &(target, _) in &subs {
@@ -76,8 +75,12 @@ impl<'x> Environment<'x> {
                 }
                 subs
             }
-            MatchResult::NoMatch => todo!(),
-            MatchResult::Unknown => todo!(),
+            MatchResult::NoMatch => {
+                todo!("Nice error, value will not match what it's assigned to.")
+            }
+            MatchResult::Unknown => {
+                todo!("Nice error, value might not match what it's assigned to.")
+            }
         }
     }
 
@@ -88,12 +91,11 @@ impl<'x> Environment<'x> {
         value: ItemId<'x>,
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
-            let dep = *dep;
+            let _dep = *dep;
             let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
             let subbed_dep = self.reduce(subbed_dep);
-            let subbed_dep_pattern = self.as_pattern(subbed_dep);
             let value = self.reduce(value);
-            let result = self.matches(value, subbed_dep_pattern);
+            let result = self.matches(value, subbed_dep);
             if let MatchResult::Match(matched_subs) = result {
                 for (matched_dep, _) in &matched_subs {
                     for (dep, _) in &*deps {

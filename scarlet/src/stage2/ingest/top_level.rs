@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use crate::{
     stage1::structure::{Module, Token, TokenTree},
     stage2::{
         ingest::util,
-        structure::{Environment, ItemId, VariableId},
+        structure::{Environment, ItemId},
     },
 };
 

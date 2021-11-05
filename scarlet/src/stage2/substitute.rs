@@ -1,7 +1,7 @@
 use crate::{
-    shared::{OrderedMap, OrderedSet},
+    shared::OrderedMap,
     stage2::structure::{
-        Condition, Definition, Environment, ItemId, Pattern, StructField, Substitutions, VariableId,
+        Condition, Definition, Environment, ItemId, StructField, Substitutions, VarType, VariableId,
     },
 };
 
@@ -28,16 +28,15 @@ impl<'x> Environment<'x> {
         original: ItemId<'x>,
         substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
     ) -> Option<ItemId<'x>> {
-        Some(match self.items[original].definition.clone().unwrap() {
+        let new_def = match self.items[original].definition.clone().unwrap() {
             Definition::BuiltinOperation(op, args) => {
                 let args = args
                     .into_iter()
                     .map(|i| self.substitute(i, substitutions))
                     .collect::<Option<_>>()?;
-                let def = Definition::BuiltinOperation(op, args);
-                self.item_with_new_definition(original, def, true)
+                Definition::BuiltinOperation(op, args)
             }
-            Definition::BuiltinValue(..) => original,
+            Definition::BuiltinValue(..) => return Some(original),
             Definition::Match {
                 base,
                 conditions,
@@ -54,32 +53,17 @@ impl<'x> Environment<'x> {
                         })
                     })
                     .collect::<Option<_>>()?;
-                let def = Definition::Match {
+                Definition::Match {
                     base,
                     conditions,
                     else_value,
-                };
-                self.item_with_new_definition(original, def, true)
+                }
             }
             Definition::Member(base, name) => {
                 let base = self.substitute(base, substitutions)?;
-                let def = Definition::Member(base, name);
-                self.item_with_new_definition(original, def, true)
+                Definition::Member(base, name)
             }
-            Definition::Other(id) => self.substitute_impl(id, substitutions)?,
-            Definition::Pattern(pat) => match pat {
-                Pattern::God
-                | Pattern::Pattern
-                | Pattern::_32U
-                | Pattern::Bool
-                | Pattern::Capture(_) => original,
-                Pattern::And(left, right) => {
-                    let left = self.substitute(left, substitutions)?;
-                    let right = self.substitute(right, substitutions)?;
-                    let def = Pattern::And(left, right).into();
-                    self.item_with_new_definition(original, def, true)
-                }
-            },
+            Definition::Other(id) => return self.substitute_impl(id, substitutions),
             Definition::ResolvedSubstitute(base, original_subs) => {
                 // The substitutions that we are currently doing that should be
                 // applied to the base, because $original_subs does not override
@@ -102,8 +86,27 @@ impl<'x> Environment<'x> {
                     .into_iter()
                     .map(|(target, value)| Some((target, self.substitute(value, substitutions)?)))
                     .collect::<Option<_>>()?;
-                let def = Definition::ResolvedSubstitute(base, original_subs);
-                self.item_with_new_definition(original, def, true)
+                Definition::ResolvedSubstitute(base, original_subs)
+            }
+            Definition::SetEager { base, vals, eager } => {
+                let base = self.substitute(base, substitutions)?;
+                let mut base_deps = self.get_deps(base);
+                let mut new_vals = Vec::new();
+                for &val in &vals {
+                    for (dep, _) in self.get_deps(val) {
+                        base_deps.remove(&dep);
+                    }
+                    let subbed = self.substitute(val, substitutions)?;
+                    new_vals.push(subbed);
+                    base_deps = base_deps.union(self.get_deps(subbed));
+                }
+                let vals = new_vals;
+                let has_any_deps_at_all = !base_deps.is_empty();
+                if has_any_deps_at_all {
+                    Definition::SetEager { base, vals, eager }
+                } else {
+                    return Some(base);
+                }
             }
             Definition::Struct(fields) => {
                 let fields = fields
@@ -114,19 +117,38 @@ impl<'x> Environment<'x> {
                         Some(StructField { name, value })
                     })
                     .collect::<Option<_>>()?;
-                let def = Definition::Struct(fields);
-                self.item_with_new_definition(original, def, true)
+                Definition::Struct(fields)
             }
             Definition::UnresolvedSubstitute(..) => unreachable!(),
-            Definition::Variable { var, pattern } => {
+            Definition::Variable { var, typee } => {
                 if let Some(sub) = substitutions.get(&var) {
-                    *sub
+                    return Some(*sub);
                 } else {
-                    let pattern = self.substitute(pattern, substitutions)?;
-                    let def = Definition::Variable { var, pattern };
-                    self.item_with_new_definition(original, def, true)
+                    let typee = self.substitute_var_type(typee, substitutions)?;
+                    Definition::Variable { var, typee }
                 }
             }
-        })
+        };
+        Some(self.item_with_new_definition(original, new_def, true))
+    }
+
+    pub fn substitute_var_type(
+        &mut self,
+        typee: VarType<'x>,
+        substitutions: &Substitutions<'x>,
+    ) -> Option<VarType<'x>> {
+        let typee = match typee {
+            VarType::God | VarType::_32U | VarType::Bool => typee,
+            VarType::Just(other) => VarType::Just(self.substitute(other, substitutions)?),
+            VarType::And(l, r) => VarType::And(
+                self.substitute(l, substitutions)?,
+                self.substitute(r, substitutions)?,
+            ),
+            VarType::Or(l, r) => VarType::Or(
+                self.substitute(l, substitutions)?,
+                self.substitute(r, substitutions)?,
+            ),
+        };
+        Some(typee)
     }
 }

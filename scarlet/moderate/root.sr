@@ -1,56 +1,27 @@
-[
-    BOOL is builtin{BOOL any BOOL}
-    32U is builtin{32U any 32U}
-    PATTERN is builtin{PATTERN}
+{
+    BOOL is Builtin(BOOL)
+    32U is Builtin(32U)
+    PATTERN is Builtin(PATTERN)
 
-    logic is [
-        left is any BOOL
-        right is any BOOL
+    # True
+    {3 OR 4 matches 4 OR 3}.0.S
+    {1 AND 2 matches 1 AND 2}.0.S
+    {1 AND 2 matches 1}.0.S
+    {1 AND 2 matches 32U}.0.S
+    {1 matches PATTERN}.0.S
+    {32U matches PATTERN}.0.S
+    {true matches true AND true}.0.S
+    {true matches true AND BOOL}.0.S
+    {true matches true AND BOOL AND PATTERN}.0.S
+    {1 matches 1 OR 2 OR 3}.0.S
+    {1 matches 3 OR 2 OR 1}.0.S
 
-        and is
-        left match{
-            on true right
-            else false
-        }
+    0.S
 
-        or is
-        left match{
-            on true true
-            else right
-        }
-    ]
+    # False
+    {3 OR 4 matches 4 OR 5}.0.S
+    {1 matches 1 AND 2}.0.S
+    {PATTERN matches 32U}.0.S
+    {32U matches BOOL}.0.S
 
-    left is any PATTERN
-    right is any PATTERN
-
-    equal is
-    logic.and(
-        right matches after{left} left
-        left matches after{right} right
-    )
-
-    index is any 32U
-
-    fibb is
-    index match{
-        on 0 1
-        on 1 1
-        else fibb(index - 1) + fibb(index - 2)
-    }
-
-    better_fibb is
-    index match{
-        on 0 [1 1]
-
-        else 
-        [
-            prev.1 
-            prev.0 + prev.1
-        ]
-        using 
-        [
-            prev is better_fibb(prev_index)
-            prev_index is index - 1
-        ]
-    }
-]
+}

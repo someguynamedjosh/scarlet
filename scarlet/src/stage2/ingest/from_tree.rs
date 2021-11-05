@@ -4,10 +4,12 @@ mod struct_def;
 mod substitute_def;
 mod using;
 
+use std::marker::PhantomData;
+
 use super::top_level::IngestionContext;
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, Definition, Environment, ItemId, Pattern, Variable},
+    stage2::structure::{BuiltinOperation, Definition, ItemId, VarType, Variable},
 };
 
 impl<'e, 'x> IngestionContext<'e, 'x> {
@@ -20,7 +22,11 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
             TokenTree::Token(token) => self.token_def(token),
 
             TokenTree::BuiltinRule {
-                name: "match",
+                name: "eager",
+                body,
+            } => self.eagerness_def(body, true),
+            TokenTree::BuiltinRule {
+                name: "matched",
                 body,
             } => self.match_def(body),
             TokenTree::BuiltinRule {
@@ -31,7 +37,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 name: "member",
                 body,
             } => self.member_def(body),
-            TokenTree::BuiltinRule { name: "show", body } => self.show_def(body, into),
+            TokenTree::BuiltinRule {
+                name: "shown",
+                body,
+            } => self.show_def(body, into),
             TokenTree::BuiltinRule {
                 name: "struct",
                 body,
@@ -51,23 +60,31 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
 
             TokenTree::BuiltinRule {
                 name: "PATTERN", ..
-            } => Pattern::God.into(),
-            TokenTree::BuiltinRule { name: "32U", .. } => Pattern::_32U.into(),
-            TokenTree::BuiltinRule { name: "BOOL", .. } => Pattern::Bool.into(),
-            TokenTree::BuiltinRule { name: "AND", body } => self.and_pattern_def(body),
-
-            TokenTree::BuiltinRule {
-                name: "sum_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Sum32U, body),
-            TokenTree::BuiltinRule {
-                name: "dif_32u",
-                body,
-            } => self.builtin_op_def(BuiltinOperation::Dif32U, body),
-
-            TokenTree::BuiltinRule { name, .. } => {
-                todo!("Nice error, unrecognized builtin {}", name)
+            } => self.var_with_special_type(VarType::God),
+            TokenTree::BuiltinRule { name: "32U", .. } => self.var_with_special_type(VarType::_32U),
+            TokenTree::BuiltinRule { name: "BOOL", .. } => {
+                self.var_with_special_type(VarType::Bool)
             }
+            TokenTree::BuiltinRule { name: "AND", body } => self.and_pattern_def(body),
+            TokenTree::BuiltinRule { name: "OR", body } => self.or_pattern_def(body),
+
+            TokenTree::BuiltinRule { name, body } => self.builtin_op_def(
+                match *name {
+                    "sum_32u" => BuiltinOperation::Sum32U,
+                    "difference_32u" => BuiltinOperation::Difference32U,
+                    "product_32u" => BuiltinOperation::Product32U,
+                    "quotient_32u" => BuiltinOperation::Quotient32U,
+                    "power_32u" => BuiltinOperation::Power32U,
+                    "modulo_32u" => BuiltinOperation::Modulo32U,
+
+                    "greater_than_32u" => BuiltinOperation::GreaterThan32U,
+                    "greater_than_or_equal_32u" => BuiltinOperation::GreaterThanOrEqual32U,
+                    "less_than_32u" => BuiltinOperation::LessThan32U,
+                    "less_than_or_equal_32u" => BuiltinOperation::LessThanOrEqual32U,
+                    _ => todo!("Nice error, unrecognized builtin {}", name),
+                },
+                body,
+            ),
         }
     }
 
@@ -84,6 +101,24 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         assert_eq!(body.len(), 2);
         let left = self.ingest_tree(&body[0]);
         let right = self.ingest_tree(&body[1]);
-        Pattern::And(left, right).into()
+        self.var_with_special_type(VarType::And(left, right))
+    }
+
+    fn or_pattern_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 2);
+        let left = self.ingest_tree(&body[0]);
+        let right = self.ingest_tree(&body[1]);
+        self.var_with_special_type(VarType::Or(left, right))
+    }
+
+    fn var_with_special_type(&mut self, typee: VarType<'x>) -> Definition<'x> {
+        // assert_eq!(
+        //     body.len(),
+        //     0,
+        //     "TODO: Nice error, expected zero argument to builtin."
+        // );
+        let var = Variable { pd: PhantomData };
+        let var = self.env.vars.push(var);
+        Definition::Variable { var, typee }
     }
 }

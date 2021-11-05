@@ -1,19 +1,7 @@
-[
+{
     PATTERN is Builtin(PATTERN)
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    condition is BOOL.V
-    PROOF is condition AND true
-
-    5holder is [
-        value is 32U.V
-        is_five is PROOF(value matches 5).V
-    ]
-
-    5holder(5 true).S
-
-    # PROOF_FIVE is 
-    # after{number} 
-    # number matches 5 AND true
-]
+    [7 <= 7].S
+}

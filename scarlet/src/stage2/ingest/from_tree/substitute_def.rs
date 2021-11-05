@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
 use crate::{
-    stage1::structure::{Token, TokenTree},
+    stage1::structure::TokenTree,
     stage2::{
-        ingest::top_level::{self, IngestionContext},
-        structure::{Definition, Environment, ItemId, UnresolvedSubstitution},
+        ingest::top_level::IngestionContext,
+        structure::{Definition, UnresolvedSubstitution},
     },
 };
 
