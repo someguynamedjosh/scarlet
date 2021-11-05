@@ -44,6 +44,17 @@ pub enum VarType<'x> {
     Or(ItemId<'x>, ItemId<'x>),
 }
 
+impl<'x> VarType<'x> {
+    pub fn map_item_ids(self, mut by: impl FnMut(ItemId<'x>) -> ItemId<'x>) -> Self {
+        match self {
+            Self::God | Self::_32U | Self::Bool => self,
+            Self::Just(a) => Self::Just(by(a)),
+            Self::And(a, b) => Self::And(by(a), by(b)),
+            Self::Or(a, b) => Self::Or(by(a), by(b)),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinValue {
     _32U(u32),
