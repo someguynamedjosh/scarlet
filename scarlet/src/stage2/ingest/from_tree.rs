@@ -26,7 +26,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 body,
             } => self.eagerness_def(body, true),
             TokenTree::BuiltinRule {
-                name: "match",
+                name: "matched",
                 body,
             } => self.match_def(body),
             TokenTree::BuiltinRule {
@@ -37,7 +37,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 name: "member",
                 body,
             } => self.member_def(body),
-            TokenTree::BuiltinRule { name: "show", body } => self.show_def(body, into),
+            TokenTree::BuiltinRule { name: "shown", body } => self.show_def(body, into),
             TokenTree::BuiltinRule {
                 name: "struct",
                 body,

@@ -37,11 +37,11 @@ impl<M: SpecialMember> Transformer for M {
             false
         } else {
             for alias in self.aliases() {
-                if &to[at + 1] != &TokenTree::Token(alias) {
-                    return false;
+                if &to[at + 1] == &TokenTree::Token(alias) {
+                    return true;
                 }
             }
-            true
+            false
         }
     }
 
