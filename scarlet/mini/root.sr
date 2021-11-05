@@ -3,10 +3,5 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    condition is BOOL.V
-    PROOF is condition.Eager(condition) AND true
-
-    value is 32U.V
-
-    PROOF(value matches 5)(5 true).S
+    [1 * 5].S
 }

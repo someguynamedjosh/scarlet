@@ -56,6 +56,34 @@ macro_rules! tfers {
     }
 }
 
+struct SubExpression;
+impl Transformer for SubExpression {
+    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+        if let TokenTree::BuiltinRule {
+            name: "group[]", ..
+        } = &to[at]
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+        if let TokenTree::BuiltinRule { body, .. } = &to[at] {
+            let mut body = body.clone();
+            apply_transformers(&mut body, &Default::default());
+            assert_eq!(body.len(), 1);
+            TransformerResult {
+                replace_range: at..=at,
+                with: body.into_iter().next().unwrap(),
+            }
+        } else {
+            unreachable!("Checked in should_be_applied_at")
+        }
+    }
+}
+
 struct Struct;
 impl Transformer for Struct {
     fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
@@ -304,7 +332,7 @@ fn build_transformers<'e>(
     extras: &'e Extras<'e>,
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
-        10 => tfers![Struct, Builtin],
+        10 => tfers![SubExpression, Struct, Builtin],
         20 => tfers![Matched, Variable, Shown, Eager, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk],
