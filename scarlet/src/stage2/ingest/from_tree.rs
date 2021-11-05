@@ -38,6 +38,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 body,
             } => self.member_def(body),
             TokenTree::BuiltinRule {
+                name: "member_at_index",
+                body,
+            } => self.member_at_index_def(body),
+            TokenTree::BuiltinRule {
                 name: "shown",
                 body,
             } => self.show_def(body, into),

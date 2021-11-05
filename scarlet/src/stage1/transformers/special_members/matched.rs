@@ -32,7 +32,7 @@ impl SpecialMember for Matched {
         paren_group: Option<Vec<TokenTree<'t>>>,
     ) -> TokenTree<'t> {
         TokenTree::BuiltinRule {
-            name: "match",
+            name: "matched",
             body: vec![
                 base,
                 TokenTree::BuiltinRule {

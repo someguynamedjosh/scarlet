@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::{
     stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, BuiltinValue, Definition, VarType},
+    stage2::structure::{BuiltinOperation, BuiltinValue, Definition, Member, VarType},
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -120,15 +120,30 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(base, _) => {
                 let base = self.get_name_or_code(base, context);
-                let name = if let Definition::Member(_, name) = self.get_definition(item) {
-                    name
+                let member = if let Definition::Member(_, member) = self.get_definition(item) {
+                    member
                 } else {
                     unreachable!()
                 };
-                let member = TokenTree::Token(name);
-                TokenTree::BuiltinRule {
-                    name: "member",
-                    body: vec![base, member],
+                match member {
+                    Member::Named(name) => {
+                        let name = TokenTree::Token(name);
+                        TokenTree::BuiltinRule {
+                            name: "member",
+                            body: vec![base, name],
+                        }
+                    }
+                    &Member::Index {
+                        index,
+                        proof_lt_len,
+                    } => TokenTree::BuiltinRule {
+                        name: "member",
+                        body: vec![
+                            base,
+                            self.get_name_or_code(index, context),
+                            self.get_name_or_code(proof_lt_len, context),
+                        ],
+                    },
                 }
             }
             Definition::Other(item) => self.get_code(item, context),

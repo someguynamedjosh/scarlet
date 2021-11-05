@@ -91,6 +91,15 @@ pub struct UnresolvedSubstitution<'x> {
 pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Member<'x> {
+    Named(String),
+    Index {
+        index: ItemId<'x>,
+        proof_lt_len: ItemId<'x>,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
@@ -99,7 +108,7 @@ pub enum Definition<'x> {
         conditions: Vec<Condition<'x>>,
         else_value: ItemId<'x>,
     },
-    Member(ItemId<'x>, String),
+    Member(ItemId<'x>, Member<'x>),
     Other(ItemId<'x>),
     SetEager {
         base: ItemId<'x>,

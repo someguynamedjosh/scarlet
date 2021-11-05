@@ -4,7 +4,7 @@ use crate::{
     stage1::structure::TokenTree,
     stage2::{
         ingest::top_level::IngestionContext,
-        structure::{BuiltinValue, Definition, ItemId, VarType, Variable},
+        structure::{BuiltinValue, Definition, ItemId, Member, VarType, Variable},
     },
 };
 
@@ -29,7 +29,21 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
         let base = &body[0];
         let base = self.ingest_tree(base);
         let name = body[1].as_token().unwrap().to_owned();
-        Definition::Member(base, name)
+        let member = Member::Named(name);
+        Definition::Member(base, member)
+    }
+
+    pub fn member_at_index_def(&mut self, body: &'x Vec<TokenTree<'x>>) -> Definition<'x> {
+        assert_eq!(body.len(), 3);
+        let base = &body[0];
+        let base = self.ingest_tree(base);
+        let index = self.ingest_tree(&body[1]);
+        let proof_lt_len = self.ingest_tree(&body[2]);
+        let member = Member::Index {
+            index,
+            proof_lt_len,
+        };
+        Definition::Member(base, member)
     }
 
     pub fn show_def(&mut self, body: &'x Vec<TokenTree<'x>>, into: ItemId<'x>) -> Definition<'x> {
