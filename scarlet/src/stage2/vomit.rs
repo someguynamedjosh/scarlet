@@ -15,7 +15,7 @@ impl<'x> Environment<'x> {
         for (id, item) in &self.items {
             for &context in &item.shown_from {
                 println!(
-                    "{:?} is\n{:#?}",
+                    "\n{:?} is\n{:#?}",
                     self.get_name(id, context)
                         .unwrap_or(TokenTree::Token("anonymous")),
                     self.get_code(id, context)

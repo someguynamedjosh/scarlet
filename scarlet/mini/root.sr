@@ -3,25 +3,10 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    # condition is BOOL.V
+    condition is BOOL.V
+    PROOF is condition.Eager(condition) AND true
 
-    # PROOF is condition.Eager(condition) AND true
+    value is 32U.V
 
-    # value is 32U.V
-
-    # PROOF(false false).S
-
-    # True
-    {3 OR 4 matches 4 OR 3}.0.S
-    {1 AND 2 matches 1 AND 2}.0.S
-    {1 AND 2 matches 1}.0.S
-    {1 AND 2 matches 32U}.0.S
-    {1 matches PATTERN}.0.S
-
-    0.S
-
-    # False
-    {3 OR 4 matches 4 OR 5}.0.S
-    {1 matches 1 AND 2}.0.S
-
+    PROOF(value matches 5).S
 }

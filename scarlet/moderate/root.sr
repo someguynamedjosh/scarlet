@@ -3,139 +3,25 @@
     32U is Builtin(32U)
     PATTERN is Builtin(PATTERN)
 
-    condition is BOOL.V
-    PROOF is condition.Eager(Self) AND true
-
-    # This should not be dependant on x and y
-    {
-        the_x is x.Shy(x)
-        the_y is y.Shy(y)
-    }
-
-    # However, this should.
-    {
-        the_x is x.Eager(x)
-        the_y is y.Eager(y)
-    }
-
-    # And this? Maybe? At least not for now.
-    {
-        the_x is x
-        the_y is y
-    }
-    .Shy(x y)
-
-    # This should be dependant on x
-    # Because x is dependant on x, so a reference to x 
-    # should also be dependant on x.
-    {
-        the_x is x.Shy(x)
-        the_y is y.Shy(y)
-    }
-    .the_x
-
-    # This should be dependant on x
-    y.Match(
-        on x.Eager(x) 123
-        else 456
-    )
-
-    # This should not.
-    y.Match(
-        on x.Shy(x) 123
-        else unreachable
-    )
-
-    # This should also be dependant on x.
-    {
-        something is 
-        {
-            value is x.Eager(x)
-        }
-    }
-
-    # This will always be dependant on x.
-    y.Match(
-        on 123 x
-        else   123
-    )
-
-    # Depends on "x" and the new variable.
-    x.Eager(x).Var
-
-    # x.Var.Eager(All)
-    x.Var.Eager(Self)
-
-    # How do we express functions?
-    f is 32U.Var(x)
-    called_with_one is f(1)
-
-    # Reduces to 4
-    called_with_one(x + 3)
-
-
-    # True, no subs.
-    1 matches 1
-    2 matches 2
-    true matches true
-
-    # True, sub left for 32U
-    1 matches 32U
-    32U matches 32U
-    32U.V matches 32U
-    32U.V.V.V.V.V matches 32U
-
-    32u is 32U.V.Eager(Self)
-    specific is 32u.V.Shy(32u)
-
-    # True, sub 1 for specific and 32u
-    1 matches specific
-    # True, sub 1 for 32u
-    1 matches 32u
-    # True, sub 1 for 32U
-    1 matches 32U
     # True
-    1 matches (32U VarType)
+    {3 OR 4 matches 4 OR 3}.0.S
+    {1 AND 2 matches 1 AND 2}.0.S
+    {1 AND 2 matches 1}.0.S
+    {1 AND 2 matches 32U}.0.S
+    {1 matches PATTERN}.0.S
+    {32U matches PATTERN}.0.S
+    {true matches true AND true}.0.S
+    {true matches true AND BOOL}.0.S
+    {true matches true AND BOOL AND PATTERN}.0.S
+    {1 matches 1 OR 2 OR 3}.0.S
+    {1 matches 3 OR 2 OR 1}.0.S
 
-    DATA is PATTERN.V.Eager(Self)
-    a is DATA.V
-    b is DATA.V
+    0.S
 
-    # Unknown
-    a matches b.Eager(Self)
-    # Unknown
-    DATA matches b.Eager(Self)
-    # Unknown, because PATTERN might not be the same as b.
-    PATTERN matches b.Eager(Self) 
+    # False
+    {3 OR 4 matches 4 OR 5}.0.S
+    {1 matches 1 AND 2}.0.S
+    {PATTERN matches 32U}.0.S
+    {32U matches BOOL}.0.S
 
-    a       matches x AND y  implies  a matches x  and  a matches y
-    a OR b  matches x        implies  a matches x  and  b matches x
-    a  matches x OR y (where a is not compound)  implies  a matches x or a matches y
-    a AND b matches x (where x is not compound)  implies  a matches x or b matches x
-
-    true AND false matches true AND false
-
-    Bounding pattern:
-    - builtin_op -> the result pattern (e.g. 32U for sum_32u)
-    - match      -> OR of all results' bounding patterns
-    - member     -> if base bp has member, bp of that member, else PATTERN
-    - other      -> bp of target
-    - set_eager  -> same but with base's bp replacing base
-    - struct     -> same but with fields replaced by their bps
-    - sub        -> apply substitutions to base's bounding pattern
-    - variable   -> same but with typee being replaced with a type where all items are replaced by their bp
-
-    Process:
-    - on right AND,             recurse then and
-    - on left OR,               recurse then and
-    - on right OR,              recurse then or
-    - on left AND,              recurse then or
-    - on right shy variable,    recurse on pattern keeping subs that are deps
-    - on right set_eager,       recurse on base noting eager deps
-    - on left variable,         recurse on pattern
-    - on left and right struct, check fields are same, recurse on fields, then and
-    - on landr builtin value,   check equal
-    - on landr builtin vartype, check equal
-    - on l bltn val, r bltn vt, check match
-    - otherwise, Unknown
 }

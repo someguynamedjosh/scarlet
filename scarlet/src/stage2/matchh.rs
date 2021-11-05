@@ -256,7 +256,7 @@ impl<'x> Environment<'x> {
             },
         ) = (&value_def, &pattern_def)
         {
-            if value_type == pattern_type {
+            if value_type == pattern_type || pattern_type == VarType::God {
                 non_capturing_match().with_sub_if_match(var, original_value)
             } else {
                 NoMatch
