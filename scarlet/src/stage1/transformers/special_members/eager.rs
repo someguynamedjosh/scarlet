@@ -1,18 +1,5 @@
-use maplit::hashmap;
-
 use super::base::SpecialMember;
-use crate::{
-    stage1::{
-        structure::TokenTree,
-        transformers::{
-            apply,
-            basics::{Extras, Transformer, TransformerResult},
-            helpers,
-            statements::{Else, OnPattern},
-        },
-    },
-    tfers,
-};
+use crate::stage1::structure::TokenTree;
 
 pub struct Eager;
 impl SpecialMember for Eager {

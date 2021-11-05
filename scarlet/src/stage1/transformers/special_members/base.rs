@@ -1,16 +1,10 @@
-use maplit::hashmap;
-
-use crate::{
-    stage1::{
-        structure::TokenTree,
-        transformers::{
-            apply,
-            basics::{Extras, Transformer, TransformerResult},
-            helpers,
-            statements::{Else, OnPattern},
-        },
+use crate::stage1::{
+    structure::TokenTree,
+    transformers::{
+        apply,
+        basics::{Extras, Transformer, TransformerResult},
+        helpers,
     },
-    tfers,
 };
 
 pub trait SpecialMember {

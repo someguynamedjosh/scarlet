@@ -37,7 +37,10 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 name: "member",
                 body,
             } => self.member_def(body),
-            TokenTree::BuiltinRule { name: "shown", body } => self.show_def(body, into),
+            TokenTree::BuiltinRule {
+                name: "shown",
+                body,
+            } => self.show_def(body, into),
             TokenTree::BuiltinRule {
                 name: "struct",
                 body,
