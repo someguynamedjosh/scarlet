@@ -45,6 +45,7 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
                 }
             }
         }
-        Definition::UnresolvedSubstitute(base, substitutions)
+        // Definition::UnresolvedSubstitute(base, substitutions)
+        todo!()
     }
 }

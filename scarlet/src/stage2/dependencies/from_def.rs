@@ -15,6 +15,10 @@ impl<'x> Environment<'x> {
                 self.deps_of_builtin_op(args, num_struct_unwraps)
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
+            Definition::CustomItem { .. } => {
+                self.resolve_custom(of);
+                self.get_deps_from_def(of, num_struct_unwraps)
+            }
             Definition::Match {
                 base,
                 conditions,
@@ -36,11 +40,7 @@ impl<'x> Environment<'x> {
                 }
                 query
             }
-            Definition::UnresolvedSubstitute(..) => {
-                self.resolve_substitution(of);
-                self.get_deps_from_def(of, num_struct_unwraps)
-            }
-            Definition::ResolvedSubstitute(base, subs) => {
+            Definition::Substitute(base, subs) => {
                 self.deps_of_resolved_substitution(base, num_struct_unwraps, subs)
             }
             Definition::Variable { var, typee } => {

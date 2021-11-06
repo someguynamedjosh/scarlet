@@ -26,9 +26,13 @@ impl<'e, 'x> IngestionContext<'e, 'x> {
 }
 
 impl<'x> Environment<'x> {
-    pub fn get_members(&self, of: ItemId<'x>) -> HashMap<Token<'x>, ItemId<'x>> {
+    pub fn get_members(&mut self, of: ItemId<'x>) -> HashMap<Token<'x>, ItemId<'x>> {
         match self.get_definition(of) {
-            Definition::Other(item) => self.get_members(*item),
+            &Definition::Other(item) => self.get_members(item),
+            Definition::CustomItem { .. } => {
+                self.resolve_custom(of);
+                self.get_members(of)
+            }
             Definition::Struct(fields) => {
                 let mut result = HashMap::new();
                 for field in fields {

@@ -86,6 +86,7 @@ impl<'x> Environment<'x> {
                     false => TokenTree::Token("false"),
                 },
             },
+            Definition::CustomItem { .. } => todo!(),
             Definition::Match {
                 base,
                 conditions,
@@ -179,31 +180,7 @@ impl<'x> Environment<'x> {
                     body,
                 }
             }
-            Definition::UnresolvedSubstitute(base, subs) => {
-                let base = self.get_name_or_code(base, context);
-                let mut tt_subs = Vec::new();
-                for sub in subs {
-                    let value = self.get_name_or_code(sub.value, context);
-                    if let Some(target) = sub.target_meaning {
-                        let target = self.get_name_or_code(target, context);
-                        tt_subs.push(TokenTree::BuiltinRule {
-                            name: "target",
-                            body: vec![target, value],
-                        })
-                    } else {
-                        tt_subs.push(value)
-                    };
-                }
-                let tt_subs = TokenTree::BuiltinRule {
-                    name: "substitutions",
-                    body: tt_subs,
-                };
-                TokenTree::BuiltinRule {
-                    name: "substitute",
-                    body: vec![base, tt_subs],
-                }
-            }
-            Definition::ResolvedSubstitute(base, subs) => {
+            Definition::Substitute(base, subs) => {
                 let base = self.get_name_or_code(base, context);
                 let mut tt_subs = Vec::new();
                 for (target, value) in subs {

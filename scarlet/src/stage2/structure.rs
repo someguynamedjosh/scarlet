@@ -103,6 +103,10 @@ pub enum Member<'x> {
 pub enum Definition<'x> {
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
+    CustomItem {
+        name: &'x str,
+        contents: Vec<ItemId<'x>>,
+    },
     Match {
         base: ItemId<'x>,
         conditions: Vec<Condition<'x>>,
@@ -116,8 +120,7 @@ pub enum Definition<'x> {
         eager: bool,
     },
     Struct(Vec<StructField<'x>>),
-    UnresolvedSubstitute(ItemId<'x>, Vec<UnresolvedSubstitution<'x>>),
-    ResolvedSubstitute(ItemId<'x>, Substitutions<'x>),
+    Substitute(ItemId<'x>, Substitutions<'x>),
     Variable {
         var: VariableId<'x>,
         typee: VarType<'x>,

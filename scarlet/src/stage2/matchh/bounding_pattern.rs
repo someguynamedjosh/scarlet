@@ -16,6 +16,10 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::GreaterThanOrEqual32U => todo!(),
             },
             Definition::BuiltinValue(..) => pattern,
+            Definition::CustomItem { .. } => {
+                self.resolve_custom(pattern);
+                self.find_bounding_pattern(pattern)
+            }
             Definition::Match {
                 conditions,
                 else_value,
@@ -30,17 +34,14 @@ impl<'x> Environment<'x> {
             }
             Definition::Member(..) => todo!(),
             Definition::Other(other) => self.find_bounding_pattern(other),
-            Definition::ResolvedSubstitute(_base, _subs) => todo!(),
+
+            Definition::Substitute(_base, _subs) => todo!(),
             Definition::SetEager { base, vals, eager } => {
                 let base = self.find_bounding_pattern(base);
                 let def = Definition::SetEager { base, vals, eager };
                 self.item_with_new_definition(pattern, def, true)
             }
             Definition::Struct(..) => todo!(),
-            Definition::UnresolvedSubstitute(..) => {
-                self.resolve_substitution(pattern);
-                self.find_bounding_pattern(pattern)
-            }
             Definition::Variable { typee, var } => {
                 // TODO: Make a function to map a var type.
                 let typee = match typee {

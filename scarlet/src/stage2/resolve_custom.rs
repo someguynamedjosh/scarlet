@@ -8,12 +8,21 @@ use crate::{
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn resolve_substitution(&mut self, item: ItemId<'x>) {
-        if let Definition::UnresolvedSubstitute(base, subs) = self.get_definition(item) {
-            let (base, mut subs) = (*base, subs.clone());
-            let base = self.reduce(base);
-            let new_subs = self.resolve_targets_in_sub(base, &mut subs);
-            self.items[item].definition = Some(Definition::ResolvedSubstitute(base, new_subs));
+    pub(super) fn resolve_custom(&mut self, item: ItemId<'x>) {
+        if let Definition::CustomItem { name, contents } = self.get_definition(item) {
+            let new_def = match *name {
+                "other" => self.items[contents[0]].definition.clone().unwrap(),
+                "substitution" => {
+                    let mut contents = contents.clone();
+                    let base = contents.remove(0);
+                    let mut subs = contents;
+                    todo!()
+                    // let new_subs = self.resolve_targets_in_sub(base, &mut
+                    // subs);
+                }
+                _ => todo!("Nice error, unrecognized custom item {}", name),
+            };
+            self.items[item].definition = Some(new_def);
         }
     }
 

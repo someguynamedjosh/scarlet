@@ -37,6 +37,7 @@ impl<'x> Environment<'x> {
                 Definition::BuiltinOperation(op, args)
             }
             Definition::BuiltinValue(..) => return Some(original),
+            Definition::CustomItem { .. } => unreachable!(),
             Definition::Match {
                 base,
                 conditions,
@@ -64,7 +65,8 @@ impl<'x> Environment<'x> {
                 Definition::Member(base, name)
             }
             Definition::Other(id) => return self.substitute_impl(id, substitutions),
-            Definition::ResolvedSubstitute(base, original_subs) => {
+
+            Definition::Substitute(base, original_subs) => {
                 // The substitutions that we are currently doing that should be
                 // applied to the base, because $original_subs does not override
                 // them.
@@ -86,7 +88,7 @@ impl<'x> Environment<'x> {
                     .into_iter()
                     .map(|(target, value)| Some((target, self.substitute(value, substitutions)?)))
                     .collect::<Option<_>>()?;
-                Definition::ResolvedSubstitute(base, original_subs)
+                Definition::Substitute(base, original_subs)
             }
             Definition::SetEager { base, vals, eager } => {
                 let base = self.substitute(base, substitutions)?;
@@ -119,7 +121,6 @@ impl<'x> Environment<'x> {
                     .collect::<Option<_>>()?;
                 Definition::Struct(fields)
             }
-            Definition::UnresolvedSubstitute(..) => unreachable!(),
             Definition::Variable { var, typee } => {
                 if let Some(sub) = substitutions.get(&var) {
                     return Some(*sub);
