@@ -17,7 +17,7 @@ impl<'x> Environment<'x> {
             },
             Definition::BuiltinValue(..) => pattern,
             Definition::Resolvable { .. } => {
-                self.resolve(pattern);
+                let pattern = self.resolve(pattern);
                 self.find_bounding_pattern(pattern)
             }
             Definition::Match {
@@ -33,7 +33,6 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::Member(..) => todo!(),
-            Definition::Other(other) => self.find_bounding_pattern(other),
 
             Definition::Substitute(_base, _subs) => todo!(),
             Definition::SetEager { base, vals, eager } => {

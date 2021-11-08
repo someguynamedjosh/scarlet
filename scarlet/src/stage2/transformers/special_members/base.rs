@@ -1,10 +1,10 @@
-use crate::{
-    stage1::transformers::{
+use crate::stage2::{
+    structure::Token,
+    transformers::{
         apply,
         basics::{Extras, Transformer, TransformerResult},
         helpers,
     },
-    stage2::structure::Token,
 };
 
 pub trait SpecialMember {

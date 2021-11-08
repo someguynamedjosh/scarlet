@@ -1,6 +1,6 @@
-use crate::{
-    stage1::transformers::basics::{Transformer, TransformerResult},
-    stage2::structure::Token,
+use crate::stage2::{
+    structure::Token,
+    transformers::basics::{Transformer, TransformerResult},
 };
 
 pub struct OnPattern;

@@ -1,12 +1,14 @@
 use maplit::hashmap;
 
 use crate::{
-    stage1::transformers::{
-        apply,
-        basics::{Transformer, TransformerResult},
-        operators::Is,
+    stage2::{
+        structure::Token,
+        transformers::{
+            apply,
+            basics::{Transformer, TransformerResult},
+            operators::Is,
+        },
     },
-    stage2::structure::Token,
     tfers,
 };
 

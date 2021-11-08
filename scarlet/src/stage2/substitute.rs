@@ -37,7 +37,6 @@ impl<'x> Environment<'x> {
                 Definition::BuiltinOperation(op, args)
             }
             Definition::BuiltinValue(..) => return Some(original),
-            Definition::Resolvable { .. } => unreachable!(),
             Definition::Match {
                 base,
                 conditions,
@@ -64,8 +63,7 @@ impl<'x> Environment<'x> {
                 let base = self.substitute(base, substitutions)?;
                 Definition::Member(base, name)
             }
-            Definition::Other(id) => return self.substitute_impl(id, substitutions),
-
+            Definition::Resolvable { .. } => unreachable!(),
             Definition::Substitute(base, original_subs) => {
                 // The substitutions that we are currently doing that should be
                 // applied to the base, because $original_subs does not override

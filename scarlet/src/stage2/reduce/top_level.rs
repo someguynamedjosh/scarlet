@@ -24,17 +24,16 @@ impl<'x> Environment<'x> {
     fn reduce_from_scratch(&mut self, item: ItemId<'x>) -> ItemId<'x> {
         let definition = self.items[item].definition.clone().unwrap();
         match definition {
-            Definition::Resolvable { .. } => {
-                self.resolve(item);
-                self.reduce_from_scratch(item)
-            }
             Definition::Match {
                 base,
                 conditions,
                 else_value,
             } => self.reduce_match(base, else_value, conditions, item),
             Definition::Member(base, name) => self.reduce_member(base, name, item),
-            Definition::Other(other) => self.reduce(other),
+            Definition::Resolvable { .. } => {
+                let item = self.resolve(item);
+                self.reduce_from_scratch(item)
+            }
             Definition::Substitute(base, subs) => self.reduce_substitution(base, subs, item),
             _ => {
                 let reduced_definition = self.reduce_definition(definition);
@@ -46,7 +45,6 @@ impl<'x> Environment<'x> {
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
         match def.clone() {
             Definition::Resolvable { .. } => unreachable!(),
-            Definition::Other(..) => unreachable!(),
             Definition::Substitute(..) => unreachable!(),
 
             Definition::BuiltinOperation(op, args) => self.reduce_builtin_op(def, op, args),

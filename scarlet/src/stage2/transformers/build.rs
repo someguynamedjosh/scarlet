@@ -1,9 +1,9 @@
 use crate::{
-    stage1::transformers::{
+    stage2::transformers::{
         basics::{Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer},
         operators::*,
         roots::{Builtin, Struct, SubExpression},
-        special_members::{Eager, Matched, Shown, Variable, MemberAtIndex},
+        special_members::{Eager, Matched, MemberAtIndex, Shown, Variable},
         substitution::Substitution,
     },
     tfers,
@@ -15,7 +15,15 @@ pub fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![SubExpression, Struct, Builtin],
-        20 => tfers![Matched, Variable, Shown, Eager, MemberAtIndex, Substitution, Member],
+        20 => tfers![
+            Matched,
+            Variable,
+            Shown,
+            Eager,
+            MemberAtIndex,
+            Substitution,
+            Member
+        ],
         61 => tfers![Caret],
         70 => tfers![Asterisk, Slash],
         80 => tfers![Plus, Minus],

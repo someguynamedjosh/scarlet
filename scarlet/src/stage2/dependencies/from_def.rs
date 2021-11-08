@@ -15,17 +15,16 @@ impl<'x> Environment<'x> {
                 self.deps_of_builtin_op(args, num_struct_unwraps)
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
-            Definition::Resolvable { .. } => {
-                self.resolve(of);
-                self.get_deps_from_def(of, num_struct_unwraps)
-            }
             Definition::Match {
                 base,
                 conditions,
                 else_value,
             } => self.deps_of_match(base, num_struct_unwraps, conditions, else_value),
             Definition::Member(base, _) => self.dep_query(base, num_struct_unwraps + 1),
-            Definition::Other(item) => self.dep_query(item, num_struct_unwraps),
+            Definition::Resolvable { .. } => {
+                let of = self.resolve(of);
+                self.get_deps_from_def(of, num_struct_unwraps)
+            }
             Definition::SetEager { base, vals, eager } => {
                 self.deps_of_set_eager(vals, num_struct_unwraps, base, of, eager)
             }

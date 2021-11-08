@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn resolve(&mut self, item: ItemId<'x>) {
+    pub(super) fn resolve(&mut self, item: ItemId<'x>) -> ItemId<'x> {
         if let Definition::Resolvable(token) = self.get_definition(item) {
             let new_def = match token {
                 Token::Stream {
@@ -22,10 +22,20 @@ impl<'x> Environment<'x> {
                     // let new_subs = self.resolve_targets_in_sub(base, &mut
                     // subs);
                 }
+                Token::Stream {
+                    label: "syntax_root",
+                    contents,
+                } => {
+                    todo!()
+                }
                 other => todo!("Nice error, unrecognized custom item {:?}", other),
             };
             self.items[item].definition = Some(new_def);
+            if let Some(Definition::Resolvable(Token::Item(item))) = &self.items[item].definition {
+                return *item;
+            }
         }
+        item
     }
 
     // fn resolve_targets_in_sub(

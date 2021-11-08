@@ -44,17 +44,9 @@ fn parse_group<'a>() -> impl Parser<'a, Token<'a>> {
     })
 }
 
-fn parse_builtin_rule<'a>() -> impl Parser<'a, Token<'a>> {
-    let begin = tuple((tag("Builtin"), ws(), tag("("), ws()));
-    let name = preceded(begin, parse_plain_token());
-    let body = delimited(ws(), parse(), tag(")"));
-    let data = tuple((name, body));
-    map(data, |(label, contents)| Token::Stream { label, contents })
-}
-
 fn parse_tree<'a>() -> impl Parser<'a, Token<'a>> {
     let token = map(parse_plain_token(), Token::Plain);
-    alt((parse_builtin_rule(), parse_group(), token))
+    alt((parse_group(), token))
 }
 
 fn parse<'a>() -> impl Parser<'a, TokenStream<'a>> {
@@ -63,6 +55,10 @@ fn parse<'a>() -> impl Parser<'a, TokenStream<'a>> {
 
 pub fn ingest(file_tree: &FileNode) -> Module {
     let (remainder, self_content) = parse()(&file_tree.self_content).unwrap();
+    let self_content = Token::Stream {
+        label: "syntax_root",
+        contents: self_content,
+    };
     if remainder.len() > 0 {
         eprintln!("Syntax error at: {}", remainder);
         todo!("nice error");

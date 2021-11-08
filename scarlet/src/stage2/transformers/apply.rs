@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use super::build;
-use crate::{
-    stage1::transformers::basics::{OwnedOrBorrowed, Precedence, Transformer},
-    stage2::structure::Token,
+use crate::stage2::{
+    structure::Token,
+    transformers::basics::{OwnedOrBorrowed, Precedence, Transformer},
 };
 
 fn apply_transformers_ltr<'t>(to: &mut Vec<Token<'t>>, transformers: &[&dyn Transformer]) {

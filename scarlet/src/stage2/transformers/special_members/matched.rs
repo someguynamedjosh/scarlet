@@ -2,11 +2,13 @@ use maplit::hashmap;
 
 use super::base::SpecialMember;
 use crate::{
-    stage1::transformers::{
-        basics::{Extras, Transformer},
-        statements::{Else, OnPattern},
+    stage2::{
+        structure::Token,
+        transformers::{
+            basics::{Extras, Transformer},
+            statements::{Else, OnPattern},
+        },
     },
-    stage2::structure::Token,
     tfers,
 };
 

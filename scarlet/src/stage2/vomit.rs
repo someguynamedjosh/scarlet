@@ -85,7 +85,6 @@ impl<'x> Environment<'x> {
                     false => Token::Plain("false"),
                 },
             },
-            Definition::Resolvable { .. } => todo!(),
             Definition::Match {
                 base,
                 conditions,
@@ -146,7 +145,7 @@ impl<'x> Environment<'x> {
                     },
                 }
             }
-            Definition::Other(item) => self.get_code(item, context),
+            Definition::Resolvable { .. } => todo!(),
             Definition::SetEager { base, vals, eager } => {
                 let base = self.get_name_or_code(base, context);
                 let vals = vals
@@ -239,7 +238,8 @@ impl<'x> Environment<'x> {
 
     fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> ItemId<'x> {
         let mut item = item;
-        while let Definition::Other(other) | Definition::SetEager { base: other, .. } =
+        while let Definition::Resolvable(Token::Item(other))
+        | Definition::SetEager { base: other, .. } =
             self.items[item].definition.as_ref().unwrap()
         {
             item = *other;
