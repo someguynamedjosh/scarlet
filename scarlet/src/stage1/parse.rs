@@ -1,10 +1,10 @@
-use super::{
-    nom_prelude::*,
-    structure::{Module, Token, TokenTree},
+use super::{nom_prelude::*, structure::Module};
+use crate::{
+    entry::FileNode,
+    stage2::structure::{Token, TokenStream},
 };
-use crate::entry::FileNode;
 
-fn parse_token<'a>() -> impl Parser<'a, Token<'a>> {
+fn parse_plain_token<'a>() -> impl Parser<'a, &'a str> {
     |input: &'a str| {
         let parens = "{[()]}";
         let split_on = ".:!@$%^&*-=+\\|;'\",<>/?";
@@ -24,11 +24,11 @@ fn parse_token<'a>() -> impl Parser<'a, Token<'a>> {
     }
 }
 
-fn parse_group<'a>() -> impl Parser<'a, TokenTree<'a>> {
+fn parse_group<'a>() -> impl Parser<'a, Token<'a>> {
     let data = tuple((recognize(one_of("{[(")), parse(), recognize(one_of("}])"))));
-    map(data, |(start, body, end)| {
+    map(data, |(start, contents, end)| {
         // I'm dedicated.
-        let name = match (start, end) {
+        let label = match (start, end) {
             ("{", "}") => "group{}",
             ("{", "]") => "group{]",
             ("{", ")") => "group{)",
@@ -40,24 +40,24 @@ fn parse_group<'a>() -> impl Parser<'a, TokenTree<'a>> {
             ("(", ")") => "group()",
             _ => unreachable!(),
         };
-        TokenTree::BuiltinRule { name, body }
+        Token::Stream { label, contents }
     })
 }
 
-fn parse_primitive_rule<'a>() -> impl Parser<'a, TokenTree<'a>> {
-    let begin = tuple((tag("primitive"), ws(), tag("{"), ws()));
-    let name = preceded(begin, parse_token());
-    let body = delimited(ws(), parse(), tag("}"));
+fn parse_builtin_rule<'a>() -> impl Parser<'a, Token<'a>> {
+    let begin = tuple((tag("Builtin"), ws(), tag("("), ws()));
+    let name = preceded(begin, parse_plain_token());
+    let body = delimited(ws(), parse(), tag(")"));
     let data = tuple((name, body));
-    map(data, |(name, body)| TokenTree::BuiltinRule { name, body })
+    map(data, |(label, contents)| Token::Stream { label, contents })
 }
 
-fn parse_tree<'a>() -> impl Parser<'a, TokenTree<'a>> {
-    let token = map(parse_token(), TokenTree::Token);
-    alt((parse_primitive_rule(), parse_group(), token))
+fn parse_tree<'a>() -> impl Parser<'a, Token<'a>> {
+    let token = map(parse_plain_token(), Token::Plain);
+    alt((parse_builtin_rule(), parse_group(), token))
 }
 
-fn parse<'a>() -> impl Parser<'a, Vec<TokenTree<'a>>> {
+fn parse<'a>() -> impl Parser<'a, TokenStream<'a>> {
     |input| terminated(many0(after_ws(parse_tree())), ws())(input)
 }
 

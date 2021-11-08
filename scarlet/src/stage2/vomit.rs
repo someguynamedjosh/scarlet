@@ -1,9 +1,8 @@
 use std::collections::HashSet;
 
 use super::structure::{Environment, ItemId, StructField, VariableId};
-use crate::{
-    stage1::structure::TokenTree,
-    stage2::structure::{BuiltinOperation, BuiltinValue, Definition, Member, VarType},
+use crate::stage2::structure::{
+    BuiltinOperation, BuiltinValue, Definition, Member, Token, VarType,
 };
 
 type Parent<'x> = (ItemId<'x>, String);
@@ -17,14 +16,14 @@ impl<'x> Environment<'x> {
                 println!(
                     "\n{:?} is\n{:#?}",
                     self.get_name(id, context)
-                        .unwrap_or(TokenTree::Token("anonymous")),
+                        .unwrap_or(Token::Plain("anonymous")),
                     self.get_code(id, context)
                 );
             }
         }
     }
 
-    pub fn get_name_or_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
+    pub fn get_name_or_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> Token {
         if let Some(name) = self.get_name(item, context) {
             name
         } else {
@@ -32,7 +31,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ItemId<'x>) -> TokenTree {
+    pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ItemId<'x>) -> Token {
         for (item_id, _) in &self.items {
             if let Definition::Variable { var: var_id, .. } = self.get_definition(item_id) {
                 if *var_id == var {
@@ -56,11 +55,11 @@ impl<'x> Environment<'x> {
         self.vomited_tokens.0.alloc(of)
     }
 
-    pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> TokenTree {
+    pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> Token {
         let item = self.items[item].cached_reduction.unwrap_or(item);
         match self.get_definition(item).clone() {
             Definition::BuiltinOperation(op, args) => {
-                let name = match op {
+                let label = match op {
                     BuiltinOperation::Sum32U => "sum_32u",
                     BuiltinOperation::Difference32U => "difference_32u",
                     BuiltinOperation::Product32U => "product_32u",
@@ -73,20 +72,20 @@ impl<'x> Environment<'x> {
                     BuiltinOperation::LessThan32U => "less_than_32u",
                     BuiltinOperation::LessThanOrEqual32U => "less_than_or_equal_32u",
                 };
-                let body = args
+                let contents = args
                     .into_iter()
                     .map(|arg| self.get_name_or_code(arg, context))
                     .collect();
-                TokenTree::BuiltinRule { name, body }
+                Token::Stream { label, contents }
             }
             Definition::BuiltinValue(val) => match val {
-                BuiltinValue::_32U(val) => TokenTree::Token(self.token(format!("{}", val))),
+                BuiltinValue::_32U(val) => Token::Plain(self.token(format!("{}", val))),
                 BuiltinValue::Bool(val) => match val {
-                    true => TokenTree::Token("true"),
-                    false => TokenTree::Token("false"),
+                    true => Token::Plain("true"),
+                    false => Token::Plain("false"),
                 },
             },
-            Definition::CustomItem { .. } => todo!(),
+            Definition::Resolvable { .. } => todo!(),
             Definition::Match {
                 base,
                 conditions,
@@ -98,25 +97,25 @@ impl<'x> Environment<'x> {
                 for cond in conditions {
                     let pattern = self.get_name_or_code(cond.pattern, context);
                     let value = self.get_name_or_code(cond.value, context);
-                    patterns.push(TokenTree::BuiltinRule {
-                        name: "on",
-                        body: vec![pattern, value],
+                    patterns.push(Token::Stream {
+                        label: "on",
+                        contents: vec![pattern, value],
                     });
                 }
 
                 let else_value = self.get_name_or_code(else_value, context);
-                patterns.push(TokenTree::BuiltinRule {
-                    name: "else",
-                    body: vec![else_value],
+                patterns.push(Token::Stream {
+                    label: "else",
+                    contents: vec![else_value],
                 });
 
-                let patterns = TokenTree::BuiltinRule {
-                    name: "patterns",
-                    body: patterns,
+                let patterns = Token::Stream {
+                    label: "patterns",
+                    contents: patterns,
                 };
-                TokenTree::BuiltinRule {
-                    name: "match",
-                    body: vec![base, patterns],
+                Token::Stream {
+                    label: "match",
+                    contents: vec![base, patterns],
                 }
             }
             Definition::Member(base, _) => {
@@ -128,18 +127,18 @@ impl<'x> Environment<'x> {
                 };
                 match member {
                     Member::Named(name) => {
-                        let name = TokenTree::Token(name);
-                        TokenTree::BuiltinRule {
-                            name: "member",
-                            body: vec![base, name],
+                        let name = Token::Plain(name);
+                        Token::Stream {
+                            label: "member",
+                            contents: vec![base, name],
                         }
                     }
                     &Member::Index {
                         index,
                         proof_lt_len,
-                    } => TokenTree::BuiltinRule {
-                        name: "member",
-                        body: vec![
+                    } => Token::Stream {
+                        label: "member",
+                        contents: vec![
                             base,
                             self.get_name_or_code(index, context),
                             self.get_name_or_code(proof_lt_len, context),
@@ -154,30 +153,30 @@ impl<'x> Environment<'x> {
                     .into_iter()
                     .map(|v| self.get_name_or_code(v, context))
                     .collect();
-                let vals = TokenTree::BuiltinRule {
-                    name: "vals",
-                    body: vals,
+                let vals = Token::Stream {
+                    label: "vals",
+                    contents: vals,
                 };
-                TokenTree::BuiltinRule {
-                    name: if eager { "eager" } else { "shy" },
-                    body: vec![vals, base],
+                Token::Stream {
+                    label: if eager { "eager" } else { "shy" },
+                    contents: vec![vals, base],
                 }
             }
             Definition::Struct(fields) => {
-                let mut body = Vec::new();
+                let mut contents = Vec::new();
                 for field in fields {
                     let value = self.get_name_or_code(field.value, context);
-                    body.push(match &field.name {
-                        Some(name) => TokenTree::BuiltinRule {
-                            name: "target",
-                            body: vec![TokenTree::Token(name), value],
+                    contents.push(match &field.name {
+                        Some(name) => Token::Stream {
+                            label: "target",
+                            contents: vec![Token::Plain(name), value],
                         },
                         None => value,
                     })
                 }
-                TokenTree::BuiltinRule {
-                    name: "struct",
-                    body,
+                Token::Stream {
+                    label: "struct",
+                    contents,
                 }
             }
             Definition::Substitute(base, subs) => {
@@ -186,49 +185,49 @@ impl<'x> Environment<'x> {
                 for (target, value) in subs {
                     let value = self.get_name_or_code(value, context);
                     let target = self.get_var_name_or_code(target, context);
-                    tt_subs.push(TokenTree::BuiltinRule {
-                        name: "target",
-                        body: vec![target, value],
+                    tt_subs.push(Token::Stream {
+                        label: "target",
+                        contents: vec![target, value],
                     })
                 }
-                let tt_subs = TokenTree::BuiltinRule {
-                    name: "substitutions",
-                    body: tt_subs,
+                let tt_subs = Token::Stream {
+                    label: "substitutions",
+                    contents: tt_subs,
                 };
-                TokenTree::BuiltinRule {
-                    name: "substitute",
-                    body: vec![base, tt_subs],
+                Token::Stream {
+                    label: "substitute",
+                    contents: vec![base, tt_subs],
                 }
             }
             Definition::Variable { typee, .. } => {
                 // let typee = self.get_name_or_code(typee, context);
                 match typee {
-                    VarType::God => TokenTree::BuiltinRule {
-                        name: "PATTERN",
-                        body: vec![],
+                    VarType::God => Token::Stream {
+                        label: "PATTERN",
+                        contents: vec![],
                     },
-                    VarType::_32U => TokenTree::BuiltinRule {
-                        name: "32U",
-                        body: vec![],
+                    VarType::_32U => Token::Stream {
+                        label: "32U",
+                        contents: vec![],
                     },
-                    VarType::Bool => TokenTree::BuiltinRule {
-                        name: "BOOL",
-                        body: vec![],
+                    VarType::Bool => Token::Stream {
+                        label: "BOOL",
+                        contents: vec![],
                     },
-                    VarType::Just(other) => TokenTree::BuiltinRule {
-                        name: "variable",
-                        body: vec![self.get_name_or_code(other, context)],
+                    VarType::Just(other) => Token::Stream {
+                        label: "variable",
+                        contents: vec![self.get_name_or_code(other, context)],
                     },
-                    VarType::And(left, right) => TokenTree::BuiltinRule {
-                        name: "AND",
-                        body: vec![
+                    VarType::And(left, right) => Token::Stream {
+                        label: "AND",
+                        contents: vec![
                             self.get_name_or_code(left, context),
                             self.get_name_or_code(right, context),
                         ],
                     },
-                    VarType::Or(left, right) => TokenTree::BuiltinRule {
-                        name: "OR",
-                        body: vec![
+                    VarType::Or(left, right) => Token::Stream {
+                        label: "OR",
+                        contents: vec![
                             self.get_name_or_code(left, context),
                             self.get_name_or_code(right, context),
                         ],
@@ -253,12 +252,12 @@ impl<'x> Environment<'x> {
         item
     }
 
-    pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
+    pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<Token> {
         let of = self.dereference(of, context);
         self.get_name_impl(of, context)
     }
 
-    pub fn get_name_impl(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<TokenTree> {
+    pub fn get_name_impl(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<Token> {
         let all_context_parents: HashSet<ItemId<'x>> = self
             .get_paths(context, context)
             .into_iter()
@@ -271,11 +270,11 @@ impl<'x> Environment<'x> {
         let path = reachable_paths.min_by_key(|p| p.len());
         path.map(|mut path| {
             let base = path.remove(0);
-            let mut result = TokenTree::Token(self.token(base.1));
+            let mut result = Token::Plain(self.token(base.1));
             for (_, member) in path {
-                result = TokenTree::BuiltinRule {
-                    name: "member",
-                    body: vec![result, TokenTree::Token(self.token(member))],
+                result = Token::Stream {
+                    label: "member",
+                    contents: vec![result, Token::Plain(self.token(member))],
                 }
             }
             result

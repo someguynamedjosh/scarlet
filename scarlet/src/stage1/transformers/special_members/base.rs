@@ -1,10 +1,10 @@
-use crate::stage1::{
-    structure::TokenTree,
-    transformers::{
+use crate::{
+    stage1::transformers::{
         apply,
         basics::{Extras, Transformer, TransformerResult},
         helpers,
     },
+    stage2::structure::Token,
 };
 
 pub trait SpecialMember {
@@ -15,23 +15,19 @@ pub trait SpecialMember {
     fn paren_group_transformers<'t>(&self) -> Extras<'t> {
         Default::default()
     }
-    fn apply<'t>(
-        &self,
-        base: TokenTree<'t>,
-        paren_group: Option<Vec<TokenTree<'t>>>,
-    ) -> TokenTree<'t>;
+    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t>;
 }
 
 impl<M: SpecialMember> Transformer for M {
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
         if at < 1 {
             return false;
         }
-        if &to[at] != &TokenTree::Token(".") {
+        if &to[at] != &Token::Plain(".") {
             false
         } else {
             for alias in self.aliases() {
-                if &to[at + 1] == &TokenTree::Token(alias) {
+                if &to[at + 1] == &Token::Plain(alias) {
                     return true;
                 }
             }
@@ -39,7 +35,7 @@ impl<M: SpecialMember> Transformer for M {
         }
     }
 
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
         let mut end = at + 1;
         let base = to[at - 1].clone();
         let paren_group = if self.expects_paren_group() {

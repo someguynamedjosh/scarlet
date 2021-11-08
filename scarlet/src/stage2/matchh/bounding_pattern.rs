@@ -16,8 +16,8 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::GreaterThanOrEqual32U => todo!(),
             },
             Definition::BuiltinValue(..) => pattern,
-            Definition::CustomItem { .. } => {
-                self.resolve_custom(pattern);
+            Definition::Resolvable { .. } => {
+                self.resolve(pattern);
                 self.find_bounding_pattern(pattern)
             }
             Definition::Match {

@@ -1,5 +1,5 @@
 use super::base::SpecialMember;
-use crate::stage1::structure::TokenTree;
+use crate::stage2::structure::Token;
 
 pub struct MemberAtIndex;
 impl SpecialMember for MemberAtIndex {
@@ -11,14 +11,10 @@ impl SpecialMember for MemberAtIndex {
         true
     }
 
-    fn apply<'t>(
-        &self,
-        base: TokenTree<'t>,
-        paren_group: Option<Vec<TokenTree<'t>>>,
-    ) -> TokenTree<'t> {
-        TokenTree::BuiltinRule {
-            name: "member_at_index",
-            body: [vec![base], paren_group.unwrap()].concat(),
+    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t> {
+        Token::Stream {
+            label: "member_at_index",
+            contents: [vec![base], paren_group.unwrap()].concat(),
         }
     }
 }

@@ -24,8 +24,8 @@ impl<'x> Environment<'x> {
     fn reduce_from_scratch(&mut self, item: ItemId<'x>) -> ItemId<'x> {
         let definition = self.items[item].definition.clone().unwrap();
         match definition {
-            Definition::CustomItem { .. } => {
-                self.resolve_custom(item);
+            Definition::Resolvable { .. } => {
+                self.resolve(item);
                 self.reduce_from_scratch(item)
             }
             Definition::Match {
@@ -45,7 +45,7 @@ impl<'x> Environment<'x> {
 
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
         match def.clone() {
-            Definition::CustomItem { .. } => unreachable!(),
+            Definition::Resolvable { .. } => unreachable!(),
             Definition::Other(..) => unreachable!(),
             Definition::Substitute(..) => unreachable!(),
 

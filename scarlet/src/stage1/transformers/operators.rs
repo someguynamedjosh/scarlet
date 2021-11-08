@@ -1,6 +1,6 @@
-use crate::stage1::{
-    structure::TokenTree,
-    transformers::basics::{Transformer, TransformerResult},
+use crate::{
+    stage1::transformers::basics::{Transformer, TransformerResult},
+    stage2::structure::Token,
 };
 
 macro_rules! binary_operator {
@@ -13,23 +13,23 @@ macro_rules! compound_binary_operator {
     ($StructName:ident, $internal_name:expr, $operator:expr) => {
         pub struct $StructName;
         impl Transformer for $StructName {
-            fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+            fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
                 for (index, token) in $operator.iter().enumerate() {
-                    if &to[at + index] != &TokenTree::Token(token) {
+                    if &to[at + index] != &Token::Plain(token) {
                         return false;
                     }
                 }
                 true
             }
 
-            fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+            fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
                 let left = to[at - 1].clone();
                 let right = to[at + $operator.len()].clone();
                 TransformerResult {
                     replace_range: at - 1..=at + $operator.len(),
-                    with: TokenTree::BuiltinRule {
-                        name: $internal_name,
-                        body: vec![left, right],
+                    with: Token::Stream {
+                        label: $internal_name,
+                        contents: vec![left, right],
                     },
                 }
             }

@@ -1,26 +1,26 @@
-use crate::stage1::{
-    structure::TokenTree,
-    transformers::basics::{Transformer, TransformerResult},
+use crate::{
+    stage1::transformers::basics::{Transformer, TransformerResult},
+    stage2::structure::Token,
 };
 
 pub struct OnPattern;
 impl Transformer for OnPattern {
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token("on")
+    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+        &to[at] == &Token::Plain("on")
     }
 
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
         let pattern = to[at + 1].clone();
-        let pattern = TokenTree::BuiltinRule {
-            name: "pattern",
-            body: vec![pattern],
+        let pattern = Token::Stream {
+            label: "pattern",
+            contents: vec![pattern],
         };
         let value = to[at + 2].clone();
         TransformerResult {
             replace_range: at..=at + 2,
-            with: TokenTree::BuiltinRule {
-                name: "on",
-                body: vec![pattern, value],
+            with: Token::Stream {
+                label: "on",
+                contents: vec![pattern, value],
             },
         }
     }
@@ -28,17 +28,17 @@ impl Transformer for OnPattern {
 
 pub struct Else;
 impl Transformer for Else {
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
-        &to[at] == &TokenTree::Token("else")
+    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+        &to[at] == &Token::Plain("else")
     }
 
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
         let value = to[at + 1].clone();
         TransformerResult {
             replace_range: at..=at + 1,
-            with: TokenTree::BuiltinRule {
-                name: "else",
-                body: vec![value],
+            with: Token::Stream {
+                label: "else",
+                contents: vec![value],
             },
         }
     }

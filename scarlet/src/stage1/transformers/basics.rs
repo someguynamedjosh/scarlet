@@ -1,17 +1,17 @@
 use std::{collections::HashMap, ops::RangeInclusive};
 
-use crate::stage1::structure::TokenTree;
+use crate::stage2::structure::Token;
 
 pub struct TransformerResult<'t> {
     pub replace_range: RangeInclusive<usize>,
-    pub with: TokenTree<'t>,
+    pub with: Token<'t>,
 }
 
 pub trait Transformer {
     /// Returns true if the transformer should be applied at the given
     /// location.
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool;
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t>;
+    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool;
+    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t>;
 }
 
 pub enum OwnedOrBorrowed<'a, T: ?Sized> {

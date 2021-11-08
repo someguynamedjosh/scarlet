@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use super::build;
-use crate::stage1::{
-    structure::TokenTree,
-    transformers::basics::{OwnedOrBorrowed, Precedence, Transformer},
+use crate::{
+    stage1::transformers::basics::{OwnedOrBorrowed, Precedence, Transformer},
+    stage2::structure::Token,
 };
 
-fn apply_transformers_ltr<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn Transformer]) {
+fn apply_transformers_ltr<'t>(to: &mut Vec<Token<'t>>, transformers: &[&dyn Transformer]) {
     let mut index = 0;
     while index < to.len() {
         for transformer in transformers {
@@ -27,7 +27,7 @@ fn apply_transformers_ltr<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn 
     }
 }
 
-fn apply_transformers_rtl<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn Transformer]) {
+fn apply_transformers_rtl<'t>(to: &mut Vec<Token<'t>>, transformers: &[&dyn Transformer]) {
     let mut index = to.len();
     while index > 0 {
         index -= 1;
@@ -49,7 +49,7 @@ fn apply_transformers_rtl<'t>(to: &mut Vec<TokenTree<'t>>, transformers: &[&dyn 
 }
 
 pub fn apply_transformers<'e, 't>(
-    to: &mut Vec<TokenTree<'t>>,
+    to: &mut Vec<Token<'t>>,
     extras: &'e HashMap<Precedence, Vec<Box<dyn Transformer + 'e>>>,
 ) {
     for precedence in 0..=u8::MAX {

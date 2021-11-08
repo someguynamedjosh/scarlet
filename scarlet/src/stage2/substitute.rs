@@ -37,7 +37,7 @@ impl<'x> Environment<'x> {
                 Definition::BuiltinOperation(op, args)
             }
             Definition::BuiltinValue(..) => return Some(original),
-            Definition::CustomItem { .. } => unreachable!(),
+            Definition::Resolvable { .. } => unreachable!(),
             Definition::Match {
                 base,
                 conditions,

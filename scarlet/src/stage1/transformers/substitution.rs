@@ -1,24 +1,22 @@
 use maplit::hashmap;
 
 use crate::{
-    stage1::{
-        structure::TokenTree,
-        transformers::{
-            apply,
-            basics::{Transformer, TransformerResult},
-            operators::Is,
-        },
+    stage1::transformers::{
+        apply,
+        basics::{Transformer, TransformerResult},
+        operators::Is,
     },
+    stage2::structure::Token,
     tfers,
 };
 
 pub struct Substitution;
 impl Transformer for Substitution {
-    fn should_be_applied_at(&self, to: &[TokenTree], at: usize) -> bool {
+    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
         if at == 0 {
             false
-        } else if let TokenTree::BuiltinRule {
-            name: "group()", ..
+        } else if let Token::Stream {
+            label: "group()", ..
         } = &to[at]
         {
             true
@@ -27,21 +25,21 @@ impl Transformer for Substitution {
         }
     }
 
-    fn apply<'t>(&self, to: &Vec<TokenTree<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
         let base = to[at - 1].clone();
-        if let TokenTree::BuiltinRule { body, .. } = &to[at] {
+        if let Token::Stream { contents: body, .. } = &to[at] {
             let mut substitutions = body.clone();
             let extras = hashmap![200 => tfers![Is]];
             apply::apply_transformers(&mut substitutions, &extras);
-            let substitutions = TokenTree::BuiltinRule {
-                name: "substitutions",
-                body: substitutions,
+            let substitutions = Token::Stream {
+                label: "substitutions",
+                contents: substitutions,
             };
             TransformerResult {
                 replace_range: at - 1..=at,
-                with: TokenTree::BuiltinRule {
-                    name: "substitute",
-                    body: vec![base, substitutions],
+                with: Token::Stream {
+                    label: "substitute",
+                    contents: vec![base, substitutions],
                 },
             }
         } else {

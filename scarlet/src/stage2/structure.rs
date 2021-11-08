@@ -1,15 +1,20 @@
-use std::{collections::HashMap, fmt::Debug, marker::PhantomData};
+use std::{
+    collections::HashMap,
+    fmt::{self, Debug, Formatter},
+    marker::PhantomData,
+};
 
 use typed_arena::Arena;
 
 use crate::{
     shared::{Id, OrderedMap, OrderedSet, Pool},
-    stage1::structure::{self as s1, Token},
+    stage1::structure::{self as s1},
+    util::indented,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructField<'x> {
-    pub name: Option<Token<'x>>,
+    pub name: Option<&'x str>,
     pub value: ItemId<'x>,
 }
 
@@ -78,16 +83,6 @@ pub struct VariableInfo<'x> {
     pub eager: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct UnresolvedSubstitution<'x> {
-    /// If the target was an identifier, $name is that identifier.
-    pub target_name: Option<Token<'x>>,
-    /// What the name resolves to in the scope where the substitution was
-    /// first used.
-    pub target_meaning: Option<ItemId<'x>>,
-    pub value: ItemId<'x>,
-}
-
 pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -99,14 +94,48 @@ pub enum Member<'x> {
     },
 }
 
+pub type TokenStream<'x> = Vec<Token<'x>>;
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum Token<'x> {
+    Plain(&'x str),
+    Item(ItemId<'x>),
+    Stream {
+        label: &'x str,
+        contents: TokenStream<'x>,
+    },
+}
+
+impl<'x> Token<'x> {
+    pub fn unwrap_plain(&self) -> &'x str {
+        if let Self::Plain(plain) = self {
+            *plain
+        } else {
+            panic!("Expected a plain token, got {:?} instead", self)
+        }
+    }
+}
+
+impl<'x> Debug for Token<'x> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Token::Plain(plain) => write!(f, "{}", plain),
+            Token::Item(id) => write!(f, "{:?}", id),
+            Token::Stream { label, contents } => {
+                writeln!(f, "stream {} {{", label)?;
+                for line in contents {
+                    writeln!(f, "    {}", indented(&format!("{:?}", line)))?;
+                }
+                write!(f, "}}")
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
     BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
     BuiltinValue(BuiltinValue),
-    CustomItem {
-        name: &'x str,
-        contents: Vec<ItemId<'x>>,
-    },
     Match {
         base: ItemId<'x>,
         conditions: Vec<Condition<'x>>,
@@ -114,6 +143,7 @@ pub enum Definition<'x> {
     },
     Member(ItemId<'x>, Member<'x>),
     Other(ItemId<'x>),
+    Resolvable(Token<'x>),
     SetEager {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,
@@ -187,9 +217,9 @@ pub enum After<'x> {
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Item<'x> {
-    pub original_definition: &'x s1::TokenTree<'x>,
+    pub original_definition: &'x Token<'x>,
     pub definition: Option<Definition<'x>>,
-    pub scope: HashMap<Token<'x>, ItemId<'x>>,
+    pub scope: HashMap<&'x str, ItemId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
     pub cached_reduction: Option<ItemId<'x>>,

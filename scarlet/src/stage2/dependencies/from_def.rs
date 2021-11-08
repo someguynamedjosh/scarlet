@@ -15,8 +15,8 @@ impl<'x> Environment<'x> {
                 self.deps_of_builtin_op(args, num_struct_unwraps)
             }
             Definition::BuiltinValue(..) => DepQueryResult::new(),
-            Definition::CustomItem { .. } => {
-                self.resolve_custom(of);
+            Definition::Resolvable { .. } => {
+                self.resolve(of);
                 self.get_deps_from_def(of, num_struct_unwraps)
             }
             Definition::Match {

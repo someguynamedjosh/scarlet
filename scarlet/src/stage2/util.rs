@@ -1,7 +1,8 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-use super::structure::{BuiltinValue, Definition, Environment, Item, ItemId, VarType, Variable};
-use crate::stage1::structure::TokenTree;
+use super::structure::{
+    BuiltinValue, Definition, Environment, Item, ItemId, Token, VarType, Variable,
+};
 
 impl<'x> Environment<'x> {
     pub fn get_definition(&self, of: ItemId<'x>) -> &Definition<'x> {
@@ -29,7 +30,7 @@ impl<'x> Environment<'x> {
             cached_reduction: None,
             definition: Some(def),
             dependencies: None,
-            original_definition: &TokenTree::Token("Internal"),
+            original_definition: &Token::Plain("Internal"),
             scope: HashMap::new(),
             shown_from: Vec::new(),
         };

@@ -2,13 +2,11 @@ use maplit::hashmap;
 
 use super::base::SpecialMember;
 use crate::{
-    stage1::{
-        structure::TokenTree,
-        transformers::{
-            basics::{Extras, Transformer},
-            statements::{Else, OnPattern},
-        },
+    stage1::transformers::{
+        basics::{Extras, Transformer},
+        statements::{Else, OnPattern},
     },
+    stage2::structure::Token,
     tfers,
 };
 
@@ -26,18 +24,14 @@ impl SpecialMember for Matched {
         hashmap![172 => tfers![OnPattern, Else]]
     }
 
-    fn apply<'t>(
-        &self,
-        base: TokenTree<'t>,
-        paren_group: Option<Vec<TokenTree<'t>>>,
-    ) -> TokenTree<'t> {
-        TokenTree::BuiltinRule {
-            name: "matched",
-            body: vec![
+    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t> {
+        Token::Stream {
+            label: "matched",
+            contents: vec![
                 base,
-                TokenTree::BuiltinRule {
-                    name: "patterns",
-                    body: paren_group.unwrap(),
+                Token::Stream {
+                    label: "patterns",
+                    contents: paren_group.unwrap(),
                 },
             ],
         }

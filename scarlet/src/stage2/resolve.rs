@@ -1,59 +1,61 @@
-use super::structure::{Substitutions, UnresolvedSubstitution};
+use super::structure::Substitutions;
 use crate::{
     shared::OrderedSet,
     stage2::{
         matchh::MatchResult,
-        structure::{Definition, Environment, ItemId, VariableInfo},
+        structure::{Definition, Environment, ItemId, Token, VariableInfo},
     },
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn resolve_custom(&mut self, item: ItemId<'x>) {
-        if let Definition::CustomItem { name, contents } = self.get_definition(item) {
-            let new_def = match *name {
-                "other" => self.items[contents[0]].definition.clone().unwrap(),
-                "substitution" => {
+    pub(super) fn resolve(&mut self, item: ItemId<'x>) {
+        if let Definition::Resolvable(token) = self.get_definition(item) {
+            let new_def = match token {
+                Token::Stream {
+                    label: "substitution",
+                    contents,
+                } => {
                     let mut contents = contents.clone();
-                    let base = contents.remove(0);
-                    let mut subs = contents;
+                    // let base = contents.remove(0);
+                    // let mut subs = contents;
                     todo!()
                     // let new_subs = self.resolve_targets_in_sub(base, &mut
                     // subs);
                 }
-                _ => todo!("Nice error, unrecognized custom item {}", name),
+                other => todo!("Nice error, unrecognized custom item {:?}", other),
             };
             self.items[item].definition = Some(new_def);
         }
     }
 
-    fn resolve_targets_in_sub(
-        &mut self,
-        base: ItemId<'x>,
-        subs: &mut [UnresolvedSubstitution<'x>],
-    ) -> Substitutions<'x> {
-        let mut new_subs = Substitutions::new();
-        let mut deps = self.get_deps(base);
-        for sub in &mut *subs {
-            if let Some(possible_meaning) = sub.target_meaning {
-                let additional_subs = self.resolve_named_target(
-                    possible_meaning,
-                    sub.target_name,
-                    base,
-                    sub.value,
-                    &mut deps,
-                    &new_subs,
-                );
-                new_subs = new_subs.union(additional_subs);
-            }
-        }
-        for sub in &mut *subs {
-            if sub.target_meaning.is_none() {
-                let additions = self.resolve_anonymous_target(&mut deps, &new_subs, sub.value);
-                new_subs = new_subs.union(additions);
-            }
-        }
-        new_subs
-    }
+    // fn resolve_targets_in_sub(
+    //     &mut self,
+    //     base: ItemId<'x>,
+    //     subs: &mut [UnresolvedSubstitution<'x>],
+    // ) -> Substitutions<'x> {
+    //     let mut new_subs = Substitutions::new();
+    //     let mut deps = self.get_deps(base);
+    //     for sub in &mut *subs {
+    //         if let Some(possible_meaning) = sub.target_meaning {
+    //             let additional_subs = self.resolve_named_target(
+    //                 possible_meaning,
+    //                 sub.target_name,
+    //                 base,
+    //                 sub.value,
+    //                 &mut deps,
+    //                 &new_subs,
+    //             );
+    //             new_subs = new_subs.union(additional_subs);
+    //         }
+    //     }
+    //     for sub in &mut *subs {
+    //         if sub.target_meaning.is_none() {
+    //             let additions = self.resolve_anonymous_target(&mut deps,
+    // &new_subs, sub.value);             new_subs = new_subs.union(additions);
+    //         }
+    //     }
+    //     new_subs
+    // }
 
     fn resolve_named_target(
         &mut self,

@@ -1,5 +1,5 @@
 use super::base::SpecialMember;
-use crate::stage1::structure::TokenTree;
+use crate::stage2::structure::Token;
 
 pub struct Eager;
 impl SpecialMember for Eager {
@@ -11,18 +11,14 @@ impl SpecialMember for Eager {
         true
     }
 
-    fn apply<'t>(
-        &self,
-        base: TokenTree<'t>,
-        paren_group: Option<Vec<TokenTree<'t>>>,
-    ) -> TokenTree<'t> {
-        TokenTree::BuiltinRule {
-            name: "eager",
-            body: vec![
+    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t> {
+        Token::Stream {
+            label: "eager",
+            contents: vec![
                 base,
-                TokenTree::BuiltinRule {
-                    name: "values",
-                    body: paren_group.unwrap(),
+                Token::Stream {
+                    label: "values",
+                    contents: paren_group.unwrap(),
                 },
             ],
         }

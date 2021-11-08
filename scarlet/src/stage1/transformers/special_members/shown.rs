@@ -1,5 +1,5 @@
 use super::base::SpecialMember;
-use crate::stage1::structure::TokenTree;
+use crate::stage2::structure::Token;
 
 pub struct Shown;
 impl SpecialMember for Shown {
@@ -7,14 +7,10 @@ impl SpecialMember for Shown {
         &["Shown", "S"]
     }
 
-    fn apply<'t>(
-        &self,
-        base: TokenTree<'t>,
-        _paren_group: Option<Vec<TokenTree<'t>>>,
-    ) -> TokenTree<'t> {
-        TokenTree::BuiltinRule {
-            name: "shown",
-            body: vec![base],
+    fn apply<'t>(&self, base: Token<'t>, _paren_group: Option<Vec<Token<'t>>>) -> Token<'t> {
+        Token::Stream {
+            label: "shown",
+            contents: vec![base],
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::stage1::structure::TokenTree;
+use crate::stage2::structure::Token;
 
 #[macro_export]
 macro_rules! tfers {
@@ -7,10 +7,10 @@ macro_rules! tfers {
     }
 }
 
-pub fn expect_paren_group<'a, 't>(tt: &'a TokenTree<'t>) -> &'a Vec<TokenTree<'t>> {
-    if let TokenTree::BuiltinRule {
-        name: "group()",
-        body,
+pub fn expect_paren_group<'a, 't>(tt: &'a Token<'t>) -> &'a Vec<Token<'t>> {
+    if let Token::Stream {
+        label: "group()",
+        contents: body,
     } = tt
     {
         body
