@@ -1,7 +1,9 @@
-use crate::stage2::structure::{BuiltinOperation, Definition, Environment, ItemId, VarType};
+use crate::stage2::structure::{
+    BuiltinOperation, Definition, Environment, ItemId, StructField, VarType,
+};
 
 impl<'x> Environment<'x> {
-    pub(super) fn find_bounding_pattern(&mut self, pattern: ItemId<'x>) -> ItemId<'x> {
+    pub(in crate::stage2) fn find_bounding_pattern(&mut self, pattern: ItemId<'x>) -> ItemId<'x> {
         match self.get_definition(pattern).clone() {
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Sum32U
@@ -9,11 +11,11 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::Product32U
                 | BuiltinOperation::Quotient32U
                 | BuiltinOperation::Modulo32U
-                | BuiltinOperation::Power32U => todo!(),
+                | BuiltinOperation::Power32U => self.get_or_push_var(VarType::Bool),
                 BuiltinOperation::LessThan32U
                 | BuiltinOperation::LessThanOrEqual32U
                 | BuiltinOperation::GreaterThan32U
-                | BuiltinOperation::GreaterThanOrEqual32U => todo!(),
+                | BuiltinOperation::GreaterThanOrEqual32U => self.get_or_push_var(VarType::_32U),
             },
             Definition::BuiltinValue(..) => pattern,
             Definition::Unresolved { .. } => {
@@ -33,14 +35,23 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::Member(..) => todo!(),
-
             Definition::Substitute(_base, _subs) => todo!(),
             Definition::SetEager { base, vals, eager } => {
                 let base = self.find_bounding_pattern(base);
                 let def = Definition::SetEager { base, vals, eager };
                 self.item_with_new_definition(pattern, def, true)
             }
-            Definition::Struct(..) => todo!(),
+            Definition::Struct(fields) => {
+                let mut new_fields = Vec::new();
+                for field in fields {
+                    new_fields.push(StructField {
+                        name: field.name,
+                        value: self.find_bounding_pattern(field.value),
+                    })
+                }
+                let def = Definition::Struct(new_fields);
+                self.item_with_new_definition(pattern, def, true)
+            }
             Definition::Variable { typee, var } => {
                 // TODO: Make a function to map a var type.
                 let typee = match typee {

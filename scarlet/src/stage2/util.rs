@@ -41,6 +41,7 @@ impl<'x> Environment<'x> {
     pub(super) fn push_def(&mut self, def: Definition<'x>) -> ItemId<'x> {
         let item = self.begin_item();
         self.items[item].definition = Some(def);
+        self.check(item);
         item
     }
 
@@ -50,6 +51,21 @@ impl<'x> Environment<'x> {
         } else {
             self.push_def(Definition::Unresolved(token))
         }
+    }
+
+    pub(super) fn get_or_push_var(&mut self, typee: VarType<'x>) -> ItemId<'x> {
+        for (id, item) in &self.items {
+            if let Some(Definition::Variable {
+                typee: candidate_typee,
+                ..
+            }) = &item.definition
+            {
+                if &typee == candidate_typee {
+                    return id;
+                }
+            }
+        }
+        self.push_var(typee)
     }
 
     pub(super) fn push_var(&mut self, typee: VarType<'x>) -> ItemId<'x> {
@@ -74,7 +90,9 @@ impl<'x> Environment<'x> {
             new_item.cached_reduction = None;
         }
         new_item.shown_from = vec![];
-        self.items.get_or_push(new_item)
+        let id = self.items.get_or_push(new_item);
+        self.check(id);
+        id
     }
 
     pub(super) fn has_member(&mut self, base: ItemId<'x>, member_name: &str) -> bool {

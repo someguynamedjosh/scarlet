@@ -1,13 +1,13 @@
 {
-    PATTERN is Builtin(PATTERN)
+    # PATTERN is Builtin(PATTERN)
     BOOL is Builtin(BOOL)
-    32U is Builtin(32U)
+    # 32U is Builtin(32U)
 
-    {10 20 30}.Mem(0 true).S
+    condition is BOOL.V
+    # THEOREM is condition AND true
 
-    BOOL.Matched(
-        on true 123
-        on false 12
-        else 456
-    )(false).S
+    # index is 32U.V
+    # index_in_range is THEOREM(index < 3).V
+
+    # {10 20 30}.Mem(index index_in_range).S
 }

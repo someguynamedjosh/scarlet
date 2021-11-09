@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops::RangeInclusive};
 
-use crate::stage2::structure::{Definition, Environment, ItemId, Token};
+use crate::stage2::structure::{Definition, Environment, ItemId, Token, VarType};
 
 pub struct TransformerResult<'t> {
     pub replace_range: RangeInclusive<usize>,
@@ -58,6 +58,12 @@ impl<'a, 't> ApplyContext<'a, 't> {
             self.env.items[item].parent_scope = self.parent_scope;
             item
         }
+    }
+
+    pub fn push_var(&mut self, typee: VarType<'t>) -> ItemId<'t> {
+        let item = self.env.push_var(typee);
+        self.env.items[item].parent_scope = self.parent_scope;
+        item
     }
 }
 

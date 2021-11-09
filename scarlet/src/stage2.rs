@@ -8,5 +8,6 @@ mod substitute;
 mod transformers;
 mod util;
 mod vomit;
+mod check;
 
 pub use ingest::ingest;

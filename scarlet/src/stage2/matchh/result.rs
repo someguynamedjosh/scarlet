@@ -10,6 +10,12 @@ pub enum MatchResult<'x> {
 use MatchResult::*;
 
 impl<'x> MatchResult<'x> {
+    pub fn is_guaranteed_match(&self) -> bool {
+        match self {
+            Self::Match(..) => true,
+            _ => false,
+        }
+    }
     pub fn with_sub_if_match(mut self, target: VariableId<'x>, value: ItemId<'x>) -> Self {
         if let Self::Match(subs) = &mut self {
             subs.insert_no_replace(target, value)

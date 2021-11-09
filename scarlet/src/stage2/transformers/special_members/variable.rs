@@ -17,7 +17,7 @@ impl SpecialMember for Variable {
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let pattern = c.push_token(base);
-        let var_item = c.env.push_var(VarType::Just(pattern));
+        let var_item = c.push_var(VarType::Just(pattern));
         Token::Item(var_item)
     }
 }

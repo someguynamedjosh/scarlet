@@ -5,7 +5,7 @@ use crate::{stage1::structure::Module, stage2::structure::Definition};
 
 pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
     let mut env = Environment::new();
-    let root = env.items.push(Item {
+    let root = env.push_item(Item {
         cached_reduction: None,
         definition: Some(Definition::Unresolved(src.self_content.clone())),
         dependencies: None,

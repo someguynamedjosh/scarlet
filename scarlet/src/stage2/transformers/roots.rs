@@ -81,6 +81,7 @@ impl Transformer for Struct {
                 .collect_vec();
             let def = Definition::Struct(fields);
             c.env.items[item].definition = Some(def);
+            c.env.check(item);
             TransformerResult {
                 replace_range: at..=at,
                 with: Token::Item(item),

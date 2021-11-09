@@ -46,13 +46,17 @@ impl<'x> Environment<'x> {
                     Definition::Unresolved(contents.into_iter().next().unwrap())
                 }
                 Token::Item(other) => return *other,
-                Token::Plain(plain) => self.resolve_plain_token(item, *plain),
+                Token::Plain(plain) => {
+                    let plain = *plain;
+                    self.resolve_plain_token(item, plain)
+                },
                 other => {
                     println!("{:#?}", self);
                     todo!("Nice error, cannot convert {:?} into an item", other)
                 }
             };
             self.items[item].definition = Some(new_def);
+            self.check(item);
         }
         item
     }
@@ -72,6 +76,7 @@ impl<'x> Environment<'x> {
                 }
                 maybe_scope = self.items[scope].parent_scope;
             }
+            println!("{:#?}\n{:?}", self, item);
             todo!("Nice error, bad ident {}", plain)
         }
     }

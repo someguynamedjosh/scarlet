@@ -182,6 +182,12 @@ impl<'x> Environment<'x> {
         }
     }
 
+    pub fn push_item(&mut self, item: Item<'x>) -> ItemId<'x> {
+        let id = self.items.push(item);
+        self.check(id);
+        id
+    }
+
     pub(super) fn with_fresh_query_stack<T>(&mut self, op: impl FnOnce(&mut Self) -> T) -> T {
         let old = std::mem::take(&mut self.query_stack);
         let result = op(self);
