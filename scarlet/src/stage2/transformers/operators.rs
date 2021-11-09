@@ -1,5 +1,5 @@
 use crate::stage2::{
-    structure::{Environment, Token},
+    structure::{BuiltinOperation, Definition, Environment, Token},
     transformers::basics::{Transformer, TransformerResult},
 };
 
@@ -24,40 +24,72 @@ macro_rules! compound_binary_operator {
 
             fn apply<'t>(
                 &self,
-                env: &mut Environment,
+                env: &mut Environment<'t>,
                 to: &Vec<Token<'t>>,
                 at: usize,
             ) -> TransformerResult<'t> {
-                let left = to[at - 1].clone();
-                let right = to[at + $operator.len()].clone();
+                let left = env.push_token(to[at - 1].clone());
+                let right = env.push_token(to[at + $operator.len()].clone());
+                let result = Definition::BuiltinOperation($internal_name, vec![left, right]);
+                let result = env.push_def(result);
                 TransformerResult {
                     replace_range: at - 1..=at + $operator.len(),
-                    with: Token::Stream {
-                        label: $internal_name,
-                        contents: vec![left, right],
-                    },
+                    with: Token::Item(result),
                 }
             }
         }
     };
 }
 
-binary_operator!(Caret, "power_32u", "^");
-binary_operator!(Asterisk, "product_32u", "*");
-binary_operator!(Slash, "quotient_32u", "/");
-binary_operator!(Plus, "sum_32u", "+");
-binary_operator!(Minus, "difference_32u", "-");
-binary_operator!(Modulo, "modulo_32u", "mod");
+binary_operator!(Caret, BuiltinOperation::Power32U, "^");
+binary_operator!(Asterisk, BuiltinOperation::Product32U, "*");
+binary_operator!(Slash, BuiltinOperation::Quotient32U, "/");
+binary_operator!(Plus, BuiltinOperation::Sum32U, "+");
+binary_operator!(Minus, BuiltinOperation::Difference32U, "-");
+binary_operator!(Modulo, BuiltinOperation::Modulo32U, "mod");
 
-binary_operator!(GreaterThan, "greater_than_32u", ">");
-compound_binary_operator!(GreaterThanOrEqual, "greater_than_or_equal_32u", &[">", "="]);
-binary_operator!(LessThan, "less_than_32u", "<");
-compound_binary_operator!(LessThanOrEqual, "less_than_or_equal_32u", &["<", "="]);
+binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, ">");
+compound_binary_operator!(
+    GreaterThanOrEqual,
+    BuiltinOperation::GreaterThanOrEqual32U,
+    &[">", "="]
+);
+binary_operator!(LessThan, BuiltinOperation::LessThan32U, "<");
+compound_binary_operator!(
+    LessThanOrEqual,
+    BuiltinOperation::LessThanOrEqual32U,
+    &["<", "="]
+);
 
-binary_operator!(Matches, "matches", "matches");
-binary_operator!(PatternAnd, "AND", "AND");
-binary_operator!(PatternOr, "OR", "OR");
+// binary_operator!(Matches, BuiltinOperation::Matches, "matches");
+// binary_operator!(PatternAnd, BuiltinOperation::PatternAnd, "AND");
+// binary_operator!(PatternOr, BuiltinOperation::OR, "OR");
 
-binary_operator!(Member, "member", ".");
-binary_operator!(Using, "using", "using");
-binary_operator!(Is, "target", "is");
+// binary_operator!(Member, BuiltinOperation::member, ".");
+// binary_operator!(Using, BuiltinOperation::using, "using");
+// binary_operator!(Is, BuiltinOperation::target, "is");
+
+pub struct Is;
+impl Transformer for Is {
+    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+        &to[at] == &Token::Plain("is")
+    }
+
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
+        let left = to[at - 1].clone();
+        let right = env.push_token(to[at + 1].clone());
+        let right = Token::Item(right);
+        TransformerResult {
+            replace_range: at - 1..=at + 1,
+            with: Token::Stream {
+                label: "target",
+                contents: vec![left, right],
+            },
+        }
+    }
+}

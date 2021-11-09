@@ -5,5 +5,8 @@
 
     {10 20 30}.Mem(0 true).S
 
-    [10 + 20].S
+    false.Matched(
+        on true 123
+        else 456
+    ).S
 }

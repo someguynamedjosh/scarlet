@@ -40,6 +40,10 @@ impl<'x> Environment<'x> {
                 Token::Plain(plain) => {
                     if let Ok(int) = plain.parse::<u32>() {
                         Definition::BuiltinValue(BuiltinValue::_32U(int))
+                    } else if *plain == "true" {
+                        Definition::BuiltinValue(BuiltinValue::Bool(true))
+                    } else if *plain == "false" {
+                        Definition::BuiltinValue(BuiltinValue::Bool(false))
                     } else {
                         todo!()
                     }

@@ -1,5 +1,5 @@
 use super::base::SpecialMember;
-use crate::stage2::structure::{Environment, Token};
+use crate::stage2::structure::{Environment, Token, VarType};
 
 pub struct Variable;
 impl SpecialMember for Variable {
@@ -13,9 +13,8 @@ impl SpecialMember for Variable {
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        Token::Stream {
-            label: "variable",
-            contents: vec![base],
-        }
+        let pattern = env.push_token(base);
+        let var_item = env.push_var(VarType::Just(pattern));
+        Token::Item(var_item)
     }
 }

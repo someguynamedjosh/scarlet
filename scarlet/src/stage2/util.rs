@@ -37,6 +37,14 @@ impl<'x> Environment<'x> {
         self.items.push(item)
     }
 
+    pub(super) fn push_token(&mut self, token: Token<'x>) -> ItemId<'x> {
+        if let Token::Item(item) = token {
+            item
+        } else {
+            self.push_def(Definition::Resolvable(token))
+        }
+    }
+
     pub(super) fn push_var(&mut self, typee: VarType<'x>) -> ItemId<'x> {
         let var = self.vars.push(Variable { pd: PhantomData });
         let def = Definition::Variable { var, typee };
