@@ -1,5 +1,6 @@
 use maplit::hashmap;
 
+use super::basics::ApplyContext;
 use crate::{
     stage2::{
         structure::{Environment, Token},
@@ -14,12 +15,12 @@ use crate::{
 
 pub struct Substitution;
 impl Transformer for Substitution {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
         if at == 0 {
             false
         } else if let Token::Stream {
             label: "group()", ..
-        } = &to[at]
+        } = &c.to[at]
         {
             true
         } else {
@@ -27,17 +28,12 @@ impl Transformer for Substitution {
         }
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        let base = to[at - 1].clone();
-        if let Token::Stream { contents: body, .. } = &to[at] {
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let base = c.to[at - 1].clone();
+        if let Token::Stream { contents: body, .. } = &c.to[at] {
             let mut substitutions = body.clone();
             let extras = hashmap![200 => tfers![Is]];
-            apply::apply_transformers(env, &mut substitutions, &extras);
+            apply::apply_transformers(&mut c.with_target(&mut substitutions), &extras);
             let substitutions = Token::Stream {
                 label: "substitutions",
                 contents: substitutions,

@@ -1,22 +1,54 @@
 use std::{collections::HashMap, ops::RangeInclusive};
 
-use crate::stage2::structure::{Environment, Token};
+use crate::stage2::structure::{Environment, ItemId, Token};
 
 pub struct TransformerResult<'t> {
     pub replace_range: RangeInclusive<usize>,
     pub with: Token<'t>,
 }
 
+pub struct ApplyContext<'a, 't> {
+    pub env: &'a mut Environment<'t>,
+    pub parent_scope: Option<ItemId<'t>>,
+    pub to: &'a mut Vec<Token<'t>>,
+}
+
+impl<'a, 't> ApplyContext<'a, 't> {
+    pub fn with_target<'b, 'c>(
+        &'c mut self,
+        new_target: &'b mut Vec<Token<'t>>,
+    ) -> ApplyContext<'b, 't>
+    where
+        'a: 'b,
+        'c: 'b,
+    {
+        ApplyContext {
+            env: self.env,
+            parent_scope: self.parent_scope,
+            to: new_target,
+        }
+    }
+
+    pub fn with_parent_scope<'b>(
+        &'b mut self,
+        new_parent_scope: Option<ItemId<'t>>,
+    ) -> ApplyContext<'b, 't>
+    where
+        'a: 'b,
+    {
+        ApplyContext {
+            env: self.env,
+            parent_scope: new_parent_scope,
+            to: self.to,
+        }
+    }
+}
+
 pub trait Transformer {
     /// Returns true if the transformer should be applied at the given
     /// location.
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool;
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t>;
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool;
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t>;
 }
 
 pub enum OwnedOrBorrowed<'a, T: ?Sized> {

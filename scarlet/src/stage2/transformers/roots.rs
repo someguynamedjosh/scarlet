@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use maplit::hashmap;
 
+use super::basics::ApplyContext;
 use crate::{
     stage2::{
         structure::{Definition, Environment, StructField, Token, VarType},
@@ -16,10 +17,10 @@ use crate::{
 
 pub struct SubExpression;
 impl Transformer for SubExpression {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
         if let Token::Stream {
             label: "group[]", ..
-        } = &to[at]
+        } = &c.to[at]
         {
             true
         } else {
@@ -27,15 +28,10 @@ impl Transformer for SubExpression {
         }
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        if let Token::Stream { contents: body, .. } = &to[at] {
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        if let Token::Stream { contents: body, .. } = &c.to[at] {
             let mut body = body.clone();
-            apply::apply_transformers(env, &mut body, &Default::default());
+            apply::apply_transformers(&mut c.with_target(&mut body), &Default::default());
             assert_eq!(body.len(), 1);
             TransformerResult {
                 replace_range: at..=at,
@@ -49,24 +45,20 @@ impl Transformer for SubExpression {
 
 pub struct Struct;
 impl Transformer for Struct {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
-        if let Token::Stream { label: name, .. } = &to[at] {
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        if let Token::Stream { label: name, .. } = &c.to[at] {
             *name == "group{}"
         } else {
             false
         }
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        if let Token::Stream { contents, .. } = &to[at] {
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        if let Token::Stream { contents, .. } = &c.to[at] {
             let mut contents = contents.clone();
             let extras = hashmap![200 => tfers![Is]];
-            apply::apply_transformers(env, &mut contents, &extras);
+            let item = c.env.begin_item();
+            apply::apply_transformers(&mut c.with_target(&mut contents), &extras);
             let fields = contents
                 .into_iter()
                 .map(|x| match x {
@@ -76,18 +68,18 @@ impl Transformer for Struct {
                     } => {
                         let (name, value) = contents.into_iter().collect_tuple().unwrap();
                         let name = Some(name.unwrap_plain());
-                        let value = env.push_def(Definition::Unresolved(value));
+                        let value = c.env.push_def(Definition::Unresolved(value));
                         StructField { name, value }
                     }
                     other => {
                         let name = None;
-                        let value = env.push_def(Definition::Unresolved(other));
+                        let value = c.env.push_def(Definition::Unresolved(other));
                         StructField { name, value }
                     }
                 })
                 .collect_vec();
             let def = Definition::Struct(fields);
-            let item = env.push_def(def);
+            c.env.items[item].definition = Some(def);
             TransformerResult {
                 replace_range: at..=at,
                 with: Token::Item(item),
@@ -100,24 +92,19 @@ impl Transformer for Struct {
 
 pub struct Builtin;
 impl Transformer for Builtin {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
-        &to[at] == &Token::Plain("Builtin")
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        &c.to[at] == &Token::Plain("Builtin")
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        let mut body = helpers::expect_paren_group(&to[at + 1]).clone();
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let mut body = helpers::expect_paren_group(&c.to[at + 1]).clone();
         assert!(body.len() >= 1);
         let name = body.remove(0).unwrap_plain();
-        apply::apply_transformers(env, &mut body, &Default::default());
+        apply::apply_transformers(&mut c.with_target(&mut body), &Default::default());
         let item = match name {
-            "PATTERN" => env.push_var(VarType::God),
-            "BOOL" => env.push_var(VarType::Bool),
-            "32U" => env.push_var(VarType::_32U),
+            "PATTERN" => c.env.push_var(VarType::God),
+            "BOOL" => c.env.push_var(VarType::Bool),
+            "32U" => c.env.push_var(VarType::_32U),
             other => todo!("Nice error, unrecognized builtin {}", other),
         };
         TransformerResult {

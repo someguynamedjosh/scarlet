@@ -1,6 +1,6 @@
 use crate::stage2::{
     structure::{BuiltinOperation, Definition, Environment, Token},
-    transformers::basics::{Transformer, TransformerResult},
+    transformers::basics::{ApplyContext, Transformer, TransformerResult},
 };
 
 macro_rules! binary_operator {
@@ -13,25 +13,20 @@ macro_rules! compound_binary_operator {
     ($StructName:ident, $internal_name:expr, $operator:expr) => {
         pub struct $StructName;
         impl Transformer for $StructName {
-            fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+            fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
                 for (index, token) in $operator.iter().enumerate() {
-                    if &to[at + index] != &Token::Plain(token) {
+                    if &c.to[at + index] != &Token::Plain(token) {
                         return false;
                     }
                 }
                 true
             }
 
-            fn apply<'t>(
-                &self,
-                env: &mut Environment<'t>,
-                to: &Vec<Token<'t>>,
-                at: usize,
-            ) -> TransformerResult<'t> {
-                let left = env.push_token(to[at - 1].clone());
-                let right = env.push_token(to[at + $operator.len()].clone());
+            fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+                let left = c.env.push_token(c.to[at - 1].clone());
+                let right = c.env.push_token(c.to[at + $operator.len()].clone());
                 let result = Definition::BuiltinOperation($internal_name, vec![left, right]);
-                let result = env.push_def(result);
+                let result = c.env.push_def(result);
                 TransformerResult {
                     replace_range: at - 1..=at + $operator.len(),
                     with: Token::Item(result),
@@ -71,18 +66,13 @@ compound_binary_operator!(
 
 pub struct Is;
 impl Transformer for Is {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
-        &to[at] == &Token::Plain("is")
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        &c.to[at] == &Token::Plain("is")
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        let left = to[at - 1].clone();
-        let right = env.push_token(to[at + 1].clone());
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let left = c.to[at - 1].clone();
+        let right = c.env.push_token(c.to[at + 1].clone());
         let right = Token::Item(right);
         TransformerResult {
             replace_range: at - 1..=at + 1,

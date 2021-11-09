@@ -26,16 +26,22 @@ impl<'x> Environment<'x> {
         Some(result)
     }
 
-    pub(super) fn push_def(&mut self, def: Definition<'x>) -> ItemId<'x> {
+    pub(super) fn begin_item(&mut self) -> ItemId<'x> {
         let item = Item {
             cached_reduction: None,
-            definition: Some(def),
+            definition: None,
             dependencies: None,
             original_definition: &Token::Plain("Internal"),
             parent_scope: None,
             shown_from: Vec::new(),
         };
         self.items.push(item)
+    }
+
+    pub(super) fn push_def(&mut self, def: Definition<'x>) -> ItemId<'x> {
+        let item = self.begin_item();
+        self.items[item].definition = Some(def);
+        item
     }
 
     pub(super) fn push_token(&mut self, token: Token<'x>) -> ItemId<'x> {

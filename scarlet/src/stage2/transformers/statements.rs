@@ -1,3 +1,4 @@
+use super::basics::ApplyContext;
 use crate::stage2::{
     structure::{Environment, Token},
     transformers::basics::{Transformer, TransformerResult},
@@ -5,20 +6,15 @@ use crate::stage2::{
 
 pub struct OnPattern;
 impl Transformer for OnPattern {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
-        &to[at] == &Token::Plain("on")
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        &c.to[at] == &Token::Plain("on")
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        let pattern = to[at + 1].clone();
-        let pattern = Token::Item(env.push_token(pattern));
-        let value = to[at + 2].clone();
-        let value = Token::Item(env.push_token(value));
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let pattern = c.to[at + 1].clone();
+        let pattern = Token::Item(c.env.push_token(pattern));
+        let value = c.to[at + 2].clone();
+        let value = Token::Item(c.env.push_token(value));
         TransformerResult {
             replace_range: at..=at + 2,
             with: Token::Stream {
@@ -31,18 +27,13 @@ impl Transformer for OnPattern {
 
 pub struct Else;
 impl Transformer for Else {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
-        &to[at] == &Token::Plain("else")
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        &c.to[at] == &Token::Plain("else")
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
-        let value = to[at + 1].clone();
-        let value = Token::Item(env.push_token(value));
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let value = c.to[at + 1].clone();
+        let value = Token::Item(c.env.push_token(value));
         TransformerResult {
             replace_range: at..=at + 1,
             with: Token::Stream {

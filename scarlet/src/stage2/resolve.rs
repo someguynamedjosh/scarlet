@@ -4,7 +4,7 @@ use crate::{
     stage2::{
         matchh::MatchResult,
         structure::{BuiltinValue, Definition, Environment, ItemId, Token, VariableInfo},
-        transformers,
+        transformers::{self, ApplyContext},
     },
 };
 
@@ -28,7 +28,12 @@ impl<'x> Environment<'x> {
                     contents,
                 } => {
                     let mut contents = contents.clone();
-                    transformers::apply_transformers(self, &mut contents, &Default::default());
+                    let mut context = ApplyContext {
+                        env: self,
+                        parent_scope: None,
+                        to: &mut contents,
+                    };
+                    transformers::apply_transformers(&mut context, &Default::default());
                     assert_eq!(
                         contents.len(),
                         1,

@@ -2,7 +2,7 @@ use crate::stage2::{
     structure::{Environment, Token},
     transformers::{
         apply,
-        basics::{Extras, Transformer, TransformerResult},
+        basics::{ApplyContext, Extras, Transformer, TransformerResult},
         helpers,
     },
 };
@@ -24,15 +24,15 @@ pub trait SpecialMember {
 }
 
 impl<M: SpecialMember> Transformer for M {
-    fn should_be_applied_at(&self, to: &[Token], at: usize) -> bool {
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
         if at < 1 {
             return false;
         }
-        if &to[at] != &Token::Plain(".") {
+        if &c.to[at] != &Token::Plain(".") {
             false
         } else {
             for alias in self.aliases() {
-                if &to[at + 1] == &Token::Plain(alias) {
+                if &c.to[at + 1] == &Token::Plain(alias) {
                     return true;
                 }
             }
@@ -40,24 +40,19 @@ impl<M: SpecialMember> Transformer for M {
         }
     }
 
-    fn apply<'t>(
-        &self,
-        env: &mut Environment<'t>,
-        to: &Vec<Token<'t>>,
-        at: usize,
-    ) -> TransformerResult<'t> {
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
         let mut end = at + 1;
-        let base = to[at - 1].clone();
+        let base = c.to[at - 1].clone();
         let paren_group = if self.expects_paren_group() {
             end += 1;
-            let mut paren_group = helpers::expect_paren_group(&to[end]).clone();
+            let mut paren_group = helpers::expect_paren_group(&c.to[end]).clone();
             let extras = self.paren_group_transformers();
-            apply::apply_transformers(env, &mut paren_group, &extras);
+            apply::apply_transformers(&mut c.with_target(&mut paren_group), &extras);
             Some(paren_group)
         } else {
             None
         };
-        let replace_with_tree = <Self as SpecialMember>::apply(&self, env, base, paren_group);
+        let replace_with_tree = <Self as SpecialMember>::apply(&self, c.env, base, paren_group);
         TransformerResult {
             replace_range: at - 1..=end,
             with: replace_with_tree,

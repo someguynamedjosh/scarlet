@@ -9,3 +9,4 @@ mod statements;
 mod substitution;
 
 pub use apply::apply_transformers;
+pub use basics::ApplyContext;
