@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::structure::Substitutions;
 use crate::{
     shared::OrderedSet,
@@ -10,18 +12,20 @@ use crate::{
 
 impl<'x> Environment<'x> {
     pub(super) fn resolve(&mut self, item: ItemId<'x>) -> ItemId<'x> {
+        let parent_scope = self.items[item].parent_scope;
         if let Definition::Unresolved(token) = self.get_definition(item) {
             let new_def = match token {
                 Token::Stream {
-                    label: "substitution",
+                    label: "substitute",
                     contents,
                 } => {
                     let mut contents = contents.clone();
-                    // let base = contents.remove(0);
-                    // let mut subs = contents;
-                    todo!()
-                    // let new_subs = self.resolve_targets_in_sub(base, &mut
-                    // subs);
+                    let base = contents.remove(0);
+                    let base = self.push_token(base);
+                    self.items[base].parent_scope = parent_scope;
+                    let mut subs = contents;
+                    let new_subs = self.resolve_targets_in_sub(base, &mut subs, parent_scope);
+                    Definition::Substitute(base, new_subs)
                 }
                 Token::Stream {
                     label: "syntax_root",
@@ -72,34 +76,51 @@ impl<'x> Environment<'x> {
         }
     }
 
-    // fn resolve_targets_in_sub(
-    //     &mut self,
-    //     base: ItemId<'x>,
-    //     subs: &mut [UnresolvedSubstitution<'x>],
-    // ) -> Substitutions<'x> {
-    //     let mut new_subs = Substitutions::new();
-    //     let mut deps = self.get_deps(base);
-    //     for sub in &mut *subs {
-    //         if let Some(possible_meaning) = sub.target_meaning {
-    //             let additional_subs = self.resolve_named_target(
-    //                 possible_meaning,
-    //                 sub.target_name,
-    //                 base,
-    //                 sub.value,
-    //                 &mut deps,
-    //                 &new_subs,
-    //             );
-    //             new_subs = new_subs.union(additional_subs);
-    //         }
-    //     }
-    //     for sub in &mut *subs {
-    //         if sub.target_meaning.is_none() {
-    //             let additions = self.resolve_anonymous_target(&mut deps,
-    // &new_subs, sub.value);             new_subs = new_subs.union(additions);
-    //         }
-    //     }
-    //     new_subs
-    // }
+    fn resolve_targets_in_sub(
+        &mut self,
+        base: ItemId<'x>,
+        subs: &mut [Token<'x>],
+        parent_scope: Option<ItemId<'x>>,
+    ) -> Substitutions<'x> {
+        let mut new_subs = Substitutions::new();
+        let mut deps = self.get_deps(base);
+        for sub in &mut *subs {
+            if let Token::Stream {
+                label: "target",
+                contents,
+            } = sub
+            {
+                let (target, value) = contents.into_iter().collect_tuple().unwrap();
+                let possible_meaning = self.push_token(target.clone());
+                self.items[possible_meaning].parent_scope = parent_scope;
+                let value = self.push_token(value.clone());
+                self.items[value].parent_scope = parent_scope;
+                let additional_subs = self.resolve_named_target(
+                    possible_meaning,
+                    None,
+                    base,
+                    value,
+                    &mut deps,
+                    &new_subs,
+                );
+                new_subs = new_subs.union(additional_subs);
+            }
+        }
+        for sub in &mut *subs {
+            if let Token::Stream {
+                label: "target",
+                ..
+            } = sub
+            {
+            } else {
+                let value = self.push_token(sub.clone());
+                self.items[value].parent_scope = parent_scope;
+                let additions = self.resolve_anonymous_target(&mut deps, &new_subs, value);
+                new_subs = new_subs.union(additions);
+            }
+        }
+        new_subs
+    }
 
     fn resolve_named_target(
         &mut self,

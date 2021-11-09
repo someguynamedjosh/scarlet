@@ -9,5 +9,5 @@
         on true 123
         on false 12
         else 456
-    ).S
+    )(false).S
 }

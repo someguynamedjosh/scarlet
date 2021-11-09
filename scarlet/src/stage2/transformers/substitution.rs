@@ -34,15 +34,11 @@ impl Transformer for Substitution {
             let mut substitutions = body.clone();
             let extras = hashmap![200 => tfers![Is]];
             apply::apply_transformers(&mut c.with_target(&mut substitutions), &extras);
-            let substitutions = Token::Stream {
-                label: "substitutions",
-                contents: substitutions,
-            };
             TransformerResult {
                 replace_range: at - 1..=at,
                 with: Token::Stream {
                     label: "substitute",
-                    contents: vec![base, substitutions],
+                    contents: [vec![base], substitutions].concat(),
                 },
             }
         } else {
