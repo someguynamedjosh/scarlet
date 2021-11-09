@@ -58,6 +58,7 @@ impl Transformer for Struct {
             let mut contents = contents.clone();
             let extras = hashmap![200 => tfers![Is]];
             let item = c.env.begin_item();
+            let mut c = c.with_parent_scope(Some(item));
             apply::apply_transformers(&mut c.with_target(&mut contents), &extras);
             let fields = contents
                 .into_iter()
@@ -68,12 +69,12 @@ impl Transformer for Struct {
                     } => {
                         let (name, value) = contents.into_iter().collect_tuple().unwrap();
                         let name = Some(name.unwrap_plain());
-                        let value = c.env.push_def(Definition::Unresolved(value));
+                        let value = c.push_token(value);
                         StructField { name, value }
                     }
                     other => {
                         let name = None;
-                        let value = c.env.push_def(Definition::Unresolved(other));
+                        let value = c.push_token(other);
                         StructField { name, value }
                     }
                 })

@@ -23,8 +23,8 @@ macro_rules! compound_binary_operator {
             }
 
             fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
-                let left = c.env.push_token(c.to[at - 1].clone());
-                let right = c.env.push_token(c.to[at + $operator.len()].clone());
+                let left = c.push_token(c.to[at - 1].clone());
+                let right = c.push_token(c.to[at + $operator.len()].clone());
                 let result = Definition::BuiltinOperation($internal_name, vec![left, right]);
                 let result = c.env.push_def(result);
                 TransformerResult {
@@ -72,7 +72,7 @@ impl Transformer for Is {
 
     fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
         let left = c.to[at - 1].clone();
-        let right = c.env.push_token(c.to[at + 1].clone());
+        let right = c.push_token(c.to[at + 1].clone());
         let right = Token::Item(right);
         TransformerResult {
             replace_range: at - 1..=at + 1,

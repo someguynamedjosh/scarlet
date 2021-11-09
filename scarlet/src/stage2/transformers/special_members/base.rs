@@ -17,7 +17,7 @@ pub trait SpecialMember {
     }
     fn apply<'t>(
         &self,
-        env: &mut Environment<'t>,
+        c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
         paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t>;
@@ -52,7 +52,7 @@ impl<M: SpecialMember> Transformer for M {
         } else {
             None
         };
-        let replace_with_tree = <Self as SpecialMember>::apply(&self, c.env, base, paren_group);
+        let replace_with_tree = <Self as SpecialMember>::apply(&self, c, base, paren_group);
         TransformerResult {
             replace_range: at - 1..=end,
             with: replace_with_tree,

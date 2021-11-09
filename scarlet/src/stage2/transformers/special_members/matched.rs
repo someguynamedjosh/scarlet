@@ -8,6 +8,7 @@ use crate::{
         transformers::{
             basics::{Extras, Transformer},
             statements::{Else, OnPattern},
+            ApplyContext,
         },
     },
     tfers,
@@ -29,11 +30,11 @@ impl SpecialMember for Matched {
 
     fn apply<'t>(
         &self,
-        env: &mut Environment<'t>,
+        c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
         paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = env.push_token(base);
+        let base = c.push_token(base);
         let mut conditions = Vec::new();
         let mut else_value = None;
         for token in paren_group.unwrap() {
@@ -43,7 +44,7 @@ impl SpecialMember for Matched {
                     contents,
                 } => {
                     let (pattern, value) = contents.into_iter().collect_tuple().unwrap();
-                    let (pattern, value) = (env.push_token(pattern), env.push_token(value));
+                    let (pattern, value) = (c.push_token(pattern), c.push_token(value));
                     conditions.push(Condition { pattern, value })
                 }
                 Token::Stream {
@@ -54,7 +55,7 @@ impl SpecialMember for Matched {
                         todo!("Nice error.")
                     }
                     let (value,) = contents.into_iter().collect_tuple().unwrap();
-                    else_value = Some(env.push_token(value));
+                    else_value = Some(c.push_token(value));
                 }
                 _ => todo!("Nice error"),
             }
@@ -65,7 +66,7 @@ impl SpecialMember for Matched {
             conditions,
             else_value,
         };
-        let item = env.push_def(def);
+        let item = c.push_def(def);
         Token::Item(item)
     }
 }

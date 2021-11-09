@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops::RangeInclusive};
 
-use crate::stage2::structure::{Environment, ItemId, Token};
+use crate::stage2::structure::{Definition, Environment, ItemId, Token};
 
 pub struct TransformerResult<'t> {
     pub replace_range: RangeInclusive<usize>,
@@ -40,6 +40,23 @@ impl<'a, 't> ApplyContext<'a, 't> {
             env: self.env,
             parent_scope: new_parent_scope,
             to: self.to,
+        }
+    }
+
+    pub fn push_def(&mut self, def: Definition<'t>) -> ItemId<'t> {
+        let item = self.env.push_def(def);
+        self.env.items[item].parent_scope = self.parent_scope;
+        item
+    }
+
+    pub fn push_token(&mut self, token: Token<'t>) -> ItemId<'t> {
+        let item = self.env.push_token(token);
+        let existing_scope = self.env.items[item].parent_scope;
+        if existing_scope.is_some() && existing_scope != self.parent_scope {
+            self.push_def(Definition::Unresolved(Token::Item(item)))
+        } else {
+            self.env.items[item].parent_scope = self.parent_scope;
+            item
         }
     }
 }

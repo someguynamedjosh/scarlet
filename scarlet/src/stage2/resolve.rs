@@ -42,18 +42,7 @@ impl<'x> Environment<'x> {
                     Definition::Unresolved(contents.into_iter().next().unwrap())
                 }
                 Token::Item(other) => return *other,
-                Token::Plain(plain) => {
-                    if let Ok(int) = plain.parse::<u32>() {
-                        Definition::BuiltinValue(BuiltinValue::_32U(int))
-                    } else if *plain == "true" {
-                        Definition::BuiltinValue(BuiltinValue::Bool(true))
-                    } else if *plain == "false" {
-                        Definition::BuiltinValue(BuiltinValue::Bool(false))
-                    } else {
-                        println!("{:#?}", self);
-                        todo!()
-                    }
-                }
+                Token::Plain(plain) => self.resolve_plain_token(item, *plain),
                 other => {
                     println!("{:#?}", self);
                     todo!("Nice error, cannot convert {:?} into an item", other)
@@ -62,6 +51,25 @@ impl<'x> Environment<'x> {
             self.items[item].definition = Some(new_def);
         }
         item
+    }
+
+    fn resolve_plain_token(&mut self, item: ItemId<'x>, plain: &str) -> Definition<'x> {
+        if let Ok(int) = plain.parse::<u32>() {
+            Definition::BuiltinValue(BuiltinValue::_32U(int))
+        } else if plain == "true" {
+            Definition::BuiltinValue(BuiltinValue::Bool(true))
+        } else if plain == "false" {
+            Definition::BuiltinValue(BuiltinValue::Bool(false))
+        } else {
+            let mut maybe_scope = self.items[item].parent_scope;
+            while let Some(scope) = maybe_scope {
+                if let Some(result) = self.get_member(scope, plain) {
+                    return Definition::Unresolved(Token::Item(result));
+                }
+                maybe_scope = self.items[scope].parent_scope;
+            }
+            todo!("Nice error, bad ident {}", plain)
+        }
     }
 
     // fn resolve_targets_in_sub(

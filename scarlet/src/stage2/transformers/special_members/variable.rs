@@ -1,5 +1,8 @@
 use super::base::SpecialMember;
-use crate::stage2::structure::{Environment, Token, VarType};
+use crate::stage2::{
+    structure::{Environment, Token, VarType},
+    transformers::ApplyContext,
+};
 
 pub struct Variable;
 impl SpecialMember for Variable {
@@ -9,12 +12,12 @@ impl SpecialMember for Variable {
 
     fn apply<'t>(
         &self,
-        env: &mut Environment<'t>,
+        c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let pattern = env.push_token(base);
-        let var_item = env.push_var(VarType::Just(pattern));
+        let pattern = c.push_token(base);
+        let var_item = c.env.push_var(VarType::Just(pattern));
         Token::Item(var_item)
     }
 }

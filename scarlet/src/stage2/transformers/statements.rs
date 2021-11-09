@@ -12,9 +12,9 @@ impl Transformer for OnPattern {
 
     fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
         let pattern = c.to[at + 1].clone();
-        let pattern = Token::Item(c.env.push_token(pattern));
+        let pattern = Token::Item(c.push_token(pattern));
         let value = c.to[at + 2].clone();
-        let value = Token::Item(c.env.push_token(value));
+        let value = Token::Item(c.push_token(value));
         TransformerResult {
             replace_range: at..=at + 2,
             with: Token::Stream {
@@ -33,7 +33,7 @@ impl Transformer for Else {
 
     fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
         let value = c.to[at + 1].clone();
-        let value = Token::Item(c.env.push_token(value));
+        let value = Token::Item(c.push_token(value));
         TransformerResult {
             replace_range: at..=at + 1,
             with: Token::Stream {

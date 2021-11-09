@@ -1,7 +1,10 @@
 use itertools::Itertools;
 
 use super::base::SpecialMember;
-use crate::stage2::structure::{Definition, Environment, Token};
+use crate::stage2::{
+    structure::{Definition, Environment, Token},
+    transformers::ApplyContext,
+};
 
 pub struct Eager;
 impl SpecialMember for Eager {
@@ -15,21 +18,21 @@ impl SpecialMember for Eager {
 
     fn apply<'t>(
         &self,
-        env: &mut Environment<'t>,
+        c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
         paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let vals = paren_group
             .unwrap()
             .into_iter()
-            .map(|x| env.push_token(x))
+            .map(|x| c.push_token(x))
             .collect_vec();
         let def = Definition::SetEager {
-            base: env.push_token(base),
+            base: c.push_token(base),
             vals,
             eager: true,
         };
-        let item = env.push_def(def);
+        let item = c.push_def(def);
         Token::Item(item)
     }
 }

@@ -1,5 +1,8 @@
 use super::base::SpecialMember;
-use crate::stage2::structure::{Definition, Environment, Token};
+use crate::stage2::{
+    structure::{Definition, Environment, Token},
+    transformers::ApplyContext,
+};
 
 pub struct Shown;
 impl SpecialMember for Shown {
@@ -9,12 +12,12 @@ impl SpecialMember for Shown {
 
     fn apply<'t>(
         &self,
-        env: &mut Environment<'t>,
+        c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = env.push_def(Definition::Unresolved(base));
-        env.items[base].shown_from.push(base);
+        let base = c.push_def(Definition::Unresolved(base));
+        c.env.items[base].shown_from.push(base);
         Token::Item(base)
     }
 }
