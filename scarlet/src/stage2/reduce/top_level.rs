@@ -31,8 +31,12 @@ impl<'x> Environment<'x> {
             } => self.reduce_match(base, else_value, conditions, item),
             Definition::Member(base, name) => self.reduce_member(base, name, item),
             Definition::Resolvable { .. } => {
-                let item = self.resolve(item);
-                self.reduce_from_scratch(item)
+                let resolved_item = self.resolve(item);
+                if resolved_item == item {
+                    self.reduce_from_scratch(resolved_item)
+                } else {
+                    self.reduce(resolved_item)
+                }
             }
             Definition::Substitute(base, subs) => self.reduce_substitution(base, subs, item),
             _ => {

@@ -3,5 +3,7 @@
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
 
-    {10 20 30}.Mem(1 true).S
+    {10 20 30}.Mem(0 true).S
+
+    [10 + 20].S
 }
