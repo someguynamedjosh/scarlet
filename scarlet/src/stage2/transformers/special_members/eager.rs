@@ -1,5 +1,5 @@
 use super::base::SpecialMember;
-use crate::stage2::structure::Token;
+use crate::stage2::structure::{Environment, Token};
 
 pub struct Eager;
 impl SpecialMember for Eager {
@@ -11,7 +11,12 @@ impl SpecialMember for Eager {
         true
     }
 
-    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        base: Token<'t>,
+        paren_group: Option<Vec<Token<'t>>>,
+    ) -> Token<'t> {
         Token::Stream {
             label: "eager",
             contents: vec![

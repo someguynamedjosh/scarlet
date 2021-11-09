@@ -145,7 +145,13 @@ impl<'x> Environment<'x> {
                     },
                 }
             }
-            Definition::Resolvable { .. } => todo!(),
+            Definition::Resolvable(token) => {
+                if let Token::Item(item) = token {
+                    self.get_code(item, context)
+                } else {
+                    token
+                }
+            }
             Definition::SetEager { base, vals, eager } => {
                 let base = self.get_name_or_code(base, context);
                 let vals = vals

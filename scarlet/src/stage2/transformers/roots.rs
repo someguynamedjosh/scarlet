@@ -1,8 +1,9 @@
+use itertools::Itertools;
 use maplit::hashmap;
 
 use crate::{
     stage2::{
-        structure::Token,
+        structure::{Definition, Environment, StructField, Token, VarType},
         transformers::{
             apply,
             basics::{Transformer, TransformerResult},
@@ -26,10 +27,15 @@ impl Transformer for SubExpression {
         }
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
         if let Token::Stream { contents: body, .. } = &to[at] {
             let mut body = body.clone();
-            apply::apply_transformers(&mut body, &Default::default());
+            apply::apply_transformers(env, &mut body, &Default::default());
             assert_eq!(body.len(), 1);
             TransformerResult {
                 replace_range: at..=at,
@@ -51,18 +57,40 @@ impl Transformer for Struct {
         }
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
-        if let Token::Stream { contents: body, .. } = &to[at] {
-            let mut body = body.clone();
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
+        if let Token::Stream { contents, .. } = &to[at] {
+            let mut contents = contents.clone();
             let extras = hashmap![200 => tfers![Is]];
-            apply::apply_transformers(&mut body, &extras);
-            let name = "struct";
+            apply::apply_transformers(env, &mut contents, &extras);
+            let fields = contents
+                .into_iter()
+                .map(|x| match x {
+                    Token::Stream {
+                        label: "target",
+                        contents,
+                    } => {
+                        let (name, value) = contents.into_iter().collect_tuple().unwrap();
+                        let name = Some(name.unwrap_plain());
+                        let value = env.push_def(Definition::Resolvable(value));
+                        StructField { name, value }
+                    }
+                    other => {
+                        let name = None;
+                        let value = env.push_def(Definition::Resolvable(other));
+                        StructField { name, value }
+                    }
+                })
+                .collect_vec();
+            let def = Definition::Struct(fields);
+            let item = env.push_def(def);
             TransformerResult {
                 replace_range: at..=at,
-                with: Token::Stream {
-                    label: name,
-                    contents: body,
-                },
+                with: Token::Item(item),
             }
         } else {
             unreachable!("Checked in should_be_applied_at")
@@ -76,17 +104,25 @@ impl Transformer for Builtin {
         &to[at] == &Token::Plain("Builtin")
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
         let mut body = helpers::expect_paren_group(&to[at + 1]).clone();
         assert!(body.len() >= 1);
         let name = body.remove(0).unwrap_plain();
-        apply::apply_transformers(&mut body, &Default::default());
+        apply::apply_transformers(env, &mut body, &Default::default());
+        let item = match name {
+            "PATTERN" => env.push_var(VarType::God),
+            "BOOL" => env.push_var(VarType::Bool),
+            "32U" => env.push_var(VarType::_32U),
+            other => todo!("Nice error, unrecognized builtin {}", other),
+        };
         TransformerResult {
             replace_range: at..=at + 1,
-            with: Token::Stream {
-                label: name,
-                contents: body,
-            },
+            with: Token::Item(item),
         }
     }
 }

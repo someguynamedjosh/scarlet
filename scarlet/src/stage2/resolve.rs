@@ -3,7 +3,8 @@ use crate::{
     shared::OrderedSet,
     stage2::{
         matchh::MatchResult,
-        structure::{Definition, Environment, ItemId, Token, VariableInfo},
+        structure::{BuiltinValue, Definition, Environment, ItemId, Token, VariableInfo},
+        transformers,
     },
 };
 
@@ -26,14 +27,29 @@ impl<'x> Environment<'x> {
                     label: "syntax_root",
                     contents,
                 } => {
-                    todo!()
+                    let mut contents = contents.clone();
+                    transformers::apply_transformers(self, &mut contents, &Default::default());
+                    assert_eq!(
+                        contents.len(),
+                        1,
+                        "Nice error, expected a single expression."
+                    );
+                    Definition::Resolvable(contents.into_iter().next().unwrap())
                 }
-                other => todo!("Nice error, unrecognized custom item {:?}", other),
+                Token::Item(other) => return *other,
+                Token::Plain(plain) => {
+                    if let Ok(int) = plain.parse::<u32>() {
+                        Definition::BuiltinValue(BuiltinValue::_32U(int))
+                    } else {
+                        todo!()
+                    }
+                }
+                other => {
+                    println!("{:#?}", self);
+                    todo!("Nice error, cannot convert {:?} into an item", other)
+                }
             };
             self.items[item].definition = Some(new_def);
-            if let Some(Definition::Resolvable(Token::Item(item))) = &self.items[item].definition {
-                return *item;
-            }
         }
         item
     }

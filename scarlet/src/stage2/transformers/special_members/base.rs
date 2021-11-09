@@ -1,5 +1,5 @@
 use crate::stage2::{
-    structure::Token,
+    structure::{Environment, Token},
     transformers::{
         apply,
         basics::{Extras, Transformer, TransformerResult},
@@ -15,7 +15,12 @@ pub trait SpecialMember {
     fn paren_group_transformers<'t>(&self) -> Extras<'t> {
         Default::default()
     }
-    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t>;
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        base: Token<'t>,
+        paren_group: Option<Vec<Token<'t>>>,
+    ) -> Token<'t>;
 }
 
 impl<M: SpecialMember> Transformer for M {
@@ -35,19 +40,24 @@ impl<M: SpecialMember> Transformer for M {
         }
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
         let mut end = at + 1;
         let base = to[at - 1].clone();
         let paren_group = if self.expects_paren_group() {
             end += 1;
             let mut paren_group = helpers::expect_paren_group(&to[end]).clone();
             let extras = self.paren_group_transformers();
-            apply::apply_transformers(&mut paren_group, &extras);
+            apply::apply_transformers(env, &mut paren_group, &extras);
             Some(paren_group)
         } else {
             None
         };
-        let replace_with_tree = <Self as SpecialMember>::apply(&self, base, paren_group);
+        let replace_with_tree = <Self as SpecialMember>::apply(&self, env, base, paren_group);
         TransformerResult {
             replace_range: at - 1..=end,
             with: replace_with_tree,

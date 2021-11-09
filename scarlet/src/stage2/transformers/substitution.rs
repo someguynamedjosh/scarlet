@@ -2,7 +2,7 @@ use maplit::hashmap;
 
 use crate::{
     stage2::{
-        structure::Token,
+        structure::{Environment, Token},
         transformers::{
             apply,
             basics::{Transformer, TransformerResult},
@@ -27,12 +27,17 @@ impl Transformer for Substitution {
         }
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
         let base = to[at - 1].clone();
         if let Token::Stream { contents: body, .. } = &to[at] {
             let mut substitutions = body.clone();
             let extras = hashmap![200 => tfers![Is]];
-            apply::apply_transformers(&mut substitutions, &extras);
+            apply::apply_transformers(env, &mut substitutions, &extras);
             let substitutions = Token::Stream {
                 label: "substitutions",
                 contents: substitutions,

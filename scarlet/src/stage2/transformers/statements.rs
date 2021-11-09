@@ -1,5 +1,5 @@
 use crate::stage2::{
-    structure::Token,
+    structure::{Environment, Token},
     transformers::basics::{Transformer, TransformerResult},
 };
 
@@ -9,7 +9,12 @@ impl Transformer for OnPattern {
         &to[at] == &Token::Plain("on")
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
         let pattern = to[at + 1].clone();
         let pattern = Token::Stream {
             label: "pattern",
@@ -32,7 +37,12 @@ impl Transformer for Else {
         &to[at] == &Token::Plain("else")
     }
 
-    fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment,
+        to: &Vec<Token<'t>>,
+        at: usize,
+    ) -> TransformerResult<'t> {
         let value = to[at + 1].clone();
         TransformerResult {
             replace_range: at..=at + 1,

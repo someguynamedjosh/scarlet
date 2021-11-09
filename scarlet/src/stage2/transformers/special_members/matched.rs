@@ -3,7 +3,7 @@ use maplit::hashmap;
 use super::base::SpecialMember;
 use crate::{
     stage2::{
-        structure::Token,
+        structure::{Environment, Token},
         transformers::{
             basics::{Extras, Transformer},
             statements::{Else, OnPattern},
@@ -26,7 +26,12 @@ impl SpecialMember for Matched {
         hashmap![172 => tfers![OnPattern, Else]]
     }
 
-    fn apply<'t>(&self, base: Token<'t>, paren_group: Option<Vec<Token<'t>>>) -> Token<'t> {
+    fn apply<'t>(
+        &self,
+        env: &mut Environment<'t>,
+        base: Token<'t>,
+        paren_group: Option<Vec<Token<'t>>>,
+    ) -> Token<'t> {
         Token::Stream {
             label: "matched",
             contents: vec![

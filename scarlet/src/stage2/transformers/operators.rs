@@ -1,5 +1,5 @@
 use crate::stage2::{
-    structure::Token,
+    structure::{Environment, Token},
     transformers::basics::{Transformer, TransformerResult},
 };
 
@@ -22,7 +22,12 @@ macro_rules! compound_binary_operator {
                 true
             }
 
-            fn apply<'t>(&self, to: &Vec<Token<'t>>, at: usize) -> TransformerResult<'t> {
+            fn apply<'t>(
+                &self,
+                env: &mut Environment,
+                to: &Vec<Token<'t>>,
+                at: usize,
+            ) -> TransformerResult<'t> {
                 let left = to[at - 1].clone();
                 let right = to[at + $operator.len()].clone();
                 TransformerResult {

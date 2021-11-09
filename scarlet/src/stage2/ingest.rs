@@ -7,7 +7,7 @@ pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
     let mut env = Environment::new();
     let root = env.items.push(Item {
         cached_reduction: None,
-        definition: Some(Definition::Resolvable(&src.self_content)),
+        definition: Some(Definition::Resolvable(src.self_content.clone())),
         dependencies: None,
         scope: HashMap::default(),
         shown_from: vec![],

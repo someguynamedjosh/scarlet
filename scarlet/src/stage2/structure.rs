@@ -142,7 +142,7 @@ pub enum Definition<'x> {
         else_value: ItemId<'x>,
     },
     Member(ItemId<'x>, Member<'x>),
-    Resolvable(&'x Token<'x>),
+    Resolvable(Token<'x>),
     SetEager {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,
