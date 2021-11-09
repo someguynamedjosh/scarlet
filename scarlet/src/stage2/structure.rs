@@ -142,7 +142,7 @@ pub enum Definition<'x> {
         else_value: ItemId<'x>,
     },
     Member(ItemId<'x>, Member<'x>),
-    Resolvable(Token<'x>),
+    Unresolved(Token<'x>),
     SetEager {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,
@@ -206,19 +206,12 @@ impl<'x> Environment<'x> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum After<'x> {
-    Unknown,
-    PartialItems(Vec<ItemId<'x>>),
-    AllVars(OrderedSet<VariableId<'x>>),
-}
-
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Item<'x> {
     pub original_definition: &'x Token<'x>,
     pub definition: Option<Definition<'x>>,
-    pub scope: HashMap<&'x str, ItemId<'x>>,
+    pub parent_scope: Option<ItemId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
     pub cached_reduction: Option<ItemId<'x>>,

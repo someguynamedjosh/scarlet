@@ -5,8 +5,9 @@
 
     {10 20 30}.Mem(0 true).S
 
-    false.Matched(
+    BOOL.Matched(
         on true 123
+        on false 12
         else 456
     ).S
 }

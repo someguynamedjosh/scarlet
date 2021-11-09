@@ -63,7 +63,7 @@ impl<'x> Environment<'x> {
                 let base = self.substitute(base, substitutions)?;
                 Definition::Member(base, name)
             }
-            Definition::Resolvable { .. } => unreachable!(),
+            Definition::Unresolved { .. } => unreachable!(),
             Definition::Substitute(base, original_subs) => {
                 // The substitutions that we are currently doing that should be
                 // applied to the base, because $original_subs does not override

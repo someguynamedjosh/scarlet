@@ -19,10 +19,10 @@ impl SpecialMember for MemberAtIndex {
         base: Token<'t>,
         paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = env.push_def(Definition::Resolvable(base));
+        let base = env.push_def(Definition::Unresolved(base));
         let (index, proof_lt_len) = paren_group.unwrap().into_iter().collect_tuple().unwrap();
-        let index = env.push_def(Definition::Resolvable(index));
-        let proof_lt_len = env.push_def(Definition::Resolvable(proof_lt_len));
+        let index = env.push_def(Definition::Unresolved(index));
+        let proof_lt_len = env.push_def(Definition::Unresolved(proof_lt_len));
         let def = Definition::Member(
             base,
             Member::Index {

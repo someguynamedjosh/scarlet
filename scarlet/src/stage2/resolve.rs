@@ -10,7 +10,7 @@ use crate::{
 
 impl<'x> Environment<'x> {
     pub(super) fn resolve(&mut self, item: ItemId<'x>) -> ItemId<'x> {
-        if let Definition::Resolvable(token) = self.get_definition(item) {
+        if let Definition::Unresolved(token) = self.get_definition(item) {
             let new_def = match token {
                 Token::Stream {
                     label: "substitution",
@@ -34,7 +34,7 @@ impl<'x> Environment<'x> {
                         1,
                         "Nice error, expected a single expression."
                     );
-                    Definition::Resolvable(contents.into_iter().next().unwrap())
+                    Definition::Unresolved(contents.into_iter().next().unwrap())
                 }
                 Token::Item(other) => return *other,
                 Token::Plain(plain) => {
@@ -45,6 +45,7 @@ impl<'x> Environment<'x> {
                     } else if *plain == "false" {
                         Definition::BuiltinValue(BuiltinValue::Bool(false))
                     } else {
+                        println!("{:#?}", self);
                         todo!()
                     }
                 }
@@ -97,11 +98,11 @@ impl<'x> Environment<'x> {
         new_subs: &Substitutions<'x>,
     ) -> Substitutions<'x> {
         let mut resolved_target = possible_meaning;
-        if let Some(name) = name {
-            if let Some(value) = self.items[base].scope.get(name) {
-                resolved_target = *value;
-            }
-        }
+        // if let Some(name) = name {
+        //     if let Some(value) = self.items[base].scope.get(name) {
+        //         resolved_target = *value;
+        //     }
+        // }
         let resolved_target = self.substitute(resolved_target, new_subs).unwrap();
         match self.matches(value, resolved_target) {
             MatchResult::Match(subs) => {

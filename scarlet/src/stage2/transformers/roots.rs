@@ -76,12 +76,12 @@ impl Transformer for Struct {
                     } => {
                         let (name, value) = contents.into_iter().collect_tuple().unwrap();
                         let name = Some(name.unwrap_plain());
-                        let value = env.push_def(Definition::Resolvable(value));
+                        let value = env.push_def(Definition::Unresolved(value));
                         StructField { name, value }
                     }
                     other => {
                         let name = None;
-                        let value = env.push_def(Definition::Resolvable(other));
+                        let value = env.push_def(Definition::Unresolved(other));
                         StructField { name, value }
                     }
                 })

@@ -145,7 +145,7 @@ impl<'x> Environment<'x> {
                     },
                 }
             }
-            Definition::Resolvable(token) => {
+            Definition::Unresolved(token) => {
                 if let Token::Item(item) = token {
                     self.get_code(item, context)
                 } else {
@@ -244,7 +244,7 @@ impl<'x> Environment<'x> {
 
     fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> ItemId<'x> {
         let mut item = item;
-        while let Definition::Resolvable(Token::Item(other))
+        while let Definition::Unresolved(Token::Item(other))
         | Definition::SetEager { base: other, .. } =
             self.items[item].definition.as_ref().unwrap()
         {

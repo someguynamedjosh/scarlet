@@ -16,7 +16,7 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::GreaterThanOrEqual32U => todo!(),
             },
             Definition::BuiltinValue(..) => pattern,
-            Definition::Resolvable { .. } => {
+            Definition::Unresolved { .. } => {
                 let pattern = self.resolve(pattern);
                 self.find_bounding_pattern(pattern)
             }

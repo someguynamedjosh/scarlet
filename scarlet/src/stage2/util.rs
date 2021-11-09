@@ -3,6 +3,7 @@ use std::{collections::HashMap, marker::PhantomData};
 use super::structure::{
     BuiltinValue, Definition, Environment, Item, ItemId, Token, VarType, Variable,
 };
+use crate::stage2::structure::Member;
 
 impl<'x> Environment<'x> {
     pub fn get_definition(&self, of: ItemId<'x>) -> &Definition<'x> {
@@ -31,7 +32,7 @@ impl<'x> Environment<'x> {
             definition: Some(def),
             dependencies: None,
             original_definition: &Token::Plain("Internal"),
-            scope: HashMap::new(),
+            parent_scope: None,
             shown_from: Vec::new(),
         };
         self.items.push(item)
@@ -41,7 +42,7 @@ impl<'x> Environment<'x> {
         if let Token::Item(item) = token {
             item
         } else {
-            self.push_def(Definition::Resolvable(token))
+            self.push_def(Definition::Unresolved(token))
         }
     }
 
@@ -68,5 +69,51 @@ impl<'x> Environment<'x> {
         }
         new_item.shown_from = vec![];
         self.items.get_or_push(new_item)
+    }
+
+    pub(super) fn has_member(&mut self, base: ItemId<'x>, member_name: &str) -> bool {
+        self.get_member(base, member_name).is_some()
+    }
+
+    pub(super) fn get_member(&mut self, base: ItemId<'x>, member_name: &str) -> Option<ItemId<'x>> {
+        let def = Definition::Member(base, Member::Named(member_name.to_owned()));
+        match self.get_definition(base).clone() {
+            Definition::BuiltinOperation(..) => None,
+            Definition::BuiltinValue(..) => None,
+            Definition::Match {
+                conditions,
+                else_value,
+                ..
+            } => {
+                for c in conditions {
+                    if !self.has_member(c.value, member_name) {
+                        return None;
+                    }
+                }
+                if self.has_member(else_value, member_name) {
+                    Some(self.push_def(def))
+                } else {
+                    None
+                }
+            }
+            Definition::Member(_, _) => todo!(),
+            Definition::Unresolved(..) => {
+                let base = self.resolve(base);
+                self.get_member(base, member_name)
+            }
+            Definition::SetEager { base, .. } => self.get_member(base, member_name),
+            Definition::Struct(fields) => {
+                for (index, field) in fields.into_iter().enumerate() {
+                    if field.name == Some(member_name) || member_name == &format!("{}", index) {
+                        return Some(field.value);
+                    }
+                }
+                None
+            }
+            Definition::Substitute(_, _) => todo!(),
+            Definition::Variable { .. } => {
+                todo!()
+            }
+        }
     }
 }

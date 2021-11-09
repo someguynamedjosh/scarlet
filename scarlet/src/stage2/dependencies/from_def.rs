@@ -21,7 +21,7 @@ impl<'x> Environment<'x> {
                 else_value,
             } => self.deps_of_match(base, num_struct_unwraps, conditions, else_value),
             Definition::Member(base, _) => self.dep_query(base, num_struct_unwraps + 1),
-            Definition::Resolvable { .. } => {
+            Definition::Unresolved { .. } => {
                 let of = self.resolve(of);
                 self.get_deps_from_def(of, num_struct_unwraps)
             }

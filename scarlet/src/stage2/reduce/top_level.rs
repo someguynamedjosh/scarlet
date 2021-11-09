@@ -30,7 +30,7 @@ impl<'x> Environment<'x> {
                 else_value,
             } => self.reduce_match(base, else_value, conditions, item),
             Definition::Member(base, name) => self.reduce_member(base, name, item),
-            Definition::Resolvable { .. } => {
+            Definition::Unresolved { .. } => {
                 let resolved_item = self.resolve(item);
                 if resolved_item == item {
                     self.reduce_from_scratch(resolved_item)
@@ -48,7 +48,7 @@ impl<'x> Environment<'x> {
 
     fn reduce_definition(&mut self, def: Definition<'x>) -> Definition<'x> {
         match def.clone() {
-            Definition::Resolvable { .. } => unreachable!(),
+            Definition::Unresolved { .. } => unreachable!(),
             Definition::Substitute(..) => unreachable!(),
 
             Definition::BuiltinOperation(op, args) => self.reduce_builtin_op(def, op, args),
