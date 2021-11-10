@@ -43,6 +43,12 @@ impl<'a, 't> ApplyContext<'a, 't> {
         }
     }
 
+    pub fn begin_item(&mut self) -> ItemId<'t> {
+        let item = self.env.begin_item();
+        self.env.items[item].parent_scope = self.parent_scope;
+        item
+    }
+
     pub fn push_def(&mut self, def: Definition<'t>) -> ItemId<'t> {
         let item = self.env.push_def(def);
         self.env.items[item].parent_scope = self.parent_scope;

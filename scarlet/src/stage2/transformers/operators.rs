@@ -1,5 +1,5 @@
 use crate::stage2::{
-    structure::{BuiltinOperation, Definition, Environment, Token},
+    structure::{BuiltinOperation, Definition, Environment, Token, VarType},
     transformers::basics::{ApplyContext, Transformer, TransformerResult},
 };
 
@@ -57,8 +57,40 @@ compound_binary_operator!(
 );
 
 // binary_operator!(Matches, BuiltinOperation::Matches, "matches");
-// binary_operator!(PatternAnd, BuiltinOperation::PatternAnd, "AND");
-// binary_operator!(PatternOr, BuiltinOperation::OR, "OR");
+
+pub struct PatternAnd;
+impl Transformer for PatternAnd {
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        &c.to[at] == &Token::Plain("AND")
+    }
+
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let left = c.push_token(c.to[at - 1].clone());
+        let right = c.push_token(c.to[at + 1].clone());
+        let item = c.push_var(VarType::And(left, right));
+        TransformerResult {
+            replace_range: at - 1..=at + 1,
+            with: Token::Item(item),
+        }
+    }
+}
+
+pub struct PatternOr;
+impl Transformer for PatternOr {
+    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
+        &c.to[at] == &Token::Plain("OR")
+    }
+
+    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
+        let left = c.push_token(c.to[at - 1].clone());
+        let right = c.push_token(c.to[at + 1].clone());
+        let item = c.push_var(VarType::Or(left, right));
+        TransformerResult {
+            replace_range: at - 1..=at + 1,
+            with: Token::Item(item),
+        }
+    }
+}
 
 // binary_operator!(Member, BuiltinOperation::member, ".");
 // binary_operator!(Using, BuiltinOperation::using, "using");

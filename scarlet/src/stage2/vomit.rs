@@ -207,21 +207,16 @@ impl<'x> Environment<'x> {
             Definition::Variable { typee, .. } => {
                 // let typee = self.get_name_or_code(typee, context);
                 match typee {
-                    VarType::God => Token::Stream {
-                        label: "PATTERN",
-                        contents: vec![],
-                    },
-                    VarType::_32U => Token::Stream {
-                        label: "32U",
-                        contents: vec![],
-                    },
-                    VarType::Bool => Token::Stream {
-                        label: "BOOL",
-                        contents: vec![],
-                    },
+                    VarType::God => self.plain_builtin("PATTERN"),
+                    VarType::_32U => self.plain_builtin("32U"),
+                    VarType::Bool => self.plain_builtin("BOOL"),
                     VarType::Just(other) => Token::Stream {
-                        label: "variable",
-                        contents: vec![self.get_name_or_code(other, context)],
+                        label: "syntax_root",
+                        contents: vec![
+                            self.get_name_or_code(other, context),
+                            Token::Plain("."),
+                            Token::Plain("Variable"),
+                        ],
                     },
                     VarType::And(left, right) => Token::Stream {
                         label: "AND",
@@ -239,6 +234,19 @@ impl<'x> Environment<'x> {
                     },
                 }
             }
+        }
+    }
+
+    fn plain_builtin(&self, name: &'x str) -> Token<'x> {
+        Token::Stream {
+            label: "syntax_root",
+            contents: vec![
+                Token::Plain("Builtin"),
+                Token::Stream {
+                    label: "group()",
+                    contents: vec![Token::Plain("PATTERN")],
+                },
+            ],
         }
     }
 

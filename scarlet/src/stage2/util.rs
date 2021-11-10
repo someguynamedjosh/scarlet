@@ -41,7 +41,6 @@ impl<'x> Environment<'x> {
     pub(super) fn push_def(&mut self, def: Definition<'x>) -> ItemId<'x> {
         let item = self.begin_item();
         self.items[item].definition = Some(def);
-        self.check(item);
         item
     }
 

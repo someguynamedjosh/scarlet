@@ -13,8 +13,10 @@ impl<'x> Environment<'x> {
         right: ItemId<'x>,
         var: VariableId<'x>,
     ) -> MatchResult<'x> {
+        println!("{:#?}",self);
         let left = self.matches_impl(original_value, value, left, eager_vars);
         let right = self.matches_impl(original_value, value, right, eager_vars);
+        println!("{:#?}\n{:#?}", left, right);
         MatchResult::and(vec![left, right]).with_sub_if_match(var, original_value)
     }
 

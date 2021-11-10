@@ -1,13 +1,17 @@
 {
-    # PATTERN is Builtin(PATTERN)
+    PATTERN is Builtin(PATTERN)
     BOOL is Builtin(BOOL)
-    # 32U is Builtin(32U)
+    32U is Builtin(32U)
 
     condition is BOOL.V
-    # THEOREM is condition AND true
+    THEOREM is [condition.Eager(condition) AND true]
 
-    # index is 32U.V
-    # index_in_range is THEOREM(index < 3).V
+    index is 32U.V
+    index_in_range is THEOREM(index < 3).V
+
+    needs_theorem is THEOREM(index < 3).V.Shown
+
+    # needs_theorem(index_in_range).Shown
 
     # {10 20 30}.Mem(index index_in_range).S
 }

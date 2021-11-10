@@ -11,11 +11,11 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::Product32U
                 | BuiltinOperation::Quotient32U
                 | BuiltinOperation::Modulo32U
-                | BuiltinOperation::Power32U => self.get_or_push_var(VarType::Bool),
+                | BuiltinOperation::Power32U => self.get_or_push_var(VarType::_32U),
                 BuiltinOperation::LessThan32U
                 | BuiltinOperation::LessThanOrEqual32U
                 | BuiltinOperation::GreaterThan32U
-                | BuiltinOperation::GreaterThanOrEqual32U => self.get_or_push_var(VarType::_32U),
+                | BuiltinOperation::GreaterThanOrEqual32U => self.get_or_push_var(VarType::Bool),
             },
             Definition::BuiltinValue(..) => pattern,
             Definition::Unresolved { .. } => {

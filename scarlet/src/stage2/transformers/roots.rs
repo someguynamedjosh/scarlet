@@ -57,7 +57,7 @@ impl Transformer for Struct {
         if let Token::Stream { contents, .. } = &c.to[at] {
             let mut contents = contents.clone();
             let extras = hashmap![200 => tfers![Is]];
-            let item = c.env.begin_item();
+            let item = c.begin_item();
             let mut c = c.with_parent_scope(Some(item));
             apply::apply_transformers(&mut c.with_target(&mut contents), &extras);
             let fields = contents
