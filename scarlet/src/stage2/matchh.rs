@@ -12,7 +12,6 @@ impl<'x> Environment<'x> {
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
         let item_bp = self.find_bounding_pattern(item);
-        let match_against_bp = self.find_bounding_pattern(match_against);
-        self.matches_impl(item, item_bp, match_against_bp, &[])
+        self.matches_impl(item, item_bp, match_against, &[])
     }
 }

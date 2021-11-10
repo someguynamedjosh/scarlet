@@ -18,6 +18,9 @@ impl<'x> Environment<'x> {
     ) -> MatchResult<'x> {
         let value_def = self.get_definition(value).clone();
         let pattern_def = self.get_definition(pattern).clone();
+        println!("{:?} matches {:?}", value, pattern);
+        println!("{:#?} matches {:#?}", value_def, pattern_def);
+        println!();
 
         if let Definition::Variable { var, .. } = pattern_def {
             if eager_vars.contains(&var) {
@@ -54,7 +57,7 @@ impl<'x> Environment<'x> {
             var,
         } = pattern_def
         {
-            self.on_right_variable(original_value, value, other, eager_vars, pattern, var)
+            self.on_right_variable(original_value, value, other, eager_vars, var)
         } else if let Definition::Variable {
             typee: VarType::Just(other),
             ..

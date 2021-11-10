@@ -9,9 +9,12 @@
     index is 32U.V
     index_in_range is THEOREM(index < 3).V
 
-    needs_theorem is THEOREM(index < 3).V.Shown
+    # required is THEOREM(index < 3).V
 
-    # needs_theorem(index_in_range).Shown
+    # index_in_range.Matched(
+    #     on required true
+    #     else false
+    # ).Shown
 
-    # {10 20 30}.Mem(index index_in_range).S
+    {10 20 30}.Mem(index index_in_range).S
 }

@@ -35,7 +35,10 @@ impl<'x> Environment<'x> {
                 result
             }
             Definition::Member(..) => todo!(),
-            Definition::Substitute(_base, _subs) => todo!(),
+            Definition::Substitute(base, subs) => {
+                let subbed = self.substitute(base, &subs).unwrap();
+                self.find_bounding_pattern(subbed)
+            },
             Definition::SetEager { base, vals, eager } => {
                 let base = self.find_bounding_pattern(base);
                 let def = Definition::SetEager { base, vals, eager };

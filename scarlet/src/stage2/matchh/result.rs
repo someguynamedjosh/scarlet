@@ -16,11 +16,27 @@ impl<'x> MatchResult<'x> {
             _ => false,
         }
     }
+
     pub fn with_sub_if_match(mut self, target: VariableId<'x>, value: ItemId<'x>) -> Self {
         if let Self::Match(subs) = &mut self {
             subs.insert_no_replace(target, value)
         }
         self
+    }
+
+    pub fn keeping_only_eager_subs(self, eager_vars: &[VariableId<'x>]) -> Self {
+        match self {
+            Self::Match(subs) => {
+                let mut new_subs = Substitutions::new();
+                for sub in subs {
+                    if eager_vars.contains(&sub.0) {
+                        new_subs.insert_no_replace(sub.0, sub.1);
+                    }
+                }
+                Self::Match(new_subs)
+            }
+            other => other,
+        }
     }
 
     pub fn non_capturing() -> Self {

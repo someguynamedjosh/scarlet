@@ -12,23 +12,12 @@ impl<'x> Environment<'x> {
         value: ItemId<'x>,
         other: ItemId<'x>,
         eager_vars: &[VariableId<'x>],
-        pattern: ItemId<'x>,
         var: VariableId<'x>,
     ) -> MatchResult<'x> {
         let result = self.matches_impl(original_value, value, other, eager_vars);
-        if let MatchResult::Match(other_subs) = result {
-            let mut subs = Substitutions::new();
-            let deps = self.get_deps(pattern);
-            for (dep, _) in deps {
-                if let Some(sub) = other_subs.get(&dep.var) {
-                    subs.insert_no_replace(dep.var, *sub);
-                }
-            }
-            subs.insert_no_replace(var, original_value);
-            MatchResult::Match(subs)
-        } else {
-            result
-        }
+        result
+            .keeping_only_eager_subs(eager_vars)
+            .with_sub_if_match(var, original_value)
     }
 
     pub(super) fn on_right_set_eager(
