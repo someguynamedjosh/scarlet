@@ -31,7 +31,6 @@ impl<'x> Environment<'x> {
             cached_reduction: None,
             definition: None,
             dependencies: None,
-            original_definition: &Token::Plain("Internal"),
             parent_scope: None,
             shown_from: Vec::new(),
         };

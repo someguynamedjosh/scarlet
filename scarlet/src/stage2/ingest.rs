@@ -13,7 +13,6 @@ pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
         dependencies: None,
         parent_scope: None,
         shown_from: vec![],
-        original_definition: &src.self_content,
     });
 
     let root = env.reduce(root);

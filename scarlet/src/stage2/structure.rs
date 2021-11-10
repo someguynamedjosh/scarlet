@@ -215,7 +215,6 @@ impl<'x> Environment<'x> {
 pub type ItemId<'x> = Id<Item<'x>, 'I'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Item<'x> {
-    pub original_definition: &'x Token<'x>,
     pub definition: Option<Definition<'x>>,
     pub parent_scope: Option<ItemId<'x>>,
     /// The variables this item's definition is dependent on.
