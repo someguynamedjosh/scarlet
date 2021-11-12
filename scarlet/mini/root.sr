@@ -4,7 +4,7 @@
     32U is Builtin(32U)
 
     condition is BOOL.V
-    THEOREM is [condition.Eager(condition) AND true]
+    THEOREM is condition.Eager(condition) AND true
 
     index is 32U.V
     index_in_range is THEOREM(index < 3).V

@@ -67,7 +67,7 @@ impl<'x> Environment<'x> {
                 | BuiltinOperation::GreaterThanOrEqual32U => {
                     for arg in args {
                         if !self.matches(arg, pattern_32u).is_guaranteed_match() {
-                            todo!("Nice error, {:?} is not an integer", arg)
+                            todo!("Nice error, {:?} is not a 32U", arg)
                         }
                     }
                 }

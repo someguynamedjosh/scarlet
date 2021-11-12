@@ -10,6 +10,16 @@ impl<'x> Environment<'x> {
         self.items[of].definition.as_ref().unwrap()
     }
 
+    pub fn get_resolved_definition(&mut self, of: ItemId<'x>) -> &Definition<'x> {
+        let def = self.items[of].definition.as_ref().unwrap();
+        if let Definition::Unresolved(..) = def {
+            let resolved = self.resolve(of);
+            self.get_definition(resolved)
+        } else {
+            self.items[of].definition.as_ref().unwrap()
+        }
+    }
+
     pub(super) fn args_as_builtin_values(
         &mut self,
         args: &[ItemId<'x>],

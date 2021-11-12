@@ -16,11 +16,8 @@ impl<'x> Environment<'x> {
         pattern: ItemId<'x>,
         eager_vars: &[VariableId<'x>],
     ) -> MatchResult<'x> {
-        let value_def = self.get_definition(value).clone();
-        let pattern_def = self.get_definition(pattern).clone();
-        println!("{:?} matches {:?}", value, pattern);
-        println!("{:#?} matches {:#?}", value_def, pattern_def);
-        println!();
+        let value_def = self.get_resolved_definition(value).clone();
+        let pattern_def = self.get_resolved_definition(pattern).clone();
 
         if let Definition::Variable { var, .. } = pattern_def {
             if eager_vars.contains(&var) {
@@ -95,6 +92,28 @@ impl<'x> Environment<'x> {
             (&value_def, &pattern_def)
         {
             values_and_variables::on_value_variable(bvalue, typee, var, original_value)
+        } else if let (
+            Definition::BuiltinOperation(value_op, value_args),
+            Definition::BuiltinOperation(pattern_op, pattern_args),
+        ) = (value_def.clone(), pattern_def.clone())
+        {
+            if value_op == pattern_op {
+                let mut results = Vec::new();
+                assert_eq!(value_args.len(), pattern_args.len());
+                for (value_arg, pattern_arg) in value_args.into_iter().zip(pattern_args.into_iter())
+                {
+                    results.push(self.matches(value_arg, pattern_arg));
+                }
+                let result = MatchResult::and(results);
+                if result.is_guaranteed_match() {
+                    return result;
+                }
+            }
+            let value_bp = self.find_bounding_pattern(value);
+            self.matches_impl(original_value, value_bp, pattern, eager_vars)
+        } else if let Definition::BuiltinOperation(value_op, value_args) = value_def.clone() {
+            let value_bp = self.find_bounding_pattern(value);
+            self.matches_impl(original_value, value_bp, pattern, eager_vars)
         } else {
             Unknown
         }
