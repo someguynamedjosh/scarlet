@@ -2,19 +2,7 @@
     PATTERN is Builtin(PATTERN)
     BOOL is Builtin(BOOL)
     32U is Builtin(32U)
+    ARRAY is Builtin(ARRAY 32U.V PATTERN.V)
 
-    condition is BOOL.V
-    THEOREM is condition.Eager(condition) AND true
-
-    index is 32U.V
-    index_in_range is THEOREM(index < 3).V
-
-    # required is THEOREM(index < 3).V
-
-    # index_in_range.Matched(
-    #     on required true
-    #     else false
-    # ).Shown
-
-    {10 20 30}.Mem(index index_in_range).S
+    ARRAY(123).Shown
 }

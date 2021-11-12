@@ -66,7 +66,7 @@ impl<'x> Environment<'x> {
             Definition::Unresolved { .. } => {
                 let original = self.resolve(original);
                 return self.substitute_impl(original, substitutions);
-            },
+            }
             Definition::Substitute(base, original_subs) => {
                 // The substitutions that we are currently doing that should be
                 // applied to the base, because $original_subs does not override
@@ -150,6 +150,17 @@ impl<'x> Environment<'x> {
                 self.substitute(l, substitutions)?,
                 self.substitute(r, substitutions)?,
             ),
+            VarType::Array {
+                length,
+                element_type,
+            } => {
+                let length = self.substitute(length, substitutions)?;
+                let element_type = self.substitute(element_type, substitutions)?;
+                VarType::Array {
+                    length,
+                    element_type,
+                }
+            }
         };
         Some(typee)
     }

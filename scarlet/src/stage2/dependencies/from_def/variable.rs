@@ -37,6 +37,14 @@ impl<'x> Environment<'x> {
                 result.append(self.dep_query(right, num_struct_unwraps));
                 result
             }
+            VarType::Array {
+                length,
+                element_type,
+            } => {
+                let mut result = self.dep_query(length, num_struct_unwraps);
+                result.append(self.dep_query(element_type, num_struct_unwraps));
+                result
+            }
         }
     }
 }

@@ -70,12 +70,7 @@ impl<'x> Environment<'x> {
                 Definition::Struct(reduced_fields)
             }
             Definition::Variable { var, typee } => {
-                let typee = match typee {
-                    VarType::Bool | VarType::God | VarType::_32U => typee,
-                    VarType::Just(other) => VarType::Just(self.reduce(other)),
-                    VarType::And(l, r) => VarType::And(self.reduce(l), self.reduce(r)),
-                    VarType::Or(l, r) => VarType::Or(self.reduce(l), self.reduce(r)),
-                };
+                let typee = typee.map_item_ids(|id| self.reduce(id));
                 Definition::Variable { var, typee }
             }
         }

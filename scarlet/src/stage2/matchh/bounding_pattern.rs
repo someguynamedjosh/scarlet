@@ -38,7 +38,7 @@ impl<'x> Environment<'x> {
             Definition::Substitute(base, subs) => {
                 let subbed = self.substitute(base, &subs).unwrap();
                 self.find_bounding_pattern(subbed)
-            },
+            }
             Definition::SetEager { base, vals, eager } => {
                 let base = self.find_bounding_pattern(base);
                 let def = Definition::SetEager { base, vals, eager };
@@ -56,17 +56,7 @@ impl<'x> Environment<'x> {
                 self.item_with_new_definition(pattern, def, true)
             }
             Definition::Variable { typee, var } => {
-                // TODO: Make a function to map a var type.
-                let typee = match typee {
-                    VarType::God | VarType::_32U | VarType::Bool => typee,
-                    VarType::Just(other) => VarType::Just(self.find_bounding_pattern(other)),
-                    VarType::And(l, r) => {
-                        VarType::And(self.find_bounding_pattern(l), self.find_bounding_pattern(r))
-                    }
-                    VarType::Or(l, r) => {
-                        VarType::Or(self.find_bounding_pattern(l), self.find_bounding_pattern(r))
-                    }
-                };
+                let typee = typee.map_item_ids(|id| self.find_bounding_pattern(id));
                 let def = Definition::Variable { typee, var };
                 self.item_with_new_definition(pattern, def, true)
             }

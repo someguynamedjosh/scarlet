@@ -107,6 +107,15 @@ impl Transformer for Builtin {
             "PATTERN" => c.env.push_var(VarType::God),
             "BOOL" => c.env.push_var(VarType::Bool),
             "32U" => c.env.push_var(VarType::_32U),
+            "ARRAY" => {
+                let length = c.push_token(body.remove(0));
+                let element_type = c.push_token(body.remove(0));
+                let typee = VarType::Array {
+                    length,
+                    element_type,
+                };
+                c.env.push_var(typee)
+            }
             other => todo!("Nice error, unrecognized builtin {}", other),
         };
         TransformerResult {

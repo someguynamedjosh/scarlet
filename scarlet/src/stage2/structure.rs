@@ -47,6 +47,10 @@ pub enum VarType<'x> {
     Just(ItemId<'x>),
     And(ItemId<'x>, ItemId<'x>),
     Or(ItemId<'x>, ItemId<'x>),
+    Array {
+        length: ItemId<'x>,
+        element_type: ItemId<'x>,
+    },
 }
 
 impl<'x> VarType<'x> {
@@ -56,6 +60,13 @@ impl<'x> VarType<'x> {
             Self::Just(a) => Self::Just(by(a)),
             Self::And(a, b) => Self::And(by(a), by(b)),
             Self::Or(a, b) => Self::Or(by(a), by(b)),
+            Self::Array {
+                length,
+                element_type,
+            } => Self::Array {
+                length: by(length),
+                element_type: by(element_type),
+            },
         }
     }
 }

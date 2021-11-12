@@ -232,6 +232,16 @@ impl<'x> Environment<'x> {
                             self.get_name_or_code(right, context),
                         ],
                     },
+                    VarType::Array {
+                        length,
+                        element_type,
+                    } => Token::Stream {
+                        label: "ARRAY",
+                        contents: vec![
+                            self.get_name_or_code(length, context),
+                            self.get_name_or_code(element_type, context),
+                        ],
+                    },
                 }
             }
         }
