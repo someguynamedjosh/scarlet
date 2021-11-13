@@ -61,8 +61,11 @@ impl<'x> Environment<'x> {
         } = value_def
         {
             self.matches_impl(original_value, other, pattern, eager_vars)
-        } else if let Definition::SetEager { base, vals, eager } = pattern_def {
-            self.on_right_set_eager(eager, eager_vars, vals, original_value, value, base)
+        } else if let Definition::SetEager {
+            base, vals, all, eager,
+        } = pattern_def
+        {
+            self.on_right_set_eager(all, eager, eager_vars, vals, original_value, value, base)
         } else if let Definition::SetEager { base, .. } = value_def {
             self.matches_impl(original_value, base, pattern, eager_vars)
         } else if let (Definition::Struct(..), Definition::Struct(..)) = (&value_def, &pattern_def)

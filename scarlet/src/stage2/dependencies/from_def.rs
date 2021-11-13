@@ -25,9 +25,12 @@ impl<'x> Environment<'x> {
                 let of = self.resolve(of);
                 self.get_deps_from_def(of, num_struct_unwraps)
             }
-            Definition::SetEager { base, vals, eager } => {
-                self.deps_of_set_eager(vals, num_struct_unwraps, base, of, eager)
-            }
+            Definition::SetEager {
+                base,
+                vals,
+                all,
+                eager,
+            } => self.deps_of_set_eager(vals, num_struct_unwraps, base, of, all, eager),
             Definition::Struct(fields) => {
                 let mut query = DepQueryResult::new();
                 for field in fields {

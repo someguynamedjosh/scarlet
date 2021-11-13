@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use itertools::Itertools;
+
 use super::structure::{Environment, ItemId, StructField, VariableId};
 use crate::stage2::structure::{
     BuiltinOperation, BuiltinValue, Definition, Member, Token, VarType,
@@ -152,12 +154,20 @@ impl<'x> Environment<'x> {
                     token
                 }
             }
-            Definition::SetEager { base, vals, eager } => {
+            Definition::SetEager {
+                base,
+                vals,
+                all,
+                eager,
+            } => {
                 let base = self.get_name_or_code(base, context);
-                let vals = vals
+                let mut vals = vals
                     .into_iter()
                     .map(|v| self.get_name_or_code(v, context))
-                    .collect();
+                    .collect_vec();
+                if all {
+                    vals.push(Token::Plain("All"))
+                }
                 let vals = Token::Stream {
                     label: "vals",
                     contents: vals,

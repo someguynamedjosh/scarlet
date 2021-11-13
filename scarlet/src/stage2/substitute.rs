@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::{
     shared::OrderedMap,
     stage2::structure::{
@@ -91,10 +93,23 @@ impl<'x> Environment<'x> {
                     .collect::<Option<_>>()?;
                 Definition::Substitute(base, original_subs)
             }
-            Definition::SetEager { base, vals, eager } => {
+            Definition::SetEager {
+                base,
+                vals,
+                all,
+                eager,
+            } => {
                 let base = self.substitute(base, substitutions)?;
                 let mut base_deps = self.get_deps(base);
                 let mut new_vals = Vec::new();
+                let vals = if all {
+                    self.get_deps(base)
+                        .into_iter()
+                        .map(|x| x.0.var_item)
+                        .collect_vec()
+                } else {
+                    vals
+                };
                 for &val in &vals {
                     for (dep, _) in self.get_deps(val) {
                         base_deps.remove(&dep);
@@ -106,7 +121,12 @@ impl<'x> Environment<'x> {
                 let vals = new_vals;
                 let has_any_deps_at_all = !base_deps.is_empty();
                 if has_any_deps_at_all {
-                    Definition::SetEager { base, vals, eager }
+                    Definition::SetEager {
+                        base,
+                        vals,
+                        all,
+                        eager,
+                    }
                 } else {
                     return Some(base);
                 }

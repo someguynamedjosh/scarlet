@@ -39,9 +39,19 @@ impl<'x> Environment<'x> {
                 let subbed = self.substitute(base, &subs).unwrap();
                 self.find_bounding_pattern(subbed)
             }
-            Definition::SetEager { base, vals, eager } => {
+            Definition::SetEager {
+                base,
+                vals,
+                all,
+                eager,
+            } => {
                 let base = self.find_bounding_pattern(base);
-                let def = Definition::SetEager { base, vals, eager };
+                let def = Definition::SetEager {
+                    base,
+                    vals,
+                    all,
+                    eager,
+                };
                 self.item_with_new_definition(pattern, def, true)
             }
             Definition::Struct(fields) => {

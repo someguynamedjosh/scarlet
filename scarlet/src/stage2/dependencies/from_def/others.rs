@@ -33,11 +33,15 @@ impl<'x> Environment<'x> {
         num_struct_unwraps: u32,
         base: ItemId<'x>,
         of: ItemId<'x>,
+        all: bool,
         eager: bool,
     ) -> DepQueryResult<'x> {
         let mut deps_to_set = DepQueryResult::new();
         for val in vals {
             deps_to_set.append(self.dep_query(val, num_struct_unwraps));
+        }
+        if all {
+            deps_to_set.append(self.dep_query(base, num_struct_unwraps));
         }
         let mut result = self.dep_query(base, num_struct_unwraps);
         if deps_to_set.partial_over.contains_key(&of) {

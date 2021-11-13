@@ -22,14 +22,19 @@ impl SpecialMember for Eager {
         base: Token<'t>,
         paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let vals = paren_group
-            .unwrap()
-            .into_iter()
-            .map(|x| c.push_token(x))
-            .collect_vec();
+        let mut vals = Vec::new();
+        let mut all = false;
+        for token in paren_group.unwrap() {
+            if let Token::Plain("All") = token {
+                all = true
+            } else {
+                vals.push(c.push_token(token))
+            }
+        }
         let def = Definition::SetEager {
             base: c.push_token(base),
             vals,
+            all,
             eager: true,
         };
         let item = c.push_def(def);

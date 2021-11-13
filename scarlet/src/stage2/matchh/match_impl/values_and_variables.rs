@@ -22,6 +22,7 @@ impl<'x> Environment<'x> {
 
     pub(super) fn on_right_set_eager(
         &mut self,
+        all: bool,
         eager: bool,
         eager_vars: &[VariableId<'x>],
         vals: Vec<ItemId<'x>>,
@@ -31,9 +32,15 @@ impl<'x> Environment<'x> {
     ) -> MatchResult<'x> {
         if eager {
             let mut new_eagers = eager_vars.to_owned();
-            for val in vals {
-                for (dep, _) in self.get_deps(val) {
+            if all {
+                for (dep, _) in self.get_deps(base) {
                     new_eagers.push(dep.var);
+                }
+            } else {
+                for val in vals {
+                    for (dep, _) in self.get_deps(val) {
+                        new_eagers.push(dep.var);
+                    }
                 }
             }
             self.matches_impl(original_value, value, base, &new_eagers[..])

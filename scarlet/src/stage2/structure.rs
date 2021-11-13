@@ -157,6 +157,7 @@ pub enum Definition<'x> {
     SetEager {
         base: ItemId<'x>,
         vals: Vec<ItemId<'x>>,
+        all: bool,
         eager: bool,
     },
     Struct(Vec<StructField<'x>>),

@@ -12,8 +12,8 @@ impl<'x> Environment<'x> {
             self.items[item].cached_reduction = Some(result);
             self.get_deps(item);
             self.get_deps(result);
-            // println!("{:#?}", self);
-            // println!("{:?} becomes {:?}", item, result);
+            println!("{:#?}", self);
+            println!("{:?} becomes {:?}", item, result);
             assert!(self.get_deps(result).len() <= self.get_deps(item).len());
             // println!("{:#?}", self);
             assert_eq!(self.reduce(result), result);
@@ -55,10 +55,20 @@ impl<'x> Environment<'x> {
             Definition::BuiltinValue(..) => def,
             Definition::Match { .. } => unreachable!(),
             Definition::Member(..) => unreachable!(),
-            Definition::SetEager { base, vals, eager } => {
+            Definition::SetEager {
+                base,
+                vals,
+                all,
+                eager,
+            } => {
                 let base = self.reduce(base);
                 let vals = vals.into_iter().map(|x| self.reduce(x)).collect();
-                Definition::SetEager { base, vals, eager }
+                Definition::SetEager {
+                    base,
+                    vals,
+                    all,
+                    eager,
+                }
             }
             Definition::Struct(fields) => {
                 let mut reduced_fields = Vec::new();
