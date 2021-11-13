@@ -5,9 +5,9 @@ use super::base::SpecialMember;
 use crate::{
     stage2::{
         structure::{Condition, Definition, Environment, Token},
-        transformers::{
+        transform::{
             basics::{Extras, Transformer},
-            statements::{Else, OnPattern},
+            transformers::statements::{Else, OnPattern},
             ApplyContext,
         },
     },

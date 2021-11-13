@@ -2,11 +2,7 @@ mod apply;
 mod basics;
 mod build;
 mod helpers;
-mod operators;
-mod roots;
-mod special_members;
-mod statements;
-mod substitution;
+mod transformers;
 
 pub use apply::apply_transformers;
 pub use basics::ApplyContext;

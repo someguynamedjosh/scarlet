@@ -5,7 +5,7 @@ mod reduce;
 mod resolve;
 pub mod structure;
 mod substitute;
-mod transformers;
+mod transform;
 mod util;
 mod vomit;
 mod check;

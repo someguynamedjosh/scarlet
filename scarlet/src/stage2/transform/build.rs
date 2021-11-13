@@ -1,10 +1,12 @@
 use crate::{
-    stage2::transformers::{
+    stage2::transform::{
         basics::{Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer},
-        operators::*,
-        roots::{Builtin, Struct, SubExpression},
-        special_members::{Eager, Matched, MemberAtIndex, Shown, Variable},
-        substitution::Substitution,
+        transformers::{
+            operators::*,
+            roots::{Builtin, Struct, SubExpression},
+            special_members::{Eager, Matched, MemberAtIndex, Shown, Variable},
+            substitution::Substitution,
+        },
     },
     tfers,
 };

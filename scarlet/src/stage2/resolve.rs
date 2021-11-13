@@ -6,7 +6,7 @@ use crate::{
     stage2::{
         matchh::MatchResult,
         structure::{BuiltinValue, Definition, Environment, ItemId, Token, VariableInfo},
-        transformers::{self, ApplyContext},
+        transform::{self, ApplyContext},
     },
 };
 
@@ -37,7 +37,7 @@ impl<'x> Environment<'x> {
                         parent_scope: None,
                         to: &mut contents,
                     };
-                    transformers::apply_transformers(&mut context, &Default::default());
+                    transform::apply_transformers(&mut context, &Default::default());
                     assert_eq!(
                         contents.len(),
                         1,

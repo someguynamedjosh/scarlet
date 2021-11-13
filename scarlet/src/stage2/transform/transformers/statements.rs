@@ -1,7 +1,9 @@
-use super::basics::ApplyContext;
 use crate::stage2::{
     structure::{Environment, Token},
-    transformers::basics::{Transformer, TransformerResult},
+    transform::{
+        basics::{Transformer, TransformerResult},
+        ApplyContext,
+    },
 };
 
 pub struct OnPattern;

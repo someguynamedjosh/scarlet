@@ -1,13 +1,13 @@
 use maplit::hashmap;
 
-use super::basics::ApplyContext;
 use crate::{
     stage2::{
         structure::{Environment, Token},
-        transformers::{
+        transform::{
             apply,
             basics::{Transformer, TransformerResult},
-            operators::Is,
+            transformers::operators::Is,
+            ApplyContext,
         },
     },
     tfers,

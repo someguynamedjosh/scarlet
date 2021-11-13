@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::base::SpecialMember;
 use crate::stage2::{
     structure::{Definition, Environment, Token},
-    transformers::ApplyContext,
+    transform::ApplyContext,
 };
 
 pub struct Eager;

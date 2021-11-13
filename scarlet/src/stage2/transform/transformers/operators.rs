@@ -1,6 +1,6 @@
 use crate::stage2::{
     structure::{BuiltinOperation, Definition, Environment, Token, VarType},
-    transformers::basics::{ApplyContext, Transformer, TransformerResult},
+    transform::basics::{ApplyContext, Transformer, TransformerResult},
 };
 
 macro_rules! binary_operator {

@@ -1,15 +1,15 @@
 use itertools::Itertools;
 use maplit::hashmap;
 
-use super::basics::ApplyContext;
 use crate::{
     stage2::{
         structure::{Definition, Environment, StructField, Token, VarType},
-        transformers::{
+        transform::{
             apply,
             basics::{Transformer, TransformerResult},
             helpers,
-            operators::Is,
+            transformers::operators::Is,
+            ApplyContext,
         },
     },
     tfers,

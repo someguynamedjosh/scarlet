@@ -1,7 +1,7 @@
 use super::base::SpecialMember;
 use crate::stage2::{
     structure::{Environment, Token, VarType},
-    transformers::ApplyContext,
+    transform::ApplyContext,
 };
 
 pub struct Variable;
