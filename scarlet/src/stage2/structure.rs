@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fmt::{self, Debug, Formatter},
     marker::PhantomData,
 };
@@ -8,7 +7,6 @@ use typed_arena::Arena;
 
 use crate::{
     shared::{Id, OrderedMap, OrderedSet, Pool},
-    stage1::structure::{self as s1},
     util::indented,
 };
 

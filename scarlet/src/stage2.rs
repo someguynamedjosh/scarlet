@@ -1,3 +1,4 @@
+mod check;
 mod dependencies;
 pub mod ingest;
 mod matchh;
@@ -8,6 +9,5 @@ mod substitute;
 mod transform;
 mod util;
 mod vomit;
-mod check;
 
 pub use ingest::ingest;

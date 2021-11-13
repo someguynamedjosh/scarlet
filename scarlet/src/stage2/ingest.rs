@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-
-use itertools::Itertools;
-
 use super::structure::{Environment, Item, ItemId};
 use crate::{stage1::structure::Module, stage2::structure::Definition};
 

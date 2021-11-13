@@ -257,7 +257,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn plain_builtin(&self, name: &'x str) -> Token<'x> {
+    fn plain_builtin(&self, _name: &'x str) -> Token<'x> {
         Token::Stream {
             label: "syntax_root",
             contents: vec![

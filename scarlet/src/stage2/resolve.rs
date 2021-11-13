@@ -49,7 +49,7 @@ impl<'x> Environment<'x> {
                 Token::Plain(plain) => {
                     let plain = *plain;
                     self.resolve_plain_token(item, plain)
-                },
+                }
                 other => {
                     println!("{:#?}", self);
                     todo!("Nice error, cannot convert {:?} into an item", other)
@@ -113,8 +113,7 @@ impl<'x> Environment<'x> {
         }
         for sub in &mut *subs {
             if let Token::Stream {
-                label: "target",
-                ..
+                label: "target", ..
             } = sub
             {
             } else {
@@ -130,13 +129,13 @@ impl<'x> Environment<'x> {
     fn resolve_named_target(
         &mut self,
         possible_meaning: ItemId<'x>,
-        name: Option<&str>,
-        base: ItemId<'x>,
+        _name: Option<&str>,
+        _base: ItemId<'x>,
         value: ItemId<'x>,
         deps: &mut OrderedSet<VariableInfo<'x>>,
         new_subs: &Substitutions<'x>,
     ) -> Substitutions<'x> {
-        let mut resolved_target = possible_meaning;
+        let resolved_target = possible_meaning;
         // if let Some(name) = name {
         //     if let Some(value) = self.items[base].scope.get(name) {
         //         resolved_target = *value;

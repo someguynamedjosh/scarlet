@@ -13,7 +13,7 @@ fn main() {
     println!("Reading source from {}", path);
 
     let root = entry::read_root(&path).unwrap();
-    let mut stage1 = stage1::ingest(&root);
+    let stage1 = stage1::ingest(&root);
     // println!("{:#?}", stage1);
 
     let (stage2, s2_root) = stage2::ingest(&stage1);

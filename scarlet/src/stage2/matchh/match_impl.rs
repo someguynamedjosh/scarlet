@@ -62,7 +62,10 @@ impl<'x> Environment<'x> {
         {
             self.matches_impl(original_value, other, pattern, eager_vars)
         } else if let Definition::SetEager {
-            base, vals, all, eager,
+            base,
+            vals,
+            all,
+            eager,
         } = pattern_def
         {
             self.on_right_set_eager(all, eager, eager_vars, vals, original_value, value, base)
@@ -114,7 +117,7 @@ impl<'x> Environment<'x> {
             }
             let value_bp = self.find_bounding_pattern(value);
             self.matches_impl(original_value, value_bp, pattern, eager_vars)
-        } else if let Definition::BuiltinOperation(value_op, value_args) = value_def.clone() {
+        } else if let Definition::BuiltinOperation(_value_op, _value_args) = value_def.clone() {
             let value_bp = self.find_bounding_pattern(value);
             self.matches_impl(original_value, value_bp, pattern, eager_vars)
         } else {

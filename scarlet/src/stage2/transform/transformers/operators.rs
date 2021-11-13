@@ -1,5 +1,5 @@
 use crate::stage2::{
-    structure::{BuiltinOperation, Definition, Environment, Token, VarType},
+    structure::{BuiltinOperation, Definition, Token, VarType},
     transform::basics::{ApplyContext, Transformer, TransformerResult},
 };
 

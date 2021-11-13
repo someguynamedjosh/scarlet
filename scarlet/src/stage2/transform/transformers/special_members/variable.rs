@@ -1,6 +1,6 @@
 use super::base::SpecialMember;
 use crate::stage2::{
-    structure::{Environment, Token, VarType},
+    structure::{Token, VarType},
     transform::ApplyContext,
 };
 

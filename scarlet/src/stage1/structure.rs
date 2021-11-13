@@ -1,6 +1,6 @@
-use std::fmt::{self, Debug, Formatter};
+use std::fmt::Debug;
 
-use crate::{stage2::structure::Token, util::indented};
+use crate::stage2::structure::Token;
 
 #[derive(Clone, Debug)]
 pub struct Module<'a> {

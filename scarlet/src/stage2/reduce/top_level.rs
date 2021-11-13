@@ -1,4 +1,4 @@
-use crate::stage2::structure::{Definition, Environment, ItemId, StructField, VarType};
+use crate::stage2::structure::{Definition, Environment, ItemId, StructField};
 
 impl<'x> Environment<'x> {
     pub fn reduce(&mut self, item: ItemId<'x>) -> ItemId<'x> {

@@ -1,16 +1,6 @@
-use itertools::Itertools;
-
-use super::structure::{Member, Substitutions};
-use crate::{
-    shared::OrderedSet,
-    stage2::{
-        matchh::MatchResult,
-        structure::{
-            BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, Token, VarType,
-            VariableInfo,
-        },
-        transform::{self, ApplyContext},
-    },
+use super::structure::Member;
+use crate::stage2::structure::{
+    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType,
 };
 
 impl<'x> Environment<'x> {
@@ -46,7 +36,7 @@ impl<'x> Environment<'x> {
                     .is_guaranteed_match()
             }
             Definition::Substitute(..) => unreachable!(),
-            Definition::Variable { var, typee } => todo!(),
+            Definition::Variable { var: _, typee: _ } => todo!(),
         }
     }
 

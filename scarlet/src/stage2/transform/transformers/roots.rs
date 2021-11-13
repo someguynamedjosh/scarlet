@@ -3,7 +3,7 @@ use maplit::hashmap;
 
 use crate::{
     stage2::{
-        structure::{Definition, Environment, StructField, Token, VarType},
+        structure::{Definition, StructField, Token, VarType},
         transform::{
             apply,
             basics::{Transformer, TransformerResult},

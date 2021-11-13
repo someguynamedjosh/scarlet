@@ -2,7 +2,7 @@ use MatchResult::*;
 
 use crate::stage2::{
     matchh::result::MatchResult,
-    structure::{BuiltinValue, Environment, ItemId, Substitutions, VarType, VariableId},
+    structure::{BuiltinValue, Environment, ItemId, VarType, VariableId},
 };
 
 impl<'x> Environment<'x> {

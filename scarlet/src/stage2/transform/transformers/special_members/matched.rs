@@ -4,9 +4,9 @@ use maplit::hashmap;
 use super::base::SpecialMember;
 use crate::{
     stage2::{
-        structure::{Condition, Definition, Environment, Token},
+        structure::{Condition, Definition, Token},
         transform::{
-            basics::{Extras, Transformer},
+            basics::Extras,
             transformers::statements::{Else, OnPattern},
             ApplyContext,
         },

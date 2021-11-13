@@ -1,4 +1,4 @@
-use std::{collections::HashMap, marker::PhantomData};
+use std::marker::PhantomData;
 
 use super::structure::{
     BuiltinValue, Definition, Environment, Item, ItemId, Token, VarType, Variable,

@@ -2,7 +2,7 @@ use itertools::Itertools;
 
 use super::base::SpecialMember;
 use crate::stage2::{
-    structure::{Definition, Environment, Member, Token},
+    structure::{Definition, Member, Token},
     transform::ApplyContext,
 };
 
