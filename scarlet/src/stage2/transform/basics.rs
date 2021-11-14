@@ -59,7 +59,7 @@ pub trait Transformer {
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'t>,
+        success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t>;
 }
 

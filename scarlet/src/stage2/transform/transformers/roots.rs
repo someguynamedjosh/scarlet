@@ -28,7 +28,7 @@ impl Transformer for SubExpression {
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'t>,
+        success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut body = success
             .get_capture("sub_expression")
@@ -52,7 +52,7 @@ impl Transformer for Struct {
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'t>,
+        success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut contents = success.get_capture("fields").unwrap_stream().clone();
         let extras = hashmap![200 => tfers![Is]];
@@ -100,7 +100,7 @@ impl Transformer for Builtin {
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'t>,
+        success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut body = success.get_capture("args").unwrap_stream().clone();
         assert!(body.len() >= 1);

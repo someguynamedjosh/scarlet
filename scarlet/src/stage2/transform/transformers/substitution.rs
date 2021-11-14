@@ -6,6 +6,7 @@ use crate::{
         transform::{
             apply,
             basics::{Transformer, TransformerResult},
+            pattern::{PatCaptureAny, PatCaptureStream, Pattern, PatternMatchSuccess},
             transformers::operators::Is,
             ApplyContext,
         },
@@ -15,34 +16,28 @@ use crate::{
 
 pub struct Substitution;
 impl Transformer for Substitution {
-    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
-        if at == 0 {
-            false
-        } else if let Token::Stream {
-            label: "group()", ..
-        } = &c.to[at]
-        {
-            true
-        } else {
-            false
-        }
+    fn pattern(&self) -> Box<dyn Pattern> {
+        Box::new((
+            PatCaptureAny { key: "base" },
+            PatCaptureStream {
+                key: "subs",
+                label: "group()",
+            },
+        ))
     }
 
-    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
-        let base = c.to[at - 1].clone();
-        if let Token::Stream { contents: body, .. } = &c.to[at] {
-            let mut substitutions = body.clone();
-            let extras = hashmap![200 => tfers![Is]];
-            apply::apply_transformers(&mut c.with_target(&mut substitutions), &extras);
-            TransformerResult {
-                replace_range: at - 1..=at,
-                with: Token::Stream {
-                    label: "substitute",
-                    contents: [vec![base], substitutions].concat(),
-                },
-            }
-        } else {
-            unreachable!("Checked in should_be_applied_at")
-        }
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let base = success.get_capture("base").clone();
+        let mut substitutions = success.get_capture("subs").unwrap_stream().clone();
+        let extras = hashmap![200 => tfers![Is]];
+        apply::apply_transformers(c, &mut substitutions, &extras);
+        TransformerResult(Token::Stream {
+            label: "substitute",
+            contents: [vec![base], substitutions].concat(),
+        })
     }
 }

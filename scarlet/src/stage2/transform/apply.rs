@@ -13,22 +13,30 @@ fn apply_transformers_ltr<'t>(
 ) {
     let mut index = 0;
     while index < stream.len() {
+        let mut nothing_applied = true;
         for transformer in transformers {
             if let Ok(success) = transformer.pattern().match_at(&stream[..], index) {
                 if !success.range.contains(&index) {
                     panic!(
                         "Transformer wants to replace {:?}, \
                     which does not contain the original index {}.",
-                        success.range, index
+                        success.range.clone(),
+                        index
                     );
                 }
                 index = *success.range.start();
 
-                let result = transformer.apply(c, index);
-                stream.splice(success.range, std::iter::once(result.0));
+                let range = success.range.clone();
+                let result = transformer.apply(c, success);
+                stream.splice(range, std::iter::once(result.0));
+
+                nothing_applied = false;
+                break;
             }
         }
-        index += 1;
+        if nothing_applied {
+            index += 1;
+        }
     }
 }
 
@@ -51,8 +59,12 @@ fn apply_transformers_rtl<'t>(
                 }
                 index = *success.range.start();
 
-                let result = transformer.apply(c, index);
-                stream.splice(success.range, std::iter::once(result.0));
+                let range = success.range.clone();
+                let result = transformer.apply(c, success);
+                stream.splice(range, std::iter::once(result.0));
+
+                index += 1;
+                break;
             }
         }
     }

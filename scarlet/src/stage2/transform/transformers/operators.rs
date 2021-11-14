@@ -21,7 +21,7 @@ macro_rules! binary_operator {
             fn apply<'t>(
                 &self,
                 c: &mut ApplyContext<'_, 't>,
-                success: PatternMatchSuccess<'t>,
+                success: PatternMatchSuccess<'_, 't>,
             ) -> TransformerResult<'t> {
                 let left = c.push_token(success.get_capture("left").clone());
                 let right = c.push_token(success.get_capture("right").clone());
@@ -33,59 +33,69 @@ macro_rules! binary_operator {
     };
 }
 
-binary_operator!(Caret, BuiltinOperation::Power32U, "^");
-binary_operator!(Asterisk, BuiltinOperation::Product32U, "*");
-binary_operator!(Slash, BuiltinOperation::Quotient32U, "/");
-binary_operator!(Plus, BuiltinOperation::Sum32U, "+");
-binary_operator!(Minus, BuiltinOperation::Difference32U, "-");
-binary_operator!(Modulo, BuiltinOperation::Modulo32U, "mod");
+binary_operator!(Caret, BuiltinOperation::Power32U, PatPlain("^"));
+binary_operator!(Asterisk, BuiltinOperation::Product32U, PatPlain("*"));
+binary_operator!(Slash, BuiltinOperation::Quotient32U, PatPlain("/"));
+binary_operator!(Plus, BuiltinOperation::Sum32U, PatPlain("+"));
+binary_operator!(Minus, BuiltinOperation::Difference32U, PatPlain("-"));
+binary_operator!(Modulo, BuiltinOperation::Modulo32U, PatPlain("mod"));
 
-binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, ">");
+binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, PatPlain(">"));
 binary_operator!(
     GreaterThanOrEqual,
     BuiltinOperation::GreaterThanOrEqual32U,
     (PatPlain(">"), PatPlain("="))
 );
-binary_operator!(LessThan, BuiltinOperation::LessThan32U, "<");
+binary_operator!(LessThan, BuiltinOperation::LessThan32U, PatPlain("<"));
 binary_operator!(
     LessThanOrEqual,
     BuiltinOperation::LessThanOrEqual32U,
-    &["<", "="]
+    (PatPlain("<"), PatPlain("="))
 );
 
 // binary_operator!(Matches, BuiltinOperation::Matches, "matches");
 
 pub struct PatternAnd;
 impl Transformer for PatternAnd {
-    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
-        &c.to[at] == &Token::Plain("AND")
+    fn pattern(&self) -> Box<dyn Pattern> {
+        Box::new((
+            PatCaptureAny { key: "left" },
+            PatPlain("AND"),
+            PatCaptureAny { key: "right" },
+        ))
     }
 
-    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
-        let left = c.push_token(c.to[at - 1].clone());
-        let right = c.push_token(c.to[at + 1].clone());
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let left = c.push_token(success.get_capture("left").clone());
+        let right = c.push_token(success.get_capture("right").clone());
         let item = c.push_var(VarType::And(left, right));
-        TransformerResult {
-            replace_range: at - 1..=at + 1,
-            with: Token::Item(item),
-        }
+        TransformerResult(Token::Item(item))
     }
 }
 
 pub struct PatternOr;
 impl Transformer for PatternOr {
-    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
-        &c.to[at] == &Token::Plain("OR")
+    fn pattern(&self) -> Box<dyn Pattern> {
+        Box::new((
+            PatCaptureAny { key: "left" },
+            PatPlain("OR"),
+            PatCaptureAny { key: "right" },
+        ))
     }
 
-    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
-        let left = c.push_token(c.to[at - 1].clone());
-        let right = c.push_token(c.to[at + 1].clone());
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let left = c.push_token(success.get_capture("left").clone());
+        let right = c.push_token(success.get_capture("right").clone());
         let item = c.push_var(VarType::Or(left, right));
-        TransformerResult {
-            replace_range: at - 1..=at + 1,
-            with: Token::Item(item),
-        }
+        TransformerResult(Token::Item(item))
     }
 }
 
@@ -95,20 +105,25 @@ impl Transformer for PatternOr {
 
 pub struct Is;
 impl Transformer for Is {
-    fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
-        &c.to[at] == &Token::Plain("is")
+    fn pattern(&self) -> Box<dyn Pattern> {
+        Box::new((
+            PatCaptureAny { key: "left" },
+            PatPlain("is"),
+            PatCaptureAny { key: "right" },
+        ))
     }
 
-    fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
-        let left = c.to[at - 1].clone();
-        let right = c.push_token(c.to[at + 1].clone());
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let left = success.get_capture("left").clone();
+        let right = c.push_token(success.get_capture("right").clone());
         let right = Token::Item(right);
-        TransformerResult {
-            replace_range: at - 1..=at + 1,
-            with: Token::Stream {
-                label: "target",
-                contents: vec![left, right],
-            },
-        }
+        TransformerResult(Token::Stream {
+            label: "target",
+            contents: vec![left, right],
+        })
     }
 }

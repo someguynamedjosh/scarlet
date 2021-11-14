@@ -2,14 +2,14 @@ use std::{collections::HashMap, marker::PhantomData, ops::RangeInclusive, slice:
 
 use crate::stage2::structure::Token;
 
-pub type Captures<'x> = HashMap<&'static str, &'x Token<'x>>;
-pub struct PatternMatchSuccess<'x> {
+pub type Captures<'i, 'x> = HashMap<&'static str, &'i Token<'x>>;
+pub struct PatternMatchSuccess<'i, 'x> {
     pub range: RangeInclusive<usize>,
-    pub captures: Captures<'x>,
+    pub captures: Captures<'i, 'x>,
 }
-pub type PatternMatchResult<'x> = Result<PatternMatchSuccess<'x>, ()>;
+pub type PatternMatchResult<'i, 'x> = Result<PatternMatchSuccess<'i, 'x>, ()>;
 
-impl<'x> PatternMatchSuccess<'x> {
+impl<'i, 'x> PatternMatchSuccess<'i, 'x> {
     pub fn at(at_index: usize) -> Self {
         Self {
             range: at_index..=at_index,
@@ -29,19 +29,19 @@ impl<'x> PatternMatchSuccess<'x> {
     }
 }
 
-fn pms_union<'x>(mut pmss: Vec<PatternMatchSuccess<'x>>) -> PatternMatchSuccess<'x> {
-    fn extract_first_pms<'x>(
-        pmrs: &mut Vec<PatternMatchSuccess<'x>>,
-    ) -> (RangeInclusive<usize>, Captures<'x>) {
+fn pms_union<'i, 'x>(mut pmss: Vec<PatternMatchSuccess<'i, 'x>>) -> PatternMatchSuccess<'i, 'x> {
+    fn extract_first_pms<'i, 'x>(
+        pmrs: &mut Vec<PatternMatchSuccess<'i, 'x>>,
+    ) -> (RangeInclusive<usize>, Captures<'i, 'x>) {
         assert!(pmrs.len() > 1);
         let first = pmrs.remove(0);
         (first.range, first.captures)
     }
 
-    fn union_with_pmr<'x>(
+    fn union_with_pmr<'i, 'x>(
         range: &mut RangeInclusive<usize>,
-        captures: &mut Captures<'x>,
-        pms: PatternMatchSuccess<'x>,
+        captures: &mut Captures<'i, 'x>,
+        pms: PatternMatchSuccess<'i, 'x>,
     ) {
         assert_eq!(*range.end() + 1, *pms.range.start());
         *range = *range.start()..=*pms.range.end();
@@ -61,20 +61,46 @@ fn pms_union<'x>(mut pmss: Vec<PatternMatchSuccess<'x>>) -> PatternMatchSuccess<
 }
 
 pub trait Pattern {
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x>;
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x>;
+    ) -> PatternMatchResult<'i, 'x>;
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x>;
+}
+
+impl<P: Pattern> Pattern for &P {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (*self).match_at(stream, at_index)
+    }
+
+    fn match_before<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        before_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (*self).match_before(stream, before_index)
+    }
 }
 
 pub struct PatCaptureAny {
-    key: &'static str,
+    pub key: &'static str,
 }
 
 impl Pattern for PatCaptureAny {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
         if at_index >= stream.len() {
             Err(())
         } else {
@@ -84,11 +110,11 @@ impl Pattern for PatCaptureAny {
         }
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
+    ) -> PatternMatchResult<'i, 'x> {
         if before_index < 1 {
             Err(())
         } else {
@@ -98,12 +124,16 @@ impl Pattern for PatCaptureAny {
 }
 
 pub struct PatCaptureStream {
-    key: &'static str,
-    label: &'static str,
+    pub key: &'static str,
+    pub label: &'static str,
 }
 
 impl Pattern for PatCaptureStream {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
         if at_index >= stream.len() {
             Err(())
         } else if let Token::Stream { label, .. } = &stream[at_index] {
@@ -119,11 +149,11 @@ impl Pattern for PatCaptureStream {
         }
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
+    ) -> PatternMatchResult<'i, 'x> {
         if before_index < 1 {
             Err(())
         } else {
@@ -135,7 +165,11 @@ impl Pattern for PatCaptureStream {
 pub struct PatPlain(pub &'static str);
 
 impl Pattern for PatPlain {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
         if at_index >= stream.len() {
             Err(())
         } else if stream[at_index] == Token::Plain(self.0) {
@@ -145,11 +179,11 @@ impl Pattern for PatPlain {
         }
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
+    ) -> PatternMatchResult<'i, 'x> {
         if before_index < 1 {
             Err(())
         } else {
@@ -161,18 +195,22 @@ impl Pattern for PatPlain {
 pub struct PatPreceded<Before: Pattern, At: Pattern>(Before, At);
 
 impl<Before: Pattern, At: Pattern> Pattern for PatPreceded<Before, At> {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
         Ok(pms_union(vec![
             self.0.match_before(stream, at_index)?,
             self.1.match_at(stream, at_index)?,
         ]))
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
+    ) -> PatternMatchResult<'i, 'x> {
         Ok(pms_union(vec![
             self.0.match_before(stream, before_index)?,
             self.1.match_at(stream, before_index)?,
@@ -180,32 +218,70 @@ impl<Before: Pattern, At: Pattern> Pattern for PatPreceded<Before, At> {
     }
 }
 
+pub struct PatFirstOf(pub Vec<Box<dyn Pattern>>);
+
+impl Pattern for PatFirstOf {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        for pat in &self.0 {
+            if let Ok(result) = pat.match_at(stream, at_index) {
+                return Ok(result);
+            }
+        }
+        Err(())
+    }
+
+    fn match_before<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        before_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        for pat in &self.0 {
+            if let Ok(result) = pat.match_before(stream, before_index) {
+                return Ok(result);
+            }
+        }
+        Err(())
+    }
+}
+
 impl<P0: Pattern> Pattern for (P0,) {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
         self.0.match_at(stream, at_index)
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
+    ) -> PatternMatchResult<'i, 'x> {
         self.0.match_before(stream, before_index)
     }
 }
 
 impl<P0: Pattern, P1: Pattern> Pattern for (P0, P1) {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
         let base = self.0.match_at(stream, at_index)?;
         let next = self.1.match_at(stream, *base.range.end() + 1)?;
         Ok(pms_union(vec![base, next]))
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
+    ) -> PatternMatchResult<'i, 'x> {
         let base = self.0.match_before(stream, before_index)?;
         let previous = self.1.match_before(stream, *base.range.start())?;
         Ok(pms_union(vec![previous, base]))
@@ -213,78 +289,105 @@ impl<P0: Pattern, P1: Pattern> Pattern for (P0, P1) {
 }
 
 impl<P0: Pattern, P1: Pattern, P2: Pattern> Pattern for (P0, P1, P2) {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2)).match_at(stream, at_index)
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2)).match_at(stream, at_index)
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2)).match_before(stream, before_index)
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2)).match_before(stream, before_index)
     }
 }
 
 impl<P0: Pattern, P1: Pattern, P2: Pattern, P3: Pattern> Pattern for (P0, P1, P2, P3) {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3)).match_at(stream, at_index)
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2, &self.3)).match_at(stream, at_index)
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3)).match_before(stream, before_index)
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2, &self.3)).match_before(stream, before_index)
     }
 }
 
 impl<P0: Pattern, P1: Pattern, P2: Pattern, P3: Pattern, P4: Pattern> Pattern
     for (P0, P1, P2, P3, P4)
 {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3, self.4)).match_at(stream, at_index)
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2, &self.3, &self.4)).match_at(stream, at_index)
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3, self.4)).match_before(stream, before_index)
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2, &self.3, &self.4)).match_before(stream, before_index)
     }
 }
 
 impl<P0: Pattern, P1: Pattern, P2: Pattern, P3: Pattern, P4: Pattern, P5: Pattern> Pattern
     for (P0, P1, P2, P3, P4, P5)
 {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3, self.4, self.5)).match_at(stream, at_index)
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2, &self.3, &self.4, &self.5)).match_at(stream, at_index)
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3, self.4, self.5)).match_before(stream, before_index)
+    ) -> PatternMatchResult<'i, 'x> {
+        (&self.0, (&self.1, &self.2, &self.3, &self.4, &self.5)).match_before(stream, before_index)
     }
 }
 
 impl<P0: Pattern, P1: Pattern, P2: Pattern, P3: Pattern, P4: Pattern, P5: Pattern, P6: Pattern>
     Pattern for (P0, P1, P2, P3, P4, P5, P6)
 {
-    fn match_at<'x>(&self, stream: &'x [Token<'x>], at_index: usize) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3, self.4, self.5, self.6)).match_at(stream, at_index)
+    fn match_at<'i, 'x>(
+        &self,
+        stream: &'i [Token<'x>],
+        at_index: usize,
+    ) -> PatternMatchResult<'i, 'x> {
+        (
+            &self.0,
+            (&self.1, &self.2, &self.3, &self.4, &self.5, &self.6),
+        )
+            .match_at(stream, at_index)
     }
 
-    fn match_before<'x>(
+    fn match_before<'i, 'x>(
         &self,
-        stream: &'x [Token<'x>],
+        stream: &'i [Token<'x>],
         before_index: usize,
-    ) -> PatternMatchResult<'x> {
-        (self.0, (self.1, self.2, self.3, self.4, self.5, self.6))
+    ) -> PatternMatchResult<'i, 'x> {
+        (
+            &self.0,
+            (&self.1, &self.2, &self.3, &self.4, &self.5, &self.6),
+        )
             .match_before(stream, before_index)
     }
 }
