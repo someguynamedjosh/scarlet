@@ -1,6 +1,6 @@
 use crate::stage2::{
     dependencies::structures::DepQueryResult,
-    structure::{Environment, ItemId, VarType, VariableId, VariableInfo},
+    structure::{Environment, ConstructId, VarType, VariableId, VariableInfo},
 };
 
 impl<'x> Environment<'x> {
@@ -8,7 +8,7 @@ impl<'x> Environment<'x> {
         &mut self,
         typee: VarType<'x>,
         num_struct_unwraps: u32,
-        of: ItemId<'x>,
+        of: ConstructId<'x>,
         var: VariableId<'x>,
     ) -> DepQueryResult<'x> {
         let mut result = self

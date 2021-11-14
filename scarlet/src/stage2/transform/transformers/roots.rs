@@ -78,7 +78,7 @@ impl Transformer for Struct {
             })
             .collect_vec();
         let def = Definition::Struct(fields);
-        c.env.items[item].definition = Some(def);
+        c.env.items[item].base = Some(def);
         c.env.check(item);
         TransformerResult(Token::Item(item))
     }

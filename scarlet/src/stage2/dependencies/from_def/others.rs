@@ -1,12 +1,12 @@
 use crate::stage2::{
     dependencies::structures::DepQueryResult,
-    structure::{Condition, Environment, ItemId, Substitutions},
+    structure::{Condition, Environment, ConstructId, Substitutions},
 };
 
 impl<'x> Environment<'x> {
     pub(super) fn deps_of_resolved_substitution(
         &mut self,
-        base: ItemId<'x>,
+        base: ConstructId<'x>,
         num_struct_unwraps: u32,
         subs: Substitutions<'x>,
     ) -> DepQueryResult<'x> {
@@ -29,10 +29,10 @@ impl<'x> Environment<'x> {
 
     pub(super) fn deps_of_set_eager(
         &mut self,
-        vals: Vec<ItemId<'x>>,
+        vals: Vec<ConstructId<'x>>,
         num_struct_unwraps: u32,
-        base: ItemId<'x>,
-        of: ItemId<'x>,
+        base: ConstructId<'x>,
+        of: ConstructId<'x>,
         all: bool,
         eager: bool,
     ) -> DepQueryResult<'x> {
@@ -60,7 +60,7 @@ impl<'x> Environment<'x> {
 
     pub(super) fn deps_of_builtin_op(
         &mut self,
-        args: Vec<ItemId<'x>>,
+        args: Vec<ConstructId<'x>>,
         num_struct_unwraps: u32,
     ) -> DepQueryResult<'x> {
         let mut result = DepQueryResult::new();
@@ -72,10 +72,10 @@ impl<'x> Environment<'x> {
 
     pub(super) fn deps_of_match(
         &mut self,
-        base: ItemId<'x>,
+        base: ConstructId<'x>,
         num_struct_unwraps: u32,
         conditions: Vec<Condition<'x>>,
-        else_value: ItemId<'x>,
+        else_value: ConstructId<'x>,
     ) -> DepQueryResult<'x> {
         let mut result = self.dep_query(base, num_struct_unwraps);
         for condition in conditions {

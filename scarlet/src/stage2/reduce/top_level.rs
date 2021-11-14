@@ -1,7 +1,7 @@
-use crate::stage2::structure::{Definition, Environment, ItemId, StructField};
+use crate::stage2::structure::{Definition, Environment, ConstructId, StructField};
 
 impl<'x> Environment<'x> {
-    pub fn reduce(&mut self, item: ItemId<'x>) -> ItemId<'x> {
+    pub fn reduce(&mut self, item: ConstructId<'x>) -> ConstructId<'x> {
         if let Some(reduction) = &self.items[item].cached_reduction {
             *reduction
         } else if self.query_stack_contains(item) {
@@ -21,8 +21,8 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn reduce_from_scratch(&mut self, item: ItemId<'x>) -> ItemId<'x> {
-        let definition = self.items[item].definition.clone().unwrap();
+    fn reduce_from_scratch(&mut self, item: ConstructId<'x>) -> ConstructId<'x> {
+        let definition = self.items[item].base.clone().unwrap();
         match definition {
             Definition::Match {
                 base,

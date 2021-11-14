@@ -3,20 +3,20 @@ use itertools::Itertools;
 use crate::{
     shared::OrderedMap,
     stage2::structure::{
-        Condition, Definition, Environment, ItemId, StructField, Substitutions, VarType, VariableId,
+        Condition, Definition, Environment, ConstructId, StructField, Substitutions, VarType, VariableId,
     },
 };
 
 impl<'x> Environment<'x> {
     pub fn substitute(
         &mut self,
-        original: ItemId<'x>,
+        original: ConstructId<'x>,
         substitutions: &Substitutions<'x>,
-    ) -> Option<ItemId<'x>> {
+    ) -> Option<ConstructId<'x>> {
         if substitutions.len() == 0 {
             Some(original)
         } else if self.query_stack_contains(original) && self.get_deps(original).len() > 0 {
-            None
+            todo!("Handle recursive substitution")
         } else {
             let result = self.with_query_stack_frame(original, |this| {
                 this.substitute_impl(original, substitutions)
@@ -27,10 +27,10 @@ impl<'x> Environment<'x> {
 
     pub(super) fn substitute_impl(
         &mut self,
-        original: ItemId<'x>,
-        substitutions: &OrderedMap<VariableId<'x>, ItemId<'x>>,
-    ) -> Option<ItemId<'x>> {
-        let new_def = match self.items[original].definition.clone().unwrap() {
+        original: ConstructId<'x>,
+        substitutions: &OrderedMap<VariableId<'x>, ConstructId<'x>>,
+    ) -> Option<ConstructId<'x>> {
+        let new_def = match self.items[original].base.clone().unwrap() {
             Definition::BuiltinOperation(op, args) => {
                 let args = args
                     .into_iter()

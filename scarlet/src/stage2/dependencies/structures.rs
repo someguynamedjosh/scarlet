@@ -2,23 +2,23 @@ use std::{fmt::Debug, hash::Hash};
 
 use crate::{
     shared::OrderedSet,
-    stage2::structure::{ItemId, VariableId, VariableInfo},
+    stage2::structure::{ConstructId, VariableId, VariableInfo},
 };
 
 #[derive(Clone, Debug)]
-pub(super) struct QueryResult<'x, T> {
-    pub(super) deps: OrderedSet<T>,
-    pub(super) partial_over: OrderedSet<ItemId<'x>>,
+pub struct QueryResult<'x, T> {
+    pub deps: OrderedSet<T>,
+    pub partial_over: OrderedSet<ConstructId<'x>>,
 }
 
-pub(super) type DepQueryResult<'x> = QueryResult<'x, VariableInfo<'x>>;
+pub type DepQueryResult<'x> = QueryResult<'x, VariableInfo<'x>>;
 
 impl<'x, T: PartialEq + Eq + Hash + Debug> QueryResult<'x, T> {
     pub fn new() -> Self {
         Self::empty(OrderedSet::new())
     }
 
-    pub fn empty(partial_over: OrderedSet<ItemId<'x>>) -> Self {
+    pub fn empty(partial_over: OrderedSet<ConstructId<'x>>) -> Self {
         Self {
             deps: Default::default(),
             partial_over,
@@ -46,7 +46,7 @@ impl<'x, T: PartialEq + Eq + Hash + Debug> QueryResult<'x, T> {
         self.partial_over = spo.union(other.partial_over);
     }
 
-    pub fn remove_partial(&mut self, over: ItemId<'x>) {
+    pub fn remove_partial(&mut self, over: ConstructId<'x>) {
         self.partial_over.remove(&over);
     }
 }

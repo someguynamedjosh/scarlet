@@ -5,15 +5,15 @@ use MatchResult::*;
 
 use crate::stage2::{
     matchh::result::MatchResult,
-    structure::{Definition, Environment, ItemId, VarType, VariableId},
+    structure::{Definition, Environment, ConstructId, VarType, VariableId},
 };
 
 impl<'x> Environment<'x> {
     pub(super) fn matches_impl(
         &mut self,
-        original_value: ItemId<'x>,
-        value: ItemId<'x>,
-        pattern: ItemId<'x>,
+        original_value: ConstructId<'x>,
+        value: ConstructId<'x>,
+        pattern: ConstructId<'x>,
         eager_vars: &[VariableId<'x>],
     ) -> MatchResult<'x> {
         let value_def = self.get_resolved_definition(value).clone();

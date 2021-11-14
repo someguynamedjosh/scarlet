@@ -1,15 +1,15 @@
 use crate::stage2::{
     matchh::MatchResult,
-    structure::{BuiltinValue, Condition, Definition, Environment, ItemId, Member, Substitutions},
+    structure::{BuiltinValue, Condition, Definition, Environment, ConstructId, Member, Substitutions},
 };
 
 impl<'x> Environment<'x> {
     pub(super) fn reduce_substitution(
         &mut self,
-        base: ItemId<'x>,
+        base: ConstructId<'x>,
         subs: Substitutions<'x>,
-        item: ItemId<'x>,
-    ) -> ItemId<'x> {
+        item: ConstructId<'x>,
+    ) -> ConstructId<'x> {
         let subbed = self.substitute(base, &subs).unwrap();
         if subbed == item {
             subbed
@@ -20,10 +20,10 @@ impl<'x> Environment<'x> {
 
     pub(super) fn reduce_member(
         &mut self,
-        base: ItemId<'x>,
+        base: ConstructId<'x>,
         member: Member<'x>,
-        item: ItemId<'x>,
-    ) -> ItemId<'x> {
+        item: ConstructId<'x>,
+    ) -> ConstructId<'x> {
         let base = self.reduce(base);
         if let Member::Named(name) = member {
             if let Definition::Struct(fields) = self.get_definition(base) {
@@ -61,11 +61,11 @@ impl<'x> Environment<'x> {
 
     pub(super) fn reduce_match(
         &mut self,
-        base: ItemId<'x>,
-        else_value: ItemId<'x>,
+        base: ConstructId<'x>,
+        else_value: ConstructId<'x>,
         conditions: Vec<Condition<'x>>,
-        item: ItemId<'x>,
-    ) -> ItemId<'x> {
+        item: ConstructId<'x>,
+    ) -> ConstructId<'x> {
         let base = self.reduce(base);
         let mut new_conditions = Vec::new();
         let mut else_value = else_value;

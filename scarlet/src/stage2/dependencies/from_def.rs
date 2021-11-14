@@ -2,12 +2,12 @@ mod others;
 mod variable;
 
 use super::structures::DepQueryResult;
-use crate::stage2::structure::{Definition, Environment, ItemId};
+use crate::stage2::structure::{Definition, Environment, ConstructId};
 
 impl<'x> Environment<'x> {
     pub(super) fn get_deps_from_def(
         &mut self,
-        of: ItemId<'x>,
+        of: ConstructId<'x>,
         num_struct_unwraps: u32,
     ) -> DepQueryResult<'x> {
         match self.get_definition(of).clone() {

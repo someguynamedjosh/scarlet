@@ -1,11 +1,11 @@
-use super::structure::{Environment, Item, ItemId};
+use super::structure::{AnnotatedConstruct, ConstructId, Environment};
 use crate::{stage1::structure::Module, stage2::structure::Definition};
 
-pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ItemId<'x>) {
+pub fn ingest<'x>(src: &'x Module) -> (Environment<'x>, ConstructId<'x>) {
     let mut env = Environment::new();
-    let root = env.push_item(Item {
+    let root = env.push_item(AnnotatedConstruct {
         cached_reduction: None,
-        definition: Some(Definition::Unresolved(src.self_content.clone())),
+        definition: Some(Box::new(Unresolved(src.self_content.clone()))),
         dependencies: None,
         parent_scope: None,
         shown_from: vec![],

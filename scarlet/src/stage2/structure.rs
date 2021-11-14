@@ -5,6 +5,7 @@ use std::{
 
 use typed_arena::Arena;
 
+use super::construct::Construct;
 use crate::{
     shared::{Id, OrderedMap, OrderedSet, Pool},
     util::indented,
@@ -13,13 +14,13 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructField<'x> {
     pub name: Option<&'x str>,
-    pub value: ItemId<'x>,
+    pub value: ConstructId<'x>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Condition<'x> {
-    pub pattern: ItemId<'x>,
-    pub value: ItemId<'x>,
+    pub pattern: ConstructId<'x>,
+    pub value: ConstructId<'x>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -42,17 +43,17 @@ pub enum VarType<'x> {
     God,
     _32U,
     Bool,
-    Just(ItemId<'x>),
-    And(ItemId<'x>, ItemId<'x>),
-    Or(ItemId<'x>, ItemId<'x>),
+    Just(ConstructId<'x>),
+    And(ConstructId<'x>, ConstructId<'x>),
+    Or(ConstructId<'x>, ConstructId<'x>),
     Array {
-        length: ItemId<'x>,
-        element_type: ItemId<'x>,
+        length: ConstructId<'x>,
+        element_type: ConstructId<'x>,
     },
 }
 
 impl<'x> VarType<'x> {
-    pub fn map_item_ids(self, mut by: impl FnMut(ItemId<'x>) -> ItemId<'x>) -> Self {
+    pub fn map_item_ids(self, mut by: impl FnMut(ConstructId<'x>) -> ConstructId<'x>) -> Self {
         match self {
             Self::God | Self::_32U | Self::Bool => self,
             Self::Just(a) => Self::Just(by(a)),
@@ -86,20 +87,20 @@ impl BuiltinValue {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct VariableInfo<'x> {
-    pub var_item: ItemId<'x>,
+    pub var_item: ConstructId<'x>,
     pub var: VariableId<'x>,
     pub typee: VarType<'x>,
     pub eager: bool,
 }
 
-pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ItemId<'x>>;
+pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ConstructId<'x>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Member<'x> {
     Named(String),
     Index {
-        index: ItemId<'x>,
-        proof_lt_len: ItemId<'x>,
+        index: ConstructId<'x>,
+        proof_lt_len: ConstructId<'x>,
     },
 }
 
@@ -108,7 +109,7 @@ pub type TokenStream<'x> = Vec<Token<'x>>;
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Token<'x> {
     Plain(&'x str),
-    Item(ItemId<'x>),
+    Item(ConstructId<'x>),
     Stream {
         label: &'x str,
         contents: TokenStream<'x>,
@@ -151,23 +152,23 @@ impl<'x> Debug for Token<'x> {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Definition<'x> {
-    BuiltinOperation(BuiltinOperation, Vec<ItemId<'x>>),
+    BuiltinOperation(BuiltinOperation, Vec<ConstructId<'x>>),
     BuiltinValue(BuiltinValue),
     Match {
-        base: ItemId<'x>,
+        base: ConstructId<'x>,
         conditions: Vec<Condition<'x>>,
-        else_value: ItemId<'x>,
+        else_value: ConstructId<'x>,
     },
-    Member(ItemId<'x>, Member<'x>),
+    Member(ConstructId<'x>, Member<'x>),
     Unresolved(Token<'x>),
     SetEager {
-        base: ItemId<'x>,
-        vals: Vec<ItemId<'x>>,
+        base: ConstructId<'x>,
+        vals: Vec<ConstructId<'x>>,
         all: bool,
         eager: bool,
     },
     Struct(Vec<StructField<'x>>),
-    Substitute(ItemId<'x>, Substitutions<'x>),
+    Substitute(ConstructId<'x>, Substitutions<'x>),
     Variable {
         var: VariableId<'x>,
         typee: VarType<'x>,
@@ -184,9 +185,9 @@ impl<T> Debug for WrappedArena<T> {
 
 #[derive(Debug)]
 pub struct Environment<'x> {
-    pub items: Pool<Item<'x>, 'I'>,
+    pub items: Pool<AnnotatedConstruct<'x>, 'I'>,
     pub vars: Pool<Variable<'x>, 'V'>,
-    query_stack: Vec<ItemId<'x>>,
+    query_stack: Vec<ConstructId<'x>>,
     pub(super) vomited_tokens: WrappedArena<String>,
 }
 
@@ -200,7 +201,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn push_item(&mut self, item: Item<'x>) -> ItemId<'x> {
+    pub fn push_item(&mut self, item: AnnotatedConstruct<'x>) -> ConstructId<'x> {
         let id = self.items.push(item);
         self.check(id);
         id
@@ -216,7 +217,7 @@ impl<'x> Environment<'x> {
 
     pub(super) fn with_query_stack_frame<T>(
         &mut self,
-        frame: ItemId<'x>,
+        frame: ConstructId<'x>,
         op: impl FnOnce(&mut Self) -> T,
     ) -> T {
         self.query_stack.push(frame);
@@ -225,20 +226,20 @@ impl<'x> Environment<'x> {
         result
     }
 
-    pub(super) fn query_stack_contains(&self, item: ItemId<'x>) -> bool {
+    pub(super) fn query_stack_contains(&self, item: ConstructId<'x>) -> bool {
         self.query_stack.contains(&item)
     }
 }
 
-pub type ItemId<'x> = Id<Item<'x>, 'I'>;
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Item<'x> {
-    pub definition: Option<Definition<'x>>,
-    pub parent_scope: Option<ItemId<'x>>,
+pub type ConstructId<'x> = Id<AnnotatedConstruct<'x>, 'I'>;
+#[derive(Debug)]
+pub struct AnnotatedConstruct<'x> {
+    pub definition: Option<Box<dyn Construct<'x>>>,
+    pub parent_scope: Option<ConstructId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,
-    pub cached_reduction: Option<ItemId<'x>>,
-    pub shown_from: Vec<ItemId<'x>>,
+    pub cached_reduction: Option<ConstructId<'x>>,
+    pub shown_from: Vec<ConstructId<'x>>,
 }
 
 pub type VariableId<'x> = Id<Variable<'x>, 'V'>;

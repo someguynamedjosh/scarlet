@@ -5,13 +5,13 @@ use crate::{
     shared::OrderedSet,
     stage2::{
         matchh::MatchResult,
-        structure::{BuiltinValue, Definition, Environment, ItemId, Token, VariableInfo},
+        structure::{BuiltinValue, Definition, Environment, ConstructId, Token, VariableInfo},
         transform::{self, ApplyContext},
     },
 };
 
 impl<'x> Environment<'x> {
-    pub(super) fn resolve(&mut self, item: ItemId<'x>) -> ItemId<'x> {
+    pub(super) fn resolve(&mut self, item: ConstructId<'x>) -> ConstructId<'x> {
         let parent_scope = self.items[item].parent_scope;
         if let Definition::Unresolved(token) = self.get_definition(item) {
             let new_def = match token {
@@ -54,13 +54,13 @@ impl<'x> Environment<'x> {
                     todo!("Nice error, cannot convert {:?} into an item", other)
                 }
             };
-            self.items[item].definition = Some(new_def);
+            self.items[item].base = Some(new_def);
             self.check(item);
         }
         item
     }
 
-    fn resolve_plain_token(&mut self, item: ItemId<'x>, plain: &str) -> Definition<'x> {
+    fn resolve_plain_token(&mut self, item: ConstructId<'x>, plain: &str) -> Definition<'x> {
         if let Ok(int) = plain.parse::<u32>() {
             Definition::BuiltinValue(BuiltinValue::_32U(int))
         } else if plain == "true" {
@@ -82,9 +82,9 @@ impl<'x> Environment<'x> {
 
     fn resolve_targets_in_sub(
         &mut self,
-        base: ItemId<'x>,
+        base: ConstructId<'x>,
         subs: &mut [Token<'x>],
-        parent_scope: Option<ItemId<'x>>,
+        parent_scope: Option<ConstructId<'x>>,
     ) -> Substitutions<'x> {
         let mut new_subs = Substitutions::new();
         let mut deps = self.get_deps(base);
@@ -127,10 +127,10 @@ impl<'x> Environment<'x> {
 
     fn resolve_named_target(
         &mut self,
-        possible_meaning: ItemId<'x>,
+        possible_meaning: ConstructId<'x>,
         _name: Option<&str>,
-        _base: ItemId<'x>,
-        value: ItemId<'x>,
+        _base: ConstructId<'x>,
+        value: ConstructId<'x>,
         deps: &mut OrderedSet<VariableInfo<'x>>,
         new_subs: &Substitutions<'x>,
     ) -> Substitutions<'x> {
@@ -167,7 +167,7 @@ impl<'x> Environment<'x> {
         &mut self,
         deps: &mut OrderedSet<VariableInfo<'x>>,
         previous_subs: &Substitutions<'x>,
-        value: ItemId<'x>,
+        value: ConstructId<'x>,
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
             let _dep = *dep;

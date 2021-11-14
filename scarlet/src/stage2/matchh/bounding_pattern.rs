@@ -1,9 +1,9 @@
 use crate::stage2::structure::{
-    BuiltinOperation, Definition, Environment, ItemId, StructField, VarType,
+    BuiltinOperation, Definition, Environment, ConstructId, StructField, VarType,
 };
 
 impl<'x> Environment<'x> {
-    pub(in crate::stage2) fn find_bounding_pattern(&mut self, pattern: ItemId<'x>) -> ItemId<'x> {
+    pub(in crate::stage2) fn find_bounding_pattern(&mut self, pattern: ConstructId<'x>) -> ConstructId<'x> {
         match self.get_definition(pattern).clone() {
             Definition::BuiltinOperation(op, _) => match op {
                 BuiltinOperation::Sum32U

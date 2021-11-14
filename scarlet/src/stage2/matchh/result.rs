@@ -1,4 +1,4 @@
-use crate::stage2::structure::{ItemId, Substitutions, VariableId};
+use crate::stage2::structure::{ConstructId, Substitutions, VariableId};
 
 #[derive(Clone, Debug)]
 pub enum MatchResult<'x> {
@@ -17,7 +17,7 @@ impl<'x> MatchResult<'x> {
         }
     }
 
-    pub fn with_sub_if_match(mut self, target: VariableId<'x>, value: ItemId<'x>) -> Self {
+    pub fn with_sub_if_match(mut self, target: VariableId<'x>, value: ConstructId<'x>) -> Self {
         if let Self::Match(subs) = &mut self {
             subs.insert_no_replace(target, value)
         }

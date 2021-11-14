@@ -1,10 +1,10 @@
 use super::structure::Member;
 use crate::stage2::structure::{
-    BuiltinOperation, BuiltinValue, Definition, Environment, ItemId, VarType,
+    BuiltinOperation, BuiltinValue, Definition, Environment, ConstructId, VarType,
 };
 
 impl<'x> Environment<'x> {
-    fn index_in_bounds_theorem(&mut self, index: ItemId<'x>, length: u32) -> ItemId<'x> {
+    fn index_in_bounds_theorem(&mut self, index: ConstructId<'x>, length: u32) -> ConstructId<'x> {
         let length = self.push_def(Definition::BuiltinValue(BuiltinValue::_32U(length)));
         let in_bounds = self.push_def(Definition::BuiltinOperation(
             BuiltinOperation::LessThan32U,
@@ -18,9 +18,9 @@ impl<'x> Environment<'x> {
 
     fn check_index(
         &mut self,
-        index: ItemId<'x>,
-        t_index_in_range: ItemId<'x>,
-        base_bounding_pattern: ItemId<'x>,
+        index: ConstructId<'x>,
+        t_index_in_range: ConstructId<'x>,
+        base_bounding_pattern: ConstructId<'x>,
     ) -> bool {
         match self.get_definition(base_bounding_pattern) {
             Definition::BuiltinOperation(_, _) => unreachable!(),
@@ -40,7 +40,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn check(&mut self, item: ItemId<'x>) {
+    pub fn check(&mut self, item: ConstructId<'x>) {
         // let pattern_bool = self.get_or_push_var(VarType::Bool);
         let pattern_32u = self.get_or_push_var(VarType::_32U);
         match self.get_definition(item).clone() {

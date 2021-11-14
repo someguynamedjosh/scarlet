@@ -2,15 +2,15 @@ use MatchResult::*;
 
 use crate::stage2::{
     matchh::result::MatchResult,
-    structure::{BuiltinValue, Environment, ItemId, VarType, VariableId},
+    structure::{BuiltinValue, Environment, ConstructId, VarType, VariableId},
 };
 
 impl<'x> Environment<'x> {
     pub(super) fn on_right_variable(
         &mut self,
-        original_value: ItemId<'x>,
-        value: ItemId<'x>,
-        other: ItemId<'x>,
+        original_value: ConstructId<'x>,
+        value: ConstructId<'x>,
+        other: ConstructId<'x>,
         eager_vars: &[VariableId<'x>],
         var: VariableId<'x>,
     ) -> MatchResult<'x> {
@@ -25,10 +25,10 @@ impl<'x> Environment<'x> {
         all: bool,
         eager: bool,
         eager_vars: &[VariableId<'x>],
-        vals: Vec<ItemId<'x>>,
-        original_value: ItemId<'x>,
-        value: ItemId<'x>,
-        base: ItemId<'x>,
+        vals: Vec<ConstructId<'x>>,
+        original_value: ConstructId<'x>,
+        value: ConstructId<'x>,
+        base: ConstructId<'x>,
     ) -> MatchResult<'x> {
         if eager {
             let mut new_eagers = eager_vars.to_owned();
@@ -62,7 +62,7 @@ pub(super) fn on_variable_variable<'x>(
     value_type: VarType<'x>,
     pattern_type: VarType<'x>,
     var: VariableId<'x>,
-    original_value: ItemId<'x>,
+    original_value: ConstructId<'x>,
 ) -> MatchResult<'x> {
     if value_type == pattern_type || pattern_type == VarType::God {
         MatchResult::non_capturing().with_sub_if_match(var, original_value)
@@ -75,7 +75,7 @@ pub(super) fn on_value_variable<'x>(
     bvalue: BuiltinValue,
     typee: VarType<'x>,
     var: VariableId<'x>,
-    original_value: ItemId<'x>,
+    original_value: ConstructId<'x>,
 ) -> MatchResult<'x> {
     let matches = match bvalue {
         BuiltinValue::_32U(..) => typee == VarType::_32U || typee == VarType::God,

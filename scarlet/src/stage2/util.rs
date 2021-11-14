@@ -1,33 +1,33 @@
 use std::marker::PhantomData;
 
 use super::structure::{
-    BuiltinValue, Definition, Environment, Item, ItemId, Token, VarType, Variable,
+    BuiltinValue, Definition, Environment, AnnotatedConstruct, ConstructId, Token, VarType, Variable,
 };
 use crate::stage2::structure::Member;
 
 impl<'x> Environment<'x> {
-    pub fn get_definition(&self, of: ItemId<'x>) -> &Definition<'x> {
-        self.items[of].definition.as_ref().unwrap()
+    pub fn get_definition(&self, of: ConstructId<'x>) -> &Definition<'x> {
+        self.items[of].base.as_ref().unwrap()
     }
 
-    pub fn get_resolved_definition(&mut self, of: ItemId<'x>) -> &Definition<'x> {
-        let def = self.items[of].definition.as_ref().unwrap();
+    pub fn get_resolved_definition(&mut self, of: ConstructId<'x>) -> &Definition<'x> {
+        let def = self.items[of].base.as_ref().unwrap();
         if let Definition::Unresolved(..) = def {
             let resolved = self.resolve(of);
             self.get_definition(resolved)
         } else {
-            self.items[of].definition.as_ref().unwrap()
+            self.items[of].base.as_ref().unwrap()
         }
     }
 
     pub(super) fn args_as_builtin_values(
         &mut self,
-        args: &[ItemId<'x>],
+        args: &[ConstructId<'x>],
     ) -> Option<Vec<BuiltinValue>> {
         let mut result = Vec::new();
         for arg in args {
             let arg = self.reduce(*arg);
-            if let Definition::BuiltinValue(value) = self.items[arg].definition.as_ref().unwrap() {
+            if let Definition::BuiltinValue(value) = self.items[arg].base.as_ref().unwrap() {
                 result.push(*value);
             } else {
                 return None;
@@ -36,10 +36,10 @@ impl<'x> Environment<'x> {
         Some(result)
     }
 
-    pub(super) fn begin_item(&mut self) -> ItemId<'x> {
-        let item = Item {
+    pub(super) fn begin_item(&mut self) -> ConstructId<'x> {
+        let item = AnnotatedConstruct {
             cached_reduction: None,
-            definition: None,
+            base: None,
             dependencies: None,
             parent_scope: None,
             shown_from: Vec::new(),
@@ -47,13 +47,13 @@ impl<'x> Environment<'x> {
         self.items.push(item)
     }
 
-    pub(super) fn push_def(&mut self, def: Definition<'x>) -> ItemId<'x> {
+    pub(super) fn push_def(&mut self, def: Definition<'x>) -> ConstructId<'x> {
         let item = self.begin_item();
-        self.items[item].definition = Some(def);
+        self.items[item].base = Some(def);
         item
     }
 
-    pub(super) fn push_token(&mut self, token: Token<'x>) -> ItemId<'x> {
+    pub(super) fn push_token(&mut self, token: Token<'x>) -> ConstructId<'x> {
         if let Token::Item(item) = token {
             item
         } else {
@@ -61,12 +61,12 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(super) fn get_or_push_var(&mut self, typee: VarType<'x>) -> ItemId<'x> {
+    pub(super) fn get_or_push_var(&mut self, typee: VarType<'x>) -> ConstructId<'x> {
         for (id, item) in &self.items {
             if let Some(Definition::Variable {
                 typee: candidate_typee,
                 ..
-            }) = &item.definition
+            }) = &item.base
             {
                 if &typee == candidate_typee {
                     return id;
@@ -76,7 +76,7 @@ impl<'x> Environment<'x> {
         self.push_var(typee)
     }
 
-    pub(super) fn push_var(&mut self, typee: VarType<'x>) -> ItemId<'x> {
+    pub(super) fn push_var(&mut self, typee: VarType<'x>) -> ConstructId<'x> {
         let var = self.vars.push(Variable { pd: PhantomData });
         let def = Definition::Variable { var, typee };
         self.push_def(def)
@@ -84,10 +84,10 @@ impl<'x> Environment<'x> {
 
     pub(super) fn item_with_new_definition(
         &mut self,
-        original: ItemId<'x>,
+        original: ConstructId<'x>,
         new_def: Definition<'x>,
         is_fundamentally_different: bool,
-    ) -> ItemId<'x> {
+    ) -> ConstructId<'x> {
         if &new_def == self.get_definition(original) {
             return original;
         }
@@ -103,11 +103,11 @@ impl<'x> Environment<'x> {
         id
     }
 
-    pub(super) fn has_member(&mut self, base: ItemId<'x>, member_name: &str) -> bool {
+    pub(super) fn has_member(&mut self, base: ConstructId<'x>, member_name: &str) -> bool {
         self.get_member(base, member_name).is_some()
     }
 
-    pub(super) fn get_member(&mut self, base: ItemId<'x>, member_name: &str) -> Option<ItemId<'x>> {
+    pub(super) fn get_member(&mut self, base: ConstructId<'x>, member_name: &str) -> Option<ConstructId<'x>> {
         let def = Definition::Member(base, Member::Named(member_name.to_owned()));
         match self.get_definition(base).clone() {
             Definition::BuiltinOperation(..) => None,

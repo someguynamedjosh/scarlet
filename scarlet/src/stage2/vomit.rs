@@ -2,12 +2,12 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 
-use super::structure::{Environment, ItemId, StructField, VariableId};
+use super::structure::{Environment, ConstructId, StructField, VariableId};
 use crate::stage2::structure::{
     BuiltinOperation, BuiltinValue, Definition, Member, Token, VarType,
 };
 
-type Parent<'x> = (ItemId<'x>, String);
+type Parent<'x> = (ConstructId<'x>, String);
 type Parents<'x> = Vec<Parent<'x>>;
 type Path<'x> = Vec<Parent<'x>>;
 
@@ -25,7 +25,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_name_or_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> Token {
+    pub fn get_name_or_code(&self, item: ConstructId<'x>, context: ConstructId<'x>) -> Token {
         if let Some(name) = self.get_name(item, context) {
             name
         } else {
@@ -33,7 +33,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ItemId<'x>) -> Token {
+    pub fn get_var_name_or_code(&self, var: VariableId<'x>, context: ConstructId<'x>) -> Token {
         for (item_id, _) in &self.items {
             if let Definition::Variable { var: var_id, .. } = self.get_definition(item_id) {
                 if *var_id == var {
@@ -57,7 +57,7 @@ impl<'x> Environment<'x> {
         self.vomited_tokens.0.alloc(of)
     }
 
-    pub fn get_code(&self, item: ItemId<'x>, context: ItemId<'x>) -> Token {
+    pub fn get_code(&self, item: ConstructId<'x>, context: ConstructId<'x>) -> Token {
         let item = self.items[item].cached_reduction.unwrap_or(item);
         match self.get_definition(item).clone() {
             Definition::BuiltinOperation(op, args) => {
@@ -270,11 +270,11 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn dereference(&self, item: ItemId<'x>, context: ItemId<'x>) -> ItemId<'x> {
+    fn dereference(&self, item: ConstructId<'x>, context: ConstructId<'x>) -> ConstructId<'x> {
         let mut item = item;
         while let Definition::Unresolved(Token::Item(other))
         | Definition::SetEager { base: other, .. } =
-            self.items[item].definition.as_ref().unwrap()
+            self.items[item].base.as_ref().unwrap()
         {
             item = *other;
         }
@@ -286,13 +286,13 @@ impl<'x> Environment<'x> {
         item
     }
 
-    pub fn get_name(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<Token> {
+    pub fn get_name(&self, of: ConstructId<'x>, context: ConstructId<'x>) -> Option<Token> {
         let of = self.dereference(of, context);
         self.get_name_impl(of, context)
     }
 
-    pub fn get_name_impl(&self, of: ItemId<'x>, context: ItemId<'x>) -> Option<Token> {
-        let all_context_parents: HashSet<ItemId<'x>> = self
+    pub fn get_name_impl(&self, of: ConstructId<'x>, context: ConstructId<'x>) -> Option<Token> {
+        let all_context_parents: HashSet<ConstructId<'x>> = self
             .get_paths(context, context)
             .into_iter()
             .map(|p| p[0].0)
@@ -315,10 +315,10 @@ impl<'x> Environment<'x> {
         })
     }
 
-    fn get_parents(&self, of: ItemId<'x>, context: ItemId<'x>) -> Parents<'x> {
+    fn get_parents(&self, of: ConstructId<'x>, context: ConstructId<'x>) -> Parents<'x> {
         let mut parents = Parents::new();
         for (candidate_id, candidate) in &self.items {
-            if let Definition::Struct(fields) = candidate.definition.as_ref().unwrap() {
+            if let Definition::Struct(fields) = candidate.base.as_ref().unwrap() {
                 self.note_occurences_of_item(&mut parents, of, context, candidate_id, &fields[..]);
             }
         }
@@ -328,9 +328,9 @@ impl<'x> Environment<'x> {
     fn note_occurences_of_item(
         &self,
         parents: &mut Parents<'x>,
-        item: ItemId<'x>,
-        context: ItemId<'x>,
-        struct_id: ItemId<'x>,
+        item: ConstructId<'x>,
+        context: ConstructId<'x>,
+        struct_id: ConstructId<'x>,
         fields: &[StructField],
     ) {
         let item = self.dereference(item, context);
@@ -345,7 +345,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn get_paths(&self, item: ItemId<'x>, context: ItemId<'x>) -> Vec<Path<'x>> {
+    fn get_paths(&self, item: ConstructId<'x>, context: ConstructId<'x>) -> Vec<Path<'x>> {
         let mut result = vec![];
         for parent in self.get_parents(item, context) {
             result.push(vec![parent.clone()]);
