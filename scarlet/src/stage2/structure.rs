@@ -123,6 +123,14 @@ impl<'x> Token<'x> {
             panic!("Expected a plain token, got {:?} instead", self)
         }
     }
+
+    pub fn unwrap_stream(&self) -> &TokenStream<'x> {
+        if let Self::Stream { contents, .. } = self {
+            contents
+        } else {
+            panic!("Expected a stream token, got {:?} instead", self)
+        }
+    }
 }
 
 impl<'x> Debug for Token<'x> {

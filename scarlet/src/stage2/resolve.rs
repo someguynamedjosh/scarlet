@@ -35,9 +35,8 @@ impl<'x> Environment<'x> {
                     let mut context = ApplyContext {
                         env: self,
                         parent_scope: None,
-                        to: &mut contents,
                     };
-                    transform::apply_transformers(&mut context, &Default::default());
+                    transform::apply_transformers(&mut context, &mut contents, &Default::default());
                     assert_eq!(
                         contents.len(),
                         1,

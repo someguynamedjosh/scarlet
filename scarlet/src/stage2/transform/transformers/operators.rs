@@ -1,36 +1,33 @@
 use crate::stage2::{
     structure::{BuiltinOperation, Definition, Token, VarType},
-    transform::basics::{ApplyContext, Transformer, TransformerResult},
+    transform::{
+        basics::{ApplyContext, Transformer, TransformerResult},
+        pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
+    },
 };
 
 macro_rules! binary_operator {
     ($StructName:ident, $internal_name:expr, $operator:expr) => {
-        compound_binary_operator!($StructName, $internal_name, &[$operator]);
-    };
-}
-
-macro_rules! compound_binary_operator {
-    ($StructName:ident, $internal_name:expr, $operator:expr) => {
         pub struct $StructName;
         impl Transformer for $StructName {
-            fn should_be_applied_at<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> bool {
-                for (index, token) in $operator.iter().enumerate() {
-                    if &c.to[at + index] != &Token::Plain(token) {
-                        return false;
-                    }
-                }
-                true
+            fn pattern(&self) -> Box<dyn Pattern> {
+                Box::new((
+                    PatCaptureAny { key: "left" },
+                    $operator,
+                    PatCaptureAny { key: "right" },
+                ))
             }
 
-            fn apply<'t>(&self, c: &mut ApplyContext<'_, 't>, at: usize) -> TransformerResult<'t> {
-                let left = c.push_token(c.to[at - 1].clone());
-                let right = c.push_token(c.to[at + $operator.len()].clone());
+            fn apply<'t>(
+                &self,
+                c: &mut ApplyContext<'_, 't>,
+                success: PatternMatchSuccess<'t>,
+            ) -> TransformerResult<'t> {
+                let left = c.push_token(success.get_capture("left").clone());
+                let right = c.push_token(success.get_capture("right").clone());
                 let result = Definition::BuiltinOperation($internal_name, vec![left, right]);
                 let result = c.env.push_def(result);
-                TransformerResult {
-                    replace_range: at - 1..=at + $operator.len(),
-                    with: Token::Item(result),
-                }
+                TransformerResult(Token::Item(result))
             }
         }
     };
@@ -44,13 +41,13 @@ binary_operator!(Minus, BuiltinOperation::Difference32U, "-");
 binary_operator!(Modulo, BuiltinOperation::Modulo32U, "mod");
 
 binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, ">");
-compound_binary_operator!(
+binary_operator!(
     GreaterThanOrEqual,
     BuiltinOperation::GreaterThanOrEqual32U,
-    &[">", "="]
+    (PatPlain(">"), PatPlain("="))
 );
 binary_operator!(LessThan, BuiltinOperation::LessThan32U, "<");
-compound_binary_operator!(
+binary_operator!(
     LessThanOrEqual,
     BuiltinOperation::LessThanOrEqual32U,
     &["<", "="]
