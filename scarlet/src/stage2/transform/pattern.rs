@@ -1,4 +1,4 @@
-use std::{collections::HashMap, marker::PhantomData, ops::RangeInclusive, slice::SliceIndex};
+use std::{collections::HashMap, ops::RangeInclusive, slice::SliceIndex};
 
 use crate::stage2::structure::Token;
 

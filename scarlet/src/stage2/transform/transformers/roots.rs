@@ -7,7 +7,6 @@ use crate::{
         transform::{
             apply,
             basics::{Transformer, TransformerResult},
-            helpers,
             pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
             transformers::operators::Is,
             ApplyContext,

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::RangeInclusive};
+use std::collections::HashMap;
 
 use super::pattern::{Pattern, PatternMatchSuccess};
 use crate::stage2::structure::{Definition, Environment, ItemId, Token, VarType};

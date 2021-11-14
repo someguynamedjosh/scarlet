@@ -3,7 +3,6 @@ use crate::stage2::{
     transform::{
         apply,
         basics::{ApplyContext, Extras, Transformer, TransformerResult},
-        helpers,
         pattern::{
             PatCaptureAny, PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess,
         },
