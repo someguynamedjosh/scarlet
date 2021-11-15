@@ -33,7 +33,7 @@ impl<T, const C: char> Pool<T, C> {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (Id<T, C>, &T)> {
+    pub fn iter(&self) -> impl Iterator<Item = (Id<C>, &T)> {
         self.into_iter()
     }
 

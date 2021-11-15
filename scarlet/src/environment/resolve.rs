@@ -4,7 +4,7 @@ use super::{BoxedConstruct, ConstructDefinition, ConstructId, Environment};
 use crate::{environment::resolve::transform::ApplyContext, tokens::structure::Token};
 
 impl<'x> Environment<'x> {
-    pub fn resolve(&mut self, con_id: ConstructId<'x>) -> ConstructId<'x> {
+    pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
         let con = &self.constructs[con_id];
         if let ConstructDefinition::Unresolved(token) = &con.definition {
             if let Token::Construct(con_id) = token {

@@ -2,12 +2,14 @@ use itertools::Itertools;
 use maplit::hashmap;
 
 use crate::{
+    constructs::variable::VarType,
     environment::resolve::transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
         pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
     },
     tfers,
+    tokens::structure::Token,
 };
 
 pub struct SubExpression;
@@ -79,42 +81,39 @@ impl Transformer for SubExpression {
 //     }
 // }
 
-// pub struct Builtin;
-// impl Transformer for Builtin {
-//     fn pattern(&self) -> Box<dyn Pattern> {
-//         Box::new((
-//             PatPlain("Builtin"),
-//             PatCaptureStream {
-//                 key: "args",
-//                 label: "group()",
-//             },
-//         ))
-//     }
+pub struct Builtin;
+impl Transformer for Builtin {
+    fn pattern(&self) -> Box<dyn Pattern> {
+        Box::new((
+            PatPlain("BUILTIN"),
+            PatCaptureStream {
+                key: "args",
+                label: "group{}",
+            },
+        ))
+    }
 
-//     fn apply<'t>(
-//         &self,
-//         c: &mut ApplyContext<'_, 't>,
-//         success: PatternMatchSuccess<'_, 't>,
-//     ) -> TransformerResult<'t> {
-//         let mut body = success.get_capture("args").unwrap_stream().clone();
-//         assert!(body.len() >= 1);
-//         let name = body.remove(0).unwrap_plain();
-//         apply::apply_transformers(c, &mut body, &Default::default());
-//         let item = match name {
-//             "PATTERN" => c.env.push_var(VarType::God),
-//             "BOOL" => c.env.push_var(VarType::Bool),
-//             "32U" => c.env.push_var(VarType::_32U),
-//             "ARRAY" => {
-//                 let length = c.push_token(body.remove(0));
-//                 let element_type = c.push_token(body.remove(0));
-//                 let typee = VarType::Array {
-//                     length,
-//                     element_type,
-//                 };
-//                 c.env.push_var(typee)
-//             }
-//             other => todo!("Nice error, unrecognized builtin {}", other),
-//         };
-//         TransformerResult(Token::Item(item))
-//     }
-// }
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let mut body = success.get_capture("args").unwrap_stream().clone();
+        assert!(body.len() >= 1);
+        let name = body.remove(0).unwrap_plain();
+        apply::apply_transformers(c, &mut body, &Default::default());
+        let con = match name {
+            "anything" => c.push_var(VarType::Anything, false),
+            "bool" => c.push_var(VarType::Bool, false),
+            "32u" => c.push_var(VarType::_32U, false),
+            "array" => {
+                let length = c.push_unresolved(body.remove(0));
+                let eltype = c.push_unresolved(body.remove(0));
+                let typee = VarType::Array { length, eltype };
+                c.push_var(typee, false)
+            }
+            other => todo!("Nice error, unrecognized builtin {}", other),
+        };
+        TransformerResult(Token::Construct(con))
+    }
+}

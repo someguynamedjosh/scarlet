@@ -1,16 +1,17 @@
-{
-    PATTERN is Builtin(PATTERN)
-    BOOL is Builtin(BOOL)
-    32U is Builtin(32U)
+BUILTIN{anything}
+# {
+#     PATTERN is Builtin(PATTERN)
+#     BOOL is Builtin(BOOL)
+#     32U is Builtin(32U)
 
-    # length is 32U.V.Eager(All)
-    # element_type is PATTERN.V.Eager(All)
-    # ARRAY is Builtin(ARRAY length element_type)
+#     # length is 32U.V.Eager(All)
+#     # element_type is PATTERN.V.Eager(All)
+#     # ARRAY is Builtin(ARRAY length element_type)
 
-    # ARRAY(123).Shown
+#     # ARRAY(123).Shown
 
-    condition is BOOL.V.E(All)
-    THEOREM is condition AND true
+#     condition is BOOL.V.E(All)
+#     THEOREM is condition AND true
 
-    THEOREM(1 > 2).S
-}
+#     THEOREM(1 > 2).S
+# }

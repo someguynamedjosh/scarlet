@@ -1,12 +1,12 @@
 use std::fmt::{self, Debug, Formatter};
 
-use crate::{environment::ConstructId, shared};
+use crate::{constructs::base::ConstructId, shared};
 
 pub type TokenStream<'x> = Vec<Token<'x>>;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum Token<'x> {
-    Construct(ConstructId<'x>),
+    Construct(ConstructId),
     Plain(&'x str),
     Stream {
         label: &'x str,
@@ -15,7 +15,7 @@ pub enum Token<'x> {
 }
 
 impl<'x> Token<'x> {
-    pub fn unwrap_construct(&self) -> ConstructId<'x> {
+    pub fn unwrap_construct(&self) -> ConstructId {
         if let Self::Construct(con) = self {
             *con
         } else {

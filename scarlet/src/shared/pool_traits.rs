@@ -58,7 +58,7 @@ fn map_index_to_id<'a, T, const C: char>(
     pool_id: u64,
     (index, value): (usize, &'a T),
 ) -> (Id<C>, &'a T) {
-    let id = unsafe { Pool::id_from_index(pool_id, index) };
+    let id = unsafe { Pool::<T, C>::id_from_index(pool_id, index) };
     (id, value)
 }
 
@@ -77,7 +77,7 @@ fn map_index_to_id_mut<'a, T, const C: char>(
     pool_id: u64,
     (index, value): (usize, &'a mut T),
 ) -> (Id<C>, &'a mut T) {
-    let id = unsafe { Pool::id_from_index(pool_id, index) };
+    let id = unsafe { Pool::<T, C>::id_from_index(pool_id, index) };
     (id, value)
 }
 

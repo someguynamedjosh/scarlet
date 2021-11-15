@@ -1,6 +1,9 @@
 use super::basics::{Extras, Precedence, SomeTransformer};
 use crate::{
-    environment::resolve::transform::{basics::Transformer, transformers::roots::SubExpression},
+    environment::resolve::transform::{
+        basics::Transformer,
+        transformers::roots::{Builtin, SubExpression},
+    },
     shared::OwnedOrBorrowed,
     tfers,
 };
@@ -10,7 +13,7 @@ pub fn build_transformers<'e>(
     extras: &'e Extras<'e>,
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
-        10 => tfers![SubExpression], //, Struct, Builtin],
+        10 => tfers![SubExpression, Builtin], //, Struct, Builtin],
         // 20 => tfers![
         //     Matched,
         //     Variable,
