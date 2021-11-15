@@ -1,7 +1,7 @@
 mod transform;
 
 use super::{BoxedConstruct, ConstructDefinition, ConstructId, Environment};
-use crate::tokens::structure::Token;
+use crate::{environment::resolve::transform::ApplyContext, tokens::structure::Token};
 
 impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId<'x>) -> ConstructId<'x> {
@@ -12,22 +12,31 @@ impl<'x> Environment<'x> {
             } else {
                 let token = token.clone();
                 let new_def = self.resolve_token(token);
-                self.constructs[con_id].definition = ConstructDefinition::Resolved(new_def);
-                con_id
+                self.constructs[con_id].definition = new_def;
+                self.resolve(con_id)
             }
         } else {
             con_id
         }
     }
 
-    fn resolve_token(&mut self, token: Token<'x>) -> BoxedConstruct<'x> {
+    fn resolve_token(&mut self, token: Token<'x>) -> ConstructDefinition<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => todo!(),
             Token::Stream {
                 label: "construct_syntax",
                 contents,
-            } => todo!(),
+            } => {
+                let mut context = ApplyContext {
+                    env: self,
+                    parent_scope: None,
+                };
+                let mut contents = contents;
+                transform::apply_transformers(&mut context, &mut contents, &Default::default());
+                assert_eq!(contents.len(), 1);
+                ConstructDefinition::Unresolved(contents.into_iter().next().unwrap())
+            }
             Token::Stream { label, .. } => todo!(
                 "Nice error, token stream with label '{:?}' cannot be resolved",
                 label

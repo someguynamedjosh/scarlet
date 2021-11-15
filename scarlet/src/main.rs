@@ -11,13 +11,21 @@ mod util;
 mod environment;
 mod constructs;
 
+use crate::environment::Environment;
+
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
     let root = file_tree::read_root(&path).unwrap();
-    let tokens = tokens::ingest(&root);
-    println!("{:#?}", tokens);
+    let root = tokens::ingest(&root);
+    println!("{:#?}", root);
+
+    let mut env = Environment::new();
+    let root = env.push_unresolved(root.self_content.clone());
+    let root = env.resolve(root);
+    println!("{:#?}", env);
+    println!("Root: {:?}", root);
 
     // let (stage2, _s2_root) = stage2::ingest(&tokens);
     // // println!("{:#?}", stage2);

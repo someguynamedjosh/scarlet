@@ -21,6 +21,7 @@ pub struct AnnotatedConstruct<'x> {
 
 pub type ConstructId<'x> = Id<AnnotatedConstruct<'x>, 'C'>;
 
+#[derive(Debug)]
 pub struct Environment<'x> {
     constructs: Pool<AnnotatedConstruct<'x>, 'C'>,
 }

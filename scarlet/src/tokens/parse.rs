@@ -56,7 +56,7 @@ fn parse<'a>() -> impl Parser<'a, TokenStream<'a>> {
 pub fn ingest(file_tree: &FileNode) -> Module {
     let (remainder, self_content) = parse()(&file_tree.self_content).unwrap();
     let self_content = Token::Stream {
-        label: "syntax_root",
+        label: "construct_syntax",
         contents: self_content,
     };
     if remainder.len() > 0 {

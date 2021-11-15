@@ -15,6 +15,14 @@ pub enum Token<'x> {
 }
 
 impl<'x> Token<'x> {
+    pub fn unwrap_construct(&self) -> ConstructId<'x> {
+        if let Self::Construct(con) = self {
+            *con
+        } else {
+            panic!("Expected a construct token, got {:?} instead", self)
+        }
+    }
+
     pub fn unwrap_plain(&self) -> &'x str {
         if let Self::Plain(plain) = self {
             *plain
