@@ -2,14 +2,13 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
-use crate::stage2::{
-    construct::{Construct, Substitutions},
-    dependencies::DepQueryResult,
-    structure::{ConstructId, Environment},
-};
+use super::Substitutions;
+use crate::stage2::{construct::Construct, dependencies::DepQueryResult, structure::{ConstructId, Environment, VarType, VariableId}};
 
+#[derive(Debug)]
 pub struct CVariable<'x> {
-    __: &'x (),
+    pub var: VariableId<'x>,
+    pub typee: VarType<'x>,
 }
 
 impl<'x> Construct<'x> for CVariable<'x> {

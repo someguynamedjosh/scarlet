@@ -1,6 +1,7 @@
 use crate::stage2::{
+    construct::constructs::Substitutions,
     dependencies::structures::DepQueryResult,
-    structure::{Condition, Environment, ConstructId, Substitutions},
+    structure::{Condition, ConstructId, Environment},
 };
 
 impl<'x> Environment<'x> {

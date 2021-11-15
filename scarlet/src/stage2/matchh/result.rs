@@ -1,4 +1,7 @@
-use crate::stage2::structure::{ConstructId, Substitutions, VariableId};
+use crate::stage2::{
+    construct::constructs::Substitutions,
+    structure::{ConstructId, VariableId},
+};
 
 #[derive(Clone, Debug)]
 pub enum MatchResult<'x> {
@@ -27,7 +30,7 @@ impl<'x> MatchResult<'x> {
     pub fn keeping_only_eager_subs(self, eager_vars: &[VariableId<'x>]) -> Self {
         match self {
             Self::Match(subs) => {
-                let mut new_subs = Substitutions::new();
+                let mut new_subs = crate::stage2::construct::constructs::Substitutions::new();
                 for sub in subs {
                     if eager_vars.contains(&sub.0) {
                         new_subs.insert_no_replace(sub.0, sub.1);
@@ -40,11 +43,11 @@ impl<'x> MatchResult<'x> {
     }
 
     pub fn non_capturing() -> Self {
-        Match(Substitutions::new())
+        Match(crate::stage2::construct::constructs::Substitutions::new())
     }
 
     pub fn and(results: Vec<Self>) -> Self {
-        let mut subs = Substitutions::new();
+        let mut subs = crate::stage2::construct::constructs::Substitutions::new();
         let mut unknown = false;
         for result in results {
             match result {

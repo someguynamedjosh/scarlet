@@ -16,7 +16,7 @@ impl SpecialMember for Shown {
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = c.push_def(Definition::Unresolved(base));
+        let base = c.push_con(Definition::Unresolved(base));
         c.env.items[base].shown_from.push(base);
         Token::Item(base)
     }

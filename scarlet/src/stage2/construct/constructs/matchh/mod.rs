@@ -2,12 +2,14 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
+use super::Substitutions;
 use crate::stage2::{
-    construct::{Construct, Substitutions},
+    construct::Construct,
     dependencies::DepQueryResult,
     structure::{ConstructId, Environment},
 };
 
+#[derive(Debug)]
 pub struct CMatch<'x> {
     __: &'x (),
 }

@@ -66,7 +66,7 @@ impl SpecialMember for Matched {
             conditions,
             else_value,
         };
-        let item = c.push_def(def);
+        let item = c.push_con(def);
         Token::Item(item)
     }
 }

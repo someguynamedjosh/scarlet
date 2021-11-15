@@ -35,7 +35,7 @@ impl SpecialMember for Eager {
             all,
             eager: true,
         };
-        let item = c.push_def(def);
+        let item = c.push_con(def);
         Token::Item(item)
     }
 }

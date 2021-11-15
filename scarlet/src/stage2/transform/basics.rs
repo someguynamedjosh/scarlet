@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::pattern::{Pattern, PatternMatchSuccess};
-use crate::stage2::structure::{Definition, Environment, ConstructId, Token, VarType};
+use crate::stage2::{construct::{Construct, constructs::CUnresolved}, structure::{ConstructId, Environment, Token, VarType}};
 
 pub struct TransformerResult<'t>(pub Token<'t>);
 
@@ -30,8 +30,8 @@ impl<'a, 't> ApplyContext<'a, 't> {
         item
     }
 
-    pub fn push_def(&mut self, def: Definition<'t>) -> ConstructId<'t> {
-        let item = self.env.push_def(def);
+    pub fn push_con(&mut self, con: impl Construct<'t>) -> ConstructId<'t> {
+        let item = self.env.push_con(con);
         self.env.items[item].parent_scope = self.parent_scope;
         item
     }
@@ -40,7 +40,7 @@ impl<'a, 't> ApplyContext<'a, 't> {
         let item = self.env.push_token(token);
         let existing_scope = self.env.items[item].parent_scope;
         if existing_scope.is_some() && existing_scope != self.parent_scope {
-            self.push_def(Definition::Unresolved(Token::Item(item)))
+            self.push_con(CUnresolved(Token::Item(item)))
         } else {
             self.env.items[item].parent_scope = self.parent_scope;
             item

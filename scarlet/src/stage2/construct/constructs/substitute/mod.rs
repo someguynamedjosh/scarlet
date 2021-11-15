@@ -2,15 +2,19 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
-use crate::stage2::{
-    construct::{Construct, Substitutions},
-    dependencies::DepQueryResult,
-    structure::{ConstructId, Environment},
+use crate::{
+    shared::OrderedMap,
+    stage2::{
+        construct::Construct,
+        dependencies::DepQueryResult,
+        structure::{ConstructId, Environment, VariableId},
+    },
 };
 
-pub struct CSubstitute<'x> {
-    __: &'x (),
-}
+pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ConstructId<'x>>;
+
+#[derive(Debug)]
+pub struct CSubstitute<'x>(pub ConstructId<'x>, pub Substitutions<'x>);
 
 impl<'x> Construct<'x> for CSubstitute<'x> {
     fn dependencies(

@@ -2,15 +2,21 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
+use super::Substitutions;
 use crate::stage2::{
-    construct::{Construct, Substitutions},
+    construct::Construct,
     dependencies::DepQueryResult,
     structure::{ConstructId, Environment},
 };
 
-pub struct CStruct<'x> {
-    __: &'x (),
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct StructField<'x> {
+    pub name: Option<&'x str>,
+    pub value: ConstructId<'x>,
 }
+
+#[derive(Debug)]
+pub struct CStruct<'x>(pub Vec<StructField<'x>>);
 
 impl<'x> Construct<'x> for CStruct<'x> {
     fn dependencies(

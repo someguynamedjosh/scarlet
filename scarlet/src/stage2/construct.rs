@@ -1,7 +1,8 @@
 pub mod constructs;
 
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 
+use self::constructs::Substitutions;
 use super::{
     dependencies::DepQueryResult,
     matchh::MatchResult,
@@ -27,11 +28,11 @@ impl<'x> From<BasicVarType<'x>> for FullVarType<'x> {
     }
 }
 
-pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ConstructId<'x>>;
-
 pub fn vt_just<'x>(item: ConstructId<'x>) -> FullVarType<'x> {
     FullVarType::Basic(BasicVarType::Just(item))
 }
+
+pub type BoxedConstruct<'x> = Box<dyn Construct<'x> + 'x>;
 
 pub trait Construct<'x>: Debug {
     fn dependencies(
@@ -39,6 +40,8 @@ pub trait Construct<'x>: Debug {
         env: &mut Environment<'x>,
         num_struct_unwraps: u32,
     ) -> DepQueryResult<'x>;
+
+    fn eq(&self, other: &(dyn Construct<'x> + 'x)) -> bool;
 
     fn reduce(&self, self_id: ConstructId<'x>, env: &mut Environment<'x>) -> ConstructId<'x>;
 

@@ -3,7 +3,8 @@ use maplit::hashmap;
 
 use crate::{
     stage2::{
-        structure::{Definition, StructField, Token, VarType},
+        construct::constructs::{CStruct, StructField},
+        structure::{Definition, Token, VarType},
         transform::{
             apply,
             basics::{Transformer, TransformerResult},
@@ -77,8 +78,8 @@ impl Transformer for Struct {
                 }
             })
             .collect_vec();
-        let def = Definition::Struct(fields);
-        c.env.items[item].base = Some(def);
+        let def = CStruct(fields);
+        c.env.items[item].definition = Some(Box::new(def));
         c.env.check(item);
         TransformerResult(Token::Item(item))
     }

@@ -2,8 +2,9 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
+use super::Substitutions;
 use crate::stage2::{
-    construct::{BasicVarType, Construct, FullVarType, Substitutions},
+    construct::{BasicVarType, Construct, FullVarType},
     dependencies::DepQueryResult,
     matchh::MatchResult,
     structure::{ConstructId, Environment},
@@ -24,11 +25,11 @@ pub enum Operation {
     GreaterThanOrEqual32U,
 }
 
+#[derive(Debug)]
 pub struct COperation<'x> {
     op: Operation,
     args: Vec<ConstructId<'x>>,
 }
-
 
 impl<'x> Construct<'x> for COperation<'x> {
     fn dependencies(

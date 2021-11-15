@@ -2,17 +2,17 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
+use super::Substitutions;
 use crate::stage2::{
-    construct::{Construct, Substitutions},
+    construct::Construct,
     dependencies::DepQueryResult,
-    structure::{ConstructId, Environment},
+    structure::{BuiltinValue, ConstructId, Environment},
 };
 
-pub struct CBuiltinValue<'x> {
-    __: &'x (),
-}
+#[derive(Debug)]
+pub struct CBuiltinValue(pub BuiltinValue);
 
-impl<'x> Construct<'x> for CBuiltinValue<'x> {
+impl<'x> Construct<'x> for CBuiltinValue {
     fn dependencies(
         &self,
         env: &mut Environment<'x>,

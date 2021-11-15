@@ -1,6 +1,6 @@
 use super::CSubstitute;
 use crate::stage2::{
-    construct::Substitutions,
+    construct::constructs::Substitutions,
     structure::{ConstructId, Environment},
 };
 

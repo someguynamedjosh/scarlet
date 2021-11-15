@@ -1,6 +1,6 @@
 use super::COperation;
 use crate::stage2::{
-    construct::Substitutions,
+    construct::constructs::Substitutions,
     structure::{ConstructId, Environment},
 };
 

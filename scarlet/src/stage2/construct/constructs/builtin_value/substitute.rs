@@ -1,11 +1,11 @@
 use super::CBuiltinValue;
 use crate::stage2::{
-    construct::Substitutions,
+    construct::constructs::Substitutions,
     structure::{ConstructId, Environment},
 };
 
 pub fn implementation<'x>(
-    this: &CBuiltinValue<'x>,
+    this: &CBuiltinValue,
     substitutions: &Substitutions<'x>,
     env: &mut Environment<'x>,
 ) -> ConstructId<'x> {

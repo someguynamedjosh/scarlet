@@ -33,6 +33,6 @@ impl SpecialMember for MemberAtIndex {
                 proof_lt_len,
             },
         );
-        Token::Item(c.push_def(def))
+        Token::Item(c.push_con(def))
     }
 }

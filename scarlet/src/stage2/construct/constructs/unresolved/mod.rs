@@ -2,15 +2,15 @@ mod dependencies;
 mod reduce;
 mod substitute;
 
+use super::Substitutions;
 use crate::stage2::{
-    construct::{Construct, Substitutions},
+    construct::Construct,
     dependencies::DepQueryResult,
-    structure::{ConstructId, Environment},
+    structure::{ConstructId, Environment, Token},
 };
 
-pub struct CUnresolved<'x> {
-    __: &'x (),
-}
+#[derive(Debug)]
+pub struct CUnresolved<'x>(pub Token<'x>);
 
 impl<'x> Construct<'x> for CUnresolved<'x> {
     fn dependencies(

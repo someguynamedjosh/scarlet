@@ -12,12 +12,6 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct StructField<'x> {
-    pub name: Option<&'x str>,
-    pub value: ConstructId<'x>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Condition<'x> {
     pub pattern: ConstructId<'x>,
     pub value: ConstructId<'x>,
@@ -93,8 +87,6 @@ pub struct VariableInfo<'x> {
     pub eager: bool,
 }
 
-pub type Substitutions<'x> = OrderedMap<VariableId<'x>, ConstructId<'x>>;
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Member<'x> {
     Named(String),
@@ -148,31 +140,6 @@ impl<'x> Debug for Token<'x> {
             }
         }
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum Definition<'x> {
-    BuiltinOperation(BuiltinOperation, Vec<ConstructId<'x>>),
-    BuiltinValue(BuiltinValue),
-    Match {
-        base: ConstructId<'x>,
-        conditions: Vec<Condition<'x>>,
-        else_value: ConstructId<'x>,
-    },
-    Member(ConstructId<'x>, Member<'x>),
-    Unresolved(Token<'x>),
-    SetEager {
-        base: ConstructId<'x>,
-        vals: Vec<ConstructId<'x>>,
-        all: bool,
-        eager: bool,
-    },
-    Struct(Vec<StructField<'x>>),
-    Substitute(ConstructId<'x>, Substitutions<'x>),
-    Variable {
-        var: VariableId<'x>,
-        typee: VarType<'x>,
-    },
 }
 
 pub struct WrappedArena<T>(pub Arena<T>);
@@ -234,7 +201,7 @@ impl<'x> Environment<'x> {
 pub type ConstructId<'x> = Id<AnnotatedConstruct<'x>, 'I'>;
 #[derive(Debug)]
 pub struct AnnotatedConstruct<'x> {
-    pub definition: Option<Box<dyn Construct<'x>>>,
+    pub definition: Option<Box<dyn Construct<'x> + 'x>>,
     pub parent_scope: Option<ConstructId<'x>>,
     /// The variables this item's definition is dependent on.
     pub dependencies: Option<OrderedSet<VariableInfo<'x>>>,

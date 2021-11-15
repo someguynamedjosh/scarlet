@@ -1,11 +1,15 @@
 use itertools::Itertools;
 
-use super::structure::Substitutions;
+use super::construct::{
+    constructs::{CBuiltinValue, CSubstitute, Substitutions},
+    BoxedConstruct, Construct,
+};
 use crate::{
     shared::OrderedSet,
     stage2::{
+        construct::constructs::CUnresolved,
         matchh::MatchResult,
-        structure::{BuiltinValue, Definition, Environment, ConstructId, Token, VariableInfo},
+        structure::{BuiltinValue, ConstructId, Environment, Token, VariableInfo},
         transform::{self, ApplyContext},
     },
 };
@@ -13,67 +17,24 @@ use crate::{
 impl<'x> Environment<'x> {
     pub(super) fn resolve(&mut self, item: ConstructId<'x>) -> ConstructId<'x> {
         let parent_scope = self.items[item].parent_scope;
-        if let Definition::Unresolved(token) = self.get_definition(item) {
-            let new_def = match token {
-                Token::Stream {
-                    label: "substitute",
-                    contents,
-                } => {
-                    let mut contents = contents.clone();
-                    let base = contents.remove(0);
-                    let base = self.push_token(base);
-                    self.items[base].parent_scope = parent_scope;
-                    let mut subs = contents;
-                    let new_subs = self.resolve_targets_in_sub(base, &mut subs, parent_scope);
-                    Definition::Substitute(base, new_subs)
-                }
-                Token::Stream {
-                    label: "syntax_root",
-                    contents,
-                } => {
-                    let mut contents = contents.clone();
-                    let mut context = ApplyContext {
-                        env: self,
-                        parent_scope: None,
-                    };
-                    transform::apply_transformers(&mut context, &mut contents, &Default::default());
-                    assert_eq!(
-                        contents.len(),
-                        1,
-                        "Nice error, expected a single expression."
-                    );
-                    Definition::Unresolved(contents.into_iter().next().unwrap())
-                }
-                Token::Item(other) => return *other,
-                Token::Plain(plain) => {
-                    let plain = *plain;
-                    self.resolve_plain_token(item, plain)
-                }
-                other => {
-                    println!("{:#?}", self);
-                    todo!("Nice error, cannot convert {:?} into an item", other)
-                }
-            };
-            self.items[item].base = Some(new_def);
-            self.check(item);
-        }
-        item
+        todo!()
     }
 
-    fn resolve_plain_token(&mut self, item: ConstructId<'x>, plain: &str) -> Definition<'x> {
+    fn resolve_plain_token(&mut self, item: ConstructId<'x>, plain: &str) -> BoxedConstruct<'x> {
         if let Ok(int) = plain.parse::<u32>() {
-            Definition::BuiltinValue(BuiltinValue::_32U(int))
+            Box::new(CBuiltinValue(BuiltinValue::_32U(int)))
         } else if plain == "true" {
-            Definition::BuiltinValue(BuiltinValue::Bool(true))
+            Box::new(CBuiltinValue(BuiltinValue::Bool(true)))
         } else if plain == "false" {
-            Definition::BuiltinValue(BuiltinValue::Bool(false))
+            Box::new(CBuiltinValue(BuiltinValue::Bool(false)))
         } else {
             let mut maybe_scope = self.items[item].parent_scope;
             while let Some(scope) = maybe_scope {
-                if let Some(result) = self.get_member(scope, plain) {
-                    return Definition::Unresolved(Token::Item(result));
-                }
-                maybe_scope = self.items[scope].parent_scope;
+                todo!()
+                // if let Some(result) = self.get_member(scope, plain) {
+                //     return Box::new(CUnresolved(Token::Item(result)));
+                // }
+                // maybe_scope = self.items[scope].parent_scope;
             }
             println!("{:#?}\n{:?}", self, item);
             todo!("Nice error, bad ident {}", plain)
@@ -86,7 +47,7 @@ impl<'x> Environment<'x> {
         subs: &mut [Token<'x>],
         parent_scope: Option<ConstructId<'x>>,
     ) -> Substitutions<'x> {
-        let mut new_subs = Substitutions::new();
+        let mut new_subs = super::construct::constructs::Substitutions::new();
         let mut deps = self.get_deps(base);
         for sub in &mut *subs {
             if let Token::Stream {
@@ -140,7 +101,8 @@ impl<'x> Environment<'x> {
         //         resolved_target = *value;
         //     }
         // }
-        let resolved_target = self.substitute(resolved_target, new_subs).unwrap();
+        todo!();
+        // let resolved_target = self.substitute(resolved_target, new_subs).unwrap();
         match self.matches(value, resolved_target) {
             MatchResult::Match(subs) => {
                 for &(target, _) in &subs {
@@ -171,7 +133,7 @@ impl<'x> Environment<'x> {
     ) -> Substitutions<'x> {
         for (dep, _) in &*deps {
             let _dep = *dep;
-            let subbed_dep = self.substitute(dep.var_item, previous_subs).unwrap();
+            let subbed_dep = todo!(); //self.substitute(dep.var_item, previous_subs).unwrap();
             let subbed_dep = self.reduce(subbed_dep);
             let value = self.reduce(value);
             let result = self.matches(value, subbed_dep);

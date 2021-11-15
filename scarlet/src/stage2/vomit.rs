@@ -274,7 +274,7 @@ impl<'x> Environment<'x> {
         let mut item = item;
         while let Definition::Unresolved(Token::Item(other))
         | Definition::SetEager { base: other, .. } =
-            self.items[item].base.as_ref().unwrap()
+            self.items[item].definition.as_ref().unwrap()
         {
             item = *other;
         }
@@ -318,7 +318,7 @@ impl<'x> Environment<'x> {
     fn get_parents(&self, of: ConstructId<'x>, context: ConstructId<'x>) -> Parents<'x> {
         let mut parents = Parents::new();
         for (candidate_id, candidate) in &self.items {
-            if let Definition::Struct(fields) = candidate.base.as_ref().unwrap() {
+            if let Definition::Struct(fields) = candidate.definition.as_ref().unwrap() {
                 self.note_occurences_of_item(&mut parents, of, context, candidate_id, &fields[..]);
             }
         }
@@ -331,7 +331,7 @@ impl<'x> Environment<'x> {
         item: ConstructId<'x>,
         context: ConstructId<'x>,
         struct_id: ConstructId<'x>,
-        fields: &[StructField],
+        fields: &[StructField<'x>],
     ) {
         let item = self.dereference(item, context);
         let mut index = 0;
