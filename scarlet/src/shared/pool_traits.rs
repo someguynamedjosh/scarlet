@@ -29,36 +29,27 @@ impl<T: Debug, const C: char> Debug for Pool<T, C> {
     }
 }
 
-impl<T, const C: char> Index<Id<T, C>> for Pool<T, C> {
+impl<T, const C: char> Index<Id<C>> for Pool<T, C> {
     type Output = T;
 
-    fn index(&self, index: Id<T, C>) -> &T {
+    fn index(&self, index: Id<C>) -> &T {
         self.get(index)
     }
 }
 
-impl<T, const C: char> IndexMut<Id<T, C>> for Pool<T, C> {
-    fn index_mut(&mut self, index: Id<T, C>) -> &mut Self::Output {
+impl<T, const C: char> IndexMut<Id<C>> for Pool<T, C> {
+    fn index_mut(&mut self, index: Id<C>) -> &mut Self::Output {
         self.get_mut(index)
     }
 }
 
 impl<T, const C: char> IntoIterator for Pool<T, C> {
-    type IntoIter = Map<Enumerate<IntoIter<T>>, Box<dyn Fn((usize, T)) -> (Id<T, C>, T)>>;
-    type Item = (Id<T, C>, T);
+    type IntoIter = Map<Enumerate<IntoIter<T>>, Box<dyn Fn((usize, T)) -> (Id<C>, T)>>;
+    type Item = (Id<C>, T);
 
     fn into_iter(self) -> Self::IntoIter {
         let pool_id = self.id;
-        let mapper = move |(index, element)| {
-            (
-                Id {
-                    index,
-                    pool_id,
-                    _pd: PhantomData,
-                },
-                element,
-            )
-        };
+        let mapper = move |(index, element)| (Id { index, pool_id }, element);
         self.items.into_iter().enumerate().map(Box::new(mapper))
     }
 }
@@ -66,14 +57,14 @@ impl<T, const C: char> IntoIterator for Pool<T, C> {
 fn map_index_to_id<'a, T, const C: char>(
     pool_id: u64,
     (index, value): (usize, &'a T),
-) -> (Id<T, C>, &'a T) {
+) -> (Id<C>, &'a T) {
     let id = unsafe { Pool::id_from_index(pool_id, index) };
     (id, value)
 }
 
 impl<'a, T: 'a, const C: char> IntoIterator for &'a Pool<T, C> {
-    type IntoIter = Map<Enumerate<Iter<'a, T>>, Box<dyn Fn((usize, &'a T)) -> (Id<T, C>, &'a T)>>;
-    type Item = (Id<T, C>, &'a T);
+    type IntoIter = Map<Enumerate<Iter<'a, T>>, Box<dyn Fn((usize, &'a T)) -> (Id<C>, &'a T)>>;
+    type Item = (Id<C>, &'a T);
 
     fn into_iter(self) -> Self::IntoIter {
         let pool_id = self.id;
@@ -85,15 +76,15 @@ impl<'a, T: 'a, const C: char> IntoIterator for &'a Pool<T, C> {
 fn map_index_to_id_mut<'a, T, const C: char>(
     pool_id: u64,
     (index, value): (usize, &'a mut T),
-) -> (Id<T, C>, &'a mut T) {
+) -> (Id<C>, &'a mut T) {
     let id = unsafe { Pool::id_from_index(pool_id, index) };
     (id, value)
 }
 
 impl<'a, T: 'a, const C: char> IntoIterator for &'a mut Pool<T, C> {
     type IntoIter =
-        Map<Enumerate<IterMut<'a, T>>, Box<dyn Fn((usize, &'a mut T)) -> (Id<T, C>, &'a mut T)>>;
-    type Item = (Id<T, C>, &'a mut T);
+        Map<Enumerate<IterMut<'a, T>>, Box<dyn Fn((usize, &'a mut T)) -> (Id<C>, &'a mut T)>>;
+    type Item = (Id<C>, &'a mut T);
 
     fn into_iter(self) -> Self::IntoIter {
         let pool_id = self.id;

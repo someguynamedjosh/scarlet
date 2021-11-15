@@ -39,7 +39,7 @@ impl<T, const C: char> Pool<T, C> {
 
     /// Returns true if the given ID was created by this pool (and therefore
     /// will not trigger a panic when used with get()).
-    pub fn contains(&self, id: Id<T, C>) -> bool {
+    pub fn contains(&self, id: Id<C>) -> bool {
         self.id == id.pool_id
     }
 
@@ -49,63 +49,63 @@ impl<T, const C: char> Pool<T, C> {
 
     /// Abuse unsafe here to tell people that you really shouldn't use this
     /// function unless you know what you're doing.
-    pub(super) unsafe fn next_id(&self) -> Id<T, C> {
+    pub(super) unsafe fn next_id(&self) -> Id<C> {
         Id {
             index: self.items.len(),
             pool_id: self.id,
-            _pd: PhantomData,
+            // _pd: PhantomData,
         }
     }
 
-    pub(super) unsafe fn id_from_index(self_id: u64, index: usize) -> Id<T, C> {
+    pub(super) unsafe fn id_from_index(self_id: u64, index: usize) -> Id<C> {
         Id {
             index,
             pool_id: self_id,
-            _pd: PhantomData,
+            // _pd: PhantomData,
         }
     }
 
-    pub fn push(&mut self, item: T) -> Id<T, C> {
+    pub fn push(&mut self, item: T) -> Id<C> {
         let id = unsafe { self.next_id() };
         self.items.push(item);
         id
     }
 
-    pub fn first(&self) -> Option<Id<T, C>> {
+    pub fn first(&self) -> Option<Id<C>> {
         if self.items.len() == 0 {
             None
         } else {
             Some(Id {
                 index: 0,
                 pool_id: self.id,
-                _pd: PhantomData,
+                // _pd: PhantomData,
             })
         }
     }
 
     /// Returns the next ID after the given ID, or None if there is no item with
     /// the new ID.
-    pub fn next(&self, after: Id<T, C>) -> Option<Id<T, C>> {
+    pub fn next(&self, after: Id<C>) -> Option<Id<C>> {
         let next_index = after.index + 1;
         if next_index < self.items.len() {
             Some(Id {
                 index: next_index,
                 pool_id: self.id,
-                _pd: PhantomData,
+                // _pd: PhantomData,
             })
         } else {
             None
         }
     }
 
-    pub fn get(&self, id: Id<T, C>) -> &T {
+    pub fn get(&self, id: Id<C>) -> &T {
         assert_eq!(id.pool_id, self.id);
         // We will never provide methods to remove data from a pool.
         debug_assert!(id.index < self.items.len());
         &self.items[id.index]
     }
 
-    pub fn get_mut(&mut self, id: Id<T, C>) -> &mut T {
+    pub fn get_mut(&mut self, id: Id<C>) -> &mut T {
         assert_eq!(id.pool_id, self.id);
         // We will never provide methods to remove data from a pool.
         debug_assert!(id.index < self.items.len());
@@ -114,7 +114,7 @@ impl<T, const C: char> Pool<T, C> {
 }
 
 impl<T: PartialEq + Eq, const C: char> Pool<T, C> {
-    pub fn get_or_push(&mut self, item: T) -> Id<T, C> {
+    pub fn get_or_push(&mut self, item: T) -> Id<C> {
         for (id, candidate) in &*self {
             if candidate == &item {
                 return id;
