@@ -1,3 +1,5 @@
+mod transform;
+
 use super::{BoxedConstruct, ConstructDefinition, ConstructId, Environment};
 use crate::tokens::structure::Token;
 
@@ -18,7 +20,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn resolve_token(&self, token: Token<'x>) -> BoxedConstruct {
+    fn resolve_token(&mut self, token: Token<'x>) -> BoxedConstruct<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => todo!(),

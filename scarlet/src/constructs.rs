@@ -1,9 +1,9 @@
 pub mod base {
     use std::{any::Any, fmt::Debug};
 
-    use crate::shared::any_eq::AnyEq;
+    use crate::shared::AnyEq;
 
-    pub type BoxedConstruct = Box<dyn Construct>;
+    pub type BoxedConstruct<'x> = Box<dyn Construct<'x>>;
 
-    pub trait Construct: Any + Debug + AnyEq {}
+    pub trait Construct<'x>: Any + Debug + AnyEq {}
 }
