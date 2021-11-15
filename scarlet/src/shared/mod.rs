@@ -3,6 +3,7 @@ mod pool;
 mod pool_id;
 mod pool_traits;
 mod terminal_utilities;
+pub mod any_eq;
 
 pub use ordered_map::*;
 pub use pool::*;
