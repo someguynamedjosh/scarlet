@@ -7,8 +7,10 @@
     element_type is PATTERN.V.Eager(All)
     ARRAY is Builtin(ARRAY length element_type)
 
-    [{1}.Matched(
-        on ARRAY(1 PATTERN).Shy(All) true
-        else false
-    )].Shown
+    STRING is {
+        length is 32U.V
+        content is ARRAY(length 32U)
+    }
+
+    STRING.Shown
 }

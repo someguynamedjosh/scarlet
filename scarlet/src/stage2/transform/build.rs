@@ -2,6 +2,7 @@ use crate::{
     stage2::transform::{
         basics::{Extras, OwnedOrBorrowed, Precedence, SomeTransformer, Transformer},
         transformers::{
+            member::Member,
             operators::*,
             roots::{Builtin, Struct, SubExpression},
             special_members::{Eager, Matched, MemberAtIndex, Shown, Shy, Variable},
@@ -24,7 +25,8 @@ pub fn build_transformers<'e>(
             Eager,
             Shy,
             MemberAtIndex,
-            Substitution // , Member
+            Substitution,
+            Member
         ],
         61 => tfers![Caret],
         70 => tfers![Asterisk, Slash],
