@@ -1,7 +1,3 @@
-pub(crate) fn indented(source: &str) -> String {
-    source.replace("\n", "\n    ")
-}
-
 // pub enum MaybeResult<T, E> {
 //     Ok(T),
 //     None,

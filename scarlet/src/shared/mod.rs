@@ -8,3 +8,7 @@ pub use ordered_map::*;
 pub use pool::*;
 pub use pool_id::*;
 pub use terminal_utilities::*;
+
+pub fn indented(source: &str) -> String {
+    source.replace("\n", "\n    ")
+}

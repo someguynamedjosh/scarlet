@@ -5,7 +5,7 @@ use std::{
 
 use serde::Serialize;
 
-use crate::util::indented;
+use crate::shared;
 
 pub type OrderedSet<K> = OrderedMap<K, ()>;
 
@@ -115,8 +115,8 @@ impl<K: Debug, V: Debug> Debug for OrderedMap<K, V> {
         for (key, value) in self {
             let (key, value) = if f.alternate() {
                 (
-                    indented(&format!("{:#?}", key)),
-                    indented(&format!("{:#?}", value)),
+                    shared::indented(&format!("{:#?}", key)),
+                    shared::indented(&format!("{:#?}", value)),
                 )
             } else {
                 (format!("{:?}", key), format!("{:?}", value))

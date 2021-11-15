@@ -4,10 +4,8 @@
 #![feature(adt_const_params)]
 
 mod entry;
-mod rust_analyzer_actions;
 mod shared;
 mod stage1;
-mod stage2;
 mod util;
 
 fn main() {
