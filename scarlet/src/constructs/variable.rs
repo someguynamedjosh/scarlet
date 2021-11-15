@@ -32,4 +32,4 @@ pub struct CVariable {
 
 impl_any_eq_for_construct!(CVariable);
 
-impl Construct for CVariable where ConstructId: 'static {}
+impl Construct for CVariable {}

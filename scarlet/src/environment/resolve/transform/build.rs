@@ -2,7 +2,7 @@ use super::basics::{Extras, Precedence, SomeTransformer};
 use crate::{
     environment::resolve::transform::{
         basics::Transformer,
-        transformers::roots::{Builtin, SubExpression},
+        transformers::{operators::*, roots::*},
     },
     shared::OwnedOrBorrowed,
     tfers,
@@ -24,12 +24,12 @@ pub fn build_transformers<'e>(
         //     Substitution,
         //     Member
         // ],
-        // 61 => tfers![Caret],
-        // 70 => tfers![Asterisk, Slash],
-        // 80 => tfers![Plus, Minus],
-        // 90 => tfers![Modulo],
-        // 100 => tfers![GreaterThanOrEqual, GreaterThan, LessThanOrEqual, LessThan],
-        // 120 => tfers![PatternAnd, PatternOr],
+        61 => tfers![Caret],
+        70 => tfers![Asterisk, Slash],
+        80 => tfers![Plus, Minus],
+        90 => tfers![Modulo],
+        100 => tfers![GreaterThanOrEqual, GreaterThan, LessThanOrEqual, LessThan],
+        120 => tfers![VariableAnd, VariableOr],
         // 130 => tfers![Matches],
         // 150 => tfers![Using],
         _ => tfers![],

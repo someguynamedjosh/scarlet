@@ -1,9 +1,13 @@
-use crate::stage2::{
-    structure::{BuiltinOperation, Definition, Token, VarType},
-    transform::{
-        basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
+use crate::{
+    constructs::{
+        builtin_operation::{BuiltinOperation, CBuiltinOperation},
+        variable::VarType,
     },
+    environment::resolve::transform::{
+        basics::{ApplyContext, Transformer, TransformerResult},
+        pattern::{PatCaptureAny, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
+    },
+    tokens::structure::Token,
 };
 
 macro_rules! binary_operator {
@@ -23,11 +27,14 @@ macro_rules! binary_operator {
                 c: &mut ApplyContext<'_, 't>,
                 success: PatternMatchSuccess<'_, 't>,
             ) -> TransformerResult<'t> {
-                let left = c.push_token(success.get_capture("left").clone());
-                let right = c.push_token(success.get_capture("right").clone());
-                let result = Definition::BuiltinOperation($internal_name, vec![left, right]);
-                let result = c.env.push_def(result);
-                TransformerResult(Token::Item(result))
+                let left = c.push_unresolved(success.get_capture("left").clone());
+                let right = c.push_unresolved(success.get_capture("right").clone());
+                let result = CBuiltinOperation {
+                    op: $internal_name,
+                    args: vec![left, right],
+                };
+                let result = c.env.push_construct(Box::new(result));
+                TransformerResult(Token::Construct(result))
             }
         }
     };
@@ -55,12 +62,16 @@ binary_operator!(
 
 // binary_operator!(Matches, BuiltinOperation::Matches, "matches");
 
-pub struct PatternAnd;
-impl Transformer for PatternAnd {
+pub struct VariableAnd;
+impl Transformer for VariableAnd {
     fn pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "left" },
-            PatPlain("AND"),
+            PatFirstOf(vec![
+                Box::new(PatPlain("VA")),
+                Box::new(PatPlain("VAR_AND")),
+                Box::new(PatPlain("VARIABLE_AND")),
+            ]),
             PatCaptureAny { key: "right" },
         ))
     }
@@ -70,19 +81,23 @@ impl Transformer for PatternAnd {
         c: &mut ApplyContext<'_, 't>,
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
-        let left = c.push_token(success.get_capture("left").clone());
-        let right = c.push_token(success.get_capture("right").clone());
-        let item = c.push_var(VarType::And(left, right));
-        TransformerResult(Token::Item(item))
+        let left = c.push_unresolved(success.get_capture("left").clone());
+        let right = c.push_unresolved(success.get_capture("right").clone());
+        let con = c.push_var(VarType::And(left, right), false);
+        TransformerResult(Token::Construct(con))
     }
 }
 
-pub struct PatternOr;
-impl Transformer for PatternOr {
+pub struct VariableOr;
+impl Transformer for VariableOr {
     fn pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "left" },
-            PatPlain("OR"),
+            PatFirstOf(vec![
+                Box::new(PatPlain("VO")),
+                Box::new(PatPlain("VAR_OR")),
+                Box::new(PatPlain("VARIABLE_OR")),
+            ]),
             PatCaptureAny { key: "right" },
         ))
     }
@@ -92,10 +107,10 @@ impl Transformer for PatternOr {
         c: &mut ApplyContext<'_, 't>,
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
-        let left = c.push_token(success.get_capture("left").clone());
-        let right = c.push_token(success.get_capture("right").clone());
-        let item = c.push_var(VarType::Or(left, right));
-        TransformerResult(Token::Item(item))
+        let left = c.push_unresolved(success.get_capture("left").clone());
+        let right = c.push_unresolved(success.get_capture("right").clone());
+        let con = c.push_var(VarType::Or(left, right), false);
+        TransformerResult(Token::Construct(con))
     }
 }
 
@@ -108,7 +123,7 @@ impl Transformer for Is {
     fn pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "left" },
-            PatPlain("is"),
+            PatPlain("IS"),
             PatCaptureAny { key: "right" },
         ))
     }
@@ -119,8 +134,8 @@ impl Transformer for Is {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let left = success.get_capture("left").clone();
-        let right = c.push_token(success.get_capture("right").clone());
-        let right = Token::Item(right);
+        let right = c.push_unresolved(success.get_capture("right").clone());
+        let right = Token::Construct(right);
         TransformerResult(Token::Stream {
             label: "target",
             contents: vec![left, right],
