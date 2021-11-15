@@ -1,8 +1,8 @@
-use super::{nom_prelude::*, structure::Module};
-use crate::{
-    entry::FileNode,
-    stage2::structure::{Token, TokenStream},
+use super::{
+    nom_prelude::*,
+    structure::{Module, Token, TokenStream},
 };
+use crate::file_tree::FileNode;
 
 fn parse_plain_token<'a>() -> impl Parser<'a, &'a str> {
     |input: &'a str| {

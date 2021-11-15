@@ -3,21 +3,21 @@
 #![feature(never_type)]
 #![feature(adt_const_params)]
 
-mod entry;
+mod file_tree;
 mod shared;
-mod stage1;
+mod tokens;
 mod util;
 
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
-    let root = entry::read_root(&path).unwrap();
-    let stage1 = stage1::ingest(&root);
-    // println!("{:#?}", stage1);
+    let root = file_tree::read_root(&path).unwrap();
+    let tokens = tokens::ingest(&root);
+    println!("{:#?}", tokens);
 
-    let (stage2, _s2_root) = stage2::ingest(&stage1);
-    // println!("{:#?}", stage2);
-    // println!("Root: {:?}", s2_root);
-    stage2.show_all();
+    // let (stage2, _s2_root) = stage2::ingest(&tokens);
+    // // println!("{:#?}", stage2);
+    // // println!("Root: {:?}", s2_root);
+    // stage2.show_all();
 }
