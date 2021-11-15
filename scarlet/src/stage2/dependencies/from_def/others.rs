@@ -1,6 +1,6 @@
 use crate::stage2::{
     dependencies::structures::DepQueryResult,
-    structure::{Condition, Environment, ItemId, Substitutions},
+    structure::{Condition, Definition, Environment, ItemId, Substitutions, VariableInfo},
 };
 
 impl<'x> Environment<'x> {
@@ -21,7 +21,18 @@ impl<'x> Environment<'x> {
                     final_deps.append(value_deps);
                 }
             } else {
-                final_deps.deps.insert_or_replace(dep, ());
+                let var_item = self.substitute(dep.var_item, &subs).unwrap();
+                if let &Definition::Variable { typee, var } = self.get_definition(var_item) {
+                    let subbed_dep = VariableInfo {
+                        eager: dep.eager,
+                        typee,
+                        var,
+                        var_item: dep.var_item,
+                    };
+                    final_deps.deps.insert_or_replace(subbed_dep, ());
+                } else {
+                    unreachable!()
+                }
             }
         }
         final_deps
