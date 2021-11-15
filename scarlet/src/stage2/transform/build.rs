@@ -4,7 +4,7 @@ use crate::{
         transformers::{
             operators::*,
             roots::{Builtin, Struct, SubExpression},
-            special_members::{Eager, Matched, MemberAtIndex, Shown, Variable},
+            special_members::{Eager, Matched, MemberAtIndex, Shown, Shy, Variable},
             substitution::Substitution,
         },
     },
@@ -22,6 +22,7 @@ pub fn build_transformers<'e>(
             Variable,
             Shown,
             Eager,
+            Shy,
             MemberAtIndex,
             Substitution // , Member
         ],

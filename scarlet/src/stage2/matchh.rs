@@ -11,6 +11,8 @@ impl<'x> Environment<'x> {
         item: ItemId<'x>,
         match_against: ItemId<'x>,
     ) -> MatchResult<'x> {
+        let item = self.reduce(item);
+        let match_against = self.reduce(match_against);
         self.matches_impl(item, item, match_against, &[])
     }
 }

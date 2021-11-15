@@ -7,5 +7,8 @@
     element_type is PATTERN.V.Eager(All)
     ARRAY is Builtin(ARRAY length element_type)
 
-    ARRAY(123).Shown
+    [{1}.Matched(
+        on ARRAY(1 PATTERN).Shy(All) true
+        else false
+    )].Shown
 }

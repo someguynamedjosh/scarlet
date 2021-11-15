@@ -1,11 +1,12 @@
 mod pattern_connectives;
 mod values_and_variables;
 
+use itertools::Itertools;
 use MatchResult::*;
 
 use crate::stage2::{
     matchh::result::MatchResult,
-    structure::{Definition, Environment, ItemId, VarType, VariableId},
+    structure::{BuiltinValue, Definition, Environment, ItemId, VarType, VariableId},
 };
 
 impl<'x> Environment<'x> {
@@ -79,6 +80,39 @@ impl<'x> Environment<'x> {
         {
             values_and_variables::on_value_value(value, pattern)
         } else if let (
+            Definition::Struct(fields),
+            &Definition::Variable {
+                typee:
+                    VarType::Array {
+                        length,
+                        element_type,
+                    },
+                var,
+            },
+        ) = (&value_def, &pattern_def)
+        {
+            if let Definition::BuiltinValue(BuiltinValue::_32U(length)) =
+                self.get_definition(length)
+            {
+                if *length as usize != fields.len() {
+                    NoMatch
+                } else {
+                    MatchResult::and(
+                        fields
+                            .clone()
+                            .into_iter()
+                            .map(|field| {
+                                self.matches(field.value, element_type)
+                                    .keeping_only_eager_subs(&[])
+                            })
+                            .collect_vec(),
+                    )
+                    .with_sub_if_match(var, original_value)
+                }
+            } else {
+                Unknown
+            }
+        } else if let (
             &Definition::Variable {
                 typee: value_type, ..
             },
@@ -89,6 +123,7 @@ impl<'x> Environment<'x> {
         ) = (&value_def, &pattern_def)
         {
             values_and_variables::on_variable_variable(
+                self,
                 value_type,
                 pattern_type,
                 var,

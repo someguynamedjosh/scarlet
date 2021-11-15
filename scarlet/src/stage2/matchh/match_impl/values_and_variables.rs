@@ -45,7 +45,21 @@ impl<'x> Environment<'x> {
             }
             self.matches_impl(original_value, value, base, &new_eagers[..])
         } else {
-            todo!()
+            let mut new_eagers = Vec::new();
+            if !all {
+                let mut avoid = Vec::new();
+                for val in vals {
+                    for (dep, _) in self.get_deps(val) {
+                        avoid.push(dep.var);
+                    }
+                }
+                for old in eager_vars {
+                    if !avoid.contains(old) {
+                        new_eagers.push(*old);
+                    }
+                }
+            }
+            self.matches_impl(original_value, value, base, &new_eagers[..])
         }
     }
 }
@@ -59,12 +73,28 @@ pub(super) fn on_value_value<'x>(value: BuiltinValue, pattern: BuiltinValue) -> 
 }
 
 pub(super) fn on_variable_variable<'x>(
+    env: &mut Environment<'x>,
     value_type: VarType<'x>,
     pattern_type: VarType<'x>,
     var: VariableId<'x>,
     original_value: ItemId<'x>,
 ) -> MatchResult<'x> {
-    if value_type == pattern_type || pattern_type == VarType::God {
+    if let (
+        VarType::Array {
+            length: value_length,
+            element_type: value_eltype,
+        },
+        VarType::Array {
+            length: pattern_length,
+            element_type: pattern_eltype,
+        },
+    ) = (value_type, pattern_type)
+    {
+        MatchResult::and(vec![
+            env.matches(value_length, pattern_length),
+            env.matches(value_eltype, pattern_eltype),
+        ])
+    } else if value_type == pattern_type || pattern_type == VarType::God {
         MatchResult::non_capturing().with_sub_if_match(var, original_value)
     } else {
         NoMatch
