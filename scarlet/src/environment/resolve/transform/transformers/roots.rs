@@ -98,9 +98,9 @@ impl Transformer for Builtin {
         let name = body.remove(0).unwrap_plain();
         apply::apply_transformers(c, &mut body, &Default::default());
         let con = match name {
-            "anything" => c.push_var(VarType::Anything, false),
-            "bool" => c.push_var(VarType::Bool, false),
-            "32u" => c.push_var(VarType::_32U, false),
+            "Anything" => c.push_var(VarType::Anything,true),
+            "Boolean" => c.push_var(VarType::Bool, true),
+            "32BitUnsignedInteger" => c.push_var(VarType::_32U, true),
             "array" => {
                 let length = c.push_unresolved(body.remove(0));
                 let eltype = c.push_unresolved(body.remove(0));

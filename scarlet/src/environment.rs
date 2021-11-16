@@ -45,11 +45,15 @@ where
     }
 
     pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
-        let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Unresolved(token),
-            parent_scope: None,
-        };
-        self.constructs.push(con)
+        if let Token::Construct(con) = token {
+            con
+        } else {
+            let con = AnnotatedConstruct {
+                definition: ConstructDefinition::Unresolved(token),
+                parent_scope: None,
+            };
+            self.constructs.push(con)
+        }
     }
 
     pub fn push_variable(&mut self, typee: VarType, capturing: bool) -> ConstructId {

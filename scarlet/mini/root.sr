@@ -1,5 +1,7 @@
 [
-    Anything IS BUILTIN{anything}
+    Any IS BUILTIN{Anything}
+    Bool IS BUILTIN{Boolean}
+    32U IS BUILTIN{32BitUnsignedInteger}
     # PATTERN is Builtin(PATTERN)
     # BOOL is Builtin(BOOL)
     # 32U is Builtin(32U)
