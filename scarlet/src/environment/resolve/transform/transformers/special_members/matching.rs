@@ -2,6 +2,7 @@ use itertools::Itertools;
 use maplit::hashmap;
 
 use crate::{
+    constructs::matchh::{CMatch, Condition},
     environment::resolve::transform::{
         basics::Extras,
         transformers::{
@@ -14,10 +15,10 @@ use crate::{
     tokens::structure::Token,
 };
 
-pub struct Matched;
-impl SpecialMember for Matched {
+pub struct Matching;
+impl SpecialMember for Matching {
     fn aliases(&self) -> &'static [&'static str] {
-        &["Matched", "M"]
+        &["MATCHING", "M"]
     }
 
     fn expects_bracket_group(&self) -> bool {
@@ -32,15 +33,16 @@ impl SpecialMember for Matched {
         &self,
         c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
-        paren_group: Option<Vec<Token<'t>>>,
+        bracket_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let base = c.push_unresolved(base);
         let mut conditions = Vec::new();
         let mut else_value = None;
-        for token in paren_group.unwrap() {
+        println!("{:?}", bracket_group);
+        for token in bracket_group.unwrap() {
             match token {
                 Token::Stream {
-                    label: "on",
+                    label: "ON",
                     contents,
                 } => {
                     let (pattern, value) = contents.into_iter().collect_tuple().unwrap();
@@ -48,7 +50,7 @@ impl SpecialMember for Matched {
                     conditions.push(Condition { pattern, value })
                 }
                 Token::Stream {
-                    label: "else",
+                    label: "ELSE",
                     contents,
                 } => {
                     if else_value.is_some() {
@@ -61,12 +63,12 @@ impl SpecialMember for Matched {
             }
         }
         let else_value = else_value.unwrap();
-        let def = Definition::Match {
+        let def = CMatch {
             base,
             conditions,
             else_value,
         };
-        let con = c.push_construct(def);
+        let con = c.push_construct(Box::new(def));
         Token::Construct(con)
     }
 }

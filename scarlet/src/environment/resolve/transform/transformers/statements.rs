@@ -11,7 +11,7 @@ pub struct OnPattern;
 impl Transformer for OnPattern {
     fn pattern(&self) -> Box<dyn Pattern> {
         Box::new((
-            PatPlain("on"),
+            PatPlain("ON"),
             PatCaptureAny { key: "pattern" },
             PatCaptureAny { key: "value" },
         ))
@@ -44,7 +44,7 @@ impl Transformer for Else {
     ) -> TransformerResult<'t> {
         let value = Token::Construct(c.push_unresolved(success.get_capture("value").clone()));
         TransformerResult(Token::Stream {
-            label: "else",
+            label: "ELSE",
             contents: vec![value],
         })
     }
