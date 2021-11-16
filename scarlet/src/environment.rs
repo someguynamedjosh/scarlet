@@ -61,4 +61,8 @@ where
         };
         self.push_construct(Box::new(def))
     }
+
+    pub(crate) fn check(&self, con: ConstructId) {
+        // todo!()
+    }
 }
