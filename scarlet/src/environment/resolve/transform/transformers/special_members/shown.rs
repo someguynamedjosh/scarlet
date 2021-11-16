@@ -1,20 +1,15 @@
 use crate::{
+    constructs::shown::CShown,
     environment::resolve::transform::{
-        basics::Extras,
-        transformers::{
-            special_members::base::SpecialMember,
-            statements::{Else, OnPattern},
-        },
-        ApplyContext,
+        transformers::special_members::base::SpecialMember, ApplyContext,
     },
-    tfers,
     tokens::structure::Token,
 };
 
 pub struct Shown;
 impl SpecialMember for Shown {
     fn aliases(&self) -> &'static [&'static str] {
-        &["Shown", "S"]
+        &["SHOWN", "S"]
     }
 
     fn apply<'t>(
@@ -23,8 +18,7 @@ impl SpecialMember for Shown {
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = c.push_construct(Definition::Unresolved(base));
-        c.env.constructs[base].shown_from.push(base);
-        Token::Construct(base)
+        let base = c.push_unresolved(base);
+        Token::Construct(c.push_construct(Box::new(CShown(base))))
     }
 }

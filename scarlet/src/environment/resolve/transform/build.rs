@@ -26,7 +26,7 @@ pub fn build_transformers<'e>(
         //     Substitution,
         //     Member
         // ],
-        20 => tfers![Indexing, Matching, Variable, Substitution, Member],
+        20 => tfers![Indexing, Matching, Shown, Variable, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk, Slash],
         80 => tfers![Plus, Minus],

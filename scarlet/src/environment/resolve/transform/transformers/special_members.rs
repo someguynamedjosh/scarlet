@@ -1,9 +1,9 @@
 mod base;
-// mod without_capturing;
+mod capturing;
 mod indexing;
 mod matching;
-// mod shown;
-// mod capturing;
+mod shown;
 mod variable;
+mod without_capturing;
 
-pub use self::{indexing::Indexing, matching::Matching, variable::Variable};
+pub use self::{indexing::Indexing, matching::Matching, shown::Shown, variable::Variable};
