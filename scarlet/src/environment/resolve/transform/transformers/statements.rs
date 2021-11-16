@@ -1,10 +1,10 @@
-use crate::stage2::{
-    structure::Token,
-    transform::{
+use crate::{
+    environment::resolve::transform::{
         basics::{Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
         ApplyContext,
     },
+    tokens::structure::Token,
 };
 
 pub struct OnPattern;
@@ -22,10 +22,10 @@ impl Transformer for OnPattern {
         c: &mut ApplyContext<'_, 't>,
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
-        let pattern = Token::Item(c.push_token(success.get_capture("pattern").clone()));
-        let value = Token::Item(c.push_token(success.get_capture("value").clone()));
+        let pattern = Token::Construct(c.push_unresolved(success.get_capture("pattern").clone()));
+        let value = Token::Construct(c.push_unresolved(success.get_capture("value").clone()));
         TransformerResult(Token::Stream {
-            label: "on",
+            label: "ON",
             contents: vec![pattern, value],
         })
     }
@@ -34,7 +34,7 @@ impl Transformer for OnPattern {
 pub struct Else;
 impl Transformer for Else {
     fn pattern(&self) -> Box<dyn Pattern> {
-        Box::new((PatPlain("else"), PatCaptureAny { key: "value" }))
+        Box::new((PatPlain("ELSE"), PatCaptureAny { key: "value" }))
     }
 
     fn apply<'t>(
@@ -42,7 +42,7 @@ impl Transformer for Else {
         c: &mut ApplyContext<'_, 't>,
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
-        let value = Token::Item(c.push_token(success.get_capture("value").clone()));
+        let value = Token::Construct(c.push_unresolved(success.get_capture("value").clone()));
         TransformerResult(Token::Stream {
             label: "else",
             contents: vec![value],

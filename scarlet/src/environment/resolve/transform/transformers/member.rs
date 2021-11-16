@@ -1,6 +1,6 @@
 use crate::{
+    constructs::member::{CMember, Member as ConstructsMember},
     environment::resolve::transform::{
-        apply,
         basics::{ApplyContext, Extras, Transformer, TransformerResult},
         pattern::{
             PatCaptureAny, PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess,
@@ -26,10 +26,10 @@ impl Transformer for Member {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let base = success.get_capture("base").clone();
-        let base = c.env.push_token(base);
+        let base = c.env.push_unresolved(base);
         let member_name = success.get_capture("member_name").unwrap_plain();
-        let def = todo!(); //Definition::Member(base, StructureMember::Named(member_name.to_owned()));
-        let item = c.env.push_def(def);
-        TransformerResult(Token::Item(item))
+        let def = CMember(base, ConstructsMember::Named(member_name.to_owned()));
+        let con = c.env.push_construct(Box::new(def));
+        TransformerResult(Token::Construct(con))
     }
 }

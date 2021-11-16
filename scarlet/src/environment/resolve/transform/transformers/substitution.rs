@@ -1,17 +1,15 @@
 use maplit::hashmap;
 
 use crate::{
-    stage2::{
-        structure::Token,
-        transform::{
-            apply,
-            basics::{Transformer, TransformerResult},
-            pattern::{PatCaptureAny, PatCaptureStream, Pattern, PatternMatchSuccess},
-            transformers::operators::Is,
-            ApplyContext,
-        },
+    environment::resolve::transform::{
+        apply,
+        basics::{Transformer, TransformerResult},
+        pattern::{PatCaptureAny, PatCaptureStream, Pattern, PatternMatchSuccess},
+        transformers::operators::Is,
+        ApplyContext,
     },
     tfers,
+    tokens::structure::Token,
 };
 
 pub struct Substitution;
@@ -21,7 +19,7 @@ impl Transformer for Substitution {
             PatCaptureAny { key: "base" },
             PatCaptureStream {
                 key: "subs",
-                label: "group()",
+                label: "group{}",
             },
         ))
     }

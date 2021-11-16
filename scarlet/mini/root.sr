@@ -2,6 +2,9 @@
     Any IS BUILTIN{Anything}
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
+
+    something IS 32U{asdf IS 123 456}
+
     # PATTERN is Builtin(PATTERN)
     # BOOL is Builtin(BOOL)
     # 32U is Builtin(32U)
