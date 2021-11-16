@@ -1,22 +1,17 @@
 use itertools::Itertools;
 
 use crate::{
+    constructs::member::{CMember, Member},
     environment::resolve::transform::{
-        basics::Extras,
-        transformers::{
-            special_members::base::SpecialMember,
-            statements::{Else, OnPattern},
-        },
-        ApplyContext,
+        transformers::special_members::base::SpecialMember, ApplyContext,
     },
-    tfers,
     tokens::structure::Token,
 };
 
-pub struct MemberAtIndex;
-impl SpecialMember for MemberAtIndex {
+pub struct Indexing;
+impl SpecialMember for Indexing {
     fn aliases(&self) -> &'static [&'static str] {
-        &["MemberAtIndex", "Member", "Mem"]
+        &["INDEXING", "INDEX", "I"]
     }
 
     fn expects_bracket_group(&self) -> bool {
@@ -33,13 +28,13 @@ impl SpecialMember for MemberAtIndex {
         let (index, proof_lt_len) = bracket_group.unwrap().into_iter().collect_tuple().unwrap();
         let index = c.push_unresolved(index);
         let proof_lt_len = c.push_unresolved(proof_lt_len);
-        let def = Definition::Member(
+        let def = CMember(
             base,
             Member::Index {
                 index,
                 proof_lt_len,
             },
         );
-        Token::Construct(c.push_construct(def))
+        Token::Construct(c.push_construct(Box::new(def)))
     }
 }
