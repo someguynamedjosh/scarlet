@@ -1,7 +1,14 @@
-use super::base::SpecialMember;
-use crate::stage2::{
-    structure::{Definition, Token},
-    transform::ApplyContext,
+use crate::{
+    environment::resolve::transform::{
+        basics::Extras,
+        transformers::{
+            special_members::base::SpecialMember,
+            statements::{Else, OnPattern},
+        },
+        ApplyContext,
+    },
+    tfers,
+    tokens::structure::Token,
 };
 
 pub struct Shown;
@@ -16,8 +23,8 @@ impl SpecialMember for Shown {
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = c.push_def(Definition::Unresolved(base));
-        c.env.items[base].shown_from.push(base);
-        Token::Item(base)
+        let base = c.push_construct(Definition::Unresolved(base));
+        c.env.constructs[base].shown_from.push(base);
+        Token::Construct(base)
     }
 }

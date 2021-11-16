@@ -1,12 +1,9 @@
 mod base;
-mod eager;
-mod matched;
-mod member_at_index;
-mod shown;
-mod shy;
+// mod without_capturing;
+// mod matched;
+// mod member_at_index;
+// mod shown;
+// mod capturing;
 mod variable;
 
-pub use self::{
-    eager::Eager, matched::Matched, member_at_index::MemberAtIndex, shown::Shown, shy::Shy,
-    variable::Variable,
-};
+pub use self::variable::Variable;

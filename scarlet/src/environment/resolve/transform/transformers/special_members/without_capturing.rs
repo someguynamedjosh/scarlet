@@ -1,7 +1,8 @@
-use super::base::SpecialMember;
-use crate::stage2::{
-    structure::{Definition, Token},
-    transform::ApplyContext,
+use crate::{
+    environment::resolve::transform::{
+        basics::ApplyContext, transformers::special_members::base::SpecialMember,
+    },
+    tokens::structure::Token,
 };
 
 pub struct Eager;
@@ -10,7 +11,7 @@ impl SpecialMember for Eager {
         &["Eager", "E"]
     }
 
-    fn expects_paren_group(&self) -> bool {
+    fn expects_bracket_group(&self) -> bool {
         true
     }
 
@@ -26,16 +27,16 @@ impl SpecialMember for Eager {
             if let Token::Plain("All") = token {
                 all = true
             } else {
-                vals.push(c.push_token(token))
+                vals.push(c.push_unresolved(token))
             }
         }
         let def = Definition::SetEager {
-            base: c.push_token(base),
+            base: c.push_unresolved(base),
             vals,
             all,
             eager: true,
         };
-        let item = c.push_def(def);
-        Token::Item(item)
+        let con = c.push_construct(def);
+        Token::Construct(con)
     }
 }

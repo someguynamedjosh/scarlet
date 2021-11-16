@@ -1,17 +1,17 @@
 use itertools::Itertools;
 use maplit::hashmap;
 
-use super::base::SpecialMember;
 use crate::{
-    stage2::{
-        structure::{Condition, Definition, Token},
-        transform::{
-            basics::Extras,
-            transformers::statements::{Else, OnPattern},
-            ApplyContext,
+    environment::resolve::transform::{
+        basics::Extras,
+        transformers::{
+            special_members::base::SpecialMember,
+            statements::{Else, OnPattern},
         },
+        ApplyContext,
     },
     tfers,
+    tokens::structure::Token,
 };
 
 pub struct Matched;
@@ -20,11 +20,11 @@ impl SpecialMember for Matched {
         &["Matched", "M"]
     }
 
-    fn expects_paren_group(&self) -> bool {
+    fn expects_bracket_group(&self) -> bool {
         true
     }
 
-    fn paren_group_transformers<'t>(&self) -> Extras<'t> {
+    fn bracket_group_transformers<'t>(&self) -> Extras<'t> {
         hashmap![172 => tfers![OnPattern, Else]]
     }
 
@@ -34,7 +34,7 @@ impl SpecialMember for Matched {
         base: Token<'t>,
         paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = c.push_token(base);
+        let base = c.push_unresolved(base);
         let mut conditions = Vec::new();
         let mut else_value = None;
         for token in paren_group.unwrap() {
@@ -44,7 +44,7 @@ impl SpecialMember for Matched {
                     contents,
                 } => {
                     let (pattern, value) = contents.into_iter().collect_tuple().unwrap();
-                    let (pattern, value) = (c.push_token(pattern), c.push_token(value));
+                    let (pattern, value) = (c.push_unresolved(pattern), c.push_unresolved(value));
                     conditions.push(Condition { pattern, value })
                 }
                 Token::Stream {
@@ -55,7 +55,7 @@ impl SpecialMember for Matched {
                         todo!("Nice error.")
                     }
                     let (value,) = contents.into_iter().collect_tuple().unwrap();
-                    else_value = Some(c.push_token(value));
+                    else_value = Some(c.push_unresolved(value));
                 }
                 _ => todo!("Nice error"),
             }
@@ -66,7 +66,7 @@ impl SpecialMember for Matched {
             conditions,
             else_value,
         };
-        let item = c.push_def(def);
-        Token::Item(item)
+        let con = c.push_construct(def);
+        Token::Construct(con)
     }
 }

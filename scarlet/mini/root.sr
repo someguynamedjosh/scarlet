@@ -3,7 +3,9 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    something IS 32U{asdf IS 123 456}
+    # something IS 32U{asdf IS 123 456}
+
+    thing IS 32U.V
 
     # PATTERN is Builtin(PATTERN)
     # BOOL is Builtin(BOOL)
