@@ -39,6 +39,16 @@ where
     }
 
     pub fn push_construct(&mut self, construct: BoxedConstruct) -> ConstructId {
+        for (id, acon) in &self.constructs {
+            if acon
+                .definition
+                .as_resolved()
+                .map(|con| con.eq(&*construct))
+                .unwrap_or(false)
+            {
+                return id;
+            }
+        }
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Resolved(construct),
             parent_scope: None,
