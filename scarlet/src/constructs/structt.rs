@@ -12,4 +12,8 @@ pub struct CStruct(pub Vec<StructField>);
 
 impl_any_eq_for_construct!(CStruct);
 
-impl Construct for CStruct {}
+impl Construct for CStruct {
+    fn dyn_clone(&self) -> Box<dyn Construct> {
+        Box::new(self.clone())
+    }
+}

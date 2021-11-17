@@ -16,4 +16,8 @@ pub struct CMatch {
 
 impl_any_eq_for_construct!(CMatch);
 
-impl Construct for CMatch {}
+impl Construct for CMatch {
+    fn dyn_clone(&self) -> Box<dyn Construct> {
+        Box::new(self.clone())
+    }
+}

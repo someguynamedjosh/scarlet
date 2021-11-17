@@ -23,7 +23,7 @@ fn main() {
 
     let mut env = Environment::new();
     let root = env.push_unresolved(root.self_content.clone());
-    let root = env.resolve(root);
+    let root = env.reduce(root);
     println!("{:#?}", env);
     println!("Root: {:?}", root);
 

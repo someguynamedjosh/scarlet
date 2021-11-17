@@ -1,4 +1,4 @@
-use super::base::{Construct, ConstructId};
+use super::base::{Construct, ConstructDefinition, ConstructId};
 use crate::{
     impl_any_eq_for_construct,
     shared::{Id, Pool},
@@ -32,4 +32,8 @@ pub struct CVariable {
 
 impl_any_eq_for_construct!(CVariable);
 
-impl Construct for CVariable {}
+impl Construct for CVariable {
+    fn dyn_clone(&self) -> Box<dyn Construct> {
+        Box::new(self.clone())
+    }
+}

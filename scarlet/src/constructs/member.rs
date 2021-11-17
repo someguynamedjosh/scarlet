@@ -15,4 +15,8 @@ pub struct CMember(pub ConstructId, pub Member);
 
 impl_any_eq_for_construct!(CMember);
 
-impl Construct for CMember {}
+impl Construct for CMember {
+    fn dyn_clone(&self) -> Box<dyn Construct> {
+        Box::new(self.clone())
+    }
+}

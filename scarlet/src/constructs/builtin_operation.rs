@@ -24,4 +24,8 @@ pub struct CBuiltinOperation {
 
 impl_any_eq_for_construct!(CBuiltinOperation);
 
-impl Construct for CBuiltinOperation {}
+impl Construct for CBuiltinOperation {
+    fn dyn_clone(&self) -> Box<dyn Construct> {
+        Box::new(self.clone())
+    }
+}
