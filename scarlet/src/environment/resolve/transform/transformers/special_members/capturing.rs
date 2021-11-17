@@ -27,22 +27,22 @@ impl SpecialMember for Capturing {
         base: Token<'t>,
         bracket_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
+        let base = Token::Construct(c.push_unresolved(base));
         let mut vals = Vec::new();
         let mut all = false;
         for token in bracket_group.unwrap() {
             if let Token::Plain("ALL") = token {
                 all = true
             } else {
-                vals.push(c.push_unresolved(token))
+                vals.push(Token::Construct(c.push_unresolved(token)))
             }
         }
-        let def = Definition::SetEager {
-            base: c.push_unresolved(base),
-            vals,
-            all,
-            eager: false,
-        };
-        let con = c.push_construct(def);
-        Token::Construct(con)
+        if all {
+            vals = vec![Token::Plain("ALL")];
+        }
+        Token::Stream {
+            label: "CAPTURING",
+            contents: [vec![base], vals].concat(),
+        }
     }
 }

@@ -1,14 +1,20 @@
 use crate::{
     environment::resolve::transform::{
-        basics::ApplyContext, transformers::special_members::base::SpecialMember,
+        basics::Extras,
+        transformers::{
+            special_members::base::SpecialMember,
+            statements::{Else, OnPattern},
+        },
+        ApplyContext,
     },
+    tfers,
     tokens::structure::Token,
 };
 
-pub struct Eager;
-impl SpecialMember for Eager {
+pub struct WithoutCapturing;
+impl SpecialMember for WithoutCapturing {
     fn aliases(&self) -> &'static [&'static str] {
-        &["Eager", "E"]
+        &["WITHOUT_CAPTURING", "WO_CAP", "WC"]
     }
 
     fn expects_bracket_group(&self) -> bool {
@@ -19,24 +25,24 @@ impl SpecialMember for Eager {
         &self,
         c: &mut ApplyContext<'_, 't>,
         base: Token<'t>,
-        paren_group: Option<Vec<Token<'t>>>,
+        bracket_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
+        let base = Token::Construct(c.push_unresolved(base));
         let mut vals = Vec::new();
         let mut all = false;
-        for token in paren_group.unwrap() {
-            if let Token::Plain("All") = token {
+        for token in bracket_group.unwrap() {
+            if let Token::Plain("ALL") = token {
                 all = true
             } else {
-                vals.push(c.push_unresolved(token))
+                vals.push(Token::Construct(c.push_unresolved(token)))
             }
         }
-        let def = Definition::SetEager {
-            base: c.push_unresolved(base),
-            vals,
-            all,
-            eager: true,
-        };
-        let con = c.push_construct(def);
-        Token::Construct(con)
+        if all {
+            vals = vec![Token::Plain("ALL")];
+        }
+        Token::Stream {
+            label: "WITHOUT_CAPTURING",
+            contents: [vec![base], vals].concat(),
+        }
     }
 }

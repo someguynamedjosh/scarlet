@@ -6,4 +6,7 @@ mod shown;
 mod variable;
 mod without_capturing;
 
-pub use self::{indexing::Indexing, matching::Matching, shown::Shown, variable::Variable};
+pub use self::{
+    capturing::Capturing, indexing::Indexing, matching::Matching, shown::Shown, variable::Variable,
+    without_capturing::WithoutCapturing,
+};

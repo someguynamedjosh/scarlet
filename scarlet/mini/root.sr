@@ -5,7 +5,7 @@
 
     # something IS 32U{asdf IS 123 456}
 
-    thing.S
+    thing.CAPTURING{thing}
 
     # PATTERN is Builtin(PATTERN)
     # BOOL is Builtin(BOOL)
