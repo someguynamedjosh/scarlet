@@ -15,8 +15,7 @@ pub struct ApplyContext<'a, 'x> {
     pub parent_scope: Option<ConstructId>,
 }
 
-impl<'a, 'x> ApplyContext<'a, 'x>
-{
+impl<'a, 'x> ApplyContext<'a, 'x> {
     pub fn with_parent_scope<'b>(
         &'b mut self,
         new_parent_scope: Option<ConstructId>,

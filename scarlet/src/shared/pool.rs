@@ -1,7 +1,4 @@
-use std::{
-    marker::PhantomData,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use lazy_static::lazy_static;
 use serde::Serialize;

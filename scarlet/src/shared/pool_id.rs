@@ -1,7 +1,6 @@
 use std::{
     fmt::{self, Debug},
     hash::Hash,
-    marker::PhantomData,
 };
 
 use serde::Serialize;

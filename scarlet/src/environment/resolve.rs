@@ -1,6 +1,6 @@
 mod transform;
 
-use super::{BoxedConstruct, ConstructDefinition, ConstructId, Environment};
+use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{environment::resolve::transform::ApplyContext, tokens::structure::Token};
 
 impl<'x> Environment<'x> {
@@ -23,7 +23,7 @@ impl<'x> Environment<'x> {
     fn resolve_token(&mut self, token: Token<'x>) -> ConstructDefinition<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
-            Token::Plain(ident) => todo!(),
+            Token::Plain(_ident) => todo!(),
             Token::Stream {
                 label: "construct_syntax",
                 contents,

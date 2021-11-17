@@ -4,12 +4,12 @@
 #![feature(adt_const_params)]
 #![feature(trait_upcasting)]
 
+mod constructs;
+mod environment;
 mod file_tree;
 mod shared;
 mod tokens;
 mod util;
-mod environment;
-mod constructs;
 
 use crate::environment::Environment;
 

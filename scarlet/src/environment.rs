@@ -7,7 +7,7 @@ use crate::{
         },
         variable::{CVariable, VarType, Variable, VariablePool},
     },
-    shared::{Id, Pool},
+    shared::Pool,
     tokens::structure::Token,
 };
 
@@ -66,7 +66,7 @@ where
         self.push_construct(Box::new(def))
     }
 
-    pub(crate) fn check(&self, con: ConstructId) {
+    pub(crate) fn check(&self, _con: ConstructId) {
         // todo!()
     }
 }

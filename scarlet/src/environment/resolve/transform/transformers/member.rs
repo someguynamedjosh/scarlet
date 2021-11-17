@@ -1,10 +1,8 @@
 use crate::{
     constructs::member::{CMember, Member as ConstructsMember},
     environment::resolve::transform::{
-        basics::{ApplyContext, Extras, Transformer, TransformerResult},
-        pattern::{
-            PatCaptureAny, PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess,
-        },
+        basics::{ApplyContext, Transformer, TransformerResult},
+        pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
     },
     tokens::structure::Token,
 };

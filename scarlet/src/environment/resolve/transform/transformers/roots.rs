@@ -1,11 +1,21 @@
 use itertools::Itertools;
 use maplit::hashmap;
 
-use crate::{constructs::{
+use crate::{
+    constructs::{
         base::ConstructDefinition,
         structt::{CStruct, StructField},
         variable::VarType,
-    }, environment::resolve::transform::{apply, basics::{ApplyContext, Transformer, TransformerResult}, pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess}, transformers::operators::Is}, tfers, tokens::structure::Token};
+    },
+    environment::resolve::transform::{
+        apply,
+        basics::{ApplyContext, Transformer, TransformerResult},
+        pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
+        transformers::operators::Is,
+    },
+    tfers,
+    tokens::structure::Token,
+};
 
 pub struct SubExpression;
 impl Transformer for SubExpression {
@@ -98,7 +108,7 @@ impl Transformer for Builtin {
         let name = body.remove(0).unwrap_plain();
         apply::apply_transformers(c, &mut body, &Default::default());
         let con = match name {
-            "Anything" => c.push_var(VarType::Anything,true),
+            "Anything" => c.push_var(VarType::Anything, true),
             "Boolean" => c.push_var(VarType::Bool, true),
             "32BitUnsignedInteger" => c.push_var(VarType::_32U, true),
             "array" => {

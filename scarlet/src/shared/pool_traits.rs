@@ -1,7 +1,6 @@
 use std::{
     fmt::{self, Debug},
     iter::{Enumerate, Map},
-    marker::PhantomData,
     ops::{Index, IndexMut},
     slice::{Iter, IterMut},
     vec::IntoIter,
