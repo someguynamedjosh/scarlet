@@ -1,5 +1,6 @@
 use super::base::{Construct, ConstructDefinition, ConstructId};
 use crate::{
+    environment::Environment,
     impl_any_eq_for_construct,
     shared::{Id, Pool},
 };
@@ -36,4 +37,6 @@ impl Construct for CVariable {
     fn dyn_clone(&self) -> Box<dyn Construct> {
         Box::new(self.clone())
     }
+
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
 }

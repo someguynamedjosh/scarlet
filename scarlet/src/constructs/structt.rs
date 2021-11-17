@@ -17,6 +17,8 @@ impl Construct for CStruct {
         Box::new(self.clone())
     }
 
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let mut fields = Vec::new();
         for field in &self.0 {

@@ -1,4 +1,4 @@
-use super::base::{Construct, ConstructId};
+use super::{base::{Construct, ConstructId}, variable::VarType};
 use crate::{
     constructs::{self, builtin_value::CBuiltinValue},
     environment::Environment,
@@ -31,6 +31,14 @@ impl_any_eq_for_construct!(CBuiltinOperation);
 impl Construct for CBuiltinOperation {
     fn dyn_clone(&self) -> Box<dyn Construct> {
         Box::new(self.clone())
+    }
+
+    fn check<'x>(&self, env: &mut Environment<'x>) {
+        for &arg in &self.args {
+            if !env.construct_matches_var_type(arg, &VarType::_32U).is_guaranteed_match() {
+                todo!("Nice error, args must match 32U");
+            }
+        }
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

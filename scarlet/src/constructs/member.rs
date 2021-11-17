@@ -20,6 +20,10 @@ impl Construct for CMember {
         Box::new(self.clone())
     }
 
+    fn check<'x>(&self, env: &mut Environment<'x>) {
+        todo!()
+    }
+
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.0);
         let member = match &self.1 {

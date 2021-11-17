@@ -9,6 +9,7 @@ impl<'x> Environment<'x> {
             .as_resolved()
             .unwrap()
             .dyn_clone();
+        con.check(self);
         con.reduce(self, con_id)
     }
 }

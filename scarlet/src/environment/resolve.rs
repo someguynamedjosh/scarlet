@@ -49,7 +49,11 @@ impl<'x> Environment<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => {
-                if let Ok(int) = ident.parse() {
+                if ident == "true" {
+                    ConstructDefinition::Resolved(Box::new(CBuiltinValue::Bool(true)))
+                } else if ident == "false" {
+                    ConstructDefinition::Resolved(Box::new(CBuiltinValue::Bool(false)))
+                } else if let Ok(int) = ident.parse() {
                     ConstructDefinition::Resolved(Box::new(CBuiltinValue::_32U(int)))
                 } else {
                     match self.lookup_ident(scope, ident) {

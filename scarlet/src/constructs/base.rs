@@ -40,6 +40,8 @@ pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {
     fn dyn_clone(&self) -> Box<dyn Construct>;
 
+    fn check<'x>(&self, env: &mut Environment<'x>);
+
     #[allow(unused_variables)]
     fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         MatchResult::Unknown

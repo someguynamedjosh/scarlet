@@ -21,6 +21,8 @@ impl Construct for CMatch {
         Box::new(self.clone())
     }
 
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.base);
         let mut conditions = Vec::new();

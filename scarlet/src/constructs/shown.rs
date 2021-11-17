@@ -1,5 +1,5 @@
 use super::base::{Construct, ConstructId};
-use crate::impl_any_eq_for_construct;
+use crate::{environment::Environment, impl_any_eq_for_construct};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CShown(pub ConstructId);
@@ -11,11 +11,9 @@ impl Construct for CShown {
         Box::new(self.clone())
     }
 
-    fn reduce<'x>(
-        &self,
-        _env: &mut crate::environment::Environment<'x>,
-        _self_id: ConstructId,
-    ) -> ConstructId {
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn reduce<'x>(&self, _env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         self.0
     }
 }

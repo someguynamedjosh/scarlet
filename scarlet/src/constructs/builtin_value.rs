@@ -38,6 +38,8 @@ impl Construct for CBuiltinValue {
         Box::new(self.clone())
     }
 
+    fn check<'x>(&self, _env: &mut Environment<'x>) { }
+
     fn matches_var_type<'x>(&self, _env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         match (self, pattern) {
             (CBuiltinValue::Bool(_), VarType::Bool) | (CBuiltinValue::_32U(_), VarType::_32U) => {
