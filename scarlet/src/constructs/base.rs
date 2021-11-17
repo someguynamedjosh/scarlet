@@ -1,8 +1,12 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{builtin_value::CBuiltinValue, structt::CStruct};
+use super::{
+    builtin_value::CBuiltinValue,
+    structt::CStruct,
+    variable::{CVariable, VarType},
+};
 use crate::{
-    environment::Environment,
+    environment::{matchh::MatchResult, Environment},
     shared::{AnyEq, Id, Pool},
     tokens::structure::Token,
 };
@@ -37,6 +41,11 @@ pub trait Construct: Any + Debug + AnyEq {
     fn dyn_clone(&self) -> Box<dyn Construct>;
 
     #[allow(unused_variables)]
+    fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+        MatchResult::Unknown
+    }
+
+    #[allow(unused_variables)]
     fn reduce<'x>(&self, env: &mut Environment<'x>, self_id: ConstructId) -> ConstructId {
         self_id
     }
@@ -51,6 +60,10 @@ pub fn as_builtin_value(from: &dyn Construct) -> Option<&CBuiltinValue> {
 }
 
 pub fn as_struct(from: &dyn Construct) -> Option<&CStruct> {
+    downcast_construct(from)
+}
+
+pub fn as_variable(from: &dyn Construct) -> Option<&CVariable> {
     downcast_construct(from)
 }
 

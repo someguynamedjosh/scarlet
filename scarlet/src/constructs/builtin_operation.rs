@@ -38,7 +38,7 @@ impl Construct for CBuiltinOperation {
         for arg in &self.args {
             args.push(env.reduce(*arg));
         }
-        let mut args_as_values: Option<Vec<_>> = args
+        let args_as_values: Option<Vec<_>> = args
             .iter()
             .map(|arg| constructs::as_builtin_value(&**env.get_construct(*arg)).map(|x| *x))
             .collect();

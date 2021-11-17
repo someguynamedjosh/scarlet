@@ -1,6 +1,7 @@
-mod reduce;
-mod resolve;
-mod util;
+pub mod matchh;
+pub mod reduce;
+pub mod resolve;
+pub mod util;
 
 use crate::{
     constructs::{
