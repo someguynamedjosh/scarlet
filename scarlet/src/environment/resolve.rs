@@ -1,7 +1,7 @@
 mod transform;
 
 use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{environment::resolve::transform::ApplyContext, tokens::structure::Token};
+use crate::{constructs, environment::resolve::transform::ApplyContext, tokens::structure::Token};
 
 impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
@@ -11,7 +11,8 @@ impl<'x> Environment<'x> {
                 *con_id
             } else {
                 let token = token.clone();
-                let new_def = self.resolve_token(token);
+                let parent = con.parent_scope;
+                let new_def = self.resolve_token(token, parent);
                 self.constructs[con_id].definition = new_def;
                 self.resolve(con_id)
             }
@@ -20,10 +21,39 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn resolve_token(&mut self, token: Token<'x>) -> ConstructDefinition<'x> {
+    fn lookup_ident(&mut self, in_scope: Option<ConstructId>, ident: &str) -> Option<ConstructId> {
+        let in_scope = in_scope?;
+        let as_struct = constructs::as_struct(&**self.get_construct(in_scope));
+        if let Some(structt) = as_struct {
+            for (index, field) in structt.0.iter().enumerate() {
+                let index_string = format!("{}", index);
+                let name = field.name.as_ref().unwrap_or(&index_string);
+                if name == ident {
+                    return Some(field.value);
+                }
+            }
+        }
+        let parent = self.constructs[in_scope].parent_scope;
+        self.lookup_ident(parent, ident)
+    }
+
+    fn resolve_token(
+        &mut self,
+        token: Token<'x>,
+        scope: Option<ConstructId>,
+    ) -> ConstructDefinition<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
-            Token::Plain(_ident) => todo!(),
+            Token::Plain(ident) => {
+                if let Ok(int) = ident.parse::<u32>() {
+                    todo!()
+                } else {
+                    match self.lookup_ident(scope, ident) {
+                        Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),
+                        None => todo!("Nice error, bad ident {}", ident),
+                    }
+                }
+            }
             Token::Stream {
                 label: "construct_syntax",
                 contents,

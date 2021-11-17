@@ -5,3 +5,5 @@ pub mod member;
 pub mod shown;
 pub mod structt;
 pub mod variable;
+
+pub use base::*;

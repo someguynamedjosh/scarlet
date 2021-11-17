@@ -1,5 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
+use super::structt::CStruct;
 use crate::{
     environment::Environment,
     shared::{AnyEq, Id, Pool},
@@ -39,6 +40,14 @@ pub trait Construct: Any + Debug + AnyEq {
     fn reduce<'x>(&self, env: &mut Environment<'x>, self_id: ConstructId) -> ConstructId {
         self_id
     }
+}
+
+pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {
+    (from as &dyn Any).downcast_ref()
+}
+
+pub fn as_struct(from: &dyn Construct) -> Option<&CStruct> {
+    downcast_construct(from)
 }
 
 #[macro_export]
