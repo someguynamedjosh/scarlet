@@ -1,7 +1,11 @@
 mod transform;
 
 use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{constructs, environment::resolve::transform::ApplyContext, tokens::structure::Token};
+use crate::{
+    constructs::{self, builtin_value::CBuiltinValue},
+    environment::resolve::transform::ApplyContext,
+    tokens::structure::Token,
+};
 
 impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
@@ -45,8 +49,8 @@ impl<'x> Environment<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => {
-                if let Ok(int) = ident.parse::<u32>() {
-                    todo!()
+                if let Ok(int) = ident.parse() {
+                    ConstructDefinition::Resolved(Box::new(CBuiltinValue::_32U(int)))
                 } else {
                     match self.lookup_ident(scope, ident) {
                         Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),

@@ -3,8 +3,8 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    # 1 + 2
-    another IS 32U
+    1 + 2
+    # another IS 32U
 
     # something IS 32U{asdf IS 123 456}
 
