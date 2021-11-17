@@ -1,5 +1,9 @@
 use super::base::{Construct, ConstructId};
-use crate::{environment::Environment, impl_any_eq_for_construct};
+use crate::{
+    constructs::{self, builtin_value::CBuiltinValue},
+    environment::Environment,
+    impl_any_eq_for_construct,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinOperation {
@@ -34,6 +38,58 @@ impl Construct for CBuiltinOperation {
         for arg in &self.args {
             args.push(env.reduce(*arg));
         }
-        env.push_construct(Box::new(Self { args, ..*self }))
+        let mut args_as_values: Option<Vec<_>> = args
+            .iter()
+            .map(|arg| constructs::as_builtin_value(&**env.get_construct(*arg)).map(|x| *x))
+            .collect();
+        if let Some(aav) = args_as_values {
+            let as_32us: Option<Vec<_>> = aav.iter().map(|x| x.as_32u()).collect();
+            let val = match self.op {
+                BuiltinOperation::Sum32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
+                }
+                BuiltinOperation::Difference32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
+                }
+                BuiltinOperation::Product32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
+                }
+                BuiltinOperation::Quotient32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
+                }
+                BuiltinOperation::Modulo32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
+                }
+                BuiltinOperation::Power32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
+                }
+
+                BuiltinOperation::LessThan32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::Bool(as_32us[0] < as_32us[1])
+                }
+                BuiltinOperation::LessThanOrEqual32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::Bool(as_32us[0] <= as_32us[1])
+                }
+                BuiltinOperation::GreaterThan32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::Bool(as_32us[0] > as_32us[1])
+                }
+                BuiltinOperation::GreaterThanOrEqual32U => {
+                    let as_32us = as_32us.unwrap();
+                    CBuiltinValue::Bool(as_32us[0] >= as_32us[1])
+                }
+            };
+            env.push_construct(Box::new(val))
+        } else {
+            env.push_construct(Box::new(Self { args, ..*self }))
+        }
     }
 }

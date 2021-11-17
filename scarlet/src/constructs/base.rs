@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use super::structt::CStruct;
+use super::{builtin_value::CBuiltinValue, structt::CStruct};
 use crate::{
     environment::Environment,
     shared::{AnyEq, Id, Pool},
@@ -44,6 +44,10 @@ pub trait Construct: Any + Debug + AnyEq {
 
 pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {
     (from as &dyn Any).downcast_ref()
+}
+
+pub fn as_builtin_value(from: &dyn Construct) -> Option<&CBuiltinValue> {
+    downcast_construct(from)
 }
 
 pub fn as_struct(from: &dyn Construct) -> Option<&CStruct> {
