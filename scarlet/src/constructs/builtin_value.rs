@@ -1,4 +1,5 @@
 use super::{
+    as_builtin_value,
     base::{Construct, ConstructId},
     variable::VarType,
 };
@@ -38,14 +39,25 @@ impl Construct for CBuiltinValue {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, _env: &mut Environment<'x>) { }
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
-    fn matches_var_type<'x>(&self, _env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+    fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         match (self, pattern) {
             (CBuiltinValue::Bool(_), VarType::Bool) | (CBuiltinValue::_32U(_), VarType::_32U) => {
                 MatchResult::non_capturing()
             }
-            _ => MatchResult::Unknown,
+            (_, VarType::Just(pattern)) => {
+                if let Some(value) = as_builtin_value(&**env.get_construct(*pattern)) {
+                    if self == value {
+                        MatchResult::non_capturing()
+                    } else {
+                        MatchResult::NoMatch
+                    }
+                } else {
+                    MatchResult::Unknown
+                }
+            }
+            _ => MatchResult::NoMatch,
         }
     }
 }

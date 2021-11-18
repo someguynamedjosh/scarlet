@@ -1,5 +1,11 @@
-use super::base::{Construct, ConstructId};
-use crate::{environment::Environment, impl_any_eq_for_construct};
+use super::{
+    base::{Construct, ConstructId},
+    variable::VarType,
+};
+use crate::{
+    environment::{matchh::MatchResult, Environment},
+    impl_any_eq_for_construct,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Condition {
@@ -23,20 +29,41 @@ impl Construct for CMatch {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
+    fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+        let mut results = vec![env.construct_matches_simple_var_type(self.else_value, pattern)];
+        for con in &self.conditions {
+            results.push(env.construct_matches_simple_var_type(con.value, pattern))
+        }
+        MatchResult::and(results)
+    }
+
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.base);
         let mut conditions = Vec::new();
+        let mut else_value = env.reduce(self.else_value);
         for condition in &self.conditions {
-            conditions.push(Condition {
-                pattern: env.reduce(condition.pattern),
-                value: env.reduce(condition.value),
-            });
+            let pattern = env.reduce(condition.pattern);
+            let value = env.reduce(condition.value);
+            match env.construct_matches_construct(base, pattern) {
+                MatchResult::Match(subs) => {
+                    if subs.len() > 0 {
+                        todo!()
+                    }
+                    else_value = value;
+                    break;
+                }
+                MatchResult::NoMatch => (),
+                MatchResult::Unknown => conditions.push(Condition { pattern, value }),
+            }
         }
-        let else_value = env.reduce(self.else_value);
-        env.push_construct(Box::new(Self {
-            base,
-            conditions,
-            else_value,
-        }))
+        if conditions.len() == 0 {
+            else_value
+        } else {
+            env.push_construct(Box::new(Self {
+                base,
+                conditions,
+                else_value,
+            }))
+        }
     }
 }

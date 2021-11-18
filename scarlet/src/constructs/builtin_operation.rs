@@ -35,7 +35,7 @@ impl Construct for CBuiltinOperation {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         for &arg in &self.args {
-            if !env.construct_matches_var_type(arg, &VarType::_32U).is_guaranteed_match() {
+            if !env.construct_matches_simple_var_type(arg, &VarType::_32U).is_guaranteed_match() {
                 todo!("Nice error, args must match 32U");
             }
         }

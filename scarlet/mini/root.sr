@@ -3,7 +3,7 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    1 + 2
+    123.M{ON 123 true ELSE false}
     # another IS 32U
 
     # something IS 32U{asdf IS 123 456}

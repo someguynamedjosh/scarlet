@@ -72,15 +72,36 @@ impl<'x> Environment<'x> {
             (VarType::_32U, VarType::_32U) => MatchResult::non_capturing(),
             (VarType::_32U, _) => MatchResult::NoMatch,
             (VarType::Array { .. }, _) => todo!(),
-            (VarType::Just(value), _) => self.construct_matches_var_type(*value, pattern),
+            (VarType::Just(value), _) => self.construct_matches_simple_var_type(*value, pattern),
         }
     }
 
-    pub fn construct_matches_var_type(
+    pub fn construct_matches_construct(
+        &mut self,
+        value: ConstructId,
+        pattern: ConstructId,
+    ) -> MatchResult {
+        self.var_type_matches_var_type(&VarType::Just(value), &VarType::Just(pattern))
+    }
+
+    pub fn construct_matches_simple_var_type(
         &mut self,
         value: ConstructId,
         pattern: &VarType,
     ) -> MatchResult {
+        match pattern {
+            VarType::Anything | VarType::And(..) | VarType::Or(..) => {
+                panic!("{:?} is not a simple pattern", pattern)
+            }
+            _ => (),
+        }
+        if let VarType::Just(con) = pattern {
+            if let Some(var) = as_variable(&**self.get_construct(*con)) {
+                if var.capturing {
+                    panic!("{:?} is not a simple pattern", pattern)
+                }
+            }
+        }
         self.get_construct(value)
             .dyn_clone()
             .matches_var_type(self, pattern)
