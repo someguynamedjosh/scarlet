@@ -6,5 +6,6 @@ pub mod member;
 pub mod shown;
 pub mod structt;
 pub mod variable;
+pub mod substitution;
 
 pub use base::*;

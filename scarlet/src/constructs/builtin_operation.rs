@@ -1,4 +1,9 @@
-use super::{base::{Construct, ConstructId}, variable::VarType};
+use constructs::substitution::Substitutions;
+
+use super::{
+    base::{Construct, ConstructId},
+    variable::VarType,
+};
 use crate::{
     constructs::{self, builtin_value::CBuiltinValue},
     environment::Environment,
@@ -35,7 +40,10 @@ impl Construct for CBuiltinOperation {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         for &arg in &self.args {
-            if !env.construct_matches_simple_var_type(arg, &VarType::_32U).is_guaranteed_match() {
+            if !env
+                .construct_matches_simple_var_type(arg, &VarType::_32U)
+                .is_guaranteed_match()
+            {
                 todo!("Nice error, args must match 32U");
             }
         }
@@ -99,5 +107,18 @@ impl Construct for CBuiltinOperation {
         } else {
             env.push_construct(Box::new(Self { args, ..*self }))
         }
+    }
+
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
+        let mut args = Vec::new();
+        for arg in &self.args {
+            args.push(env.substitute(*arg, substitutions));
+        }
+        let def = Self { op: self.op, args };
+        env.push_construct(Box::new(def))
     }
 }

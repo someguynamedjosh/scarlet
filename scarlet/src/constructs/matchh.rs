@@ -1,5 +1,8 @@
+use itertools::Itertools;
+
 use super::{
     base::{Construct, ConstructId},
+    substitution::Substitutions,
     variable::VarType,
 };
 use crate::{
@@ -40,22 +43,20 @@ impl Construct for CMatch {
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.base);
         let mut conditions = Vec::new();
-        let mut else_value = env.reduce(self.else_value);
+        let mut else_value = self.else_value;
         for condition in &self.conditions {
             let pattern = env.reduce(condition.pattern);
             let value = env.reduce(condition.value);
             match env.construct_matches_construct(base, pattern) {
                 MatchResult::Match(subs) => {
-                    if subs.len() > 0 {
-                        todo!()
-                    }
-                    else_value = value;
+                    else_value = env.substitute(value, &subs);
                     break;
                 }
                 MatchResult::NoMatch => (),
                 MatchResult::Unknown => conditions.push(Condition { pattern, value }),
             }
         }
+        else_value = env.reduce(else_value);
         if conditions.len() == 0 {
             else_value
         } else {
@@ -65,5 +66,27 @@ impl Construct for CMatch {
                 else_value,
             }))
         }
+    }
+
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
+        let base = env.substitute(self.base, substitutions);
+        let else_value = env.substitute(self.else_value, substitutions);
+        let conditions = self
+            .conditions
+            .iter()
+            .map(|con| Condition {
+                pattern: env.substitute(con.pattern, substitutions),
+                value: env.substitute(con.value, substitutions),
+            })
+            .collect_vec();
+        env.push_construct(Box::new(Self {
+            base,
+            conditions,
+            else_value,
+        }))
     }
 }

@@ -1,10 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{
-    builtin_value::CBuiltinValue,
-    structt::CStruct,
-    variable::{CVariable, VarType},
-};
+use super::{builtin_value::CBuiltinValue, structt::CStruct, substitution::Substitutions, variable::{CVariable, VarType}};
 use crate::{
     environment::{matchh::MatchResult, Environment},
     shared::{AnyEq, Id, Pool},
@@ -51,6 +47,8 @@ pub trait Construct: Any + Debug + AnyEq {
     fn reduce<'x>(&self, env: &mut Environment<'x>, self_id: ConstructId) -> ConstructId {
         self_id
     }
+
+    fn substitute<'x>(&self, env: &mut Environment<'x>, substitutions: &Substitutions) -> ConstructId;
 }
 
 pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {

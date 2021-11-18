@@ -1,4 +1,7 @@
-use super::base::{Construct, ConstructId};
+use super::{
+    base::{Construct, ConstructId},
+    substitution::Substitutions,
+};
 use crate::{environment::Environment, impl_any_eq_for_construct};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -34,6 +37,25 @@ impl Construct for CMember {
             } => Member::Index {
                 index: env.reduce(*index),
                 proof_lt_len: env.reduce(*proof_lt_len),
+            },
+        };
+        env.push_construct(Box::new(Self(base, member)))
+    }
+
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
+        let base = env.substitute(self.0, substitutions);
+        let member = match &self.1 {
+            &Member::Named(..) => self.1.clone(),
+            &Member::Index {
+                index,
+                proof_lt_len,
+            } => Member::Index {
+                index: env.substitute(index, substitutions),
+                proof_lt_len: env.substitute(proof_lt_len, substitutions),
             },
         };
         env.push_construct(Box::new(Self(base, member)))

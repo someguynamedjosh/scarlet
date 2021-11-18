@@ -2,13 +2,12 @@ use std::collections::HashMap;
 
 use crate::{
     constructs::{
+        substitution::Substitutions,
         variable::{CVariable, VariableId},
         ConstructId,
     },
     shared::OrderedMap,
 };
-
-pub type Substitutions = OrderedMap<CVariable, ConstructId>;
 
 #[derive(Clone, Debug)]
 pub enum MatchResult {

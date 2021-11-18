@@ -1,4 +1,7 @@
-use super::base::{Construct, ConstructDefinition, ConstructId};
+use super::{
+    base::{Construct, ConstructDefinition, ConstructId},
+    substitution::Substitutions,
+};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
@@ -39,4 +42,17 @@ impl Construct for CVariable {
     }
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
+        for (target, value) in substitutions {
+            if target.id == self.id && target.capturing == self.capturing {
+                return *value;
+            }
+        }
+        env.push_construct(Box::new(self.clone()))
+    }
 }

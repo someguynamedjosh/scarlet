@@ -1,4 +1,7 @@
-use super::base::{Construct, ConstructId};
+use super::{
+    base::{Construct, ConstructId},
+    substitution::Substitutions,
+};
 use crate::{environment::Environment, impl_any_eq_for_construct};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,6 +30,22 @@ impl Construct for CStruct {
                 value: env.reduce(field.value),
             });
         }
+        env.push_construct(Box::new(Self(fields)))
+    }
+
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
+        let fields = self
+            .0
+            .iter()
+            .map(|field| StructField {
+                name: field.name.clone(),
+                value: env.substitute(field.value, substitutions),
+            })
+            .collect();
         env.push_construct(Box::new(Self(fields)))
     }
 }

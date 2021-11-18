@@ -1,8 +1,4 @@
-use super::{
-    as_builtin_value,
-    base::{Construct, ConstructId},
-    variable::VarType,
-};
+use super::{as_builtin_value, base::{Construct, ConstructId}, substitution::Substitutions, variable::VarType};
 use crate::{
     environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
@@ -59,5 +55,9 @@ impl Construct for CBuiltinValue {
             }
             _ => MatchResult::NoMatch,
         }
+    }
+
+    fn substitute<'x>(&self, env: &mut Environment<'x>, _substitutions: &Substitutions) -> ConstructId {
+        env.push_construct(Box::new(self.clone()))
     }
 }

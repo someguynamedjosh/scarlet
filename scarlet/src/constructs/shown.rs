@@ -1,4 +1,7 @@
-use super::base::{Construct, ConstructId};
+use super::{
+    base::{Construct, ConstructId},
+    substitution::Substitutions,
+};
 use crate::{environment::Environment, impl_any_eq_for_construct};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,5 +18,14 @@ impl Construct for CShown {
 
     fn reduce<'x>(&self, _env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         self.0
+    }
+
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
+        let base = env.substitute(self.0, substitutions);
+        env.push_construct(Box::new(Self(base)))
     }
 }
