@@ -1,8 +1,13 @@
 use super::{
+    as_struct,
     base::{Construct, ConstructId},
     substitution::Substitutions,
+    variable::VarType,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct};
+use crate::{
+    environment::{matchh::MatchResult, Environment},
+    impl_any_eq_for_construct,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StructField {
@@ -21,6 +26,29 @@ impl Construct for CStruct {
     }
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+        if let VarType::Just(pattern) = pattern {
+            if let Some(pattern) = as_struct(&**env.get_construct(*pattern)) {
+                if self.0.len() != pattern.0.len() {
+                    return MatchResult::NoMatch;
+                }
+                let pattern = pattern.clone();
+                let fields = self.0.iter().zip(pattern.0.iter());
+                let results = fields
+                    .map(|(vfield, pfield)| {
+                        if vfield.name == pfield.name {
+                            env.construct_matches_construct(vfield.value, pfield.value)
+                        } else {
+                            MatchResult::NoMatch
+                        }
+                    })
+                    .collect();
+                return MatchResult::and(results);
+            }
+        }
+        MatchResult::Unknown
+    }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let mut fields = Vec::new();
