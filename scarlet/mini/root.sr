@@ -8,6 +8,8 @@
 
     sum IS a + b
 
+    sum{1 2}
+
     # another IS 32U
 
     # something IS 32U{asdf IS 123 456}

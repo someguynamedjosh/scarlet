@@ -2,7 +2,12 @@ mod transform;
 
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::{self, builtin_value::CBuiltinValue, variable::CVariable},
+    constructs::{
+        self,
+        builtin_value::CBuiltinValue,
+        substitution::{CSubstitution, Substitutions},
+        variable::CVariable,
+    },
     environment::resolve::transform::ApplyContext,
     shared::OrderedMap,
     tokens::structure::Token,
@@ -103,6 +108,16 @@ impl<'x> Environment<'x> {
                     }
                 }
                 ConstructDefinition::Unresolved(Token::Construct(self.substitute(base, &subs)))
+            }
+            Token::Stream {
+                label: "substitute",
+                mut contents,
+            } => {
+                let base = self.push_unresolved(contents.remove(0));
+                self.constructs[base].parent_scope = scope;
+                let mut subs = Substitutions::new();
+                println!("{:?}", contents);
+                ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
             }
             Token::Stream { label, .. } => todo!(
                 "Nice error, token stream with label '{:?}' cannot be resolved",

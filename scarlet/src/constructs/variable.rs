@@ -22,6 +22,29 @@ pub enum VarType {
     },
 }
 
+impl VarType {
+    pub fn substitute<'x>(self, env: &mut Environment<'x>, substitutions: &Substitutions) -> Self {
+        match self {
+            Self::And(l, r) => Self::And(
+                env.substitute(l, substitutions),
+                env.substitute(r, substitutions),
+            ),
+            Self::Or(l, r) => Self::Or(
+                env.substitute(l, substitutions),
+                env.substitute(r, substitutions),
+            ),
+            Self::Array { length, eltype } => Self::Array {
+                length: env.substitute(length, substitutions),
+                eltype: env.substitute(eltype, substitutions),
+            },
+            Self::Just(just) => Self::Just(env.substitute(just, substitutions)),
+            Self::Anything => Self::Anything,
+            Self::Bool => Self::Bool,
+            Self::_32U => Self::_32U,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable;
 pub type VariablePool = Pool<Variable, 'V'>;
@@ -32,6 +55,12 @@ pub struct CVariable {
     pub id: VariableId,
     pub typee: VarType,
     pub capturing: bool,
+}
+
+impl CVariable {
+    pub fn is_same_variable_as(&self, other: &Self) -> bool {
+        self.id == other.id && self.capturing == other.capturing
+    }
 }
 
 impl_any_eq_for_construct!(CVariable);
@@ -65,6 +94,12 @@ impl Construct for CVariable {
                 return *value;
             }
         }
-        env.push_construct(Box::new(self.clone()))
+        let typee = self.typee.clone().substitute(env, substitutions);
+        let new = Self {
+            capturing: self.capturing,
+            id: self.id,
+            typee,
+        };
+        env.push_construct(Box::new(new))
     }
 }
