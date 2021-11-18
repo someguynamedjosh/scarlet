@@ -3,7 +3,7 @@ use super::{
     substitution::Substitutions,
 };
 use crate::{
-    environment::Environment,
+    environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
     shared::{Id, Pool},
 };
@@ -45,6 +45,14 @@ impl Construct for CVariable {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         vec![self.clone()]
+    }
+
+    fn matches_simple_var_type<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        pattern: &VarType,
+    ) -> MatchResult {
+        env.var_type_matches_var_type(&self.typee, pattern)
     }
 
     fn substitute<'x>(

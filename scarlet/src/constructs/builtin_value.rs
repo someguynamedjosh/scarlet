@@ -46,7 +46,7 @@ impl Construct for CBuiltinValue {
         Vec::new()
     }
 
-    fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+    fn matches_simple_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         match (self, pattern) {
             (CBuiltinValue::Bool(_), VarType::Bool) | (CBuiltinValue::_32U(_), VarType::_32U) => {
                 MatchResult::non_capturing()

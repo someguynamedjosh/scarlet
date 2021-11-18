@@ -43,7 +43,7 @@ impl Construct for CMatch {
         deps
     }
 
-    fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+    fn matches_simple_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         let mut results = vec![env.construct_matches_simple_var_type(self.else_value, pattern)];
         for con in &self.conditions {
             results.push(env.construct_matches_simple_var_type(con.value, pattern))

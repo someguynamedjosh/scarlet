@@ -104,6 +104,6 @@ impl<'x> Environment<'x> {
         }
         self.get_construct(value)
             .dyn_clone()
-            .matches_var_type(self, pattern)
+            .matches_simple_var_type(self, pattern)
     }
 }
