@@ -2,8 +2,9 @@ mod transform;
 
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::{self, builtin_value::CBuiltinValue},
+    constructs::{self, builtin_value::CBuiltinValue, variable::CVariable},
     environment::resolve::transform::ApplyContext,
+    shared::OrderedMap,
     tokens::structure::Token,
 };
 
@@ -11,8 +12,8 @@ impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
         let con = &self.constructs[con_id];
         if let ConstructDefinition::Unresolved(token) = &con.definition {
-            if let Token::Construct(con_id) = token {
-                *con_id
+            if let &Token::Construct(con_id) = token {
+                self.resolve(con_id)
             } else {
                 let token = token.clone();
                 let parent = con.parent_scope;
@@ -74,6 +75,34 @@ impl<'x> Environment<'x> {
                 transform::apply_transformers(&mut context, &mut contents, &Default::default());
                 assert_eq!(contents.len(), 1);
                 ConstructDefinition::Unresolved(contents.into_iter().next().unwrap())
+            }
+            Token::Stream {
+                label: "CAPTURING",
+                contents,
+            } => {
+                let base = contents[0].unwrap_construct();
+                let mut to_set = Vec::new();
+                for capture in &contents[1..] {
+                    match capture {
+                        Token::Plain("ALL") => to_set.append(&mut self.get_dependencies(base)),
+                        &Token::Construct(capture) => {
+                            to_set.append(&mut self.get_dependencies(capture))
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+                let mut subs = OrderedMap::new();
+                for var in to_set {
+                    if !var.capturing && !subs.contains_key(&var) {
+                        let value = CVariable {
+                            capturing: true,
+                            ..var.clone()
+                        };
+                        let value = self.push_construct(Box::new(value));
+                        subs.insert_no_replace(var, value)
+                    }
+                }
+                ConstructDefinition::Unresolved(Token::Construct(self.substitute(base, &subs)))
             }
             Token::Stream { label, .. } => todo!(
                 "Nice error, token stream with label '{:?}' cannot be resolved",

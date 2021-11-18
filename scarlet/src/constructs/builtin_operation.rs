@@ -1,4 +1,4 @@
-use constructs::substitution::Substitutions;
+use constructs::{substitution::Substitutions, variable::CVariable};
 
 use super::{
     base::{Construct, ConstructId},
@@ -47,6 +47,14 @@ impl Construct for CBuiltinOperation {
                 todo!("Nice error, args must match 32U");
             }
         }
+    }
+
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        let mut deps = Vec::new();
+        for arg in &self.args {
+            deps.append(&mut env.get_dependencies(*arg));
+        }
+        deps
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

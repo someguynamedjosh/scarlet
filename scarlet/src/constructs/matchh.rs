@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::VarType,
+    variable::{CVariable, VarType},
 };
 use crate::{
     environment::{matchh::MatchResult, Environment},
@@ -31,6 +31,17 @@ impl Construct for CMatch {
     }
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        let mut deps = Vec::new();
+        deps.append(&mut env.get_dependencies(self.base));
+        deps.append(&mut env.get_dependencies(self.else_value));
+        for con in &self.conditions {
+            deps.append(&mut env.get_non_capturing_dependencies(con.pattern));
+            deps.append(&mut env.get_dependencies(con.value))
+        }
+        deps
+    }
 
     fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         let mut results = vec![env.construct_matches_simple_var_type(self.else_value, pattern)];

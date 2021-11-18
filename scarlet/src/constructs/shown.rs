@@ -1,6 +1,7 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
+    variable::CVariable,
 };
 use crate::{environment::Environment, impl_any_eq_for_construct};
 
@@ -15,6 +16,10 @@ impl Construct for CShown {
     }
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        env.get_dependencies(self.0)
+    }
 
     fn reduce<'x>(&self, _env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         self.0

@@ -1,6 +1,11 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{builtin_value::CBuiltinValue, structt::CStruct, substitution::Substitutions, variable::{CVariable, VarType}};
+use super::{
+    builtin_value::CBuiltinValue,
+    structt::CStruct,
+    substitution::Substitutions,
+    variable::{CVariable, VarType},
+};
 use crate::{
     environment::{matchh::MatchResult, Environment},
     shared::{AnyEq, Id, Pool},
@@ -38,6 +43,8 @@ pub trait Construct: Any + Debug + AnyEq {
 
     fn check<'x>(&self, env: &mut Environment<'x>);
 
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable>;
+
     #[allow(unused_variables)]
     fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         MatchResult::Unknown
@@ -48,7 +55,11 @@ pub trait Construct: Any + Debug + AnyEq {
         self_id
     }
 
-    fn substitute<'x>(&self, env: &mut Environment<'x>, substitutions: &Substitutions) -> ConstructId;
+    fn substitute<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        substitutions: &Substitutions,
+    ) -> ConstructId;
 }
 
 pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {

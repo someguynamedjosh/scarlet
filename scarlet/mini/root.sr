@@ -3,10 +3,10 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    point IS [x IS 32U.V.CAPTURING{ALL} y IS 32U.V.CAPTURING{ALL}]
+    px IS 32U.V.C{ALL}
+    Point IS [x IS px   y IS 32U.V].C{ALL}
 
-    # point.M{ON point true ELSE false}
-    [1].M{ON [32U] true ELSE false}
+    [x IS 1   y IS 2].M{ON Point px ELSE false}
     # another IS 32U
 
     # something IS 32U{asdf IS 123 456}

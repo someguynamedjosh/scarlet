@@ -1,6 +1,7 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
+    variable::CVariable,
 };
 use crate::{environment::Environment, impl_any_eq_for_construct};
 
@@ -25,6 +26,15 @@ impl Construct for CMember {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         todo!()
+    }
+
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        let mut deps = env.get_dependencies(self.0);
+        if let &Member::Index { index, proof_lt_len } = &self.1 {
+            deps.append(&mut env.get_dependencies(index));
+            deps.append(&mut env.get_dependencies(proof_lt_len));
+        }
+        deps
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

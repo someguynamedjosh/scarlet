@@ -43,6 +43,10 @@ impl Construct for CVariable {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        vec![self.clone()]
+    }
+
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

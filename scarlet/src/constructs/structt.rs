@@ -2,7 +2,7 @@ use super::{
     as_struct,
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::VarType,
+    variable::{CVariable, VarType},
 };
 use crate::{
     environment::{matchh::MatchResult, Environment},
@@ -27,6 +27,14 @@ impl Construct for CStruct {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        let mut deps = Vec::new();
+        for field in &self.0 {
+            deps.append(&mut env.get_dependencies(field.value));
+        }
+        deps
+    }
+
     fn matches_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
         if let VarType::Just(pattern) = pattern {
             if let Some(pattern) = as_struct(&**env.get_construct(*pattern)) {
@@ -38,8 +46,10 @@ impl Construct for CStruct {
                 let results = fields
                     .map(|(vfield, pfield)| {
                         if vfield.name == pfield.name {
+                            println!("{:?} {:?}", vfield.value, pfield.value);
                             env.construct_matches_construct(vfield.value, pfield.value)
                         } else {
+                            panic!("Name mismatch!");
                             MatchResult::NoMatch
                         }
                     })
