@@ -6,7 +6,8 @@ use crate::{
         self,
         builtin_value::CBuiltinValue,
         substitution::{CSubstitution, Substitutions},
-        variable::CVariable,
+        variable::{CVariable, VarType},
+        Construct,
     },
     environment::resolve::transform::ApplyContext,
     shared::OrderedMap,
@@ -115,8 +116,34 @@ impl<'x> Environment<'x> {
             } => {
                 let base = self.push_unresolved(contents.remove(0));
                 self.constructs[base].parent_scope = scope;
+                let mut deps = self.get_dependencies(base);
                 let mut subs = Substitutions::new();
-                println!("{:?}", contents);
+                let mut anonymous_subs = Vec::new();
+                for sub in contents {
+                    match sub {
+                        Token::Stream {
+                            label: "target",
+                            contents,
+                        } => {
+                            todo!()
+                        }
+                        _ => anonymous_subs.push(sub),
+                    }
+                }
+                for sub in anonymous_subs {
+                    let sub = self.push_unresolved(sub);
+                    self.constructs[sub].parent_scope = scope;
+                    for (idx, dep) in deps.iter().enumerate() {
+                        if self
+                            .var_type_matches_var_type(&VarType::Just(sub), &dep.typee)
+                            .is_guaranteed_match()
+                        {
+                            let dep = deps.remove(idx);
+                            subs.insert_no_replace(dep, sub);
+                            break;
+                        }
+                    }
+                }
                 ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
             }
             Token::Stream { label, .. } => todo!(
