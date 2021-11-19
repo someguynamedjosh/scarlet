@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::{
     base::{Construct, ConstructDefinition, ConstructId},
     substitution::Substitutions,
@@ -23,6 +25,22 @@ pub enum VarType {
 }
 
 impl VarType {
+    pub fn get_dependencies(&self, env: &mut Environment) -> Vec<CVariable> {
+        match self {
+            VarType::Anything | VarType::_32U | VarType::Bool => vec![],
+            VarType::Just(base) => env.get_dependencies(*base),
+            VarType::And(l, r)
+            | VarType::Or(l, r)
+            | VarType::Array {
+                length: l,
+                eltype: r,
+            } => [env.get_dependencies(*l), env.get_dependencies(*r)].concat(),
+        }
+        .into_iter()
+        .filter(|x| !x.capturing)
+        .collect_vec()
+    }
+
     pub fn substitute<'x>(self, env: &mut Environment<'x>, substitutions: &Substitutions) -> Self {
         match self {
             Self::And(l, r) => Self::And(
@@ -73,7 +91,9 @@ impl Construct for CVariable {
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        vec![self.clone()]
+        let mut base = self.typee.get_dependencies(env);
+        base.push(self.clone());
+        base
     }
 
     fn matches_simple_var_type<'x>(

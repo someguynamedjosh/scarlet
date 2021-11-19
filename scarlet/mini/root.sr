@@ -3,12 +3,17 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    a IS 32U.V
-    b IS 32U.V
+    # a IS 32U.V
+    # b IS 32U.V
 
-    sum IS a + b
+    # sum IS a + b
 
-    sum{1 2}
+    # sum{1 2}
+
+    condition IS Bool.V
+    Proof IS (condition VA true).C{ALL}
+
+    Proof{true}{true}
 
     # another IS 32U
 

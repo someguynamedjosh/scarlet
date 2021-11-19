@@ -133,6 +133,7 @@ impl<'x> Environment<'x> {
                 for sub in anonymous_subs {
                     let sub = self.push_unresolved(sub);
                     self.constructs[sub].parent_scope = scope;
+                    let mut match_found = false;
                     for (idx, dep) in deps.iter().enumerate() {
                         if self
                             .var_type_matches_var_type(&VarType::Just(sub), &dep.typee)
@@ -140,8 +141,16 @@ impl<'x> Environment<'x> {
                         {
                             let dep = deps.remove(idx);
                             subs.insert_no_replace(dep, sub);
+                            match_found = true;
                             break;
                         }
+                    }
+                    if !match_found {
+                        todo!(
+                            "Nice error, {:?} cannot be assigned to any of:\n{:#?}",
+                            sub,
+                            deps
+                        );
                     }
                 }
                 ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
