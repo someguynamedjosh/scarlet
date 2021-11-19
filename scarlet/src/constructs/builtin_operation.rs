@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     constructs::{self, builtin_value::CBuiltinValue},
-    environment::Environment,
+    environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
 };
 
@@ -55,6 +55,36 @@ impl Construct for CBuiltinOperation {
             deps.append(&mut env.get_dependencies(*arg));
         }
         deps
+    }
+
+    fn matches_simple_var_type<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        pattern: &VarType,
+    ) -> MatchResult {
+        match pattern {
+            VarType::Anything => unreachable!(),
+            VarType::_32U => match self.op {
+                BuiltinOperation::Sum32U
+                | BuiltinOperation::Difference32U
+                | BuiltinOperation::Product32U
+                | BuiltinOperation::Quotient32U
+                | BuiltinOperation::Modulo32U
+                | BuiltinOperation::Power32U => MatchResult::non_capturing(),
+                _ => MatchResult::NoMatch,
+            },
+            VarType::Bool => match self.op {
+                BuiltinOperation::LessThan32U
+                | BuiltinOperation::LessThanOrEqual32U
+                | BuiltinOperation::GreaterThan32U
+                | BuiltinOperation::GreaterThanOrEqual32U => MatchResult::non_capturing(),
+                _ => MatchResult::NoMatch,
+            },
+            VarType::Just(_) => MatchResult::Unknown,
+            VarType::And(_, _) => unreachable!(),
+            VarType::Or(_, _) => unreachable!(),
+            VarType::Array { .. } => unreachable!(),
+        }
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

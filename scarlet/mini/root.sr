@@ -13,7 +13,13 @@
     condition IS Bool.V
     Proof IS (condition VA true).C{ALL}
 
-    Proof{true}{true}
+    value IS 32U.V
+    value_lt_10 IS Proof{value < 10}.V
+    both IS [value value_lt_10]
+
+    both{1}{true}
+
+    # both{123}
 
     # another IS 32U
 

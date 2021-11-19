@@ -41,6 +41,21 @@ impl VarType {
         .collect_vec()
     }
 
+    pub fn reduce<'x>(self, env: &mut Environment<'x>) -> Self {
+        match self {
+            Self::And(l, r) => Self::And(env.reduce(l), env.reduce(r)),
+            Self::Or(l, r) => Self::Or(env.reduce(l), env.reduce(r)),
+            Self::Array { length, eltype } => Self::Array {
+                length: env.reduce(length),
+                eltype: env.reduce(eltype),
+            },
+            Self::Just(just) => Self::Just(env.reduce(just)),
+            Self::Anything => Self::Anything,
+            Self::Bool => Self::Bool,
+            Self::_32U => Self::_32U,
+        }
+    }
+
     pub fn substitute<'x>(self, env: &mut Environment<'x>, substitutions: &Substitutions) -> Self {
         match self {
             Self::And(l, r) => Self::And(
@@ -102,6 +117,14 @@ impl Construct for CVariable {
         pattern: &VarType,
     ) -> MatchResult {
         env.var_type_matches_var_type(&self.typee, pattern)
+    }
+
+    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
+        let def = Self {
+            typee: self.typee.clone().reduce(env),
+            ..self.clone()
+        };
+        env.push_construct(Box::new(def))
     }
 
     fn substitute<'x>(

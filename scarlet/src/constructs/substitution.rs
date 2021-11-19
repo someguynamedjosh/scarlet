@@ -38,13 +38,17 @@ impl Construct for CSubstitution {
             .map(|var| var.substitute(env, &self.1))
             .collect_vec()
             .into_iter()
-            .map(|item| env.get_dependencies(item))
+            .map(|item| {
+                let item = env.reduce(item);
+                env.get_dependencies(item)
+            })
             .flatten()
             .collect()
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let subbed = env.substitute(self.0, &self.1);
+        let base = env.reduce(self.0);
+        let subbed = env.substitute(base, &self.1);
         env.reduce(subbed)
     }
 
@@ -53,6 +57,7 @@ impl Construct for CSubstitution {
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
     ) -> ConstructId {
+        let base = env.reduce(self.0);
         let mut new_subs = self.1.clone();
         for (_, value) in &mut new_subs {
             let subbed = env.substitute(*value, substitutions);
@@ -70,6 +75,6 @@ impl Construct for CSubstitution {
                 new_subs.insert_no_replace(target.clone(), *value);
             }
         }
-        env.push_construct(Box::new(Self(self.0, new_subs)))
+        env.push_construct(Box::new(Self(base, new_subs)))
     }
 }

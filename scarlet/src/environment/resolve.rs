@@ -146,6 +146,7 @@ impl<'x> Environment<'x> {
                         }
                     }
                     if !match_found {
+                        println!("{:#?}", self);
                         todo!(
                             "Nice error, {:?} cannot be assigned to any of:\n{:#?}",
                             sub,
