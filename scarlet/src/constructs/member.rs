@@ -1,7 +1,8 @@
 use super::{
     base::{Construct, ConstructId},
+    builtin_operation::{BuiltinOperation, CBuiltinOperation},
     substitution::Substitutions,
-    variable::CVariable,
+    variable::{CVariable, VarType},
 };
 use crate::{environment::Environment, impl_any_eq_for_construct};
 
@@ -25,12 +26,26 @@ impl Construct for CMember {
     }
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
-        todo!()
+        if let Member::Index {
+            index,
+            proof_lt_len,
+        } = &self.1
+        {
+            let lt_len = env.push_construct(Box::new(CBuiltinOperation {
+                op: BuiltinOperation::LessThan32U,
+                args: vec![*index, todo!()],
+            }));
+            todo!()
+        }
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         let mut deps = env.get_dependencies(self.0);
-        if let &Member::Index { index, proof_lt_len } = &self.1 {
+        if let &Member::Index {
+            index,
+            proof_lt_len,
+        } = &self.1
+        {
             deps.append(&mut env.get_dependencies(index));
             deps.append(&mut env.get_dependencies(proof_lt_len));
         }

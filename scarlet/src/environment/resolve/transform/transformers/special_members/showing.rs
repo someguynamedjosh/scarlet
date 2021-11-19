@@ -9,7 +9,7 @@ use crate::{
 pub struct Shown;
 impl SpecialMember for Shown {
     fn aliases(&self) -> &'static [&'static str] {
-        &["SHOWN", "S"]
+        &["SHOWING", "S"]
     }
 
     fn apply<'t>(

@@ -19,6 +19,7 @@ pub fn build_transformers<'e>(
         20 => tfers![
             Capturing,
             Indexing,
+            Length,
             Matching,
             Shown,
             Variable,

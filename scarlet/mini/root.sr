@@ -14,10 +14,9 @@
     Proof IS (condition VA true).C{ALL}
 
     value IS 32U.V
-    value_lt_10 IS Proof{value < 10}.V
-    both IS [value value_lt_10]
+    value_lt_3 IS Proof{value < 3}.V
 
-    both{1}{true}
+    selection IS [123 456 789].I{value value_lt_3}
 
     # both{123}
 
