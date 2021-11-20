@@ -48,7 +48,11 @@ impl Construct for CSubstitution {
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.0);
-        let subbed = env.substitute(base, &self.1);
+        let mut rsubs = Substitutions::new();
+        for (target, value) in &self.1 {
+            rsubs.insert_no_replace(target.clone(), env.reduce(*value));
+        }
+        let subbed = env.substitute(base, &rsubs);
         env.reduce(subbed)
     }
 

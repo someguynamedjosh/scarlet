@@ -65,7 +65,10 @@ impl<'x> Environment<'x> {
                 } else {
                     match self.lookup_ident(scope, ident) {
                         Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),
-                        None => todo!("Nice error, bad ident {}", ident),
+                        None => {
+                            println!("{:#?}", self);
+                            todo!("Nice error, bad ident {} in {:?}", ident, scope)
+                        },
                     }
                 }
             }
@@ -114,7 +117,8 @@ impl<'x> Environment<'x> {
                 label: "substitute",
                 mut contents,
             } => {
-                let base = self.push_unresolved(contents.remove(0));
+                let base = self.push_unresolved(contents.remove(0), scope);
+                let base = self.reduce(base);
                 self.constructs[base].parent_scope = scope;
                 let mut deps = self.get_dependencies(base);
                 let mut subs = Substitutions::new();
@@ -131,8 +135,8 @@ impl<'x> Environment<'x> {
                     }
                 }
                 for sub in anonymous_subs {
-                    let sub = self.push_unresolved(sub);
-                    self.constructs[sub].parent_scope = scope;
+                    let sub = self.push_unresolved(sub, scope);
+                    let sub = self.reduce(sub);
                     let mut match_found = false;
                     for (idx, dep) in deps.iter().enumerate() {
                         if self

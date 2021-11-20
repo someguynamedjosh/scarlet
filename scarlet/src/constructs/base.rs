@@ -46,7 +46,11 @@ pub trait Construct: Any + Debug + AnyEq {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable>;
 
     #[allow(unused_variables)]
-    fn matches_simple_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+    fn matches_simple_var_type<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        pattern: &VarType,
+    ) -> MatchResult {
         MatchResult::Unknown
     }
 

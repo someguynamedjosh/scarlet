@@ -1,9 +1,9 @@
+pub mod dependencies;
 pub mod matchh;
 pub mod reduce;
 pub mod resolve;
-pub mod util;
 pub mod substitute;
-pub mod dependencies;
+pub mod util;
 
 use crate::{
     constructs::{
@@ -59,13 +59,21 @@ where
         self.constructs.push(con)
     }
 
-    pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
+    pub fn push_unresolved(
+        &mut self,
+        token: Token<'x>,
+        parent_scope: Option<ConstructId>,
+    ) -> ConstructId {
+        if token == Token::Plain("Theorem") {
+            println!("{:#?}", self);
+            println!("HERE");
+        }
         if let Token::Construct(con) = token {
             con
         } else {
             let con = AnnotatedConstruct {
                 definition: ConstructDefinition::Unresolved(token),
-                parent_scope: None,
+                parent_scope,
             };
             self.constructs.push(con)
         }
@@ -81,7 +89,8 @@ where
         self.push_construct(Box::new(def))
     }
 
-    pub(crate) fn check(&self, _con: ConstructId) {
-        // todo!()
+    pub(crate) fn check(&mut self, con_id: ConstructId) {
+        let con = self.get_construct(con_id).dyn_clone();
+        con.check(self);
     }
 }

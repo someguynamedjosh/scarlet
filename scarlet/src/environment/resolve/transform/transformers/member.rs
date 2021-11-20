@@ -24,7 +24,7 @@ impl Transformer for Member {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let base = success.get_capture("base").clone();
-        let base = c.env.push_unresolved(base);
+        let base = c.push_unresolved(base);
         let member_name = success.get_capture("member_name").unwrap_plain();
         let def = CMember(base, ConstructsMember::Named(member_name.to_owned()));
         let con = c.env.push_construct(Box::new(def));

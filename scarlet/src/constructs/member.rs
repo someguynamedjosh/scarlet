@@ -35,6 +35,7 @@ impl Construct for CMember {
             proof_lt_len,
         } = &self.1
         {
+            let (index, proof_lt_len) = (env.reduce(index), env.reduce(proof_lt_len));
             let len = env.push_construct(Box::new(CLength(self.0)));
             let lt_len = env.push_construct(Box::new(CBuiltinOperation {
                 op: BuiltinOperation::LessThan32U,
@@ -46,6 +47,8 @@ impl Construct for CMember {
                 .var_type_matches_var_type(&VarType::Just(proof_lt_len), &lt_len_and_true)
                 .is_guaranteed_match()
             {
+                println!("{:#?}", env);
+                println!("{:?}", lt_len_and_true);
                 todo!(
                     "Nice error, {:?} is not a proof that {:?} is in bounds of {:?}",
                     proof_lt_len,

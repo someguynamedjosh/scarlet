@@ -42,7 +42,7 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
     }
 
     pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
-        let con = self.env.push_unresolved(token.clone());
+        let con = self.env.push_unresolved(token.clone(), None);
         let existing_scope = self.env.constructs[con].parent_scope;
         if existing_scope.is_some() && existing_scope != self.parent_scope {
             let con = self.push_placeholder();
