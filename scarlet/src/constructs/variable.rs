@@ -2,6 +2,7 @@ use itertools::Itertools;
 
 use super::{
     base::{Construct, ConstructDefinition, ConstructId},
+    downcast_construct,
     substitution::Substitutions,
 };
 use crate::{
@@ -116,6 +117,13 @@ impl Construct for CVariable {
         env: &mut Environment<'x>,
         pattern: &VarType,
     ) -> MatchResult {
+        if let &VarType::Just(other) = pattern {
+            if let Some(pattern_var) = downcast_construct::<Self>(&**env.get_construct(other)) {
+                if self.is_same_variable_as(pattern_var) {
+                    return MatchResult::non_capturing();
+                }
+            }
+        }
         env.var_type_matches_var_type(&self.typee, pattern)
     }
 

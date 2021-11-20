@@ -1,11 +1,11 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::CVariable,
+    variable::{CVariable, VarType},
 };
 use crate::{
     constructs::{as_struct, builtin_value::CBuiltinValue},
-    environment::Environment,
+    environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
 };
 
@@ -23,6 +23,18 @@ impl Construct for CLength {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         env.get_dependencies(self.0)
+    }
+
+    fn matches_simple_var_type<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        pattern: &VarType,
+    ) -> MatchResult {
+        match pattern {
+            VarType::Bool => MatchResult::NoMatch,
+            VarType::_32U => MatchResult::non_capturing(),
+            _ => MatchResult::Unknown,
+        }
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, self_id: ConstructId) -> ConstructId {

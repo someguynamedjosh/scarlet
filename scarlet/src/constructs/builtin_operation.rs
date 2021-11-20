@@ -5,7 +5,7 @@ use super::{
     variable::VarType,
 };
 use crate::{
-    constructs::{self, builtin_value::CBuiltinValue},
+    constructs::{self, as_builtin_value, builtin_value::CBuiltinValue, downcast_construct},
     environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
 };
@@ -59,7 +59,7 @@ impl Construct for CBuiltinOperation {
 
     fn matches_simple_var_type<'x>(
         &self,
-        _env: &mut Environment<'x>,
+        env: &mut Environment<'x>,
         pattern: &VarType,
     ) -> MatchResult {
         match pattern {
@@ -80,7 +80,28 @@ impl Construct for CBuiltinOperation {
                 | BuiltinOperation::GreaterThanOrEqual32U => MatchResult::non_capturing(),
                 _ => MatchResult::NoMatch,
             },
-            VarType::Just(_) => MatchResult::Unknown,
+            VarType::Just(other) => {
+                if let Some(pattern_op) = downcast_construct::<Self>(&**env.get_construct(*other)) {
+                    let pattern_op = pattern_op.clone();
+                    if pattern_op.op == self.op {
+                        for (&self_arg, &pattern_arg) in
+                            self.args.iter().zip(pattern_op.args.iter())
+                        {
+                            if !env
+                                .construct_matches_construct(self_arg, pattern_arg)
+                                .is_guaranteed_match()
+                            {
+                                return MatchResult::Unknown;
+                            }
+                        }
+                        MatchResult::non_capturing()
+                    } else {
+                        MatchResult::Unknown
+                    }
+                } else {
+                    MatchResult::Unknown
+                }
+            }
             VarType::And(_, _) => unreachable!(),
             VarType::Or(_, _) => unreachable!(),
             VarType::Array { .. } => unreachable!(),

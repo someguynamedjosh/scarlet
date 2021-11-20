@@ -3,39 +3,14 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    # a IS 32U.V
-    # b IS 32U.V
-
-    # sum IS a + b
-
-    # sum{1 2}
-
     condition IS Bool.V
-    Proof IS (condition VA true).C{ALL}
+    Theorem IS (condition VA true).C{ALL}
 
     value IS 32U.V
-    value_lt_3 IS Proof{value < 3}.V
+    # value_lt_3 IS Theorem{value < 3}.V
 
-    selection IS [123 456 789].I{value value_lt_3}
+    
 
-    # both{123}
+    # selection IS [123 456 789].I{value value_lt_3}
 
-    # another IS 32U
-
-    # something IS 32U{asdf IS 123 456}
-
-    # PATTERN is Builtin(PATTERN)
-    # BOOL is Builtin(BOOL)
-    # 32U is Builtin(32U)
-
-    # # length is 32U.V.Eager(All)
-    # # element_type is PATTERN.V.Eager(All)
-    # # ARRAY is Builtin(ARRAY length element_type)
-
-    # # ARRAY(123).Shown
-
-    # condition is BOOL.V.E(All)
-    # THEOREM is condition AND true
-
-    # THEOREM(1 > 2).S
 ]
