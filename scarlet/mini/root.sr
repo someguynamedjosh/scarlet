@@ -10,4 +10,6 @@
     value_lt_3 IS Theorem{value < 3}.V
 
     selection IS [123 456 789].I{value value_lt_3}
+
+    selection{1}{true}
 ]

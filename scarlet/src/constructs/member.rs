@@ -1,4 +1,5 @@
 use super::{
+    as_builtin_value, as_struct,
     base::{Construct, ConstructId},
     builtin_operation::{BuiltinOperation, CBuiltinOperation},
     substitution::Substitutions,
@@ -74,6 +75,37 @@ impl Construct for CMember {
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.0);
+        match &self.1 {
+            Member::Named(name) => {
+                if let Some(structt) = as_struct(&**env.get_construct(base)) {
+                    for (index, field) in structt.0.iter().enumerate() {
+                        if field.name.as_ref().map(|n| n == name).unwrap_or(false)
+                            || name == &format!("{}", index)
+                        {
+                            return field.value;
+                        }
+                    }
+                }
+            }
+            &Member::Index {
+                index,
+                proof_lt_len,
+            } => {
+                let index = env.reduce(index);
+                let proof_lt_len = env.reduce(proof_lt_len);
+                if let Some(&CBuiltinValue::_32U(index)) =
+                    as_builtin_value(&**env.get_construct(index))
+                {
+                    if let Some(&CBuiltinValue::Bool(true)) =
+                        as_builtin_value(&**env.get_construct(proof_lt_len))
+                    {
+                        if let Some(structt) = as_struct(&**env.get_construct(base)) {
+                            return structt.0[index as usize].value;
+                        }
+                    }
+                }
+            }
+        }
         let member = match &self.1 {
             Member::Named(..) => self.1.clone(),
             Member::Index {
