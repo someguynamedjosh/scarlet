@@ -3,13 +3,16 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    condition IS Bool.V
-    Theorem IS (condition VA true).C{ALL}
+    thing IS [1 2 3]
+    thing.S
 
-    value IS 32U.V
-    value_lt_3 IS Theorem{value < 3}.V
+    # condition IS Bool.V
+    # Theorem IS (condition VA true).C{ALL}
 
-    selection IS [123 456 789].I{value value_lt_3}
+    # value IS 32U.V
+    # value_lt_3 IS Theorem{value < 3}.V
 
-    selection{1}{true}
+    # selection IS [123 456 789].I{value value_lt_3}
+
+    # selection{1}{true}
 ]

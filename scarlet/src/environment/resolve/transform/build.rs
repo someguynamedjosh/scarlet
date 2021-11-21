@@ -18,8 +18,6 @@ pub fn build_transformers<'e>(
         10 => tfers![SubExpression, Builtin, Struct],
         20 => tfers![
             Capturing,
-            Indexing,
-            Length,
             Matching,
             Shown,
             Variable,
