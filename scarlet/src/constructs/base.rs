@@ -64,6 +64,11 @@ pub trait Construct: Any + Debug + AnyEq {
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
     ) -> ConstructId;
+
+    #[allow(unused_variables)]
+    fn vomit<'x>(&self) -> Token<'x> {
+        "unimplemented vomit".into()
+    }
 }
 
 pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {

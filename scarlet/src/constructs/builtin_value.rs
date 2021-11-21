@@ -7,6 +7,7 @@ use super::{
 use crate::{
     environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
+    tokens::structure::Token,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -46,7 +47,11 @@ impl Construct for CBuiltinValue {
         Vec::new()
     }
 
-    fn matches_simple_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+    fn matches_simple_var_type<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        pattern: &VarType,
+    ) -> MatchResult {
         match (self, pattern) {
             (CBuiltinValue::Bool(_), VarType::Bool) | (CBuiltinValue::_32U(_), VarType::_32U) => {
                 MatchResult::non_capturing()
@@ -72,5 +77,13 @@ impl Construct for CBuiltinValue {
         _substitutions: &Substitutions,
     ) -> ConstructId {
         env.push_construct(Box::new(self.clone()))
+    }
+
+    fn vomit<'x>(&self) -> Token<'x> {
+        let text = match self {
+            CBuiltinValue::Bool(val) => format!("{}", val),
+            CBuiltinValue::_32U(val) => format!("{}", val),
+        };
+        text.into()
     }
 }

@@ -4,6 +4,7 @@ pub mod reduce;
 pub mod resolve;
 pub mod substitute;
 pub mod util;
+mod vomit;
 
 use crate::{
     constructs::{
@@ -64,7 +65,7 @@ where
         token: Token<'x>,
         parent_scope: Option<ConstructId>,
     ) -> ConstructId {
-        if token == Token::Plain("Theorem") {
+        if token == "Theorem".into() {
             println!("{:#?}", self);
             println!("HERE");
         }

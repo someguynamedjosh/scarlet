@@ -26,6 +26,8 @@ fn main() {
     let root = env.reduce(root);
     println!("{:#?}", env);
     println!("Root: {:?}", root);
+    println!();
+    env.show_all_requested();
 
     // let (stage2, _s2_root) = stage2::ingest(&tokens);
     // // println!("{:#?}", stage2);

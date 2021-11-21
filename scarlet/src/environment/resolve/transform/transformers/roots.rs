@@ -105,7 +105,8 @@ impl Transformer for Builtin {
     ) -> TransformerResult<'t> {
         let mut body = success.get_capture("args").unwrap_stream().clone();
         assert!(body.len() >= 1);
-        let name = body.remove(0).unwrap_plain();
+        let name = body.remove(0);
+        let name = name.unwrap_plain();
         apply::apply_transformers(c, &mut body, &Default::default());
         let con = match name {
             "Anything" => c.push_var(VarType::Anything, true),

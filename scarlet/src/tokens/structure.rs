@@ -1,4 +1,7 @@
-use std::fmt::{self, Debug, Formatter};
+use std::{
+    borrow::Cow,
+    fmt::{self, Debug, Formatter},
+};
 
 use crate::{constructs::base::ConstructId, shared};
 
@@ -7,11 +10,29 @@ pub type TokenStream<'x> = Vec<Token<'x>>;
 #[derive(Clone, PartialEq, Eq)]
 pub enum Token<'x> {
     Construct(ConstructId),
-    Plain(&'x str),
+    Plain(Cow<'x, str>),
     Stream {
         label: &'x str,
         contents: TokenStream<'x>,
     },
+}
+
+impl<'x> From<&'x str> for Token<'x> {
+    fn from(contents: &'x str) -> Self {
+        Self::Plain(Cow::Borrowed(contents))
+    }
+}
+
+impl<'x> From<String> for Token<'x> {
+    fn from(contents: String) -> Self {
+        Self::Plain(Cow::Owned(contents))
+    }
+}
+
+impl<'x> From<ConstructId> for Token<'x> {
+    fn from(contents: ConstructId) -> Self {
+        Self::Construct(contents)
+    }
 }
 
 impl<'x> Token<'x> {
@@ -23,9 +44,9 @@ impl<'x> Token<'x> {
         }
     }
 
-    pub fn unwrap_plain(&self) -> &'x str {
+    pub fn unwrap_plain(&self) -> &str {
         if let Self::Plain(plain) = self {
-            *plain
+            plain.as_ref()
         } else {
             panic!("Expected a plain token, got {:?} instead", self)
         }

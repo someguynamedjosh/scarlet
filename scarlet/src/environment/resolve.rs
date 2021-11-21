@@ -1,5 +1,7 @@
 mod transform;
 
+use std::borrow::Cow;
+
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
     constructs::{
@@ -63,12 +65,12 @@ impl<'x> Environment<'x> {
                 } else if let Ok(int) = ident.parse() {
                     ConstructDefinition::Resolved(Box::new(CBuiltinValue::_32U(int)))
                 } else {
-                    match self.lookup_ident(scope, ident) {
+                    match self.lookup_ident(scope, ident.as_ref()) {
                         Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),
                         None => {
                             println!("{:#?}", self);
                             todo!("Nice error, bad ident {} in {:?}", ident, scope)
-                        },
+                        }
                     }
                 }
             }
@@ -93,7 +95,9 @@ impl<'x> Environment<'x> {
                 let mut to_set = Vec::new();
                 for capture in &contents[1..] {
                     match capture {
-                        Token::Plain("ALL") => to_set.append(&mut self.get_dependencies(base)),
+                        Token::Plain(Cow::Borrowed("ALL")) => {
+                            to_set.append(&mut self.get_dependencies(base))
+                        }
                         &Token::Construct(capture) => {
                             to_set.append(&mut self.get_dependencies(capture))
                         }

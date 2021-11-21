@@ -4,7 +4,8 @@
     32U IS BUILTIN{32BitUnsignedInteger}
 
     thing IS [1 2 3]
-    thing.S
+
+    1.S
 
     # condition IS Bool.V
     # Theorem IS (condition VA true).C{ALL}

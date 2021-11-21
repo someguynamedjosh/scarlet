@@ -25,14 +25,14 @@ impl SpecialMember for Capturing {
         let mut vals = Vec::new();
         let mut all = false;
         for token in bracket_group.unwrap() {
-            if let Token::Plain("ALL") = token {
+            if token == "ALL".into() {
                 all = true
             } else {
                 vals.push(Token::Construct(c.push_unresolved(token)))
             }
         }
         if all {
-            vals = vec![Token::Plain("ALL")];
+            vals = vec!["ALL".into()];
         }
         Token::Stream {
             label: "CAPTURING",

@@ -45,7 +45,7 @@ fn parse_group<'a>() -> impl Parser<'a, Token<'a>> {
 }
 
 fn parse_tree<'a>() -> impl Parser<'a, Token<'a>> {
-    let token = map(parse_plain_token(), Token::Plain);
+    let token = map(parse_plain_token(), Token::from);
     alt((parse_group(), token))
 }
 

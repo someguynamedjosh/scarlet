@@ -172,7 +172,7 @@ impl Pattern for PatPlain {
     ) -> PatternMatchResult<'i, 'x> {
         if at_index >= stream.len() {
             Err(())
-        } else if stream[at_index] == Token::Plain(self.0) {
+        } else if stream[at_index] == self.0.into() {
             Ok(PatternMatchSuccess::at(at_index))
         } else {
             Err(())
