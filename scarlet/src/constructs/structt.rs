@@ -4,10 +4,7 @@ use super::{
     substitution::Substitutions,
     variable::{CVariable, VarType},
 };
-use crate::{
-    environment::{matchh::MatchResult, Environment},
-    impl_any_eq_for_construct,
-};
+use crate::{environment::{matchh::MatchResult, Environment}, impl_any_eq_for_construct, tokens::structure::Token};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StructField {
