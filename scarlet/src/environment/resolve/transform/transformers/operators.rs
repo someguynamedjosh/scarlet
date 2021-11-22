@@ -14,12 +14,16 @@ macro_rules! binary_operator {
     ($StructName:ident, $internal_name:expr, $operator:expr) => {
         pub struct $StructName;
         impl Transformer for $StructName {
-            fn pattern(&self) -> Box<dyn Pattern> {
+            fn input_pattern(&self) -> Box<dyn Pattern> {
                 Box::new((
                     PatCaptureAny { key: "left" },
                     $operator,
                     PatCaptureAny { key: "right" },
                 ))
+            }
+
+            fn output_pattern(&self) -> Box<dyn Pattern> {
+                Box::new(PatCaptureAny { key: "" })
             }
 
             fn apply<'t>(
@@ -64,7 +68,7 @@ binary_operator!(
 
 pub struct VariableAnd;
 impl Transformer for VariableAnd {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "left" },
             PatFirstOf(vec![
@@ -74,6 +78,10 @@ impl Transformer for VariableAnd {
             ]),
             PatCaptureAny { key: "right" },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -90,7 +98,7 @@ impl Transformer for VariableAnd {
 
 pub struct VariableOr;
 impl Transformer for VariableOr {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "left" },
             PatFirstOf(vec![
@@ -100,6 +108,10 @@ impl Transformer for VariableOr {
             ]),
             PatCaptureAny { key: "right" },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -120,12 +132,16 @@ impl Transformer for VariableOr {
 
 pub struct Is;
 impl Transformer for Is {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "left" },
             PatPlain("IS"),
             PatCaptureAny { key: "right" },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

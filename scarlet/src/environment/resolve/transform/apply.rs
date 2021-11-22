@@ -16,7 +16,7 @@ fn apply_transformers_ltr<'t>(
     while index < stream.len() {
         let mut nothing_applied = true;
         for transformer in transformers {
-            if let Ok(success) = transformer.pattern().match_at(&stream[..], index) {
+            if let Ok(success) = transformer.input_pattern().match_at(&stream[..], index) {
                 if !success.range.contains(&index) {
                     panic!(
                         "Transformer wants to replace {:?}, \
@@ -28,7 +28,7 @@ fn apply_transformers_ltr<'t>(
                 index = *success.range.start();
 
                 let range = success.range.clone();
-                let result = transformer.apply(c, success);
+                let result = transformer.apply_checked(c, success);
                 stream.splice(range, std::iter::once(result.0));
 
                 nothing_applied = false;
@@ -50,7 +50,7 @@ fn apply_transformers_rtl<'t>(
     while index > 0 {
         index -= 1;
         for transformer in transformers {
-            if let Ok(success) = transformer.pattern().match_at(&stream[..], index) {
+            if let Ok(success) = transformer.input_pattern().match_at(&stream[..], index) {
                 if !success.range.contains(&index) {
                     panic!(
                         "Transformer wants to replace {:?}, \
@@ -61,7 +61,7 @@ fn apply_transformers_rtl<'t>(
                 index = *success.range.start();
 
                 let range = success.range.clone();
-                let result = transformer.apply(c, success);
+                let result = transformer.apply_checked(c, success);
                 stream.splice(range, std::iter::once(result.0));
 
                 index += 1;

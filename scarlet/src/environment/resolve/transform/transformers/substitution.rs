@@ -14,7 +14,7 @@ use crate::{
 
 pub struct Substitution;
 impl Transformer for Substitution {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "base" },
             PatCaptureStream {
@@ -22,6 +22,10 @@ impl Transformer for Substitution {
                 label: "group{}",
             },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

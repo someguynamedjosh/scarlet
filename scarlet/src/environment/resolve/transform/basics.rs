@@ -62,12 +62,26 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
 }
 
 pub trait Transformer {
-    fn pattern(&self) -> Box<dyn Pattern>;
+    fn input_pattern(&self) -> Box<dyn Pattern>;
+    fn output_pattern(&self) -> Box<dyn Pattern>;
     fn apply<'x>(
         &self,
         c: &mut ApplyContext<'_, 'x>,
         success: PatternMatchSuccess<'_, 'x>,
     ) -> TransformerResult<'x>;
+
+    fn apply_checked<'x>(
+        &self,
+        c: &mut ApplyContext<'_, 'x>,
+        success: PatternMatchSuccess<'_, 'x>,
+    ) -> TransformerResult<'x> {
+        let result = self.apply(c, success);
+        assert!(self
+            .output_pattern()
+            .match_at(&[result.0.clone()], 0)
+            .is_ok());
+        result
+    }
 }
 
 pub type Precedence = u8;

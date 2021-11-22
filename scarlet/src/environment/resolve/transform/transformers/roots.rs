@@ -10,7 +10,7 @@ use crate::{
     environment::resolve::transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
+        pattern::{PatCaptureAny, PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
         transformers::operators::Is,
     },
     tfers,
@@ -19,11 +19,15 @@ use crate::{
 
 pub struct SubExpression;
 impl Transformer for SubExpression {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new(PatCaptureStream {
             key: "sub_expression",
             label: "group()",
         })
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -43,11 +47,15 @@ impl Transformer for SubExpression {
 
 pub struct Struct;
 impl Transformer for Struct {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new(PatCaptureStream {
             key: "fields",
             label: "group[]",
         })
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -88,7 +96,7 @@ impl Transformer for Struct {
 
 pub struct Builtin;
 impl Transformer for Builtin {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatPlain("BUILTIN"),
             PatCaptureStream {
@@ -96,6 +104,10 @@ impl Transformer for Builtin {
                 label: "group{}",
             },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

@@ -10,12 +10,16 @@ use crate::{
 pub struct Member;
 
 impl Transformer for Member {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatCaptureAny { key: "base" },
             PatPlain("."),
             PatCaptureAny { key: "member_name" },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

@@ -26,7 +26,7 @@ pub trait SpecialMember {
 }
 
 impl<M: SpecialMember> Transformer for M {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         let base = (
             PatCaptureAny { key: "base" },
             PatPlain("."),
@@ -48,6 +48,10 @@ impl<M: SpecialMember> Transformer for M {
         } else {
             Box::new(base)
         }
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

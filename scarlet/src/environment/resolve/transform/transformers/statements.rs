@@ -9,12 +9,16 @@ use crate::{
 
 pub struct OnPattern;
 impl Transformer for OnPattern {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatPlain("ON"),
             PatCaptureAny { key: "pattern" },
             PatCaptureAny { key: "value" },
         ))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -33,8 +37,12 @@ impl Transformer for OnPattern {
 
 pub struct Else;
 impl Transformer for Else {
-    fn pattern(&self) -> Box<dyn Pattern> {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((PatPlain("ELSE"), PatCaptureAny { key: "value" }))
+    }
+
+    fn output_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
