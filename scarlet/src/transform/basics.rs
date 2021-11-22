@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use super::pattern::{Pattern, PatternMatchSuccess};
 use crate::{
-    constructs::{base::BoxedConstruct, variable::VarType},
-    environment::{ConstructDefinition, ConstructId, Environment},
+    constructs::{base::BoxedConstruct, variable::VarType, ConstructDefinition, ConstructId},
+    environment::Environment,
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
+    transform::pattern::{Pattern, PatternMatchSuccess},
 };
 
 pub struct TransformerResult<'x>(pub Token<'x>);
@@ -69,6 +69,8 @@ pub trait Transformer {
         c: &mut ApplyContext<'_, 'x>,
         success: PatternMatchSuccess<'_, 'x>,
     ) -> TransformerResult<'x>;
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>>;
 
     fn apply_checked<'x>(
         &self,

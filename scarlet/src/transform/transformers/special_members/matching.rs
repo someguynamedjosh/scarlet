@@ -3,7 +3,7 @@ use maplit::hashmap;
 
 use crate::{
     constructs::matchh::{CMatch, Condition},
-    environment::resolve::transform::{
+    transform::{
         basics::Extras,
         transformers::{
             special_members::base::SpecialMember,
@@ -70,5 +70,9 @@ impl SpecialMember for Matching {
         };
         let con = c.push_construct(Box::new(def));
         Token::Construct(con)
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

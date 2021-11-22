@@ -10,6 +10,7 @@ mod file_tree;
 mod shared;
 mod tokens;
 mod util;
+pub mod transform;
 
 use crate::environment::Environment;
 

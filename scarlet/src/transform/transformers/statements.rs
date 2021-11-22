@@ -1,5 +1,5 @@
 use crate::{
-    environment::resolve::transform::{
+    transform::{
         basics::{Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
         ApplyContext,
@@ -29,6 +29,10 @@ impl Transformer for OnPattern {
             contents: vec![pattern, value],
         })
     }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
+    }
 }
 
 pub struct Else;
@@ -47,5 +51,9 @@ impl Transformer for Else {
             label: "ELSE",
             contents: vec![value],
         })
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

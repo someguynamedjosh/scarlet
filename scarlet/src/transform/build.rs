@@ -1,14 +1,29 @@
 use super::basics::{Extras, Precedence, SomeTransformer};
 use crate::{
-    environment::resolve::transform::{
-        basics::Transformer,
-        transformers::{
-            member::Member, operators::*, roots::*, special_members::*, substitution::Substitution,
-        },
-    },
     shared::OwnedOrBorrowed,
     tfers,
+    transform::{
+        basics::Transformer,
+        transformers::{
+            member::Member, operators::*, roots::*, special_members::*, statements,
+            substitution::Substitution,
+        },
+    },
 };
+
+pub fn all_transformers<'e>(extras: &'e Extras<'e>) -> Vec<SomeTransformer<'e>> {
+    let mut result = tfers![];
+    for prec in 0..=Precedence::MAX {
+        result.append(&mut build_transformers(prec, extras));
+    }
+    result.append(
+        &mut tfers![statements::OnPattern, statements::Else, Is]
+            .into_iter()
+            .map(OwnedOrBorrowed::Owned)
+            .collect(),
+    );
+    result
+}
 
 pub fn build_transformers<'e>(
     precedence: Precedence,
@@ -16,14 +31,7 @@ pub fn build_transformers<'e>(
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
         10 => tfers![SubExpression, Builtin, Struct],
-        20 => tfers![
-            Capturing,
-            Matching,
-            Shown,
-            Variable,
-            Substitution,
-            Member
-        ],
+        20 => tfers![Capturing, Matching, Shown, Variable, Substitution, Member],
         61 => tfers![Caret],
         70 => tfers![Asterisk, Slash],
         80 => tfers![Plus, Minus],

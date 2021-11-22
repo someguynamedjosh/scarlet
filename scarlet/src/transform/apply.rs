@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::{basics::ApplyContext, build};
 use crate::{
-    environment::resolve::transform::basics::{Precedence, Transformer},
+    transform::basics::{Precedence, Transformer},
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
 };

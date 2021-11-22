@@ -3,7 +3,7 @@ use crate::tokens::structure::Token;
 #[macro_export]
 macro_rules! tfers {
     ($($transformer:expr),*) => {
-        vec![$(Box::new($transformer) as Box<dyn crate::environment::resolve::transform::basics::Transformer>),*]
+        vec![$(Box::new($transformer) as Box<dyn crate::transform::basics::Transformer>),*]
     }
 }
 

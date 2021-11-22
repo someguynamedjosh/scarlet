@@ -1,14 +1,14 @@
 use crate::{
-    environment::resolve::transform::{
+    transform::{
         transformers::special_members::base::SpecialMember, ApplyContext,
     },
     tokens::structure::Token,
 };
 
-pub struct WithoutCapturing;
-impl SpecialMember for WithoutCapturing {
+pub struct Capturing;
+impl SpecialMember for Capturing {
     fn aliases(&self) -> &'static [&'static str] {
-        &["WITHOUT_CAPTURING", "WO_CAP", "WC"]
+        &["CAPTURING", "CAP", "C"]
     }
 
     fn expects_bracket_group(&self) -> bool {
@@ -35,8 +35,12 @@ impl SpecialMember for WithoutCapturing {
             vals = vec!["ALL".into()];
         }
         Token::Stream {
-            label: "WITHOUT_CAPTURING",
+            label: "CAPTURING",
             contents: [vec![base], vals].concat(),
         }
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

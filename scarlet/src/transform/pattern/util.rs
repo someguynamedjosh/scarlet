@@ -1,7 +1,7 @@
 use std::ops::RangeInclusive;
 
 use super::PatternMatchSuccess;
-use crate::environment::resolve::transform::pattern::Captures;
+use crate::transform::pattern::Captures;
 
 pub(super) fn pms_union<'i, 'x>(
     mut pmss: Vec<PatternMatchSuccess<'i, 'x>>,

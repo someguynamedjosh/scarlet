@@ -7,7 +7,7 @@ use crate::{
         structt::{CStruct, StructField},
         variable::VarType,
     },
-    environment::resolve::transform::{
+    transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
         pattern::{
@@ -41,6 +41,10 @@ impl Transformer for SubExpression {
         apply::apply_transformers(c, &mut body, &Default::default());
         assert_eq!(body.len(), 1);
         TransformerResult(body.into_iter().next().unwrap())
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }
 
@@ -87,6 +91,10 @@ impl Transformer for Struct {
         c.env.check(con);
         TransformerResult(Token::Construct(con))
     }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
+    }
 }
 
 pub struct Builtin;
@@ -124,5 +132,9 @@ impl Transformer for Builtin {
             other => todo!("Nice error, unrecognized builtin {}", other),
         };
         TransformerResult(Token::Construct(con))
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

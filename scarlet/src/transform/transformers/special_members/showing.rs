@@ -1,6 +1,6 @@
 use crate::{
     constructs::shown::CShown,
-    environment::resolve::transform::{
+    transform::{
         transformers::special_members::base::SpecialMember, ApplyContext,
     },
     tokens::structure::Token,
@@ -20,5 +20,9 @@ impl SpecialMember for Shown {
     ) -> Token<'t> {
         let base = c.push_unresolved(base);
         Token::Construct(c.push_construct(Box::new(CShown(base))))
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

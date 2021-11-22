@@ -3,9 +3,9 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    thing IS [1 2 3]
+    thing IS [1 2 3].V
 
-    thing.S
+    thing.1.S
 
     # condition IS Bool.V
     # Theorem IS (condition VA true).C{ALL}

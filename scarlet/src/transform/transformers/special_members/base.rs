@@ -1,5 +1,5 @@
 use crate::{
-    environment::resolve::transform::{
+    transform::{
         apply,
         basics::{ApplyContext, Extras, Transformer, TransformerResult},
         pattern::{
@@ -23,6 +23,7 @@ pub trait SpecialMember {
         base: Token<'t>,
         bracket_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t>;
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>>;
 }
 
 impl<M: SpecialMember> Transformer for M {
@@ -66,5 +67,9 @@ impl<M: SpecialMember> Transformer for M {
         };
         let replace_with_tree = <Self as SpecialMember>::apply(&self, c, base, paren_group);
         TransformerResult(replace_with_tree)
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        <Self as SpecialMember>::vomit(&self, c, to)
     }
 }

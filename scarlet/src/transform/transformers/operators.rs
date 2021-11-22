@@ -3,7 +3,7 @@ use crate::{
         builtin_operation::{BuiltinOperation, CBuiltinOperation},
         variable::VarType,
     },
-    environment::resolve::transform::{
+    transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
     },
@@ -35,6 +35,14 @@ macro_rules! binary_operator {
                 };
                 let result = c.env.push_construct(Box::new(result));
                 TransformerResult(Token::Construct(result))
+            }
+
+            fn vomit<'x>(
+                &self,
+                c: &mut ApplyContext<'_, 'x>,
+                to: &Token<'x>,
+            ) -> Option<Vec<Token<'x>>> {
+                None
             }
         }
     };
@@ -86,6 +94,10 @@ impl Transformer for VariableAnd {
         let con = c.push_var(VarType::And(left, right), false);
         TransformerResult(Token::Construct(con))
     }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
+    }
 }
 
 pub struct VariableOr;
@@ -111,6 +123,10 @@ impl Transformer for VariableOr {
         let right = c.push_unresolved(success.get_capture("right").clone());
         let con = c.push_var(VarType::Or(left, right), false);
         TransformerResult(Token::Construct(con))
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }
 
@@ -140,5 +156,9 @@ impl Transformer for Is {
             label: "target",
             contents: vec![left, right],
         })
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

@@ -1,5 +1,3 @@
-mod transform;
-
 use std::borrow::Cow;
 
 use super::{ConstructDefinition, ConstructId, Environment};
@@ -9,11 +7,10 @@ use crate::{
         builtin_value::CBuiltinValue,
         substitution::{CSubstitution, Substitutions},
         variable::{CVariable, VarType},
-        Construct,
     },
-    environment::resolve::transform::ApplyContext,
     shared::OrderedMap,
     tokens::structure::Token,
+    transform::{self, ApplyContext},
 };
 
 impl<'x> Environment<'x> {

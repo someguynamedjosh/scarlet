@@ -19,8 +19,8 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Environment<'x> {
-    constructs: ConstructPool<'x>,
-    variables: VariablePool,
+    pub(crate) constructs: ConstructPool<'x>,
+    pub(crate) variables: VariablePool,
 }
 
 impl<'x> Environment<'x>

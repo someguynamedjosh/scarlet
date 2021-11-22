@@ -1,6 +1,6 @@
 use crate::{
     constructs::variable::VarType,
-    environment::resolve::transform::{
+    transform::{
         transformers::special_members::base::SpecialMember, ApplyContext,
     },
     tokens::structure::Token,
@@ -21,5 +21,9 @@ impl SpecialMember for Variable {
         let pattern = c.push_unresolved(base);
         let var_con = c.push_var(VarType::Just(pattern), false);
         Token::Construct(var_con)
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

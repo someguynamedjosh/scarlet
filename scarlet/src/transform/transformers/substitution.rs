@@ -1,7 +1,7 @@
 use maplit::hashmap;
 
 use crate::{
-    environment::resolve::transform::{
+    transform::{
         apply,
         basics::{Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatCaptureStream, Pattern, PatternMatchSuccess},
@@ -37,5 +37,9 @@ impl Transformer for Substitution {
             label: "substitute",
             contents: [vec![base], substitutions].concat(),
         })
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+        None
     }
 }

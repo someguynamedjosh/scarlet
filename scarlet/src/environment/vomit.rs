@@ -6,6 +6,7 @@ use crate::{
         shown::CShown,
     },
     tokens::structure::Token,
+    transform::{self, ApplyContext},
 };
 
 impl<'x> Environment<'x> {
@@ -26,8 +27,31 @@ impl<'x> Environment<'x> {
         }
     }
 
+    fn expand_stream(&mut self, input: Vec<Token<'x>>) -> Vec<Token<'x>> {
+        let mut result = Vec::new();
+        let extras = Default::default();
+        let tfers = transform::all_transformers(&extras);
+        'tokens: for token in input {
+            for tfer in &tfers {
+                let mut context = ApplyContext {
+                    env: self,
+                    parent_scope: None,
+                };
+                if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &token) {
+                    result.append(&mut self.expand_stream(replace_with));
+                    continue 'tokens;
+                }
+            }
+            result.push(token);
+        }
+        result
+    }
+
     fn vomit(&mut self, con_id: ConstructId) -> String {
-        let token = self.get_construct(con_id).vomit();
-        format!("{:?}", token)
+        let mut result = String::new();
+        for token in self.expand_stream(vec![con_id.into()]) {
+            result.push_str(&format!("{:?} ", token));
+        }
+        result
     }
 }

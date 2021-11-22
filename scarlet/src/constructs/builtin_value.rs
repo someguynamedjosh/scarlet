@@ -78,12 +78,4 @@ impl Construct for CBuiltinValue {
     ) -> ConstructId {
         env.push_construct(Box::new(self.clone()))
     }
-
-    fn vomit<'x>(&self) -> Token<'x> {
-        let text = match self {
-            CBuiltinValue::Bool(val) => format!("{}", val),
-            CBuiltinValue::_32U(val) => format!("{}", val),
-        };
-        text.into()
-    }
 }
