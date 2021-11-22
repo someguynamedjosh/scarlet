@@ -128,7 +128,7 @@ impl<'x> Environment<'x> {
                     match sub {
                         Token::Stream {
                             label: "target",
-                            contents,
+                            contents: _,
                         } => {
                             todo!()
                         }

@@ -1,13 +1,4 @@
-use std::collections::HashMap;
-
-use crate::{
-    constructs::{
-        substitution::Substitutions,
-        variable::{CVariable, VariableId},
-        ConstructId,
-    },
-    shared::OrderedMap,
-};
+use crate::constructs::{substitution::Substitutions, variable::CVariable, ConstructId};
 
 #[derive(Clone, Debug)]
 pub enum MatchResult {

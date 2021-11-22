@@ -7,7 +7,6 @@ use super::{
 use crate::{
     environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
-    tokens::structure::Token,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -43,7 +42,7 @@ impl Construct for CBuiltinValue {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
         Vec::new()
     }
 

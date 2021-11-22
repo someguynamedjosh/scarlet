@@ -1,15 +1,10 @@
 use super::{
-    as_builtin_value, as_struct,
+    as_struct,
     base::{Construct, ConstructId},
-    builtin_operation::{BuiltinOperation, CBuiltinOperation},
     substitution::Substitutions,
-    variable::{CVariable, VarType},
+    variable::CVariable,
 };
-use crate::{
-    constructs::{builtin_value::CBuiltinValue, length::CLength},
-    environment::Environment,
-    impl_any_eq_for_construct,
-};
+use crate::{environment::Environment, impl_any_eq_for_construct};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CMember(pub ConstructId, pub String);
@@ -21,7 +16,7 @@ impl Construct for CMember {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>) {}
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         env.get_dependencies(self.0)

@@ -7,7 +7,6 @@ use super::{
 use crate::{
     environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
-    tokens::structure::Token,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

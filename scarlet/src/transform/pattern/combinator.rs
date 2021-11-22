@@ -1,4 +1,4 @@
-use super::{util, Pattern, PatternMatchResult, PatternMatchSuccess};
+use super::{util, Pattern, PatternMatchResult};
 use crate::{environment::Environment, tokens::structure::Token};
 
 #[derive(Debug)]

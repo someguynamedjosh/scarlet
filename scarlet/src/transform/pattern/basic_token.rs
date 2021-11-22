@@ -45,7 +45,7 @@ pub struct PatCaptureStream {
 impl Pattern for PatCaptureStream {
     fn match_at<'i, 'x>(
         &self,
-        env: &mut Environment<'x>,
+        _env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
@@ -84,7 +84,7 @@ pub struct PatPlain(pub &'static str);
 impl Pattern for PatPlain {
     fn match_at<'i, 'x>(
         &self,
-        env: &mut Environment<'x>,
+        _env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x> {

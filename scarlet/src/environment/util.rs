@@ -1,8 +1,5 @@
-use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{
-    constructs::base::{BoxedConstruct, Construct},
-    tokens::structure::Token,
-};
+use super::{ConstructId, Environment};
+use crate::constructs::base::BoxedConstruct;
 
 impl<'x> Environment<'x> {
     pub fn get_construct(&mut self, con_id: ConstructId) -> &BoxedConstruct {

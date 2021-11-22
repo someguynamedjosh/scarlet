@@ -2,11 +2,8 @@ mod result;
 
 pub use result::MatchResult;
 
-use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{
-    constructs::{self, as_variable, variable::VarType},
-    tokens::structure::Token,
-};
+use super::{ConstructId, Environment};
+use crate::constructs::{self, as_variable, variable::VarType};
 
 impl<'x> Environment<'x> {
     pub fn construct_as_var_type(&mut self, id: ConstructId) -> VarType {

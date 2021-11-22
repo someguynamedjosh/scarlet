@@ -1,10 +1,6 @@
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::{
-        base::{BoxedConstruct, Construct},
-        downcast_construct,
-        shown::CShown,
-    },
+    constructs::{base::Construct, downcast_construct, shown::CShown},
     tokens::structure::Token,
     transform::{self, ApplyContext},
 };

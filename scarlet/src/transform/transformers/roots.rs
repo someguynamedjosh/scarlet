@@ -12,10 +12,7 @@ use crate::{
     transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{
-            PatCaptureAny, PatCaptureConstruct, PatCaptureStream, PatPlain, Pattern,
-            PatternMatchSuccess,
-        },
+        pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
         transformers::operators::Is,
     },
 };
@@ -43,7 +40,7 @@ impl Transformer for SubExpression {
         TransformerResult(body.into_iter().next().unwrap())
     }
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
         None
     }
 }
@@ -92,7 +89,7 @@ impl Transformer for Struct {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
         None
     }
 }
@@ -134,7 +131,7 @@ impl Transformer for Builtin {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
         None
     }
 }

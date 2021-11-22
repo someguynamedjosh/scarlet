@@ -1,10 +1,5 @@
-use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{
-    constructs::{
-        self, builtin_value::CBuiltinValue, substitution::Substitutions, variable::CVariable,
-    },
-    tokens::structure::Token,
-};
+use super::{ConstructId, Environment};
+use crate::constructs::variable::CVariable;
 
 impl<'x> Environment<'x> {
     pub fn get_dependencies(&mut self, con_id: ConstructId) -> Vec<CVariable> {

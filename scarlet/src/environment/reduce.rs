@@ -1,5 +1,4 @@
-use super::{ConstructDefinition, ConstructId, Environment};
-use crate::tokens::structure::Token;
+use super::{ConstructId, Environment};
 
 impl<'x> Environment<'x> {
     pub fn reduce(&mut self, con_id: ConstructId) -> ConstructId {

@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
 use super::{
-    base::{Construct, ConstructDefinition, ConstructId},
+    base::{Construct, ConstructId},
     downcast_construct,
     substitution::Substitutions,
 };

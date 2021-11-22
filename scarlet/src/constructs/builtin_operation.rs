@@ -5,7 +5,7 @@ use super::{
     variable::VarType,
 };
 use crate::{
-    constructs::{self, as_builtin_value, builtin_value::CBuiltinValue, downcast_construct},
+    constructs::{self, builtin_value::CBuiltinValue, downcast_construct},
     environment::{matchh::MatchResult, Environment},
     impl_any_eq_for_construct,
 };
