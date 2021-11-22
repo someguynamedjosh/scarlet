@@ -1,4 +1,5 @@
 use crate::{
+    tokens::structure::Token,
     transform::{
         apply,
         basics::{ApplyContext, Extras, Transformer, TransformerResult},
@@ -6,7 +7,6 @@ use crate::{
             PatCaptureAny, PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess,
         },
     },
-    tokens::structure::Token,
 };
 
 pub trait SpecialMember {

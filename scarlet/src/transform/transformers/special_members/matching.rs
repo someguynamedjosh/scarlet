@@ -3,6 +3,8 @@ use maplit::hashmap;
 
 use crate::{
     constructs::matchh::{CMatch, Condition},
+    tfers,
+    tokens::structure::Token,
     transform::{
         basics::Extras,
         transformers::{
@@ -11,8 +13,6 @@ use crate::{
         },
         ApplyContext,
     },
-    tfers,
-    tokens::structure::Token,
 };
 
 pub struct Matching;

@@ -1,10 +1,10 @@
 use crate::{
+    tokens::structure::Token,
     transform::{
         basics::{Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
         ApplyContext,
     },
-    tokens::structure::Token,
 };
 
 pub struct OnPattern;

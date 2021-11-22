@@ -50,7 +50,7 @@ impl<'x> Environment<'x> {
     fn vomit(&mut self, con_id: ConstructId) -> String {
         let mut result = String::new();
         for token in self.expand_stream(vec![con_id.into()]) {
-            result.push_str(&format!("{:?} ", token));
+            result.push_str(&format!("{:?}", token));
         }
         result
     }

@@ -3,11 +3,11 @@ use crate::{
         builtin_operation::{BuiltinOperation, CBuiltinOperation},
         variable::VarType,
     },
+    tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
     },
-    tokens::structure::Token,
 };
 
 macro_rules! binary_operator {

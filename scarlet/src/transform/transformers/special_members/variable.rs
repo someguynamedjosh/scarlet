@@ -1,9 +1,7 @@
 use crate::{
     constructs::variable::VarType,
-    transform::{
-        transformers::special_members::base::SpecialMember, ApplyContext,
-    },
     tokens::structure::Token,
+    transform::{transformers::special_members::base::SpecialMember, ApplyContext},
 };
 
 pub struct Variable;

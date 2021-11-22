@@ -1,6 +1,8 @@
 use maplit::hashmap;
 
 use crate::{
+    tfers,
+    tokens::structure::Token,
     transform::{
         apply,
         basics::{Transformer, TransformerResult},
@@ -8,8 +10,6 @@ use crate::{
         transformers::operators::Is,
         ApplyContext,
     },
-    tfers,
-    tokens::structure::Token,
 };
 
 pub struct Substitution;

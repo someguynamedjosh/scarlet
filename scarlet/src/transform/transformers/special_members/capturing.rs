@@ -1,8 +1,6 @@
 use crate::{
-    transform::{
-        transformers::special_members::base::SpecialMember, ApplyContext,
-    },
     tokens::structure::Token,
+    transform::{transformers::special_members::base::SpecialMember, ApplyContext},
 };
 
 pub struct Capturing;

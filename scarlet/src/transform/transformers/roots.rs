@@ -7,6 +7,8 @@ use crate::{
         structt::{CStruct, StructField},
         variable::VarType,
     },
+    tfers,
+    tokens::structure::Token,
     transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
@@ -16,8 +18,6 @@ use crate::{
         },
         transformers::operators::Is,
     },
-    tfers,
-    tokens::structure::Token,
 };
 
 pub struct SubExpression;

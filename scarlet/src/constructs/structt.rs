@@ -4,7 +4,11 @@ use super::{
     substitution::Substitutions,
     variable::{CVariable, VarType},
 };
-use crate::{environment::{matchh::MatchResult, Environment}, impl_any_eq_for_construct, tokens::structure::Token};
+use crate::{
+    environment::{matchh::MatchResult, Environment},
+    impl_any_eq_for_construct,
+    tokens::structure::Token,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StructField {
@@ -32,7 +36,11 @@ impl Construct for CStruct {
         deps
     }
 
-    fn matches_simple_var_type<'x>(&self, env: &mut Environment<'x>, pattern: &VarType) -> MatchResult {
+    fn matches_simple_var_type<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        pattern: &VarType,
+    ) -> MatchResult {
         if let VarType::Just(pattern) = pattern {
             if let Some(pattern) = as_struct(&**env.get_construct(*pattern)) {
                 if self.0.len() != pattern.0.len() {

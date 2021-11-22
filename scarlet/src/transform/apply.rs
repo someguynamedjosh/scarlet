@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use super::{basics::ApplyContext, build};
 use crate::{
-    transform::basics::{Precedence, Transformer},
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
+    transform::basics::{Precedence, Transformer},
 };
 
 fn apply_transformers_ltr<'t>(
