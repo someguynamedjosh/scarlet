@@ -17,10 +17,6 @@ impl Transformer for OnPattern {
         ))
     }
 
-    fn output_pattern(&self) -> Box<dyn Pattern> {
-        Box::new(PatCaptureAny { key: "" })
-    }
-
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,
@@ -39,10 +35,6 @@ pub struct Else;
 impl Transformer for Else {
     fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((PatPlain("ELSE"), PatCaptureAny { key: "value" }))
-    }
-
-    fn output_pattern(&self) -> Box<dyn Pattern> {
-        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

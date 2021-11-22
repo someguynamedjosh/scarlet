@@ -10,7 +10,10 @@ use crate::{
     environment::resolve::transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureAny, PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
+        pattern::{
+            PatCaptureAny, PatCaptureConstruct, PatCaptureStream, PatPlain, Pattern,
+            PatternMatchSuccess,
+        },
         transformers::operators::Is,
     },
     tfers,
@@ -24,10 +27,6 @@ impl Transformer for SubExpression {
             key: "sub_expression",
             label: "group()",
         })
-    }
-
-    fn output_pattern(&self) -> Box<dyn Pattern> {
-        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -52,10 +51,6 @@ impl Transformer for Struct {
             key: "fields",
             label: "group[]",
         })
-    }
-
-    fn output_pattern(&self) -> Box<dyn Pattern> {
-        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(
@@ -104,10 +99,6 @@ impl Transformer for Builtin {
                 label: "group{}",
             },
         ))
-    }
-
-    fn output_pattern(&self) -> Box<dyn Pattern> {
-        Box::new(PatCaptureAny { key: "" })
     }
 
     fn apply<'t>(

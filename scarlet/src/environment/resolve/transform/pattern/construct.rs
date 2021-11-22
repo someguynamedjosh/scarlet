@@ -7,9 +7,19 @@ use crate::{
     tokens::structure::Token,
 };
 
+#[derive(Debug)]
 pub struct PatCaptureConstruct<C: Construct> {
     pub key: &'static str,
-    pub pd: PhantomData<&'static C>,
+    pd: PhantomData<&'static C>,
+}
+
+impl<C: Construct> PatCaptureConstruct<C> {
+    pub fn new(key: &'static str) -> Self {
+        Self {
+            key,
+            pd: PhantomData,
+        }
+    }
 }
 
 impl<C: Construct> Pattern for PatCaptureConstruct<C> {

@@ -18,10 +18,6 @@ impl Transformer for Member {
         ))
     }
 
-    fn output_pattern(&self) -> Box<dyn Pattern> {
-        Box::new(PatCaptureAny { key: "" })
-    }
-
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,

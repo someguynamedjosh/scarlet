@@ -1,6 +1,7 @@
 use super::{Pattern, PatternMatchResult, PatternMatchSuccess};
 use crate::{environment::Environment, tokens::structure::Token};
 
+#[derive(Debug)]
 pub struct PatCaptureAny {
     pub key: &'static str,
 }
@@ -35,6 +36,7 @@ impl Pattern for PatCaptureAny {
     }
 }
 
+#[derive(Debug)]
 pub struct PatCaptureStream {
     pub key: &'static str,
     pub label: &'static str,
@@ -75,6 +77,8 @@ impl Pattern for PatCaptureStream {
         }
     }
 }
+
+#[derive(Debug)]
 pub struct PatPlain(pub &'static str);
 
 impl Pattern for PatPlain {

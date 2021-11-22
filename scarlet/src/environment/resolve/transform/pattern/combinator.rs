@@ -1,6 +1,7 @@
 use super::{util, Pattern, PatternMatchResult, PatternMatchSuccess};
 use crate::{environment::Environment, tokens::structure::Token};
 
+#[derive(Debug)]
 pub struct PatPreceded<Before: Pattern, At: Pattern>(Before, At);
 
 impl<Before: Pattern, At: Pattern> Pattern for PatPreceded<Before, At> {
@@ -29,6 +30,7 @@ impl<Before: Pattern, At: Pattern> Pattern for PatPreceded<Before, At> {
     }
 }
 
+#[derive(Debug)]
 pub struct PatFirstOf(pub Vec<Box<dyn Pattern>>);
 
 impl Pattern for PatFirstOf {

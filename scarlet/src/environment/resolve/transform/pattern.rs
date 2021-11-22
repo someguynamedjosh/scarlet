@@ -4,9 +4,9 @@ mod construct;
 mod tuple_patterns;
 mod util;
 
-use std::{collections::HashMap, ops::RangeInclusive};
+use std::{collections::HashMap, fmt::Debug, ops::RangeInclusive};
 
-pub use self::{basic_token::*, combinator::*, tuple_patterns::*};
+pub use self::{basic_token::*, combinator::*, construct::*, tuple_patterns::*};
 use crate::{environment::Environment, tokens::structure::Token};
 
 pub type Captures<'i, 'x> = HashMap<&'static str, &'i Token<'x>>;
@@ -36,7 +36,7 @@ impl<'i, 'x> PatternMatchSuccess<'i, 'x> {
     }
 }
 
-pub trait Pattern {
+pub trait Pattern: Debug {
     fn match_before<'i, 'x>(
         &self,
         env: &mut Environment<'x>,

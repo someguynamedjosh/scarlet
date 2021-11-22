@@ -63,7 +63,7 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
 
 pub trait Transformer {
     fn input_pattern(&self) -> Box<dyn Pattern>;
-    fn output_pattern(&self) -> Box<dyn Pattern>;
+    // fn output_pattern(&self) -> Box<dyn Pattern>;
     fn apply<'x>(
         &self,
         c: &mut ApplyContext<'_, 'x>,
@@ -76,10 +76,14 @@ pub trait Transformer {
         success: PatternMatchSuccess<'_, 'x>,
     ) -> TransformerResult<'x> {
         let result = self.apply(c, success);
-        assert!(self
-            .output_pattern()
-            .match_at(c.env, &[result.0.clone()], 0)
-            .is_ok());
+        // assert!(
+        //     self.output_pattern()
+        //         .match_at(c.env, &[result.0.clone()], 0)
+        //         .is_ok(),
+        //     "Output should match {:?}, but it is {:?} instead.",
+        //     self.output_pattern(),
+        //     result.0
+        // );
         result
     }
 }
