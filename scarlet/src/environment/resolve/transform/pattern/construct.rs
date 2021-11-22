@@ -1,7 +1,11 @@
 use std::marker::PhantomData;
 
 use super::{Pattern, PatternMatchResult, PatternMatchSuccess};
-use crate::{constructs::Construct, environment::Environment, tokens::structure::Token};
+use crate::{
+    constructs::{downcast_construct, Construct},
+    environment::Environment,
+    tokens::structure::Token,
+};
 
 pub struct PatCaptureConstruct<C: Construct> {
     pub key: &'static str,
@@ -18,9 +22,14 @@ impl<C: Construct> Pattern for PatCaptureConstruct<C> {
         if at_index >= stream.len() {
             Err(())
         } else if let &Token::Construct(con_id) = &stream[at_index] {
-            let mut res = PatternMatchSuccess::at(at_index);
-            res.captures.insert(self.key, &stream[at_index]);
-            Ok(res)
+            let con = env.get_construct(con_id);
+            if downcast_construct::<C>(&**con).is_some() {
+                let mut res = PatternMatchSuccess::at(at_index);
+                res.captures.insert(self.key, &stream[at_index]);
+                Ok(res)
+            } else {
+                Err(())
+            }
         } else {
             Err(())
         }
