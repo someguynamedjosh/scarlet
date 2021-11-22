@@ -1,12 +1,13 @@
 mod basic_token;
 mod combinator;
+mod construct;
 mod tuple_patterns;
 mod util;
 
 use std::{collections::HashMap, ops::RangeInclusive};
 
 pub use self::{basic_token::*, combinator::*, tuple_patterns::*};
-use crate::tokens::structure::Token;
+use crate::{environment::Environment, tokens::structure::Token};
 
 pub type Captures<'i, 'x> = HashMap<&'static str, &'i Token<'x>>;
 pub struct PatternMatchSuccess<'i, 'x> {
@@ -38,11 +39,13 @@ impl<'i, 'x> PatternMatchSuccess<'i, 'x> {
 pub trait Pattern {
     fn match_before<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         before_index: usize,
     ) -> PatternMatchResult<'i, 'x>;
     fn match_at<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x>;
@@ -51,17 +54,19 @@ pub trait Pattern {
 impl<P: Pattern> Pattern for &P {
     fn match_at<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
-        (*self).match_at(stream, at_index)
+        (*self).match_at(env, stream, at_index)
     }
 
     fn match_before<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         before_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
-        (*self).match_before(stream, before_index)
+        (*self).match_before(env, stream, before_index)
     }
 }

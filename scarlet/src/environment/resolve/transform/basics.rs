@@ -78,7 +78,7 @@ pub trait Transformer {
         let result = self.apply(c, success);
         assert!(self
             .output_pattern()
-            .match_at(&[result.0.clone()], 0)
+            .match_at(c.env, &[result.0.clone()], 0)
             .is_ok());
         result
     }

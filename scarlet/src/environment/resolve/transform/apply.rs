@@ -16,7 +16,10 @@ fn apply_transformers_ltr<'t>(
     while index < stream.len() {
         let mut nothing_applied = true;
         for transformer in transformers {
-            if let Ok(success) = transformer.input_pattern().match_at(&stream[..], index) {
+            if let Ok(success) = transformer
+                .input_pattern()
+                .match_at(c.env, &stream[..], index)
+            {
                 if !success.range.contains(&index) {
                     panic!(
                         "Transformer wants to replace {:?}, \
@@ -50,7 +53,10 @@ fn apply_transformers_rtl<'t>(
     while index > 0 {
         index -= 1;
         for transformer in transformers {
-            if let Ok(success) = transformer.input_pattern().match_at(&stream[..], index) {
+            if let Ok(success) = transformer
+                .input_pattern()
+                .match_at(c.env, &stream[..], index)
+            {
                 if !success.range.contains(&index) {
                     panic!(
                         "Transformer wants to replace {:?}, \

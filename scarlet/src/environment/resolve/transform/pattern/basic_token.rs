@@ -1,5 +1,5 @@
 use super::{Pattern, PatternMatchResult, PatternMatchSuccess};
-use crate::tokens::structure::Token;
+use crate::{environment::Environment, tokens::structure::Token};
 
 pub struct PatCaptureAny {
     pub key: &'static str,
@@ -8,6 +8,7 @@ pub struct PatCaptureAny {
 impl Pattern for PatCaptureAny {
     fn match_at<'i, 'x>(
         &self,
+        _env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
@@ -22,13 +23,14 @@ impl Pattern for PatCaptureAny {
 
     fn match_before<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         before_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
         if before_index < 1 {
             Err(())
         } else {
-            Self::match_at(&self, stream, before_index - 1)
+            Self::match_at(&self, env, stream, before_index - 1)
         }
     }
 }
@@ -41,6 +43,7 @@ pub struct PatCaptureStream {
 impl Pattern for PatCaptureStream {
     fn match_at<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
@@ -61,13 +64,14 @@ impl Pattern for PatCaptureStream {
 
     fn match_before<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         before_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
         if before_index < 1 {
             Err(())
         } else {
-            Self::match_at(&self, stream, before_index - 1)
+            Self::match_at(&self, env, stream, before_index - 1)
         }
     }
 }
@@ -76,6 +80,7 @@ pub struct PatPlain(pub &'static str);
 impl Pattern for PatPlain {
     fn match_at<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         at_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
@@ -90,13 +95,14 @@ impl Pattern for PatPlain {
 
     fn match_before<'i, 'x>(
         &self,
+        env: &mut Environment<'x>,
         stream: &'i [Token<'x>],
         before_index: usize,
     ) -> PatternMatchResult<'i, 'x> {
         if before_index < 1 {
             Err(())
         } else {
-            Self::match_at(&self, stream, before_index - 1)
+            Self::match_at(&self, env, stream, before_index - 1)
         }
     }
 }
