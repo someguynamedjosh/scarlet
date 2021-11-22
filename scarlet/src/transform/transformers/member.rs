@@ -31,10 +31,14 @@ impl Transformer for Member {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
         if let &Token::Construct(con_id) = to {
             if let Some(mem) = downcast_construct::<CMember>(&**c.env.get_construct(con_id)) {
-                return Some(vec![mem.0.into(), ".".into(), mem.1.clone().into()]);
+                let contents = vec![mem.0.into(), ".".into(), mem.1.clone().into()];
+                return Some(Token::Stream {
+                    label: "syntax_root",
+                    contents,
+                });
             }
         }
         None

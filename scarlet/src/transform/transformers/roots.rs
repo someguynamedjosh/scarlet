@@ -4,6 +4,7 @@ use maplit::hashmap;
 use crate::{
     constructs::{
         base::ConstructDefinition,
+        downcast_construct,
         structt::{CStruct, StructField},
         variable::VarType,
     },
@@ -40,7 +41,7 @@ impl Transformer for SubExpression {
         TransformerResult(body.into_iter().next().unwrap())
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }
@@ -89,7 +90,27 @@ impl Transformer for Struct {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
+        if let &Token::Construct(con_id) = to {
+            if let Some(structt) = downcast_construct::<CStruct>(&**c.env.get_construct(con_id)) {
+                let mut contents = Vec::new();
+                for field in &structt.0 {
+                    let value: Token = field.value.into();
+                    if let Some(name) = field.name.clone() {
+                        contents.push(Token::Stream {
+                            label: "target",
+                            contents: vec![name.into(), value],
+                        })
+                    } else {
+                        contents.push(value);
+                    }
+                }
+                return Some(Token::Stream {
+                    label: "group[]",
+                    contents,
+                });
+            }
+        }
         None
     }
 }
@@ -131,7 +152,7 @@ impl Transformer for Builtin {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }

@@ -5,7 +5,7 @@
 
     thing IS [1 2 3].V
 
-    thing.1.S
+    [thing.0 thing.1].S
 
     # condition IS Bool.V
     # Theorem IS (condition VA true).C{ALL}

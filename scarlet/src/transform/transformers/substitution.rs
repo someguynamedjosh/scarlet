@@ -39,7 +39,7 @@ impl Transformer for Substitution {
         })
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }

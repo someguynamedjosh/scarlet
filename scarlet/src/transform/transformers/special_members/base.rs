@@ -23,7 +23,7 @@ pub trait SpecialMember {
         base: Token<'t>,
         bracket_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t>;
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>>;
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>>;
 }
 
 impl<M: SpecialMember> Transformer for M {
@@ -69,7 +69,7 @@ impl<M: SpecialMember> Transformer for M {
         TransformerResult(replace_with_tree)
     }
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
         <Self as SpecialMember>::vomit(&self, c, to)
     }
 }

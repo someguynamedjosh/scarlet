@@ -20,7 +20,7 @@ impl SpecialMember for Shown {
         Token::Construct(c.push_construct(Box::new(CShown(base))))
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }

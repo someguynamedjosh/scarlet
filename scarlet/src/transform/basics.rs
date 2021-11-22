@@ -70,7 +70,7 @@ pub trait Transformer {
         success: PatternMatchSuccess<'_, 'x>,
     ) -> TransformerResult<'x>;
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Vec<Token<'x>>>;
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>>;
 
     fn apply_checked<'x>(
         &self,

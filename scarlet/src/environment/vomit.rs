@@ -21,33 +21,30 @@ impl<'x> Environment<'x> {
             let vomited = self.vomit(con_id);
             println!("{:?} is\n{}", con_id, vomited);
         }
+        // println!("{:#?}", self);
     }
 
-    fn expand_stream(&mut self, input: Vec<Token<'x>>) -> Vec<Token<'x>> {
-        let mut result = Vec::new();
+    fn expand_token(&mut self, input: Token<'x>) -> Token<'x> {
         let extras = Default::default();
         let tfers = transform::all_transformers(&extras);
-        'tokens: for token in input {
-            for tfer in &tfers {
-                let mut context = ApplyContext {
-                    env: self,
-                    parent_scope: None,
-                };
-                if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &token) {
-                    result.append(&mut self.expand_stream(replace_with));
-                    continue 'tokens;
-                }
+        for tfer in &tfers {
+            let mut context = ApplyContext {
+                env: self,
+                parent_scope: None,
+            };
+            if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {
+                return self.expand_token(replace_with);
             }
-            result.push(token);
         }
-        result
+        if let Token::Stream { label, contents } = input {
+            let contents = contents.into_iter().map(|t| self.expand_token(t)).collect();
+            Token::Stream { label, contents }
+        } else {
+            input
+        }
     }
 
     fn vomit(&mut self, con_id: ConstructId) -> String {
-        let mut result = String::new();
-        for token in self.expand_stream(vec![con_id.into()]) {
-            result.push_str(&format!("{:?}", token));
-        }
-        result
+        format!("{:?}", self.expand_token(con_id.into()))
     }
 }

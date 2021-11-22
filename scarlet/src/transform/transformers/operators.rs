@@ -41,7 +41,7 @@ macro_rules! binary_operator {
                 &self,
                 _c: &mut ApplyContext<'_, 'x>,
                 _to: &Token<'x>,
-            ) -> Option<Vec<Token<'x>>> {
+            ) -> Option<Token<'x>> {
                 None
             }
         }
@@ -95,7 +95,7 @@ impl Transformer for VariableAnd {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }
@@ -125,7 +125,7 @@ impl Transformer for VariableOr {
         TransformerResult(Token::Construct(con))
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }
@@ -158,7 +158,7 @@ impl Transformer for Is {
         })
     }
 
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Vec<Token<'x>>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }
