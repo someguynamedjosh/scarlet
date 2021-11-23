@@ -8,5 +8,6 @@ pub mod shown;
 pub mod structt;
 pub mod substitution;
 pub mod variable;
+pub mod index;
 
 pub use base::*;

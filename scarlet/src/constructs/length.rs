@@ -37,14 +37,14 @@ impl Construct for CLength {
         }
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, self_id: ConstructId) -> ConstructId {
+    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let base = env.reduce(self.0);
         let base_con = env.get_construct(base);
         if let Some(structt) = as_struct(&**base_con) {
             let length = structt.0.len() as u32;
             env.push_construct(Box::new(CBuiltinValue::_32U(length)))
         } else {
-            self_id
+            env.push_construct(Box::new(Self(base)))
         }
     }
 

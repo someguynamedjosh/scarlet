@@ -1,5 +1,9 @@
 use crate::{
-    constructs::variable::VarType,
+    constructs::{
+        builtin_operation::{BuiltinOperation, CBuiltinOperation},
+        length::CLength,
+        variable::VarType,
+    },
     tokens::structure::Token,
     transform::{
         apply,
@@ -38,6 +42,11 @@ impl Transformer for Builtin {
                 let eltype = c.push_unresolved(body.remove(0));
                 let typee = VarType::Struct { eltype };
                 c.push_var(typee, true)
+            }
+            "length" => {
+                let of = c.push_unresolved(body.remove(0));
+                let con = CLength(of);
+                c.push_construct(Box::new(con))
             }
             other => todo!("Nice error, unrecognized builtin {}", other),
         };

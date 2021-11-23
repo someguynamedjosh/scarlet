@@ -7,6 +7,8 @@
     Struct IS BUILTIN{Struct eltype}
     AnyStruct IS Struct{Any}
 
-    any_struct IS AnyStruct.V
-    any_struct{[123 456]}.S
+    array IS AnyStruct.V
+    length IS BUILTIN{length array}.S
+
+    length{[1 2 3 4 5 9 9 9 ]}.S
 ]
