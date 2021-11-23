@@ -2,7 +2,7 @@ use crate::constructs::{substitution::Substitutions, variable::CVariable, Constr
 
 #[derive(Clone, Debug)]
 pub enum MatchResult {
-    Match(Substitutions),
+    Match,
     NoMatch,
     Unknown,
 }
@@ -12,15 +12,12 @@ use MatchResult::*;
 impl MatchResult {
     pub fn is_guaranteed_match(&self) -> bool {
         match self {
-            Self::Match(..) => true,
+            Self::Match => true,
             _ => false,
         }
     }
 
     pub fn with_sub_if_match(mut self, target: CVariable, value: ConstructId) -> Self {
-        if let Self::Match(subs) = &mut self {
-            subs.insert_no_replace(target, value)
-        }
         self
     }
 
@@ -29,25 +26,14 @@ impl MatchResult {
     }
 
     pub fn non_capturing() -> Self {
-        Match(Substitutions::new())
+        Match
     }
 
     pub fn and(results: Vec<Self>) -> Self {
-        let mut subs = Substitutions::new();
         let mut unknown = false;
         for result in results {
             match result {
-                Match(result_subs) => {
-                    for (target, value) in result_subs {
-                        if let Some(&existing_value) = subs.get(&target) {
-                            if value != existing_value {
-                                return NoMatch;
-                            }
-                        } else {
-                            subs.insert_no_replace(target, value);
-                        }
-                    }
-                }
+                Match => (),
                 NoMatch => return NoMatch,
                 Unknown => unknown = true,
             }
@@ -55,7 +41,7 @@ impl MatchResult {
         if unknown {
             Unknown
         } else {
-            Match(subs)
+            Match
         }
     }
 
@@ -63,7 +49,7 @@ impl MatchResult {
         let mut unknown = false;
         for result in results {
             match result {
-                Match(..) => return result,
+                Match => return result,
                 NoMatch => (),
                 Unknown => unknown = true,
             }

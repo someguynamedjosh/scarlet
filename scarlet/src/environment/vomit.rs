@@ -1,6 +1,9 @@
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::{base::Construct, downcast_construct, shown::CShown},
+    constructs::{
+        as_builtin_value, base::Construct, builtin_value::CBuiltinValue, downcast_construct,
+        shown::CShown,
+    },
     tokens::structure::Token,
     transform::{self, ApplyContext},
 };
@@ -20,6 +23,15 @@ impl<'x> Environment<'x> {
             let con_id = self.reduce(con_id);
             let vomited = self.vomit(con_id);
             println!("{:?} is\n{}", con_id, vomited);
+            println!("depends on:");
+            for dep in self.get_dependencies(con_id) {
+                let kind = match dep.capturing {
+                    true => "capturing",
+                    false => "without capturing",
+                };
+                println!("    {} a(n) {:?}", kind, dep.typee);
+            }
+            println!();
         }
         // println!("{:#?}", self);
     }
@@ -36,7 +48,16 @@ impl<'x> Environment<'x> {
                 return self.expand_token(replace_with);
             }
         }
-        if let Token::Stream { label, contents } = input {
+        if let Token::Construct(con_id) = input {
+            if let Some(builtin) = as_builtin_value(&**self.get_construct(con_id)) {
+                match builtin {
+                    CBuiltinValue::Bool(value) => format!("{}", value).into(),
+                    CBuiltinValue::_32U(value) => format!("{}", value).into(),
+                }
+            } else {
+                input
+            }
+        } else if let Token::Stream { label, contents } = input {
             let contents = contents.into_iter().map(|t| self.expand_token(t)).collect();
             Token::Stream { label, contents }
         } else {

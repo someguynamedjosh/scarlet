@@ -104,7 +104,7 @@ impl Construct for CBuiltinOperation {
             }
             VarType::And(_, _) => unreachable!(),
             VarType::Or(_, _) => unreachable!(),
-            VarType::Array { .. } => unreachable!(),
+            VarType::Struct { .. } => unreachable!(),
         }
     }
 

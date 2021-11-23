@@ -53,13 +53,19 @@ impl Construct for CStruct {
                             println!("{:?} {:?}", vfield.value, pfield.value);
                             env.construct_matches_construct(vfield.value, pfield.value)
                         } else {
-                            panic!("Name mismatch!");
                             MatchResult::NoMatch
                         }
                     })
                     .collect();
                 return MatchResult::and(results);
             }
+        } else if let &VarType::Struct { eltype } = pattern {
+            return MatchResult::and(
+                self.0
+                    .iter()
+                    .map(|field| env.construct_matches_construct(field.value, eltype))
+                    .collect(),
+            );
         }
         MatchResult::Unknown
     }

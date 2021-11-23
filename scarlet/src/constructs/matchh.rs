@@ -63,8 +63,9 @@ impl Construct for CMatch {
             let pattern = env.reduce(condition.pattern);
             let value = env.reduce(condition.value);
             match env.construct_matches_construct(base, pattern) {
-                MatchResult::Match(subs) => {
-                    else_value = env.substitute(value, &subs);
+                MatchResult::Match => {
+                    else_value = value;
+                    // env.substitute(value, &subs);
                     break;
                 }
                 MatchResult::NoMatch => (),

@@ -19,23 +19,17 @@ pub enum VarType {
     Just(ConstructId),
     And(ConstructId, ConstructId),
     Or(ConstructId, ConstructId),
-    Array {
-        length: ConstructId,
-        eltype: ConstructId,
-    },
+    Struct { eltype: ConstructId },
 }
 
 impl VarType {
     pub fn get_dependencies(&self, env: &mut Environment) -> Vec<CVariable> {
         match self {
             VarType::Anything | VarType::_32U | VarType::Bool => vec![],
-            VarType::Just(base) => env.get_dependencies(*base),
-            VarType::And(l, r)
-            | VarType::Or(l, r)
-            | VarType::Array {
-                length: l,
-                eltype: r,
-            } => [env.get_dependencies(*l), env.get_dependencies(*r)].concat(),
+            VarType::Just(base) | VarType::Struct { eltype: base } => env.get_dependencies(*base),
+            VarType::And(l, r) | VarType::Or(l, r) => {
+                [env.get_dependencies(*l), env.get_dependencies(*r)].concat()
+            }
         }
         .into_iter()
         .filter(|x| !x.capturing)
@@ -46,8 +40,7 @@ impl VarType {
         match self {
             Self::And(l, r) => Self::And(env.reduce(l), env.reduce(r)),
             Self::Or(l, r) => Self::Or(env.reduce(l), env.reduce(r)),
-            Self::Array { length, eltype } => Self::Array {
-                length: env.reduce(length),
+            Self::Struct { eltype } => Self::Struct {
                 eltype: env.reduce(eltype),
             },
             Self::Just(just) => Self::Just(env.reduce(just)),
@@ -67,8 +60,7 @@ impl VarType {
                 env.substitute(l, substitutions),
                 env.substitute(r, substitutions),
             ),
-            Self::Array { length, eltype } => Self::Array {
-                length: env.substitute(length, substitutions),
+            Self::Struct { eltype } => Self::Struct {
                 eltype: env.substitute(eltype, substitutions),
             },
             Self::Just(just) => Self::Just(env.substitute(just, substitutions)),

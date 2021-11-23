@@ -21,7 +21,7 @@ impl<'x> Environment<'x> {
                     let var = var.clone();
                     let pattern = &var.typee;
                     return match self.var_type_matches_var_type(value, pattern) {
-                        MatchResult::Match(..) => {
+                        MatchResult::Match => {
                             MatchResult::non_capturing().with_sub_if_match(var, *original_value)
                         }
                         other => other,
@@ -68,7 +68,7 @@ impl<'x> Environment<'x> {
             (VarType::Bool, _) => MatchResult::NoMatch,
             (VarType::_32U, VarType::_32U) => MatchResult::non_capturing(),
             (VarType::_32U, _) => MatchResult::NoMatch,
-            (VarType::Array { .. }, _) => todo!(),
+            (VarType::Struct { .. }, _) => todo!(),
             (VarType::Just(value), _) => self.construct_matches_simple_var_type(*value, pattern),
         }
     }

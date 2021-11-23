@@ -3,17 +3,10 @@
     Bool IS BUILTIN{Boolean}
     32U IS BUILTIN{32BitUnsignedInteger}
 
-    thing IS [1 2 3].V
+    eltype IS Any.V
+    Struct IS BUILTIN{Struct eltype}
+    AnyStruct IS Struct{Any}
 
-    [thing.0 thing.1].S
-
-    # condition IS Bool.V
-    # Theorem IS (condition VA true).C{ALL}
-
-    # value IS 32U.V
-    # value_lt_3 IS Theorem{value < 3}.V
-
-    # selection IS [123 456 789].I{value value_lt_3}
-
-    # selection{1}{true}
+    any_struct IS AnyStruct.V
+    any_struct{[123 456]}.S
 ]

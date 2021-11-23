@@ -115,6 +115,36 @@ impl<'x> Environment<'x> {
                 ConstructDefinition::Unresolved(Token::Construct(self.substitute(base, &subs)))
             }
             Token::Stream {
+                label: "WITHOUT_CAPTURING",
+                contents,
+            } => {
+                let base = contents[0].unwrap_construct();
+                let mut to_set = Vec::new();
+                for capture in &contents[1..] {
+                    match capture {
+                        Token::Plain(Cow::Borrowed("ALL")) => {
+                            to_set.append(&mut self.get_dependencies(base))
+                        }
+                        &Token::Construct(capture) => {
+                            to_set.append(&mut self.get_dependencies(capture))
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+                let mut subs = OrderedMap::new();
+                for var in to_set {
+                    if var.capturing && !subs.contains_key(&var) {
+                        let value = CVariable {
+                            capturing: false,
+                            ..var.clone()
+                        };
+                        let value = self.push_construct(Box::new(value));
+                        subs.insert_no_replace(var, value)
+                    }
+                }
+                ConstructDefinition::Unresolved(Token::Construct(self.substitute(base, &subs)))
+            }
+            Token::Stream {
                 label: "substitute",
                 mut contents,
             } => {
