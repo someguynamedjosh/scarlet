@@ -45,7 +45,6 @@ pub fn build_transformers<'e>(
         80 => tfers![Plus, Minus],
         90 => tfers![Modulo],
         100 => tfers![GreaterThanOrEqual, GreaterThan, LessThanOrEqual, LessThan],
-        120 => tfers![VariableAnd, VariableOr],
         // 130 => tfers![Matches],
         // 150 => tfers![Using],
         _ => tfers![],

@@ -6,7 +6,7 @@ use crate::{
         self,
         builtin_value::CBuiltinValue,
         substitution::{CSubstitution, Substitutions},
-        variable::{CVariable, VarType},
+        variable::CVariable,
     },
     shared::OrderedMap,
     tokens::structure::Token,
@@ -170,10 +170,7 @@ impl<'x> Environment<'x> {
                     let sub = self.reduce(sub);
                     let mut match_found = false;
                     for (idx, dep) in deps.iter().enumerate() {
-                        if self
-                            .var_type_matches_var_type(&VarType::Just(sub), &dep.typee)
-                            .is_guaranteed_match()
-                        {
+                        if todo!("check substitution matches dependency") {
                             let dep = deps.remove(idx);
                             subs.insert_no_replace(dep, sub);
                             match_found = true;

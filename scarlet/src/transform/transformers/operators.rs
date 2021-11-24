@@ -1,8 +1,5 @@
 use crate::{
-    constructs::{
-        builtin_operation::{BuiltinOperation, CBuiltinOperation},
-        variable::VarType,
-    },
+    constructs::builtin_operation::{BuiltinOperation, CBuiltinOperation},
     tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
@@ -69,67 +66,6 @@ binary_operator!(
 );
 
 // binary_operator!(Matches, BuiltinOperation::Matches, "matches");
-
-pub struct VariableAnd;
-impl Transformer for VariableAnd {
-    fn input_pattern(&self) -> Box<dyn Pattern> {
-        Box::new((
-            PatCaptureAny { key: "left" },
-            PatFirstOf(vec![
-                Box::new(PatPlain("VA")),
-                Box::new(PatPlain("VAR_AND")),
-                Box::new(PatPlain("VARIABLE_AND")),
-            ]),
-            PatCaptureAny { key: "right" },
-        ))
-    }
-
-    fn apply<'t>(
-        &self,
-        c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'_, 't>,
-    ) -> TransformerResult<'t> {
-        let left = c.push_unresolved(success.get_capture("left").clone());
-        let right = c.push_unresolved(success.get_capture("right").clone());
-        let con = c.push_var(VarType::And(left, right), false);
-        TransformerResult(Token::Construct(con))
-    }
-
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
-        None
-    }
-}
-
-pub struct VariableOr;
-impl Transformer for VariableOr {
-    fn input_pattern(&self) -> Box<dyn Pattern> {
-        Box::new((
-            PatCaptureAny { key: "left" },
-            PatFirstOf(vec![
-                Box::new(PatPlain("VO")),
-                Box::new(PatPlain("VAR_OR")),
-                Box::new(PatPlain("VARIABLE_OR")),
-            ]),
-            PatCaptureAny { key: "right" },
-        ))
-    }
-
-    fn apply<'t>(
-        &self,
-        c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'_, 't>,
-    ) -> TransformerResult<'t> {
-        let left = c.push_unresolved(success.get_capture("left").clone());
-        let right = c.push_unresolved(success.get_capture("right").clone());
-        let con = c.push_var(VarType::Or(left, right), false);
-        TransformerResult(Token::Construct(con))
-    }
-
-    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
-        None
-    }
-}
-
 // binary_operator!(Member, BuiltinOperation::member, ".");
 // binary_operator!(Using, BuiltinOperation::using, "using");
 // binary_operator!(Is, BuiltinOperation::target, "is");

@@ -3,12 +3,9 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::{CVariable, VarType},
+    variable::CVariable,
 };
-use crate::{
-    environment::{matchh::MatchResult, Environment},
-    impl_any_eq_for_construct,
-};
+use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Condition {
@@ -43,16 +40,8 @@ impl Construct for CMatch {
         deps
     }
 
-    fn matches_simple_var_type<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        pattern: &VarType,
-    ) -> MatchResult {
-        let mut results = vec![env.construct_matches_simple_var_type(self.else_value, pattern)];
-        for con in &self.conditions {
-            results.push(env.construct_matches_simple_var_type(con.value, pattern))
-        }
-        MatchResult::and(results)
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
@@ -62,14 +51,14 @@ impl Construct for CMatch {
         for condition in &self.conditions {
             let pattern = env.reduce(condition.pattern);
             let value = env.reduce(condition.value);
-            match env.construct_matches_construct(base, pattern) {
-                MatchResult::Match => {
+            match todo!("check if base matches pattern") {
+                TripleBool::True => {
                     else_value = value;
                     // env.substitute(value, &subs);
                     break;
                 }
-                MatchResult::NoMatch => (),
-                MatchResult::Unknown => conditions.push(Condition { pattern, value }),
+                TripleBool::False=> (),
+                TripleBool::Unknown => conditions.push(Condition { pattern, value }),
             }
         }
         else_value = env.reduce(else_value);

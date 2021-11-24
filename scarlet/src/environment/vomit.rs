@@ -29,7 +29,7 @@ impl<'x> Environment<'x> {
                     true => "capturing",
                     false => "without capturing",
                 };
-                println!("    {} a(n) {:?}", kind, dep.typee);
+                println!("    {} ({})", kind, self.vomit(dep.invariant));
             }
             println!();
         }

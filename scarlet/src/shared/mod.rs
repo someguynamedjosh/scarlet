@@ -16,3 +16,10 @@ pub use terminal_utilities::*;
 pub fn indented(source: &str) -> String {
     source.replace("\n", "\n    ")
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TripleBool {
+    True,
+    False,
+    Unknown
+}

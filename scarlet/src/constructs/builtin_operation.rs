@@ -1,13 +1,11 @@
 use constructs::{substitution::Substitutions, variable::CVariable};
 
-use super::{
-    base::{Construct, ConstructId},
-    variable::VarType,
-};
+use super::base::{Construct, ConstructId};
 use crate::{
     constructs::{self, builtin_value::CBuiltinValue, downcast_construct},
-    environment::{matchh::MatchResult, Environment},
+    environment::{ Environment},
     impl_any_eq_for_construct,
+    shared::TripleBool,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -40,10 +38,7 @@ impl Construct for CBuiltinOperation {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         for &arg in &self.args {
-            if !env
-                .construct_matches_simple_var_type(arg, &VarType::_32U)
-                .is_guaranteed_match()
-            {
+            if !(todo!("arg always matches 32U") as bool) {
                 todo!("Nice error, args must match 32U");
             }
         }
@@ -57,55 +52,8 @@ impl Construct for CBuiltinOperation {
         deps
     }
 
-    fn matches_simple_var_type<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        pattern: &VarType,
-    ) -> MatchResult {
-        match pattern {
-            VarType::Anything => unreachable!(),
-            VarType::_32U => match self.op {
-                BuiltinOperation::Sum32U
-                | BuiltinOperation::Difference32U
-                | BuiltinOperation::Product32U
-                | BuiltinOperation::Quotient32U
-                | BuiltinOperation::Modulo32U
-                | BuiltinOperation::Power32U => MatchResult::non_capturing(),
-                _ => MatchResult::NoMatch,
-            },
-            VarType::Bool => match self.op {
-                BuiltinOperation::LessThan32U
-                | BuiltinOperation::LessThanOrEqual32U
-                | BuiltinOperation::GreaterThan32U
-                | BuiltinOperation::GreaterThanOrEqual32U => MatchResult::non_capturing(),
-                _ => MatchResult::NoMatch,
-            },
-            VarType::Just(other) => {
-                if let Some(pattern_op) = downcast_construct::<Self>(&**env.get_construct(*other)) {
-                    let pattern_op = pattern_op.clone();
-                    if pattern_op.op == self.op {
-                        for (&self_arg, &pattern_arg) in
-                            self.args.iter().zip(pattern_op.args.iter())
-                        {
-                            if !env
-                                .construct_matches_construct(self_arg, pattern_arg)
-                                .is_guaranteed_match()
-                            {
-                                return MatchResult::Unknown;
-                            }
-                        }
-                        MatchResult::non_capturing()
-                    } else {
-                        MatchResult::Unknown
-                    }
-                } else {
-                    MatchResult::Unknown
-                }
-            }
-            VarType::And(_, _) => unreachable!(),
-            VarType::Or(_, _) => unreachable!(),
-            VarType::Struct { .. } => unreachable!(),
-        }
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

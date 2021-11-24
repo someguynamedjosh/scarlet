@@ -1,12 +1,13 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::{CVariable, VarType},
+    variable::CVariable,
 };
 use crate::{
     constructs::{as_struct, builtin_value::CBuiltinValue},
-    environment::{matchh::MatchResult, Environment},
+    environment::Environment,
     impl_any_eq_for_construct,
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -25,16 +26,8 @@ impl Construct for CLength {
         env.get_dependencies(self.0)
     }
 
-    fn matches_simple_var_type<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        pattern: &VarType,
-    ) -> MatchResult {
-        match pattern {
-            VarType::Bool => MatchResult::NoMatch,
-            VarType::_32U => MatchResult::non_capturing(),
-            _ => MatchResult::Unknown,
-        }
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    constructs::{base::BoxedConstruct, variable::VarType, ConstructDefinition, ConstructId},
+    constructs::{base::BoxedConstruct, ConstructDefinition, ConstructId},
     environment::Environment,
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
@@ -54,8 +54,8 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
         }
     }
 
-    pub fn push_var(&mut self, typee: VarType, capturing: bool) -> ConstructId {
-        let con = self.env.push_variable(typee, capturing);
+    pub fn push_var(&mut self, invariant: ConstructId, capturing: bool) -> ConstructId {
+        let con = self.env.push_variable(invariant, capturing);
         self.env.constructs[con].parent_scope = self.parent_scope;
         con
     }

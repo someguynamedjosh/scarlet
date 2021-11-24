@@ -1,5 +1,4 @@
 pub mod dependencies;
-pub mod matchh;
 pub mod reduce;
 pub mod resolve;
 pub mod substitute;
@@ -11,7 +10,7 @@ use crate::{
         base::{
             AnnotatedConstruct, BoxedConstruct, ConstructDefinition, ConstructId, ConstructPool,
         },
-        variable::{CVariable, VarType, Variable, VariablePool},
+        variable::{CVariable, Variable, VariablePool},
     },
     shared::Pool,
     tokens::structure::Token,
@@ -80,12 +79,12 @@ where
         }
     }
 
-    pub fn push_variable(&mut self, typee: VarType, capturing: bool) -> ConstructId {
+    pub fn push_variable(&mut self, invariant: ConstructId, capturing: bool) -> ConstructId {
         let id = self.variables.push(Variable);
         let def = CVariable {
             capturing,
             id,
-            typee,
+            invariant,
         };
         self.push_construct(Box::new(def))
     }

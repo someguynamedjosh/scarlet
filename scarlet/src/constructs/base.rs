@@ -1,14 +1,12 @@
 use std::{any::Any, fmt::Debug};
 
 use super::{
-    builtin_value::CBuiltinValue,
-    structt::CStruct,
-    substitution::Substitutions,
-    variable::{CVariable, VarType},
+    builtin_value::CBuiltinValue, structt::CStruct, substitution::Substitutions,
+    variable::CVariable,
 };
 use crate::{
-    environment::{matchh::MatchResult, Environment},
-    shared::{AnyEq, Id, Pool},
+    environment::Environment,
+    shared::{AnyEq, Id, Pool, TripleBool},
     tokens::structure::Token,
 };
 
@@ -46,12 +44,8 @@ pub trait Construct: Any + Debug + AnyEq {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable>;
 
     #[allow(unused_variables)]
-    fn matches_simple_var_type<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        pattern: &VarType,
-    ) -> MatchResult {
-        MatchResult::Unknown
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     #[allow(unused_variables)]

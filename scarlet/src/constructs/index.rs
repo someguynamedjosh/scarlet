@@ -3,12 +3,13 @@ use super::{
     base::{Construct, ConstructId},
     builtin_operation::{BuiltinOperation, CBuiltinOperation},
     substitution::Substitutions,
-    variable::{CVariable, VarType},
+    variable::CVariable,
 };
 use crate::{
     constructs::{builtin_value::CBuiltinValue, length::CLength},
     environment::Environment,
     impl_any_eq_for_construct,
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -33,20 +34,7 @@ impl Construct for CIndex {
             args: vec![index, len],
         }));
         let truee = env.push_construct(Box::new(CBuiltinValue::Bool(true)));
-        let lt_len_and_true = VarType::And(lt_len, truee).reduce(env);
-        if !env
-            .var_type_matches_var_type(&VarType::Just(proof_lt_len), &lt_len_and_true)
-            .is_guaranteed_match()
-        {
-            println!("{:#?}", env);
-            println!("{:?}", lt_len_and_true);
-            todo!(
-                "Nice error, {:?} is not a proof that {:?} is in bounds of {:?}",
-                proof_lt_len,
-                index,
-                self.base
-            )
-        }
+        todo!("check proof_lt_len matches lt_len and true or something like that");
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
@@ -54,6 +42,10 @@ impl Construct for CIndex {
         deps.append(&mut env.get_dependencies(self.index));
         deps.append(&mut env.get_dependencies(self.proof_lt_len));
         deps
+    }
+
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

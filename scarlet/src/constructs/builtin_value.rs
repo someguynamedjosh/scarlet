@@ -2,12 +2,9 @@ use super::{
     as_builtin_value,
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::{CVariable, VarType},
+    variable::CVariable,
 };
-use crate::{
-    environment::{matchh::MatchResult, Environment},
-    impl_any_eq_for_construct,
-};
+use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CBuiltinValue {
@@ -46,28 +43,8 @@ impl Construct for CBuiltinValue {
         Vec::new()
     }
 
-    fn matches_simple_var_type<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        pattern: &VarType,
-    ) -> MatchResult {
-        match (self, pattern) {
-            (CBuiltinValue::Bool(_), VarType::Bool) | (CBuiltinValue::_32U(_), VarType::_32U) => {
-                MatchResult::non_capturing()
-            }
-            (_, VarType::Just(pattern)) => {
-                if let Some(value) = as_builtin_value(&**env.get_construct(*pattern)) {
-                    if self == value {
-                        MatchResult::non_capturing()
-                    } else {
-                        MatchResult::NoMatch
-                    }
-                } else {
-                    MatchResult::Unknown
-                }
-            }
-            _ => MatchResult::NoMatch,
-        }
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn substitute<'x>(

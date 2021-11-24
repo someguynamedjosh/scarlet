@@ -1,5 +1,4 @@
 use crate::{
-    constructs::variable::VarType,
     tokens::structure::Token,
     transform::{transformers::special_members::base::SpecialMember, ApplyContext},
 };
@@ -16,8 +15,8 @@ impl SpecialMember for Variable {
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let pattern = c.push_unresolved(base);
-        let var_con = c.push_var(VarType::Just(pattern), false);
+        let invariant = c.push_unresolved(base);
+        let var_con = c.push_var(invariant, false);
         Token::Construct(var_con)
     }
 

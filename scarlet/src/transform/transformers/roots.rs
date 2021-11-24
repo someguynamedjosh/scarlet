@@ -6,7 +6,6 @@ use crate::{
         base::ConstructDefinition,
         downcast_construct,
         structt::{CStruct, StructField},
-        variable::VarType,
     },
     tfers,
     tokens::structure::Token,

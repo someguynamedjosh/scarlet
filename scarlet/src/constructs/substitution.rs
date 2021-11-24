@@ -2,8 +2,9 @@ use itertools::Itertools;
 
 use super::{variable::CVariable, Construct, ConstructId};
 use crate::{
-    constructs::variable::VarType, environment::Environment, impl_any_eq_for_construct,
-    shared::OrderedMap,
+    environment::Environment,
+    impl_any_eq_for_construct,
+    shared::{OrderedMap, TripleBool},
 };
 
 pub type Substitutions = OrderedMap<CVariable, ConstructId>;
@@ -20,13 +21,10 @@ impl Construct for CSubstitution {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         for (target, value) in &self.1 {
-            if !env
-                .var_type_matches_var_type(&VarType::Just(*value), &target.typee)
-                .is_guaranteed_match()
-            {
+            if !(todo!("value matches target") as bool) {
                 panic!(
-                    "Argument {:?} does not match {:?}, which it is assigned to.",
-                    value, target.typee
+                    "Argument {:?} does not match {:?} ({:?}), which it is assigned to.",
+                    value, target, target.invariant
                 )
             }
         }
@@ -44,6 +42,10 @@ impl Construct for CSubstitution {
             })
             .flatten()
             .collect()
+    }
+
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {

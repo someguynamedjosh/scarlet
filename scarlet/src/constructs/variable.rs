@@ -6,70 +6,10 @@ use super::{
     substitution::Substitutions,
 };
 use crate::{
-    environment::{matchh::MatchResult, Environment},
+    environment::Environment,
     impl_any_eq_for_construct,
-    shared::{Id, Pool},
+    shared::{Id, Pool, TripleBool},
 };
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VarType {
-    Anything,
-    _32U,
-    Bool,
-    Just(ConstructId),
-    And(ConstructId, ConstructId),
-    Or(ConstructId, ConstructId),
-    Struct { eltype: ConstructId },
-}
-
-impl VarType {
-    pub fn get_dependencies(&self, env: &mut Environment) -> Vec<CVariable> {
-        match self {
-            VarType::Anything | VarType::_32U | VarType::Bool => vec![],
-            VarType::Just(base) | VarType::Struct { eltype: base } => env.get_dependencies(*base),
-            VarType::And(l, r) | VarType::Or(l, r) => {
-                [env.get_dependencies(*l), env.get_dependencies(*r)].concat()
-            }
-        }
-        .into_iter()
-        .filter(|x| !x.capturing)
-        .collect_vec()
-    }
-
-    pub fn reduce<'x>(self, env: &mut Environment<'x>) -> Self {
-        match self {
-            Self::And(l, r) => Self::And(env.reduce(l), env.reduce(r)),
-            Self::Or(l, r) => Self::Or(env.reduce(l), env.reduce(r)),
-            Self::Struct { eltype } => Self::Struct {
-                eltype: env.reduce(eltype),
-            },
-            Self::Just(just) => Self::Just(env.reduce(just)),
-            Self::Anything => Self::Anything,
-            Self::Bool => Self::Bool,
-            Self::_32U => Self::_32U,
-        }
-    }
-
-    pub fn substitute<'x>(self, env: &mut Environment<'x>, substitutions: &Substitutions) -> Self {
-        match self {
-            Self::And(l, r) => Self::And(
-                env.substitute(l, substitutions),
-                env.substitute(r, substitutions),
-            ),
-            Self::Or(l, r) => Self::Or(
-                env.substitute(l, substitutions),
-                env.substitute(r, substitutions),
-            ),
-            Self::Struct { eltype } => Self::Struct {
-                eltype: env.substitute(eltype, substitutions),
-            },
-            Self::Just(just) => Self::Just(env.substitute(just, substitutions)),
-            Self::Anything => Self::Anything,
-            Self::Bool => Self::Bool,
-            Self::_32U => Self::_32U,
-        }
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable;
@@ -79,7 +19,7 @@ pub type VariableId = Id<'V'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CVariable {
     pub id: VariableId,
-    pub typee: VarType,
+    pub invariant: ConstructId,
     pub capturing: bool,
 }
 
@@ -99,29 +39,18 @@ impl Construct for CVariable {
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut base = self.typee.get_dependencies(env);
+        let mut base = env.get_non_capturing_dependencies(self.invariant);
         base.push(self.clone());
         base
     }
 
-    fn matches_simple_var_type<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        pattern: &VarType,
-    ) -> MatchResult {
-        if let &VarType::Just(other) = pattern {
-            if let Some(pattern_var) = downcast_construct::<Self>(&**env.get_construct(other)) {
-                if self.is_same_variable_as(pattern_var) {
-                    return MatchResult::non_capturing();
-                }
-            }
-        }
-        env.var_type_matches_var_type(&self.typee, pattern)
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        TripleBool::Unknown
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
         let def = Self {
-            typee: self.typee.clone().reduce(env),
+            invariant: env.reduce(self.invariant),
             ..self.clone()
         };
         env.push_construct(Box::new(def))
@@ -137,11 +66,11 @@ impl Construct for CVariable {
                 return *value;
             }
         }
-        let typee = self.typee.clone().substitute(env, substitutions);
+        let invariant = env.substitute(self.invariant, substitutions);
         let new = Self {
-            capturing: self.capturing,
             id: self.id,
-            typee,
+            invariant,
+            capturing: self.capturing,
         };
         env.push_construct(Box::new(new))
     }
