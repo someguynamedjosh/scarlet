@@ -1,14 +1,3 @@
 [
-    Any IS BUILTIN{Anything}
-    Bool IS BUILTIN{Boolean}
-    32U IS BUILTIN{32BitUnsignedInteger}
-
-    eltype IS Any.V
-    Struct IS BUILTIN{Struct eltype}
-    AnyStruct IS Struct{Any}
-
-    array IS AnyStruct.V
-    length IS BUILTIN{length array}.S
-
-    length{[1 2 3 4 5 9 9 9 ]}.S
-]
+    1 + 2
+].S

@@ -27,13 +27,6 @@ impl Construct for CIndex {
     }
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
-        let (index, proof_lt_len) = (env.reduce(self.index), env.reduce(self.proof_lt_len));
-        let len = env.push_construct(Box::new(CLength(self.base)));
-        let lt_len = env.push_construct(Box::new(CBuiltinOperation {
-            op: BuiltinOperation::LessThan32U,
-            args: vec![index, len],
-        }));
-        let truee = env.push_construct(Box::new(CBuiltinValue::Bool(true)));
         todo!("check proof_lt_len matches lt_len and true or something like that");
     }
 

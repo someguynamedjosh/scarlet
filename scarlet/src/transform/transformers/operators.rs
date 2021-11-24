@@ -1,5 +1,5 @@
 use crate::{
-    constructs::builtin_operation::{BuiltinOperation, CBuiltinOperation},
+    constructs::builtin_operation::{arithmetic::*, BuiltinOperation, CBuiltinOperation},
     tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
@@ -27,7 +27,7 @@ macro_rules! binary_operator {
                 let left = c.push_unresolved(success.get_capture("left").clone());
                 let right = c.push_unresolved(success.get_capture("right").clone());
                 let result = CBuiltinOperation {
-                    op: $internal_name,
+                    op: Box::new($internal_name),
                     args: vec![left, right],
                 };
                 let result = c.env.push_construct(Box::new(result));
@@ -45,25 +45,25 @@ macro_rules! binary_operator {
     };
 }
 
-binary_operator!(Caret, BuiltinOperation::Power32U, PatPlain("^"));
-binary_operator!(Asterisk, BuiltinOperation::Product32U, PatPlain("*"));
-binary_operator!(Slash, BuiltinOperation::Quotient32U, PatPlain("/"));
-binary_operator!(Plus, BuiltinOperation::Sum32U, PatPlain("+"));
-binary_operator!(Minus, BuiltinOperation::Difference32U, PatPlain("-"));
-binary_operator!(Modulo, BuiltinOperation::Modulo32U, PatPlain("mod"));
+binary_operator!(Caret, OPow::<u32>::new(), PatPlain("^"));
+binary_operator!(Asterisk, OMul::<u32>::new(), PatPlain("*"));
+binary_operator!(Slash, ODiv::<u32>::new(), PatPlain("/"));
+binary_operator!(Plus, OAdd::<u32>::new(), PatPlain("+"));
+binary_operator!(Minus, OSub::<u32>::new(), PatPlain("-"));
+binary_operator!(Modulo, OMod::<u32>::new(), PatPlain("mod"));
 
-binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, PatPlain(">"));
-binary_operator!(
-    GreaterThanOrEqual,
-    BuiltinOperation::GreaterThanOrEqual32U,
-    (PatPlain(">"), PatPlain("="))
-);
-binary_operator!(LessThan, BuiltinOperation::LessThan32U, PatPlain("<"));
-binary_operator!(
-    LessThanOrEqual,
-    BuiltinOperation::LessThanOrEqual32U,
-    (PatPlain("<"), PatPlain("="))
-);
+// binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, PatPlain(">"));
+// binary_operator!(
+//     GreaterThanOrEqual,
+//     BuiltinOperation::GreaterThanOrEqual32U,
+//     (PatPlain(">"), PatPlain("="))
+// );
+// binary_operator!(LessThan, BuiltinOperation::LessThan32U, PatPlain("<"));
+// binary_operator!(
+//     LessThanOrEqual,
+//     BuiltinOperation::LessThanOrEqual32U,
+//     (PatPlain("<"), PatPlain("="))
+// );
 
 // binary_operator!(Matches, BuiltinOperation::Matches, "matches");
 // binary_operator!(Member, BuiltinOperation::member, ".");

@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use super::{
     as_builtin_value,
     base::{Construct, ConstructId},
@@ -12,23 +14,29 @@ pub enum CBuiltinValue {
     _32U(u32),
 }
 
-impl CBuiltinValue {
-    pub fn as_bool(&self) -> Option<bool> {
-        if let Self::Bool(v) = self {
-            Some(*v)
-        } else {
-            None
-        }
-    }
+macro_rules! impl_conversions {
+    ($Variant:ident $ty:ty) => {
+        impl TryInto<$ty> for CBuiltinValue {
+            type Error = Self;
 
-    pub fn as_32u(&self) -> Option<u32> {
-        if let Self::_32U(v) = self {
-            Some(*v)
-        } else {
-            None
+            fn try_into(self) -> Result<$ty, Self::Error> {
+                match self {
+                    Self::$Variant(v) => Ok(v),
+                    _ => Err(self),
+                }
+            }
         }
-    }
+
+        impl From<$ty> for CBuiltinValue {
+            fn from(v: $ty) -> Self {
+                Self::$Variant(v)
+            }
+        }
+    };
 }
+
+impl_conversions!(Bool bool);
+impl_conversions!(_32U u32);
 
 impl_any_eq_for_construct!(CBuiltinValue);
 

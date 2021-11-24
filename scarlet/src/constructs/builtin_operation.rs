@@ -1,32 +1,46 @@
+pub mod arithmetic;
+
+use std::fmt::Debug;
+
 use constructs::{substitution::Substitutions, variable::CVariable};
 
 use super::base::{Construct, ConstructId};
 use crate::{
     constructs::{self, builtin_value::CBuiltinValue, downcast_construct},
-    environment::{ Environment},
+    environment::Environment,
     impl_any_eq_for_construct,
-    shared::TripleBool,
+    shared::{AnyEq, TripleBool},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum BuiltinOperation {
-    Sum32U,
-    Difference32U,
-    Product32U,
-    Quotient32U,
-    Modulo32U,
-    Power32U,
-
-    LessThan32U,
-    LessThanOrEqual32U,
-    GreaterThan32U,
-    GreaterThanOrEqual32U,
+pub trait BuiltinOperation: AnyEq + Debug {
+    fn compute<'x>(&self, env: &mut Environment<'x>, args: &[ConstructId]) -> Option<ConstructId>;
+    fn dyn_clone(&self) -> Box<dyn BuiltinOperation>;
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct CBuiltinOperation {
-    pub op: BuiltinOperation,
+    pub op: Box<dyn BuiltinOperation>,
     pub args: Vec<ConstructId>,
+}
+
+impl Clone for CBuiltinOperation {
+    fn clone(&self) -> Self {
+        Self {
+            op: self.op.dyn_clone(),
+            args: self.args.clone(),
+        }
+    }
+}
+
+impl PartialEq for CBuiltinOperation {
+    fn eq(&self, other: &Self) -> bool {
+        for (larg, rarg) in self.args.iter().zip(other.args.iter()) {
+            if larg != rarg {
+                return false;
+            }
+        }
+        self.op.eq(&*other.op)
+    }
 }
 
 impl_any_eq_for_construct!(CBuiltinOperation);
@@ -37,6 +51,7 @@ impl Construct for CBuiltinOperation {
     }
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
+        return;
         for &arg in &self.args {
             if !(todo!("arg always matches 32U") as bool) {
                 todo!("Nice error, args must match 32U");
@@ -61,58 +76,13 @@ impl Construct for CBuiltinOperation {
         for arg in &self.args {
             args.push(env.reduce(*arg));
         }
-        let args_as_values: Option<Vec<_>> = args
-            .iter()
-            .map(|arg| constructs::as_builtin_value(&**env.get_construct(*arg)).map(|x| *x))
-            .collect();
-        if let Some(aav) = args_as_values {
-            let as_32us: Option<Vec<_>> = aav.iter().map(|x| x.as_32u()).collect();
-            let val = match self.op {
-                BuiltinOperation::Sum32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
-                }
-                BuiltinOperation::Difference32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
-                }
-                BuiltinOperation::Product32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
-                }
-                BuiltinOperation::Quotient32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
-                }
-                BuiltinOperation::Modulo32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
-                }
-                BuiltinOperation::Power32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::_32U(as_32us[0] + as_32us[1])
-                }
-
-                BuiltinOperation::LessThan32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::Bool(as_32us[0] < as_32us[1])
-                }
-                BuiltinOperation::LessThanOrEqual32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::Bool(as_32us[0] <= as_32us[1])
-                }
-                BuiltinOperation::GreaterThan32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::Bool(as_32us[0] > as_32us[1])
-                }
-                BuiltinOperation::GreaterThanOrEqual32U => {
-                    let as_32us = as_32us.unwrap();
-                    CBuiltinValue::Bool(as_32us[0] >= as_32us[1])
-                }
-            };
-            env.push_construct(Box::new(val))
+        if let Some(result) = self.op.compute(env, &args[..]) {
+            result
         } else {
-            env.push_construct(Box::new(Self { args, ..*self }))
+            env.push_construct(Box::new(Self {
+                op: self.op.dyn_clone(),
+                args,
+            }))
         }
     }
 
@@ -125,7 +95,10 @@ impl Construct for CBuiltinOperation {
         for arg in &self.args {
             args.push(env.substitute(*arg, substitutions));
         }
-        let def = Self { op: self.op, args };
+        let def = Self {
+            op: self.op.dyn_clone(),
+            args,
+        };
         env.push_construct(Box::new(def))
     }
 }
