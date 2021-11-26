@@ -1,4 +1,6 @@
 pub mod arithmetic;
+pub mod length;
+pub mod index;
 
 use std::fmt::Debug;
 

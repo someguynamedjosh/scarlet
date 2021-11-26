@@ -1,15 +1,8 @@
-use crate::{
-    constructs::{
-        builtin_operation::{BuiltinOperation, CBuiltinOperation},
-        length::CLength,
-    },
-    tokens::structure::Token,
-    transform::{
+use crate::{constructs::builtin_operation::{BuiltinOperation, CBuiltinOperation, index::OIndex, length::OLength}, tokens::structure::Token, transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
         pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
-    },
-};
+    }};
 
 pub struct Builtin;
 impl Transformer for Builtin {
@@ -34,9 +27,21 @@ impl Transformer for Builtin {
         let name = name.unwrap_plain();
         apply::apply_transformers(c, &mut body, &Default::default());
         let con = match name {
+            "index" => {
+                let of = c.push_unresolved(body.remove(0));
+                let index = c.push_unresolved(body.remove(0));
+                let con = CBuiltinOperation {
+                    op: Box::new(OIndex),
+                    args: vec![of, index],
+                };
+                c.push_construct(Box::new(con))
+            }
             "length" => {
                 let of = c.push_unresolved(body.remove(0));
-                let con = CLength(of);
+                let con = CBuiltinOperation {
+                    op: Box::new(OLength),
+                    args: vec![of],
+                };
                 c.push_construct(Box::new(con))
             }
             other => todo!("Nice error, unrecognized builtin {}", other),
