@@ -1,5 +1,3 @@
 [
-    anything IS true.V
-
-    test IS BUILTIN{index [1 2 3 5 999999] 1}
+    test IS BUILTIN{index [1 2 3 5 999999] 5 true}
 ].S
