@@ -1,3 +1,33 @@
 [
-    test IS BUILTIN{index [1 2 3 5 999999] 5 true}
+    32U IS [
+        UNIQUE
+        bits IS (is_bitfield{SELF} AND bitfield_length{SELF} = 8)
+    ]
+
+    sum IS
+    32U{
+        BUILTIN{
+            BITFIELD
+            x0 x1 x2 x3 x4 x5 x6 x7
+        }
+        true
+    }
+    USING [
+        a IS 32U.VM
+        b IS 32U.VM
+
+        [x0, c0] IS half_sum{a.bits.0 b.bits.0}
+        [x1, c1] IS full_sum{a.bits.1 b.bits.1 c0}
+        [x2, c2] IS full_sum{a.bits.2 b.bits.2 c1}
+        [x3, c3] IS full_sum{a.bits.3 b.bits.3 c2}
+        [x4, c4] IS full_sum{a.bits.4 b.bits.4 c3}
+        [x5, c5] IS full_sum{a.bits.5 b.bits.5 c4}
+        [x6, c6] IS full_sum{a.bits.6 b.bits.6 c5}
+        [x7, c7] IS full_sum{a.bits.7 b.bits.7 c6}
+    ]
+
+    thing = 123
+    other = 456
+    what = thing + other
+
 ].S

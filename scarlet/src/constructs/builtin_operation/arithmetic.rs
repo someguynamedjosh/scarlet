@@ -65,6 +65,14 @@ macro_rules! arithmetic_op {
         where
             CBuiltinValue: TryInto<T> + From<T>,
         {
+            fn check<'x>(
+                &self,
+                env: &mut Environment<'x>,
+                args: &[ConstructId]
+            ) {
+                todo!()
+            }
+
             fn compute<'x>(
                 &self,
                 env: &mut Environment<'x>,

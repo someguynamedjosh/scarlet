@@ -1,6 +1,6 @@
 pub mod arithmetic;
-pub mod length;
 pub mod index;
+pub mod length;
 
 use std::fmt::Debug;
 
@@ -15,6 +15,7 @@ use crate::{
 };
 
 pub trait BuiltinOperation: AnyEq + Debug {
+    fn check<'x>(&self, env: &mut Environment<'x>, args: &[ConstructId]);
     fn compute<'x>(&self, env: &mut Environment<'x>, args: &[ConstructId]) -> Option<ConstructId>;
     fn dyn_clone(&self) -> Box<dyn BuiltinOperation>;
 }
@@ -53,12 +54,7 @@ impl Construct for CBuiltinOperation {
     }
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
-        return;
-        for &arg in &self.args {
-            if !(todo!("arg always matches 32U") as bool) {
-                todo!("Nice error, args must match 32U");
-            }
-        }
+        self.op.check(env, &self.args[..])
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {

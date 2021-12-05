@@ -11,8 +11,8 @@ pub struct OLength;
 impl_any_eq_for_construct!(OLength);
 
 impl BuiltinOperation for OLength {
-    fn dyn_clone(&self) -> Box<dyn BuiltinOperation> {
-        Box::new(self.clone())
+    fn check<'x>(&self, env: &mut Environment<'x>, args: &[ConstructId]) {
+        todo!()
     }
 
     fn compute<'x>(&self, env: &mut Environment<'x>, args: &[ConstructId]) -> Option<ConstructId> {
@@ -24,5 +24,9 @@ impl BuiltinOperation for OLength {
         } else {
             None
         }
+    }
+
+    fn dyn_clone(&self) -> Box<dyn BuiltinOperation> {
+        Box::new(self.clone())
     }
 }
