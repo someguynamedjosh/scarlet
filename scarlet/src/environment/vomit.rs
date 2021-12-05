@@ -51,6 +51,7 @@ impl<'x> Environment<'x> {
         if let Token::Construct(con_id) = input {
             if let Some(builtin) = as_builtin_value(&**self.get_construct(con_id)) {
                 match builtin {
+                    CBuiltinValue::Unique(_id) => format!("UNIQUE").into(),
                     CBuiltinValue::Bool(value) => format!("{}", value).into(),
                     CBuiltinValue::_32U(value) => format!("{}", value).into(),
                 }

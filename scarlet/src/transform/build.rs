@@ -1,4 +1,7 @@
-use super::basics::{Extras, Precedence, SomeTransformer};
+use super::{
+    basics::{Extras, Precedence, SomeTransformer},
+    transformers::{special_members::as_language_item::AsLanguageItem, unique::Unique},
+};
 use crate::{
     shared::OwnedOrBorrowed,
     tfers,
@@ -30,8 +33,9 @@ pub fn build_transformers<'e>(
     extras: &'e Extras<'e>,
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
-        10 => tfers![SubExpression, Builtin, Struct],
+        10 => tfers![Unique, SubExpression, Builtin, Struct],
         20 => tfers![
+            AsLanguageItem,
             Capturing,
             WithoutCapturing,
             Matching,

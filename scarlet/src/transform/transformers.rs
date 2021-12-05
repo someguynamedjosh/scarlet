@@ -5,3 +5,4 @@ pub(super) mod special_members;
 pub(super) mod statements;
 pub(super) mod substitution;
 pub mod builtin;
+pub mod unique;

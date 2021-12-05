@@ -6,10 +6,16 @@ use super::{
     substitution::Substitutions,
     variable::CVariable,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
+use crate::{environment::Environment, impl_any_eq_for_construct, shared::{TripleBool, Id, Pool}};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Unique;
+pub type UniquePool = Pool<Unique, 'U'>;
+pub type UniqueId = Id<'U'>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CBuiltinValue {
+    Unique(UniqueId),
     Bool(bool),
     _32U(u32),
 }
