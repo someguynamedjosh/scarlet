@@ -121,9 +121,9 @@ impl Transformer for Variable {
     fn input_pattern(&self) -> Box<dyn Pattern> {
         Box::new((
             PatFirstOf(vec![
-                Box::new(PatPlain("ANYTHING")),
-                Box::new(PatPlain("ANY")),
-                Box::new(PatPlain("A")),
+                Box::new(PatPlain("VARIABLE")),
+                Box::new(PatPlain("VAR")),
+                Box::new(PatPlain("V")),
             ]),
             PatCaptureStream {
                 key: "invariants",

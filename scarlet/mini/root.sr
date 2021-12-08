@@ -5,27 +5,27 @@
     false IS UNIQUE.AS_LANG_ITEM{false}
 
     Bool IS 
-    ANY{ 
+    VAR{ 
         bool_or{ 
-            SELF = true  
-            SELF = false 
+            left IS Bool = true  
+            right IS Bool = false 
         } 
     }
     .AS_LANG_ITEM{Bool}
 
     left IS 
-    ANY{ 
+    VAR{ 
         bool_or{ 
-            SELF = true  
-            SELF = false 
+            left IS left = true  
+            right IS left = false 
         } 
     }
 
     right IS 
-    ANY{ 
+    VAR{ 
         bool_or{ 
-            SELF = true  
-            SELF = false 
+            left IS right = true  
+            right IS right = false 
         } 
     }
 
@@ -35,6 +35,6 @@
     #     ELSE     false 
     # }
 
-    bool_or IS 
-    BUILTIN{ pick left true right }
+    bool_or IS true
+    # BUILTIN{ pick left true right }
 ].S

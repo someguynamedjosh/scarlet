@@ -72,7 +72,7 @@ impl<'x> Environment<'x> {
                 }
             }
             Token::Stream {
-                label: "construct_syntax",
+                label: "CONSTRUCT_SYNTAX",
                 contents,
             } => {
                 let mut context = ApplyContext {
@@ -84,112 +84,8 @@ impl<'x> Environment<'x> {
                 assert_eq!(contents.len(), 1);
                 ConstructDefinition::Unresolved(contents.into_iter().next().unwrap())
             }
-            Token::Stream {
-                label: "CAPTURING",
-                contents,
-            } => {
-                let base = contents[0].unwrap_construct();
-                let mut to_set = Vec::new();
-                for capture in &contents[1..] {
-                    match capture {
-                        Token::Plain(Cow::Borrowed("ALL")) => {
-                            to_set.append(&mut self.get_dependencies(base))
-                        }
-                        &Token::Construct(capture) => {
-                            to_set.append(&mut self.get_dependencies(capture))
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-                let mut subs = OrderedMap::new();
-                for var in to_set {
-                    if !var.capturing && !subs.contains_key(&var) {
-                        let value = CVariable {
-                            capturing: true,
-                            ..var.clone()
-                        };
-                        let value = self.push_construct(Box::new(value));
-                        subs.insert_no_replace(var, value)
-                    }
-                }
-                ConstructDefinition::Unresolved(Token::Construct(self.substitute(base, &subs)))
-            }
-            Token::Stream {
-                label: "WITHOUT_CAPTURING",
-                contents,
-            } => {
-                let base = contents[0].unwrap_construct();
-                let mut to_set = Vec::new();
-                for capture in &contents[1..] {
-                    match capture {
-                        Token::Plain(Cow::Borrowed("ALL")) => {
-                            to_set.append(&mut self.get_dependencies(base))
-                        }
-                        &Token::Construct(capture) => {
-                            to_set.append(&mut self.get_dependencies(capture))
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-                let mut subs = OrderedMap::new();
-                for var in to_set {
-                    if var.capturing && !subs.contains_key(&var) {
-                        let value = CVariable {
-                            capturing: false,
-                            ..var.clone()
-                        };
-                        let value = self.push_construct(Box::new(value));
-                        subs.insert_no_replace(var, value)
-                    }
-                }
-                ConstructDefinition::Unresolved(Token::Construct(self.substitute(base, &subs)))
-            }
-            Token::Stream {
-                label: "substitute",
-                mut contents,
-            } => {
-                let base = self.push_unresolved(contents.remove(0), scope);
-                let base = self.reduce(base);
-                self.constructs[base].parent_scope = scope;
-                let mut deps = self.get_dependencies(base);
-                let mut subs = Substitutions::new();
-                let mut anonymous_subs = Vec::new();
-                for sub in contents {
-                    match sub {
-                        Token::Stream {
-                            label: "target",
-                            contents: _,
-                        } => {
-                            todo!()
-                        }
-                        _ => anonymous_subs.push(sub),
-                    }
-                }
-                for sub in anonymous_subs {
-                    let sub = self.push_unresolved(sub, scope);
-                    let sub = self.reduce(sub);
-                    let mut match_found = false;
-                    for (idx, dep) in deps.iter().enumerate() {
-                        if todo!("check substitution matches dependency") {
-                            let dep = deps.remove(idx);
-                            subs.insert_no_replace(dep, sub);
-                            match_found = true;
-                            break;
-                        }
-                    }
-                    if !match_found {
-                        println!("{:#?}", self);
-                        todo!(
-                            "Nice error, {:?} cannot be assigned to any of:\n{:#?}",
-                            sub,
-                            deps
-                        );
-                    }
-                }
-                ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
-            }
             Token::Stream { label, .. } => todo!(
-                "Nice error, token stream with label '{:?}' cannot be resolved",
+                "Nice error, bad label '{:?}', expected CONSTRUCT_SYNTAX",
                 label
             ),
         }
