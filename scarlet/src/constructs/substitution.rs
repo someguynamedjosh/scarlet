@@ -24,7 +24,7 @@ impl Construct for CSubstitution {
             if !(todo!("value matches target") as bool) {
                 panic!(
                     "Argument {:?} does not match {:?} ({:?}), which it is assigned to.",
-                    value, target, target.invariant
+                    value, target, target.invariants
                 )
             }
         }

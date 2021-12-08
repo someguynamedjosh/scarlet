@@ -4,17 +4,18 @@
     true IS UNIQUE.AS_LANG_ITEM{true}
     false IS UNIQUE.AS_LANG_ITEM{false}
 
-    # Bool IS 
-    # ANY{ 
-    #     bool_or{ 
-    #         SELF = true  
-    #         SELF = false 
-    #     } 
-    # }
-    # .AS_LANG_ITEM{Bool}
+    Bool IS 
+    ANY{ 
+        bool_or{ 
+            SELF = true  
+            SELF = false 
+        } 
+    }
+    .CAPTURING{ALL}
+    .AS_LANG_ITEM{Bool}
 
-    # left IS ANY{ SELF matches Bool }
-    # right IS ANY{ SELF matches Bool }
+    left IS ANY{ SELF matches Bool }
+    right IS ANY{ SELF matches Bool }
 
     # bool_and IS 
     # PICK{ 
@@ -22,9 +23,9 @@
     #     ELSE     false 
     # }
 
-    # bool_or IS 
-    # PICK{ 
-    #     ON left  true    
-    #     ELSE  right 
-    # }
+    bool_or IS 
+    PICK{ 
+        ON left  true    
+        ELSE     right 
+    }
 ].S

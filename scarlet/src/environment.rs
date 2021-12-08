@@ -106,12 +106,12 @@ where
         }
     }
 
-    pub fn push_variable(&mut self, invariant: ConstructId, capturing: bool) -> ConstructId {
+    pub fn push_variable(&mut self, invariants: Vec<ConstructId>, capturing: bool) -> ConstructId {
         let id = self.variables.push(Variable);
         let def = CVariable {
             capturing,
             id,
-            invariant,
+            invariants,
         };
         self.push_construct(Box::new(def))
     }

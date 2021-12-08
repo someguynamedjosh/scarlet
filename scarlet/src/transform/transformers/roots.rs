@@ -3,16 +3,18 @@ use maplit::hashmap;
 
 use crate::{
     constructs::{
+        self,
         base::ConstructDefinition,
         downcast_construct,
         structt::{CStruct, StructField},
+        variable::CVariable,
     },
     tfers,
     tokens::structure::Token,
     transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
+        pattern::{PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
         transformers::operators::Is,
     },
 };
@@ -110,6 +112,51 @@ impl Transformer for Struct {
                 });
             }
         }
+        None
+    }
+}
+
+pub struct Variable;
+impl Transformer for Variable {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
+        Box::new((
+            PatFirstOf(vec![
+                Box::new(PatPlain("ANYTHING")),
+                Box::new(PatPlain("ANY")),
+                Box::new(PatPlain("A")),
+            ]),
+            PatCaptureStream {
+                key: "invariants",
+                label: "group{}",
+            },
+        ))
+    }
+
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let mut invariants = success.get_capture("invariants").unwrap_stream().clone();
+        let con = c.push_placeholder();
+        let mut c = c.with_parent_scope(Some(con));
+        apply::apply_transformers(&mut c, &mut invariants, &Default::default());
+        let invariants = invariants
+            .into_iter()
+            .map(|x| c.push_unresolved(x))
+            .collect_vec();
+        let id = c.env.variables.push(constructs::variable::Variable);
+        let def = Box::new(CVariable {
+            id,
+            invariants,
+            capturing: false,
+        });
+        c.env.constructs[con].definition = ConstructDefinition::Resolved(def);
+        c.env.check(con);
+        TransformerResult(Token::Construct(con))
+    }
+
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }
