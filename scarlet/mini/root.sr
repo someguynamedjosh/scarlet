@@ -11,11 +11,23 @@
             SELF = false 
         } 
     }
-    .CAPTURING{ALL}
     .AS_LANG_ITEM{Bool}
 
-    left IS ANY{ SELF matches Bool }
-    right IS ANY{ SELF matches Bool }
+    left IS 
+    ANY{ 
+        bool_or{ 
+            SELF = true  
+            SELF = false 
+        } 
+    }
+
+    right IS 
+    ANY{ 
+        bool_or{ 
+            SELF = true  
+            SELF = false 
+        } 
+    }
 
     # bool_and IS 
     # PICK{ 
@@ -24,8 +36,5 @@
     # }
 
     bool_or IS 
-    PICK{ 
-        ON left  true    
-        ELSE     right 
-    }
+    BUILTIN{ pick left true right }
 ].S
