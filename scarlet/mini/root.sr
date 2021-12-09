@@ -1,40 +1,5 @@
-[
-    void IS UNIQUE.AS_LANG_ITEM{void}
-
-    true IS UNIQUE.AS_LANG_ITEM{true}
-    false IS UNIQUE.AS_LANG_ITEM{false}
-
-    Bool IS 
-    VAR{ 
-        bool_or{ 
-            left IS Bool = true  
-            right IS Bool = false 
-        } 
-    }
-    .AS_LANG_ITEM{Bool}
-
-    left IS 
-    VAR{ 
-        bool_or{ 
-            left IS left = true  
-            right IS left = false 
-        } 
-    }
-
-    right IS 
-    VAR{ 
-        bool_or{ 
-            left IS right = true  
-            right IS right = false 
-        } 
-    }
-
-    # bool_and IS 
-    # PICK{ 
-    #     ON left  right    
-    #     ELSE     false 
-    # }
-
-    bool_or IS true
-    # BUILTIN{ pick left true right }
-].S
+# We have:
+UNIQUE    # Unique values
+[a IS a]  # Struct values
+VAR{}     # Variables
+VAR{x}    # Invariants

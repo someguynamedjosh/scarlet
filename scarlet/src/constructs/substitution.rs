@@ -36,10 +36,7 @@ impl Construct for CSubstitution {
             .map(|var| var.substitute(env, &self.1))
             .collect_vec()
             .into_iter()
-            .map(|item| {
-                let item = env.reduce(item);
-                env.get_dependencies(item)
-            })
+            .map(|item| env.get_dependencies(item))
             .flatten()
             .collect()
     }
@@ -48,22 +45,12 @@ impl Construct for CSubstitution {
         TripleBool::Unknown
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let base = env.reduce(self.0);
-        let mut rsubs = Substitutions::new();
-        for (target, value) in &self.1 {
-            rsubs.insert_no_replace(target.clone(), env.reduce(*value));
-        }
-        let subbed = env.substitute(base, &rsubs);
-        env.reduce(subbed)
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
     ) -> ConstructId {
-        let base = env.reduce(self.0);
+        let base = self.0;
         let mut new_subs = self.1.clone();
         for (_, value) in &mut new_subs {
             let subbed = env.substitute(*value, substitutions);

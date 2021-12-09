@@ -22,24 +22,6 @@ impl Construct for CMember {
         env.get_dependencies(self.0)
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let base = env.reduce(self.0);
-        match &self.1 {
-            name => {
-                if let Some(structt) = as_struct(&**env.get_construct(base)) {
-                    for (index, field) in structt.0.iter().enumerate() {
-                        if field.name.as_ref().map(|n| n == name).unwrap_or(false)
-                            || name == &format!("{}", index)
-                        {
-                            return field.value;
-                        }
-                    }
-                }
-            }
-        }
-        env.push_construct(Box::new(Self(base, self.1.clone())))
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

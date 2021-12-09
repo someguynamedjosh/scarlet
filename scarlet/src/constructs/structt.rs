@@ -36,17 +36,6 @@ impl Construct for CStruct {
         TripleBool::Unknown
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let mut fields = Vec::new();
-        for field in &self.0 {
-            fields.push(StructField {
-                name: field.name.clone(),
-                value: env.reduce(field.value),
-            });
-        }
-        env.push_construct(Box::new(Self(fields)))
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

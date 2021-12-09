@@ -44,35 +44,6 @@ impl Construct for CMatch {
         TripleBool::Unknown
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let base = env.reduce(self.base);
-        let mut conditions = Vec::new();
-        let mut else_value = self.else_value;
-        for condition in &self.conditions {
-            let pattern = env.reduce(condition.pattern);
-            let value = env.reduce(condition.value);
-            match todo!("check if base matches pattern") {
-                TripleBool::True => {
-                    else_value = value;
-                    // env.substitute(value, &subs);
-                    break;
-                }
-                TripleBool::False=> (),
-                TripleBool::Unknown => conditions.push(Condition { pattern, value }),
-            }
-        }
-        else_value = env.reduce(else_value);
-        if conditions.len() == 0 {
-            else_value
-        } else {
-            env.push_construct(Box::new(Self {
-                base,
-                conditions,
-                else_value,
-            }))
-        }
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

@@ -69,21 +69,6 @@ impl Construct for CBuiltinOperation {
         TripleBool::Unknown
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let mut args = Vec::new();
-        for arg in &self.args {
-            args.push(env.reduce(*arg));
-        }
-        if let Some(result) = self.op.compute(env, &args[..]) {
-            result
-        } else {
-            env.push_construct(Box::new(Self {
-                op: self.op.dyn_clone(),
-                args,
-            }))
-        }
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

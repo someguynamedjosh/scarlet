@@ -21,10 +21,6 @@ impl Construct for CShown {
         env.get_dependencies(self.0)
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        env.reduce(self.0)
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

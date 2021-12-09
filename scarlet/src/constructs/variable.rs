@@ -51,14 +51,6 @@ impl Construct for CVariable {
         TripleBool::Unknown
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>, _self_id: ConstructId) -> ConstructId {
-        let def = Self {
-            invariants: self.invariants.iter().map(|&x| env.reduce(x)).collect(),
-            ..self.clone()
-        };
-        env.push_construct(Box::new(def))
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

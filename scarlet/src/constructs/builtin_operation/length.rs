@@ -16,7 +16,7 @@ impl BuiltinOperation for OLength {
     }
 
     fn compute<'x>(&self, env: &mut Environment<'x>, args: &[ConstructId]) -> Option<ConstructId> {
-        let base = env.reduce(args[0]);
+        let base = args[0];
         let base_con = env.get_construct(base);
         if let Some(structt) = as_struct(&**base_con) {
             let length = structt.0.len() as u32;

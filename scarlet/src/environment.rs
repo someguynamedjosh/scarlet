@@ -1,5 +1,4 @@
 pub mod dependencies;
-pub mod reduce;
 pub mod resolve;
 pub mod substitute;
 pub mod util;

@@ -48,11 +48,6 @@ pub trait Construct: Any + Debug + AnyEq {
         TripleBool::Unknown
     }
 
-    #[allow(unused_variables)]
-    fn reduce<'x>(&self, env: &mut Environment<'x>, self_id: ConstructId) -> ConstructId {
-        self_id
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
