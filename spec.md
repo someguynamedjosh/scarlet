@@ -1,0 +1,263 @@
+# Data
+
+Just like how in set theory, everything is a set, in Scarlet, everything is
+one of these three kinds of values:
+```py
+UNIQUE
+EMPTY_STRUCT
+POPULATED_STRUCT[ label value rest ]
+```
+Each different usage of "UNIQUE" is, as the name suggests, UNIQUE. So if I have
+in a file "x IS UNIQUE y IS UNIQUE", "x != y" is a true statement.  There is
+also `PANIC`, which represents an unrecoverable error. It is not quite a value
+because you can never observe it - any computation involving a PANIC itself
+resolves to that same PANIC until the root of the program is reached.
+```py
+PANIC[ "Something really bad happened" ]
+```
+
+# Syntactic Constructs
+Some of these make use of the syntax sugars and standard library definitions
+listed in the next sections.
+```py
+UNIQUE
+
+EMPTY_STRUCT
+
+# Gives a single field, then "rest" 
+# contains the rest of the fields.
+POPULATED_STRUCT[ label value rest ]
+struct.LABEL
+struct.VALUE
+struct.REST
+
+# Declares a new variable. x, y, and z 
+# are the conditions that must be true 
+# to be able to assign a value to the 
+# variable.
+VARIABLE[ { x y z } ]                   
+x.INVARIANTS                       
+
+# Substitute the variables y and z in 
+# the expression x.
+x SUBSTITUTE[ { y IS 123  z IS 456 } ]
+
+# Returns 'true' if the two expressions
+# have the same value.
+x = y
+
+# Returns 'x' if c is true, otherwise 
+# returns y.
+IF_THEN_ELSE[ c x y ]
+```
+
+# Syntax Sugars
+Some of these use standard library definitions
+```py
+{ something IS 123 }               
+# Sugar for...
+POPULATED_STRUCT[ 
+    "something" 
+    123 
+    EMPTY_STRUCT 
+]
+
+{ x y z }                          
+# Sugar for...
+POPULATED_STRUCT[ 
+    "" 
+    x 
+
+    POPULATED_STRUCT[
+        "" 
+        y 
+
+        POPULATED_STRUCT[
+            "" 
+            z 
+            EMPTY_STRUCT
+        ]
+
+    ]
+
+]
+
+x[ 123 456 ]
+# By automatically determining which 
+# variables to substitute based on 
+# variables contained in x, sugar 
+# for...
+x[ y IS 123  z IS 456 ]
+# which is sugar for...
+x SUB[ { y IS 123  z IS 456 } ]
+
+VF[ x ]
+# sugar for...
+VARIABLE[ SELF FROM x ]
+
+PICK[
+    ON c1 v1
+    ON c2 v2
+    ELSE v3
+]
+# sugar for...
+IF_THEN_ELSE[
+    c1
+    v1
+    IF_THEN_ELSE[ c2 v2 v3 ]
+]
+
+x AND y
+# sugar for...
+bool_and[ x y ]
+
+x OR y
+# sugar for...
+bool_or[ x y ]
+
+# Returns 'true' if expr could have been
+# constructed using source. Only
+# compiles for certain sources probably
+# due to Godel's incompleteness theorem
+# and definitely because there's no good
+# way to handle the case `true FROM
+# (hash = expected)`
+expr FROM source
+# When source is a struct, sugar for...
+expr.LABEL = source.LABEL
+    AND expr.0 FROM source.0
+    AND expr.REST FROM source.REST
+# When source is a variable, sugar 
+# for... (in other words, sugar for if 
+# expr matches source's invariants)
+all[ 
+    source.INVARIANTS[ source IS expr ] 
+]
+# When source is anything else, sugar 
+# for...
+expr = source
+
+a + b
+USING {
+    a IS 123
+    b IS 456
+}
+# Sugar for...
+POPULATED_STRUCT[
+    ""
+    a + b
+    {
+        a IS 123
+        b IS 456
+    }
+]
+.VALUE
+```
+
+# Syntactic Constructs again, but with the sugars the average programmer would use.
+```py
+# Creates a struct
+{ f1 IS asdf  f2 IS 123  456 }
+# Access a member of a struct by its 
+# index
+x.1
+# Access by its label
+x.f2
+
+# Declares a new variable requiring 
+# x y and z to be true
+VARIABLE[ x y z ]
+x.INVARIANTS                       
+
+# Substitute the variables y and z in 
+# the expression x.
+x[ y IS 123  z IS 456 ]
+# Implicit substitution.
+x[ 123 456 ]
+
+# Equality
+x = y
+
+# Returns 'true' if expr could have been
+# constructed using source. 
+expr FROM source
+
+# Pythagorean theorem
+distance IS
+sqrt[ dx * dx + dy * dy ]
+USING {
+    dx IS x2 - x1
+    dy IS y2 - y1
+}
+```
+
+# The Standard Library (a really big struct)
+
+```py
+{
+    true IS UNIQUE
+    false IS UNIQUE
+
+    # The compiler can be smart here and
+    # realize there is only two things
+    # a Bool can be so it can get away
+    # with using a single bit to store
+    # a Bool.
+    Bool IS 
+    VAR[ 
+        SELF = true OR SELF = false 
+    ]
+
+    bool_and IS
+    PICK[
+        ON left true
+        ELSE right
+    ]
+    USING {
+        left IS VF[Bool]
+        right IS VF[Bool]
+    }
+
+    bool_or IS
+    PICK[
+        ON left true
+        ELSE right
+    ]
+    USING {
+        left IS VF[Bool]
+        right IS VF[Bool]
+    }
+}
+```
+
+# Examples
+```
+
+```
+
+# Checks
+
+Given `POPULATED_STRUCT[ label value remainder ]`
+- `label` requires `label FROM String`
+- `remainder` requires `remainder FROM Struct`
+
+Given `VAR[ i ]`
+- `i` requires `i FROM Struct`
+- for every field in i:
+    - the field must have no label
+    - the field requires `field FROM Bool`
+
+Given `x SUB[ s ]`
+- `s` requires `s FROM Struct`
+- for every field in s:
+    - the field must have no label
+    - its value must be a struct
+        - Satisfying `field FROM { var val }` where `var` and `val` are variables.
+        - `field.0` must be a variable
+        - all the fields in 
+
+# THE REDUCTION AXIOMS
+Forall x, x = x
+Given l1 = l2, f1 = f2, r1 = r2, POPULATED_STRUCT[ l1 f1 r1 ] = POPULATED_STRUCT[ l2 f2 r2 ]
+Given x = UNIQUE, y = UNIQUE, (x = y) = false
+Given x = VAR[ s ], x.INVARIANTS = s

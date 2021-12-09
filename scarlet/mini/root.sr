@@ -1,5 +1,0 @@
-# We have:
-UNIQUE    # Unique values
-[a IS a]  # Struct values
-VAR{}     # Variables
-VAR{x}    # Invariants
