@@ -1,9 +1,29 @@
 use super::{
+    as_struct,
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::CVariable, as_struct, ConstructDefinition,
+    variable::CVariable,
+    ConstructDefinition,
 };
 use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
+
+pub fn struct_from_unnamed_fields<'x>(
+    env: &mut Environment<'x>,
+    mut fields: Vec<ConstructId>,
+) -> ConstructId {
+    if fields.is_empty(){
+        env.push_construct(Box::new(CEmptyStruct))
+    } else {
+        let first_field = fields.remove(0);
+        let rest = struct_from_unnamed_fields(env, fields);
+        let con = CPopulatedStruct {
+            label: String::new(),
+            value: first_field,
+            rest,
+        };
+        env.push_construct(Box::new(con))
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CEmptyStruct;
@@ -52,8 +72,8 @@ impl Construct for CPopulatedStruct {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         [
-            env.get_dependencies(self.value),
             env.get_dependencies(self.rest),
+            env.get_dependencies(self.value),
         ]
         .concat()
     }

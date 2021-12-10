@@ -19,7 +19,7 @@ impl Transformer for Substitution {
             PatCaptureAny { key: "base" },
             PatCaptureStream {
                 key: "subs",
-                label: "group{}",
+                label: "group[]",
             },
         ))
     }
@@ -34,7 +34,7 @@ impl Transformer for Substitution {
         let extras = hashmap![200 => tfers![Is]];
         apply::apply_transformers(c, &mut substitutions, &extras);
         TransformerResult(Token::Stream {
-            label: "substitute",
+            label: "SUBSTITUTE",
             contents: [vec![base], substitutions].concat(),
         })
     }

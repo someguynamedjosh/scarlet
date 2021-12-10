@@ -24,18 +24,14 @@ UNIQUE
 
 EMPTY_STRUCT
 
-# Gives a single field, then "rest" 
-# contains the rest of the fields.
+# Provides a single field in addition to
+# the fields specified in "rest".
 # Consumes Invariants:
 # rest FROM Struct
-# Produces Invariants:
-# SELF.VALUE = value
-# SELF.REST = rest
-# SELF IS_POPULATED_STRUCT
-POPULATED_STRUCT[ label value rest ]
+POPULATED_STRUCT[ rest label value ]
+struct.REST
 struct.LABEL
 struct.VALUE
-struct.REST
 struct IS_POPULATED_STRUCT
 
 # Declares a new variable. x, y, and z 

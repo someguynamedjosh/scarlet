@@ -25,11 +25,7 @@ impl<'x> Environment<'x> {
                     true => "capturing",
                     false => "without capturing",
                 };
-                println!("    {} (", kind);
-                for invariant in dep.invariants {
-                    println!("        {}", self.vomit(invariant));
-                }
-                println!("    )");
+                println!("    {} ({})", kind, self.vomit(dep.invariants));
             }
             println!();
         }

@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use super::{variable::CVariable, Construct, ConstructId};
+use super::{variable::CVariable, Construct, ConstructId, ConstructDefinition};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
@@ -43,6 +43,12 @@ impl Construct for CSubstitution {
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
+    }
+
+    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
+        let subbed = env.substitute(self.0, &self.1);
+        env.reduce(subbed);
+        subbed.into()
     }
 
     fn substitute<'x>(

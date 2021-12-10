@@ -1,6 +1,2 @@
-POPULATED_STRUCT[
-    hello_world
-    UNIQUE
-    EMPTY_STRUCT
-]
-.VALUE
+
+VARIABLE[][UNIQUE]

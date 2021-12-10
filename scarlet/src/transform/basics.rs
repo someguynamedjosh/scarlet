@@ -54,7 +54,7 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
         }
     }
 
-    pub fn push_var(&mut self, invariants: Vec<ConstructId>, capturing: bool) -> ConstructId {
+    pub fn push_var(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
         let con = self.env.push_variable(invariants, capturing);
         self.env.constructs[con].parent_scope = self.parent_scope;
         con

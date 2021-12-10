@@ -1,9 +1,9 @@
 pub mod dependencies;
+mod reduce;
 pub mod resolve;
 pub mod substitute;
 pub mod util;
 mod vomit;
-mod reduce;
 
 use std::collections::HashMap;
 
@@ -106,7 +106,7 @@ where
         }
     }
 
-    pub fn push_variable(&mut self, invariants: Vec<ConstructId>, capturing: bool) -> ConstructId {
+    pub fn push_variable(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
         let id = self.variables.push(Variable);
         let def = CVariable {
             capturing,

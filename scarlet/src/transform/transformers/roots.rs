@@ -3,7 +3,7 @@ use maplit::hashmap;
 
 use crate::{
     constructs::{
-        self, base::ConstructDefinition, downcast_construct, structt::CPopulatedStruct,
+        self, base::ConstructDefinition, downcast_construct, structt::{CPopulatedStruct, self},
         variable::CVariable,
     },
     tfers,
@@ -62,16 +62,15 @@ impl Transformer for PopulatedStruct {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut contents = success.get_capture("args").unwrap_stream().clone();
-        let label = contents.remove(0);
-        let label = label.unwrap_plain().to_owned();
         let con = c.push_placeholder();
         let mut c = c.with_parent_scope(Some(con));
         apply::apply_transformers(&mut c, &mut contents, &Default::default());
-        assert_eq!(contents.len(), 2);
+        assert_eq!(contents.len(), 3);
+        let label = contents[0].unwrap_plain().to_owned();
         let def = Box::new(CPopulatedStruct {
             label,
-            value: c.push_unresolved(contents[0].clone()),
-            rest: c.push_unresolved(contents[1].clone()),
+            value: c.push_unresolved(contents[1].clone()),
+            rest: c.push_unresolved(contents[2].clone()),
         });
         c.env.constructs[con].definition = ConstructDefinition::Resolved(def);
         c.env.check(con);
@@ -106,7 +105,7 @@ impl Transformer for Variable {
             ]),
             PatCaptureStream {
                 key: "invariants",
-                label: "group{}",
+                label: "group[]",
             },
         ))
     }
@@ -124,6 +123,7 @@ impl Transformer for Variable {
             .into_iter()
             .map(|x| c.push_unresolved(x))
             .collect_vec();
+        let invariants = structt::struct_from_unnamed_fields(&mut c.env, invariants);
         let id = c.env.variables.push(constructs::variable::Variable);
         let def = Box::new(CVariable {
             id,

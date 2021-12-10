@@ -19,7 +19,7 @@ pub type VariableId = Id<'V'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CVariable {
     pub id: VariableId,
-    pub invariants: Vec<ConstructId>,
+    pub invariants: ConstructId,
     pub capturing: bool,
 }
 
@@ -39,10 +39,7 @@ impl Construct for CVariable {
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut base = Vec::new();
-        for invariant in &self.invariants {
-            base.append(&mut env.get_dependencies(*invariant));
-        }
+        let mut base = env.get_dependencies(self.invariants);
         base.push(self.clone());
         base
     }
@@ -61,11 +58,7 @@ impl Construct for CVariable {
                 return *value;
             }
         }
-        let invariants = self
-            .invariants
-            .iter()
-            .map(|&x| env.substitute(x, substitutions))
-            .collect();
+        let invariants = env.substitute(self.invariants, substitutions);
         let new = Self {
             id: self.id,
             invariants,
