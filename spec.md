@@ -8,7 +8,7 @@ EMPTY_STRUCT
 POPULATED_STRUCT[ label value rest ]
 ```
 Each different usage of "UNIQUE" is, as the name suggests, UNIQUE. So if I have
-in a file "x IS UNIQUE y IS UNIQUE", "x != y" is a true statement.  There is
+in a file "x IS UNIQUE y IS UNIQUE", "x =not y" is a true statement.  There is
 also `PANIC`, which represents an unrecoverable error. It is not quite a value
 because you can never observe it - any computation involving a PANIC itself
 resolves to that same PANIC until the root of the program is reached.
@@ -26,29 +26,128 @@ EMPTY_STRUCT
 
 # Gives a single field, then "rest" 
 # contains the rest of the fields.
+# Consumes Invariants:
+# rest FROM Struct
+# Produces Invariants:
+# SELF.VALUE = value
+# SELF.REST = rest
+# SELF IS_POPULATED_STRUCT
 POPULATED_STRUCT[ label value rest ]
 struct.LABEL
 struct.VALUE
 struct.REST
+struct IS_POPULATED_STRUCT
 
 # Declares a new variable. x, y, and z 
 # are the conditions that must be true 
 # to be able to assign a value to the 
 # variable.
 VARIABLE[ { x y z } ]                   
-x.INVARIANTS                       
 
 # Substitute the variables y and z in 
 # the expression x.
-x SUBSTITUTE[ { y IS 123  z IS 456 } ]
+x[ y IS 123  z IS 456 ]
 
 # Returns 'true' if the two expressions
 # have the same value.
 x = y
 
+# Axiom of Equality, requires 
+# f FROM Bool
+# Produces invariant:
+# a = b IMP bool.equal[ f[ a ]  f[ b ] ]
+AE[ a b f ]
+
 # Returns 'x' if c is true, otherwise 
 # returns y.
 IF_THEN_ELSE[ c x y ]
+```
+
+```py
+# Logicings
+a IS VAR[]
+b IS VAR[]
+c IS VF[ Bool ]
+c1 IS VF[ Bool ]
+c2 IS VF[ Bool ]
+x IS VAR[]
+f IS VAR[DEPENDS_ON x]
+
+# Don't know what to call this. Proves
+# a = b IMP f[ a ] = f[ b ]
+value_ext IS
+AE[ a  b  f[ a ] = f[ $ ] ]
+
+# Proves b = a IMP f[ a ] = f[ b ]
+rev_value_ext IS
+AE[ b  a  f[ $ ] = f[ b ] ]
+
+# Requires x FROM Bool, f[ true ] and 
+# f[ false ], proves f[ x ]
+prove_bool_by_cases
+PICK[
+    ON x  AE[ true  x f ] 
+    ELSE  AE[ false x f ]
+]
+USING {
+    x IS VF[ Bool ]
+    f IS VAR[ 
+        SELF FROM Bool  
+        SELF[ true ] 
+        SELF[ false ] 
+        DEPENDS_ON x 
+    ]
+}
+
+
+
+# Proves c = (c = true)
+eq_true_is_ident IS
+prove_bool_by_cases[ 
+    c  
+    $ = ($ = true) 
+]
+
+# Proves c NOT = (c = false)
+eq_false_is_not IS
+prove_bool_by_cases[
+    c
+    $ NOT = ($ = false)
+]
+
+# Proves c IMP IF_THEN_ELSE[ c a b ] = a
+prove_bool_by_cases[
+    c
+    $ IMP IF_THEN_ELSE [ $ a b ] = a
+]
+
+# Proves IF_THEN_ELSE[ b = a  b  a ] = a
+equal_branch_is_identity IS
+PICK[
+    ON b = a
+    AE[ true  b = a  s ]
+]
+USING {
+    s IS IF_THEN_ELSE[ $ b a ] = a
+}
+
+x IS VAR[SELF = a OR SELF = b]
+swap IS
+PICK[
+    ON x = a  b
+    ELSE      a
+]
+
+# Proves (a = b) = (b = a)
+eq_symm IS
+USING {
+    # Proves a = b IMP b = PICK[ ON b = a  b  ELSE  a ]
+    value_ext[ a b swap ]
+    # Proves a = b IMP b = a
+    AE[ swap[ a ]  b  a = b IMP b = $ ]
+}
+
+# Need something that from a OR b, a IMP c, b IMP c proves c.
 ```
 
 # Syntax Sugars
@@ -88,8 +187,6 @@ x[ 123 456 ]
 # variables contained in x, sugar 
 # for...
 x[ y IS 123  z IS 456 ]
-# which is sugar for...
-x SUB[ { y IS 123  z IS 456 } ]
 
 VF[ x ]
 # sugar for...
@@ -109,11 +206,11 @@ IF_THEN_ELSE[
 
 x AND y
 # sugar for...
-bool_and[ x y ]
+bool.and[ x y ]
 
 x OR y
 # sugar for...
-bool_or[ x y ]
+bool.or[ x y ]
 
 # Returns 'true' if expr could have been
 # constructed using source. Only
@@ -124,14 +221,15 @@ bool_or[ x y ]
 # (hash = expected)`
 expr FROM source
 # When source is a struct, sugar for...
-expr.LABEL = source.LABEL
+expr IS_POPULATED_STRUCT
+    AND expr.LABEL = source.LABEL
     AND expr.0 FROM source.0
     AND expr.REST FROM source.REST
 # When source is a variable, sugar 
 # for... (in other words, sugar for if 
 # expr matches source's invariants)
 all[ 
-    source.INVARIANTS[ source IS expr ] 
+    (source invariants)[ source IS expr ] 
 ]
 # When source is anything else, sugar 
 # for...
@@ -195,38 +293,90 @@ USING {
 
 ```py
 {
-    true IS UNIQUE
-    false IS UNIQUE
+    struct IS 
+    {
+        # We can't use bool.or or OR
+        # because member access has
+        # yet to be defined.
+        true IS bool.VALUE
+        left IS VAR[]
+        right IS VAR[]
+        or IS PICK[
+            ON left true
+            ELSE right
+        ]
 
-    # The compiler can be smart here and
-    # realize there is only two things
-    # a Bool can be so it can get away
-    # with using a single bit to store
-    # a Bool.
-    Bool IS 
-    VAR[ 
-        SELF = true OR SELF = false 
-    ]
+        Struct IS
+        VAR[
+            or[
+                SELF = EMPTY_STRUCT 
+                SELF IS_POPULATED_STRUCT
+            ]
+        ]
 
-    bool_and IS
-    PICK[
-        ON left true
-        ELSE right
-    ]
-    USING {
-        left IS VF[Bool]
-        right IS VF[Bool]
+        x IS VF[ Struct ]
     }
 
-    bool_or IS
-    PICK[
-        ON left true
-        ELSE right
-    ]
-    USING {
+    bool IS
+    {
+        true IS UNIQUE
+        false IS UNIQUE
+
+        # The compiler can be smart here and
+        # realize there is only two things
+        # a Bool can be so it can get away
+        # with using a single bit to store
+        # a Bool.
+        Bool IS 
+        VAR[ 
+            SELF = true OR SELF = false 
+        ]
+
+        x IS VF[Bool]
         left IS VF[Bool]
         right IS VF[Bool]
+
+        not IS PICK[ 
+            ON x false  
+            ELSE true 
+        ]
+
+        and IS
+        PICK[
+            ON left true
+            ELSE right
+        ]
+
+        or IS
+        PICK[
+            ON left true
+            ELSE right
+        ]
+
+        implies IS
+        PICK[
+            ON left right
+            ELSE true
+        ]
+
+        equal IS
+        PICK[
+            ON left right
+            ELSE not[ right ]
+        ]
+
+        xor IS
+        PICK[
+            ON left not[ right ]
+            ELSE right
+        ]
     }
+
+    true IS bool.true
+    false IS bool.false
+    Bool IS bool.Bool
+    # Alternatively:
+    # Bool IS bool.REST.REST.VALUE
 }
 ```
 
