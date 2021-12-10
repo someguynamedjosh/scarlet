@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{structt::CStruct, substitution::Substitutions, variable::CVariable};
+use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
     environment::Environment,
     shared::{AnyEq, Id, Pool, TripleBool},
@@ -20,6 +20,18 @@ impl<'x> ConstructDefinition<'x> {
             Self::Resolved(con) => Some(con),
             _ => None,
         }
+    }
+}
+
+impl<'x> From<Box<dyn Construct>> for ConstructDefinition<'x> {
+    fn from(input: Box<dyn Construct>) -> Self {
+        Self::Resolved(input)
+    }
+}
+
+impl<'a, 'x> From<&'a ConstructId> for ConstructDefinition<'x> {
+    fn from(input: &'a ConstructId) -> Self {
+        Self::Unresolved(Token::Construct(*input))
     }
 }
 
@@ -52,8 +64,8 @@ pub trait Construct: Any + Debug + AnyEq {
     }
 
     #[allow(unused_variables)]
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> Box<dyn Construct> {
-        self.dyn_clone()
+    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
+        ConstructDefinition::Resolved(self.dyn_clone())
     }
 
     fn substitute<'x>(
@@ -67,7 +79,7 @@ pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {
     (from as &dyn Any).downcast_ref()
 }
 
-pub fn as_struct(from: &dyn Construct) -> Option<&CStruct> {
+pub fn as_struct(from: &dyn Construct) -> Option<&CPopulatedStruct> {
     downcast_construct(from)
 }
 

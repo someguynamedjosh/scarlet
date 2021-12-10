@@ -29,6 +29,12 @@ impl<'x> From<String> for Token<'x> {
     }
 }
 
+impl<'a, 'x> From<&'a ConstructId> for Token<'x> {
+    fn from(input: &'a ConstructId) -> Self {
+        Self::Construct(*input)
+    }
+}
+
 impl<'x> From<ConstructId> for Token<'x> {
     fn from(contents: ConstructId) -> Self {
         Self::Construct(contents)

@@ -3,6 +3,7 @@ pub mod resolve;
 pub mod substitute;
 pub mod util;
 mod vomit;
+mod reduce;
 
 use std::collections::HashMap;
 

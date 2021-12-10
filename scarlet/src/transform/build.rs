@@ -30,8 +30,15 @@ pub fn build_transformers<'e>(
     extras: &'e Extras<'e>,
 ) -> Vec<SomeTransformer<'e>> {
     let basics: Vec<Box<dyn Transformer>> = match precedence {
-        10 => tfers![Unique, SubExpression, Struct],
-        20 => tfers![AsLanguageItem, Shown, Variable, Substitution],
+        10 => tfers![Unique, SubExpression, Variable, PopulatedStruct],
+        20 => tfers![
+            AsLanguageItem,
+            Shown,
+            StructLabel,
+            StructValue,
+            StructRest,
+            Substitution
+        ],
         61 => tfers![Caret],
         70 => tfers![Asterisk, Slash],
         80 => tfers![Plus, Minus],

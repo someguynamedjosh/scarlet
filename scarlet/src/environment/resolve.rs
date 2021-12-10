@@ -34,13 +34,7 @@ impl<'x> Environment<'x> {
         let in_scope = in_scope?;
         let as_struct = constructs::as_struct(&**self.get_construct(in_scope));
         if let Some(structt) = as_struct {
-            for (index, field) in structt.0.iter().enumerate() {
-                let index_string = format!("{}", index);
-                let name = field.name.as_ref().unwrap_or(&index_string);
-                if name == ident {
-                    return Some(field.value);
-                }
-            }
+            todo!()
         }
         let parent = self.constructs[in_scope].parent_scope;
         self.lookup_ident(parent, ident)
