@@ -4,7 +4,6 @@ use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
     constructs::{
         self,
-        builtin_value::CBuiltinValue,
         substitution::{CSubstitution, Substitutions},
         variable::CVariable,
     },
@@ -56,11 +55,11 @@ impl<'x> Environment<'x> {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => {
                 if ident == "true" {
-                    ConstructDefinition::Resolved(Box::new(CBuiltinValue::Bool(true)))
+                    self.get_builtin_item("true").into()
                 } else if ident == "false" {
-                    ConstructDefinition::Resolved(Box::new(CBuiltinValue::Bool(false)))
-                } else if let Ok(int) = ident.parse() {
-                    ConstructDefinition::Resolved(Box::new(CBuiltinValue::_32U(int)))
+                    self.get_builtin_item("false").into()
+                // } else if let Ok(_) = ident.parse() {
+                //     todo!()
                 } else {
                     match self.lookup_ident(scope, ident.as_ref()) {
                         Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),

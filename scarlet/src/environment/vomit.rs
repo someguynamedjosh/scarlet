@@ -1,9 +1,6 @@
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::{
-        as_builtin_value, base::Construct, builtin_value::CBuiltinValue, downcast_construct,
-        shown::CShown,
-    },
+    constructs::{base::Construct, downcast_construct, shown::CShown},
     tokens::structure::Token,
     transform::{self, ApplyContext},
 };
@@ -52,15 +49,7 @@ impl<'x> Environment<'x> {
             }
         }
         if let Token::Construct(con_id) = input {
-            if let Some(builtin) = as_builtin_value(&**self.get_construct(con_id)) {
-                match builtin {
-                    CBuiltinValue::Unique(_id) => format!("UNIQUE").into(),
-                    CBuiltinValue::Bool(value) => format!("{}", value).into(),
-                    CBuiltinValue::_32U(value) => format!("{}", value).into(),
-                }
-            } else {
-                input
-            }
+            input
         } else if let Token::Stream { label, contents } = input {
             let contents = contents.into_iter().map(|t| self.expand_token(t)).collect();
             Token::Stream { label, contents }

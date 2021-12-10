@@ -11,7 +11,7 @@ use crate::{
         base::{
             AnnotatedConstruct, BoxedConstruct, ConstructDefinition, ConstructId, ConstructPool,
         },
-        builtin_value::{Unique, UniqueId, UniquePool},
+        unique::{Unique, UniqueId, UniquePool},
         variable::{CVariable, Variable, VariablePool},
     },
     shared::Pool,

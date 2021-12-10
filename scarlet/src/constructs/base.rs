@@ -1,9 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{
-    builtin_value::CBuiltinValue, structt::CStruct, substitution::Substitutions,
-    variable::CVariable,
-};
+use super::{structt::CStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
     environment::Environment,
     shared::{AnyEq, Id, Pool, TripleBool},
@@ -23,6 +20,12 @@ impl<'x> ConstructDefinition<'x> {
             Self::Resolved(con) => Some(con),
             _ => None,
         }
+    }
+}
+
+impl<'x> From<ConstructId> for ConstructDefinition<'x> {
+    fn from(input: ConstructId) -> Self {
+        Self::Unresolved(Token::Construct(input))
     }
 }
 
@@ -48,6 +51,11 @@ pub trait Construct: Any + Debug + AnyEq {
         TripleBool::Unknown
     }
 
+    #[allow(unused_variables)]
+    fn reduce<'x>(&self, env: &mut Environment<'x>) -> Box<dyn Construct> {
+        self.dyn_clone()
+    }
+
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
@@ -57,10 +65,6 @@ pub trait Construct: Any + Debug + AnyEq {
 
 pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {
     (from as &dyn Any).downcast_ref()
-}
-
-pub fn as_builtin_value(from: &dyn Construct) -> Option<&CBuiltinValue> {
-    downcast_construct(from)
 }
 
 pub fn as_struct(from: &dyn Construct) -> Option<&CStruct> {

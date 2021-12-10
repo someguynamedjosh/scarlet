@@ -1,9 +1,9 @@
 use crate::{
-    constructs::builtin_operation::{arithmetic::*, BuiltinOperation, CBuiltinOperation},
+    constructs::substitution::CSubstitution,
     tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureAny, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
+        pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
     },
 };
 
@@ -26,10 +26,7 @@ macro_rules! binary_operator {
             ) -> TransformerResult<'t> {
                 let left = c.push_unresolved(success.get_capture("left").clone());
                 let right = c.push_unresolved(success.get_capture("right").clone());
-                let result = CBuiltinOperation {
-                    op: Box::new($internal_name),
-                    args: vec![left, right],
-                };
+                let result: CSubstitution = todo!();
                 let result = c.env.push_construct(Box::new(result));
                 TransformerResult(Token::Construct(result))
             }
@@ -52,8 +49,8 @@ binary_operator!(Plus, OAdd::<u32>::new(), PatPlain("+"));
 binary_operator!(Minus, OSub::<u32>::new(), PatPlain("-"));
 binary_operator!(Modulo, OMod::<u32>::new(), PatPlain("mod"));
 
-// binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U, PatPlain(">"));
-// binary_operator!(
+// binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U,
+// PatPlain(">")); binary_operator!(
 //     GreaterThanOrEqual,
 //     BuiltinOperation::GreaterThanOrEqual32U,
 //     (PatPlain(">"), PatPlain("="))
