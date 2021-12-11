@@ -34,7 +34,15 @@ impl Construct for CUnique {
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        TripleBool::Unknown
+        if let Some(other) = downcast_construct::<Self>(other) {
+            if self.0 == other.0 {
+                TripleBool::True
+            } else {
+                TripleBool::False
+            }
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn substitute<'x>(
