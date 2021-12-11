@@ -8,3 +8,4 @@ pub(super) mod substitution;
 pub(super) mod unique;
 pub(super) mod variable;
 pub mod struct_sugar;
+pub mod if_then_else;

@@ -4,7 +4,7 @@ use crate::{
     constructs::{
         self,
         structt::{self},
-        variable::CVariable,
+        variable::{CVariable, SVariableInvariants},
     },
     tokens::structure::Token,
     transform::{
@@ -47,10 +47,12 @@ impl Transformer for Variable {
             invariants: invariants.clone(),
             capturing: false,
         });
-        let con = c.env.push_construct(def, invariants);
-        let new_scope = todo!();
-        let old_scope = c.env.get_construct_scope(con);
-        c.env.change_scope(old_scope, new_scope);
+        let con = c.env.push_construct(def, invariants.clone());
+        for inv in invariants {
+            let old_scope = c.env.get_construct_scope(inv);
+            let new_scope = SVariableInvariants(con);
+            c.env.change_scope(old_scope, Box::new(new_scope));
+        }
         c.env.check(con);
         TransformerResult(Token::Construct(con))
     }

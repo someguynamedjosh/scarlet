@@ -5,5 +5,6 @@ pub mod structt;
 pub mod substitution;
 pub mod unique;
 pub mod variable;
+pub mod if_then_else;
 
 pub use base::*;

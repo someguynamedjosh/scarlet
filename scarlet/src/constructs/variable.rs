@@ -7,7 +7,8 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    shared::{Id, Pool, TripleBool, OrderedMap},
+    scope::Scope,
+    shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -95,5 +96,22 @@ impl Construct for CVariable {
             capturing: self.capturing,
         };
         env.push_construct(Box::new(new), invariants)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SVariableInvariants(pub ConstructId);
+
+impl Scope for SVariableInvariants {
+    fn dyn_clone(&self) -> Box<dyn Scope> {
+        Box::new(self.clone())
+    }
+
+    fn lookup_ident<'x>(&self, _env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+        if ident == "SELF" {
+            Some(self.0)
+        } else {
+            None
+        }
     }
 }

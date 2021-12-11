@@ -12,6 +12,8 @@ use crate::{
     },
 };
 
+use super::transformers::if_then_else::IfThenElse;
+
 pub fn all_transformers<'e>(extras: &'e Extras<'e>) -> Vec<SomeTransformer<'e>> {
     let mut result = tfers![];
     for prec in 0..=Precedence::MAX {
@@ -37,6 +39,7 @@ pub fn build_transformers<'e>(
             Variable,
             PopulatedStruct,
             EmptyStruct,
+            IfThenElse,
             StructSugar
         ],
         20 => tfers![
