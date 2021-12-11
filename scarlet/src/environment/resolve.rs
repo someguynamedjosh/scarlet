@@ -17,6 +17,7 @@ impl<'x> Environment<'x> {
                 let parent = con.scope;
                 let new_def = self.resolve_token(token, parent);
                 self.constructs[con_id].definition = new_def;
+                self.check(con_id);
                 self.resolve(con_id)
             }
         } else {

@@ -34,6 +34,8 @@ impl CVariable {
         let mut known_true = true;
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
+            env.reduce(subbed);
+            let subbed = env.resolve(subbed);
             match env.is_def_equal(subbed, env.get_builtin_item("true")) {
                 TripleBool::True => (),
                 TripleBool::False => return TripleBool::False,
@@ -58,16 +60,7 @@ impl Construct for CVariable {
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut base = vec![];
-        for inv in &self.invariants {
-            for dep in env.get_dependencies(*inv) {
-                if !self.is_same_variable_as(&dep) {
-                    base.push(dep);
-                }
-            }
-        }
-        base.push(self.clone());
-        base
+        vec![self.clone()]
     }
 
     fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
