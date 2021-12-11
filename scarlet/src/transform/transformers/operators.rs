@@ -1,5 +1,5 @@
 use crate::{
-    constructs::substitution::CSubstitution,
+    constructs::{substitution::CSubstitution, equal::CEqual},
     tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
@@ -8,7 +8,7 @@ use crate::{
 };
 
 macro_rules! binary_operator {
-    ($StructName:ident, $internal_name:expr, $operator:expr) => {
+    ($StructName:ident, $constructor:expr, $operator:expr) => {
         pub struct $StructName;
         impl Transformer for $StructName {
             fn input_pattern(&self) -> Box<dyn Pattern> {
@@ -26,7 +26,7 @@ macro_rules! binary_operator {
             ) -> TransformerResult<'t> {
                 let left = c.push_unresolved(success.get_capture("left").clone());
                 let right = c.push_unresolved(success.get_capture("right").clone());
-                let result: CSubstitution = todo!();
+                let result = ($constructor)(left, right);
                 let result = c.env.push_construct(Box::new(result));
                 TransformerResult(Token::Construct(result))
             }
@@ -42,12 +42,14 @@ macro_rules! binary_operator {
     };
 }
 
-binary_operator!(Caret, OPow::<u32>::new(), PatPlain("^"));
-binary_operator!(Asterisk, OMul::<u32>::new(), PatPlain("*"));
-binary_operator!(Slash, ODiv::<u32>::new(), PatPlain("/"));
-binary_operator!(Plus, OAdd::<u32>::new(), PatPlain("+"));
-binary_operator!(Minus, OSub::<u32>::new(), PatPlain("-"));
-binary_operator!(Modulo, OMod::<u32>::new(), PatPlain("mod"));
+// binary_operator!(Caret, OPow::<u32>::new(), PatPlain("^"));
+// binary_operator!(Asterisk, OMul::<u32>::new(), PatPlain("*"));
+// binary_operator!(Slash, ODiv::<u32>::new(), PatPlain("/"));
+// binary_operator!(Plus, OAdd::<u32>::new(), PatPlain("+"));
+// binary_operator!(Minus, OSub::<u32>::new(), PatPlain("-"));
+// binary_operator!(Modulo, OMod::<u32>::new(), PatPlain("mod"));
+
+binary_operator!(Equal, CEqual, PatPlain("="));
 
 // binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U,
 // PatPlain(">")); binary_operator!(

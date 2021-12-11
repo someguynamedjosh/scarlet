@@ -3,7 +3,7 @@ use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
     variable::CVariable,
-    ConstructDefinition,
+    ConstructDefinition, downcast_construct,
 };
 use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
 
@@ -42,7 +42,11 @@ impl Construct for CEmptyStruct {
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        TripleBool::Unknown
+        if let Some(_) = downcast_construct::<Self>(other) {
+            TripleBool::True
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn substitute<'x>(

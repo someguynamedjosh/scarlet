@@ -34,7 +34,7 @@ impl<'x> Environment<'x> {
         let in_scope = in_scope?;
         let as_struct = constructs::as_struct(&**self.get_construct(in_scope));
         if let Some(structt) = as_struct {
-            todo!()
+            todo!("{}", ident)
         }
         let parent = self.constructs[in_scope].parent_scope;
         self.lookup_ident(parent, ident)

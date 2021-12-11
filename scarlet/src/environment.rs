@@ -15,7 +15,7 @@ use crate::{
         unique::{Unique, UniqueId, UniquePool},
         variable::{CVariable, Variable, VariablePool},
     },
-    shared::Pool,
+    shared::{Pool, TripleBool},
     tokens::structure::Token,
 };
 
@@ -119,5 +119,10 @@ where
     pub(crate) fn check(&mut self, con_id: ConstructId) {
         let con = self.get_construct(con_id).dyn_clone();
         con.check(self);
+    }
+
+    pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {
+        let other = self.get_construct(right).dyn_clone();
+        self.get_construct(left).dyn_clone().is_def_equal(self, &*other)
     }
 }

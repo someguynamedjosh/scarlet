@@ -3,7 +3,10 @@ use maplit::hashmap;
 
 use crate::{
     constructs::{
-        self, base::ConstructDefinition, downcast_construct, structt::{CPopulatedStruct, self},
+        self,
+        base::ConstructDefinition,
+        downcast_construct,
+        structt::{self, CPopulatedStruct, CEmptyStruct},
         variable::CVariable,
     },
     tfers,
@@ -40,6 +43,27 @@ impl Transformer for SubExpression {
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
+        None
+    }
+}
+
+pub struct EmptyStruct;
+impl Transformer for EmptyStruct {
+    fn input_pattern(&self) -> Box<dyn Pattern> {
+        Box::new(PatPlain("EMPTY_STRUCT"))
+    }
+
+    fn apply<'t>(
+        &self,
+        c: &mut ApplyContext<'_, 't>,
+        success: PatternMatchSuccess<'_, 't>,
+    ) -> TransformerResult<'t> {
+        let con = CEmptyStruct;
+        let con_id = c.push_construct(Box::new(con));
+        TransformerResult(Token::Construct(con_id))
+    }
+
+    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }
