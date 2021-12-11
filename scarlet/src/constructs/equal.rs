@@ -3,11 +3,7 @@ use itertools::Itertools;
 use super::{
     substitution::Substitutions, variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
-use crate::{
-    environment::Environment,
-    impl_any_eq_for_construct,
-    shared::{OrderedMap, TripleBool},
-};
+use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CEqual(pub ConstructId, pub ConstructId);
@@ -19,13 +15,13 @@ impl Construct for CEqual {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>) {}
+    fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         [env.get_dependencies(self.0), env.get_dependencies(self.1)].concat()
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
     }
 

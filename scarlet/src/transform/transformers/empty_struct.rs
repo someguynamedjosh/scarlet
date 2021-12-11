@@ -1,21 +1,9 @@
-use itertools::Itertools;
-use maplit::hashmap;
-
 use crate::{
-    constructs::{
-        self,
-        base::ConstructDefinition,
-        downcast_construct,
-        structt::{self, CEmptyStruct, CPopulatedStruct, SField, SFieldAndRest},
-        variable::CVariable,
-    },
-    tfers,
+    constructs::structt::CEmptyStruct,
     tokens::structure::Token,
     transform::{
-        apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
-        transformers::operators::Is,
+        pattern::{PatPlain, Pattern, PatternMatchSuccess},
     },
 };
 
@@ -28,14 +16,14 @@ impl Transformer for EmptyStruct {
     fn apply<'t>(
         &self,
         c: &mut ApplyContext<'_, 't>,
-        success: PatternMatchSuccess<'_, 't>,
+        _success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let con = CEmptyStruct;
         let con_id = c.env.push_construct(Box::new(con), vec![]);
         TransformerResult(Token::Construct(con_id))
     }
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
+    fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
         None
     }
 }

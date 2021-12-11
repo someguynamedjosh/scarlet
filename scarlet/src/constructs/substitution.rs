@@ -19,7 +19,7 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>) {
+    fn check<'x>(&self, _env: &mut Environment<'x>) {
         for (target, value) in &self.1 {
             if !(todo!("value matches target") as bool) {
                 panic!(
@@ -41,7 +41,7 @@ impl Construct for CSubstitution {
             .collect()
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
     }
 

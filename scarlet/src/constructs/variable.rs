@@ -1,8 +1,5 @@
-use itertools::Itertools;
-
 use super::{
     base::{Construct, ConstructId},
-    downcast_construct,
     substitution::Substitutions,
 };
 use crate::{
@@ -44,7 +41,7 @@ impl Construct for CVariable {
         base
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
     }
 

@@ -48,7 +48,7 @@ impl Scope for SEmpty {
         Box::new(self.clone())
     }
 
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn lookup_ident<'x>(&self, _env: &mut Environment<'x>, _ident: &str) -> Option<ConstructId> {
         None
     }
 }

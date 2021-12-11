@@ -1,21 +1,9 @@
-use itertools::Itertools;
-use maplit::hashmap;
-
 use crate::{
-    constructs::{
-        self,
-        base::ConstructDefinition,
-        downcast_construct,
-        structt::{self, CEmptyStruct, CPopulatedStruct, SField, SFieldAndRest},
-        variable::CVariable,
-    },
-    tfers,
     tokens::structure::Token,
     transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
-        transformers::operators::Is,
+        pattern::{PatCaptureStream, Pattern, PatternMatchSuccess},
     },
 };
 pub struct SubExpression;

@@ -1,21 +1,13 @@
-use itertools::Itertools;
-use maplit::hashmap;
-
 use crate::{
     constructs::{
-        self,
-        base::ConstructDefinition,
         downcast_construct,
-        structt::{self, CEmptyStruct, CPopulatedStruct, SField, SFieldAndRest},
-        variable::CVariable,
+        structt::{CPopulatedStruct, SField, SFieldAndRest},
     },
-    tfers,
     tokens::structure::Token,
     transform::{
         apply,
         basics::{ApplyContext, Transformer, TransformerResult},
-        pattern::{PatCaptureStream, PatFirstOf, PatPlain, Pattern, PatternMatchSuccess},
-        transformers::operators::Is,
+        pattern::{PatCaptureStream, PatPlain, Pattern, PatternMatchSuccess},
     },
 };
 
@@ -62,7 +54,11 @@ impl Transformer for PopulatedStruct {
             if let Some(structt) =
                 downcast_construct::<CPopulatedStruct>(&**c.env.get_construct(con_id))
             {
-                let CPopulatedStruct { label, value, rest } = structt;
+                let CPopulatedStruct {
+                    label: _,
+                    value,
+                    rest,
+                } = structt;
                 let contents = vec![structt.label.clone().into(), value.into(), rest.into()];
                 return Some(Token::Stream {
                     label: "group[]",

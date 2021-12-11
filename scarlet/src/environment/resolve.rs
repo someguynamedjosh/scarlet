@@ -1,14 +1,7 @@
-use std::borrow::Cow;
-
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::{
-        self,
-        substitution::{CSubstitution, Substitutions},
-        variable::CVariable,
-    },
+    constructs::substitution::{CSubstitution, Substitutions},
     scope::ScopeId,
-    shared::OrderedMap,
     tokens::structure::Token,
     transform::{self, ApplyContext},
 };
@@ -69,7 +62,7 @@ impl<'x> Environment<'x> {
                     match sub {
                         Token::Stream {
                             label: "target",
-                            contents,
+                            contents: _,
                         } => {
                             todo!()
                         }
@@ -81,7 +74,7 @@ impl<'x> Environment<'x> {
                     self.reduce(sub);
                     let sub = self.resolve(sub);
                     let mut match_found = false;
-                    for (idx, dep) in deps.iter().enumerate() {
+                    for (idx, _dep) in deps.iter().enumerate() {
                         // TODO: Type checking
                         if true {
                             let dep = deps.remove(idx);

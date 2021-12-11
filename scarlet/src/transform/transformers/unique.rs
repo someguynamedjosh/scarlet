@@ -3,7 +3,7 @@ use crate::{
     tokens::structure::Token,
     transform::{
         basics::{Transformer, TransformerResult},
-        pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
+        pattern::{PatPlain, Pattern, PatternMatchSuccess},
         ApplyContext,
     },
 };

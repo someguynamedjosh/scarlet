@@ -1,16 +1,4 @@
-use std::borrow::Cow;
-
-use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{
-    constructs::{
-        self,
-        substitution::{CSubstitution, Substitutions},
-        variable::CVariable,
-    },
-    shared::OrderedMap,
-    tokens::structure::Token,
-    transform::{self, ApplyContext},
-};
+use super::{ConstructId, Environment};
 
 impl<'x> Environment<'x> {
     pub fn reduce(&mut self, con_id: ConstructId) {

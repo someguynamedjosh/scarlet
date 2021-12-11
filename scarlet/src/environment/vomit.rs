@@ -35,14 +35,14 @@ impl<'x> Environment<'x> {
     fn expand_token(&mut self, input: Token<'x>) -> Token<'x> {
         let extras = Default::default();
         let tfers = transform::all_transformers(&extras);
-        let scope = self.root_scope();
+        let _scope = self.root_scope();
         for tfer in &tfers {
             let mut context = ApplyContext { env: self };
             if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {
                 return self.expand_token(replace_with);
             }
         }
-        if let Token::Construct(con_id) = input {
+        if let Token::Construct(_con_id) = input {
             input
         } else if let Token::Stream { label, contents } = input {
             let contents = contents.into_iter().map(|t| self.expand_token(t)).collect();

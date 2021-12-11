@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use super::{ConstructId, Environment};
 use crate::constructs::base::BoxedConstruct;
 

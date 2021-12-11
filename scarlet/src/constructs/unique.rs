@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::{
     base::{Construct, ConstructId},
     downcast_construct,
@@ -29,11 +27,11 @@ impl Construct for CUnique {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
         vec![]
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         if let Some(other) = downcast_construct::<Self>(other) {
             if self.0 == other.0 {
                 TripleBool::True
@@ -48,7 +46,7 @@ impl Construct for CUnique {
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
-        substitutions: &Substitutions,
+        _substitutions: &Substitutions,
     ) -> ConstructId {
         env.push_construct(self.dyn_clone(), vec![])
     }

@@ -40,11 +40,11 @@ impl Construct for CEmptyStruct {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
         vec![]
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         if let Some(_) = downcast_construct::<Self>(other) {
             TripleBool::True
         } else {
@@ -55,7 +55,7 @@ impl Construct for CEmptyStruct {
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
-        substitutions: &Substitutions,
+        _substitutions: &Substitutions,
     ) -> ConstructId {
         env.push_construct(Box::new(Self), vec![])
     }
@@ -85,7 +85,7 @@ impl Construct for CPopulatedStruct {
         .concat()
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
     }
 
@@ -127,7 +127,7 @@ impl Construct for CAtomicStructMember {
         env.get_dependencies(self.0)
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
     }
 
