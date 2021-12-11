@@ -15,6 +15,7 @@ use crate::{
         unique::{Unique, UniqueId, UniquePool},
         variable::{CVariable, Variable, VariablePool},
     },
+    scope::{AnnotatedScope, SRoot, Scope, ScopeId, ScopePool},
     shared::{Pool, TripleBool},
     tokens::structure::Token,
 };
@@ -26,6 +27,7 @@ pub const BUILTIN_ITEM_NAMES: &[&str] = &[];
 pub struct Environment<'x> {
     builtin_items: HashMap<&'static str, ConstructId>,
     pub(crate) constructs: ConstructPool<'x>,
+    pub(crate) scopes: ScopePool,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
 }
@@ -38,9 +40,11 @@ where
         let mut this = Self {
             builtin_items: HashMap::new(),
             constructs: Pool::new(),
+            scopes: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
         };
+        this.push_scope(Box::new(SRoot), None);
         for &name in BUILTIN_ITEM_NAMES {
             let id = this.push_placeholder();
             this.builtin_items.insert(name, id);
@@ -61,15 +65,17 @@ where
             .unwrap_or_else(|| todo!("nice error, no builtin item named {}", name))
     }
 
-    pub fn push_placeholder(&mut self) -> ConstructId {
+    pub fn push_placeholder(&mut self, ) -> ConstructId {
+        let scope = self.root_scope();
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Placeholder,
-            parent_scope: None,
+            scope,
         };
         self.constructs.push(con)
     }
 
     pub fn push_construct(&mut self, construct: BoxedConstruct) -> ConstructId {
+        let scope = self.root_scope();
         for (id, acon) in &self.constructs {
             if acon
                 .definition
@@ -82,32 +88,48 @@ where
         }
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Resolved(construct),
-            parent_scope: None,
+            scope,
         };
         self.constructs.push(con)
+    }
+
+    pub fn push_scope(&mut self, scope: Box<dyn Scope>, parent: Option<ScopeId>) -> ScopeId {
+        self.scopes.push(AnnotatedScope { scope, parent })
+    }
+
+    pub fn change_scope(&mut self, id: ScopeId, scope: Box<dyn Scope>) {
+        self.scopes[id].scope = scope;
+    }
+
+    pub fn get_scope(&self, id: ScopeId) -> &AnnotatedScope {
+        &self.scopes[id]
+    }
+
+    pub fn root_scope(&self) -> ScopeId {
+        self.scopes.first().unwrap()
     }
 
     pub fn push_unique(&mut self) -> UniqueId {
         self.uniques.push(Unique)
     }
 
-    pub fn push_unresolved(
-        &mut self,
-        token: Token<'x>,
-        parent_scope: Option<ConstructId>,
-    ) -> ConstructId {
+    pub fn push_unresolved(&mut self, token: Token<'x>, scope: ScopeId) -> ConstructId {
         if let Token::Construct(con) = token {
             con
         } else {
             let con = AnnotatedConstruct {
                 definition: ConstructDefinition::Unresolved(token),
-                parent_scope,
+                scope,
             };
             self.constructs.push(con)
         }
     }
 
-    pub fn push_variable(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
+    pub fn push_variable(
+        &mut self,
+        invariants: ConstructId,
+        capturing: bool,
+    ) -> ConstructId {
         let id = self.variables.push(Variable);
         let def = CVariable {
             capturing,
@@ -124,6 +146,8 @@ where
 
     pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {
         let other = self.get_construct(right).dyn_clone();
-        self.get_construct(left).dyn_clone().is_def_equal(self, &*other)
+        self.get_construct(left)
+            .dyn_clone()
+            .is_def_equal(self, &*other)
     }
 }

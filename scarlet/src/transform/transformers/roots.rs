@@ -6,7 +6,7 @@ use crate::{
         self,
         base::ConstructDefinition,
         downcast_construct,
-        structt::{self, CPopulatedStruct, CEmptyStruct},
+        structt::{self, CPopulatedStruct, CEmptyStruct, SFieldAndRest},
         variable::CVariable,
     },
     tfers,
@@ -87,7 +87,8 @@ impl Transformer for PopulatedStruct {
     ) -> TransformerResult<'t> {
         let mut contents = success.get_capture("args").unwrap_stream().clone();
         let con = c.push_placeholder();
-        let mut c = c.with_parent_scope(Some(con));
+        let scope = c.push_scope(Box::new(SFieldAndRest(con)));
+        let mut c = c.with_scope(scope);
         apply::apply_transformers(&mut c, &mut contents, &Default::default());
         assert_eq!(contents.len(), 3);
         let label = contents[0].unwrap_plain().to_owned();
@@ -141,7 +142,8 @@ impl Transformer for Variable {
     ) -> TransformerResult<'t> {
         let mut invariants = success.get_capture("invariants").unwrap_stream().clone();
         let con = c.push_placeholder();
-        let mut c = c.with_parent_scope(Some(con));
+        let scope = todo!();
+        let mut c = c.with_scope(scope);
         apply::apply_transformers(&mut c, &mut invariants, &Default::default());
         let invariants = invariants
             .into_iter()

@@ -11,6 +11,7 @@ mod shared;
 mod tokens;
 pub mod transform;
 mod util;
+pub mod scope;
 
 use crate::environment::Environment;
 
@@ -23,7 +24,8 @@ fn main() {
     println!("{:#?}", root);
 
     let mut env = Environment::new();
-    let root = env.push_unresolved(root.self_content.clone(), None);
+    let scope = env.root_scope();
+    let root = env.push_unresolved(root.self_content.clone(), scope);
     let root = env.resolve(root);
     env.reduce_all();
     let root = env.resolve(root);

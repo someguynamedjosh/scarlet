@@ -35,11 +35,9 @@ impl<'x> Environment<'x> {
     fn expand_token(&mut self, input: Token<'x>) -> Token<'x> {
         let extras = Default::default();
         let tfers = transform::all_transformers(&extras);
+        let scope = self.root_scope();
         for tfer in &tfers {
-            let mut context = ApplyContext {
-                env: self,
-                parent_scope: None,
-            };
+            let mut context = ApplyContext { env: self, scope };
             if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {
                 return self.expand_token(replace_with);
             }

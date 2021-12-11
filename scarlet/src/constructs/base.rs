@@ -4,7 +4,7 @@ use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CV
 use crate::{
     environment::Environment,
     shared::{AnyEq, Id, Pool, TripleBool},
-    tokens::structure::Token,
+    tokens::structure::Token, scope::ScopeId,
 };
 
 #[derive(Debug)]
@@ -44,7 +44,7 @@ impl<'x> From<ConstructId> for ConstructDefinition<'x> {
 #[derive(Debug)]
 pub struct AnnotatedConstruct<'x> {
     pub definition: ConstructDefinition<'x>,
-    pub parent_scope: Option<ConstructId>,
+    pub scope: ScopeId,
 }
 
 pub type ConstructPool<'x> = Pool<AnnotatedConstruct<'x>, 'C'>;

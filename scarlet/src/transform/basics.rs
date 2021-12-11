@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::{
     constructs::{base::BoxedConstruct, ConstructDefinition, ConstructId},
     environment::Environment,
+    scope::{ScopeId, Scope},
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
     transform::pattern::{Pattern, PatternMatchSuccess},
@@ -12,51 +13,52 @@ pub struct TransformerResult<'x>(pub Token<'x>);
 
 pub struct ApplyContext<'a, 'x> {
     pub env: &'a mut Environment<'x>,
-    pub parent_scope: Option<ConstructId>,
+    pub scope: ScopeId,
 }
 
 impl<'a, 'x> ApplyContext<'a, 'x> {
-    pub fn with_parent_scope<'b>(
-        &'b mut self,
-        new_parent_scope: Option<ConstructId>,
-    ) -> ApplyContext<'b, 'x>
+    pub fn with_scope<'b>(&'b mut self, new_scope: ScopeId) -> ApplyContext<'b, 'x>
     where
         'a: 'b,
     {
         ApplyContext {
             env: self.env,
-            parent_scope: new_parent_scope,
+            scope: new_scope,
         }
     }
 
     pub fn push_placeholder(&mut self) -> ConstructId {
         let con = self.env.push_placeholder();
-        self.env.constructs[con].parent_scope = self.parent_scope;
+        self.env.constructs[con].scope = self.scope;
         con
     }
 
     pub fn push_construct(&mut self, construct: BoxedConstruct) -> ConstructId {
         let con = self.env.push_construct(construct);
-        self.env.constructs[con].parent_scope = self.parent_scope;
+        self.env.constructs[con].scope = self.scope;
         con
     }
 
+    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ScopeId {
+        self.env.push_scope(scope, Some(self.scope))
+    }
+
     pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
-        let con = self.env.push_unresolved(token.clone(), None);
-        let existing_scope = self.env.constructs[con].parent_scope;
-        if existing_scope.is_some() && existing_scope != self.parent_scope {
+        let con = self.env.push_unresolved(token.clone(), self.scope);
+        let existing_scope = self.env.constructs[con].scope;
+        if existing_scope != self.scope {
             let con = self.push_placeholder();
             self.env.constructs[con].definition = ConstructDefinition::Unresolved(token);
+            self.env.constructs[con].scope = self.scope;
             con
         } else {
-            self.env.constructs[con].parent_scope = self.parent_scope;
             con
         }
     }
 
     pub fn push_var(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
         let con = self.env.push_variable(invariants, capturing);
-        self.env.constructs[con].parent_scope = self.parent_scope;
+        self.env.constructs[con].scope = self.scope;
         con
     }
 }
