@@ -41,14 +41,13 @@ impl Transformer for Variable {
             .into_iter()
             .map(|x| c.push_unresolved(x))
             .collect_vec();
-        let invariants = structt::struct_from_unnamed_fields(&mut c.env, invariants);
         let id = c.env.variables.push(constructs::variable::Variable);
         let def = Box::new(CVariable {
             id,
-            invariants,
+            invariants: invariants.clone(),
             capturing: false,
         });
-        let con = c.env.push_construct(def, vec![invariants]);
+        let con = c.env.push_construct(def, invariants);
         let new_scope = todo!();
         let old_scope = c.env.get_construct_scope(con);
         c.env.change_scope(old_scope, new_scope);

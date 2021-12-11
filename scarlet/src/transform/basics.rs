@@ -25,11 +25,6 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
         let con = self.env.push_unresolved(token.clone(), scope);
         con
     }
-
-    pub fn push_var(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
-        let con = self.env.push_variable(invariants, capturing);
-        con
-    }
 }
 
 pub trait Transformer {

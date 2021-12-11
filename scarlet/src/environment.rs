@@ -144,14 +144,14 @@ where
         }
     }
 
-    pub fn push_variable(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
+    pub fn push_variable(&mut self, invariants: Vec<ConstructId>, capturing: bool) -> ConstructId {
         let id = self.variables.push(Variable);
         let def = CVariable {
             capturing,
             id,
-            invariants,
+            invariants: invariants.clone(),
         };
-        self.push_construct(Box::new(def), vec![invariants])
+        self.push_construct(Box::new(def), invariants)
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {

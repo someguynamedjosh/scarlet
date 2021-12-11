@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
@@ -5,7 +7,7 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    shared::{Id, Pool, TripleBool},
+    shared::{Id, Pool, TripleBool, OrderedMap},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -16,13 +18,32 @@ pub type VariableId = Id<'V'>;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CVariable {
     pub id: VariableId,
-    pub invariants: ConstructId,
+    pub invariants: Vec<ConstructId>,
     pub capturing: bool,
 }
 
 impl CVariable {
     pub fn is_same_variable_as(&self, other: &Self) -> bool {
         self.id == other.id && self.capturing == other.capturing
+    }
+
+    pub fn can_be_assigned(&self, value: ConstructId, env: &mut Environment) -> TripleBool {
+        let mut substitutions = OrderedMap::new();
+        substitutions.insert_no_replace(self.clone(), value);
+        let mut known_true = true;
+        for inv in &self.invariants {
+            let subbed = env.substitute(*inv, &substitutions);
+            match env.is_def_equal(subbed, env.get_builtin_item("true")) {
+                TripleBool::True => (),
+                TripleBool::False => return TripleBool::False,
+                TripleBool::Unknown => known_true = false,
+            }
+        }
+        if known_true {
+            TripleBool::True
+        } else {
+            TripleBool::Unknown
+        }
     }
 }
 
@@ -36,7 +57,14 @@ impl Construct for CVariable {
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut base = env.get_dependencies(self.invariants);
+        let mut base = vec![];
+        for inv in &self.invariants {
+            for dep in env.get_dependencies(*inv) {
+                if !self.is_same_variable_as(&dep) {
+                    base.push(dep);
+                }
+            }
+        }
         base.push(self.clone());
         base
     }
@@ -55,12 +83,17 @@ impl Construct for CVariable {
                 return *value;
             }
         }
-        let invariants = env.substitute(self.invariants, substitutions);
+        let invariants = self
+            .invariants
+            .iter()
+            .copied()
+            .map(|x| env.substitute(x, substitutions))
+            .collect_vec();
         let new = Self {
             id: self.id,
-            invariants,
+            invariants: invariants.clone(),
             capturing: self.capturing,
         };
-        env.push_construct(Box::new(new), vec![invariants])
+        env.push_construct(Box::new(new), invariants)
     }
 }

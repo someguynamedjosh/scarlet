@@ -19,13 +19,12 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, _env: &mut Environment<'x>) {
+    fn check<'x>(&self, env: &mut Environment<'x>) {
         for (target, value) in &self.1 {
-            if !(todo!("value matches target") as bool) {
-                panic!(
-                    "Argument {:?} does not match {:?} ({:?}), which it is assigned to.",
-                    value, target, target.invariants
-                )
+            match target.can_be_assigned(*value, env) {
+                TripleBool::True => (),
+                TripleBool::False => todo!("nice error, argument {:?} definitely cannot be assigned to {:?}", value, target),
+                TripleBool::Unknown => todo!("nice error, argument {:?} might not be assignable to {:?}", value, target),
             }
         }
     }
