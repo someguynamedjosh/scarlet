@@ -30,10 +30,14 @@ impl Transformer for PopulatedStruct {
     ) -> TransformerResult<'t> {
         let mut contents = success.get_capture("args").unwrap_stream().clone();
         apply::apply_transformers(c, &mut contents, &Default::default());
-        assert_eq!(contents.len(), 3);
-        let label = contents[0].unwrap_plain().to_owned();
-        let value = c.push_unresolved(contents[1].clone());
-        let rest = c.push_unresolved(contents[2].clone());
+        let label = if contents.len() == 3 {
+            contents.remove(0).unwrap_plain().to_owned()
+        } else {
+            String::new()
+        };
+        assert_eq!(contents.len(), 2);
+        let value = c.push_unresolved(contents[0].clone());
+        let rest = c.push_unresolved(contents[1].clone());
         let def = Box::new(CPopulatedStruct { label, value, rest });
         let con = c.env.push_construct(def, vec![value, rest]);
 

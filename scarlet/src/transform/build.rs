@@ -5,8 +5,9 @@ use crate::{
         basics::{Extras, Precedence, SomeTransformer, Transformer},
         transformers::{
             empty_struct::EmptyStruct, operators::*, populated_struct::PopulatedStruct,
-            special_members::*, statements, sub_expression::SubExpression,
-            substitution::Substitution, unique::Unique, variable::Variable,
+            special_members::*, statements, struct_sugar::StructSugar,
+            sub_expression::SubExpression, substitution::Substitution, unique::Unique,
+            variable::Variable,
         },
     },
 };
@@ -35,7 +36,8 @@ pub fn build_transformers<'e>(
             SubExpression,
             Variable,
             PopulatedStruct,
-            EmptyStruct
+            EmptyStruct,
+            StructSugar
         ],
         20 => tfers![
             AsLanguageItem,

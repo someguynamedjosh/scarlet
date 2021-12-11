@@ -20,8 +20,7 @@ use crate::{
     tokens::structure::Token,
 };
 
-// pub const BUILTIN_ITEM_NAMES: &[&str] = &["true", "false", "void", "Bool"];
-pub const BUILTIN_ITEM_NAMES: &[&str] = &[];
+pub const BUILTIN_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 
 #[derive(Debug)]
 pub struct Environment<'x> {

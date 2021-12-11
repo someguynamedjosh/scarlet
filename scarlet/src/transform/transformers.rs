@@ -7,3 +7,4 @@ pub(super) mod sub_expression;
 pub(super) mod substitution;
 pub(super) mod unique;
 pub(super) mod variable;
+pub mod struct_sugar;

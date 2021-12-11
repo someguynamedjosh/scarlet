@@ -1,9 +1,6 @@
-POPULATED_STRUCT[
-    x
-    UNIQUE
-    POPULATED_STRUCT[
-        y
-        x
-        EMPTY_STRUCT
-    ]
-]
+{
+    void = void
+    true IS UNIQUE.AS_LANG_ITEM[true]
+    false IS UNIQUE.AS_LANG_ITEM[false]
+    void IS UNIQUE.AS_LANG_ITEM[void]
+}.VALUE

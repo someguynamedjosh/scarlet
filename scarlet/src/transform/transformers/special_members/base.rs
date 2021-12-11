@@ -43,7 +43,7 @@ impl<M: SpecialMember> Transformer for M {
                 base,
                 PatCaptureStream {
                     key: "args",
-                    label: "group{}",
+                    label: "group[]",
                 },
             ))
         } else {
