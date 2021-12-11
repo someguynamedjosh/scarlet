@@ -1,12 +1,12 @@
-use super::basics::{Extras, Precedence, SomeTransformer};
 use crate::{
     shared::OwnedOrBorrowed,
     tfers,
     transform::{
-        basics::Transformer,
+        basics::{Extras, Precedence, SomeTransformer, Transformer},
         transformers::{
-            operators::*, roots::*, special_members::*, statements, substitution::Substitution,
-            unique::Unique,
+            empty_struct::EmptyStruct, operators::*, populated_struct::PopulatedStruct,
+            special_members::*, statements, sub_expression::SubExpression,
+            substitution::Substitution, unique::Unique, variable::Variable,
         },
     },
 };

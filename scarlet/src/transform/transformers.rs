@@ -1,6 +1,9 @@
+pub(super) mod empty_struct;
 pub(super) mod operators;
-pub(super) mod roots;
+pub(super) mod populated_struct;
 pub(super) mod special_members;
 pub(super) mod statements;
+pub(super) mod sub_expression;
 pub(super) mod substitution;
 pub(super) mod unique;
+pub(super) mod variable;
