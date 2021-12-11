@@ -3,8 +3,9 @@ use std::{any::Any, fmt::Debug};
 use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
     environment::Environment,
+    scope::ScopeId,
     shared::{AnyEq, Id, Pool, TripleBool},
-    tokens::structure::Token, scope::ScopeId,
+    tokens::structure::Token,
 };
 
 #[derive(Debug)]

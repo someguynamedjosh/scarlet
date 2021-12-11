@@ -6,7 +6,7 @@ use crate::{
         self,
         base::ConstructDefinition,
         downcast_construct,
-        structt::{self, CEmptyStruct, CPopulatedStruct, SFieldAndRest, SField},
+        structt::{self, CEmptyStruct, CPopulatedStruct, SField, SFieldAndRest},
         variable::CVariable,
     },
     tfers,

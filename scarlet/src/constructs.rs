@@ -1,9 +1,9 @@
 pub mod base;
+pub mod equal;
 pub mod shown;
 pub mod structt;
 pub mod substitution;
-pub mod variable;
 pub mod unique;
-pub mod equal;
+pub mod variable;
 
 pub use base::*;

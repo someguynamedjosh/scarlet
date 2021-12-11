@@ -1,5 +1,5 @@
 use crate::{
-    constructs::{substitution::CSubstitution, equal::CEqual},
+    constructs::{equal::CEqual, substitution::CSubstitution},
     tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},

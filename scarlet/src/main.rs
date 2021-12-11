@@ -7,11 +7,11 @@
 mod constructs;
 mod environment;
 mod file_tree;
+pub mod scope;
 mod shared;
 mod tokens;
 pub mod transform;
 mod util;
-pub mod scope;
 
 use crate::environment::Environment;
 

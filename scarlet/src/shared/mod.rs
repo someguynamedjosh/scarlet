@@ -21,5 +21,5 @@ pub fn indented(source: &str) -> String {
 pub enum TripleBool {
     True,
     False,
-    Unknown
+    Unknown,
 }
