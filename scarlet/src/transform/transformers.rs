@@ -1,11 +1,11 @@
 pub(super) mod empty_struct;
+pub(super) mod if_then_else;
 pub(super) mod operators;
 pub(super) mod populated_struct;
 pub(super) mod special_members;
 pub(super) mod statements;
+pub(super) mod struct_sugar;
 pub(super) mod sub_expression;
 pub(super) mod substitution;
 pub(super) mod unique;
 pub(super) mod variable;
-pub mod struct_sugar;
-pub mod if_then_else;

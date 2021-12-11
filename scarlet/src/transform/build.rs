@@ -4,15 +4,13 @@ use crate::{
     transform::{
         basics::{Extras, Precedence, SomeTransformer, Transformer},
         transformers::{
-            empty_struct::EmptyStruct, operators::*, populated_struct::PopulatedStruct,
-            special_members::*, statements, struct_sugar::StructSugar,
-            sub_expression::SubExpression, substitution::Substitution, unique::Unique,
-            variable::Variable,
+            empty_struct::EmptyStruct, if_then_else::IfThenElse, operators::*,
+            populated_struct::PopulatedStruct, special_members::*, statements,
+            struct_sugar::StructSugar, sub_expression::SubExpression, substitution::Substitution,
+            unique::Unique, variable::Variable,
         },
     },
 };
-
-use super::transformers::if_then_else::IfThenElse;
 
 pub fn all_transformers<'e>(extras: &'e Extras<'e>) -> Vec<SomeTransformer<'e>> {
     let mut result = tfers![];
@@ -43,6 +41,7 @@ pub fn build_transformers<'e>(
             StructSugar
         ],
         20 => tfers![
+            IsPopulatedStruct,
             AsLanguageItem,
             Shown,
             StructLabel,
