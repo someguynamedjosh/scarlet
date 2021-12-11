@@ -64,6 +64,6 @@ impl Construct for CVariable {
             invariants,
             capturing: self.capturing,
         };
-        env.push_construct(Box::new(new))
+        env.push_construct(Box::new(new), vec![invariants])
     }
 }

@@ -17,10 +17,10 @@ impl SpecialMember for StructLabel {
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let base = c.push_unresolved(base);
-        Token::Construct(c.push_construct(Box::new(CAtomicStructMember(
-            base,
-            AtomicStructMember::Label,
-        ))))
+        Token::Construct(c.env.push_construct(
+            Box::new(CAtomicStructMember(base, AtomicStructMember::Label)),
+            vec![base],
+        ))
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
@@ -41,10 +41,10 @@ impl SpecialMember for StructValue {
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let base = c.push_unresolved(base);
-        Token::Construct(c.push_construct(Box::new(CAtomicStructMember(
-            base,
-            AtomicStructMember::Value,
-        ))))
+        Token::Construct(c.env.push_construct(
+            Box::new(CAtomicStructMember(base, AtomicStructMember::Value)),
+            vec![base],
+        ))
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {
@@ -65,10 +65,10 @@ impl SpecialMember for StructRest {
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let base = c.push_unresolved(base);
-        Token::Construct(c.push_construct(Box::new(CAtomicStructMember(
-            base,
-            AtomicStructMember::Rest,
-        ))))
+        Token::Construct(c.env.push_construct(
+            Box::new(CAtomicStructMember(base, AtomicStructMember::Rest)),
+            vec![base],
+        ))
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {

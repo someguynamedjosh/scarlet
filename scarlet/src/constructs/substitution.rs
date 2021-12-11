@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use super::{variable::CVariable, Construct, ConstructId, ConstructDefinition};
+use super::{variable::CVariable, Construct, ConstructDefinition, ConstructId};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
@@ -58,6 +58,7 @@ impl Construct for CSubstitution {
     ) -> ConstructId {
         let base = self.0;
         let mut new_subs = self.1.clone();
+        let mut contains = vec![base];
         for (_, value) in &mut new_subs {
             let subbed = env.substitute(*value, substitutions);
             *value = subbed;
@@ -71,9 +72,10 @@ impl Construct for CSubstitution {
                 }
             }
             if !already_present {
+                contains.push(*value);
                 new_subs.insert_no_replace(target.clone(), *value);
             }
         }
-        env.push_construct(Box::new(Self(base, new_subs)))
+        env.push_construct(Box::new(Self(base, new_subs)), contains)
     }
 }

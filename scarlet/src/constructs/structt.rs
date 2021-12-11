@@ -15,7 +15,7 @@ pub fn struct_from_unnamed_fields<'x>(
     mut fields: Vec<ConstructId>,
 ) -> ConstructId {
     if fields.is_empty() {
-        env.push_construct(Box::new(CEmptyStruct))
+        env.push_construct(Box::new(CEmptyStruct), vec![])
     } else {
         let first_field = fields.remove(0);
         let rest = struct_from_unnamed_fields(env, fields);
@@ -24,7 +24,7 @@ pub fn struct_from_unnamed_fields<'x>(
             value: first_field,
             rest,
         };
-        env.push_construct(Box::new(con))
+        env.push_construct(Box::new(con), vec![first_field, rest])
     }
 }
 
@@ -57,7 +57,7 @@ impl Construct for CEmptyStruct {
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
     ) -> ConstructId {
-        env.push_construct(Box::new(Self))
+        env.push_construct(Box::new(Self), vec![])
     }
 }
 
@@ -99,7 +99,8 @@ impl Construct for CPopulatedStruct {
             value: env.substitute(self.value, substitutions),
             rest: env.substitute(self.rest, substitutions),
         };
-        env.push_construct(Box::new(subbed))
+        let containing = vec![subbed.value, subbed.rest];
+        env.push_construct(Box::new(subbed), containing)
     }
 }
 
@@ -150,7 +151,29 @@ impl Construct for CAtomicStructMember {
     ) -> ConstructId {
         let subbed_base = env.substitute(self.0, substitutions);
         let subbed = Self(subbed_base, self.1);
-        env.push_construct(Box::new(subbed))
+        env.push_construct(Box::new(subbed), vec![subbed_base])
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SField(pub ConstructId);
+
+impl Scope for SField {
+    fn dyn_clone(&self) -> Box<dyn Scope> {
+        Box::new(self.clone())
+    }
+
+    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+        if let Some(structt) = as_struct(&**env.get_construct(self.0)) {
+            let structt = structt.clone();
+            if structt.label == ident {
+                Some(structt.value)
+            } else {
+                None
+            }
+        } else {
+            unreachable!()
+        }
     }
 }
 

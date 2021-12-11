@@ -27,7 +27,7 @@ macro_rules! binary_operator {
                 let left = c.push_unresolved(success.get_capture("left").clone());
                 let right = c.push_unresolved(success.get_capture("right").clone());
                 let result = ($constructor)(left, right);
-                let result = c.env.push_construct(Box::new(result));
+                let result = c.env.push_construct(Box::new(result), vec![left, right]);
                 TransformerResult(Token::Construct(result))
             }
 

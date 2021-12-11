@@ -50,6 +50,6 @@ impl Construct for CUnique {
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
     ) -> ConstructId {
-        env.push_construct(self.dyn_clone())
+        env.push_construct(self.dyn_clone(), vec![])
     }
 }

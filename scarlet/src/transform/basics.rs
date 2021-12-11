@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     constructs::{base::BoxedConstruct, ConstructDefinition, ConstructId},
     environment::Environment,
-    scope::{ScopeId, Scope},
+    scope::{SEmpty, Scope, ScopeId},
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
     transform::pattern::{Pattern, PatternMatchSuccess},
@@ -13,52 +13,21 @@ pub struct TransformerResult<'x>(pub Token<'x>);
 
 pub struct ApplyContext<'a, 'x> {
     pub env: &'a mut Environment<'x>,
-    pub scope: ScopeId,
 }
 
 impl<'a, 'x> ApplyContext<'a, 'x> {
-    pub fn with_scope<'b>(&'b mut self, new_scope: ScopeId) -> ApplyContext<'b, 'x>
-    where
-        'a: 'b,
-    {
-        ApplyContext {
-            env: self.env,
-            scope: new_scope,
-        }
-    }
-
-    pub fn push_placeholder(&mut self) -> ConstructId {
-        let con = self.env.push_placeholder();
-        self.env.constructs[con].scope = self.scope;
-        con
-    }
-
-    pub fn push_construct(&mut self, construct: BoxedConstruct) -> ConstructId {
-        let con = self.env.push_construct(construct);
-        self.env.constructs[con].scope = self.scope;
-        con
-    }
-
     pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ScopeId {
-        self.env.push_scope(scope, Some(self.scope))
+        self.env.push_scope(scope, None)
     }
 
     pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
-        let con = self.env.push_unresolved(token.clone(), self.scope);
-        let existing_scope = self.env.constructs[con].scope;
-        if existing_scope != self.scope {
-            let con = self.push_placeholder();
-            self.env.constructs[con].definition = ConstructDefinition::Unresolved(token);
-            self.env.constructs[con].scope = self.scope;
-            con
-        } else {
-            con
-        }
+        let scope = self.push_scope(Box::new(SEmpty));
+        let con = self.env.push_unresolved(token.clone(), scope);
+        con
     }
 
     pub fn push_var(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
         let con = self.env.push_variable(invariants, capturing);
-        self.env.constructs[con].scope = self.scope;
         con
     }
 }

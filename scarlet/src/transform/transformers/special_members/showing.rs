@@ -17,7 +17,7 @@ impl SpecialMember for Shown {
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
         let base = c.push_unresolved(base);
-        Token::Construct(c.push_construct(Box::new(CShown(base))))
+        Token::Construct(c.env.push_construct(Box::new(CShown(base)), vec![base]))
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {

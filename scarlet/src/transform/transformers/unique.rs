@@ -1,10 +1,11 @@
 use crate::{
+    constructs::unique::CUnique,
     tokens::structure::Token,
     transform::{
         basics::{Transformer, TransformerResult},
         pattern::{PatCaptureAny, PatPlain, Pattern, PatternMatchSuccess},
         ApplyContext,
-    }, constructs::unique::CUnique,
+    },
 };
 
 pub struct Unique;
@@ -19,7 +20,7 @@ impl Transformer for Unique {
         _success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let id = c.env.push_unique();
-        let con = c.env.push_construct(Box::new(CUnique(id)));
+        let con = c.env.push_construct(Box::new(CUnique(id)), vec![]);
         TransformerResult(Token::Construct(con))
     }
 

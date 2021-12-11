@@ -15,7 +15,7 @@ use crate::{
         unique::{Unique, UniqueId, UniquePool},
         variable::{CVariable, Variable, VariablePool},
     },
-    scope::{AnnotatedScope, SRoot, Scope, ScopeId, ScopePool},
+    scope::{AnnotatedScope, SEmpty, SRoot, Scope, ScopeId, ScopePool},
     shared::{Pool, TripleBool},
     tokens::structure::Token,
 };
@@ -65,8 +65,8 @@ where
             .unwrap_or_else(|| todo!("nice error, no builtin item named {}", name))
     }
 
-    pub fn push_placeholder(&mut self, ) -> ConstructId {
-        let scope = self.root_scope();
+    pub fn push_placeholder(&mut self) -> ConstructId {
+        let scope = self.new_empty_scope();
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Placeholder,
             scope,
@@ -74,8 +74,16 @@ where
         self.constructs.push(con)
     }
 
-    pub fn push_construct(&mut self, construct: BoxedConstruct) -> ConstructId {
-        let scope = self.root_scope();
+    pub fn push_construct(
+        &mut self,
+        construct: BoxedConstruct,
+        containing: Vec<ConstructId>,
+    ) -> ConstructId {
+        let scope = self.new_empty_scope();
+        for con in containing {
+            let child = self.constructs[con].scope;
+            self.scopes[child].parent = Some(scope);
+        }
         for (id, acon) in &self.constructs {
             if acon
                 .definition
@@ -93,6 +101,10 @@ where
         self.constructs.push(con)
     }
 
+    pub fn get_construct_scope(&mut self, con_id: ConstructId) -> ScopeId {
+        self.constructs[con_id].scope
+    }
+
     pub fn push_scope(&mut self, scope: Box<dyn Scope>, parent: Option<ScopeId>) -> ScopeId {
         self.scopes.push(AnnotatedScope { scope, parent })
     }
@@ -101,12 +113,20 @@ where
         self.scopes[id].scope = scope;
     }
 
+    pub fn set_scope_parent(&mut self, id: ScopeId, new_parent: ScopeId) {
+        self.scopes[id].parent = Some(new_parent);
+    }
+
     pub fn get_scope(&self, id: ScopeId) -> &AnnotatedScope {
         &self.scopes[id]
     }
 
     pub fn root_scope(&self) -> ScopeId {
         self.scopes.first().unwrap()
+    }
+
+    pub fn new_empty_scope(&mut self) -> ScopeId {
+        self.push_scope(Box::new(SEmpty), None)
     }
 
     pub fn push_unique(&mut self) -> UniqueId {
@@ -125,18 +145,14 @@ where
         }
     }
 
-    pub fn push_variable(
-        &mut self,
-        invariants: ConstructId,
-        capturing: bool,
-    ) -> ConstructId {
+    pub fn push_variable(&mut self, invariants: ConstructId, capturing: bool) -> ConstructId {
         let id = self.variables.push(Variable);
         let def = CVariable {
             capturing,
             id,
             invariants,
         };
-        self.push_construct(Box::new(def))
+        self.push_construct(Box::new(def), vec![invariants])
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {

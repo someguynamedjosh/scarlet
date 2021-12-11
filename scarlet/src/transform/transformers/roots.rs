@@ -6,7 +6,7 @@ use crate::{
         self,
         base::ConstructDefinition,
         downcast_construct,
-        structt::{self, CPopulatedStruct, CEmptyStruct, SFieldAndRest},
+        structt::{self, CEmptyStruct, CPopulatedStruct, SFieldAndRest, SField},
         variable::CVariable,
     },
     tfers,
@@ -59,7 +59,7 @@ impl Transformer for EmptyStruct {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let con = CEmptyStruct;
-        let con_id = c.push_construct(Box::new(con));
+        let con_id = c.env.push_construct(Box::new(con), vec![]);
         TransformerResult(Token::Construct(con_id))
     }
 
@@ -86,18 +86,22 @@ impl Transformer for PopulatedStruct {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut contents = success.get_capture("args").unwrap_stream().clone();
-        let con = c.push_placeholder();
-        let scope = c.push_scope(Box::new(SFieldAndRest(con)));
-        let mut c = c.with_scope(scope);
-        apply::apply_transformers(&mut c, &mut contents, &Default::default());
+        apply::apply_transformers(c, &mut contents, &Default::default());
         assert_eq!(contents.len(), 3);
         let label = contents[0].unwrap_plain().to_owned();
-        let def = Box::new(CPopulatedStruct {
-            label,
-            value: c.push_unresolved(contents[1].clone()),
-            rest: c.push_unresolved(contents[2].clone()),
-        });
-        c.env.constructs[con].definition = ConstructDefinition::Resolved(def);
+        let value = c.push_unresolved(contents[1].clone());
+        let rest = c.push_unresolved(contents[2].clone());
+        let def = Box::new(CPopulatedStruct { label, value, rest });
+        let con = c.env.push_construct(def, vec![value, rest]);
+
+        let new_scope = Box::new(SFieldAndRest(con));
+        let old_scope = c.env.get_construct_scope(value);
+        c.env.change_scope(old_scope, new_scope);
+
+        let new_scope = Box::new(SField(con));
+        let old_scope = c.env.get_construct_scope(rest);
+        c.env.change_scope(old_scope, new_scope);
+
         c.env.check(con);
         TransformerResult(Token::Construct(con))
     }
@@ -141,10 +145,7 @@ impl Transformer for Variable {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut invariants = success.get_capture("invariants").unwrap_stream().clone();
-        let con = c.push_placeholder();
-        let scope = todo!();
-        let mut c = c.with_scope(scope);
-        apply::apply_transformers(&mut c, &mut invariants, &Default::default());
+        apply::apply_transformers(c, &mut invariants, &Default::default());
         let invariants = invariants
             .into_iter()
             .map(|x| c.push_unresolved(x))
@@ -156,7 +157,10 @@ impl Transformer for Variable {
             invariants,
             capturing: false,
         });
-        c.env.constructs[con].definition = ConstructDefinition::Resolved(def);
+        let con = c.env.push_construct(def, vec![invariants]);
+        let new_scope = todo!();
+        let old_scope = c.env.get_construct_scope(con);
+        c.env.change_scope(old_scope, new_scope);
         c.env.check(con);
         TransformerResult(Token::Construct(con))
     }

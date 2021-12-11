@@ -27,6 +27,6 @@ impl Construct for CShown {
         substitutions: &Substitutions,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
-        env.push_construct(Box::new(Self(base)))
+        env.push_construct(Box::new(Self(base)), vec![base])
     }
 }

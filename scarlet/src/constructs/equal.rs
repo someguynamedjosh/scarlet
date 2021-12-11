@@ -1,6 +1,8 @@
 use itertools::Itertools;
 
-use super::{variable::CVariable, Construct, ConstructId, ConstructDefinition, substitution::Substitutions};
+use super::{
+    substitution::Substitutions, variable::CVariable, Construct, ConstructDefinition, ConstructId,
+};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
@@ -17,14 +19,10 @@ impl Construct for CEqual {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>) {
-    }
+    fn check<'x>(&self, env: &mut Environment<'x>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        [
-            env.get_dependencies(self.0),
-            env.get_dependencies(self.1),
-        ].concat()
+        [env.get_dependencies(self.0), env.get_dependencies(self.1)].concat()
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
@@ -46,6 +44,6 @@ impl Construct for CEqual {
     ) -> ConstructId {
         let left = env.substitute(self.0, substitutions);
         let right = env.substitute(self.1, substitutions);
-        env.push_construct(Box::new(Self(left, right)))
+        env.push_construct(Box::new(Self(left, right)), vec![left, right])
     }
 }

@@ -48,10 +48,7 @@ impl<'x> Environment<'x> {
                 label: "CONSTRUCT_SYNTAX",
                 contents,
             } => {
-                let mut context = ApplyContext {
-                    env: self,
-                    scope,
-                };
+                let mut context = ApplyContext { env: self };
                 let mut contents = contents;
                 transform::apply_transformers(&mut context, &mut contents, &Default::default());
                 assert_eq!(contents.len(), 1);
