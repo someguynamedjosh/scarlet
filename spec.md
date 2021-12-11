@@ -24,28 +24,28 @@ UNIQUE
 
 EMPTY_STRUCT
 
-# Provides a single field in addition to
+# Provides a single field prepended to
 # the fields specified in "rest".
 # Consumes Invariants:
 # rest FROM Struct
-POPULATED_STRUCT[ rest label value ]
-struct.REST
+POPULATED_STRUCT[ label value rest ]
 struct.LABEL
 struct.VALUE
+struct.REST
 struct IS_POPULATED_STRUCT
 
-# Declares a new variable. x, y, and z 
-# are the conditions that must be true 
+# Declares a new variable. x, y, and z
+# are the conditions that must be true
 # to be able to assign a value to the 
 # variable.
-VARIABLE[ { x y z } ]                   
+VARIABLE[ { x y z } ]
 
 # Substitute the variables y and z in 
 # the expression x.
 x[ y IS 123  z IS 456 ]
 
 # Returns 'true' if the two expressions
-# have the same value.
+# are definitionally equal
 x = y
 
 # Axiom of Equality, requires 

@@ -1,1 +1,9 @@
-UNIQUE = UNIQUE
+POPULATED_STRUCT[
+    x
+    UNIQUE
+    POPULATED_STRUCT[
+        y
+        x
+        EMPTY_STRUCT
+    ]
+]
