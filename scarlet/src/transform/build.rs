@@ -4,10 +4,10 @@ use crate::{
     transform::{
         basics::{Extras, Precedence, SomeTransformer, Transformer},
         transformers::{
-            empty_struct::EmptyStruct, if_then_else::IfThenElse, operators::*,
-            populated_struct::PopulatedStruct, special_members::*, statements,
-            struct_sugar::StructSugar, sub_expression::SubExpression, substitution::Substitution,
-            unique::Unique, variable::Variable,
+            if_then_else::IfThenElse, operators::*, populated_struct::PopulatedStruct,
+            special_members::*, statements, struct_sugar::StructSugar,
+            sub_expression::SubExpression, substitution::Substitution, unique::Unique,
+            variable::Variable,
         },
     },
 };
@@ -36,7 +36,6 @@ pub fn build_transformers<'e>(
             SubExpression,
             Variable,
             PopulatedStruct,
-            EmptyStruct,
             IfThenElse,
             StructSugar
         ],

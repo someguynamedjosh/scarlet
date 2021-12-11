@@ -12,8 +12,8 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Unique;
-pub type UniquePool = Pool<Unique, 'V'>;
-pub type UniqueId = Id<'V'>;
+pub type UniquePool = Pool<Unique, 'U'>;
+pub type UniqueId = Id<'U'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CUnique(pub UniqueId);

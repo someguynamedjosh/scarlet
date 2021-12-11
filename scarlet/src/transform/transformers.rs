@@ -1,4 +1,3 @@
-pub(super) mod empty_struct;
 pub(super) mod if_then_else;
 pub(super) mod operators;
 pub(super) mod populated_struct;

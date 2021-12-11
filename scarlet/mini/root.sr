@@ -1,46 +1,10 @@
 {
-    true.IS_POPULATED_STRUCT
+    OnlyTrue[false]
 
+    OnlyTrue IS VAR[identity[SELF = true]]
+    identity IS VAR[]
+    
     true IS UNIQUE.AS_LANG_ITEM[true]
     false IS UNIQUE.AS_LANG_ITEM[false]
     void IS UNIQUE.AS_LANG_ITEM[void]
-
-    Any IS VAR[]
-
-    Bool IS VAR[
-        IF_THEN_ELSE[
-            SELF  true  SELF = false
-        ]
-    ]
-    left IS VAR[
-        IF_THEN_ELSE[
-            SELF  true  SELF = false
-        ]
-    ]
-    right IS VAR[
-        IF_THEN_ELSE[
-            SELF  true  SELF = false
-        ]
-    ]
-
-    bool_and IS IF_THEN_ELSE[
-        left  right  false
-    ]
-
-    bool_or IS IF_THEN_ELSE[
-        left  true  right
-    ]
-
-    # Nat IS VAR[
-    #     IF_THEN_ELSE[
-    #         SELF IS_POPULATED_STRUCT
-    #         bool_and[
-    #             SELF.VALUE FROM Bool
-    #             SELF.REST FROM Nat
-    #         ]
-    #         SELF = EMPTY_STRUCT
-    #     ]
-    # ]
-    # zero IS EMPTY_STRUCT
-    # one IS { true }
 }.VALUE

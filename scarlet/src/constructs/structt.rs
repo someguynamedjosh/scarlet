@@ -1,7 +1,6 @@
 use super::{
     as_struct,
     base::{Construct, ConstructId},
-    downcast_construct,
     substitution::Substitutions,
     variable::CVariable,
     ConstructDefinition,
@@ -15,7 +14,7 @@ pub fn struct_from_unnamed_fields<'x>(
     mut fields: Vec<ConstructId>,
 ) -> ConstructId {
     if fields.is_empty() {
-        env.push_construct(Box::new(CEmptyStruct), vec![])
+        env.get_builtin_item("void")
     } else {
         let first_field = fields.remove(0);
         let rest = struct_from_unnamed_fields(env, fields);
@@ -27,40 +26,6 @@ pub fn struct_from_unnamed_fields<'x>(
         env.push_construct(Box::new(con), vec![first_field, rest])
     }
 }
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CEmptyStruct;
-
-impl_any_eq_for_construct!(CEmptyStruct);
-
-impl Construct for CEmptyStruct {
-    fn dyn_clone(&self) -> Box<dyn Construct> {
-        Box::new(self.clone())
-    }
-
-    fn check<'x>(&self, _env: &mut Environment<'x>) {}
-
-    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
-        vec![]
-    }
-
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(_) = downcast_construct::<Self>(other) {
-            TripleBool::True
-        } else {
-            TripleBool::Unknown
-        }
-    }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        _substitutions: &Substitutions,
-    ) -> ConstructId {
-        env.push_construct(Box::new(Self), vec![])
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CPopulatedStruct {
     pub label: String,

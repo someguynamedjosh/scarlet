@@ -1,27 +1,53 @@
 {
-    BOOL is Builtin(BOOL)
-    32U is Builtin(32U)
-    PATTERN is Builtin(PATTERN)
+    Struct[{}]
 
-    # True
-    {3 OR 4 matches 4 OR 3}.0.S
-    {1 AND 2 matches 1 AND 2}.0.S
-    {1 AND 2 matches 1}.0.S
-    {1 AND 2 matches 32U}.0.S
-    {1 matches PATTERN}.0.S
-    {32U matches PATTERN}.0.S
-    {true matches true AND true}.0.S
-    {true matches true AND BOOL}.0.S
-    {true matches true AND BOOL AND PATTERN}.0.S
-    {1 matches 1 OR 2 OR 3}.0.S
-    {1 matches 3 OR 2 OR 1}.0.S
+    true IS UNIQUE.AS_LANG_ITEM[true]
+    false IS UNIQUE.AS_LANG_ITEM[false]
+    void IS UNIQUE.AS_LANG_ITEM[void]
 
-    0.S
+    Any IS VAR[]
 
-    # False
-    {3 OR 4 matches 4 OR 5}.0.S
-    {1 matches 1 AND 2}.0.S
-    {PATTERN matches 32U}.0.S
-    {32U matches BOOL}.0.S
+    Bool IS VAR[
+        IF_THEN_ELSE[
+            SELF  true  SELF = false
+        ]
+    ]
+    left IS VAR[
+        IF_THEN_ELSE[
+            SELF  true  SELF = false
+        ]
+    ]
+    right IS VAR[
+        IF_THEN_ELSE[
+            SELF  true  SELF = false
+        ]
+    ]
 
-}
+    bool_and IS IF_THEN_ELSE[
+        left  right  false
+    ]
+
+    bool_or IS IF_THEN_ELSE[
+        left  true  right
+    ]
+
+    Struct IS VAR[
+        bool_or[
+            SELF.IS_POPULATED_STRUCT
+            SELF = void
+        ]
+    ]
+
+    # Nat IS VAR[
+    #     IF_THEN_ELSE[
+    #         SELF IS_POPULATED_STRUCT
+    #         bool_and[
+    #             SELF.VALUE FROM Bool
+    #             SELF.REST FROM Nat
+    #         ]
+    #         SELF = EMPTY_STRUCT
+    #     ]
+    # ]
+    # zero IS EMPTY_STRUCT
+    # one IS { true }
+}.VALUE

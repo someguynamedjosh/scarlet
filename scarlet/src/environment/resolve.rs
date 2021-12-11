@@ -14,8 +14,8 @@ impl<'x> Environment<'x> {
                 self.resolve(con_id)
             } else {
                 let token = token.clone();
-                let parent = con.scope;
-                let new_def = self.resolve_token(token, parent);
+                let scope = con.scope;
+                let new_def = self.resolve_token(token, scope);
                 self.constructs[con_id].definition = new_def;
                 self.check(con_id);
                 self.resolve(con_id)
@@ -92,6 +92,10 @@ impl<'x> Environment<'x> {
                             deps
                         );
                     }
+                }
+                for (_, sub) in &subs {
+                    let child_scope = self.get_construct_scope(*sub);
+                    self.scopes[child_scope].parent = Some(scope);
                 }
                 ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
             }

@@ -22,6 +22,7 @@ impl<'a, 'x> ApplyContext<'a, 'x> {
 
     pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
         let scope = self.push_scope(Box::new(SEmpty));
+        token.set_parent_scope_of_items(self.env, scope);
         let con = self.env.push_unresolved(token.clone(), scope);
         con
     }

@@ -30,7 +30,7 @@ impl Transformer for StructSugar {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let mut contents = success.get_capture("fields").unwrap_stream().clone();
-        let extras = hashmap![120 => tfers![ Is ]];
+        let extras = hashmap![200 => tfers![ Is ]];
         apply::apply_transformers(c, &mut contents, &extras);
 
         let mut fields = vec![];
@@ -50,7 +50,7 @@ impl Transformer for StructSugar {
             }
         }
 
-        let mut result = vec![format!("EMPTY_STRUCT").into()];
+        let mut result = vec![c.env.get_builtin_item("void").into()];
         for field in fields.into_iter().rev() {
             let body = [vec![field.0.into(), field.1], result].concat();
             result = vec![

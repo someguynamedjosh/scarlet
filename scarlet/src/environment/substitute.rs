@@ -7,8 +7,16 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         substitutions: &Substitutions,
     ) -> ConstructId {
-        self.get_construct(con_id)
+        let result = self
+            .get_construct(con_id)
             .dyn_clone()
-            .substitute(self, substitutions)
+            .substitute(self, substitutions);
+        if result != con_id {
+            let original_scope = self.get_construct_scope(con_id);
+            let original_parent = self.get_scope(original_scope).parent;
+            let result_scope = self.get_construct_scope(result);
+            self.scopes[result_scope].parent = original_parent;
+        }
+        result
     }
 }
