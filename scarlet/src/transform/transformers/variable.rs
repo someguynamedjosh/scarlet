@@ -39,20 +39,13 @@ impl Transformer for Variable {
         let mut invariants = success.get_capture("invariants").unwrap_stream().clone();
         apply::apply_transformers(c, &mut invariants, &Default::default());
 
-        let con = c.env.push_placeholder();
         let invariants = invariants
             .into_iter()
-            .map(|x| c.env.push_unresolved(x, SVariableInvariants(con)))
+            .map(|x| c.env.push_unresolved(x))
             .collect_vec();
         let id = c.env.variables.push(constructs::variable::Variable);
-        let def = CVariable {
-            id,
-            invariants: invariants.clone(),
-            capturing: false,
-        };
-        c.env.define_placeholder(con, def, SPlaceholder);
-        c.env.check(con);
-        TransformerResult(Token::Construct(con))
+
+        CVariable::new(c.env, id, invariants, false).into()
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {

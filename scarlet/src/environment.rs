@@ -42,10 +42,6 @@ where
             uniques: Pool::new(),
             variables: Pool::new(),
         };
-        let root = this.constructs.push(AnnotatedConstruct {
-            definition: ConstructDefinition::Placeholder,
-            scope: Box::new(SRoot),
-        });
         for &name in BUILTIN_ITEM_NAMES {
             let id = this.push_placeholder();
             this.builtin_items.insert(name, id);
@@ -75,25 +71,10 @@ where
         self.constructs.push(con)
     }
 
-    pub fn define_placeholder(
-        &mut self,
-        con: ConstructId,
-        def: impl Construct + 'static,
-        scope: impl Scope + 'static,
-    ) {
-        let definition = ConstructDefinition::Resolved(Box::new(def));
-        let scope = Box::new(scope);
-        self.constructs[con] = AnnotatedConstruct { definition, scope }
-    }
-
-    pub fn push_construct(
-        &mut self,
-        construct: BoxedConstruct,
-        scope: impl Scope + 'static,
-    ) -> ConstructId {
+    pub fn push_construct(&mut self, construct: impl Construct) -> ConstructId {
         let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Resolved(construct),
-            scope: Box::new(scope),
+            definition: ConstructDefinition::Resolved(Box::new(construct)),
+            scope: Box::new(SPlaceholder),
         };
         self.constructs.push(con)
     }
@@ -102,35 +83,37 @@ where
         self.uniques.push(Unique)
     }
 
-    pub fn push_unresolved(
-        &mut self,
-        token: Token<'x>,
-        scope: impl Scope + 'static,
-    ) -> ConstructId {
-        token.set_scope_of_items(self, &scope);
+    pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
         if let Token::Construct(con) = token {
             con
         } else {
             let con = AnnotatedConstruct {
                 definition: ConstructDefinition::Unresolved(token),
-                scope: Box::new(scope),
+                scope: Box::new(SPlaceholder),
             };
             self.constructs.push(con)
         }
     }
 
-    pub fn get_root(&self) -> ConstructId {
-        self.constructs.first().unwrap()
-    }
-
-    pub fn set_root(&mut self, def: ConstructDefinition<'x>) {
-        let root = self.get_root();
-        self.constructs[root].definition = def;
+    pub fn set_scope(&mut self, of: ConstructId, scope: &dyn Scope) {
+        if let ConstructDefinition::Unresolved(token) = &self.constructs[of].definition {
+            let token = token.clone();
+            token.set_scope_of_items(self, scope);
+        }
+        self.constructs[of].scope = scope.dyn_clone();
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {
         let con = self.get_construct_definition(con_id).dyn_clone();
         con.check(self);
+    }
+
+    pub(crate) fn check_all(&mut self) {
+        let mut next_id = self.constructs.first();
+        while let Some(id) = next_id {
+            self.check(id);
+            next_id = self.constructs.next(id);
+        }
     }
 
     pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {

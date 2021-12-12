@@ -3,10 +3,25 @@ use itertools::Itertools;
 use super::{
     substitution::Substitutions, variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
+use crate::{
+    environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CEqual(pub ConstructId, pub ConstructId);
+pub struct CEqual(ConstructId, ConstructId);
+
+impl CEqual {
+    pub fn new<'x>(
+        env: &mut Environment<'x>,
+        left: ConstructId,
+        right: ConstructId,
+    ) -> ConstructId {
+        let con = env.push_construct(Self(left, right));
+        env.set_scope(left, &SPlain(con));
+        env.set_scope(right, &SPlain(con));
+        con
+    }
+}
 
 impl_any_eq_for_construct!(CEqual);
 
@@ -40,6 +55,6 @@ impl Construct for CEqual {
     ) -> ConstructId {
         let left = env.substitute(self.0, substitutions);
         let right = env.substitute(self.1, substitutions);
-        env.push_construct(Box::new(Self(left, right)), vec![left, right])
+        Self::new(env, left, right)
     }
 }

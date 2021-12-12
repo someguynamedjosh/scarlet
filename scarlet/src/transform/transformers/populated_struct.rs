@@ -36,21 +36,11 @@ impl Transformer for PopulatedStruct {
             String::new()
         };
         assert_eq!(contents.len(), 2);
-        let value = c.push_unresolved(contents[0].clone());
-        let rest = c.push_unresolved(contents[1].clone());
-        let def = Box::new(CPopulatedStruct { label, value, rest });
-        let con = c.env.push_construct(def, vec![value, rest]);
 
-        let new_scope = Box::new(SFieldAndRest(con));
-        let old_scope = c.env.get_construct_scope(value);
-        c.env.change_scope(old_scope, new_scope);
+        let value = c.env.push_unresolved(contents[0].clone());
+        let rest = c.env.push_unresolved(contents[1].clone());
 
-        let new_scope = Box::new(SField(con));
-        let old_scope = c.env.get_construct_scope(rest);
-        c.env.change_scope(old_scope, new_scope);
-
-        c.env.check(con);
-        TransformerResult(Token::Construct(con))
+        CPopulatedStruct::new(c.env, label, value, rest).into()
     }
 
     fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
@@ -58,12 +48,11 @@ impl Transformer for PopulatedStruct {
             if let Some(structt) =
                 downcast_construct::<CPopulatedStruct>(&**c.env.get_construct_definition(con_id))
             {
-                let CPopulatedStruct {
-                    label: _,
-                    value,
-                    rest,
-                } = structt;
-                let contents = vec![structt.label.clone().into(), value.into(), rest.into()];
+                let contents = vec![
+                    structt.get_label().to_owned().into(),
+                    structt.get_value().into(),
+                    structt.get_rest().into(),
+                ];
                 return Some(Token::Stream {
                     label: "group[]",
                     contents,

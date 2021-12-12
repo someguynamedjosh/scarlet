@@ -6,7 +6,10 @@ use super::{
     ConstructDefinition,
 };
 use crate::{
-    environment::Environment, impl_any_eq_for_construct, scope::Scope, shared::TripleBool,
+    environment::Environment,
+    impl_any_eq_for_construct,
+    scope::{SPlain, Scope},
+    shared::TripleBool,
 };
 
 pub fn struct_from_unnamed_fields<'x>(
@@ -18,19 +21,40 @@ pub fn struct_from_unnamed_fields<'x>(
     } else {
         let first_field = fields.remove(0);
         let rest = struct_from_unnamed_fields(env, fields);
-        let con = CPopulatedStruct {
-            label: String::new(),
-            value: first_field,
-            rest,
-        };
-        env.push_construct(Box::new(con), vec![first_field, rest])
+        CPopulatedStruct::new(env, String::new(), first_field, rest)
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CPopulatedStruct {
-    pub label: String,
-    pub value: ConstructId,
-    pub rest: ConstructId,
+    label: String,
+    value: ConstructId,
+    rest: ConstructId,
+}
+
+impl CPopulatedStruct {
+    pub fn new<'x>(
+        env: &mut Environment<'x>,
+        label: String,
+        value: ConstructId,
+        rest: ConstructId,
+    ) -> ConstructId {
+        let con = env.push_construct(Self { label, value, rest });
+        env.set_scope(value, &SFieldAndRest(con));
+        env.set_scope(rest, &SField(con));
+        con
+    }
+
+    pub fn get_label(&self) -> &str {
+        &self.label[..]
+    }
+
+    pub fn get_value(&self) -> ConstructId {
+        self.value
+    }
+
+    pub fn get_rest(&self) -> ConstructId {
+        self.rest
+    }
 }
 
 impl_any_eq_for_construct!(CPopulatedStruct);
@@ -59,13 +83,9 @@ impl Construct for CPopulatedStruct {
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
     ) -> ConstructId {
-        let subbed = Self {
-            label: self.label.clone(),
-            value: env.substitute(self.value, substitutions),
-            rest: env.substitute(self.rest, substitutions),
-        };
-        let containing = vec![subbed.value, subbed.rest];
-        env.push_construct(Box::new(subbed), containing)
+        let value = env.substitute(self.value, substitutions);
+        let rest = env.substitute(self.rest, substitutions);
+        Self::new(env, self.label.clone(), value, rest)
     }
 }
 
@@ -116,7 +136,9 @@ impl Construct for CAtomicStructMember {
     ) -> ConstructId {
         let subbed_base = env.substitute(self.0, substitutions);
         let subbed = Self(subbed_base, self.1);
-        env.push_construct(Box::new(subbed), vec![subbed_base])
+        let con = env.push_construct(subbed);
+        env.set_scope(subbed_base, &SPlain(con));
+        con
     }
 }
 
@@ -128,7 +150,11 @@ impl Scope for SField {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        ident: &str,
+    ) -> Option<ConstructId> {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             if structt.label == ident {
@@ -169,7 +195,11 @@ impl Scope for SFieldAndRest {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        ident: &str,
+    ) -> Option<ConstructId> {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)

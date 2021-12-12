@@ -1,11 +1,20 @@
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
     constructs::substitution::{CSubstitution, Substitutions},
+    scope::{SPlain, Scope},
     tokens::structure::Token,
-    transform::{self, ApplyContext}, scope::Scope,
+    transform::{self, ApplyContext},
 };
 
 impl<'x> Environment<'x> {
+    pub fn resolve_all(&mut self) {
+        let mut next_id = self.constructs.first();
+        while let Some(id) = next_id {
+            self.resolve(id);
+            next_id = self.constructs.next(id);
+        }
+    }
+
     pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
         let con = &self.constructs[con_id];
         if let ConstructDefinition::Unresolved(token) = &con.definition {
@@ -13,8 +22,7 @@ impl<'x> Environment<'x> {
                 self.resolve(con_id)
             } else {
                 let token = token.clone();
-                let scope = &*con.scope;
-                let new_def = self.resolve_token(token, scope);
+                let new_def = self.resolve_token(token, con_id);
                 self.constructs[con_id].definition = new_def;
                 self.check(con_id);
                 self.resolve(con_id)
@@ -24,11 +32,11 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn resolve_token(&mut self, token: Token<'x>, scope: &dyn Scope) -> ConstructDefinition<'x> {
+    fn resolve_token(&mut self, token: Token<'x>, this: ConstructId) -> ConstructDefinition<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => {
-                let scope = scope.dyn_clone();
+                let scope = self.get_construct(this).scope.dyn_clone();
                 match scope.lookup_ident(self, ident.as_ref()) {
                     Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),
                     None => {
@@ -51,10 +59,10 @@ impl<'x> Environment<'x> {
                 label: "SUBSTITUTE",
                 mut contents,
             } => {
-                let base = self.push_unresolved(contents.remove(0), scope);
+                let base = self.push_unresolved(contents.remove(0));
                 self.reduce(base);
                 let base = self.resolve(base);
-                self.constructs[base].scope = scope.dyn_clone();
+                self.set_scope(base, &SPlain(this));
                 let mut deps = self.get_dependencies(base);
                 let mut subs = Substitutions::new();
                 let mut anonymous_subs = Vec::new();
@@ -70,7 +78,7 @@ impl<'x> Environment<'x> {
                     }
                 }
                 for sub in anonymous_subs {
-                    let sub = self.push_unresolved(sub, scope);
+                    let sub = self.push_unresolved(sub);
                     self.reduce(sub);
                     let sub = self.resolve(sub);
                     let mut match_found = false;
@@ -79,6 +87,7 @@ impl<'x> Environment<'x> {
                         if true {
                             let dep = deps.remove(idx);
                             subs.insert_no_replace(dep, sub);
+                            self.set_scope(sub, &SPlain(this));
                             match_found = true;
                             break;
                         }
@@ -92,7 +101,7 @@ impl<'x> Environment<'x> {
                         );
                     }
                 }
-                ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
+                CSubstitution::into(self, this, base, subs)
             }
             Token::Stream { label, .. } => todo!(
                 "Nice error, bad label '{:?}', expected CONSTRUCT_SYNTAX or SUBSTITUTE",

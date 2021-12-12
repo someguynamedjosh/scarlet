@@ -11,6 +11,12 @@ use crate::{
 
 pub struct TransformerResult<'x>(pub Token<'x>);
 
+impl<'x, T: Into<Token<'x>>> From<T> for TransformerResult<'x> {
+    fn from(value: T) -> Self {
+        Self(value.into())
+    }
+}
+
 pub struct ApplyContext<'a, 'x> {
     pub env: &'a mut Environment<'x>,
 }

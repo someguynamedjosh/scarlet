@@ -4,10 +4,20 @@ use super::{
     downcast_construct, structt::CPopulatedStruct, substitution::Substitutions, unique::CUnique,
     variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
+use crate::{
+    environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CIsPopulatedStruct(pub ConstructId);
+pub struct CIsPopulatedStruct(ConstructId);
+
+impl CIsPopulatedStruct {
+    pub fn new<'x>(env: &mut Environment<'x>, base: ConstructId) -> ConstructId {
+        let con = env.push_construct(Self(base));
+        env.set_scope(base, &SPlain(con));
+        con
+    }
+}
 
 impl_any_eq_for_construct!(CIsPopulatedStruct);
 
@@ -43,6 +53,6 @@ impl Construct for CIsPopulatedStruct {
         substitutions: &Substitutions,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
-        env.push_construct(Box::new(Self(base)), vec![base])
+        Self::new(env, base)
     }
 }

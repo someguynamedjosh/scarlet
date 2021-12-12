@@ -15,8 +15,14 @@ pub struct Unique;
 pub type UniquePool = Pool<Unique, 'U'>;
 pub type UniqueId = Id<'U'>;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CUnique(pub UniqueId);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CUnique(UniqueId);
+
+impl CUnique {
+    pub fn new<'x>(env: &mut Environment<'x>, id: UniqueId) -> ConstructId {
+        env.push_construct(Self(id))
+    }
+}
 
 impl_any_eq_for_construct!(CUnique);
 
@@ -48,6 +54,6 @@ impl Construct for CUnique {
         env: &mut Environment<'x>,
         _substitutions: &Substitutions,
     ) -> ConstructId {
-        env.push_construct(self.dyn_clone(), vec![])
+        Self::new(env, self.0)
     }
 }

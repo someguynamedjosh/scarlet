@@ -7,7 +7,7 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::{Scope, SPlain, SPlaceholder},
+    scope::Scope,
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
@@ -18,9 +18,40 @@ pub type VariableId = Id<'V'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CVariable {
-    pub id: VariableId,
-    pub invariants: Vec<ConstructId>,
-    pub capturing: bool,
+    id: VariableId,
+    invariants: Vec<ConstructId>,
+    capturing: bool,
+}
+
+impl CVariable {
+    pub fn new<'x>(
+        env: &mut Environment<'x>,
+        id: VariableId,
+        invariants: Vec<ConstructId>,
+        capturing: bool,
+    ) -> ConstructId {
+        let con = env.push_construct(Self {
+            id,
+            invariants: invariants.clone(),
+            capturing,
+        });
+        for &invariant in &invariants {
+            env.set_scope(invariant, &SVariableInvariants(con));
+        }
+        con
+    }
+
+    pub(crate) fn get_id(&self) -> VariableId {
+        self.id
+    }
+
+    pub(crate) fn get_invariants(&self) -> &[ConstructId] {
+        &self.invariants[..]
+    }
+
+    pub(crate) fn is_capturing(&self) -> bool {
+        self.capturing
+    }
 }
 
 impl CVariable {
@@ -83,12 +114,7 @@ impl Construct for CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        let new = Self {
-            id: self.id,
-            invariants: invariants.clone(),
-            capturing: self.capturing,
-        };
-        env.push_construct(Box::new(new), SPlaceholder)
+        Self::new(env, self.id, invariants.clone(), self.capturing)
     }
 }
 
@@ -100,7 +126,11 @@ impl Scope for SVariableInvariants {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, _env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        ident: &str,
+    ) -> Option<ConstructId> {
         if ident == "SELF" {
             Some(self.0)
         } else {

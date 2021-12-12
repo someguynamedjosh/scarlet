@@ -22,11 +22,13 @@ impl Transformer for OnPattern {
         c: &mut ApplyContext<'_, 't>,
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
-        let pattern = Token::Construct(c.push_unresolved(success.get_capture("pattern").clone()));
-        let value = Token::Construct(c.push_unresolved(success.get_capture("value").clone()));
+        let pattern = success.get_capture("pattern").clone();
+        let pattern = c.env.push_unresolved(pattern);
+        let value = success.get_capture("value").clone();
+        let value = c.env.push_unresolved(value);
         TransformerResult(Token::Stream {
             label: "ON",
-            contents: vec![pattern, value],
+            contents: vec![pattern.into(), value.into()],
         })
     }
 
@@ -46,10 +48,11 @@ impl Transformer for Else {
         c: &mut ApplyContext<'_, 't>,
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
-        let value = Token::Construct(c.push_unresolved(success.get_capture("value").clone()));
+        let value = success.get_capture("value").clone();
+        let value = c.env.push_unresolved(value);
         TransformerResult(Token::Stream {
             label: "ELSE",
-            contents: vec![value],
+            contents: vec![value.into()],
         })
     }
 

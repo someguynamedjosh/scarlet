@@ -12,9 +12,8 @@ impl<'x> Environment<'x> {
             .dyn_clone()
             .substitute(self, substitutions);
         if result != con_id {
-            let original_scope = self.get_construct_scope(con_id);
-            let original_parent = self.get_scope(original_scope).parent;
-            let result_scope = self.get_construct_scope(result);
+            let original_scope = self.get_construct(con_id).scope.dyn_clone();
+            self.set_scope(result, &*original_scope);
         }
         result
     }

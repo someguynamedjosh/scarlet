@@ -1,5 +1,6 @@
 use crate::{
     constructs::{is_populated_struct::CIsPopulatedStruct, shown::CShown},
+    scope::SPlain,
     tokens::structure::Token,
     transform::{transformers::special_members::base::SpecialMember, ApplyContext},
 };
@@ -16,9 +17,8 @@ impl SpecialMember for IsPopulatedStruct {
         base: Token<'t>,
         _paren_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let base = c.push_unresolved(base);
-        let con = Box::new(CIsPopulatedStruct(base));
-        Token::Construct(c.env.push_construct(con, vec![base]))
+        let base = c.env.push_unresolved(base);
+        CIsPopulatedStruct::new(c.env, base).into()
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {

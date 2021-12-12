@@ -20,8 +20,7 @@ impl Transformer for Unique {
         _success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let id = c.env.push_unique();
-        let con = c.env.push_construct(Box::new(CUnique(id)), vec![]);
-        TransformerResult(Token::Construct(con))
+        CUnique::new(c.env, id).into()
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {

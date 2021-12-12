@@ -11,7 +11,7 @@ impl<'x> Environment<'x> {
         for (_, acon) in &self.constructs {
             if let ConstructDefinition::Resolved(con) = &acon.definition {
                 if let Some(shown) = downcast_construct::<CShown>(&**con) {
-                    to_vomit.push(shown.0);
+                    to_vomit.push(shown.get_base());
                 }
             }
         }
@@ -21,12 +21,12 @@ impl<'x> Environment<'x> {
             println!("{:?} is\n{}", con_id, vomited);
             println!("depends on:");
             for dep in self.get_dependencies(con_id) {
-                let kind = match dep.capturing {
+                let kind = match dep.is_capturing() {
                     true => "capturing",
                     false => "without capturing",
                 };
                 println!("    {} (", kind);
-                for inv in &dep.invariants {
+                for inv in dep.get_invariants() {
                     println!("        {}", self.vomit(*inv));
                 }
                 println!("    )");
@@ -39,7 +39,6 @@ impl<'x> Environment<'x> {
     fn expand_token(&mut self, input: Token<'x>) -> Token<'x> {
         let extras = Default::default();
         let tfers = transform::all_transformers(&extras);
-        let _scope = self.root_scope();
         for tfer in &tfers {
             let mut context = ApplyContext { env: self };
             if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {

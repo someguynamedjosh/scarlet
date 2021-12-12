@@ -1,5 +1,6 @@
 use crate::{
     constructs::equal::CEqual,
+    scope::SPlain,
     tokens::structure::Token,
     transform::{
         basics::{ApplyContext, Transformer, TransformerResult},
@@ -24,11 +25,9 @@ macro_rules! binary_operator {
                 c: &mut ApplyContext<'_, 't>,
                 success: PatternMatchSuccess<'_, 't>,
             ) -> TransformerResult<'t> {
-                let left = c.push_unresolved(success.get_capture("left").clone());
-                let right = c.push_unresolved(success.get_capture("right").clone());
-                let result = ($constructor)(left, right);
-                let result = c.env.push_construct(Box::new(result), vec![left, right]);
-                TransformerResult(Token::Construct(result))
+                let left = c.env.push_unresolved(success.get_capture("left").clone());
+                let right = c.env.push_unresolved(success.get_capture("right").clone());
+                ($constructor)(c.env, left, right).into()
             }
 
             fn vomit<'x>(
@@ -49,7 +48,7 @@ macro_rules! binary_operator {
 // binary_operator!(Minus, OSub::<u32>::new(), PatPlain("-"));
 // binary_operator!(Modulo, OMod::<u32>::new(), PatPlain("mod"));
 
-binary_operator!(Equal, CEqual, PatPlain("="));
+binary_operator!(Equal, CEqual::new, PatPlain("="));
 
 // binary_operator!(GreaterThan, BuiltinOperation::GreaterThan32U,
 // PatPlain(">")); binary_operator!(
@@ -85,7 +84,7 @@ impl Transformer for Is {
         success: PatternMatchSuccess<'_, 't>,
     ) -> TransformerResult<'t> {
         let left = success.get_capture("left").clone();
-        let right = c.push_unresolved(success.get_capture("right").clone());
+        let right = c.env.push_unresolved(success.get_capture("right").clone());
         let right = Token::Construct(right);
         TransformerResult(Token::Stream {
             label: "target",

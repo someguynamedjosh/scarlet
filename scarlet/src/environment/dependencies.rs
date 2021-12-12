@@ -11,7 +11,7 @@ impl<'x> Environment<'x> {
     pub fn get_non_capturing_dependencies(&mut self, con_id: ConstructId) -> Vec<CVariable> {
         self.get_dependencies(con_id)
             .into_iter()
-            .filter(|x| !x.capturing)
+            .filter(|x| !x.is_capturing())
             .collect()
     }
 }

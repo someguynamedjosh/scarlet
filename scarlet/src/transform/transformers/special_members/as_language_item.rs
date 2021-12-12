@@ -19,7 +19,7 @@ impl SpecialMember for AsLanguageItem {
         base: Token<'t>,
         bracket_group: Option<Vec<Token<'t>>>,
     ) -> Token<'t> {
-        let id = c.push_unresolved(base);
+        let id = c.env.push_unresolved(base);
         let base = Token::Construct(id);
         // TODO: Nice errors.
         let bracket_group = bracket_group.unwrap();

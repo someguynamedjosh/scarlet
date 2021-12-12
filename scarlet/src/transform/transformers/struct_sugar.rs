@@ -68,22 +68,6 @@ impl Transformer for StructSugar {
     }
 
     fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
-        if let &Token::Construct(con_id) = to {
-            if let Some(structt) =
-                downcast_construct::<CPopulatedStruct>(&**c.env.get_construct_definition(con_id))
-            {
-                let CPopulatedStruct {
-                    label: _,
-                    value,
-                    rest,
-                } = structt;
-                let contents = vec![structt.label.clone().into(), value.into(), rest.into()];
-                return Some(Token::Stream {
-                    label: "group[]",
-                    contents,
-                });
-            }
-        }
         None
     }
 }

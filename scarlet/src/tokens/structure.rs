@@ -45,7 +45,7 @@ impl<'x> Token<'x> {
     pub fn set_scope_of_items(&self, env: &mut Environment<'x>, scope: &dyn Scope) {
         match self {
             Token::Construct(con) => {
-                env.get_construct(*con).scope = scope.dyn_clone();
+                env.set_scope(*con, scope);
             }
             Token::Plain(..) => (),
             Token::Stream { contents, .. } => {

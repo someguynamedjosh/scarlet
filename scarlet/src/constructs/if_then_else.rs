@@ -1,13 +1,34 @@
 use super::{
     substitution::Substitutions, variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, shared::TripleBool};
+use crate::{
+    environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CIfThenElse {
-    pub condition: ConstructId,
-    pub then: ConstructId,
-    pub elsee: ConstructId,
+    condition: ConstructId,
+    then: ConstructId,
+    elsee: ConstructId,
+}
+
+impl CIfThenElse {
+    pub fn new<'x>(
+        env: &mut Environment<'x>,
+        condition: ConstructId,
+        then: ConstructId,
+        elsee: ConstructId,
+    ) -> ConstructId {
+        let con = env.push_construct(Self {
+            condition,
+            then,
+            elsee,
+        });
+        env.set_scope(condition, &SPlain(con));
+        env.set_scope(then, &SPlain(con));
+        env.set_scope(elsee, &SPlain(con));
+        con
+    }
 }
 
 impl_any_eq_for_construct!(CIfThenElse);
@@ -56,13 +77,6 @@ impl Construct for CIfThenElse {
         let condition = env.substitute(self.condition, substitutions);
         let then = env.substitute(self.then, substitutions);
         let elsee = env.substitute(self.elsee, substitutions);
-        env.push_construct(
-            Box::new(Self {
-                condition,
-                then,
-                elsee,
-            }),
-            vec![condition, then, elsee],
-        )
+        Self::new(env, condition, then, elsee)
     }
 }
