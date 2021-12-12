@@ -96,11 +96,13 @@ where
     }
 
     pub fn set_scope(&mut self, of: ConstructId, scope: &dyn Scope) {
-        if let ConstructDefinition::Unresolved(token) = &self.constructs[of].definition {
-            let token = token.clone();
-            token.set_scope_of_items(self, scope);
+        if self.constructs[of].scope.is_placeholder() {
+            if let ConstructDefinition::Unresolved(token) = &self.constructs[of].definition {
+                let token = token.clone();
+                token.set_scope_of_items(self, scope);
+            }
+            self.constructs[of].scope = scope.dyn_clone();
         }
-        self.constructs[of].scope = scope.dyn_clone();
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {

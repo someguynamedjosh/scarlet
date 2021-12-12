@@ -5,7 +5,10 @@ use super::{
     ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
+    environment::Environment,
+    impl_any_eq_for_construct,
+    scope::SPlain,
+    shared::{Id, TripleBool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

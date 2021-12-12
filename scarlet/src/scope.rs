@@ -4,6 +4,11 @@ use crate::{constructs::ConstructId, environment::Environment, shared::TripleBoo
 
 pub trait Scope: Debug {
     fn dyn_clone(&self) -> Box<dyn Scope>;
+
+    fn is_placeholder(&self) -> bool {
+        false
+    }
+
     fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str)
         -> Option<ConstructId>;
     fn local_lookup_invariant<'x>(&self, env: &mut Environment<'x>, invariant: ConstructId)
@@ -27,8 +32,6 @@ pub trait Scope: Debug {
         if self.local_lookup_invariant(env, invariant) {
             true
         } else if let Some(parent) = self.parent() {
-            println!("{:#?}", env);
-            println!("{:#?}", parent);
             env.get_construct(parent)
                 .scope
                 .dyn_clone()
@@ -112,6 +115,10 @@ pub struct SPlaceholder;
 impl Scope for SPlaceholder {
     fn dyn_clone(&self) -> Box<dyn Scope> {
         Box::new(self.clone())
+    }
+
+    fn is_placeholder(&self) -> bool {
+        true
     }
 
     fn local_lookup_ident<'x>(

@@ -9,7 +9,7 @@ use crate::shared::{reset_color, set_color_index};
 
 #[derive(Serialize)]
 pub struct Id</* T, */ const C: char> {
-    pub(super) pool_id: u64,
+    pub pool_id: u64,
     pub index: usize,
     // pub(super) _pd: PhantomData<*const T>,
 }
