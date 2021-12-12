@@ -1,22 +1,40 @@
 use std::fmt::Debug;
 
-use crate::{
-    constructs::ConstructId,
-    environment::Environment,
-};
+use crate::{constructs::ConstructId, environment::Environment, shared::TripleBool};
 
 pub trait Scope: Debug {
     fn dyn_clone(&self) -> Box<dyn Scope>;
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId>;
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str)
+        -> Option<ConstructId>;
+    fn local_lookup_invariant<'x>(&self, env: &mut Environment<'x>, invariant: ConstructId)
+        -> bool;
     fn parent(&self) -> Option<ConstructId>;
 
     fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
         if let Some(result) = self.local_lookup_ident(env, ident) {
             Some(result)
         } else if let Some(parent) = self.parent() {
-            env.get_construct(parent).scope.dyn_clone().lookup_ident(env, ident)
+            env.get_construct(parent)
+                .scope
+                .dyn_clone()
+                .lookup_ident(env, ident)
         } else {
             None
+        }
+    }
+
+    fn lookup_invariant<'x>(&self, env: &mut Environment<'x>, invariant: ConstructId) -> bool {
+        if self.local_lookup_invariant(env, invariant) {
+            true
+        } else if let Some(parent) = self.parent() {
+            println!("{:#?}", env);
+            println!("{:#?}", parent);
+            env.get_construct(parent)
+                .scope
+                .dyn_clone()
+                .lookup_invariant(env, invariant)
+        } else {
+            false
         }
     }
 }
@@ -29,8 +47,20 @@ impl Scope for SPlain {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, _env: &mut Environment<'x>, _ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        _ident: &str,
+    ) -> Option<ConstructId> {
         None
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
+        false
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -46,7 +76,11 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        ident: &str,
+    ) -> Option<ConstructId> {
         if ident == "true" {
             Some(env.get_builtin_item("true").into())
         } else if ident == "false" {
@@ -56,6 +90,15 @@ impl Scope for SRoot {
         } else {
             None
         }
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
+        let truee = env.get_builtin_item("true");
+        env.is_def_equal(invariant, truee) == TripleBool::True
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -71,7 +114,19 @@ impl Scope for SPlaceholder {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        ident: &str,
+    ) -> Option<ConstructId> {
+        unreachable!()
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
         unreachable!()
     }
 

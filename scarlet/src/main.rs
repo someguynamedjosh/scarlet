@@ -27,7 +27,6 @@ fn main() {
     let root = env.push_unresolved(root.self_content.clone());
     env.set_scope(root, &SRoot);
     env.resolve_all();
-    env.check_all();
     env.reduce_all();
     env.check_all();
     let root = env.resolve(root);

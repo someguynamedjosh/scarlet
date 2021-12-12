@@ -24,7 +24,6 @@ impl<'x> Environment<'x> {
                 let token = token.clone();
                 let new_def = self.resolve_token(token, con_id);
                 self.constructs[con_id].definition = new_def;
-                self.check(con_id);
                 self.resolve(con_id)
             }
         } else {
@@ -53,7 +52,10 @@ impl<'x> Environment<'x> {
                 let mut contents = contents;
                 transform::apply_transformers(&mut context, &mut contents, &Default::default());
                 assert_eq!(contents.len(), 1);
-                ConstructDefinition::Unresolved(contents.into_iter().next().unwrap())
+                let token = contents.into_iter().next().unwrap();
+                let scope = self.get_construct(this).scope.dyn_clone();
+                token.set_scope_of_items(self, &*scope);
+                ConstructDefinition::Unresolved(token)
             }
             Token::Stream {
                 label: "SUBSTITUTE",

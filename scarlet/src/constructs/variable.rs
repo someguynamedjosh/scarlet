@@ -52,32 +52,23 @@ impl CVariable {
     pub(crate) fn is_capturing(&self) -> bool {
         self.capturing
     }
-}
 
-impl CVariable {
     pub fn is_same_variable_as(&self, other: &Self) -> bool {
         self.id == other.id && self.capturing == other.capturing
     }
 
-    pub fn can_be_assigned(&self, value: ConstructId, env: &mut Environment) -> TripleBool {
+    pub fn can_be_assigned(&self, value: ConstructId, env: &mut Environment) -> bool {
         let mut substitutions = OrderedMap::new();
         substitutions.insert_no_replace(self.clone(), value);
-        let mut known_true = true;
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
             env.reduce(subbed);
             let subbed = env.resolve(subbed);
-            match env.is_def_equal(subbed, env.get_builtin_item("true")) {
-                TripleBool::True => (),
-                TripleBool::False => return TripleBool::False,
-                TripleBool::Unknown => known_true = false,
+            if !env.has_invariant(subbed, value) {
+                return false;
             }
         }
-        if known_true {
-            TripleBool::True
-        } else {
-            TripleBool::Unknown
-        }
+        true
     }
 }
 
@@ -89,6 +80,14 @@ impl Construct for CVariable {
     }
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn generated_invariants<'x>(
+        &self,
+        this: ConstructId,
+        env: &mut Environment<'x>,
+    ) -> Vec<ConstructId> {
+        self.invariants.clone()
+    }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         vec![self.clone()]
@@ -136,6 +135,14 @@ impl Scope for SVariableInvariants {
         } else {
             None
         }
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
+        false
     }
 
     fn parent(&self) -> Option<ConstructId> {

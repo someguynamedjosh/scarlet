@@ -28,6 +28,14 @@ impl Construct for CIsPopulatedStruct {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
+    fn generated_invariants<'x>(
+        &self,
+        this: ConstructId,
+        env: &mut Environment<'x>,
+    ) -> Vec<ConstructId> {
+        env.generated_invariants(self.0)
+    }
+
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         env.get_dependencies(self.0)
     }

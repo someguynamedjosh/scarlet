@@ -60,6 +60,11 @@ pub trait Construct: Any + Debug + AnyEq {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable>;
 
     #[allow(unused_variables)]
+    fn generated_invariants<'x>(&self, this: ConstructId, env: &mut Environment<'x>) -> Vec<ConstructId> {
+        vec![]
+    }
+
+    #[allow(unused_variables)]
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         TripleBool::Unknown
     }

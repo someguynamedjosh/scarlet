@@ -50,18 +50,13 @@ impl Construct for CSubstitution {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         for (target, value) in &self.1 {
-            match target.can_be_assigned(*value, env) {
-                TripleBool::True => (),
-                TripleBool::False => todo!(
-                    "nice error, argument {:?} definitely cannot be assigned to {:?}",
+            if !target.can_be_assigned(*value, env) {
+                println!("{:#?}", env);
+                todo!(
+                    "nice error, argument {:?} does not meet all of {:?}'s invariants",
                     value,
                     target
-                ),
-                TripleBool::Unknown => todo!(
-                    "nice error, argument {:?} might not be assignable to {:?}",
-                    value,
-                    target
-                ),
+                );
             }
         }
     }
@@ -82,6 +77,7 @@ impl Construct for CSubstitution {
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
+        self.check(env);
         let subbed = env.substitute(self.0, &self.1);
         env.reduce(subbed);
         subbed.into()

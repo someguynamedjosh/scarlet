@@ -66,6 +66,18 @@ impl Construct for CPopulatedStruct {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
+    fn generated_invariants<'x>(
+        &self,
+        this: ConstructId,
+        env: &mut Environment<'x>,
+    ) -> Vec<ConstructId> {
+        [
+            env.generated_invariants(self.value),
+            env.generated_invariants(self.rest),
+        ]
+        .concat()
+    }
+
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         [
             env.get_dependencies(self.rest),
@@ -107,6 +119,14 @@ impl Construct for CAtomicStructMember {
     }
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
+
+    fn generated_invariants<'x>(
+        &self,
+        this: ConstructId,
+        env: &mut Environment<'x>,
+    ) -> Vec<ConstructId> {
+        env.generated_invariants(self.0)
+    }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         env.get_dependencies(self.0)
@@ -167,6 +187,18 @@ impl Scope for SField {
         }
     }
 
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
+            false
+        } else {
+            unreachable!()
+        }
+    }
+
     fn parent(&self) -> Option<ConstructId> {
         Some(self.0)
     }
@@ -206,6 +238,14 @@ impl Scope for SFieldAndRest {
         } else {
             unreachable!()
         }
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
+        false
     }
 
     fn parent(&self) -> Option<ConstructId> {
