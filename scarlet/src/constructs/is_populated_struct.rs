@@ -27,7 +27,7 @@ impl Construct for CIsPopulatedStruct {
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        let con = env.get_construct(self.0);
+        let con = env.get_construct_definition(self.0);
         if downcast_construct::<CPopulatedStruct>(&**con).is_some() {
             env.get_builtin_item("true").into()
         } else if downcast_construct::<CUnique>(&**con).is_some() {

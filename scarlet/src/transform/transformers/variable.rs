@@ -6,6 +6,7 @@ use crate::{
         structt::{self},
         variable::{CVariable, SVariableInvariants},
     },
+    scope::{SPlaceholder, SPlain},
     tokens::structure::Token,
     transform::{
         apply,
@@ -37,22 +38,19 @@ impl Transformer for Variable {
     ) -> TransformerResult<'t> {
         let mut invariants = success.get_capture("invariants").unwrap_stream().clone();
         apply::apply_transformers(c, &mut invariants, &Default::default());
+
+        let con = c.env.push_placeholder();
         let invariants = invariants
             .into_iter()
-            .map(|x| c.push_unresolved(x))
+            .map(|x| c.env.push_unresolved(x, SVariableInvariants(con)))
             .collect_vec();
         let id = c.env.variables.push(constructs::variable::Variable);
-        let def = Box::new(CVariable {
+        let def = CVariable {
             id,
             invariants: invariants.clone(),
             capturing: false,
-        });
-        let con = c.env.push_construct(def, invariants.clone());
-        for inv in invariants {
-            let old_scope = c.env.get_construct_scope(inv);
-            let new_scope = SVariableInvariants(con);
-            c.env.change_scope(old_scope, Box::new(new_scope));
-        }
+        };
+        c.env.define_placeholder(con, def, SPlaceholder);
         c.env.check(con);
         TransformerResult(Token::Construct(con))
     }

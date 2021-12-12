@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    constructs::ConstructId,
+    constructs::{Construct, ConstructId},
     environment::Environment,
-    scope::{SEmpty, Scope, ScopeId},
+    scope::{SPlain, Scope},
     shared::OwnedOrBorrowed,
     tokens::structure::Token,
     transform::pattern::{Pattern, PatternMatchSuccess},
@@ -13,19 +13,6 @@ pub struct TransformerResult<'x>(pub Token<'x>);
 
 pub struct ApplyContext<'a, 'x> {
     pub env: &'a mut Environment<'x>,
-}
-
-impl<'a, 'x> ApplyContext<'a, 'x> {
-    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ScopeId {
-        self.env.push_scope(scope, None)
-    }
-
-    pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
-        let scope = self.push_scope(Box::new(SEmpty));
-        token.set_parent_scope_of_items(self.env, scope);
-        let con = self.env.push_unresolved(token.clone(), scope);
-        con
-    }
 }
 
 pub trait Transformer {

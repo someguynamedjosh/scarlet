@@ -2,7 +2,7 @@ use super::{ConstructId, Environment};
 
 impl<'x> Environment<'x> {
     pub fn reduce(&mut self, con_id: ConstructId) {
-        let con = self.get_construct(con_id).dyn_clone();
+        let con = self.get_construct_definition(con_id).dyn_clone();
         let reduced = con.reduce(self);
         self.constructs[con_id].definition = reduced;
     }

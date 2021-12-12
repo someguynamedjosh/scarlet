@@ -3,7 +3,7 @@ use std::{any::Any, fmt::Debug};
 use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
     environment::Environment,
-    scope::ScopeId,
+    scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},
     tokens::structure::Token,
 };
@@ -45,7 +45,7 @@ impl<'x> From<ConstructId> for ConstructDefinition<'x> {
 #[derive(Debug)]
 pub struct AnnotatedConstruct<'x> {
     pub definition: ConstructDefinition<'x>,
-    pub scope: ScopeId,
+    pub scope: Box<dyn Scope>,
 }
 
 pub type ConstructPool<'x> = Pool<AnnotatedConstruct<'x>, 'C'>;

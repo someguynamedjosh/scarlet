@@ -31,7 +31,7 @@ impl Transformer for IfThenElse {
         let mut contents = success.get_capture("args").unwrap_stream().clone();
         apply::apply_transformers(c, &mut contents, &Default::default());
         assert_eq!(contents.len(), 3);
-        let condition = c.push_unresolved(contents[0].clone());
+        let condition = c.push_unresolved(contents[0].clone(), SFieldAndRest(con));
         let then = c.push_unresolved(contents[1].clone());
         let elsee = c.push_unresolved(contents[2].clone());
         let def = Box::new(CIfThenElse { condition, then, elsee });
@@ -52,7 +52,7 @@ impl Transformer for IfThenElse {
     fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
         if let &Token::Construct(con_id) = to {
             if let Some(structt) =
-                downcast_construct::<CPopulatedStruct>(&**c.env.get_construct(con_id))
+                downcast_construct::<CPopulatedStruct>(&**c.env.get_construct_definition(con_id))
             {
                 let CPopulatedStruct {
                     label: _,

@@ -13,7 +13,7 @@ mod tokens;
 pub mod transform;
 mod util;
 
-use crate::environment::Environment;
+use crate::{constructs::ConstructDefinition, environment::Environment};
 
 fn main() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
@@ -24,8 +24,8 @@ fn main() {
     println!("{:#?}", root);
 
     let mut env = Environment::new();
-    let scope = env.root_scope();
-    let root = env.push_unresolved(root.self_content.clone(), scope);
+    env.set_root(ConstructDefinition::Unresolved(root.self_content.clone()));
+    let root = env.get_root();
     let root = env.resolve(root);
     env.reduce_all();
     let root = env.resolve(root);

@@ -98,7 +98,7 @@ impl Construct for CAtomicStructMember {
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
         env.reduce(self.0);
-        if let Some(structt) = as_struct(&**env.get_construct(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             match self.1 {
                 AtomicStructMember::Label => todo!(),
                 AtomicStructMember::Value => structt.value.into(),
@@ -128,8 +128,8 @@ impl Scope for SField {
         Box::new(self.clone())
     }
 
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
-        if let Some(structt) = as_struct(&**env.get_construct(self.0)) {
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             if structt.label == ident {
                 Some(structt.value)
@@ -139,6 +139,10 @@ impl Scope for SField {
         } else {
             unreachable!()
         }
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        Some(self.0)
     }
 }
 
@@ -152,7 +156,7 @@ fn lookup_ident_in<'x>(
 ) -> Option<ConstructId> {
     if inn.label == ident {
         Some(inn.value)
-    } else if let Some(rest) = as_struct(&**env.get_construct(inn.rest)) {
+    } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
         lookup_ident_in(env, ident, &rest)
     } else {
@@ -165,12 +169,16 @@ impl Scope for SFieldAndRest {
         Box::new(self.clone())
     }
 
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
-        if let Some(structt) = as_struct(&**env.get_construct(self.0)) {
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)
         } else {
             unreachable!()
         }
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        Some(self.0)
     }
 }

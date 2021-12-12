@@ -3,7 +3,7 @@ use crate::constructs::variable::CVariable;
 
 impl<'x> Environment<'x> {
     pub fn get_dependencies(&mut self, con_id: ConstructId) -> Vec<CVariable> {
-        self.get_construct(con_id)
+        self.get_construct_definition(con_id)
             .dyn_clone()
             .get_dependencies(self)
     }

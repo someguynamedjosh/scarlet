@@ -7,7 +7,7 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::Scope,
+    scope::{Scope, SPlain, SPlaceholder},
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
@@ -88,7 +88,7 @@ impl Construct for CVariable {
             invariants: invariants.clone(),
             capturing: self.capturing,
         };
-        env.push_construct(Box::new(new), invariants)
+        env.push_construct(Box::new(new), SPlaceholder)
     }
 }
 
@@ -100,11 +100,15 @@ impl Scope for SVariableInvariants {
         Box::new(self.clone())
     }
 
-    fn lookup_ident<'x>(&self, _env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(&self, _env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
         if ident == "SELF" {
             Some(self.0)
         } else {
             None
         }
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        Some(self.0)
     }
 }

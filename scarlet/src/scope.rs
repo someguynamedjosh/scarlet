@@ -3,53 +3,38 @@ use std::fmt::Debug;
 use crate::{
     constructs::ConstructId,
     environment::Environment,
-    shared::{Id, Pool},
 };
 
-pub type ScopeId = Id<'S'>;
-pub type ScopePool = Pool<AnnotatedScope, 'S'>;
-#[derive(Debug)]
-pub struct AnnotatedScope {
-    pub scope: Box<dyn Scope>,
-    pub parent: Option<ScopeId>,
-}
+pub trait Scope: Debug {
+    fn dyn_clone(&self) -> Box<dyn Scope>;
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId>;
+    fn parent(&self) -> Option<ConstructId>;
 
-impl Clone for AnnotatedScope {
-    fn clone(&self) -> Self {
-        Self {
-            scope: self.scope.dyn_clone(),
-            parent: self.parent,
-        }
-    }
-}
-
-impl AnnotatedScope {
-    pub fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
-        if let Some(result) = self.scope.lookup_ident(env, ident) {
+    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+        if let Some(result) = self.local_lookup_ident(env, ident) {
             Some(result)
-        } else if let Some(parent) = self.parent {
-            env.get_scope(parent).clone().lookup_ident(env, ident)
+        } else if let Some(parent) = self.parent() {
+            env.get_construct(parent).scope.dyn_clone().lookup_ident(env, ident)
         } else {
             None
         }
     }
 }
 
-pub trait Scope: Debug {
-    fn dyn_clone(&self) -> Box<dyn Scope>;
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId>;
-}
-
 #[derive(Debug, Clone)]
-pub struct SEmpty;
+pub struct SPlain(pub ConstructId);
 
-impl Scope for SEmpty {
+impl Scope for SPlain {
     fn dyn_clone(&self) -> Box<dyn Scope> {
         Box::new(self.clone())
     }
 
-    fn lookup_ident<'x>(&self, _env: &mut Environment<'x>, _ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(&self, _env: &mut Environment<'x>, _ident: &str) -> Option<ConstructId> {
         None
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        Some(self.0)
     }
 }
 
@@ -61,7 +46,7 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
         if ident == "true" {
             Some(env.get_builtin_item("true").into())
         } else if ident == "false" {
@@ -71,5 +56,26 @@ impl Scope for SRoot {
         } else {
             None
         }
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        None
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SPlaceholder;
+
+impl Scope for SPlaceholder {
+    fn dyn_clone(&self) -> Box<dyn Scope> {
+        Box::new(self.clone())
+    }
+
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
+        unreachable!()
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        unreachable!()
     }
 }

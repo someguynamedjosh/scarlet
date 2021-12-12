@@ -56,7 +56,7 @@ impl Transformer for PopulatedStruct {
     fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>> {
         if let &Token::Construct(con_id) = to {
             if let Some(structt) =
-                downcast_construct::<CPopulatedStruct>(&**c.env.get_construct(con_id))
+                downcast_construct::<CPopulatedStruct>(&**c.env.get_construct_definition(con_id))
             {
                 let CPopulatedStruct {
                     label: _,

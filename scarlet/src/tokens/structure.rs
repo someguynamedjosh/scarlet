@@ -3,7 +3,7 @@ use std::{
     fmt::{self, Debug, Formatter},
 };
 
-use crate::{constructs::base::ConstructId, environment::Environment, scope::ScopeId, shared};
+use crate::{constructs::base::ConstructId, environment::Environment, shared, scope::Scope};
 
 pub type TokenStream<'x> = Vec<Token<'x>>;
 
@@ -42,16 +42,15 @@ impl<'x> From<ConstructId> for Token<'x> {
 }
 
 impl<'x> Token<'x> {
-    pub fn set_parent_scope_of_items(&self, env: &mut Environment<'x>, parent: ScopeId) {
+    pub fn set_scope_of_items(&self, env: &mut Environment<'x>, scope: &dyn Scope) {
         match self {
             Token::Construct(con) => {
-                let scope = env.get_construct_scope(*con);
-                env.set_scope_parent(scope, parent)
+                env.get_construct(*con).scope = scope.dyn_clone();
             }
             Token::Plain(..) => (),
             Token::Stream { contents, .. } => {
                 for token in contents {
-                    token.set_parent_scope_of_items(env, parent)
+                    token.set_scope_of_items(env, scope)
                 }
             }
         }

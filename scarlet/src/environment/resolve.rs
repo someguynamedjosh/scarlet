@@ -1,9 +1,8 @@
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
     constructs::substitution::{CSubstitution, Substitutions},
-    scope::ScopeId,
     tokens::structure::Token,
-    transform::{self, ApplyContext},
+    transform::{self, ApplyContext}, scope::Scope,
 };
 
 impl<'x> Environment<'x> {
@@ -14,7 +13,7 @@ impl<'x> Environment<'x> {
                 self.resolve(con_id)
             } else {
                 let token = token.clone();
-                let scope = con.scope;
+                let scope = &*con.scope;
                 let new_def = self.resolve_token(token, scope);
                 self.constructs[con_id].definition = new_def;
                 self.check(con_id);
@@ -25,11 +24,11 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn resolve_token(&mut self, token: Token<'x>, scope: ScopeId) -> ConstructDefinition<'x> {
+    fn resolve_token(&mut self, token: Token<'x>, scope: &dyn Scope) -> ConstructDefinition<'x> {
         match token {
             Token::Construct(..) => unreachable!(),
             Token::Plain(ident) => {
-                let scope = self.get_scope(scope).clone();
+                let scope = scope.dyn_clone();
                 match scope.lookup_ident(self, ident.as_ref()) {
                     Some(id) => ConstructDefinition::Unresolved(Token::Construct(id)),
                     None => {
@@ -55,7 +54,7 @@ impl<'x> Environment<'x> {
                 let base = self.push_unresolved(contents.remove(0), scope);
                 self.reduce(base);
                 let base = self.resolve(base);
-                self.constructs[base].scope = scope;
+                self.constructs[base].scope = scope.dyn_clone();
                 let mut deps = self.get_dependencies(base);
                 let mut subs = Substitutions::new();
                 let mut anonymous_subs = Vec::new();
@@ -92,10 +91,6 @@ impl<'x> Environment<'x> {
                             deps
                         );
                     }
-                }
-                for (_, sub) in &subs {
-                    let child_scope = self.get_construct_scope(*sub);
-                    self.scopes[child_scope].parent = Some(scope);
                 }
                 ConstructDefinition::Resolved(Box::new(CSubstitution(base, subs)))
             }

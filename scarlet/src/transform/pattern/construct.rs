@@ -32,7 +32,7 @@ impl<C: Construct> Pattern for PatCaptureConstruct<C> {
         if at_index >= stream.len() {
             Err(())
         } else if let &Token::Construct(con_id) = &stream[at_index] {
-            let con = env.get_construct(con_id);
+            let con = env.get_construct_definition(con_id);
             if downcast_construct::<C>(&**con).is_some() {
                 let mut res = PatternMatchSuccess::at(at_index);
                 res.captures.insert(self.key, &stream[at_index]);
