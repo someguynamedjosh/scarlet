@@ -1,9 +1,4 @@
 {
-    OnlyTrue[false]
-
-    OnlyTrue IS VAR[identity[SELF = true]]
-    identity IS VAR[]
-    
     true IS UNIQUE.AS_LANG_ITEM[true]
     false IS UNIQUE.AS_LANG_ITEM[false]
     void IS UNIQUE.AS_LANG_ITEM[void]

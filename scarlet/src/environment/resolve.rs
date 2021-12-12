@@ -60,7 +60,7 @@ impl<'x> Environment<'x> {
                 mut contents,
             } => {
                 let base = self.push_unresolved(contents.remove(0));
-                self.reduce(base);
+                self.set_scope(base, &SPlain(this));
                 let base = self.resolve(base);
                 self.set_scope(base, &SPlain(this));
                 let mut deps = self.get_dependencies(base);
@@ -79,7 +79,7 @@ impl<'x> Environment<'x> {
                 }
                 for sub in anonymous_subs {
                     let sub = self.push_unresolved(sub);
-                    self.reduce(sub);
+                    self.set_scope(sub, &SPlain(this));
                     let sub = self.resolve(sub);
                     let mut match_found = false;
                     for (idx, _dep) in deps.iter().enumerate() {
