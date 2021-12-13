@@ -1,5 +1,6 @@
 use super::{
-    substitution::Substitutions, variable::CVariable, Construct, ConstructDefinition, ConstructId,
+    downcast_construct, substitution::Substitutions, variable::CVariable, Construct,
+    ConstructDefinition, ConstructId,
 };
 use crate::{
     environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
@@ -49,8 +50,16 @@ impl Construct for CIfThenElse {
         .concat()
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
-        TripleBool::Unknown
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            TripleBool::and(vec![
+                env.is_def_equal(self.condition, other.condition),
+                env.is_def_equal(self.then, other.then),
+                env.is_def_equal(self.elsee, other.elsee),
+            ])
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {

@@ -23,3 +23,21 @@ pub enum TripleBool {
     False,
     Unknown,
 }
+
+impl TripleBool {
+    pub fn and(over: Vec<TripleBool>) -> TripleBool {
+        let mut known_true = true;
+        for b in over {
+            match b {
+                TripleBool::True => (),
+                TripleBool::False => return TripleBool::False,
+                TripleBool::Unknown => known_true = false,
+            }
+        }
+        if known_true {
+            TripleBool::True
+        } else {
+            TripleBool::Unknown
+        }
+    }
+}

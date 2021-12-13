@@ -1,8 +1,8 @@
 use itertools::Itertools;
 
 use super::{
-    if_then_else::CIfThenElse, substitution::Substitutions, variable::CVariable, Construct,
-    ConstructDefinition, ConstructId,
+    downcast_construct, if_then_else::CIfThenElse, substitution::Substitutions,
+    variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
     environment::Environment,
@@ -54,9 +54,11 @@ impl Construct for CEqual {
     ) -> Vec<ConstructId> {
         let truee = env.get_builtin_item("true");
         let falsee = env.get_builtin_item("false");
-        let is_true = Self::new(env, this, truee);
+        let is_true = this;
         let is_false = Self::new(env, this, falsee);
         let is_bool = CIfThenElse::new(env, is_true, truee, is_false);
+
+        println!("is_bool: {:#?}", is_bool);
 
         env.set_scope(is_bool, &SPlain(this));
 
@@ -72,8 +74,15 @@ impl Construct for CEqual {
         .concat()
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
-        TripleBool::Unknown
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            TripleBool::and(vec![
+                env.is_def_equal(self.left, other.left),
+                env.is_def_equal(self.right, other.right),
+            ])
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {

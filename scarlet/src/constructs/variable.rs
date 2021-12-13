@@ -2,6 +2,7 @@ use itertools::Itertools;
 
 use super::{
     base::{Construct, ConstructId},
+    downcast_construct,
     substitution::Substitutions,
 };
 use crate::{
@@ -93,7 +94,12 @@ impl Construct for CVariable {
         vec![self.clone()]
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            if self.is_same_variable_as(other) {
+                return TripleBool::True;
+            }
+        }
         TripleBool::Unknown
     }
 
