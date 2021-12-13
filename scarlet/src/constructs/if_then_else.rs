@@ -61,12 +61,14 @@ impl Construct for CIfThenElse {
             }
             if is_conditional {
                 let conditional_inv = CIfThenElse::new(env, self.condition, true_inv, truee);
+                env.reduce(conditional_inv);
                 result.push(conditional_inv);
             }
         }
         for false_inv in false_invs {
             // Everything left over is conditional.
             let conditional_inv = CIfThenElse::new(env, self.condition, truee, false_inv);
+            env.reduce(conditional_inv);
             result.push(conditional_inv);
         }
         result
