@@ -22,6 +22,7 @@ pub struct CVariable {
     id: VariableId,
     invariants: Vec<ConstructId>,
     capturing: bool,
+    depends_on: Vec<CVariable>,
 }
 
 impl CVariable {
@@ -30,11 +31,13 @@ impl CVariable {
         id: VariableId,
         invariants: Vec<ConstructId>,
         capturing: bool,
+        depends_on: Vec<CVariable>,
     ) -> ConstructId {
         let con = env.push_construct(Self {
             id,
             invariants: invariants.clone(),
             capturing,
+            depends_on,
         });
         for &invariant in &invariants {
             env.set_scope(invariant, &SVariableInvariants(con));
@@ -66,6 +69,18 @@ impl CVariable {
             env.reduce(subbed);
             let subbed = env.resolve(subbed);
             if !env.has_invariant(subbed, value) {
+                return false;
+            }
+        }
+        for required_dep in &self.depends_on {
+            let mut met = false;
+            for value_dep in env.get_dependencies(value) {
+                if value_dep.is_same_variable_as(&required_dep) {
+                    met = true;
+                    break;
+                }
+            }
+            if !met {
                 return false;
             }
         }
@@ -119,7 +134,13 @@ impl Construct for CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        Self::new(env, self.id, invariants.clone(), self.capturing)
+        Self::new(
+            env,
+            self.id,
+            invariants.clone(),
+            self.capturing,
+            self.depends_on.clone(),
+        )
     }
 }
 
