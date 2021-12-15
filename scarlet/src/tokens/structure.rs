@@ -3,7 +3,7 @@ use std::{
     fmt::{self, Debug, Formatter},
 };
 
-use crate::{constructs::base::ConstructId, environment::Environment, shared, scope::Scope};
+use crate::{constructs::base::ConstructId, environment::Environment, scope::Scope, shared};
 
 pub type TokenStream<'x> = Vec<Token<'x>>;
 
@@ -56,6 +56,21 @@ impl<'x> Token<'x> {
         }
     }
 
+    pub fn resolve_items(&mut self, env: &mut Environment<'x>) {
+        match self {
+            Token::Construct(con) => {
+                let result = env.resolve(*con);
+                *con = result;
+            }
+            Token::Plain(..) => (),
+            Token::Stream { contents, .. } => {
+                for token in contents {
+                    token.resolve_items(env)
+                }
+            }
+        }
+    }
+
     pub fn unwrap_construct(&self) -> ConstructId {
         if let Self::Construct(con) = self {
             *con
@@ -69,6 +84,14 @@ impl<'x> Token<'x> {
             plain.as_ref()
         } else {
             panic!("Expected a plain token, got {:?} instead", self)
+        }
+    }
+
+    pub fn into_stream(self) -> TokenStream<'x> {
+        if let Self::Stream { contents, .. } = self {
+            contents
+        } else {
+            panic!("Expected a stream token, got {:?} instead", self)
         }
     }
 

@@ -1,12 +1,5 @@
-use itertools::Itertools;
-
 use crate::{
-    constructs::{
-        self, as_variable,
-        structt::{self},
-        variable::{CVariable, SVariableInvariants},
-    },
-    scope::{SPlaceholder, SPlain},
+    constructs::variable::SVariableInvariants,
     tokens::structure::Token,
     transform::{
         apply,
@@ -49,27 +42,30 @@ impl Transformer for Variable {
             }
             match mode {
                 0 => invariants.push(c.env.push_unresolved(token)),
-                1 => {
-                    let construct = if let Token::Construct(con) = token {
-                        con
-                    } else {
-                        todo!("Nice error, dependency must be a variable.");
-                    };
-                    let def = c.env.get_construct_definition(construct);
-                    let var = if let Some(var) = as_variable(&**def) {
-                        var.clone()
-                    } else {
-                        todo!("Nice error, dependency must be a variable.");
-                    };
-                    depends_on.push(var)
-                }
+                1 => depends_on.push(c.env.push_unresolved(token)),
                 _ => unreachable!(),
             }
         }
 
-        let id = c.env.variables.push(constructs::variable::Variable);
+        let con_id = c.env.push_unresolved(Token::Stream {
+            label: "VARIABLE",
+            contents: vec![
+                Token::Stream {
+                    label: "INVARIANTS",
+                    contents: invariants.clone().into_iter().map(Into::into).collect(),
+                },
+                Token::Stream {
+                    label: "DEPENDS_ON",
+                    contents: depends_on.into_iter().map(Into::into).collect(),
+                },
+            ],
+        });
 
-        CVariable::new(c.env, id, invariants, false, depends_on).into()
+        for invariant in invariants {
+            c.env.set_scope(invariant, &SVariableInvariants(con_id));
+        }
+
+        con_id.into()
     }
 
     fn vomit<'x>(&self, _c: &mut ApplyContext<'_, 'x>, _to: &Token<'x>) -> Option<Token<'x>> {

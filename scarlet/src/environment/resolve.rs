@@ -1,6 +1,12 @@
+use itertools::Itertools;
+
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
-    constructs::substitution::{CSubstitution, Substitutions},
+    constructs::{
+        as_variable,
+        substitution::{CSubstitution, Substitutions},
+        variable::CVariable, self,
+    },
     scope::{SPlain, Scope},
     tokens::structure::Token,
     transform::{self, ApplyContext},
@@ -18,7 +24,9 @@ impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
         let con = &self.constructs[con_id];
         if let ConstructDefinition::Unresolved(token) = &con.definition {
-            if let &Token::Construct(con_id) = token {
+            let mut token = token.clone();
+            token.resolve_items(self);
+            if let &Token::Construct(con_id) = &token {
                 self.resolve(con_id)
             } else {
                 let token = token.clone();
@@ -56,6 +64,38 @@ impl<'x> Environment<'x> {
                 let scope = self.get_construct(this).scope.dyn_clone();
                 token.set_scope_of_items(self, &*scope);
                 ConstructDefinition::Unresolved(token)
+            }
+            Token::Stream {
+                label: "VARIABLE",
+                mut contents,
+            } => {
+                let depends_on = contents
+                    .pop()
+                    .unwrap()
+                    .into_stream()
+                    .iter()
+                    .map(Token::unwrap_construct)
+                    .collect_vec();
+                let invariants = contents
+                    .pop()
+                    .unwrap()
+                    .into_stream()
+                    .iter()
+                    .map(Token::unwrap_construct)
+                    .collect_vec();
+                let depends_on = depends_on
+                    .into_iter()
+                    .map(|dep| {
+                        let def = self.get_construct_definition(dep);
+                        if let Some(var) = as_variable(&**def) {
+                            var.clone()
+                        } else {
+                            todo!("Nice error, dependency is not a variable.")
+                        }
+                    })
+                    .collect_vec();
+                let id = self.variables.push(constructs::variable::Variable);
+                CVariable::new(self, id, invariants, false, depends_on).into()
             }
             Token::Stream {
                 label: "SUBSTITUTE",
@@ -106,7 +146,7 @@ impl<'x> Environment<'x> {
                 CSubstitution::into(self, this, base, subs)
             }
             Token::Stream { label, .. } => todo!(
-                "Nice error, bad label '{:?}', expected CONSTRUCT_SYNTAX or SUBSTITUTE",
+                "Nice error, bad label '{:?}', expected CONSTRUCT_SYNTAX, VARIABLE or SUBSTITUTE",
                 label
             ),
         }
