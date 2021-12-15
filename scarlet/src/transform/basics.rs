@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::{
-    constructs::{Construct, ConstructId},
+    constructs::{Construct, ConstructDefinition, ConstructId},
     environment::Environment,
     scope::{SPlain, Scope},
     shared::OwnedOrBorrowed,
@@ -9,48 +9,48 @@ use crate::{
     transform::pattern::{Pattern, PatternMatchSuccess},
 };
 
-pub struct TransformerResult<'x>(pub Token<'x>);
-
-impl<'x, T: Into<Token<'x>>> From<T> for TransformerResult<'x> {
-    fn from(value: T) -> Self {
-        Self(value.into())
-    }
-}
-
 pub struct ApplyContext<'a, 'x> {
     pub env: &'a mut Environment<'x>,
 }
 
-pub trait Transformer {
-    fn input_pattern(&self) -> Box<dyn Pattern>;
-    // fn output_pattern(&self) -> Box<dyn Pattern>;
-    fn apply<'x>(
-        &self,
-        c: &mut ApplyContext<'_, 'x>,
-        success: PatternMatchSuccess<'_, 'x>,
-    ) -> TransformerResult<'x>;
+pub trait Parser<'x>: Fn(&'x str) -> Result<(&'x str, BoxedResolvable<'x>), String> {}
 
-    fn vomit<'x>(&self, c: &mut ApplyContext<'_, 'x>, to: &Token<'x>) -> Option<Token<'x>>;
+impl<'x, T> Parser<'x> for T where T: Fn(&'x str) -> Result<(&'x str, BoxedResolvable<'x>), String> {}
 
-    fn apply_checked<'x>(
-        &self,
-        c: &mut ApplyContext<'_, 'x>,
-        success: PatternMatchSuccess<'_, 'x>,
-    ) -> TransformerResult<'x> {
-        let result = self.apply(c, success);
-        // assert!(
-        //     self.output_pattern()
-        //         .match_at(c.env, &[result.0.clone()], 0)
-        //         .is_ok(),
-        //     "Output should match {:?}, but it is {:?} instead.",
-        //     self.output_pattern(),
-        //     result.0
-        // );
-        result
-    }
+pub type BoxedResolvable<'x> = Box<dyn Resolvable<'x> + 'x>;
+
+pub trait Resolvable<'x>: Debug {
+    fn resolve(&self, env: &mut Environment<'x>, scope: &dyn Scope) -> ConstructDefinition;
 }
 
 pub type Precedence = u8;
 
-pub type Extras<'e> = HashMap<Precedence, Vec<Box<dyn Transformer + 'e>>>;
-pub type SomeTransformer<'e> = OwnedOrBorrowed<'e, dyn Transformer + 'e>;
+pub type SomeParser<'x> = OwnedOrBorrowed<'x, dyn Parser<'x>>;
+
+pub type Extras<'x> = HashMap<Precedence, Vec<SomeParser<'x>>>;
+
+pub fn p_identifier<'x>(input: &'x str) -> Result<(&'x str, BoxedResolvable<'x>), String> {
+    let mut split_at = 0;
+    for char in input.chars() {
+        if char.is_alphanumeric() {
+            split_at += char.len_utf8()
+        } else {
+            break;
+        }
+    }
+    if split_at > 0 {
+        let (identifier, remainder) = input.split_at(split_at);
+        Ok((remainder, Box::new(RIdentifier(identifier))))
+    } else {
+        Err(format!("invalid identifier"))
+    }
+}
+
+#[derive(Debug)]
+pub struct RIdentifier<'x>(&'x str);
+
+impl<'x> Resolvable<'x> for RIdentifier<'x> {
+    fn resolve(&self, env: &mut Environment<'x>, scope: &dyn Scope) -> ConstructDefinition {
+        scope.lookup_ident(env, self.0).unwrap().into()
+    }
+}

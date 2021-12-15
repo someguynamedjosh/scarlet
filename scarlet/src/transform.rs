@@ -1,10 +1,11 @@
-mod apply;
 mod basics;
-mod build;
 mod helpers;
 mod pattern;
+mod combinators;
 mod transformers;
 
-pub use apply::apply_transformers;
-pub use basics::ApplyContext;
-pub use build::all_transformers;
+pub use basics::*;
+
+pub fn p_root<'x>() -> impl Parser<'x> {
+    transformers::expression::p_expression(Precedence::MAX)
+}

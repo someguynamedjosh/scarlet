@@ -61,7 +61,7 @@ impl CVariable {
         self.id == other.id && self.capturing == other.capturing
     }
 
-    pub fn can_be_assigned(&self, value: ConstructId, env: &mut Environment) -> bool {
+    pub fn can_be_assigned<'x>(&self, value: ConstructId, env: &mut Environment<'x>) -> bool {
         let mut substitutions = OrderedMap::new();
         substitutions.insert_no_replace(self.clone(), value);
         for inv in &self.invariants {

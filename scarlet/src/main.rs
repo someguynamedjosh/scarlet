@@ -3,6 +3,8 @@
 #![feature(never_type)]
 #![feature(adt_const_params)]
 #![feature(trait_upcasting)]
+#![feature(generic_associated_types)]
+#![feature(associated_type_defaults)]
 
 mod constructs;
 mod environment;
@@ -20,11 +22,11 @@ fn main() {
     println!("Reading source from {}", path);
 
     let root = file_tree::read_root(&path).unwrap();
-    let root = tokens::ingest(&root);
     println!("{:#?}", root);
 
     let mut env = Environment::new();
-    let root = env.push_unresolved(root.self_content.clone());
+    let root = transform::p_root()(&root.self_content).unwrap().1;
+    let root = env.push_unresolved(root);
     env.set_scope(root, &SRoot);
     env.resolve_all();
     env.reduce_all();

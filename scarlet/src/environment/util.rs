@@ -5,7 +5,7 @@ use crate::{
 };
 
 impl<'x> Environment<'x> {
-    pub fn get_construct(&self, con_id: ConstructId) -> &AnnotatedConstruct {
+    pub fn get_construct(&self, con_id: ConstructId) -> &AnnotatedConstruct<'x> {
         &self.constructs[con_id]
     }
 

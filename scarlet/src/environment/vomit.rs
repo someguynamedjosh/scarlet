@@ -37,14 +37,14 @@ impl<'x> Environment<'x> {
     }
 
     fn expand_token(&mut self, input: Token<'x>) -> Token<'x> {
-        let extras = Default::default();
-        let tfers = transform::all_transformers(&extras);
-        for tfer in &tfers {
-            let mut context = ApplyContext { env: self };
-            if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {
-                return self.expand_token(replace_with);
-            }
-        }
+        // let extras = Default::default();
+        let tfers = todo!(); //transform::all_transformers(&extras);
+        // for tfer in &tfers {
+        //     let mut context = ApplyContext { env: self };
+        //     if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {
+        //         return self.expand_token(replace_with);
+        //     }
+        // }
         if let Token::Construct(_con_id) = input {
             input
         } else if let Token::Stream { label, contents } = input {

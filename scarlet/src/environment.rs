@@ -19,6 +19,7 @@ use crate::{
     scope::{SPlaceholder, SPlain, SRoot, Scope},
     shared::{Pool, TripleBool},
     tokens::structure::Token,
+    transform::{Resolvable, BoxedResolvable},
 };
 
 pub const BUILTIN_ITEM_NAMES: &[&str] = &["true", "false", "void"];
@@ -31,10 +32,7 @@ pub struct Environment<'x> {
     pub(crate) variables: VariablePool,
 }
 
-impl<'x> Environment<'x>
-where
-    ConstructId: 'static,
-{
+impl<'x> Environment<'x> {
     pub fn new() -> Self {
         let mut this = Self {
             builtin_items: HashMap::new(),
@@ -51,8 +49,7 @@ where
 
     pub fn define_builtin_item(&mut self, name: &str, definition: ConstructId) {
         let id = self.get_builtin_item(name);
-        self.constructs[id].definition =
-            ConstructDefinition::Unresolved(Token::Construct(definition));
+        self.constructs[id].definition = definition.into();
     }
 
     pub fn get_builtin_item(&self, name: &str) -> ConstructId {
@@ -83,24 +80,15 @@ where
         self.uniques.push(Unique)
     }
 
-    pub fn push_unresolved(&mut self, token: Token<'x>) -> ConstructId {
-        if let Token::Construct(con) = token {
-            con
-        } else {
-            let con = AnnotatedConstruct {
-                definition: ConstructDefinition::Unresolved(token),
-                scope: Box::new(SPlaceholder),
-            };
-            self.constructs.push(con)
-        }
+    pub fn push_unresolved(&mut self, definition: BoxedResolvable<'x>) -> ConstructId {
+        self.constructs.push(AnnotatedConstruct {
+            definition: ConstructDefinition::Unresolved(definition),
+            scope: Box::new(SPlaceholder),
+        })
     }
 
     pub fn set_scope(&mut self, of: ConstructId, scope: &dyn Scope) {
         if self.constructs[of].scope.is_placeholder() {
-            if let ConstructDefinition::Unresolved(token) = &self.constructs[of].definition {
-                let token = token.clone();
-                token.set_scope_of_items(self, scope);
-            }
             self.constructs[of].scope = scope.dyn_clone();
         }
     }

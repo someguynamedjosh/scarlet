@@ -5,14 +5,15 @@ use crate::{
     environment::Environment,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},
-    tokens::structure::Token,
+    tokens::structure::Token, transform::{Resolvable, BoxedResolvable},
 };
 
 #[derive(Debug)]
 pub enum ConstructDefinition<'x> {
+    Other(ConstructId),
     Placeholder,
     Resolved(BoxedConstruct),
-    Unresolved(Token<'x>),
+    Unresolved(BoxedResolvable<'x>),
 }
 
 impl<'x> ConstructDefinition<'x> {
@@ -32,13 +33,13 @@ impl<'x> From<Box<dyn Construct>> for ConstructDefinition<'x> {
 
 impl<'a, 'x> From<&'a ConstructId> for ConstructDefinition<'x> {
     fn from(input: &'a ConstructId) -> Self {
-        Self::Unresolved(Token::Construct(*input))
+        Self::Other(*input)
     }
 }
 
 impl<'x> From<ConstructId> for ConstructDefinition<'x> {
     fn from(input: ConstructId) -> Self {
-        Self::Unresolved(Token::Construct(input))
+        Self::Other(input)
     }
 }
 
