@@ -1,4 +1,8 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    fmt::{self, Debug, Formatter},
+    hash::{Hash, Hasher},
+};
 
 // https://en.wikipedia.org/wiki/Earley_parser
 
@@ -29,13 +33,57 @@ pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
     tokens
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone)]
 pub enum Component {
     Nonterminal(String),
-    Terminal {
-        role: &'static str,
-        content: Option<&'static str>,
-    },
+    Terminal(fn(&Token) -> bool),
+}
+
+impl Debug for Component {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Nonterminal(nt) => write!(f, "{}", nt),
+            Self::Terminal(t) => write!(f, "terminal"),
+        }
+    }
+}
+
+impl PartialEq for Component {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Nonterminal(nt) => {
+                if let Nonterminal(ont) = other {
+                    nt == ont
+                } else {
+                    false
+                }
+            }
+            Terminal(t) => {
+                if let Terminal(ot) = other {
+                    (*t as *const ()) == (*ot as *const ())
+                } else {
+                    false
+                }
+            }
+        }
+    }
+}
+
+impl Eq for Component {}
+
+impl Hash for Component {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Nonterminal(nt) => {
+                state.write_u8(0);
+                nt.hash(state);
+            }
+            Terminal(t) => {
+                state.write_u8(1);
+                state.write_usize((*t as *const ()) as usize);
+            }
+        }
+    }
 }
 
 use regex::Regex;
@@ -83,14 +131,8 @@ impl<'a> State<'a> {
     }
 
     pub fn immediate_next_terminal_matches(&self, token: &Token) -> bool {
-        if let Some(Terminal { role, content }) =
-            self.rule.components.get(self.current_position_in_rule)
-        {
-            (if let Some(content) = content {
-                *content == token.content
-            } else {
-                true
-            }) && (*role == token.role)
+        if let Some(Terminal(matcher)) = self.rule.components.get(self.current_position_in_rule) {
+            matcher(token)
         } else {
             false
         }
@@ -189,11 +231,14 @@ macro_rules! components {
     ([] [$($items:tt);*]) => {
         vec![$($items),*]
     };
-    ([name $($input:tt)*] [$($items:tt);*]) => {
+    ([ws $($input:tt)*] [$($items:tt);*]) => {
         {
+            fn eval(token: &Token) -> bool {
+                any_whitespace(token)
+            }
             components!(
                 [$($input)*]
-                [$($items;)* (Component::Terminal { role: "name", content: None })]
+                [$($items;)* (Component::Terminal(eval))]
             )
         }
     };
@@ -202,6 +247,17 @@ macro_rules! components {
             [$($input)*]
             [$($items;)* (Component::Nonterminal(String::from(stringify!($nonterminal))))]
         )
+    };
+    ([$eval:tt $($input:tt)*] [$($items:tt);*]) => {
+        {
+            fn eval(token: &Token) -> bool {
+                $eval(token)
+            }
+            components!(
+                [$($input)*]
+                [$($items;)* (Component::Terminal(eval))]
+            )
+        }
     };
 }
 
@@ -214,8 +270,29 @@ macro_rules! rule {
     };
 }
 
+macro_rules! rules {
+    ($(($nt:ident -> $($c:tt)*))*) => {
+        vec![
+            $(
+                rule!($nt -> $($c)*)
+            ),*
+        ]
+    }
+}
+
+fn any_name(token: &Token) -> bool {
+    token.role == "name"
+}
+
+fn any_whitespace(token: &Token) -> bool {
+    token.role == "whitespace"
+}
+
 pub fn parse(input: &str) {
-    let rules = vec![rule!(Expr0 -> name)];
+    let rules = rules![
+        (Expr1 -> Expr0)
+        (Expr0 -> (any_name))
+    ];
     println!("{:#?}", rules);
     parse_internal(input, &rules[..], "Expr0");
 }
