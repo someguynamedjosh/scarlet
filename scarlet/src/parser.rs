@@ -5,7 +5,6 @@ use std::collections::HashSet;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Component {
     Nonterminal(String),
-    RepeatedTerminal(fn(char) -> bool),
     Terminal(fn(char) -> bool),
 }
 
@@ -33,65 +32,30 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn advanced_past_next_nonterminal(&self) -> Self {
-        let mut new = Self { ..*self };
-        while let Some(RepeatedTerminal(..)) =
-            self.rule.components.get(new.current_position_in_rule)
-        {
-            new.current_position_in_rule += 1;
+    pub fn advanced(&self) -> Self {
+        Self {
+            current_position_in_rule: self.current_position_in_rule + 1,
+            ..*self
         }
-        if let Some(Nonterminal(..)) = self.rule.components.get(new.current_position_in_rule) {
-            new.current_position_in_rule += 1
-        } else {
-            panic!(
-                "advance_past_next_nonterminal called when the next thing is not a nonterminal!"
-            );
-        }
-        new
     }
 
     pub fn is_complete(&self) -> bool {
-        let mut position = self.current_position_in_rule;
-        while let Some(RepeatedTerminal(..)) = self.rule.components.get(position) {
-            position += 1;
-        }
-        position == self.rule.components.len()
+        self.current_position_in_rule == self.rule.components.len()
     }
 
     pub fn immediate_next_nonterminal(&self) -> Option<&str> {
-        let mut position = self.current_position_in_rule;
-        let mut next = self.rule.components.get(position);
-        while let Some(RepeatedTerminal(..)) = next {
-            position += 1;
-            next = self.rule.components.get(position);
-        }
-        if let Some(Nonterminal(nt)) = next {
+        if let Some(Nonterminal(nt)) = self.rule.components.get(self.current_position_in_rule) {
             Some(&nt[..])
         } else {
             None
         }
     }
 
-    pub fn match_against_character(&self, c: char) -> Option<Self> {
-        let mut position = self.current_position_in_rule;
-        let mut next = self.rule.components.get(position);
-        while let Some(RepeatedTerminal(matcher)) = next {
-            if matcher(c) {
-                return Some(Self {
-                    current_position_in_rule: position,
-                    ..*self
-                });
-            }
-            position += 1;
-            next = self.rule.components.get(position);
-        }
-        if let Some(Terminal(t)) = next {
-            Some(Self {
-                current_position_in_rule: position,
-                ..*self
-            })
+    pub fn immediate_next_terminal_matches(&self, c: char) -> bool {
+        if let Some(Terminal(t)) = self.rule.components.get(self.current_position_in_rule) {
+            t(c)
         } else {
-            None
+            false
         }
     }
 }
@@ -116,20 +80,11 @@ impl<'a> StateSet<'a> {
         res
     }
 
-    pub fn accepts(&self, root_nonterminal: &str) -> bool {
-        for state in &self.states {
-            if state.rule.produced_nonterminal == root_nonterminal && state.is_complete() {
-                return true
-            }
-        }
-        false
-    }
-
     pub fn advance(rules: &'a [Rule], previous: &[Self], this_char: char) -> Self {
         let immediate_predecessor = previous.last().unwrap();
         let mut next = Self {
             position: immediate_predecessor.position + 1,
-            states: HashSet::new(),
+            states: HashSet::new()
         };
         loop {
             let old_size = next.states.len();
@@ -138,7 +93,7 @@ impl<'a> StateSet<'a> {
             next.complete(previous);
             let new_size = next.states.len();
             if old_size == new_size {
-                break;
+                break
             }
         }
         next
@@ -160,8 +115,8 @@ impl<'a> StateSet<'a> {
 
     fn scan(&mut self, previous: &Self, this_char: char) {
         for state in &previous.states {
-            if let Some(advanced) = state.match_against_character(this_char) {
-                self.states.insert(advanced);
+            if state.immediate_next_terminal_matches(this_char) {
+                self.states.insert(state.advanced());
             }
         }
     }
@@ -171,10 +126,8 @@ impl<'a> StateSet<'a> {
         for state in &self.states {
             if state.is_complete() {
                 for previous_state in &previous[state.start_position_in_input].states {
-                    if previous_state.immediate_next_nonterminal()
-                        == Some(&state.rule.produced_nonterminal)
-                    {
-                        new.insert(previous_state.advanced_past_next_nonterminal());
+                    if previous_state.immediate_next_nonterminal() == Some(&state.rule.produced_nonterminal) {
+                        new.insert(previous_state.advanced());
                     }
                 }
             }
@@ -190,7 +143,6 @@ fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
         state_sets.push(next_state);
     }
     println!("{:#?}", state_sets);
-    println!("{:#?}", state_sets.last().unwrap().accepts(root_nonterminal));
 }
 
 macro_rules! components {
@@ -202,17 +154,6 @@ macro_rules! components {
             [$($input)*]
             [$($items;)* (Component::Nonterminal(String::from(stringify!($nonterminal))))]
         )
-    };
-    ([$eval:tt* $($input:tt)*] [$($items:tt);*]) => {
-        {
-            fn matcher(arg: char) -> bool {
-                $eval(arg)
-            }
-            components!(
-                [$($input)*]
-                [$($items;)* (Component::RepeatedTerminal(matcher))]
-            )
-        }
     };
     ([$eval:tt $($input:tt)*] [$($items:tt);*]) => {
         {
@@ -242,7 +183,8 @@ fn char_allowed_in_identifier(c: char) -> bool {
 
 pub fn parse(input: &str) {
     let rules = vec![
-        rule!(Identifier -> (char_allowed_in_identifier)*),
+        rule!(Identifier -> (char_allowed_in_identifier)),
+        rule!(Identifier -> Identifier (char_allowed_in_identifier)),
     ];
     println!("{:#?}", rules);
     parse_internal(input, &rules[..], "Identifier");
