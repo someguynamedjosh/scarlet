@@ -2,12 +2,43 @@ use std::collections::HashSet;
 
 // https://en.wikipedia.org/wiki/Earley_parser
 
+pub struct Token<'a> {
+    role: &'static str,
+    content: &'a str,
+}
+
+pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
+    let name = Regex::new("[a-zA-Z0-9]+|[^a-zA-Z0-9]").unwrap();
+    let whitespace = Regex::new(r"[\r\n\t ]+").unwrap();
+    let mut index = 0;
+    let mut tokens = Vec::new();
+    while index < input.len() {
+        let (result, role) = if let Some(result) = whitespace.find_at(input, index) {
+            (result, "whitespace")
+        } else if let Some(result) = name.find_at(input, index) {
+            (result, "name")
+        } else {
+            panic!("Unrecognized characters in input: {}", &input[index..])
+        };
+        tokens.push(Token {
+            role,
+            content: result.as_str(),
+        });
+        index = result.end();
+    }
+    tokens
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Component {
     Nonterminal(String),
-    Terminal(fn(char) -> bool),
+    Terminal {
+        role: &'static str,
+        content: Option<&'static str>,
+    },
 }
 
+use regex::Regex;
 use Component::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -51,9 +82,15 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn immediate_next_terminal_matches(&self, c: char) -> bool {
-        if let Some(Terminal(t)) = self.rule.components.get(self.current_position_in_rule) {
-            t(c)
+    pub fn immediate_next_terminal_matches(&self, token: &Token) -> bool {
+        if let Some(Terminal { role, content }) =
+            self.rule.components.get(self.current_position_in_rule)
+        {
+            (if let Some(content) = content {
+                *content == token.content
+            } else {
+                true
+            }) && (*role == token.role)
         } else {
             false
         }
@@ -80,20 +117,20 @@ impl<'a> StateSet<'a> {
         res
     }
 
-    pub fn advance(rules: &'a [Rule], previous: &[Self], this_char: char) -> Self {
+    pub fn advance(rules: &'a [Rule], previous: &[Self], token: &Token<'a>) -> Self {
         let immediate_predecessor = previous.last().unwrap();
         let mut next = Self {
             position: immediate_predecessor.position + 1,
-            states: HashSet::new()
+            states: HashSet::new(),
         };
         loop {
             let old_size = next.states.len();
             next.predict(rules);
-            next.scan(immediate_predecessor, this_char);
+            next.scan(immediate_predecessor, token);
             next.complete(previous);
             let new_size = next.states.len();
             if old_size == new_size {
-                break
+                break;
             }
         }
         next
@@ -113,9 +150,9 @@ impl<'a> StateSet<'a> {
         self.states.extend(new.into_iter());
     }
 
-    fn scan(&mut self, previous: &Self, this_char: char) {
+    fn scan(&mut self, previous: &Self, token: &Token<'a>) {
         for state in &previous.states {
-            if state.immediate_next_terminal_matches(this_char) {
+            if state.immediate_next_terminal_matches(token) {
                 self.states.insert(state.advanced());
             }
         }
@@ -126,7 +163,9 @@ impl<'a> StateSet<'a> {
         for state in &self.states {
             if state.is_complete() {
                 for previous_state in &previous[state.start_position_in_input].states {
-                    if previous_state.immediate_next_nonterminal() == Some(&state.rule.produced_nonterminal) {
+                    if previous_state.immediate_next_nonterminal()
+                        == Some(&state.rule.produced_nonterminal)
+                    {
                         new.insert(previous_state.advanced());
                     }
                 }
@@ -138,8 +177,9 @@ impl<'a> StateSet<'a> {
 
 fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
     let mut state_sets = vec![StateSet::new(rules, root_nonterminal)];
-    for this_char in input.chars() {
-        let next_state = StateSet::advance(rules, &state_sets[..], this_char);
+    let tokens = tokenize(input);
+    for token in &tokens {
+        let next_state = StateSet::advance(rules, &state_sets[..], token);
         state_sets.push(next_state);
     }
     println!("{:#?}", state_sets);
@@ -149,22 +189,19 @@ macro_rules! components {
     ([] [$($items:tt);*]) => {
         vec![$($items),*]
     };
+    ([name $($input:tt)*] [$($items:tt);*]) => {
+        {
+            components!(
+                [$($input)*]
+                [$($items;)* (Component::Terminal { role: "name", content: None })]
+            )
+        }
+    };
     ([$nonterminal:ident $($input:tt)*] [$($items:tt);*]) => {
         components!(
             [$($input)*]
             [$($items;)* (Component::Nonterminal(String::from(stringify!($nonterminal))))]
         )
-    };
-    ([$eval:tt $($input:tt)*] [$($items:tt);*]) => {
-        {
-            fn matcher(arg: char) -> bool {
-                $eval(arg)
-            }
-            components!(
-                [$($input)*]
-                [$($items;)* (Component::Terminal(matcher))]
-            )
-        }
     };
 }
 
@@ -177,15 +214,8 @@ macro_rules! rule {
     };
 }
 
-fn char_allowed_in_identifier(c: char) -> bool {
-    c.is_alphanumeric()
-}
-
 pub fn parse(input: &str) {
-    let rules = vec![
-        rule!(Identifier -> (char_allowed_in_identifier)),
-        rule!(Identifier -> Identifier (char_allowed_in_identifier)),
-    ];
+    let rules = vec![rule!(Expr0 -> name)];
     println!("{:#?}", rules);
-    parse_internal(input, &rules[..], "Identifier");
+    parse_internal(input, &rules[..], "Expr0");
 }
