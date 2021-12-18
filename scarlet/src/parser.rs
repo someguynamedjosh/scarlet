@@ -4,6 +4,12 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+use indexmap::IndexSet;
+use regex::Regex;
+use Component::*;
+
+use crate::shared::indented;
+
 // https://en.wikipedia.org/wiki/Earley_parser
 
 pub struct Token<'a> {
@@ -99,11 +105,6 @@ impl Hash for Component {
     }
 }
 
-use regex::Regex;
-use Component::*;
-
-use crate::shared::indented;
-
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Rule {
     pub produced_nonterminal: String,
@@ -126,10 +127,33 @@ impl Debug for Rule {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ComponentMatch {
+    ByToken,
+    ByState(usize),
+}
+
+#[derive(Clone, Debug, Eq)]
 pub struct State<'a> {
     pub rule: &'a Rule,
     pub current_position_in_rule: usize,
     pub start_position_in_input: usize,
+    pub matches: Vec<ComponentMatch>,
+}
+
+impl<'a> PartialEq for State<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.rule == other.rule
+            && self.current_position_in_rule == other.current_position_in_rule
+            && self.start_position_in_input == other.start_position_in_input
+    }
+}
+
+impl<'a> Hash for State<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.rule.hash(state);
+        self.current_position_in_rule.hash(state);
+        self.start_position_in_input.hash(state);
+    }
 }
 
 impl<'a> State<'a> {
@@ -138,12 +162,14 @@ impl<'a> State<'a> {
             rule,
             current_position_in_rule: 0,
             start_position_in_input,
+            matches: vec![],
         }
     }
 
-    pub fn advanced(&self) -> Self {
+    pub fn advanced(&self, by: ComponentMatch) -> Self {
         Self {
             current_position_in_rule: self.current_position_in_rule + 1,
+            matches: [self.matches.clone(), vec![by]].concat(),
             ..*self
         }
     }
@@ -161,15 +187,9 @@ impl<'a> State<'a> {
     }
 
     pub fn immediate_next_terminal_matches(&self, token: &Token) -> bool {
-        if let Some(Terminal(name, matcher)) =
+        if let Some(Terminal(_name, matcher)) =
             self.rule.components.get(self.current_position_in_rule)
         {
-            println!(
-                "Next terminal is {}: matches {:?}? {}",
-                name,
-                token,
-                matcher(token)
-            );
             matcher(token)
         } else {
             false
@@ -180,14 +200,14 @@ impl<'a> State<'a> {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StateSet<'a> {
     pub position: usize,
-    pub states: HashSet<State<'a>>,
+    pub states: IndexSet<State<'a>>,
 }
 
 impl<'a> StateSet<'a> {
     pub fn new(rules: &'a [Rule], root_nonterminal: &str) -> Self {
         let mut res = Self {
             position: 0,
-            states: HashSet::new(),
+            states: IndexSet::new(),
         };
         for rule in rules {
             if rule.produced_nonterminal == root_nonterminal {
@@ -210,7 +230,7 @@ impl<'a> StateSet<'a> {
         let immediate_predecessor = previous.last().unwrap();
         let mut next = Self {
             position: immediate_predecessor.position + 1,
-            states: HashSet::new(),
+            states: IndexSet::new(),
         };
         next.execute_steps_until_no_new_states_appear(rules, previous, token);
         next
@@ -250,31 +270,55 @@ impl<'a> StateSet<'a> {
     }
 
     fn scan(&mut self, previous: &Self, token: &Token<'a>) {
-        println!("{:?}", token);
         for state in &previous.states {
             if state.immediate_next_terminal_matches(token) {
-                println!("{:?}", state);
-                self.states.insert(state.advanced());
+                self.states.insert(state.advanced(ComponentMatch::ByToken));
             }
         }
     }
 
-    fn complete(&mut self, previous: &[Self]) {
-        let mut new = HashSet::new();
-        for state in &self.states {
-            if state.is_complete() {
-                let idx = state.start_position_in_input;
-                let previous_states = if idx < previous.len() {
-                    &previous[idx].states
+    fn get_state_completing_nonterminal(&self, nonterminal: &str) -> Option<usize> {
+        let mut backup = None;
+        for (completed_state_index, state) in self.states.iter().enumerate() {
+            if !state.is_complete() {
+                continue;
+            }
+            if state.rule.produced_nonterminal == nonterminal {
+                if state.rule.preferred {
+                    return Some(completed_state_index);
                 } else {
-                    &self.states
-                };
-                for previous_state in previous_states {
-                    if previous_state.immediate_next_nonterminal()
-                        == Some(&state.rule.produced_nonterminal)
-                    {
-                        new.insert(previous_state.advanced());
-                    }
+                    backup = Some(completed_state_index);
+                }
+            }
+        }
+        backup
+    }
+
+    fn complete(&mut self, previous: &[Self]) {
+        let mut completed_nonterminals = HashSet::new();
+        for state in self.states.iter() {
+            if state.is_complete() {
+                completed_nonterminals.insert(&state.rule.produced_nonterminal);
+            }
+        }
+        let mut new = HashSet::new();
+        for completed_nonterminal in completed_nonterminals {
+            let completed_state_index = self
+                .get_state_completing_nonterminal(completed_nonterminal)
+                .unwrap();
+            let state = &self.states[completed_state_index];
+            let idx = state.start_position_in_input;
+            let previous_states = if idx < previous.len() {
+                &previous[idx].states
+            } else {
+                &self.states
+            };
+            for previous_state in previous_states {
+                if previous_state.immediate_next_nonterminal()
+                    == Some(&state.rule.produced_nonterminal)
+                {
+                    let mat = ComponentMatch::ByState(completed_state_index);
+                    new.insert(previous_state.advanced(mat));
                 }
             }
         }
@@ -309,37 +353,23 @@ impl<'a> Debug for AstNode<'a> {
 fn build_ast<'a>(
     sets: &'a [StateSet<'a>],
     tokens: &'a [Token<'a>],
-    nonterminal: &str,
+    state: usize,
     end_index: usize,
 ) -> Result<(AstNode<'a>, usize), String> {
     let state_set_here = &sets[end_index];
-    let mut rule = None;
-    let mut low_priority_rule = None;
-    for state in &state_set_here.states {
-        if state.is_complete() && state.rule.produced_nonterminal == nonterminal {
-            if state.rule.preferred {
-                rule = Some(state.rule);
-            } else {
-                low_priority_rule = Some(state.rule);
-            }
-        }
-    }
-    let rule = if let Some(rule) = rule.or(low_priority_rule) {
-        rule
-    } else {
-        // The parse was not successful.
-        return Err(format!("Parsing {} failed", nonterminal));
-    };
+    let state = state_set_here.states.get_index(state).unwrap();
+    assert!(state.is_complete());
+    let rule = &state.rule;
     let mut components = Vec::new();
     let mut input_index = end_index;
-    for component in rule.components.iter().rev() {
+    for component in state.matches.iter().rev() {
         match component {
-            Nonterminal(nonterminal) => {
-                let (node, new_input_index) = build_ast(sets, tokens, nonterminal, input_index)?;
+            &ComponentMatch::ByState(state) => {
+                let (node, new_input_index) = build_ast(sets, tokens, state, input_index)?;
                 components.push(node);
                 input_index = new_input_index;
             }
-            Terminal(_, _) => {
+            &ComponentMatch::ByToken => {
                 input_index -= 1;
                 components.push(AstNode::Terminal(&tokens[input_index]));
             }
@@ -359,7 +389,16 @@ fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
         state_sets.push(next_state);
     }
     println!("{:#?}", state_sets);
-    let ast = build_ast(&state_sets[..], &tokens[..], root_nonterminal, tokens.len());
+    let end_index = tokens.len();
+    let last_set = &state_sets[end_index];
+    let root_state = last_set
+        .states
+        .iter()
+        .position(|state| {
+            state.is_complete() && state.rule.produced_nonterminal == root_nonterminal
+        })
+        .unwrap();
+    let ast = build_ast(&state_sets[..], &tokens[..], root_state, end_index);
     let ast = ast.unwrap().0;
     println!("{:#?}", ast);
 }
@@ -377,7 +416,7 @@ macro_rules! components {
                         quote(stringify!($text))(token)
                     }
                     Component::Terminal(
-                        concat!("(quote(\"", stringify!($text), "\"))"), 
+                        concat!("(quote(\"", stringify!($text), "\"))"),
                         eval
                     )
                 })]
@@ -434,10 +473,7 @@ fn any_whitespace(token: &Token) -> bool {
 }
 
 fn quote(text: &'static str) -> impl Fn(&Token) -> bool {
-    move |token: &Token| {
-        println!("Expecting {:?}, got {:?}", text, token.content);
-        token.content == text
-    }
+    move |token: &Token| token.content == text
 }
 
 pub fn parse(input: &str) {
@@ -462,6 +498,10 @@ pub fn parse(input: &str) {
             W Expr
             W (quote("]"))
         )
+        (Expr0 -> Expr W :. W :LABEL)
+        (Expr0 -> Expr W :. W :VALUE)
+        (Expr0 -> Expr W :. W :REST)
+        (Expr0 -> Expr W :. W :IS_POPULATED_STRUCT)
         (Expr0 -> :UNIQUE)
         (W -> (any_whitespace))
         (W -> )
