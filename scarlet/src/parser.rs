@@ -18,7 +18,7 @@ impl<'a> Debug for Token<'a> {
 }
 
 pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
-    let name = Regex::new("[a-zA-Z0-9]+|[^a-zA-Z0-9]").unwrap();
+    let name = Regex::new("[a-zA-Z0-9_]+|[^a-zA-Z0-9_]").unwrap();
     let whitespace = Regex::new(r"[\r\n\t ]+").unwrap();
     let mut index = 0;
     let mut tokens = Vec::new();
@@ -48,14 +48,14 @@ pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
 #[derive(Clone)]
 pub enum Component {
     Nonterminal(String),
-    Terminal(fn(&Token) -> bool),
+    Terminal(&'static str, fn(&Token) -> bool),
 }
 
 impl Debug for Component {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Nonterminal(nt) => write!(f, "{}", nt),
-            Self::Terminal(_) => write!(f, "terminal"),
+            Self::Terminal(name, ..) => write!(f, "{}", name),
         }
     }
 }
@@ -70,9 +70,9 @@ impl PartialEq for Component {
                     false
                 }
             }
-            Terminal(t) => {
-                if let Terminal(ot) = other {
-                    (*t as *const ()) == (*ot as *const ())
+            Terminal(n, t) => {
+                if let Terminal(on, ot) = other {
+                    n == on && (*t as *const ()) == (*ot as *const ())
                 } else {
                     false
                 }
@@ -90,8 +90,9 @@ impl Hash for Component {
                 state.write_u8(0);
                 nt.hash(state);
             }
-            Terminal(t) => {
+            Terminal(n, t) => {
                 state.write_u8(1);
+                n.hash(state);
                 state.write_usize((*t as *const ()) as usize);
             }
         }
@@ -107,10 +108,14 @@ use crate::shared::indented;
 pub struct Rule {
     pub produced_nonterminal: String,
     pub components: Vec<Component>,
+    pub preferred: bool,
 }
 
 impl Debug for Rule {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        if !self.preferred {
+            write!(f, "(low priority) ")?;
+        }
         write!(f, "{} ->", self.produced_nonterminal)?;
         for component in &self.components {
             write!(f, " ")?;
@@ -156,7 +161,15 @@ impl<'a> State<'a> {
     }
 
     pub fn immediate_next_terminal_matches(&self, token: &Token) -> bool {
-        if let Some(Terminal(matcher)) = self.rule.components.get(self.current_position_in_rule) {
+        if let Some(Terminal(name, matcher)) =
+            self.rule.components.get(self.current_position_in_rule)
+        {
+            println!(
+                "Next terminal is {}: matches {:?}? {}",
+                name,
+                token,
+                matcher(token)
+            );
             matcher(token)
         } else {
             false
@@ -184,6 +197,7 @@ impl<'a> StateSet<'a> {
         loop {
             let old_size = res.states.len();
             res.predict(rules);
+            res.complete(&[]);
             let new_size = res.states.len();
             if old_size == new_size {
                 break;
@@ -236,8 +250,10 @@ impl<'a> StateSet<'a> {
     }
 
     fn scan(&mut self, previous: &Self, token: &Token<'a>) {
+        println!("{:?}", token);
         for state in &previous.states {
             if state.immediate_next_terminal_matches(token) {
+                println!("{:?}", state);
                 self.states.insert(state.advanced());
             }
         }
@@ -295,19 +311,24 @@ fn build_ast<'a>(
     tokens: &'a [Token<'a>],
     nonterminal: &str,
     end_index: usize,
-) -> Result<(AstNode<'a>, usize), ()> {
+) -> Result<(AstNode<'a>, usize), String> {
     let state_set_here = &sets[end_index];
     let mut rule = None;
+    let mut low_priority_rule = None;
     for state in &state_set_here.states {
         if state.is_complete() && state.rule.produced_nonterminal == nonterminal {
-            rule = Some(state.rule);
+            if state.rule.preferred {
+                rule = Some(state.rule);
+            } else {
+                low_priority_rule = Some(state.rule);
+            }
         }
     }
-    let rule = if let Some(rule) = rule {
+    let rule = if let Some(rule) = rule.or(low_priority_rule) {
         rule
     } else {
         // The parse was not successful.
-        return Err(());
+        return Err(format!("Parsing {} failed", nonterminal));
     };
     let mut components = Vec::new();
     let mut input_index = end_index;
@@ -318,12 +339,13 @@ fn build_ast<'a>(
                 components.push(node);
                 input_index = new_input_index;
             }
-            Terminal(_) => {
+            Terminal(_, _) => {
                 input_index -= 1;
                 components.push(AstNode::Terminal(&tokens[input_index]));
             }
         }
     }
+    components.reverse();
     let node = AstNode::Rule { rule, components };
     Ok((node, input_index))
 }
@@ -331,10 +353,12 @@ fn build_ast<'a>(
 fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
     let mut state_sets = vec![StateSet::new(rules, root_nonterminal)];
     let tokens = tokenize(input);
+    println!("{:?}", tokens);
     for token in &tokens {
         let next_state = StateSet::advance(rules, &state_sets[..], token);
         state_sets.push(next_state);
     }
+    println!("{:#?}", state_sets);
     let ast = build_ast(&state_sets[..], &tokens[..], root_nonterminal, tokens.len());
     let ast = ast.unwrap().0;
     println!("{:#?}", ast);
@@ -346,12 +370,17 @@ macro_rules! components {
     };
     ([:$text:tt $($input:tt)*] [$($items:tt);*]) => {
         {
-            fn eval(token: &Token) -> bool {
-                quote(stringify!($text))(token)
-            }
             components!(
                 [$($input)*]
-                [$($items;)* (Component::Terminal(eval))]
+                [$($items;)* ({
+                    fn eval(token: &Token) -> bool {
+                        quote(stringify!($text))(token)
+                    }
+                    Component::Terminal(
+                        concat!("(quote(\"", stringify!($text), "\"))"), 
+                        eval
+                    )
+                })]
             )
         }
     };
@@ -363,12 +392,14 @@ macro_rules! components {
     };
     ([$eval:tt $($input:tt)*] [$($items:tt);*]) => {
         {
-            fn eval(token: &Token) -> bool {
-                $eval(token)
-            }
             components!(
                 [$($input)*]
-                [$($items;)* (Component::Terminal(eval))]
+                [$($items;)* ({
+                    fn eval(token: &Token) -> bool {
+                        $eval(token)
+                    }
+                    Component::Terminal(stringify!($eval), eval)
+                })]
             )
         }
     };
@@ -379,6 +410,7 @@ macro_rules! rule {
         Rule {
             produced_nonterminal: String::from(stringify!($produced_nonterminal)),
             components: components!([$($components)*] []),
+            preferred: true,
         }
     };
 }
@@ -402,21 +434,41 @@ fn any_whitespace(token: &Token) -> bool {
 }
 
 fn quote(text: &'static str) -> impl Fn(&Token) -> bool {
-    move |token: &Token| token.content == text
+    move |token: &Token| {
+        println!("Expecting {:?}, got {:?}", text, token.content);
+        token.content == text
+    }
 }
 
 pub fn parse(input: &str) {
-    let rules = rules![
+    let mut rules = rules![
+        (Root -> W Expr W)
+
+        (ExprList -> Expr)
+        (ExprList -> ExprList Expr)
+
         (Expr -> Expr2)
         (Expr2 -> Expr1)
         (Expr1 -> Expr0)
 
         (Expr2 -> Expr2 W :+ W Expr1)
         (Expr1 -> Expr1 W :* W Expr0)
-        (Expr0 -> (any_name))
+        (
+            Expr0 ->
+            :POPULATED_STRUCT
+            W (quote("["))
+            W Expr
+            W Expr
+            W Expr
+            W (quote("]"))
+        )
+        (Expr0 -> :UNIQUE)
         (W -> (any_whitespace))
         (W -> )
     ];
+    let mut identifier = rule!(Expr0 -> (any_name));
+    identifier.preferred = false;
+    rules.push(identifier);
     println!("{:#?}", rules);
-    parse_internal(input, &rules[..], "Expr");
+    parse_internal(input, &rules[..], "Root");
 }

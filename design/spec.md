@@ -22,8 +22,6 @@ listed in the next sections.
 ```py
 UNIQUE
 
-EMPTY_STRUCT
-
 # Provides a single field prepended to
 # the fields specified in "rest".
 # Consumes Invariants:
