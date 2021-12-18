@@ -408,10 +408,11 @@ fn quote(text: &'static str) -> impl Fn(&Token) -> bool {
 pub fn parse(input: &str) {
     let rules = rules![
         (Expr -> Expr2)
-        (Expr2 -> Expr2 W :+ W Expr1)
         (Expr2 -> Expr1)
-        (Expr1 -> Expr1 W :* W Expr0)
         (Expr1 -> Expr0)
+
+        (Expr2 -> Expr2 W :+ W Expr1)
+        (Expr1 -> Expr1 W :* W Expr0)
         (Expr0 -> (any_name))
         (W -> (any_whitespace))
         (W -> )

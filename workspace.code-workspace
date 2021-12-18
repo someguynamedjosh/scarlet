@@ -9,8 +9,7 @@
 			"path": "vscode-syntax"
 		},
 		{
-			"name": "root",
-			"path": "."
+			"path": "design"
 		}
 	],
 	"settings": {}
