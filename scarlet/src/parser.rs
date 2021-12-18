@@ -294,6 +294,28 @@ impl<'a> StateSet<'a> {
         backup
     }
 
+    fn complete_state(
+        state: &State,
+        index: usize,
+        existing_states: &IndexSet<State<'a>>,
+        previous: &[Self],
+        new: &mut HashSet<State<'a>>,
+    ) {
+        let idx = state.start_position_in_input;
+        let previous_states = if idx < previous.len() {
+            &previous[idx].states
+        } else {
+            existing_states
+        };
+        for previous_state in previous_states {
+            if previous_state.immediate_next_nonterminal() == Some(&state.rule.produced_nonterminal)
+            {
+                let mat = ComponentMatch::ByState(index);
+                new.insert(previous_state.advanced(mat));
+            }
+        }
+    }
+
     fn complete(&mut self, previous: &[Self]) {
         let mut completed_nonterminals = HashSet::new();
         for state in self.states.iter() {
@@ -307,20 +329,19 @@ impl<'a> StateSet<'a> {
                 .get_state_completing_nonterminal(completed_nonterminal)
                 .unwrap();
             let state = &self.states[completed_state_index];
-            let idx = state.start_position_in_input;
-            let previous_states = if idx < previous.len() {
-                &previous[idx].states
-            } else {
-                &self.states
-            };
-            for previous_state in previous_states {
-                if previous_state.immediate_next_nonterminal()
-                    == Some(&state.rule.produced_nonterminal)
-                {
-                    let mat = ComponentMatch::ByState(completed_state_index);
-                    new.insert(previous_state.advanced(mat));
-                }
+            Self::complete_state(
+                state,
+                completed_state_index,
+                &self.states,
+                previous,
+                &mut new,
+            )
+        }
+        for (index, state) in self.states.iter().enumerate() {
+            if !state.is_complete() {
+                continue;
             }
+            Self::complete_state(state, index, &self.states, previous, &mut new)
         }
         self.states.extend(new.into_iter());
     }
@@ -480,29 +501,29 @@ pub fn parse(input: &str) {
     let mut rules = rules![
         (Root -> W Expr W)
 
-        (ExprList -> Expr)
-        (ExprList -> ExprList Expr)
+        // (ExprList -> Expr)
+        // (ExprList -> ExprList Expr)
 
-        (Expr -> Expr2)
-        (Expr2 -> Expr1)
+        (Expr -> Expr1)
+        // (Expr2 -> Expr1)
         (Expr1 -> Expr0)
 
-        (Expr2 -> Expr2 W :+ W Expr1)
+        // (Expr2 -> Expr2 W :+ W Expr1)
         (Expr1 -> Expr1 W :* W Expr0)
         (
             Expr0 ->
             :POPULATED_STRUCT
             W (quote("["))
             W Expr
-            W Expr
-            W Expr
+            // W Expr
+            // W Expr
             W (quote("]"))
         )
         (Expr0 -> Expr W :. W :LABEL)
-        (Expr0 -> Expr W :. W :VALUE)
-        (Expr0 -> Expr W :. W :REST)
-        (Expr0 -> Expr W :. W :IS_POPULATED_STRUCT)
-        (Expr0 -> :UNIQUE)
+        // (Expr0 -> Expr W :. W :VALUE)
+        // (Expr0 -> Expr W :. W :REST)
+        // (Expr0 -> Expr W :. W :IS_POPULATED_STRUCT)
+        // (Expr0 -> :UNIQUE)
         (W -> (any_whitespace))
         (W -> )
     ];
