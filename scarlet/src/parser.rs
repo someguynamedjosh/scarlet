@@ -6,6 +6,7 @@ use std::{
 
 // https://en.wikipedia.org/wiki/Earley_parser
 
+#[derive(Debug)]
 pub struct Token<'a> {
     role: &'static str,
     content: &'a str,
@@ -17,13 +18,19 @@ pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
     let mut index = 0;
     let mut tokens = Vec::new();
     while index < input.len() {
-        let (result, role) = if let Some(result) = whitespace.find_at(input, index) {
-            (result, "whitespace")
-        } else if let Some(result) = name.find_at(input, index) {
-            (result, "name")
-        } else {
+        let (result, role) = (|| {
+            if let Some(result) = whitespace.find_at(input, index) {
+                if result.start() == index {
+                    return (result, "whitespace");
+                }
+            }
+            if let Some(result) = name.find_at(input, index) {
+                if result.start() == index {
+                    return (result, "name");
+                }
+            }
             panic!("Unrecognized characters in input: {}", &input[index..])
-        };
+        })();
         tokens.push(Token {
             role,
             content: result.as_str(),
@@ -156,6 +163,14 @@ impl<'a> StateSet<'a> {
                 res.states.insert(State::new(rule, 0));
             }
         }
+        loop {
+            let old_size = res.states.len();
+            res.predict(rules);
+            let new_size = res.states.len();
+            if old_size == new_size {
+                break;
+            }
+        }
         res
     }
 
@@ -165,17 +180,27 @@ impl<'a> StateSet<'a> {
             position: immediate_predecessor.position + 1,
             states: HashSet::new(),
         };
+        next.execute_steps_until_no_new_states_appear(rules, previous, token);
+        next
+    }
+
+    fn execute_steps_until_no_new_states_appear(
+        &mut self,
+        rules: &'a [Rule],
+        previous: &[Self],
+        token: &Token<'a>,
+    ) {
+        let immediate_predecessor = previous.last().unwrap();
         loop {
-            let old_size = next.states.len();
-            next.predict(rules);
-            next.scan(immediate_predecessor, token);
-            next.complete(previous);
-            let new_size = next.states.len();
+            let old_size = self.states.len();
+            self.predict(rules);
+            self.scan(immediate_predecessor, token);
+            self.complete(previous);
+            let new_size = self.states.len();
             if old_size == new_size {
                 break;
             }
         }
-        next
     }
 
     fn predict(&mut self, rules: &'a [Rule]) {
@@ -204,7 +229,13 @@ impl<'a> StateSet<'a> {
         let mut new = HashSet::new();
         for state in &self.states {
             if state.is_complete() {
-                for previous_state in &previous[state.start_position_in_input].states {
+                let idx = state.start_position_in_input;
+                let previous_states = if idx < previous.len() {
+                    &previous[idx].states
+                } else {
+                    &self.states
+                };
+                for previous_state in previous_states {
                     if previous_state.immediate_next_nonterminal()
                         == Some(&state.rule.produced_nonterminal)
                     {
@@ -217,6 +248,53 @@ impl<'a> StateSet<'a> {
     }
 }
 
+#[derive(Clone, Debug)]
+enum AstNode<'a> {
+    Rule {
+        rule: &'a Rule,
+        components: Vec<AstNode<'a>>,
+    },
+    Terminal(&'a Token<'a>),
+}
+
+fn build_ast<'a>(
+    sets: &'a [StateSet<'a>],
+    tokens: &'a [Token<'a>],
+    nonterminal: &str,
+    end_index: usize,
+) -> Result<(AstNode<'a>, usize), ()> {
+    let state_set_here = &sets[end_index];
+    let mut rule = None;
+    for state in &state_set_here.states {
+        if state.is_complete() && state.rule.produced_nonterminal == nonterminal {
+            rule = Some(state.rule);
+        }
+    }
+    let rule = if let Some(rule) = rule {
+        rule
+    } else {
+        // The parse was not successful.
+        return Err(());
+    };
+    let mut components = Vec::new();
+    let mut input_index = end_index;
+    for component in rule.components.iter().rev() {
+        match component {
+            Nonterminal(nonterminal) => {
+                let (node, new_input_index) = build_ast(sets, tokens, nonterminal, input_index)?;
+                components.push(node);
+                input_index = new_input_index;
+            }
+            Terminal(_) => {
+                input_index -= 1;
+                components.push(AstNode::Terminal(&tokens[input_index]));
+            }
+        }
+    }
+    let node = AstNode::Rule { rule, components };
+    Ok((node, input_index))
+}
+
 fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
     let mut state_sets = vec![StateSet::new(rules, root_nonterminal)];
     let tokens = tokenize(input);
@@ -224,17 +302,19 @@ fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
         let next_state = StateSet::advance(rules, &state_sets[..], token);
         state_sets.push(next_state);
     }
-    println!("{:#?}", state_sets);
+    let ast = build_ast(&state_sets[..], &tokens[..], root_nonterminal, tokens.len());
+    // let ast = ast.unwrap().0;
+    println!("{:#?}", ast);
 }
 
 macro_rules! components {
     ([] [$($items:tt);*]) => {
         vec![$($items),*]
     };
-    ([ws $($input:tt)*] [$($items:tt);*]) => {
+    ([:$text:tt $($input:tt)*] [$($items:tt);*]) => {
         {
             fn eval(token: &Token) -> bool {
-                any_whitespace(token)
+                quote(stringify!($text))(token)
             }
             components!(
                 [$($input)*]
@@ -288,11 +368,19 @@ fn any_whitespace(token: &Token) -> bool {
     token.role == "whitespace"
 }
 
+fn quote(text: &'static str) -> impl Fn(&Token) -> bool {
+    move |token: &Token| token.content == text
+}
+
 pub fn parse(input: &str) {
     let rules = rules![
+        (Expr -> Expr1)
+        (Expr1 -> Expr1 W :+ W Expr0)
         (Expr1 -> Expr0)
         (Expr0 -> (any_name))
+        (W -> (any_whitespace))
+        (W -> )
     ];
     println!("{:#?}", rules);
-    parse_internal(input, &rules[..], "Expr0");
+    parse_internal(input, &rules[..], "Expr");
 }
