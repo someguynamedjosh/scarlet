@@ -6,10 +6,15 @@ use std::{
 
 // https://en.wikipedia.org/wiki/Earley_parser
 
-#[derive(Debug)]
 pub struct Token<'a> {
     role: &'static str,
     content: &'a str,
+}
+
+impl<'a> Debug for Token<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}", self.role, self.content)
+    }
 }
 
 pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
@@ -50,7 +55,7 @@ impl Debug for Component {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Nonterminal(nt) => write!(f, "{}", nt),
-            Self::Terminal(t) => write!(f, "terminal"),
+            Self::Terminal(_) => write!(f, "terminal"),
         }
     }
 }
@@ -96,10 +101,23 @@ impl Hash for Component {
 use regex::Regex;
 use Component::*;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+use crate::shared::indented;
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Rule {
     pub produced_nonterminal: String,
     pub components: Vec<Component>,
+}
+
+impl Debug for Rule {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ->", self.produced_nonterminal)?;
+        for component in &self.components {
+            write!(f, " ")?;
+            component.fmt(f)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -248,13 +266,28 @@ impl<'a> StateSet<'a> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 enum AstNode<'a> {
     Rule {
         rule: &'a Rule,
         components: Vec<AstNode<'a>>,
     },
     Terminal(&'a Token<'a>),
+}
+
+impl<'a> Debug for AstNode<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            AstNode::Rule { rule, components } => {
+                writeln!(f, "{:?} [", rule)?;
+                for component in components {
+                    writeln!(f, "    {},", indented(&format!("{:?}", component)))?;
+                }
+                write!(f, "]")
+            }
+            AstNode::Terminal(token) => token.fmt(f),
+        }
+    }
 }
 
 fn build_ast<'a>(
@@ -303,7 +336,7 @@ fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
         state_sets.push(next_state);
     }
     let ast = build_ast(&state_sets[..], &tokens[..], root_nonterminal, tokens.len());
-    // let ast = ast.unwrap().0;
+    let ast = ast.unwrap().0;
     println!("{:#?}", ast);
 }
 
@@ -374,8 +407,10 @@ fn quote(text: &'static str) -> impl Fn(&Token) -> bool {
 
 pub fn parse(input: &str) {
     let rules = rules![
-        (Expr -> Expr1)
-        (Expr1 -> Expr1 W :+ W Expr0)
+        (Expr -> Expr2)
+        (Expr2 -> Expr2 W :+ W Expr1)
+        (Expr2 -> Expr1)
+        (Expr1 -> Expr1 W :* W Expr0)
         (Expr1 -> Expr0)
         (Expr0 -> (any_name))
         (W -> (any_whitespace))
