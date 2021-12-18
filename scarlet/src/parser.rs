@@ -501,29 +501,29 @@ pub fn parse(input: &str) {
     let mut rules = rules![
         (Root -> W Expr W)
 
-        // (ExprList -> Expr)
-        // (ExprList -> ExprList Expr)
+        (ExprList -> Expr)
+        (ExprList -> ExprList Expr)
 
-        (Expr -> Expr1)
-        // (Expr2 -> Expr1)
+        (Expr -> Expr2)
+        (Expr2 -> Expr1)
         (Expr1 -> Expr0)
 
-        // (Expr2 -> Expr2 W :+ W Expr1)
+        (Expr2 -> Expr2 W :+ W Expr1)
         (Expr1 -> Expr1 W :* W Expr0)
         (
             Expr0 ->
             :POPULATED_STRUCT
             W (quote("["))
             W Expr
-            // W Expr
-            // W Expr
+            W Expr
+            W Expr
             W (quote("]"))
         )
         (Expr0 -> Expr W :. W :LABEL)
-        // (Expr0 -> Expr W :. W :VALUE)
-        // (Expr0 -> Expr W :. W :REST)
-        // (Expr0 -> Expr W :. W :IS_POPULATED_STRUCT)
-        // (Expr0 -> :UNIQUE)
+        (Expr0 -> Expr W :. W :VALUE)
+        (Expr0 -> Expr W :. W :REST)
+        (Expr0 -> Expr W :. W :IS_POPULATED_STRUCT)
+        (Expr0 -> :UNIQUE)
         (W -> (any_whitespace))
         (W -> )
     ];

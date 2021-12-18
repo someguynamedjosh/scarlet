@@ -36,7 +36,7 @@ struct IS_POPULATED_STRUCT
 # are the conditions that must be true
 # to be able to assign a value to the 
 # variable.
-VARIABLE[ { x y z } ]
+VARIABLE[ x y z ]
 
 # Substitute the variables y and z in 
 # the expression x.
