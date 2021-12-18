@@ -486,7 +486,7 @@ macro_rules! rules {
 }
 
 fn any_name(token: &Token) -> bool {
-    token.role == "name"
+    token.role == "name" && !["[", "]", "(", ")", "{", "}"].contains(&token.content)
 }
 
 fn any_whitespace(token: &Token) -> bool {
@@ -501,20 +501,22 @@ pub fn parse(input: &str) {
     let mut rules = rules![
         (Root -> W Expr W)
 
-        (ExprList -> Expr)
-        (ExprList -> ExprList Expr)
+        (ExprList -> )
+        (ExprList -> ExprList W Expr)
 
-        (Expr -> Expr2)
+        (Expr -> Expr4)
+        (Expr4 -> Expr3)
+        (Expr3 -> Expr2)
         (Expr2 -> Expr1)
         (Expr1 -> Expr0)
 
-        (Expr2 -> Expr2 W :+ W Expr1)
-        (Expr1 -> Expr1 W :* W Expr0)
+        (Expr3 -> Expr2 W := W Expr2)
+
         (
             Expr0 ->
             :POPULATED_STRUCT
             W (quote("["))
-            W Expr
+            W (any_name)
             W Expr
             W Expr
             W (quote("]"))
@@ -523,13 +525,46 @@ pub fn parse(input: &str) {
         (Expr0 -> Expr W :. W :VALUE)
         (Expr0 -> Expr W :. W :REST)
         (Expr0 -> Expr W :. W :IS_POPULATED_STRUCT)
+
+        (
+            Expr0 ->
+            :IF_THEN_ELSE
+            W (quote("["))
+            W Expr
+            W Expr
+            W Expr
+            W (quote("]"))
+        )
+
+        (
+            Expr0 ->
+            :VARIABLE
+            W (quote("["))
+            W ExprList
+            W (quote("]"))
+        )
+
+        (Expr0 -> :AE)
         (Expr0 -> :UNIQUE)
+
         (W -> (any_whitespace))
         (W -> )
     ];
+
     let mut identifier = rule!(Expr0 -> (any_name));
     identifier.preferred = false;
     rules.push(identifier);
+
+    let mut substitution = rule!(
+        Expr0 ->
+        Expr0
+        W (quote("["))
+        W ExprList
+        W (quote("]"))
+    );
+    substitution.preferred = false;
+    rules.push(substitution);
+
     println!("{:#?}", rules);
     parse_internal(input, &rules[..], "Root");
 }
