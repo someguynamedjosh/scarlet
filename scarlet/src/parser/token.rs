@@ -2,6 +2,7 @@ use std::fmt::{self, Debug, Formatter};
 
 use regex::Regex;
 
+#[derive(Clone, Copy)]
 pub struct Token<'a> {
     pub role: &'static str,
     pub content: &'a str,
