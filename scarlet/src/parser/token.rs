@@ -29,7 +29,7 @@ pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
             }
             if let Some(result) = symbol.find_at(input, index) {
                 if result.start() == index {
-                    return (result, "whitespace");
+                    return (result, "symbol");
                 }
             }
             if let Some(result) = name.find_at(input, index) {

@@ -1,7 +1,9 @@
-use self::token::Token;
-
 mod ast;
 mod token;
+
+use OperatorMode::*;
+
+use self::token::Token;
 
 #[derive(Clone, Debug)]
 enum Node<'a> {
@@ -30,9 +32,16 @@ impl<'a> Node<'a> {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OperatorMode {
+    DontUsePrevious,
+    UsePreviousAsFirstArgument,
+    AddToPrevious,
+}
+
 struct IncomingOperator {
-    collapse_stack_while: Option<fn(&[Node]) -> bool>,
-    uses_previous_node: bool,
+    collapse_stack_while: Box<dyn StackCollapseCondition>,
+    mode: OperatorMode,
     wait_for_next_node: bool,
     precedence: u8,
 }
@@ -40,15 +49,33 @@ struct IncomingOperator {
 impl IncomingOperator {
     pub fn from_token(token: Token) -> Option<Self> {
         Some(match token.content {
+            "(" => IncomingOperator {
+                collapse_stack_while: Box::new(DontCollapseStack),
+                mode: DontUsePrevious,
+                wait_for_next_node: true,
+                precedence: 255,
+            },
+            ")" => IncomingOperator {
+                collapse_stack_while: Box::new(CollapseUntilOperator(&["("])),
+                mode: AddToPrevious,
+                wait_for_next_node: false,
+                precedence: 0,
+            },
+            "," => IncomingOperator {
+                collapse_stack_while: Box::new(CollapseUpToPrecedence(254)),
+                mode: UsePreviousAsFirstArgument,
+                wait_for_next_node: true,
+                precedence: 254,
+            },
             "+" => IncomingOperator {
-                collapse_stack_while: Some(collapse_up_to_precedence::<5>),
-                uses_previous_node: true,
+                collapse_stack_while: Box::new(CollapseUpToPrecedence(5)),
+                mode: UsePreviousAsFirstArgument,
                 wait_for_next_node: true,
                 precedence: 5,
             },
             "*" => IncomingOperator {
-                collapse_stack_while: Some(collapse_up_to_precedence::<4>),
-                uses_previous_node: true,
+                collapse_stack_while: Box::new(CollapseUpToPrecedence(4)),
+                mode: UsePreviousAsFirstArgument,
                 wait_for_next_node: true,
                 precedence: 4,
             },
@@ -57,8 +84,47 @@ impl IncomingOperator {
     }
 }
 
-fn collapse_up_to_precedence<const PREC: u8>(stack: &[Node]) -> bool {
-    stack.len() >= 2 && stack[stack.len() - 2].precedence() <= PREC
+trait StackCollapseCondition {
+    fn should_collapse(&self, stack: &[Node]) -> bool;
+}
+
+pub struct DontCollapseStack;
+
+impl StackCollapseCondition for DontCollapseStack {
+    fn should_collapse(&self, _stack: &[Node]) -> bool {
+        false
+    }
+}
+
+pub struct CollapseUpToPrecedence(u8);
+
+impl StackCollapseCondition for CollapseUpToPrecedence {
+    fn should_collapse(&self, stack: &[Node]) -> bool {
+        stack.len() >= 2 && stack[stack.len() - 2].precedence() <= self.0
+    }
+}
+
+pub struct CollapseUntilOperator(&'static [&'static str]);
+
+impl StackCollapseCondition for CollapseUntilOperator {
+    fn should_collapse(&self, stack: &[Node]) -> bool {
+        if let Node::Operator { operators, .. } = stack.last().unwrap() {
+            if operators.len() != self.0.len() {
+                // Collapsing can continue, this is not the operator we are looking for.
+                true
+            } else {
+                for (l, r) in operators.iter().zip(self.0.iter()) {
+                    if l.content != *r {
+                        return true;
+                    }
+                }
+                // The operator has the expected length and values, stop collapsing now.
+                false
+            }
+        } else {
+            true
+        }
+    }
 }
 
 pub fn parse(input: &str) {
@@ -86,33 +152,65 @@ pub fn parse(input: &str) {
     }
 
     fn push_operator<'a>(token: Token<'a>, op: IncomingOperator, stack: &mut Vec<Node<'a>>) {
-        if let Some(collapse_stack_while) = op.collapse_stack_while {
-            while collapse_stack_while(&stack[..]) {
-                collapse(stack);
+        while op.collapse_stack_while.should_collapse(&stack[..]) {
+            if stack.len() < 2 {
+                panic!(
+                    "Attempted to collapse the stack too many times for {}",
+                    token.content
+                );
             }
+            collapse(stack);
         }
         let mut arguments = Vec::new();
-        if op.uses_previous_node {
+        if op.mode == UsePreviousAsFirstArgument {
             arguments.push(stack.pop().unwrap());
         }
-        stack.push(Node::Operator {
-            operators: vec![token],
-            arguments,
-            precedence: op.precedence,
-            waiting: op.wait_for_next_node,
-        });
+        if op.mode == AddToPrevious {
+            if let Node::Operator {
+                operators,
+                precedence,
+                waiting,
+                ..
+            } = stack.last_mut().unwrap()
+            {
+                operators.push(token);
+                *waiting = op.wait_for_next_node;
+                *precedence = op.precedence;
+            } else {
+                panic!("Looks like someone didn't write their stack collapsing condition correctly")
+            }
+        } else {
+            stack.push(Node::Operator {
+                operators: vec![token],
+                arguments,
+                precedence: op.precedence,
+                waiting: op.wait_for_next_node,
+            });
+        }
     }
 
     for token in tokens {
         if let Some(op) = IncomingOperator::from_token(token) {
             push_operator(token, op, &mut stack);
         } else if token.role == "name" {
+            if let Some(true) = stack.last().map(|n| n.is_complete()) {
+                let pretend_token = Token {
+                    role: "symbol",
+                    content: ",",
+                };
+                push_operator(
+                    pretend_token,
+                    IncomingOperator::from_token(pretend_token).unwrap(),
+                    &mut stack,
+                );
+            }
             stack.push(Node::Identifier(token));
         } else if token.role == "whitespace" {
             ()
         } else {
             todo!("Nice error, not sure what to do with token {:?}", token)
         }
+        println!("{:#?}", stack);
     }
 
     while stack.len() > 1 {
