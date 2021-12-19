@@ -90,8 +90,8 @@ macro_rules! components {
         crate::components!(
             [$($input)*]
             [$($items;)* ({
-                fn eval(token: &Token) -> bool {
-                    quote(stringify!($text))(token)
+                fn eval(token: &crate::parser::token::Token) -> bool {
+                    token.content == stringify!($text)
                 }
                 crate::parser::rule::Component::Terminal(
                     concat!("(quote(\"", stringify!($text), "\"))"),
@@ -112,7 +112,7 @@ macro_rules! components {
         crate::components!(
             [$($input)*]
             [$($items;)* ({
-                fn eval(token: &Token) -> bool {
+                fn eval(token: &crate::parser::token::Token) -> bool {
                     $eval(token)
                 }
                 crate::parser::rule::Component::Terminal(stringify!($eval), eval)
@@ -138,7 +138,7 @@ macro_rules! rules {
 ($(($nt:ident -> $($c:tt)*))*) => {
     vec![
         $(
-            rule!($nt -> $($c)*)
+            crate::rule!($nt -> $($c)*)
         ),*
     ]
 }
