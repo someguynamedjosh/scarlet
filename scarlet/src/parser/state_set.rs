@@ -1,4 +1,8 @@
-use std::{collections::HashSet, fmt::Debug};
+use std::{
+    collections::HashSet,
+    fmt::Debug,
+    time::{Duration, Instant},
+};
 
 use indexmap::IndexSet;
 
@@ -8,6 +12,13 @@ use super::{
     token::Token,
 };
 
+#[derive(Clone, Debug, Default)]
+pub struct PerfTimers {
+    pub predict_time: Duration,
+    pub scan_time: Duration,
+    pub complete_time: Duration,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StateSet<'a> {
     pub position: usize,
@@ -15,7 +26,7 @@ pub struct StateSet<'a> {
 }
 
 impl<'a> StateSet<'a> {
-    pub fn new(rules: &'a [Rule], root_nonterminal: &str) -> Self {
+    pub fn new(rules: &'a [Rule], root_nonterminal: &str, timers: &mut PerfTimers) -> Self {
         let mut res = Self {
             position: 0,
             states: IndexSet::new(),
@@ -25,10 +36,12 @@ impl<'a> StateSet<'a> {
                 res.states.insert(State::new(rule, 0));
             }
         }
+        let mut next_unprocessed = 0;
         loop {
             let old_size = res.states.len();
-            res.predict(rules);
-            res.complete(&[]);
+            res.predict(rules, 0, timers);
+            res.complete(&[], next_unprocessed, timers);
+            next_unprocessed = old_size;
             let new_size = res.states.len();
             if old_size == new_size {
                 break;
@@ -37,13 +50,18 @@ impl<'a> StateSet<'a> {
         res
     }
 
-    pub fn advance(rules: &'a [Rule], previous: &[Self], token: &Token<'a>) -> Self {
+    pub fn advance(
+        rules: &'a [Rule],
+        previous: &[Self],
+        token: &Token<'a>,
+        timers: &mut PerfTimers,
+    ) -> Self {
         let immediate_predecessor = previous.last().unwrap();
         let mut next = Self {
             position: immediate_predecessor.position + 1,
             states: IndexSet::new(),
         };
-        next.execute_steps_until_no_new_states_appear(rules, previous, token);
+        next.execute_steps_until_no_new_states_appear(rules, previous, token, timers);
         next
     }
 
@@ -52,13 +70,16 @@ impl<'a> StateSet<'a> {
         rules: &'a [Rule],
         previous: &[Self],
         token: &Token<'a>,
+        timers: &mut PerfTimers,
     ) {
         let immediate_predecessor = previous.last().unwrap();
+        let mut next_unprocessed = 0;
         loop {
             let old_size = self.states.len();
-            self.predict(rules);
-            self.scan(immediate_predecessor, token);
-            self.complete(previous);
+            self.predict(rules, 0, timers);
+            self.scan(immediate_predecessor, token, timers);
+            self.complete(previous, next_unprocessed, timers);
+            next_unprocessed = old_size;
             let new_size = self.states.len();
             if old_size == new_size {
                 break;
@@ -66,9 +87,12 @@ impl<'a> StateSet<'a> {
         }
     }
 
-    fn predict(&mut self, rules: &'a [Rule]) {
+    fn predict(&mut self, rules: &'a [Rule], after: usize, timers: &mut PerfTimers) {
+        let start = Instant::now();
+
+        let old_size = self.states.len();
         let mut new = HashSet::new();
-        for existing in &self.states {
+        for existing in self.states.iter().skip(after) {
             if let Some(nt) = existing.immediate_next_nonterminal() {
                 for rule in rules {
                     if rule.produced_nonterminal == nt {
@@ -78,14 +102,23 @@ impl<'a> StateSet<'a> {
             }
         }
         self.states.extend(new.into_iter());
+
+        timers.predict_time += start.elapsed();
+        if self.states.len() > old_size {
+            self.predict(rules, old_size, timers);
+        }
     }
 
-    fn scan(&mut self, previous: &Self, token: &Token<'a>) {
+    fn scan(&mut self, previous: &Self, token: &Token<'a>, timers: &mut PerfTimers) {
+        let start = Instant::now();
+
         for state in &previous.states {
             if state.immediate_next_terminal_matches(token) {
                 self.states.insert(state.advanced(ComponentMatch::ByToken));
             }
         }
+
+        timers.scan_time += start.elapsed();
     }
 
     fn get_state_completing_nonterminal(&self, nonterminal: &str) -> Option<usize> {
@@ -127,7 +160,9 @@ impl<'a> StateSet<'a> {
         }
     }
 
-    fn complete(&mut self, previous: &[Self]) {
+    fn complete(&mut self, previous: &[Self], after: usize, timers: &mut PerfTimers) {
+        let start = Instant::now();
+
         let mut completed_nonterminals = HashSet::new();
         for state in self.states.iter() {
             if state.is_complete() {
@@ -155,5 +190,7 @@ impl<'a> StateSet<'a> {
             Self::complete_state(state, index, &self.states, previous, &mut new)
         }
         self.states.extend(new.into_iter());
+
+        timers.complete_time += start.elapsed();
     }
 }

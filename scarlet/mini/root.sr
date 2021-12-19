@@ -1,1 +1,6 @@
-POPULATED_STRUCT[a = b c = d e = f]
+POPULATED_STRUCT[a = b c = d e = f] = POPULATED_STRUCT[a = b c = d e = f]
+POPULATED_STRUCT[a = b c = d e = f] = POPULATED_STRUCT[a = b c = d e = f]
+POPULATED_STRUCT[a = b c = d e = f] = POPULATED_STRUCT[a = b c = d e = f]
+POPULATED_STRUCT[a = b c = d e = f] = POPULATED_STRUCT[a = b c = d e = f]
+POPULATED_STRUCT[a = b c = d e = f] = POPULATED_STRUCT[a = b c = d e = f]
+POPULATED_STRUCT[a = b c = d e = f] = POPULATED_STRUCT[a = b c = d e = f]
