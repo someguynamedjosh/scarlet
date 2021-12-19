@@ -5,29 +5,34 @@ mod state_set;
 mod token;
 
 use self::{rule::Rule, token::Token};
-use crate::{parser::state_set::StateSet, rule, rules};
+use crate::{rule, rules};
 
-fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
-    let mut state_sets = vec![StateSet::new(rules, root_nonterminal)];
-    let tokens = token::tokenize(input);
-    println!("{:?}", tokens);
-    for token in &tokens {
-        let next_state = StateSet::advance(rules, &state_sets[..], token);
-        state_sets.push(next_state);
+mod top_level {
+    use super::{ast::AstNode, rule::Rule, token::Token};
+    use crate::parser::{ast, state_set::StateSet};
+
+    pub fn parse_to_ast<'x>(
+        input: &'x [Token<'x>],
+        rules: &'x [Rule],
+        root_nonterminal: &str,
+    ) -> Result<AstNode<'x>, String> {
+        let mut state_sets = vec![StateSet::new(rules, root_nonterminal)];
+        for token in input {
+            let next_state = StateSet::advance(rules, &state_sets[..], token);
+            state_sets.push(next_state);
+        }
+        let end_index = input.len();
+        let last_set = &state_sets[end_index];
+        let root_state = last_set
+            .states
+            .iter()
+            .position(|state| {
+                state.is_complete() && state.rule.produced_nonterminal == root_nonterminal
+            })
+            .unwrap();
+        let ast = ast::build_ast(&state_sets[..], &input[..], root_state, end_index);
+        ast.map(|x| x.0)
     }
-    println!("{:#?}", state_sets);
-    let end_index = tokens.len();
-    let last_set = &state_sets[end_index];
-    let root_state = last_set
-        .states
-        .iter()
-        .position(|state| {
-            state.is_complete() && state.rule.produced_nonterminal == root_nonterminal
-        })
-        .unwrap();
-    let ast = ast::build_ast(&state_sets[..], &tokens[..], root_state, end_index);
-    let ast = ast.unwrap().0;
-    println!("{:#?}", ast);
 }
 
 fn any_name(token: &Token) -> bool {
@@ -111,5 +116,7 @@ pub fn parse(input: &str) {
     rules.push(substitution);
 
     println!("{:#?}", rules);
-    parse_internal(input, &rules[..], "Root");
+    let tokens = token::tokenize(input);
+    let ast = top_level::parse_to_ast(&tokens[..], &rules[..], "Root");
+    println!("{:#?}", ast.unwrap());
 }

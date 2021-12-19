@@ -28,7 +28,7 @@ impl<'a> Debug for AstNode<'a> {
 }
 
 pub fn build_ast<'a>(
-    sets: &'a [StateSet<'a>],
+    sets: &[StateSet<'a>],
     tokens: &'a [Token<'a>],
     state: usize,
     end_index: usize,
