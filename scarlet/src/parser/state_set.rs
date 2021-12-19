@@ -1,18 +1,12 @@
-use std::{
-    collections::HashSet,
-    fmt::{self, Debug, Formatter},
-    hash::{Hash, Hasher},
-};
+use std::{collections::HashSet, fmt::Debug};
 
 use indexmap::IndexSet;
-use regex::Regex;
 
 use super::{
     rule::Rule,
     state::{ComponentMatch, State},
     token::Token,
 };
-use crate::shared::indented;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StateSet<'a> {
@@ -125,8 +119,7 @@ impl<'a> StateSet<'a> {
             existing_states
         };
         for previous_state in previous_states {
-            if previous_state.immediate_next_nonterminal()
-                == Some(&state.rule.produced_nonterminal)
+            if previous_state.immediate_next_nonterminal() == Some(&state.rule.produced_nonterminal)
             {
                 let mat = ComponentMatch::ByState(index);
                 new.insert(previous_state.advanced(mat));

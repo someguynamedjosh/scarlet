@@ -1,11 +1,4 @@
-use std::{
-    collections::HashSet,
-    fmt::{self, Debug, Formatter},
-    hash::{Hash, Hasher},
-};
-
-use indexmap::IndexSet;
-use regex::Regex;
+use std::fmt::{self, Debug, Formatter};
 
 use super::{rule::Rule, state_set::StateSet, token::Token};
 use crate::{parser::state::ComponentMatch, shared::indented};

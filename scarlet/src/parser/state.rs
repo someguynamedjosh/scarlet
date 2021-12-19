@@ -1,17 +1,12 @@
 use std::{
-    collections::HashSet,
-    fmt::{self, Debug, Formatter},
+    fmt::Debug,
     hash::{Hash, Hasher},
 };
-
-use indexmap::IndexSet;
-use regex::Regex;
 
 use super::{
     rule::{Component::*, Rule},
     token::Token,
 };
-use crate::shared::indented;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ComponentMatch {

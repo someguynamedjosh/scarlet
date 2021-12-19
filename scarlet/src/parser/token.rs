@@ -1,14 +1,6 @@
-use std::{
-    collections::HashSet,
-    fmt::{self, Debug, Formatter},
-    hash::{Hash, Hasher},
-};
+use std::fmt::{self, Debug, Formatter};
 
-use indexmap::IndexSet;
 use regex::Regex;
-
-use super::rule::Component::*;
-use crate::shared::indented;
 
 pub struct Token<'a> {
     pub role: &'static str,

@@ -1,14 +1,9 @@
 use std::{
-    collections::HashSet,
     fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
 };
 
-use indexmap::IndexSet;
-use regex::Regex;
-
 use super::{rule::Component::*, token::Token};
-use crate::shared::indented;
 
 #[derive(Clone)]
 pub enum Component {

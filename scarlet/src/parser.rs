@@ -4,13 +4,8 @@ mod state;
 mod state_set;
 mod token;
 
-use self::{
-    rule::{Component::*, Rule},
-    token::Token,
-};
-use crate::{parser::state_set::StateSet, rule, rules, shared::indented};
-
-// https://en.wikipedia.org/wiki/Earley_parser
+use self::{rule::Rule, token::Token};
+use crate::{parser::state_set::StateSet, rule, rules};
 
 fn parse_internal(input: &str, rules: &[Rule], root_nonterminal: &str) {
     let mut state_sets = vec![StateSet::new(rules, root_nonterminal)];
