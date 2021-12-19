@@ -36,7 +36,7 @@ mod top_level {
 }
 
 fn any_name(token: &Token) -> bool {
-    token.role == "name" && !["[", "]", "(", ")", "{", "}"].contains(&token.content)
+    token.role == "name"
 }
 
 fn any_whitespace(token: &Token) -> bool {

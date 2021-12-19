@@ -14,13 +14,19 @@ impl<'a> Debug for Token<'a> {
 }
 
 pub fn tokenize<'a>(input: &'a str) -> Vec<Token<'a>> {
-    let name = Regex::new("[a-zA-Z0-9_]+|[^a-zA-Z0-9_]").unwrap();
+    let name = Regex::new("[a-zA-Z0-9_]+").unwrap();
+    let symbol = Regex::new("[^a-zA-Z0-9_]").unwrap();
     let whitespace = Regex::new(r"[\r\n\t ]+").unwrap();
     let mut index = 0;
     let mut tokens = Vec::new();
     while index < input.len() {
         let (result, role) = (|| {
             if let Some(result) = whitespace.find_at(input, index) {
+                if result.start() == index {
+                    return (result, "whitespace");
+                }
+            }
+            if let Some(result) = symbol.find_at(input, index) {
                 if result.start() == index {
                     return (result, "whitespace");
                 }
