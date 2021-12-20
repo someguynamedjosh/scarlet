@@ -1,7 +1,4 @@
-use super::{
-    incoming::{IncomingOperator, OperatorMode},
-    token::Token,
-};
+use super::incoming::{IncomingOperator, OperatorMode};
 
 #[derive(Debug)]
 pub struct Stack<'a>(pub Vec<Node<'a>>);
@@ -9,12 +6,12 @@ pub struct Stack<'a>(pub Vec<Node<'a>>);
 #[derive(Debug)]
 pub enum Node<'a> {
     Operator {
-        operators: Vec<Token<'a>>,
+        operators: Vec<&'a str>,
         arguments: Vec<Node<'a>>,
         waiting: bool,
         precedence: u8,
     },
-    Identifier(Token<'a>),
+    Identifier(&'a str),
 }
 
 impl<'a> Node<'a> {
@@ -52,14 +49,14 @@ impl<'a> Stack<'a> {
         }
     }
 
-    pub fn push_operator(&mut self, token: Token<'a>, op: IncomingOperator) {
+    pub fn push_operator(&mut self, name: &'a str, op: &IncomingOperator) {
         use OperatorMode::*;
 
         while op.collapse_stack_while.should_collapse(&self.0[..]) {
             if self.0.len() < 2 {
                 panic!(
                     "Attempted to collapse the stack too many times for {}",
-                    token.content
+                    name
                 );
             }
             self.collapse();
@@ -76,7 +73,7 @@ impl<'a> Stack<'a> {
                 ..
             } = self.0.last_mut().unwrap()
             {
-                operators.push(token);
+                operators.push(name);
                 *waiting = op.wait_for_next_node;
                 *precedence = op.precedence;
             } else {
@@ -84,7 +81,7 @@ impl<'a> Stack<'a> {
             }
         } else {
             self.0.push(Node::Operator {
-                operators: vec![token],
+                operators: vec![name],
                 arguments,
                 precedence: op.precedence,
                 waiting: op.wait_for_next_node,

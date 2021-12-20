@@ -1,6 +1,4 @@
-use OperatorMode::*;
-
-use super::{token::Token, Node};
+use super::Node;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OperatorMode {
@@ -17,40 +15,13 @@ pub struct IncomingOperator {
 }
 
 impl IncomingOperator {
-    pub fn from_token(token: Token) -> Option<Self> {
-        Some(match token.content {
-            "(" => IncomingOperator {
-                collapse_stack_while: Box::new(DontCollapseStack),
-                mode: DontUsePrevious,
-                wait_for_next_node: true,
-                precedence: 255,
-            },
-            ")" => IncomingOperator {
-                collapse_stack_while: Box::new(CollapseUntilOperator(&["("])),
-                mode: AddToPrevious,
-                wait_for_next_node: false,
-                precedence: 0,
-            },
-            "," => IncomingOperator {
-                collapse_stack_while: Box::new(CollapseUpToPrecedence(254)),
-                mode: UsePreviousAsFirstArgument,
-                wait_for_next_node: true,
-                precedence: 254,
-            },
-            "+" => IncomingOperator {
-                collapse_stack_while: Box::new(CollapseUpToPrecedence(5)),
-                mode: UsePreviousAsFirstArgument,
-                wait_for_next_node: true,
-                precedence: 5,
-            },
-            "*" => IncomingOperator {
-                collapse_stack_while: Box::new(CollapseUpToPrecedence(4)),
-                mode: UsePreviousAsFirstArgument,
-                wait_for_next_node: true,
-                precedence: 4,
-            },
-            _ => return None,
-        })
+    pub fn comma() -> Self {
+        Self {
+            collapse_stack_while: Box::new(CollapseUpToPrecedence(254)),
+            mode: OperatorMode::UsePreviousAsFirstArgument,
+            wait_for_next_node: true,
+            precedence: 254,
+        }
     }
 }
 
@@ -66,7 +37,7 @@ impl StackCollapseCondition for DontCollapseStack {
     }
 }
 
-pub struct CollapseUpToPrecedence(u8);
+pub struct CollapseUpToPrecedence(pub u8);
 
 impl StackCollapseCondition for CollapseUpToPrecedence {
     fn should_collapse(&self, stack: &[Node]) -> bool {
@@ -74,7 +45,7 @@ impl StackCollapseCondition for CollapseUpToPrecedence {
     }
 }
 
-pub struct CollapseUntilOperator(&'static [&'static str]);
+pub struct CollapseUntilOperator(pub &'static [&'static str]);
 
 impl StackCollapseCondition for CollapseUntilOperator {
     fn should_collapse(&self, stack: &[Node]) -> bool {
@@ -84,7 +55,7 @@ impl StackCollapseCondition for CollapseUntilOperator {
                 true
             } else {
                 for (l, r) in operators.iter().zip(self.0.iter()) {
-                    if l.content != *r {
+                    if l != r {
                         return true;
                     }
                 }
