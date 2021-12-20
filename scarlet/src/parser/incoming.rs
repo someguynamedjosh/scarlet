@@ -1,4 +1,8 @@
-use super::Node;
+use std::fmt::Debug;
+
+use regex::Regex;
+
+use super::{rule::Rule, stack::Node};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OperatorMode {
@@ -7,11 +11,13 @@ pub enum OperatorMode {
     AddToPrevious,
 }
 
+#[derive(Debug)]
 pub struct IncomingOperator {
     pub(super) collapse_stack_while: Box<dyn StackCollapseCondition>,
     pub(super) mode: OperatorMode,
     pub(super) wait_for_next_node: bool,
     pub(super) precedence: u8,
+    pub(super) extra_rules: Vec<Rule>,
 }
 
 impl IncomingOperator {
@@ -21,14 +27,16 @@ impl IncomingOperator {
             mode: OperatorMode::UsePreviousAsFirstArgument,
             wait_for_next_node: true,
             precedence: 254,
+            extra_rules: vec![],
         }
     }
 }
 
-pub trait StackCollapseCondition {
+pub trait StackCollapseCondition: Debug {
     fn should_collapse(&self, stack: &[Node]) -> bool;
 }
 
+#[derive(Debug)]
 pub struct DontCollapseStack;
 
 impl StackCollapseCondition for DontCollapseStack {
@@ -37,6 +45,7 @@ impl StackCollapseCondition for DontCollapseStack {
     }
 }
 
+#[derive(Debug)]
 pub struct CollapseUpToPrecedence(pub u8);
 
 impl StackCollapseCondition for CollapseUpToPrecedence {
@@ -45,7 +54,8 @@ impl StackCollapseCondition for CollapseUpToPrecedence {
     }
 }
 
-pub struct CollapseUntilOperator(pub &'static [&'static str]);
+#[derive(Debug)]
+pub struct CollapseUntilOperator(pub Vec<Regex>);
 
 impl StackCollapseCondition for CollapseUntilOperator {
     fn should_collapse(&self, stack: &[Node]) -> bool {
@@ -55,7 +65,11 @@ impl StackCollapseCondition for CollapseUntilOperator {
                 true
             } else {
                 for (l, r) in operators.iter().zip(self.0.iter()) {
-                    if l != r {
+                    if let Some(m) = r.find(l) {
+                        if m.start() != 0 || m.end() != l.len() {
+                            return true;
+                        }
+                    } else {
                         return true;
                     }
                 }

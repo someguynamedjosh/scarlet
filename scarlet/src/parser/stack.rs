@@ -1,4 +1,7 @@
-use super::incoming::{IncomingOperator, OperatorMode};
+use super::{
+    incoming::{IncomingOperator, OperatorMode},
+    rule::Rule,
+};
 
 #[derive(Debug)]
 pub struct Stack<'a>(pub Vec<Node<'a>>);
@@ -10,6 +13,7 @@ pub enum Node<'a> {
         arguments: Vec<Node<'a>>,
         waiting: bool,
         precedence: u8,
+        extra_rules: &'a [Rule],
     },
     Identifier(&'a str),
 }
@@ -49,7 +53,7 @@ impl<'a> Stack<'a> {
         }
     }
 
-    pub fn push_operator(&mut self, name: &'a str, op: &IncomingOperator) {
+    pub fn push_operator(&mut self, name: &'a str, op: &'a IncomingOperator) {
         use OperatorMode::*;
 
         while op.collapse_stack_while.should_collapse(&self.0[..]) {
@@ -70,12 +74,14 @@ impl<'a> Stack<'a> {
                 operators,
                 precedence,
                 waiting,
+                extra_rules,
                 ..
             } = self.0.last_mut().unwrap()
             {
                 operators.push(name);
                 *waiting = op.wait_for_next_node;
                 *precedence = op.precedence;
+                *extra_rules = &op.extra_rules;
             } else {
                 panic!("Looks like someone didn't write their stack collapsing condition correctly")
             }
@@ -85,6 +91,7 @@ impl<'a> Stack<'a> {
                 arguments,
                 precedence: op.precedence,
                 waiting: op.wait_for_next_node,
+                extra_rules: &op.extra_rules,
             });
         }
     }
