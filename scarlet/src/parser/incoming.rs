@@ -41,7 +41,7 @@ impl Debug for IncomingOperator {
 impl IncomingOperator {
     pub fn comma() -> Self {
         Self {
-            readable_name: "comma",
+            readable_name: "multiple constructs",
             create_item: None,
             collapse_stack_while: Box::new(CollapseUpToPrecedence(254)),
             mode: OperatorMode::UsePreviousAsFirstArgument,

@@ -51,7 +51,11 @@ impl<'x> Environment<'x> {
         self.constructs[id].definition = definition.into();
     }
 
-    pub fn define_construct(&mut self, construct: ConstructId, definition: Box<dyn Construct>) {
+    pub fn define_construct(&mut self, construct: ConstructId, definition: impl Construct) {
+        self.define_dyn_construct(construct, Box::new(definition))
+    }
+
+    pub fn define_dyn_construct(&mut self, construct: ConstructId, definition: Box<dyn Construct>) {
         self.constructs[construct].definition = definition.into();
     }
 

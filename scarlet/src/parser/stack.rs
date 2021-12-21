@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
-pub type CreateFn = fn(&mut Environment, Box<dyn Scope>) -> ConstructId;
+pub type CreateFn = fn(&mut Environment, Box<dyn Scope>, &Node) -> ConstructId;
 
 pub struct Node<'a> {
     pub readable_name: &'static str,
@@ -41,8 +41,13 @@ impl<'a> Node<'a> {
         !self.waiting
     }
 
-    pub fn as_item(&self, env: &mut Environment, scope: Box<dyn Scope>) -> ConstructId {
-        self.create_item.expect("This node is not an item")(env, scope)
+    pub fn as_item(&self, env: &mut Environment, scope: impl Scope + 'static) -> ConstructId {
+        self.create_item
+            .expect(&format!("This {} node is not an item", self.readable_name))(
+            env,
+            Box::new(scope),
+            self,
+        )
     }
 }
 

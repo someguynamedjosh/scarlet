@@ -24,7 +24,7 @@ pub fn struct_from_unnamed_fields<'x>(
         let this = env.push_placeholder(scope);
         let rest = struct_from_unnamed_fields(env, fields, Box::new(SField(this)));
         let this_def = CPopulatedStruct::new(String::new(), first_field, rest);
-        env.define_construct(this, Box::new(this_def));
+        env.define_dyn_construct(this, Box::new(this_def));
         this
     }
 }

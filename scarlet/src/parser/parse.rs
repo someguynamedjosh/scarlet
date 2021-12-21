@@ -51,7 +51,11 @@ fn match_longest_rule<'a>(
     (longest_rule, longest_rule_length)
 }
 
-fn create_identifier_item(env: &mut Environment, scope: Box<dyn Scope>) -> ConstructId {
+fn create_identifier_item(
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> ConstructId {
     todo!()
 }
 

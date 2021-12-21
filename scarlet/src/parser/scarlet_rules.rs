@@ -76,7 +76,7 @@ pub fn rules() -> Vec<Rule> {
     ));
     rules.push(rule::phrase(
         "equal operator",
-        None,
+        Some(scarlet_creators::equal as CreateFn),
         Some(65),
         [(r"=", 65, true, vec![])],
     ));
