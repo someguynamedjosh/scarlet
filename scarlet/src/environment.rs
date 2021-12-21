@@ -13,7 +13,7 @@ use crate::{
             AnnotatedConstruct, BoxedConstruct, ConstructDefinition, ConstructId, ConstructPool,
         },
         unique::{Unique, UniqueId, UniquePool},
-        variable::VariablePool,
+        variable::{VariablePool, VariableId, Variable},
         Construct,
     },
     resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
@@ -96,6 +96,10 @@ impl<'x> Environment<'x> {
 
     pub fn push_unique(&mut self) -> UniqueId {
         self.uniques.push(Unique)
+    }
+
+    pub fn push_variable(&mut self) -> VariableId {
+        self.variables.push(Variable)
     }
 
     pub fn push_unresolved(

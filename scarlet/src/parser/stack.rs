@@ -42,12 +42,16 @@ impl<'a> Node<'a> {
     }
 
     pub fn as_construct(&self, env: &mut Environment, scope: impl Scope + 'static) -> ConstructId {
+        self.as_construct_dyn_scope(env, Box::new(scope))
+    }
+
+    pub fn as_construct_dyn_scope(
+        &self,
+        env: &mut Environment,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
         self.create_item
-            .expect(&format!("{} is not a construct", self.readable_name))(
-            env,
-            Box::new(scope),
-            self,
-        )
+            .expect(&format!("{} is not a construct", self.readable_name))(env, scope, self)
     }
 
     pub fn as_ident(&self) -> &'a str {

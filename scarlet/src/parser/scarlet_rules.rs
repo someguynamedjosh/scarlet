@@ -19,13 +19,21 @@ pub fn rules() -> Vec<Rule> {
         rules.push(rule::phrase(name, car, None, [(re, 0, false, vec![])]));
     }
     for (name, car, re) in [
-        ("variable", None, r"\b(VARIABLE|VAR|V)\b"),
+        (
+            "variable",
+            Some(scarlet_creators::variable as CreateFn),
+            r"\b(VARIABLE|VAR|V)\b",
+        ),
         (
             "populated struct",
             Some(scarlet_creators::populated_struct as CreateFn),
             r"\bPOPULATED_STRUCT\b",
         ),
-        ("if/then/else", None, r"\bIF_THEN_ELSE\b"),
+        (
+            "if/then/else",
+            Some(scarlet_creators::if_then_else as CreateFn),
+            r"\bIF_THEN_ELSE\b",
+        ),
     ] {
         rules.push(rule::phrase(
             name,
@@ -41,7 +49,7 @@ pub fn rules() -> Vec<Rule> {
 
     rules.push(rule::phrase(
         "parentheses",
-        None,
+        Some(scarlet_creators::parentheses as CreateFn),
         None,
         [(r"\(", 255, true, vec![]), (r"\)", 1, false, vec![])],
     ));
