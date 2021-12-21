@@ -47,6 +47,19 @@ pub fn atomic_struct_member<'x, const M: AtomicStructMember>(
     this
 }
 
+pub fn builtin_item<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
+    assert_eq!(node.operators, &[".AS_BUILTIN_ITEM", "[", "]"]);
+    assert_eq!(node.arguments.len(), 2);
+    let base = node.arguments[0].as_construct_dyn_scope(env, scope);
+    let name = node.arguments[1].as_ident();
+    env.define_builtin_item(name, base);
+    base
+}
+
 pub fn equal<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'x>) -> ConstructId {
     assert_eq!(node.operators, &["="]);
     assert_eq!(node.arguments.len(), 2);

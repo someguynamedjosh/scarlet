@@ -1,6 +1,6 @@
 use super::{ConstructId, Environment};
 use crate::{
-    constructs::{base::BoxedConstruct, AnnotatedConstruct},
+    constructs::{base::BoxedConstruct, AnnotatedConstruct, ConstructDefinition},
     shared::{Id, TripleBool},
 };
 
@@ -11,7 +11,13 @@ impl<'x> Environment<'x> {
 
     pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
         let con_id = self.resolve(con_id);
-        self.constructs[con_id].definition.as_resolved().unwrap()
+        if let &ConstructDefinition::Other(id) = &self.constructs[con_id].definition {
+            self.get_construct_definition(id)
+        } else if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
+            def
+        } else {
+            unreachable!()
+        }
     }
 
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<ConstructId> {

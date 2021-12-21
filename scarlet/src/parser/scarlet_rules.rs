@@ -91,6 +91,16 @@ pub fn rules() -> Vec<Rule> {
         rules.push(rule::phrase(name, car, Some(4), [(re, 255, false, vec![])]));
     }
     rules.push(rule::phrase(
+        "as builtin item",
+        Some(scarlet_creators::builtin_item as CreateFn),
+        Some(4),
+        [
+            (r"\.AS_BUILTIN_ITEM", 4, false, vec![]),
+            (r"\[", 0, true, vec![]),
+            (r"\]", 4, false, vec![]),
+        ],
+    ));
+    rules.push(rule::phrase(
         "member access",
         None,
         Some(4),
