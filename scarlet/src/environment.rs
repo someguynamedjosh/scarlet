@@ -40,7 +40,7 @@ impl<'x> Environment<'x> {
             variables: Pool::new(),
         };
         for &name in BUILTIN_ITEM_NAMES {
-            let id = this.push_placeholder(Box::new(SPlaceholder));
+            let id = this.push_placeholder(Box::new(SRoot));
             this.builtin_items.insert(name, id);
         }
         this

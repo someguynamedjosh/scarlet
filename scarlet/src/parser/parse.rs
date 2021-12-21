@@ -55,12 +55,25 @@ fn create_identifier_item(env: &mut Environment, scope: Box<dyn Scope>) -> Const
     todo!()
 }
 
-pub fn parse(input: &str) {
+pub struct ParseContext {
+    rules: Vec<Rule>,
+    comma: IncomingOperator,
+}
+
+impl ParseContext {
+    pub fn new() -> Self {
+        Self {
+            rules: scarlet_rules::rules(),
+            comma: IncomingOperator::comma(),
+        }
+    }
+}
+
+pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
     let r_name = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
     let r_whitespace = Regex::new(r"[ \r\n\t]+").unwrap();
 
-    let rules = scarlet_rules::rules();
-    let comma = IncomingOperator::comma();
+    let ParseContext { rules, comma } = ctx;
 
     let mut stack = Stack(Vec::new());
 
@@ -109,5 +122,5 @@ pub fn parse(input: &str) {
 
     let result = stack.0.pop().unwrap();
 
-    println!("{:#?}", result);
+    result
 }

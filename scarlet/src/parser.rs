@@ -1,8 +1,8 @@
 mod incoming;
 mod parse;
 mod rule;
-mod stack;
-mod scarlet_rules;
 mod scarlet_creators;
+mod scarlet_rules;
+mod stack;
 
-pub use parse::parse;
+pub use parse::{parse, ParseContext};
