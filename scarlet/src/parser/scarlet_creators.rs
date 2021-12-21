@@ -184,7 +184,7 @@ pub fn variable<'x>(
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    assert_eq!(node.operators, &["VARIABLE", "[", "]"]);
+    assert_eq!(&node.operators[1..], &["[", "]"]);
     assert!(node.arguments.len() <= 1);
     let invariants = collect_comma_list(node.arguments.get(0));
     let this = env.push_placeholder(scope);

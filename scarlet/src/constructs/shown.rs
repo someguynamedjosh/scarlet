@@ -46,7 +46,6 @@ impl Construct for CShown {
         scope: Box<dyn Scope>,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
-        // Self::new(env, base)
-        todo!()
+        env.push_construct(Self::new(base), scope)
     }
 }

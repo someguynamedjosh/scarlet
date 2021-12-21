@@ -37,36 +37,37 @@ impl Construct for CIfThenElse {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         let truee = env.get_builtin_item("true");
         let true_invs = env.generated_invariants(self.then);
         let mut false_invs = env.generated_invariants(self.then);
-        // let mut result = Vec::new();
-        // for true_inv in true_invs {
-        //     let mut is_conditional = true;
-        //     for (index, &false_inv) in false_invs.clone().iter().enumerate() {
-        //         if env.is_def_equal(true_inv, false_inv) == TripleBool::True {
-        //             result.push(true_inv);
-        //             false_invs.remove(index);
-        //             is_conditional = false;
-        //         }
-        //     }
-        //     if is_conditional {
-        //         let conditional_inv = CIfThenElse::new(env, self.condition, true_inv,
-        // truee);         env.reduce(conditional_inv);
-        //         result.push(conditional_inv);
-        //     }
-        // }
-        // for false_inv in false_invs {
-        //     // Everything left over is conditional.
-        //     let conditional_inv = CIfThenElse::new(env, self.condition, truee,
-        // false_inv);     env.reduce(conditional_inv);
-        //     result.push(conditional_inv);
-        // }
-        // result
-        todo!()
+        let mut result = Vec::new();
+        for true_inv in true_invs {
+            let mut is_conditional = true;
+            for (index, &false_inv) in false_invs.clone().iter().enumerate() {
+                if env.is_def_equal(true_inv, false_inv) == TripleBool::True {
+                    result.push(true_inv);
+                    false_invs.remove(index);
+                    is_conditional = false;
+                }
+            }
+            if is_conditional {
+                let conditional_inv = CIfThenElse::new(self.condition, true_inv, truee);
+                let conditional_inv = env.push_construct(conditional_inv, Box::new(SPlain(this)));
+                env.reduce(conditional_inv);
+                result.push(conditional_inv);
+            }
+        }
+        for false_inv in false_invs {
+            // Everything left over is conditional.
+            let conditional_inv = CIfThenElse::new(self.condition, truee, false_inv);
+            let conditional_inv = env.push_construct(conditional_inv, Box::new(SPlain(this)));
+            env.reduce(conditional_inv);
+            result.push(conditional_inv);
+        }
+        result
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
@@ -115,7 +116,6 @@ impl Construct for CIfThenElse {
         let condition = env.substitute(self.condition, substitutions);
         let then = env.substitute(self.then, substitutions);
         let elsee = env.substitute(self.elsee, substitutions);
-        // Self::new(env, condition, then, elsee)
-        todo!()
+        env.push_construct(Self::new(condition, then, elsee), scope)
     }
 }

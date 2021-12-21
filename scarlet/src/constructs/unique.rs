@@ -56,7 +56,6 @@ impl Construct for CUnique {
         _substitutions: &Substitutions,
         scope: Box<dyn Scope>,
     ) -> ConstructId {
-        // env.push_construct(Self::new(self.0))
-        todo!()
+        env.push_construct(Self::new(self.0), scope)
     }
 }

@@ -130,13 +130,13 @@ impl Construct for CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        Self::new(
+        let con = Self::new(
             self.id,
             invariants.clone(),
             self.capturing,
             self.depends_on.clone(),
         );
-        todo!()
+        env.push_construct(con, scope)
     }
 }
 

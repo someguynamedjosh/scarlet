@@ -85,7 +85,6 @@ impl Construct for CSubstitution {
                 new_subs.insert_no_replace(target.clone(), *value);
             }
         }
-        // Self::new(env, base, new_subs)
-        todo!()
+        env.push_construct(Self::new(base, new_subs), scope)
     }
 }

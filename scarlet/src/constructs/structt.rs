@@ -95,8 +95,7 @@ impl Construct for CPopulatedStruct {
     ) -> ConstructId {
         let value = env.substitute(self.value, substitutions);
         let rest = env.substitute(self.rest, substitutions);
-        // Self::new(self.label.clone(), value, rest)
-        todo!()
+        env.push_construct(Self::new(self.label.clone(), value, rest), scope)
     }
 }
 
@@ -156,10 +155,7 @@ impl Construct for CAtomicStructMember {
     ) -> ConstructId {
         let subbed_base = env.substitute(self.0, substitutions);
         let subbed = Self(subbed_base, self.1);
-        // let con = env.push_construct(subbed);
-        // env.set_scope(subbed_base, &SPlain(con));
-        // con
-        todo!()
+        env.push_construct(subbed, scope)
     }
 }
 

@@ -9,7 +9,8 @@ use crate::{
         scarlet_rules,
         stack::{Node, Stack},
     },
-    scope::Scope, resolvable::RIdentifier,
+    resolvable::RIdentifier,
+    scope::Scope,
 };
 
 fn anchored_find<'a>(regex: &Regex, input: &'a str) -> Option<&'a str> {
@@ -30,7 +31,7 @@ fn match_longest_rule<'a>(
     rules: &'a [Rule],
 ) -> (Option<&'a Rule>, usize) {
     let (mut longest_rule, mut longest_rule_length) = (None, 0);
-    for frame in &stack.0 {
+    for frame in stack.0.iter().rev() {
         for rule in frame.extra_rules {
             if let Some(matchh) = anchored_find(&rule.matchh, match_against) {
                 if matchh.len() > longest_rule_length {
@@ -77,7 +78,7 @@ impl ParseContext {
 
 pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
     let r_name = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
-    let r_whitespace = Regex::new(r"[ \r\n\t]+").unwrap();
+    let r_whitespace = Regex::new(r"[ \r\n\t]+|#[^\n]*\n").unwrap();
 
     let ParseContext { rules, comma } = ctx;
 
