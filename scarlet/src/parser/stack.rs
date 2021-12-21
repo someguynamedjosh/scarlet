@@ -41,13 +41,23 @@ impl<'a> Node<'a> {
         !self.waiting
     }
 
-    pub fn as_item(&self, env: &mut Environment, scope: impl Scope + 'static) -> ConstructId {
+    pub fn as_construct(&self, env: &mut Environment, scope: impl Scope + 'static) -> ConstructId {
         self.create_item
-            .expect(&format!("This {} node is not an item", self.readable_name))(
+            .expect(&format!("{} is not a construct", self.readable_name))(
             env,
             Box::new(scope),
             self,
         )
+    }
+
+    pub fn as_ident(&self) -> &'a str {
+        if self.operators[0] != "IDENTIFIER"
+            || self.operators.len() != 2
+            || self.arguments.len() != 0
+        {
+            panic!("{} is not an identifier", self.readable_name)
+        }
+        self.operators[1]
     }
 }
 

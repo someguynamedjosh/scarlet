@@ -19,7 +19,11 @@ pub fn rules() -> Vec<Rule> {
     }
     for (name, car, re) in [
         ("variable", None, r"\b(VARIABLE|VAR|V)\b"),
-        ("populated struct", None, r"\bPOPULATED_STRUCT\b"),
+        (
+            "populated struct",
+            Some(scarlet_creators::populated_struct as CreateFn),
+            r"\bPOPULATED_STRUCT\b",
+        ),
         ("if/then/else", None, r"\bIF_THEN_ELSE\b"),
     ] {
         rules.push(rule::phrase(

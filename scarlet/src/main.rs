@@ -31,7 +31,7 @@ fn main() {
     println!("{:#?}", root);
 
     let mut env = Environment::new();
-    let root = root.as_item(&mut env, SRoot);
+    let root = root.as_construct(&mut env, SRoot);
     // env.resolve_all();
     // env.reduce_all();
     // env.check_all();
