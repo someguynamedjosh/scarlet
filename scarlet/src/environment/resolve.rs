@@ -3,13 +3,11 @@ use itertools::Itertools;
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
     constructs::{
-        as_variable,
+        self, as_variable,
         substitution::{CSubstitution, Substitutions},
-        variable::CVariable, self,
+        variable::CVariable,
     },
     scope::{SPlain, Scope},
-    tokens::structure::Token,
-    transform::{self, ApplyContext},
 };
 
 impl<'x> Environment<'x> {

@@ -3,15 +3,14 @@ use std::{any::Any, fmt::Debug};
 use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
     environment::Environment,
+    resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},
-    tokens::structure::Token, transform::{Resolvable, BoxedResolvable},
 };
 
 #[derive(Debug)]
 pub enum ConstructDefinition<'x> {
     Other(ConstructId),
-    Placeholder,
     Resolved(BoxedConstruct),
     Unresolved(BoxedResolvable<'x>),
 }
@@ -61,7 +60,11 @@ pub trait Construct: Any + Debug + AnyEq {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable>;
 
     #[allow(unused_variables)]
-    fn generated_invariants<'x>(&self, this: ConstructId, env: &mut Environment<'x>) -> Vec<ConstructId> {
+    fn generated_invariants<'x>(
+        &self,
+        this: ConstructId,
+        env: &mut Environment<'x>,
+    ) -> Vec<ConstructId> {
         vec![]
     }
 

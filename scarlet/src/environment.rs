@@ -16,10 +16,9 @@ use crate::{
         variable::VariablePool,
         Construct,
     },
+    resolvable::{BoxedResolvable, RPlaceholder},
     scope::{SPlaceholder, SPlain, SRoot, Scope},
     shared::{Pool, TripleBool},
-    tokens::structure::Token,
-    transform::{Resolvable, BoxedResolvable},
 };
 
 pub const BUILTIN_ITEM_NAMES: &[&str] = &["true", "false", "void"];
@@ -62,7 +61,7 @@ impl<'x> Environment<'x> {
     pub fn push_placeholder(&mut self) -> ConstructId {
         let scope = Box::new(SPlaceholder);
         let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Placeholder,
+            definition: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             scope,
         };
         self.constructs.push(con)

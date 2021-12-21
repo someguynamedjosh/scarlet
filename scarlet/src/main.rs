@@ -6,13 +6,14 @@
 #![feature(generic_associated_types)]
 #![feature(associated_type_defaults)]
 
-// mod constructs;
-// mod environment;
+mod constructs;
+mod environment;
 mod file_tree;
 pub mod parser;
-// pub mod scope;
+pub mod scope;
 mod shared;
 mod util;
+pub mod resolvable;
 
 // use crate::{environment::Environment, scope::SRoot};
 

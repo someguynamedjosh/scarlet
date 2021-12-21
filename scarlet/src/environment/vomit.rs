@@ -1,8 +1,6 @@
 use super::{ConstructDefinition, ConstructId, Environment};
 use crate::{
     constructs::{base::Construct, downcast_construct, shown::CShown},
-    tokens::structure::Token,
-    transform::{self, ApplyContext},
 };
 
 impl<'x> Environment<'x> {
@@ -36,26 +34,7 @@ impl<'x> Environment<'x> {
         // println!("{:#?}", self);
     }
 
-    fn expand_token(&mut self, input: Token<'x>) -> Token<'x> {
-        // let extras = Default::default();
-        let tfers = todo!(); //transform::all_transformers(&extras);
-        // for tfer in &tfers {
-        //     let mut context = ApplyContext { env: self };
-        //     if let Some(replace_with) = tfer.as_ref().vomit(&mut context, &input) {
-        //         return self.expand_token(replace_with);
-        //     }
-        // }
-        if let Token::Construct(_con_id) = input {
-            input
-        } else if let Token::Stream { label, contents } = input {
-            let contents = contents.into_iter().map(|t| self.expand_token(t)).collect();
-            Token::Stream { label, contents }
-        } else {
-            input
-        }
-    }
-
     fn vomit(&mut self, con_id: ConstructId) -> String {
-        format!("{:?}", self.expand_token(con_id.into()))
+        todo!()
     }
 }
