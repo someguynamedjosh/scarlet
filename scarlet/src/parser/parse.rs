@@ -26,13 +26,11 @@ fn match_longest_rule<'a>(
 ) -> (Option<&'a Rule>, usize) {
     let (mut longest_rule, mut longest_rule_length) = (None, 0);
     for frame in &stack.0 {
-        if let Node::Operator { extra_rules, .. } = frame {
-            for rule in *extra_rules {
-                if let Some(matchh) = anchored_find(&rule.matchh, match_against) {
-                    if matchh.len() > longest_rule_length {
-                        longest_rule_length = matchh.len();
-                        longest_rule = Some(rule);
-                    }
+        for rule in frame.extra_rules {
+            if let Some(matchh) = anchored_find(&rule.matchh, match_against) {
+                if matchh.len() > longest_rule_length {
+                    longest_rule_length = matchh.len();
+                    longest_rule = Some(rule);
                 }
             }
         }
@@ -78,7 +76,13 @@ pub fn parse(input: &str) {
                 stack.push_operator(",", &comma);
             }
 
-            stack.0.push(Node::Identifier(matchh));
+            stack.0.push(Node {
+                operators: vec!["IDENTIFIER", matchh],
+                arguments: vec![],
+                extra_rules: &[],
+                precedence: 0,
+                waiting: false,
+            });
 
             input_position += matchh.len();
         } else if let Some(matchh) = anchored_find(&r_whitespace, match_against) {

@@ -4,35 +4,22 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct Stack<'a>(pub Vec<Node<'a>>);
-
-#[derive(Debug)]
-pub enum Node<'a> {
-    Operator {
-        operators: Vec<&'a str>,
-        arguments: Vec<Node<'a>>,
-        waiting: bool,
-        precedence: u8,
-        extra_rules: &'a [Rule],
-    },
-    Identifier(&'a str),
+pub struct Node<'a> {
+    pub operators: Vec<&'a str>,
+    pub arguments: Vec<Node<'a>>,
+    pub waiting: bool,
+    pub precedence: u8,
+    pub extra_rules: &'a [Rule],
 }
 
 impl<'a> Node<'a> {
     pub fn is_complete(&self) -> bool {
-        match self {
-            &Node::Operator { waiting, .. } => !waiting,
-            Node::Identifier(_) => true,
-        }
-    }
-
-    pub fn precedence(&self) -> u8 {
-        match self {
-            &Node::Operator { precedence, .. } => precedence,
-            Node::Identifier(_) => 0,
-        }
+        !self.waiting
     }
 }
+
+#[derive(Debug)]
+pub struct Stack<'a>(pub Vec<Node<'a>>);
 
 impl<'a> Stack<'a> {
     pub fn collapse(&mut self) {
@@ -41,16 +28,9 @@ impl<'a> Stack<'a> {
         assert!(top.is_complete());
         let next = self.0.len() - 1;
         let next = &mut self.0[next];
-        if let Node::Operator {
-            arguments, waiting, ..
-        } = next
-        {
-            assert!(*waiting);
-            *waiting = false;
-            arguments.push(top);
-        } else {
-            todo!("Nice error, cannot collapse self.")
-        }
+        assert!(next.waiting);
+        next.waiting = false;
+        next.arguments.push(top);
     }
 
     pub fn push_operator(&mut self, name: &'a str, op: &'a IncomingOperator) {
@@ -70,23 +50,13 @@ impl<'a> Stack<'a> {
             arguments.push(self.0.pop().unwrap());
         }
         if op.mode == AddToPrevious {
-            if let Node::Operator {
-                operators,
-                precedence,
-                waiting,
-                extra_rules,
-                ..
-            } = self.0.last_mut().unwrap()
-            {
-                operators.push(name);
-                *waiting = op.wait_for_next_node;
-                *precedence = op.precedence;
-                *extra_rules = &op.extra_rules;
-            } else {
-                panic!("Looks like someone didn't write their stack collapsing condition correctly")
-            }
+            let node = self.0.last_mut().unwrap();
+            node.operators.push(name);
+            node.waiting = op.wait_for_next_node;
+            node.precedence = op.precedence;
+            node.extra_rules = &op.extra_rules;
         } else {
-            self.0.push(Node::Operator {
+            self.0.push(Node {
                 operators: vec![name],
                 arguments,
                 precedence: op.precedence,

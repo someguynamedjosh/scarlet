@@ -50,7 +50,7 @@ pub struct CollapseUpToPrecedence(pub u8);
 
 impl StackCollapseCondition for CollapseUpToPrecedence {
     fn should_collapse(&self, stack: &[Node]) -> bool {
-        stack.len() >= 2 && stack[stack.len() - 2].precedence() <= self.0
+        stack.len() >= 2 && stack[stack.len() - 2].precedence <= self.0
     }
 }
 
@@ -59,25 +59,22 @@ pub struct CollapseUntilOperator(pub Vec<Regex>);
 
 impl StackCollapseCondition for CollapseUntilOperator {
     fn should_collapse(&self, stack: &[Node]) -> bool {
-        if let Node::Operator { operators, .. } = stack.last().unwrap() {
-            if operators.len() != self.0.len() {
-                // Collapsing can continue, this is not the operator we are looking for.
-                true
-            } else {
-                for (l, r) in operators.iter().zip(self.0.iter()) {
-                    if let Some(m) = r.find(l) {
-                        if m.start() != 0 || m.end() != l.len() {
-                            return true;
-                        }
-                    } else {
+        let top = stack.last().unwrap();
+        if top.operators.len() != self.0.len() {
+            // Collapsing can continue, this is not the operator we are looking for.
+            true
+        } else {
+            for (l, r) in top.operators.iter().zip(self.0.iter()) {
+                if let Some(m) = r.find(l) {
+                    if m.start() != 0 || m.end() != l.len() {
                         return true;
                     }
+                } else {
+                    return true;
                 }
-                // The operator has the expected length and values, stop collapsing now.
-                false
             }
-        } else {
-            true
+            // The operator has the expected length and values, stop collapsing now.
+            false
         }
     }
 }
