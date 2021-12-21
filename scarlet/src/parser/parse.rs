@@ -1,10 +1,15 @@
 use regex::Regex;
 
 use super::{incoming::IncomingOperator, rule::Rule};
-use crate::parser::{
-    incoming::OperatorMode,
-    scarlet_rules,
-    stack::{Node, Stack},
+use crate::{
+    constructs::ConstructId,
+    environment::Environment,
+    parser::{
+        incoming::OperatorMode,
+        scarlet_rules,
+        stack::{Node, Stack},
+    },
+    scope::Scope,
 };
 
 fn anchored_find<'a>(regex: &Regex, input: &'a str) -> Option<&'a str> {
@@ -46,7 +51,9 @@ fn match_longest_rule<'a>(
     (longest_rule, longest_rule_length)
 }
 
-fn create_identifier_item() {}
+fn create_identifier_item(env: &mut Environment, scope: Box<dyn Scope>) -> ConstructId {
+    todo!()
+}
 
 pub fn parse(input: &str) {
     let r_name = Regex::new(r"[a-zA-Z0-9_]+").unwrap();

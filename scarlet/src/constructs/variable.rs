@@ -27,22 +27,17 @@ pub struct CVariable {
 
 impl CVariable {
     pub fn new<'x>(
-        env: &mut Environment<'x>,
         id: VariableId,
         invariants: Vec<ConstructId>,
         capturing: bool,
         depends_on: Vec<CVariable>,
-    ) -> ConstructId {
-        let con = env.push_construct(Self {
+    ) -> Self {
+        Self {
             id,
             invariants: invariants.clone(),
             capturing,
             depends_on,
-        });
-        for &invariant in &invariants {
-            env.set_scope(invariant, &SVariableInvariants(con));
         }
-        con
     }
 
     pub(crate) fn get_id(&self) -> VariableId {
@@ -135,12 +130,12 @@ impl Construct for CVariable {
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
         Self::new(
-            env,
             self.id,
             invariants.clone(),
             self.capturing,
             self.depends_on.clone(),
-        )
+        );
+        todo!()
     }
 }
 

@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use super::{ConstructDefinition, ConstructId, Environment};
+use super::{Construct, ConstructId, Environment};
 use crate::{
     constructs::{
         self, as_variable,

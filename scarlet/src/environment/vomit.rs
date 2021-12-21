@@ -1,7 +1,5 @@
-use super::{ConstructDefinition, ConstructId, Environment};
-use crate::{
-    constructs::{base::Construct, downcast_construct, shown::CShown},
-};
+use super::{Construct, ConstructId, Environment};
+use crate::constructs::{downcast_construct, shown::CShown, ConstructDefinition};
 
 impl<'x> Environment<'x> {
     pub fn show_all_requested(&mut self) {

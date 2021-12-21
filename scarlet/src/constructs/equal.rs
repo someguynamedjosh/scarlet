@@ -19,14 +19,10 @@ pub struct CEqual {
 
 impl CEqual {
     pub fn new<'x>(
-        env: &mut Environment<'x>,
         left: ConstructId,
         right: ConstructId,
-    ) -> ConstructId {
-        let con = env.push_construct(Self { left, right });
-        env.set_scope(left, &SPlain(con));
-        env.set_scope(right, &SPlain(con));
-        con
+    ) -> Self{
+        Self { left, right }
     }
 }
 
@@ -55,23 +51,24 @@ impl Construct for CEqual {
         let truee = env.get_builtin_item("true");
         let falsee = env.get_builtin_item("false");
         let is_true = this;
-        let is_false = Self::new(env, this, falsee);
-        let is_bool = CIfThenElse::new(env, is_true, truee, is_false);
+        todo!();
+        // let is_false = Self::new(env, this, falsee);
+        // let is_bool = CIfThenElse::new(env, is_true, truee, is_false);
 
-        println!("is_bool: {:#?}", is_bool);
+        // println!("is_bool: {:#?}", is_bool);
 
-        env.set_scope(is_bool, &SPlain(this));
+        // env.set_scope(is_bool, &SPlain(this));
 
-        env.reduce(is_true);
-        env.reduce(is_false);
-        env.reduce(is_bool);
+        // env.reduce(is_true);
+        // env.reduce(is_false);
+        // env.reduce(is_bool);
 
-        [
-            vec![is_bool],
-            env.generated_invariants(self.left),
-            env.generated_invariants(self.right),
-        ]
-        .concat()
+        // [
+        //     vec![is_bool],
+        //     env.generated_invariants(self.left),
+        //     env.generated_invariants(self.right),
+        // ]
+        // .concat()
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
@@ -100,6 +97,7 @@ impl Construct for CEqual {
     ) -> ConstructId {
         let left = env.substitute(self.left, substitutions);
         let right = env.substitute(self.right, substitutions);
-        Self::new(env, left, right)
+        // Self::new(left, right)
+        todo!()
     }
 }

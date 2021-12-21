@@ -1,9 +1,9 @@
 use super::{
     as_struct,
-    base::{Construct, ConstructId},
+    base::{ConstructDefinition, ConstructId},
     substitution::Substitutions,
     variable::CVariable,
-    ConstructDefinition,
+    Construct,
 };
 use crate::{
     environment::Environment,
@@ -15,13 +15,17 @@ use crate::{
 pub fn struct_from_unnamed_fields<'x>(
     env: &mut Environment<'x>,
     mut fields: Vec<ConstructId>,
+    scope: Box<dyn Scope>,
 ) -> ConstructId {
     if fields.is_empty() {
         env.get_builtin_item("void")
     } else {
         let first_field = fields.remove(0);
-        let rest = struct_from_unnamed_fields(env, fields);
-        CPopulatedStruct::new(env, String::new(), first_field, rest)
+        let this = env.push_placeholder(scope);
+        let rest = struct_from_unnamed_fields(env, fields, Box::new(SField(this)));
+        let this_def = CPopulatedStruct::new(String::new(), first_field, rest);
+        env.define_construct(this, Box::new(this_def));
+        this
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -32,16 +36,8 @@ pub struct CPopulatedStruct {
 }
 
 impl CPopulatedStruct {
-    pub fn new<'x>(
-        env: &mut Environment<'x>,
-        label: String,
-        value: ConstructId,
-        rest: ConstructId,
-    ) -> ConstructId {
-        let con = env.push_construct(Self { label, value, rest });
-        env.set_scope(value, &SFieldAndRest(con));
-        env.set_scope(rest, &SField(con));
-        con
+    pub fn new<'x>(label: String, value: ConstructId, rest: ConstructId) -> Self {
+        Self { label, value, rest }
     }
 
     pub fn get_label(&self) -> &str {
@@ -97,7 +93,8 @@ impl Construct for CPopulatedStruct {
     ) -> ConstructId {
         let value = env.substitute(self.value, substitutions);
         let rest = env.substitute(self.rest, substitutions);
-        Self::new(env, self.label.clone(), value, rest)
+        // Self::new(self.label.clone(), value, rest)
+        todo!()
     }
 }
 
@@ -156,9 +153,10 @@ impl Construct for CAtomicStructMember {
     ) -> ConstructId {
         let subbed_base = env.substitute(self.0, substitutions);
         let subbed = Self(subbed_base, self.1);
-        let con = env.push_construct(subbed);
-        env.set_scope(subbed_base, &SPlain(con));
-        con
+        // let con = env.push_construct(subbed);
+        // env.set_scope(subbed_base, &SPlain(con));
+        // con
+        todo!()
     }
 }
 

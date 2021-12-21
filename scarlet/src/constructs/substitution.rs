@@ -15,29 +15,10 @@ pub struct CSubstitution(ConstructId, Substitutions);
 
 impl CSubstitution {
     pub fn new<'x>(
-        env: &mut Environment<'x>,
         base: ConstructId,
         subs: Substitutions,
-    ) -> ConstructId {
-        let con = env.push_construct(Self(base, subs.clone()));
-        env.set_scope(base, &SPlain(con));
-        for &(_, sub) in &subs {
-            env.set_scope(sub, &SPlain(con));
-        }
-        con
-    }
-
-    pub fn into<'x>(
-        env: &mut Environment<'x>,
-        con: ConstructId,
-        base: ConstructId,
-        subs: Substitutions,
-    ) -> ConstructDefinition<'x> {
-        env.set_scope(base, &SPlain(con));
-        for &(_, sub) in &subs {
-            env.set_scope(sub, &SPlain(con));
-        }
-        ConstructDefinition::Resolved(Box::new(Self(base, subs.clone())))
+    ) -> Self {
+        Self(base, subs.clone())
     }
 }
 
@@ -106,6 +87,7 @@ impl Construct for CSubstitution {
                 new_subs.insert_no_replace(target.clone(), *value);
             }
         }
-        Self::new(env, base, new_subs)
+        // Self::new(env, base, new_subs)
+        todo!()
     }
 }

@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Formatter};
 
 use regex::Regex;
 
@@ -14,7 +14,6 @@ pub enum OperatorMode {
     AddToPrevious,
 }
 
-#[derive(Debug)]
 pub struct IncomingOperator {
     pub(super) readable_name: &'static str,
     pub(super) create_item: Option<CreateFn>,
@@ -24,6 +23,19 @@ pub struct IncomingOperator {
     pub(super) wait_for_next_node: bool,
     pub(super) precedence: u8,
     pub(super) extra_rules: Vec<Rule>,
+}
+
+impl Debug for IncomingOperator {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Node")
+            .field("readable_name", &self.readable_name)
+            .field("collapse_stack_while", &self.collapse_stack_while)
+            .field("mode", &self.mode)
+            .field("wait_for_next_node", &self.wait_for_next_node)
+            .field("precedence", &self.precedence)
+            .field("extra_rules", &self.extra_rules)
+            .finish_non_exhaustive()
+    }
 }
 
 impl IncomingOperator {

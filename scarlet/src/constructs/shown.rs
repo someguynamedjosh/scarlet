@@ -9,10 +9,8 @@ use crate::{environment::Environment, impl_any_eq_for_construct, scope::SPlain};
 pub struct CShown(ConstructId);
 
 impl CShown {
-    pub fn new<'x>(env: &mut Environment<'x>, base: ConstructId) -> ConstructId {
-        let con = env.push_construct(Self(base));
-        env.set_scope(base, &SPlain(con));
-        con
+    pub fn new<'x>(base: ConstructId) -> Self {
+        Self(base)
     }
 
     pub(crate) fn get_base(&self) -> ConstructId {
@@ -47,6 +45,7 @@ impl Construct for CShown {
         substitutions: &Substitutions,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
-        Self::new(env, base)
+        // Self::new(env, base)
+        todo!()
     }
 }

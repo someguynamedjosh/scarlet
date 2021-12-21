@@ -40,7 +40,7 @@ impl<'x> Environment<'x> {
             variables: Pool::new(),
         };
         for &name in BUILTIN_ITEM_NAMES {
-            let id = this.push_placeholder();
+            let id = this.push_placeholder(Box::new(SPlaceholder));
             this.builtin_items.insert(name, id);
         }
         this
@@ -51,6 +51,10 @@ impl<'x> Environment<'x> {
         self.constructs[id].definition = definition.into();
     }
 
+    pub fn define_construct(&mut self, construct: ConstructId, definition: Box<dyn Construct>) {
+        self.constructs[construct].definition = definition.into();
+    }
+
     pub fn get_builtin_item(&self, name: &str) -> ConstructId {
         *self
             .builtin_items
@@ -58,8 +62,7 @@ impl<'x> Environment<'x> {
             .unwrap_or_else(|| todo!("nice error, no builtin item named {}", name))
     }
 
-    pub fn push_placeholder(&mut self) -> ConstructId {
-        let scope = Box::new(SPlaceholder);
+    pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ConstructId {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             scope,
@@ -67,10 +70,14 @@ impl<'x> Environment<'x> {
         self.constructs.push(con)
     }
 
-    pub fn push_construct(&mut self, construct: impl Construct) -> ConstructId {
+    pub fn push_construct(
+        &mut self,
+        construct: impl Construct,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Resolved(Box::new(construct)),
-            scope: Box::new(SPlaceholder),
+            scope,
         };
         self.constructs.push(con)
     }

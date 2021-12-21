@@ -1,11 +1,13 @@
+use std::fmt::{self, Debug, Formatter};
+
 use super::{
     incoming::{IncomingOperator, OperatorMode},
     rule::Rule,
 };
+use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
-pub type CreateFn = fn();
+pub type CreateFn = fn(&mut Environment, Box<dyn Scope>) -> ConstructId;
 
-#[derive(Debug)]
 pub struct Node<'a> {
     pub readable_name: &'static str,
     pub create_item: Option<CreateFn>,
@@ -17,9 +19,26 @@ pub struct Node<'a> {
     pub extra_rules: &'a [Rule],
 }
 
+impl<'a> Debug for Node<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Node")
+            .field("readable_name", &self.readable_name)
+            .field("operators", &self.operators)
+            .field("arguments", &self.arguments)
+            .field("waiting", &self.waiting)
+            .field("precedence", &self.precedence)
+            .field("extra_rules", &self.extra_rules)
+            .finish_non_exhaustive()
+    }
+}
+
 impl<'a> Node<'a> {
     pub fn is_complete(&self) -> bool {
         !self.waiting
+    }
+
+    pub fn as_item(&self, env: &mut Environment, scope: Box<dyn Scope>) -> ConstructId {
+        self.create_item.expect("This node is not an item")(env, scope)
     }
 }
 

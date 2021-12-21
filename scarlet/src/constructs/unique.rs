@@ -19,8 +19,8 @@ pub type UniqueId = Id<'U'>;
 pub struct CUnique(UniqueId);
 
 impl CUnique {
-    pub fn new<'x>(env: &mut Environment<'x>, id: UniqueId) -> ConstructId {
-        env.push_construct(Self(id))
+    pub fn new<'x>(id: UniqueId) -> Self {
+        Self(id)
     }
 }
 
@@ -54,6 +54,7 @@ impl Construct for CUnique {
         env: &mut Environment<'x>,
         _substitutions: &Substitutions,
     ) -> ConstructId {
-        Self::new(env, self.0)
+        // env.push_construct(Self::new(self.0))
+        todo!()
     }
 }

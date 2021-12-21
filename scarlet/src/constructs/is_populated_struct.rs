@@ -12,10 +12,8 @@ use crate::{
 pub struct CIsPopulatedStruct(ConstructId);
 
 impl CIsPopulatedStruct {
-    pub fn new<'x>(env: &mut Environment<'x>, base: ConstructId) -> ConstructId {
-        let con = env.push_construct(Self(base));
-        env.set_scope(base, &SPlain(con));
-        con
+    pub fn new<'x>(base: ConstructId) -> Self {
+        Self(base)
     }
 }
 
@@ -61,6 +59,7 @@ impl Construct for CIsPopulatedStruct {
         substitutions: &Substitutions,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
-        Self::new(env, base)
+        // Self::new(env, base)
+        todo!()
     }
 }
