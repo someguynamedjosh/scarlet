@@ -3,6 +3,7 @@ use super::{
     scarlet_creators,
     stack::CreateFn,
 };
+use crate::constructs::structt::AtomicStructMember;
 
 pub fn rules() -> Vec<Rule> {
     let mut rules = Vec::new();
@@ -52,10 +53,32 @@ pub fn rules() -> Vec<Rule> {
     ));
 
     for (name, car, re) in [
-        ("label access", None, r"\.LABEL"),
-        ("value access", None, r"\.VALUE"),
-        ("rest access", None, r"\.REST"),
-        ("check is populated struct", None, r"\.IS_POPULATED_STRUCT"),
+        (
+            "label access",
+            Some(
+                scarlet_creators::atomic_struct_member::<{ AtomicStructMember::Label }> as CreateFn,
+            ),
+            r"\.LABEL",
+        ),
+        (
+            "value access",
+            Some(
+                scarlet_creators::atomic_struct_member::<{ AtomicStructMember::Value }> as CreateFn,
+            ),
+            r"\.VALUE",
+        ),
+        (
+            "rest access",
+            Some(
+                scarlet_creators::atomic_struct_member::<{ AtomicStructMember::Rest }> as CreateFn,
+            ),
+            r"\.REST",
+        ),
+        (
+            "check is populated struct",
+            Some(scarlet_creators::is_populated_struct as CreateFn),
+            r"\.IS_POPULATED_STRUCT",
+        ),
     ] {
         rules.push(rule::phrase(name, car, Some(4), [(re, 255, false, vec![])]));
     }

@@ -2,7 +2,10 @@ use super::stack::Node;
 use crate::{
     constructs::{
         equal::CEqual,
-        structt::{CPopulatedStruct, SField, SFieldAndRest},
+        is_populated_struct::CIsPopulatedStruct,
+        structt::{
+            AtomicStructMember, CAtomicStructMember, CPopulatedStruct, SField, SFieldAndRest,
+        },
         unique::CUnique,
         ConstructId,
     },
@@ -27,6 +30,18 @@ fn collect_comma_list<'a, 'n>(list: Option<&'a Node<'n>>) -> Vec<&'a Node<'n>> {
     }
 }
 
+pub fn atomic_struct_member<const M: AtomicStructMember>(
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> ConstructId {
+    assert_eq!(node.arguments.len(), 1);
+    let this = env.push_placeholder(scope);
+    let base = node.arguments[0].as_construct(env, SPlain(this));
+    env.define_construct(this, CAtomicStructMember(base, M));
+    this
+}
+
 pub fn equal(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
     assert_eq!(node.operators, &["="]);
     assert_eq!(node.arguments.len(), 2);
@@ -34,6 +49,18 @@ pub fn equal(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> Const
     let left = node.arguments[0].as_construct(env, SPlain(this));
     let right = node.arguments[1].as_construct(env, SPlain(this));
     env.define_construct(this, CEqual::new(left, right));
+    this
+}
+
+pub fn is_populated_struct(
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> ConstructId {
+    assert_eq!(node.arguments.len(), 1);
+    let this = env.push_placeholder(scope);
+    let base = node.arguments[0].as_construct(env, SPlain(this));
+    env.define_construct(this, CIsPopulatedStruct::new(base));
     this
 }
 
