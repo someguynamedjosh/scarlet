@@ -108,7 +108,7 @@ pub fn rules() -> Vec<Rule> {
     ));
     rules.push(rule::phrase(
         "substitution",
-        None,
+        Some(scarlet_creators::substitution),
         Some(4),
         [(r"\[", 255, true, vec![]), (r"\]", 4, false, vec![])],
     ));

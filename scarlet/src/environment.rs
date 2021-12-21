@@ -59,6 +59,10 @@ impl<'x> Environment<'x> {
         self.constructs[construct].definition = definition.into();
     }
 
+    pub fn define_unresolved(&mut self, construct: ConstructId, definition: impl Resolvable<'x> + 'x) {
+        self.constructs[construct].definition = ConstructDefinition::Unresolved(Box::new(definition));
+    }
+
     pub fn get_builtin_item(&self, name: &str) -> ConstructId {
         *self
             .builtin_items

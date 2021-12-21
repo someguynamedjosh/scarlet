@@ -15,6 +15,7 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
+    resolvable::RSubstitution,
     scope::{SPlain, Scope},
 };
 
@@ -167,6 +168,38 @@ pub fn structt<'x>(
         })
         .collect();
     struct_from_fields(env, fields, scope)
+}
+
+pub fn substitution<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
+    assert_eq!(node.operators, &["[", "]"]);
+    assert!(node.arguments.len() <= 2);
+    let this = env.push_placeholder(scope);
+    let base = node.arguments[0].as_construct(env, SPlain(this));
+    let mut named_subs = Vec::new();
+    let mut anonymous_subs = Vec::new();
+    for sub in collect_comma_list(node.arguments.get(1)) {
+        if sub.operators == &["IS"] {
+            named_subs.push((
+                sub.arguments[0].as_ident(),
+                sub.arguments[1].as_construct(env, SPlain(this)),
+            ));
+        } else {
+            anonymous_subs.push(sub.as_construct(env, SPlain(this)));
+        }
+    }
+    env.define_unresolved(
+        this,
+        RSubstitution {
+            base,
+            named_subs,
+            anonymous_subs,
+        },
+    );
+    this
 }
 
 pub fn unique<'x>(
