@@ -28,6 +28,7 @@ pub fn struct_from_unnamed_fields<'x>(
         this
     }
 }
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CPopulatedStruct {
     label: String,

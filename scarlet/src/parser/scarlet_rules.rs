@@ -55,7 +55,7 @@ pub fn rules() -> Vec<Rule> {
     ));
     rules.push(rule::phrase(
         "struct",
-        None,
+        Some(scarlet_creators::structt as CreateFn),
         None,
         [(r"\{", 255, true, vec![]), (r"\}", 1, false, vec![])],
     ));

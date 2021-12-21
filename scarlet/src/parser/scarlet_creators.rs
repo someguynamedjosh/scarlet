@@ -3,6 +3,7 @@ use itertools::Itertools;
 use super::stack::Node;
 use crate::{
     constructs::{
+        self,
         equal::CEqual,
         if_then_else::CIfThenElse,
         is_populated_struct::CIsPopulatedStruct,
@@ -83,11 +84,7 @@ pub fn is_populated_struct(
     this
 }
 
-pub fn parentheses(
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ConstructId {
+pub fn parentheses(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
     assert_eq!(node.operators, &["(", ")"]);
     assert_eq!(node.arguments.len(), 1);
     node.arguments[0].as_construct_dyn_scope(env, scope)
@@ -107,6 +104,42 @@ pub fn populated_struct(env: &mut Environment, scope: Box<dyn Scope>, node: &Nod
     this
 }
 
+pub fn struct_from_fields<'x>(
+    env: &mut Environment<'x>,
+    mut fields: Vec<(Option<&str>, &Node)>,
+    scope: Box<dyn Scope>,
+) -> ConstructId {
+    if fields.is_empty() {
+        env.get_builtin_item("void")
+    } else {
+        let (label, field) = fields.remove(0);
+        let label = label.unwrap_or("").to_owned();
+        let this = env.push_placeholder(scope);
+        let field = field.as_construct(env, SFieldAndRest(this));
+        let rest = struct_from_fields(env, fields, Box::new(SField(this)));
+        let this_def = CPopulatedStruct::new(label, field, rest);
+        env.define_construct(this, this_def);
+        this
+    }
+}
+
+pub fn structt(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+    assert_eq!(node.operators, &["{", "}"]);
+    assert!(node.arguments.len() <= 1);
+    let fields = collect_comma_list(node.arguments.get(0));
+    let fields = fields
+        .into_iter()
+        .map(|field| {
+            if field.operators == &["IS"] {
+                (Some(field.arguments[0].as_ident()), &field.arguments[1])
+            } else {
+                (None, field)
+            }
+        })
+        .collect();
+    struct_from_fields(env, fields, scope)
+}
+
 pub fn unique(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
     assert_eq!(node.operators, &["UNIQUE"]);
     let id = env.push_unique();
@@ -114,7 +147,7 @@ pub fn unique(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> Cons
 }
 
 pub fn variable(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
-    assert_eq!(node.operators, &["POPULATED_STRUCT", "[", "]"]);
+    assert_eq!(node.operators, &["VARIABLE", "[", "]"]);
     assert!(node.arguments.len() <= 1);
     let invariants = collect_comma_list(node.arguments.get(0));
     let this = env.push_placeholder(scope);
