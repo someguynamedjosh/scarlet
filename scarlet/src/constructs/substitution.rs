@@ -4,7 +4,7 @@ use super::{variable::CVariable, Construct, ConstructDefinition, ConstructId};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::SPlain,
+    scope::{SPlaceholder, SPlain, Scope},
     shared::{OrderedMap, TripleBool},
 };
 
@@ -14,10 +14,7 @@ pub type Substitutions = OrderedMap<CVariable, ConstructId>;
 pub struct CSubstitution(ConstructId, Substitutions);
 
 impl CSubstitution {
-    pub fn new<'x>(
-        base: ConstructId,
-        subs: Substitutions,
-    ) -> Self {
+    pub fn new<'x>(base: ConstructId, subs: Substitutions) -> Self {
         Self(base, subs.clone())
     }
 }
@@ -45,7 +42,7 @@ impl Construct for CSubstitution {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
         env.get_dependencies(self.0)
             .into_iter()
-            .map(|var| var.substitute(env, &self.1))
+            .map(|var| var.substitute(env, &self.1, Box::new(SPlaceholder)))
             .collect_vec()
             .into_iter()
             .map(|item| env.get_dependencies(item))
@@ -68,6 +65,7 @@ impl Construct for CSubstitution {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let base = self.0;
         let mut new_subs = self.1.clone();

@@ -7,7 +7,7 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::SPlain,
+    scope::{SPlain, Scope},
     shared::{Id, TripleBool},
 };
 
@@ -18,10 +18,7 @@ pub struct CEqual {
 }
 
 impl CEqual {
-    pub fn new<'x>(
-        left: ConstructId,
-        right: ConstructId,
-    ) -> Self{
+    pub fn new<'x>(left: ConstructId, right: ConstructId) -> Self {
         Self { left, right }
     }
 }
@@ -94,6 +91,7 @@ impl Construct for CEqual {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let left = env.substitute(self.left, substitutions);
         let right = env.substitute(self.right, substitutions);

@@ -5,7 +5,10 @@ use super::{
     variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
+    environment::Environment,
+    impl_any_eq_for_construct,
+    scope::{SPlain, Scope},
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,6 +60,7 @@ impl Construct for CIsPopulatedStruct {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
         // Self::new(env, base)

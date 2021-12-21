@@ -4,7 +4,7 @@ use crate::{
     scope::Scope,
 };
 
-fn create_unique(env: &mut Environment, scope: Box<dyn Scope>) -> ConstructId {
+pub fn unique(env: &mut Environment, scope: Box<dyn Scope>) -> ConstructId {
     let id = env.push_unique();
     env.push_construct(CUnique::new(id), scope)
 }

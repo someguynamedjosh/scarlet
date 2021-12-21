@@ -90,6 +90,7 @@ impl Construct for CPopulatedStruct {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let value = env.substitute(self.value, substitutions);
         let rest = env.substitute(self.rest, substitutions);
@@ -150,6 +151,7 @@ impl Construct for CAtomicStructMember {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let subbed_base = env.substitute(self.0, substitutions);
         let subbed = Self(subbed_base, self.1);

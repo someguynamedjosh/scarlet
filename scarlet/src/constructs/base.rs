@@ -82,6 +82,7 @@ pub trait Construct: Any + Debug + AnyEq {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId;
 }
 

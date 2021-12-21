@@ -1,10 +1,18 @@
-use super::rule::{self, Rule};
+use super::{
+    rule::{self, Rule},
+    scarlet_creators,
+    stack::CreateFn,
+};
 
 pub fn rules() -> Vec<Rule> {
     let mut rules = Vec::new();
 
     for (name, car, re) in [
-        ("keyword UNIQUE", None, r"\bUNIQUE\b"),
+        (
+            "keyword UNIQUE",
+            Some(scarlet_creators::unique as CreateFn),
+            r"\bUNIQUE\b",
+        ),
         ("keyword AXIOM_OF_EQUALITY", None, r"\bAXIOM_OF_EQUALITY\b"),
     ] {
         rules.push(rule::phrase(name, car, None, [(re, 0, false, vec![])]));

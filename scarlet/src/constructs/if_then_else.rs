@@ -3,7 +3,10 @@ use super::{
     ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment, impl_any_eq_for_construct, scope::SPlain, shared::TripleBool,
+    environment::Environment,
+    impl_any_eq_for_construct,
+    scope::{SPlain, Scope},
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -51,15 +54,15 @@ impl Construct for CIfThenElse {
         //         }
         //     }
         //     if is_conditional {
-        //         let conditional_inv = CIfThenElse::new(env, self.condition, true_inv, truee);
-        //         env.reduce(conditional_inv);
+        //         let conditional_inv = CIfThenElse::new(env, self.condition, true_inv,
+        // truee);         env.reduce(conditional_inv);
         //         result.push(conditional_inv);
         //     }
         // }
         // for false_inv in false_invs {
         //     // Everything left over is conditional.
-        //     let conditional_inv = CIfThenElse::new(env, self.condition, truee, false_inv);
-        //     env.reduce(conditional_inv);
+        //     let conditional_inv = CIfThenElse::new(env, self.condition, truee,
+        // false_inv);     env.reduce(conditional_inv);
         //     result.push(conditional_inv);
         // }
         // result
@@ -107,6 +110,7 @@ impl Construct for CIfThenElse {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let condition = env.substitute(self.condition, substitutions);
         let then = env.substitute(self.then, substitutions);

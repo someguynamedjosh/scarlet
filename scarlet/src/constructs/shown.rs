@@ -3,7 +3,7 @@ use super::{
     substitution::Substitutions,
     variable::CVariable,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, scope::SPlain};
+use crate::{environment::Environment, impl_any_eq_for_construct, scope::{SPlain, Scope}};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CShown(ConstructId);
@@ -43,6 +43,7 @@ impl Construct for CShown {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         let base = env.substitute(self.0, substitutions);
         // Self::new(env, base)

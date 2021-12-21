@@ -7,6 +7,7 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
+    scope::Scope,
     shared::{Id, Pool, TripleBool},
 };
 
@@ -53,6 +54,7 @@ impl Construct for CUnique {
         &self,
         env: &mut Environment<'x>,
         _substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         // env.push_construct(Self::new(self.0))
         todo!()

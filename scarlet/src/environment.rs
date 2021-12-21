@@ -16,7 +16,7 @@ use crate::{
         variable::VariablePool,
         Construct,
     },
-    resolvable::{BoxedResolvable, RPlaceholder},
+    resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
     scope::{SPlaceholder, SPlain, SRoot, Scope},
     shared::{Pool, TripleBool},
 };
@@ -75,8 +75,16 @@ impl<'x> Environment<'x> {
         construct: impl Construct,
         scope: Box<dyn Scope>,
     ) -> ConstructId {
+        self.push_dyn_construct(Box::new(construct), scope)
+    }
+
+    pub fn push_dyn_construct(
+        &mut self,
+        construct: Box<dyn Construct>,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
         let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Resolved(Box::new(construct)),
+            definition: ConstructDefinition::Resolved(construct),
             scope,
         };
         self.constructs.push(con)
@@ -86,17 +94,23 @@ impl<'x> Environment<'x> {
         self.uniques.push(Unique)
     }
 
-    pub fn push_unresolved(&mut self, definition: BoxedResolvable<'x>) -> ConstructId {
-        self.constructs.push(AnnotatedConstruct {
-            definition: ConstructDefinition::Unresolved(definition),
-            scope: Box::new(SPlaceholder),
-        })
+    pub fn push_unresolved(
+        &mut self,
+        definition: impl Resolvable<'x> + 'x,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
+        self.push_dyn_unresolved(Box::new(definition), scope)
     }
 
-    pub fn set_scope(&mut self, of: ConstructId, scope: &dyn Scope) {
-        if self.constructs[of].scope.is_placeholder() {
-            self.constructs[of].scope = scope.dyn_clone();
-        }
+    pub fn push_dyn_unresolved(
+        &mut self,
+        definition: BoxedResolvable<'x>,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
+        self.constructs.push(AnnotatedConstruct {
+            definition: ConstructDefinition::Unresolved(definition),
+            scope,
+        })
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {

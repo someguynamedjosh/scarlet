@@ -117,6 +117,7 @@ impl Construct for CVariable {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
+        scope: Box<dyn Scope>,
     ) -> ConstructId {
         for (target, value) in substitutions {
             if target.id == self.id && target.capturing == self.capturing {

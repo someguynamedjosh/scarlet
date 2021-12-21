@@ -23,6 +23,10 @@ impl<'a> Debug for Node<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Node")
             .field("readable_name", &self.readable_name)
+            .field(
+                "create_item",
+                self.create_item.map(|_| &"Some(..)").unwrap_or(&"None"),
+            )
             .field("operators", &self.operators)
             .field("arguments", &self.arguments)
             .field("waiting", &self.waiting)
