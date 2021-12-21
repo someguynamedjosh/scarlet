@@ -32,10 +32,10 @@ fn main() {
 
     let mut env = Environment::new();
     let root = root.as_construct(&mut env, SRoot);
-    // env.resolve_all();
+    env.resolve_all();
     // env.reduce_all();
     // env.check_all();
-    // let root = env.resolve(root);
+    let root = env.resolve(root);
     println!("{:#?}", env);
     println!("Root: {:?}", root);
     // println!();

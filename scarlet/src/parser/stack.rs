@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
-pub type CreateFn = fn(&mut Environment, Box<dyn Scope>, &Node) -> ConstructId;
+pub type CreateFn = for<'x> fn(&mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
 
 pub struct Node<'a> {
     pub readable_name: &'static str,
@@ -36,25 +36,29 @@ impl<'a> Debug for Node<'a> {
     }
 }
 
-impl<'a> Node<'a> {
+impl<'x> Node<'x> {
     pub fn is_complete(&self) -> bool {
         !self.waiting
     }
 
-    pub fn as_construct(&self, env: &mut Environment, scope: impl Scope + 'static) -> ConstructId {
+    pub fn as_construct(
+        &self,
+        env: &mut Environment<'x>,
+        scope: impl Scope + 'static,
+    ) -> ConstructId {
         self.as_construct_dyn_scope(env, Box::new(scope))
     }
 
     pub fn as_construct_dyn_scope(
         &self,
-        env: &mut Environment,
+        env: &mut Environment<'x>,
         scope: Box<dyn Scope>,
     ) -> ConstructId {
         self.create_item
             .expect(&format!("{} is not a construct", self.readable_name))(env, scope, self)
     }
 
-    pub fn as_ident(&self) -> &'a str {
+    pub fn as_ident(&self) -> &'x str {
         if self.operators[0] != "IDENTIFIER"
             || self.operators.len() != 2
             || self.arguments.len() != 0

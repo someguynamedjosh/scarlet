@@ -35,10 +35,10 @@ fn collect_comma_list<'a, 'n>(list: Option<&'a Node<'n>>) -> Vec<&'a Node<'n>> {
     }
 }
 
-pub fn atomic_struct_member<const M: AtomicStructMember>(
-    env: &mut Environment,
+pub fn atomic_struct_member<'x, const M: AtomicStructMember>(
+    env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
-    node: &Node,
+    node: &Node<'x>,
 ) -> ConstructId {
     assert_eq!(node.arguments.len(), 1);
     let this = env.push_placeholder(scope);
@@ -47,7 +47,7 @@ pub fn atomic_struct_member<const M: AtomicStructMember>(
     this
 }
 
-pub fn equal(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn equal<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'x>) -> ConstructId {
     assert_eq!(node.operators, &["="]);
     assert_eq!(node.arguments.len(), 2);
     let this = env.push_placeholder(scope);
@@ -57,7 +57,11 @@ pub fn equal(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> Const
     this
 }
 
-pub fn if_then_else(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn if_then_else<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     assert_eq!(node.operators, &["IF_THEN_ELSE", "[", "]"]);
     assert!(node.arguments.len() == 1);
     let args = collect_comma_list(node.arguments.get(0));
@@ -71,10 +75,10 @@ pub fn if_then_else(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -
     this
 }
 
-pub fn is_populated_struct(
-    env: &mut Environment,
+pub fn is_populated_struct<'x>(
+    env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
-    node: &Node,
+    node: &Node<'x>,
 ) -> ConstructId {
     assert_eq!(node.operators, &[".IS_POPULATED_STRUCT"]);
     assert_eq!(node.arguments.len(), 1);
@@ -84,13 +88,21 @@ pub fn is_populated_struct(
     this
 }
 
-pub fn parentheses(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn parentheses<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     assert_eq!(node.operators, &["(", ")"]);
     assert_eq!(node.arguments.len(), 1);
     node.arguments[0].as_construct_dyn_scope(env, scope)
 }
 
-pub fn populated_struct(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn populated_struct<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     assert_eq!(node.operators, &["POPULATED_STRUCT", "[", "]"]);
     assert!(node.arguments.len() == 1);
     let args = collect_comma_list(node.arguments.get(0));
@@ -106,7 +118,7 @@ pub fn populated_struct(env: &mut Environment, scope: Box<dyn Scope>, node: &Nod
 
 pub fn struct_from_fields<'x>(
     env: &mut Environment<'x>,
-    mut fields: Vec<(Option<&str>, &Node)>,
+    mut fields: Vec<(Option<&str>, &Node<'x>)>,
     scope: Box<dyn Scope>,
 ) -> ConstructId {
     if fields.is_empty() {
@@ -123,7 +135,11 @@ pub fn struct_from_fields<'x>(
     }
 }
 
-pub fn structt(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn structt<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     assert_eq!(node.operators, &["{", "}"]);
     assert!(node.arguments.len() <= 1);
     let fields = collect_comma_list(node.arguments.get(0));
@@ -140,13 +156,21 @@ pub fn structt(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> Con
     struct_from_fields(env, fields, scope)
 }
 
-pub fn unique(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn unique<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     assert_eq!(node.operators, &["UNIQUE"]);
     let id = env.push_unique();
     env.push_construct(CUnique::new(id), scope)
 }
 
-pub fn variable(env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ConstructId {
+pub fn variable<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     assert_eq!(node.operators, &["VARIABLE", "[", "]"]);
     assert!(node.arguments.len() <= 1);
     let invariants = collect_comma_list(node.arguments.get(0));

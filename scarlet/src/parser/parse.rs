@@ -9,7 +9,7 @@ use crate::{
         scarlet_rules,
         stack::{Node, Stack},
     },
-    scope::Scope,
+    scope::Scope, resolvable::RIdentifier,
 };
 
 fn anchored_find<'a>(regex: &Regex, input: &'a str) -> Option<&'a str> {
@@ -51,12 +51,14 @@ fn match_longest_rule<'a>(
     (longest_rule, longest_rule_length)
 }
 
-fn create_identifier_item(
-    env: &mut Environment,
+fn create_identifier_item<'x>(
+    env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
-    node: &Node,
+    node: &Node<'x>,
 ) -> ConstructId {
-    todo!()
+    assert_eq!(node.operators.len(), 2);
+    assert_eq!(node.operators[0], "IDENTIFIER");
+    env.push_unresolved(RIdentifier(node.operators[1]), scope)
 }
 
 pub struct ParseContext {

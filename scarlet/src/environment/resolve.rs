@@ -1,14 +1,5 @@
-use itertools::Itertools;
-
-use super::{Construct, ConstructId, Environment};
-use crate::{
-    constructs::{
-        self, as_variable,
-        substitution::{CSubstitution, Substitutions},
-        variable::CVariable,
-    },
-    scope::{SPlain, Scope},
-};
+use super::{ConstructId, Environment};
+use crate::constructs::ConstructDefinition;
 
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
@@ -20,6 +11,13 @@ impl<'x> Environment<'x> {
     }
 
     pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
-        todo!()
+        let con = &self.constructs[con_id];
+        if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
+            let resolvable = resolvable.dyn_clone();
+            let scope = con.scope.dyn_clone();
+            resolvable.resolve(self, scope)
+        } else {
+            con_id
+        }
     }
 }
