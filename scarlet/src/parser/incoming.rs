@@ -2,7 +2,10 @@ use std::fmt::Debug;
 
 use regex::Regex;
 
-use super::{rule::Rule, stack::Node};
+use super::{
+    rule::Rule,
+    stack::{CreateFn, Node},
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OperatorMode {
@@ -13,6 +16,9 @@ pub enum OperatorMode {
 
 #[derive(Debug)]
 pub struct IncomingOperator {
+    pub(super) readable_name: &'static str,
+    pub(super) create_item: Option<CreateFn>,
+
     pub(super) collapse_stack_while: Box<dyn StackCollapseCondition>,
     pub(super) mode: OperatorMode,
     pub(super) wait_for_next_node: bool,
@@ -23,6 +29,8 @@ pub struct IncomingOperator {
 impl IncomingOperator {
     pub fn comma() -> Self {
         Self {
+            readable_name: "comma",
+            create_item: None,
             collapse_stack_while: Box::new(CollapseUpToPrecedence(254)),
             mode: OperatorMode::UsePreviousAsFirstArgument,
             wait_for_next_node: true,

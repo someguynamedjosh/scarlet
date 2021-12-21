@@ -3,8 +3,13 @@ use super::{
     rule::Rule,
 };
 
+pub type CreateFn = fn();
+
 #[derive(Debug)]
 pub struct Node<'a> {
+    pub readable_name: &'static str,
+    pub create_item: Option<CreateFn>,
+
     pub operators: Vec<&'a str>,
     pub arguments: Vec<Node<'a>>,
     pub waiting: bool,
@@ -57,6 +62,8 @@ impl<'a> Stack<'a> {
             node.extra_rules = &op.extra_rules;
         } else {
             self.0.push(Node {
+                readable_name: op.readable_name,
+                create_item: op.create_item,
                 operators: vec![name],
                 arguments,
                 precedence: op.precedence,

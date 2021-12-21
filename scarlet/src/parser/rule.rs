@@ -1,5 +1,6 @@
 use regex::Regex;
 
+use super::stack::CreateFn;
 use crate::parser::incoming::{
     CollapseUntilOperator, CollapseUpToPrecedence, DontCollapseStack, IncomingOperator,
     OperatorMode::*,
@@ -12,6 +13,8 @@ pub struct Rule {
 }
 
 pub fn phrase<const LEN: usize>(
+    readable_name: &'static str,
+    create_item: Option<CreateFn>,
     preceding_node: Option<u8>,
     phrase: [(&str, u8, bool, Vec<Rule>); LEN],
 ) -> Rule {
@@ -22,6 +25,8 @@ pub fn phrase<const LEN: usize>(
     let first_regex = Regex::new(first_regex).unwrap();
     let first_op = if let Some(prec) = preceding_node {
         IncomingOperator {
+            readable_name,
+            create_item,
             collapse_stack_while: Box::new(CollapseUpToPrecedence(prec)),
             mode: UsePreviousAsFirstArgument,
             wait_for_next_node: first_has_next,
@@ -30,6 +35,8 @@ pub fn phrase<const LEN: usize>(
         }
     } else {
         IncomingOperator {
+            readable_name,
+            create_item,
             collapse_stack_while: Box::new(DontCollapseStack),
             mode: DontUsePrevious,
             wait_for_next_node: first_has_next,
@@ -48,6 +55,8 @@ pub fn phrase<const LEN: usize>(
         previous_extras.push(Rule {
             matchh: next_regex.clone(),
             result: IncomingOperator {
+                readable_name,
+                create_item,
                 collapse_stack_while: Box::new(CollapseUntilOperator(prev_regex.clone())),
                 mode: AddToPrevious,
                 wait_for_next_node: next_has_next,

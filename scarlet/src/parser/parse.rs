@@ -46,6 +46,8 @@ fn match_longest_rule<'a>(
     (longest_rule, longest_rule_length)
 }
 
+fn create_identifier_item() {}
+
 pub fn parse(input: &str) {
     let r_name = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
     let r_whitespace = Regex::new(r"[ \r\n\t]+").unwrap();
@@ -77,6 +79,8 @@ pub fn parse(input: &str) {
             }
 
             stack.0.push(Node {
+                create_item: Some(create_identifier_item),
+                readable_name: "identifier",
                 operators: vec!["IDENTIFIER", matchh],
                 arguments: vec![],
                 extra_rules: &[],
