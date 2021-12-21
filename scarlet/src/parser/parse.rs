@@ -2,6 +2,7 @@ use regex::Regex;
 
 use super::{incoming::IncomingOperator, rule::Rule};
 use crate::parser::{
+    incoming::OperatorMode,
     scarlet_rules,
     stack::{Node, Stack},
 };
@@ -63,6 +64,11 @@ pub fn parse(input: &str) {
             match_longest_rule(match_against, &stack, &rules[..]);
         if let Some(rule) = longest_rule {
             let name = &match_against[..longest_rule_length];
+            if let Some(true) = stack.0.last().map(|n| n.is_complete()) {
+                if rule.result.mode == OperatorMode::DontUsePrevious {
+                    stack.push_operator(",", &comma);
+                }
+            }
             stack.push_operator(name, &rule.result);
             input_position += longest_rule_length;
             continue;

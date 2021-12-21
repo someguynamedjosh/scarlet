@@ -50,7 +50,7 @@ x = y
 # f FROM Bool
 # Produces invariant:
 # a = b IMP bool.equal[ f[ a ]  f[ b ] ]
-AE[ a b f ]
+AXIOM_OF_EQUALITY[ a b f ]
 
 # Returns 'x' if c is true, otherwise 
 # returns y.
