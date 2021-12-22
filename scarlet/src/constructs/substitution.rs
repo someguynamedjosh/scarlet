@@ -40,14 +40,15 @@ impl Construct for CSubstitution {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        env.get_dependencies(self.0)
-            .into_iter()
-            .map(|var| var.substitute(env, &self.1, Box::new(SPlaceholder)))
-            .collect_vec()
-            .into_iter()
-            .map(|item| env.get_dependencies(item))
-            .flatten()
-            .collect()
+        let mut deps = Vec::new();
+        for dep in env.get_dependencies(self.0) {
+            if let Some(rep) = self.1.get(&dep) {
+                deps.append(&mut env.get_dependencies(*rep));
+            } else {
+                deps.push(dep);
+            }
+        }
+        deps
     }
 
     fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {

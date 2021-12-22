@@ -1,7 +1,12 @@
 {
-    bool_and[ true true ]
+    call_with_true[ identity ]
 
-    bool_and IS IF_THEN_ELSE[ a b false ]
+    x IS VAR[]
+    f IS VAR[DEPENDS_ON x]
+
+    identity IS x
+
+    call_with_true IS f[ true ]
 
     a IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
     b IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]

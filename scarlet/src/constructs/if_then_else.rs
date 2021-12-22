@@ -93,8 +93,7 @@ impl Construct for CIfThenElse {
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
         env.reduce(self.condition);
-        let condition = env.resolve(self.condition);
-        match env.is_def_equal(condition, env.get_builtin_item("true")) {
+        match env.is_def_equal(self.condition, env.get_builtin_item("true")) {
             TripleBool::True => {
                 env.reduce(self.then);
                 self.then.into()

@@ -15,7 +15,7 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    resolvable::RSubstitution,
+    resolvable::{RSubstitution, RVariable},
     scope::{SPlain, Scope},
 };
 
@@ -219,13 +219,27 @@ pub fn variable<'x>(
 ) -> ConstructId {
     assert_eq!(&node.operators[1..], &["[", "]"]);
     assert!(node.arguments.len() <= 1);
-    let invariants = collect_comma_list(node.arguments.get(0));
+    let mut invariants = Vec::new();
+    let mut depends_on = Vec::new();
+    let mut mode = 0;
     let this = env.push_placeholder(scope);
-    let invariants = invariants
-        .into_iter()
-        .map(|node| node.as_construct(env, SVariableInvariants(this)))
-        .collect_vec();
+    for arg in collect_comma_list(node.arguments.get(0)) {
+        if arg.operators == &["IDENTIFIER", "DEPENDS_ON"] {
+            mode = 1;
+        } else if mode == 0 {
+            let con = arg.as_construct(env, SVariableInvariants(this));
+            invariants.push(con);
+        } else {
+            let con = arg.as_construct(env, SPlain(this));
+            depends_on.push(con);
+        }
+    }
     let id = env.push_variable();
-    env.define_construct(this, CVariable::new(id, invariants, false, vec![]));
+    let def = RVariable {
+        id,
+        invariants,
+        depends_on,
+    };
+    env.define_unresolved(this, def);
     this
 }

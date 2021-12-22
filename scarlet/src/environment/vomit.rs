@@ -12,7 +12,6 @@ impl<'x> Environment<'x> {
             }
         }
         for con_id in to_vomit {
-            let con_id = self.resolve(con_id);
             let vomited = self.vomit(con_id);
             println!("{:?} is\n{}", con_id, vomited);
             println!("depends on:");

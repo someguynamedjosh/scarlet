@@ -10,12 +10,15 @@ impl<'x> Environment<'x> {
     }
 
     pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
-        let con_id = self.resolve(con_id);
+        let old_con_id = con_id;
+        self.resolve(con_id);
         if let &ConstructDefinition::Other(id) = &self.constructs[con_id].definition {
             self.get_construct_definition(id)
         } else if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
             def
         } else {
+            println!("{:#?}", self);
+            println!("{:?} -> {:?}", old_con_id, con_id);
             unreachable!()
         }
     }

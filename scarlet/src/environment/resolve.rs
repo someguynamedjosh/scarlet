@@ -10,14 +10,13 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn resolve(&mut self, con_id: ConstructId) -> ConstructId {
+    pub fn resolve(&mut self, con_id: ConstructId) {
         let con = &self.constructs[con_id];
         if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
             let resolvable = resolvable.dyn_clone();
             let scope = con.scope.dyn_clone();
-            resolvable.resolve(self, scope)
-        } else {
-            con_id
+            let new_def = resolvable.resolve(self, scope);
+            self.constructs[con_id].definition = new_def;
         }
     }
 }

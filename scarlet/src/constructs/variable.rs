@@ -3,12 +3,12 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     downcast_construct,
-    substitution::Substitutions,
+    substitution::{CSubstitution, Substitutions},
 };
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::Scope,
+    scope::{SPlain, Scope},
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
@@ -62,7 +62,6 @@ impl CVariable {
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
             env.reduce(subbed);
-            let subbed = env.resolve(subbed);
             if !env.has_invariant(subbed, value) {
                 return false;
             }
@@ -101,7 +100,9 @@ impl Construct for CVariable {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        vec![self.clone()]
+        let mut deps = self.depends_on.clone();
+        deps.push(self.clone());
+        deps
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
@@ -136,7 +137,21 @@ impl Construct for CVariable {
             self.capturing,
             self.depends_on.clone(),
         );
-        env.push_construct(con, scope)
+        let mut remaining_subs = Substitutions::new();
+        for (target, value) in substitutions {
+            if self.depends_on.contains(target) {
+                remaining_subs.insert_no_replace(target.clone(), *value);
+            }
+        }
+        if remaining_subs.len() > 0 {
+            let subbed = env.push_placeholder(scope);
+            let id = env.push_construct(con, Box::new(SPlain(subbed)));
+            let con = CSubstitution::new(id, remaining_subs);
+            env.define_construct(subbed, con);
+            subbed
+        } else {
+            env.push_construct(con, scope)
+        }
     }
 }
 
