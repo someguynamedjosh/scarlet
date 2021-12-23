@@ -11,6 +11,11 @@ pub trait Scope: Debug {
 
     fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str)
         -> Option<ConstructId>;
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String>;
     fn local_lookup_invariant<'x>(&self, env: &mut Environment<'x>, invariant: ConstructId)
         -> bool;
     fn parent(&self) -> Option<ConstructId>;
@@ -23,6 +28,23 @@ pub trait Scope: Debug {
                 .scope
                 .dyn_clone()
                 .lookup_ident(env, ident)
+        } else {
+            None
+        }
+    }
+
+    fn reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
+        if let Some(result) = self.local_reverse_lookup_ident(env, value) {
+            Some(result.to_owned())
+        } else if let Some(parent) = self.parent() {
+            env.get_construct(parent)
+                .scope
+                .dyn_clone()
+                .reverse_lookup_ident(env, value)
         } else {
             None
         }
@@ -55,6 +77,14 @@ impl Scope for SPlain {
         _env: &mut Environment<'x>,
         _ident: &str,
     ) -> Option<ConstructId> {
+        None
+    }
+
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
         None
     }
 
@@ -95,6 +125,20 @@ impl Scope for SRoot {
         }
     }
 
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
+        if value == env.get_builtin_item("true") {
+            Some("true".to_owned())
+        } else if value == env.get_builtin_item("false") {
+            Some("false".to_owned())
+        } else {
+            None
+        }
+    }
+
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
@@ -126,6 +170,14 @@ impl Scope for SPlaceholder {
         env: &mut Environment<'x>,
         ident: &str,
     ) -> Option<ConstructId> {
+        unreachable!()
+    }
+
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
         unreachable!()
     }
 

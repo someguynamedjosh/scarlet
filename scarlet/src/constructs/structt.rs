@@ -184,6 +184,23 @@ impl Scope for SField {
         }
     }
 
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
+            let structt = structt.clone();
+            if structt.value == value {
+                Some(structt.label.clone())
+            } else {
+                None
+            }
+        } else {
+            unreachable!()
+        }
+    }
+
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
@@ -219,6 +236,21 @@ fn lookup_ident_in<'x>(
     }
 }
 
+fn reverse_lookup_ident_in<'x>(
+    env: &mut Environment<'x>,
+    value: ConstructId,
+    inn: &CPopulatedStruct,
+) -> Option<String> {
+    if inn.value == value{
+        Some(inn.label.clone())
+    } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
+        let rest = rest.clone();
+        reverse_lookup_ident_in(env, value, &rest)
+    } else {
+        None
+    }
+}
+
 impl Scope for SFieldAndRest {
     fn dyn_clone(&self) -> Box<dyn Scope> {
         Box::new(self.clone())
@@ -232,6 +264,19 @@ impl Scope for SFieldAndRest {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn local_reverse_lookup_ident<'a, 'x>(
+        &self,
+        env: &'a mut Environment<'x>,
+        value: ConstructId
+    ) -> Option<String> {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
+            let structt = structt.clone();
+            reverse_lookup_ident_in(env, value, &structt)
         } else {
             unreachable!()
         }

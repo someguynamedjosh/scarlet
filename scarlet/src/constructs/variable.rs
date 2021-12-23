@@ -175,6 +175,18 @@ impl Scope for SVariableInvariants {
         }
     }
 
+    fn local_reverse_lookup_ident<'a, 'x>(
+        &self,
+        env: &'a mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
+        if value == self.0 {
+            Some("SELF".to_owned())
+        } else {
+            None
+        }
+    }
+
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,

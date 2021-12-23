@@ -4,6 +4,8 @@ pub mod resolve;
 pub mod substitute;
 pub mod util;
 mod vomit;
+pub mod overlay;
+pub mod path;
 
 use std::collections::HashMap;
 
