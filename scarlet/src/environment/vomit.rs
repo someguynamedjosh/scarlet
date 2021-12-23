@@ -7,7 +7,8 @@ impl<'x> Environment<'x> {
         for (from, acon) in &self.constructs {
             if let ConstructDefinition::Resolved(con) = &acon.definition {
                 if let Some(shown) = downcast_construct::<CShown>(&**con) {
-                    to_vomit.push((shown.get_base(), from));
+                    let base = shown.get_base();
+                    to_vomit.push((base, from));
                 }
             }
         }
@@ -32,6 +33,7 @@ impl<'x> Environment<'x> {
     }
 
     fn vomit(&mut self, con_id: ConstructId, from: ConstructId) -> String {
+        let con_id = self.dereference(con_id);
         let from_scope = self.constructs[from].scope.dyn_clone();
         let mut paths = PathOverlay::new(self);
         format!("{:?}", paths.get_path(con_id, &*from_scope))
