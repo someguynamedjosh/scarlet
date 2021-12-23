@@ -87,6 +87,11 @@ pub fn rules() -> Vec<Rule> {
             Some(scarlet_creators::is_populated_struct as CreateFn),
             r"\.IS_POPULATED_STRUCT",
         ),
+        (
+            "shown",
+            Some(scarlet_creators::shown as CreateFn),
+            r"\.SHOWN",
+        ),
     ] {
         rules.push(rule::phrase(name, car, Some(4), [(re, 255, false, vec![])]));
     }

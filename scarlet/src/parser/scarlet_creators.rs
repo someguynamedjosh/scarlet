@@ -12,7 +12,7 @@ use crate::{
         },
         unique::CUnique,
         variable::{CVariable, SVariableInvariants},
-        ConstructId,
+        ConstructId, shown::CShown,
     },
     environment::Environment,
     resolvable::{RSubstitution, RVariable},
@@ -127,6 +127,19 @@ pub fn populated_struct<'x>(
     let value = args[1].as_construct(env, SFieldAndRest(this));
     let rest = args[2].as_construct(env, SField(this));
     env.define_construct(this, CPopulatedStruct::new(label, value, rest));
+    this
+}
+
+pub fn shown<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
+    assert_eq!(node.operators, &[".SHOWN"]);
+    assert_eq!(node.arguments.len(), 1);
+    let this = env.push_placeholder(scope);
+    let base = node.arguments[0].as_construct(env, SPlain(this));
+    env.define_construct(this, CShown::new(base));
     this
 }
 
