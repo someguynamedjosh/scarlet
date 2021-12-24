@@ -7,7 +7,7 @@ use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
 pub type CreateFn = for<'x> fn(&mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum NodeChild<'a> {
     Node(Node<'a>),
     Text(&'a str),
@@ -22,10 +22,25 @@ impl<'a> NodeChild<'a> {
     }
 }
 
-#[derive(Clone, Debug)]
+impl<'a> Debug for NodeChild<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            NodeChild::Node(node) => node.fmt(f),
+            NodeChild::Text(text) => text.fmt(f),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct Node<'a> {
     pub role: &'static str,
     pub children: Vec<NodeChild<'a>>,
+}
+
+impl<'a> Debug for Node<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?} {:#?}", self.role, self.children)
+    }
 }
 
 impl<'x> Node<'x> {
