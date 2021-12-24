@@ -1,6 +1,9 @@
+use typed_arena::Arena;
+
 use super::{overlay::Overlay, Environment};
 use crate::{
     constructs::{as_struct, ConstructDefinition, ConstructId},
+    parser::Node,
     scope::Scope,
     shared::OwnedOrBorrowed,
 };
@@ -21,6 +24,29 @@ pub struct PathParent {
 pub struct Path {
     pub ident: String,
     pub access: Vec<PathParentType>,
+}
+
+impl Path {
+    pub fn vomit<'a>(&self, code_arena: &'a Arena<String>) -> Node<'a> {
+        todo!()
+        // let mut result = Node::vomited(
+        //     code_arena,
+        //     "identifier",
+        //     vec!["IDENTIFIER", &self.ident],
+        //     vec![],
+        // );
+        // for access in &self.access {
+        //     match access {
+        //         PathParentType::StructValue => {
+        //             result = Node::vomited(code_arena, "value access", vec![".VALUE"], vec![result])
+        //         }
+        //         PathParentType::StructRest => {
+        //             result = Node::vomited(code_arena, "rest access", vec![".REST"], vec![result])
+        //         }
+        //     }
+        // }
+        // result
+    }
 }
 
 #[derive(Debug)]

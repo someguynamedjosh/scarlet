@@ -1,4 +1,6 @@
-use super::{Construct, ConstructId, Environment, path::PathOverlay};
+use typed_arena::Arena;
+
+use super::{path::PathOverlay, Construct, ConstructId, Environment};
 use crate::constructs::{downcast_construct, shown::CShown, ConstructDefinition};
 
 impl<'x> Environment<'x> {
@@ -12,9 +14,14 @@ impl<'x> Environment<'x> {
                 }
             }
         }
+        let code_arena = Arena::new();
         for (con_id, from) in to_vomit {
-            let vomited = self.vomit(con_id, from);
-            println!("{:?} is\n{}", con_id, vomited);
+            let vomited = self.vomit(&code_arena, con_id, from);
+            println!(
+                "{:?} is\n{}",
+                con_id,
+                vomited.unwrap_or("anonymous".to_owned())
+            );
             println!("depends on:");
             for dep in self.get_dependencies(con_id) {
                 let kind = match dep.is_capturing() {
@@ -23,7 +30,11 @@ impl<'x> Environment<'x> {
                 };
                 println!("    {} (", kind);
                 for inv in dep.get_invariants() {
-                    println!("        {}", self.vomit(*inv, from));
+                    println!(
+                        "        {}",
+                        self.vomit(&code_arena, *inv, from)
+                            .unwrap_or("anonymous".to_owned())
+                    );
                 }
                 println!("    )");
             }
@@ -32,10 +43,17 @@ impl<'x> Environment<'x> {
         // println!("{:#?}", self);
     }
 
-    fn vomit(&mut self, con_id: ConstructId, from: ConstructId) -> String {
+    fn vomit(
+        &mut self,
+        code_arena: &Arena<String>,
+        con_id: ConstructId,
+        from: ConstructId,
+    ) -> Option<String> {
         let con_id = self.dereference(con_id);
         let from_scope = self.constructs[from].scope.dyn_clone();
         let mut paths = PathOverlay::new(self);
-        format!("{:?}", paths.get_path(con_id, &*from_scope))
+        let path = paths.get_path(con_id, &*from_scope)?;
+        let path = path.vomit(code_arena);
+        Some(format!("{:?}", path))
     }
 }

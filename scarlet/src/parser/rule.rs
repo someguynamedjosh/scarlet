@@ -1,71 +1,77 @@
+use std::collections::HashMap;
+
 use regex::Regex;
 
 use super::stack::CreateFn;
-use crate::parser::incoming::{
-    CollapseUntilOperator, CollapseUpToPrecedence, DontCollapseStack, IncomingOperator,
-    OperatorMode::*,
-};
+
+pub type Precedence = u8;
+pub type PhraseName = String;
 
 #[derive(Debug)]
-pub struct Rule {
-    pub(super) matchh: Regex,
-    pub(super) result: IncomingOperator,
+pub struct NodePhraseComponent {
+    pub prec: Precedence,
+    pub additional_allowed_phraes: Vec<PhraseName>,
 }
 
-pub fn phrase<const LEN: usize>(
-    readable_name: &'static str,
-    create_item: Option<CreateFn>,
-    preceding_node: Option<u8>,
-    phrase: [(&str, u8, bool, Vec<Rule>); LEN],
-) -> Rule {
-    assert!(phrase.len() > 0);
-    let mut phrase_parts = IntoIterator::into_iter(phrase);
-    let (first_regex, first_precedence, first_has_next, first_extras) =
-        phrase_parts.next().unwrap();
-    let first_regex = Regex::new(first_regex).unwrap();
-    let first_op = if let Some(prec) = preceding_node {
-        IncomingOperator {
-            readable_name,
-            create_item,
-            collapse_stack_while: Box::new(CollapseUpToPrecedence(prec)),
-            mode: UsePreviousAsFirstArgument,
-            wait_for_next_node: first_has_next,
-            precedence: first_precedence,
-            extra_rules: first_extras,
-        }
-    } else {
-        IncomingOperator {
-            readable_name,
-            create_item,
-            collapse_stack_while: Box::new(DontCollapseStack),
-            mode: DontUsePrevious,
-            wait_for_next_node: first_has_next,
-            precedence: first_precedence,
-            extra_rules: vec![],
-        }
-    };
-    let mut result = Rule {
-        matchh: first_regex.clone(),
-        result: first_op,
-    };
-    let mut previous_extras = &mut result.result.extra_rules;
-    let mut prev_regex = vec![first_regex];
-    for (next_regex, next_precedence, next_has_next, next_extras) in phrase_parts {
-        let next_regex = Regex::new(next_regex).unwrap();
-        previous_extras.push(Rule {
-            matchh: next_regex.clone(),
-            result: IncomingOperator {
-                readable_name,
-                create_item,
-                collapse_stack_while: Box::new(CollapseUntilOperator(prev_regex.clone())),
-                mode: AddToPrevious,
-                wait_for_next_node: next_has_next,
-                precedence: next_precedence,
-                extra_rules: next_extras,
-            },
-        });
-        previous_extras = &mut previous_extras[0].result.extra_rules;
-        prev_regex.push(next_regex);
-    }
-    result
+#[derive(Debug)]
+pub enum PhraseComponent {
+    Node(NodePhraseComponent),
+    Text(Regex),
 }
+
+impl From<Precedence> for PhraseComponent {
+    fn from(prec: Precedence) -> Self {
+        Self::Node(NodePhraseComponent {
+            prec,
+            additional_allowed_phraes: vec![],
+        })
+    }
+}
+
+impl From<&str> for PhraseComponent {
+    fn from(regex: &str) -> Self {
+        Self::Text(Regex::new(regex).unwrap())
+    }
+}
+
+impl PhraseComponent {
+    /// Returns `true` if the phrase component is [`Node`].
+    ///
+    /// [`Node`]: PhraseComponent::Node
+    pub fn is_node(&self) -> bool {
+        matches!(self, Self::Node { .. })
+    }
+
+    /// Returns `true` if the phrase component is [`Text`].
+    ///
+    /// [`Text`]: PhraseComponent::Text
+    pub fn is_text(&self) -> bool {
+        matches!(self, Self::Text(..))
+    }
+}
+
+pub struct Phrase {
+    pub name: &'static str,
+    pub components: Vec<PhraseComponent>,
+    pub create_item: Option<CreateFn>,
+    pub precedence: Precedence,
+}
+
+impl Phrase {
+    pub fn upcoming(
+        &self,
+        starting_at_component: usize,
+    ) -> (Option<&NodePhraseComponent>, Option<&Regex>) {
+        let mut preceding_node_precedence = None;
+        for component in &self.components[starting_at_component..] {
+            if let PhraseComponent::Text(regex) = component {
+                return (preceding_node_precedence, Some(regex));
+            } else if let PhraseComponent::Node(node) = component {
+                preceding_node_precedence = Some(node)
+            }
+        }
+        (preceding_node_precedence, None)
+    }
+}
+
+pub type PhraseTable = HashMap<PhraseName, Phrase>;

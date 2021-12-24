@@ -30,15 +30,15 @@ fn main() {
     let root = parser::parse(&root.self_content, &parse_context);
     println!("{:#?}", root);
 
-    let mut env = Environment::new();
-    let root = root.as_construct(&mut env, SRoot);
-    env.resolve_all();
-    env.reduce_all();
-    env.check_all();
-    println!("{:#?}", env);
-    println!("Root: {:?}", root);
-    println!();
-    env.show_all_requested();
+    // let mut env = Environment::new();
+    // let root = root.as_construct(&mut env, SRoot);
+    // env.resolve_all();
+    // env.reduce_all();
+    // env.check_all();
+    // println!("{:#?}", env);
+    // println!("Root: {:?}", root);
+    // println!();
+    // env.show_all_requested();
 
     // let (stage2, _s2_root) = stage2::ingest(&tokens);
     // // println!("{:#?}", stage2);
