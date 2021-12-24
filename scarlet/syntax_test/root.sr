@@ -1,0 +1,5 @@
+{ UNIQUE  AXIOM_OF_EQUALITY }.SHOWN.AS_BUILTIN_ITEM[ true ]
+POPULATED_STRUCT[ VARIABLE[ asdf fdsa ] ].REST
+IF_THEN_ELSE[ a (b = c) c ].LABEL.VALUE
+{ asdf  fdsa IS asdf }.IS_POPULATED_STRUCT
+{ }.asdf[ 123 IS 456 ]

@@ -11,6 +11,7 @@ pub type CreateFn = for<'x> fn(&mut Environment<'x>, Box<dyn Scope>, &Node<'x>) 
 pub enum NodeChild<'a> {
     Node(Node<'a>),
     Text(&'a str),
+    Missing,
 }
 
 impl<'a> NodeChild<'a> {
@@ -18,6 +19,7 @@ impl<'a> NodeChild<'a> {
         match self {
             NodeChild::Node(_) => panic!("Expected text, got a node instead"),
             NodeChild::Text(text) => text,
+            NodeChild::Missing => panic!("Expected text, got missing instead"),
         }
     }
 }
@@ -27,6 +29,7 @@ impl<'a> Debug for NodeChild<'a> {
         match self {
             NodeChild::Node(node) => node.fmt(f),
             NodeChild::Text(text) => text.fmt(f),
+            NodeChild::Missing => write!(f, "missing"),
         }
     }
 }
@@ -44,6 +47,16 @@ impl<'a> Debug for Node<'a> {
 }
 
 impl<'x> Node<'x> {
+    pub fn will_wait_for_text(&self, pt: &PhraseTable) -> bool {
+        let phrase = pt.get(self.role).unwrap();
+        for component in &phrase.components[self.children.len()..] {
+            if component.is_text() {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn is_waiting_for_node(&self, pt: &PhraseTable) -> bool {
         let phrase = pt.get(self.role).unwrap();
         assert!(phrase.components.len() > self.children.len());
@@ -103,7 +116,11 @@ impl<'a> Stack<'a> {
     /// Collapses the stack until collapsing it more would result in the top
     /// item having a higher precedence than `prec`.
     pub fn collapse_to_precedence(&mut self, pt: &PhraseTable, prec: Precedence) {
-        while self.0.len() >= 2 && pt[self.0[self.0.len() - 2].role].precedence <= prec {
+        while self.0.len() >= 2
+            && self.0[self.0.len() - 1].is_complete(pt)
+            && pt[self.0[self.0.len() - 2].role].precedence <= prec
+            && !self.0[self.0.len() - 2].will_wait_for_text(pt)
+        {
             self.collapse(pt)
         }
     }

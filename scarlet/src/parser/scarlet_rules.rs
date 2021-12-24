@@ -16,14 +16,6 @@ macro_rules! phrase {
     }
 }
 
-pub fn comma() -> Phrase {
-    phrase!(
-        "multiple constructs",
-        None,
-        255 => 254, r",", 255
-    )
-}
-
 pub fn rules() -> Vec<Phrase> {
     vec![
         phrase!(
@@ -87,12 +79,37 @@ pub fn rules() -> Vec<Phrase> {
             4 => 4, r"\.SHOWN"
         ),
         phrase!(
-            "addition",
+            "as builtin item",
+            Some(scarlet_creators::builtin_item),
+            4 => 4, r"\.AS_BUILTIN_ITEM", r"\[", 255, r"\]"
+        ),
+        phrase!(
+            "member access",
+            None,
+            4 => 4, r"\.", 4
+        ),
+        phrase!(
+            "substitution",
+            Some(scarlet_creators::substitution),
+            4 => 4, r"\[", 255, r"\]"
+        ),
+        phrase!(
+            "is",
+            None,
+            250 => 250, r"IS", 250
+        ),
+        phrase!(
+            "equal operator",
+            Some(scarlet_creators::equal),
+            65 => 65, r"=", 65
+        ),
+        phrase!(
+            "add operator",
             None,
             20 => 20, r"\+", 20
         ),
         phrase!(
-            "exponentiation",
+            "exponent operator",
             None,
             10 => 9, r"\^", 10
         ),
@@ -101,44 +118,10 @@ pub fn rules() -> Vec<Phrase> {
             None,
             0 => r"[a-zA-Z0-9_]+"
         ),
+        phrase!(
+            "multiple constructs",
+            None,
+            255 => 255, r",", 255
+        ),
     ]
-    // phrases.push(rule::phrase(
-    //     "as builtin item",
-    //     Some(scarlet_creators::builtin_item as CreateFn),
-    //     Some(4),
-    //     [
-    //         (r"\.AS_BUILTIN_ITEM", 4, false, vec![]),
-    //         (r"\[", 0, true, vec![]),
-    //         (r"\]", 4, false, vec![]),
-    //     ],
-    // ));
-    // phrases.push(rule::phrase(
-    //     "member access",
-    //     None,
-    //     Some(4),
-    //     [(r"\.", 4, true, vec![])],
-    // ));
-    // phrases.push(rule::phrase(
-    //     "substitution",
-    //     Some(scarlet_creators::substitution),
-    //     Some(4),
-    //     [(r"\[", 255, true, vec![]), (r"\]", 4, false, vec![])],
-    // ));
-
-    // phrases.push(rule::phrase(
-    //     "target specifier",
-    //     None,
-    //     Some(253),
-    //     [(r"IS", 253, true, vec![])],
-    // ));
-    // phrases.push(rule::phrase(
-    //     "equal operator",
-    //     Some(scarlet_creators::equal as CreateFn),
-    //     Some(65),
-    //     [(r"=", 65, true, vec![])],
-    // ));
-    // // rules.push(rule::phrase(Some(20), [(r"\+", 20, true, vec![])]));
-    // // rules.push(rule::phrase(Some(9), [(r"\^", 10, true, vec![])]));
-
-    // phrases
 }
