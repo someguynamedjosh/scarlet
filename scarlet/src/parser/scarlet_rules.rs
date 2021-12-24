@@ -28,13 +28,63 @@ pub fn rules() -> Vec<Phrase> {
     vec![
         phrase!(
             "keyword UNIQUE",
-            Some(scarlet_creators::unique as CreateFn),
+            Some(scarlet_creators::unique),
             0 => r"\bUNIQUE\b"
         ),
         phrase!(
             "keyword AXIOM_OF_EQUALITY",
-            Some(scarlet_creators::unique as CreateFn),
+            Some(scarlet_creators::unique),
             0 => r"\bAXIOM_OF_EQUALITY\b"
+        ),
+        phrase!(
+            "variable",
+            Some(scarlet_creators::variable),
+            0 => r"\b(VARIABLE|VAR|V)\b" , r"\[", 255, r"\]"
+        ),
+        phrase!(
+            "populated struct",
+            Some(scarlet_creators::populated_struct),
+            0 => r"\bPOPULATED_STRUCT\b" , r"\[", 255, r"\]"
+        ),
+        phrase!(
+            "if then else",
+            Some(scarlet_creators::if_then_else),
+            0 => r"\bIF_THEN_ELSE\b" , r"\[", 255, r"\]"
+        ),
+        phrase!(
+            "parentheses",
+            Some(scarlet_creators::parentheses),
+            0 => r"\(", 255, r"\)"
+        ),
+        phrase!(
+            "struct",
+            Some(scarlet_creators::structt),
+            0 => r"\{", 255, r"\}"
+        ),
+        phrase!(
+            "label access",
+            Some(scarlet_creators::atomic_struct_member::<{AtomicStructMember::Label}>),
+            4 => 4, r"\.LABEL"
+        ),
+        phrase!(
+            "value access",
+            Some(scarlet_creators::atomic_struct_member::<{AtomicStructMember::Value}>),
+            4 => 4, r"\.VALUE"
+        ),
+        phrase!(
+            "rest access",
+            Some(scarlet_creators::atomic_struct_member::<{AtomicStructMember::Rest}>),
+            4 => 4, r"\.REST"
+        ),
+        phrase!(
+            "is populated struct",
+            Some(scarlet_creators::is_populated_struct),
+            4 => 4, r"\.IS_POPULATED_STRUCT"
+        ),
+        phrase!(
+            "shown",
+            Some(scarlet_creators::shown),
+            4 => 4, r"\.SHOWN"
         ),
         phrase!(
             "addition",
@@ -52,96 +102,6 @@ pub fn rules() -> Vec<Phrase> {
             0 => r"[a-zA-Z0-9_]+"
         ),
     ]
-
-    // let mut phrases = Vec::new();
-
-    // for (name, car, re) in [
-    //     (
-    //         "keyword UNIQUE",
-    //         Some(scarlet_creators::unique as CreateFn),
-    //         r"\bUNIQUE\b",
-    //     ),
-    //     ("keyword AXIOM_OF_EQUALITY", None, r"\bAXIOM_OF_EQUALITY\b"),
-    // ] {
-    //     phrases.push(rule::phrase(name, car, None, [(re, 0, false,
-    // vec![])])); }
-    // for (name, car, re) in [
-    //     (
-    //         "variable",
-    //         Some(scarlet_creators::variable as CreateFn),
-    //         r"\b(VARIABLE|VAR|V)\b",
-    //     ),
-    //     (
-    //         "populated struct",
-    //         Some(scarlet_creators::populated_struct as CreateFn),
-    //         r"\bPOPULATED_STRUCT\b",
-    //     ),
-    //     (
-    //         "if/then/else",
-    //         Some(scarlet_creators::if_then_else as CreateFn),
-    //         r"\bIF_THEN_ELSE\b",
-    //     ),
-    // ] {
-    //     phrases.push(rule::phrase(
-    //         name,
-    //         car,
-    //         None,
-    //         [
-    //             (re, 255, false, vec![]),
-    //             (r"\[", 255, true, vec![]),
-    //             (r"\]", 4, false, vec![]),
-    //         ],
-    //     ));
-    // }
-
-    // phrases.push(rule::phrase(
-    //     "parentheses",
-    //     Some(scarlet_creators::parentheses as CreateFn),
-    //     None,
-    //     [(r"\(", 255, true, vec![]), (r"\)", 1, false, vec![])],
-    // ));
-    // phrases.push(rule::phrase(
-    //     "struct",
-    //     Some(scarlet_creators::structt as CreateFn),
-    //     None,
-    //     [(r"\{", 255, true, vec![]), (r"\}", 1, false, vec![])],
-    // ));
-
-    // for (name, car, re) in [
-    //     (
-    //         "label access",
-    //         Some(
-    //             scarlet_creators::atomic_struct_member::<{
-    // AtomicStructMember::Label }> as CreateFn,         ),
-    //         r"\.LABEL",
-    //     ),
-    //     (
-    //         "value access",
-    //         Some(
-    //             scarlet_creators::atomic_struct_member::<{
-    // AtomicStructMember::Value }> as CreateFn,         ),
-    //         r"\.VALUE",
-    //     ),
-    //     (
-    //         "rest access",
-    //         Some(
-    //             scarlet_creators::atomic_struct_member::<{
-    // AtomicStructMember::Rest }> as CreateFn,         ),
-    //         r"\.REST",
-    //     ),
-    //     (
-    //         "check is populated struct",
-    //         Some(scarlet_creators::is_populated_struct as CreateFn),
-    //         r"\.IS_POPULATED_STRUCT",
-    //     ),
-    //     (
-    //         "shown",
-    //         Some(scarlet_creators::shown as CreateFn),
-    //         r"\.SHOWN",
-    //     ),
-    // ] {
-    //     phrases.push(rule::phrase(name, car, Some(4), [(re, 255, false,
-    // vec![])])); }
     // phrases.push(rule::phrase(
     //     "as builtin item",
     //     Some(scarlet_creators::builtin_item as CreateFn),
