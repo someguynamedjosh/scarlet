@@ -1,21 +1,22 @@
 use itertools::Itertools;
 
-use super::stack::Node;
+use super::node::Node;
 use crate::{
     constructs::{
         self,
         equal::CEqual,
         if_then_else::CIfThenElse,
         is_populated_struct::CIsPopulatedStruct,
+        shown::CShown,
         structt::{
             AtomicStructMember, CAtomicStructMember, CPopulatedStruct, SField, SFieldAndRest,
         },
         unique::CUnique,
         variable::{CVariable, SVariableInvariants},
-        ConstructId, shown::CShown,
+        ConstructId,
     },
     environment::Environment,
-    resolvable::{RSubstitution, RVariable},
+    resolvable::{RIdentifier, RSubstitution, RVariable},
     scope::{SPlain, Scope},
 };
 
@@ -73,6 +74,16 @@ pub fn equal<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'
     // env.define_construct(this, CEqual::new(left, right));
     // this
     todo!()
+}
+
+pub fn identifier<'x>(
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
+    assert_eq!(node.role, "identifier");
+    assert_eq!(node.children.len(), 2);
+    env.push_unresolved(RIdentifier(node.children[1].as_text()), scope)
 }
 
 pub fn if_then_else<'x>(
@@ -138,11 +149,7 @@ pub fn populated_struct<'x>(
     todo!()
 }
 
-pub fn shown<'x>(
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+pub fn shown<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'x>) -> ConstructId {
     // assert_eq!(node.operators, &[".SHOWN"]);
     // assert_eq!(node.arguments.len(), 1);
     // let this = env.push_placeholder(scope);

@@ -1,5 +1,5 @@
 use super::{
-    rule::{self, Phrase},
+    phrase::{self, Phrase},
     scarlet_creators,
     stack::CreateFn,
 };
@@ -16,7 +16,7 @@ macro_rules! phrase {
     }
 }
 
-pub fn rules() -> Vec<Phrase> {
+pub fn phrases() -> Vec<Phrase> {
     vec![
         phrase!(
             "keyword UNIQUE",
@@ -103,25 +103,25 @@ pub fn rules() -> Vec<Phrase> {
             Some(scarlet_creators::equal),
             65 => 65, r"=", 65
         ),
-        phrase!(
-            "add operator",
-            None,
-            20 => 20, r"\+", 20
-        ),
-        phrase!(
-            "exponent operator",
-            None,
-            10 => 9, r"\^", 10
-        ),
-        phrase!(
-            "identifier",
-            None,
-            0 => r"[a-zA-Z0-9_]+"
-        ),
+        // phrase!(
+        //     "add operator",
+        //     None,
+        //     20 => 20, r"\+", 20
+        // ),
+        // phrase!(
+        //     "exponent operator",
+        //     None,
+        //     10 => 9, r"\^", 10
+        // ),
         phrase!(
             "multiple constructs",
             None,
             255 => 255, r",", 255
+        ),
+        phrase!(
+            "identifier",
+            Some(scarlet_creators::identifier),
+            0 => r"[a-zA-Z0-9_]+"
         ),
     ]
 }
