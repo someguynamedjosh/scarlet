@@ -26,6 +26,24 @@ impl<'a> NodeChild<'a> {
             NodeChild::Missing => panic!("Expected text, got missing instead"),
         }
     }
+
+    pub(crate) fn as_construct(
+        &self,
+        pc: &ParseContext,
+        env: &mut Environment<'a>,
+        scope: impl Scope + 'static,
+    ) -> ConstructId {
+        self.as_node().as_construct(pc, env, scope)
+    }
+
+    pub(crate) fn as_construct_dyn_scope(
+        &self,
+        pc: &ParseContext,
+        env: &mut Environment<'a>,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
+        self.as_node().as_construct_dyn_scope(pc, env, scope)
+    }
 }
 
 impl<'a> Debug for NodeChild<'a> {
