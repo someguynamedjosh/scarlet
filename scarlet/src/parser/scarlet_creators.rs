@@ -60,13 +60,14 @@ pub fn builtin_item<'x>(
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    // assert_eq!(node.operators, &[".AS_BUILTIN_ITEM", "[", "]"]);
-    // assert_eq!(node.arguments.len(), 2);
-    // let base = node.arguments[0].as_construct_dyn_scope(env, scope);
-    // let name = node.arguments[1].as_ident();
-    // env.define_builtin_item(name, base);
-    // base
-    todo!()
+    assert_eq!(node.children.len(), 5);
+    assert_eq!(node.children[1], Text(".AS_BUILTIN_ITEM"));
+    assert_eq!(node.children[2], Text("["));
+    assert_eq!(node.children[4], Text("]"));
+    let base = node.children[0].as_node().as_construct_dyn_scope(pc, env, scope);
+    let name = node.children[3].as_node().as_ident();
+    env.define_builtin_item(name, base);
+    base
 }
 
 pub fn equal<'x>(
@@ -92,8 +93,8 @@ pub fn identifier<'x>(
     node: &Node<'x>,
 ) -> ConstructId {
     assert_eq!(node.phrase, "identifier");
-    assert_eq!(node.children.len(), 2);
-    env.push_unresolved(RIdentifier(node.children[1].as_text()), scope)
+    assert_eq!(node.children.len(), 1);
+    env.push_unresolved(RIdentifier(node.children[0].as_text()), scope)
 }
 
 pub fn if_then_else<'x>(
@@ -213,7 +214,7 @@ pub fn structt<'x>(
         .map(|field| {
             if field.phrase == "is" {
                 (
-                    Some(field.children[0].as_node().children[0].as_text()),
+                    Some(field.children[0].as_node().as_ident()),
                     field.children[2].as_node(),
                 )
             } else {

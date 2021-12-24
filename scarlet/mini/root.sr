@@ -1,11 +1,7 @@
 {
-    UNIQUE
-    fdsa IS UNIQUE
-}
-# {
-#     asdf IS true.SHOWN
+    asdf IS true#.SHOWN
 
-#     true IS UNIQUE.AS_BUILTIN_ITEM[true]
-#     false IS UNIQUE.AS_BUILTIN_ITEM[false]
-#     void IS UNIQUE.AS_BUILTIN_ITEM[void]
-# }
+    true IS UNIQUE.AS_BUILTIN_ITEM[true]
+    false IS UNIQUE.AS_BUILTIN_ITEM[false]
+    void IS UNIQUE.AS_BUILTIN_ITEM[void]
+}

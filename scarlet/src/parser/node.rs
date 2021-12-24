@@ -97,9 +97,9 @@ impl<'x> Node<'x> {
         if self.phrase != "identifier" {
             panic!("{} is not an identifier", self.phrase)
         }
-        if self.children.len() != 2 {
+        if self.children.len() != 1 {
             panic!("identifier is not complete")
         }
-        self.children[1].as_text()
+        self.children[0].as_text()
     }
 }
