@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use indexmap::IndexMap;
 use regex::Regex;
 
 use super::stack::CreateFn;
@@ -74,4 +75,4 @@ impl Phrase {
     }
 }
 
-pub type PhraseTable = HashMap<PhraseName, Phrase>;
+pub type PhraseTable = IndexMap<PhraseName, Phrase>;

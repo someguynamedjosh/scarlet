@@ -36,6 +36,21 @@ pub fn rules() -> Vec<Phrase> {
             Some(scarlet_creators::unique as CreateFn),
             0 => r"\bAXIOM_OF_EQUALITY\b"
         ),
+        phrase!(
+            "addition",
+            None,
+            20 => 20, r"\+", 20
+        ),
+        phrase!(
+            "exponentiation",
+            None,
+            10 => 9, r"\^", 10
+        ),
+        phrase!(
+            "identifier",
+            None,
+            0 => r"[a-zA-Z0-9_]+"
+        ),
     ]
 
     // let mut phrases = Vec::new();

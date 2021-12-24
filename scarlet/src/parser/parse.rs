@@ -144,7 +144,6 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
 }
 
 pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
-    let r_name = Regex::new(r"[a-zA-Z0-9_]+").unwrap();
     let r_whitespace = Regex::new(r"[ \r\n\t]+|#[^\n]*").unwrap();
 
     let ParseContext { phrases, comma } = ctx;
@@ -157,26 +156,16 @@ pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
         let longest_match = longest_match(match_against, &stack, phrases);
         if let Some(matchh) = longest_match {
             if let Some(true) = stack.0.last().map(|n| n.is_complete(phrases)) {
-                // stack.push_operator(",", &comma);
-                todo!()
+                if let StackAction::DontPopNode = matchh.action {
+                    // stack.push_operator(",", &comma);
+                    todo!()
+                }
             }
             input_position += matchh.text.len();
             push_match(phrases, matchh, &mut stack);
             continue;
         }
-        if let Some(matchh) = anchored_find(&r_name, match_against) {
-            if let Some(true) = stack.0.last().map(|n| n.is_complete(phrases)) {
-                // stack.push_operator(",", &comma);
-                todo!()
-            }
-
-            stack.0.push(Node {
-                role: "identifier",
-                children: vec![NodeChild::Text(matchh)],
-            });
-
-            input_position += matchh.len();
-        } else if let Some(matchh) = anchored_find(&r_whitespace, match_against) {
+        if let Some(matchh) = anchored_find(&r_whitespace, match_against) {
             input_position += matchh.len();
         } else {
             panic!("Unrecognized input: {}", match_against);
