@@ -14,7 +14,7 @@ use crate::{
 };
 
 pub struct ParseContext {
-    phrases: PhraseTable,
+    pub(super) phrases: PhraseTable,
 }
 
 impl ParseContext {
@@ -58,7 +58,7 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
         to.0[index].children.append(&mut append);
     } else {
         to.0.push(Node {
-            role: matchh.phrase,
+            phrase: matchh.phrase,
             children: append,
         });
     }
@@ -75,9 +75,7 @@ pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
     while input_position < input.len() {
         let match_against = &input[input_position..];
         let longest_match = matchh::longest_match(match_against, &stack, phrases);
-        println!("{:#?}", stack);
         if let Some(matchh) = longest_match {
-            println!("{:#?}", matchh);
             input_position += matchh.text.len();
             push_match(phrases, matchh, &mut stack);
         } else if let Some(matchh) = matchh::anchored_find(&r_whitespace, match_against) {

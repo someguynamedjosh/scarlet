@@ -2,10 +2,17 @@ use std::fmt::{self, Debug, Formatter};
 
 use typed_arena::Arena;
 
-use super::{phrase::{PhraseTable, Precedence}, node::Node};
-use crate::{constructs::ConstructId, environment::Environment, scope::Scope, parser::node::NodeChild};
+use super::{
+    node::Node,
+    phrase::{PhraseTable, Precedence},
+    ParseContext,
+};
+use crate::{
+    constructs::ConstructId, environment::Environment, parser::node::NodeChild, scope::Scope,
+};
 
-pub type CreateFn = for<'x> fn(&mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
+pub type CreateFn =
+    for<'x> fn(&ParseContext, &mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
 
 #[derive(Debug)]
 pub struct Stack<'a>(pub Vec<Node<'a>>);
@@ -26,7 +33,7 @@ impl<'a> Stack<'a> {
     pub fn collapse_to_precedence(&mut self, pt: &PhraseTable, prec: Precedence) {
         while self.0.len() >= 2
             && self.0[self.0.len() - 1].is_complete(pt)
-            && pt[self.0[self.0.len() - 2].role].precedence <= prec
+            && pt[self.0[self.0.len() - 2].phrase].precedence <= prec
             && !self.0[self.0.len() - 2].will_wait_for_text(pt)
         {
             self.collapse(pt)

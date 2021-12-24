@@ -1,10 +1,9 @@
-use std::fmt::{Debug, Formatter, self};
+use std::fmt::{self, Debug, Formatter};
 
-use crate::{environment::Environment, scope::Scope, constructs::ConstructId};
+use super::{phrase::PhraseTable, ParseContext};
+use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
-use super::phrase::PhraseTable;
-
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum NodeChild<'a> {
     Node(Node<'a>),
     Text(&'a str),
@@ -12,6 +11,14 @@ pub enum NodeChild<'a> {
 }
 
 impl<'a> NodeChild<'a> {
+    pub fn as_node(&self) -> &Node<'a> {
+        if let Self::Node(v) = self {
+            v
+        } else {
+            panic!("Expected node")
+        }
+    }
+
     pub fn as_text(&self) -> &'a str {
         match self {
             NodeChild::Node(_) => panic!("Expected text, got a node instead"),
@@ -31,21 +38,21 @@ impl<'a> Debug for NodeChild<'a> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Node<'a> {
-    pub role: &'static str,
+    pub phrase: &'static str,
     pub children: Vec<NodeChild<'a>>,
 }
 
 impl<'a> Debug for Node<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?} {:#?}", self.role, self.children)
+        write!(f, "{:?} {:#?}", self.phrase, self.children)
     }
 }
 
 impl<'x> Node<'x> {
     pub fn will_wait_for_text(&self, pt: &PhraseTable) -> bool {
-        let phrase = pt.get(self.role).unwrap();
+        let phrase = pt.get(self.phrase).unwrap();
         for component in &phrase.components[self.children.len()..] {
             if component.is_text() {
                 return true;
@@ -55,39 +62,40 @@ impl<'x> Node<'x> {
     }
 
     pub fn is_waiting_for_node(&self, pt: &PhraseTable) -> bool {
-        let phrase = pt.get(self.role).unwrap();
+        let phrase = pt.get(self.phrase).unwrap();
         assert!(phrase.components.len() > self.children.len());
         phrase.components[self.children.len()].is_node()
     }
 
     pub fn is_complete(&self, pt: &PhraseTable) -> bool {
-        pt.get(self.role).unwrap().components.len() == self.children.len()
+        pt.get(self.phrase).unwrap().components.len() == self.children.len()
     }
 
     pub fn as_construct(
         &self,
-        pt: &PhraseTable,
+        pc: &ParseContext,
         env: &mut Environment<'x>,
         scope: impl Scope + 'static,
     ) -> ConstructId {
-        self.as_construct_dyn_scope(pt, env, Box::new(scope))
+        self.as_construct_dyn_scope(pc, env, Box::new(scope))
     }
 
     pub fn as_construct_dyn_scope(
         &self,
-        pt: &PhraseTable,
+        pc: &ParseContext,
         env: &mut Environment<'x>,
         scope: Box<dyn Scope>,
     ) -> ConstructId {
-        pt.get(self.role)
+        pc.phrases
+            .get(self.phrase)
             .unwrap()
             .create_item
-            .expect(&format!("{} is not a construct", self.role))(env, scope, self)
+            .expect(&format!("{} is not a construct", self.phrase))(pc, env, scope, self)
     }
 
     pub fn as_ident(&self) -> &'x str {
-        if self.role != "identifier" {
-            panic!("{} is not an identifier", self.role)
+        if self.phrase != "identifier" {
+            panic!("{} is not an identifier", self.phrase)
         }
         if self.children.len() != 2 {
             panic!("identifier is not complete")

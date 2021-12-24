@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
-use super::node::Node;
+use self::NodeChild::*;
+use super::{node::Node, ParseContext};
 use crate::{
     constructs::{
         self,
@@ -16,29 +17,31 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
+    parser::node::NodeChild,
     resolvable::{RIdentifier, RSubstitution, RVariable},
     scope::{SPlain, Scope},
 };
 
-fn collect_comma_list<'a, 'n>(list: Option<&'a Node<'n>>) -> Vec<&'a Node<'n>> {
-    // if let Some(list) = list {
-    //     if list.operators == &[","] {
-    //         assert_eq!(list.arguments.len(), 2);
-    //         [
-    //             collect_comma_list(Some(&list.arguments[0])),
-    //             vec![&list.arguments[1]],
-    //         ]
-    //         .concat()
-    //     } else {
-    //         vec![list]
-    //     }
-    // } else {
-    //     vec![]
-    // }
-    todo!()
+fn collect_comma_list<'a, 'n>(list: &'a NodeChild<'n>) -> Vec<&'a Node<'n>> {
+    if let NodeChild::Node(list) = list {
+        if list.phrase == "multiple constructs" {
+            assert_eq!(list.children.len(), 3);
+            assert_eq!(list.children[1], NodeChild::Text(","));
+            [
+                collect_comma_list(&list.children[0]),
+                vec![list.children[2].as_node()],
+            ]
+            .concat()
+        } else {
+            vec![list]
+        }
+    } else {
+        vec![]
+    }
 }
 
 pub fn atomic_struct_member<'x, const M: AtomicStructMember>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -52,6 +55,7 @@ pub fn atomic_struct_member<'x, const M: AtomicStructMember>(
 }
 
 pub fn builtin_item<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -65,7 +69,12 @@ pub fn builtin_item<'x>(
     todo!()
 }
 
-pub fn equal<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'x>) -> ConstructId {
+pub fn equal<'x>(
+    pc: &ParseContext,
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     // assert_eq!(node.operators, &["="]);
     // assert_eq!(node.arguments.len(), 2);
     // let this = env.push_placeholder(scope);
@@ -77,16 +86,18 @@ pub fn equal<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'
 }
 
 pub fn identifier<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    assert_eq!(node.role, "identifier");
+    assert_eq!(node.phrase, "identifier");
     assert_eq!(node.children.len(), 2);
     env.push_unresolved(RIdentifier(node.children[1].as_text()), scope)
 }
 
 pub fn if_then_else<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -106,6 +117,7 @@ pub fn if_then_else<'x>(
 }
 
 pub fn is_populated_struct<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -120,6 +132,7 @@ pub fn is_populated_struct<'x>(
 }
 
 pub fn parentheses<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -131,6 +144,7 @@ pub fn parentheses<'x>(
 }
 
 pub fn populated_struct<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -149,7 +163,12 @@ pub fn populated_struct<'x>(
     todo!()
 }
 
-pub fn shown<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'x>) -> ConstructId {
+pub fn shown<'x>(
+    pc: &ParseContext,
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
+) -> ConstructId {
     // assert_eq!(node.operators, &[".SHOWN"]);
     // assert_eq!(node.arguments.len(), 1);
     // let this = env.push_placeholder(scope);
@@ -160,48 +179,53 @@ pub fn shown<'x>(env: &mut Environment<'x>, scope: Box<dyn Scope>, node: &Node<'
 }
 
 pub fn struct_from_fields<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     mut fields: Vec<(Option<&str>, &Node<'x>)>,
     scope: Box<dyn Scope>,
 ) -> ConstructId {
-    // if fields.is_empty() {
-    //     env.get_builtin_item("void")
-    // } else {
-    //     let (label, field) = fields.remove(0);
-    //     let label = label.unwrap_or("").to_owned();
-    //     let this = env.push_placeholder(scope);
-    //     let field = field.as_construct(env, SFieldAndRest(this));
-    //     let rest = struct_from_fields(env, fields, Box::new(SField(this)));
-    //     let this_def = CPopulatedStruct::new(label, field, rest);
-    //     env.define_construct(this, this_def);
-    //     this
-    // }
-    todo!()
+    if fields.is_empty() {
+        env.get_builtin_item("void")
+    } else {
+        let (label, field) = fields.remove(0);
+        let label = label.unwrap_or("").to_owned();
+        let this = env.push_placeholder(scope);
+        let field = field.as_construct(pc, env, SFieldAndRest(this));
+        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
+        let this_def = CPopulatedStruct::new(label, field, rest);
+        env.define_construct(this, this_def);
+        this
+    }
 }
 
 pub fn structt<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    // assert_eq!(node.operators, &["{", "}"]);
-    // assert!(node.arguments.len() <= 1);
-    // let fields = collect_comma_list(node.arguments.get(0));
-    // let fields = fields
-    //     .into_iter()
-    //     .map(|field| {
-    //         if field.operators == &["IS"] {
-    //             (Some(field.arguments[0].as_ident()), &field.arguments[1])
-    //         } else {
-    //             (None, field)
-    //         }
-    //     })
-    //     .collect();
-    // struct_from_fields(env, fields, scope)
-    todo!()
+    assert_eq!(node.children.len(), 3);
+    assert_eq!(node.children[0], Text("{"));
+    assert_eq!(node.children[2], Text("}"));
+    let fields = collect_comma_list(&node.children[1]);
+    let fields = fields
+        .into_iter()
+        .map(|field| {
+            if field.phrase == "is" {
+                (
+                    Some(field.children[0].as_node().children[0].as_text()),
+                    field.children[2].as_node(),
+                )
+            } else {
+                (None, field)
+            }
+        })
+        .collect();
+    struct_from_fields(pc, env, fields, scope)
 }
 
 pub fn substitution<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -235,17 +259,18 @@ pub fn substitution<'x>(
 }
 
 pub fn unique<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    // assert_eq!(node.operators, &["UNIQUE"]);
-    // let id = env.push_unique();
-    // env.push_construct(CUnique::new(id), scope)
-    todo!()
+    assert_eq!(node.children, &[Text("UNIQUE")]);
+    let id = env.push_unique();
+    env.push_construct(CUnique::new(id), scope)
 }
 
 pub fn variable<'x>(
+    pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,

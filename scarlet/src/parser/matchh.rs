@@ -68,7 +68,7 @@ pub fn longest_match<'a>(
 ) -> Option<MatchSuccess<'a>> {
     let mut longest_match = None;
     for (node_index, node) in stack.0.iter().enumerate().rev() {
-        let phrase = &phrases[node.role];
+        let phrase = &phrases[node.phrase];
         if let Some(matchh) = matches(match_against, node.children.len(), Some(node_index), phrase)
         {
             if longest_match
