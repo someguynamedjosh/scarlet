@@ -6,5 +6,5 @@ mod scarlet_phrases;
 mod stack;
 mod matchh;
 
-pub use node::Node;
+pub use node::{Node, NodeChild};
 pub use parse::{parse, ParseContext};

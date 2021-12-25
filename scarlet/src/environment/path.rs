@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use super::{overlay::Overlay, Environment};
 use crate::{
     constructs::{as_struct, ConstructDefinition, ConstructId},
-    parser::Node,
+    parser::{
+        Node,
+        NodeChild::{self, *},
+    },
     scope::Scope,
     shared::OwnedOrBorrowed,
 };
@@ -26,26 +29,33 @@ pub struct Path {
     pub access: Vec<PathParentType>,
 }
 
+fn text_child<'a>(code_arena: &'a Arena<String>, s: &str) -> NodeChild<'a> {
+    Text(code_arena.alloc(s.to_owned()))
+}
+
 impl Path {
     pub fn vomit<'a>(&self, code_arena: &'a Arena<String>) -> Node<'a> {
-        todo!()
-        // let mut result = Node::vomited(
-        //     code_arena,
-        //     "identifier",
-        //     vec!["IDENTIFIER", &self.ident],
-        //     vec![],
-        // );
-        // for access in &self.access {
-        //     match access {
-        //         PathParentType::StructValue => {
-        //             result = Node::vomited(code_arena, "value access", vec![".VALUE"], vec![result])
-        //         }
-        //         PathParentType::StructRest => {
-        //             result = Node::vomited(code_arena, "rest access", vec![".REST"], vec![result])
-        //         }
-        //     }
-        // }
-        // result
+        let mut result = Node {
+            phrase: "identifier",
+            children: vec![text_child(code_arena, &self.ident)],
+        };
+        for access in &self.access {
+            match access {
+                PathParentType::StructValue => {
+                    result = Node {
+                        phrase: "value access",
+                        children: vec![NodeChild::Node(result), text_child(code_arena, ".VALUE")],
+                    }
+                }
+                PathParentType::StructRest => {
+                    result = Node {
+                        phrase: "rest access",
+                        children: vec![NodeChild::Node(result), text_child(code_arena, ".REST")],
+                    }
+                }
+            }
+        }
+        result
     }
 }
 
