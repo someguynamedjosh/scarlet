@@ -1,7 +1,7 @@
 use super::{ConstructId, Environment};
 use crate::{
     constructs::{base::BoxedConstruct, AnnotatedConstruct, ConstructDefinition},
-    shared::{Id, TripleBool},
+    shared::TripleBool,
 };
 
 impl<'x> Environment<'x> {

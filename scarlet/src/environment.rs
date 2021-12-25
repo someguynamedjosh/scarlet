@@ -1,25 +1,23 @@
 pub mod dependencies;
+pub mod overlay;
+pub mod path;
 mod reduce;
 pub mod resolve;
 pub mod substitute;
 pub mod util;
 mod vomit;
-pub mod overlay;
-pub mod path;
 
 use std::collections::HashMap;
 
 use crate::{
     constructs::{
-        base::{
-            AnnotatedConstruct, BoxedConstruct, ConstructDefinition, ConstructId, ConstructPool,
-        },
+        base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
         unique::{Unique, UniqueId, UniquePool},
-        variable::{VariablePool, VariableId, Variable},
+        variable::{Variable, VariableId, VariablePool},
         Construct,
     },
     resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
-    scope::{SPlaceholder, SPlain, SRoot, Scope},
+    scope::{SRoot, Scope},
     shared::{Pool, TripleBool},
 };
 
@@ -61,8 +59,13 @@ impl<'x> Environment<'x> {
         self.constructs[construct].definition = definition.into();
     }
 
-    pub fn define_unresolved(&mut self, construct: ConstructId, definition: impl Resolvable<'x> + 'x) {
-        self.constructs[construct].definition = ConstructDefinition::Unresolved(Box::new(definition));
+    pub fn define_unresolved(
+        &mut self,
+        construct: ConstructId,
+        definition: impl Resolvable<'x> + 'x,
+    ) {
+        self.constructs[construct].definition =
+            ConstructDefinition::Unresolved(Box::new(definition));
     }
 
     pub fn get_builtin_item(&self, name: &str) -> ConstructId {

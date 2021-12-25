@@ -4,7 +4,6 @@ use self::NodeChild::*;
 use super::{node::Node, ParseContext};
 use crate::{
     constructs::{
-        self,
         equal::CEqual,
         if_then_else::CIfThenElse,
         is_populated_struct::CIsPopulatedStruct,
@@ -13,12 +12,12 @@ use crate::{
             AtomicStructMember, CAtomicStructMember, CPopulatedStruct, SField, SFieldAndRest,
         },
         unique::CUnique,
-        variable::{CVariable, SVariableInvariants},
+        variable::SVariableInvariants,
         ConstructId,
     },
     environment::Environment,
     parser::node::NodeChild,
-    resolvable::{RIdentifier, RSubstitution, RVariable},
+    resolvable::{RIdentifier, RVariable},
     scope::{SPlain, Scope},
 };
 
@@ -85,7 +84,7 @@ pub fn equal<'x>(
 }
 
 pub fn identifier<'x>(
-    pc: &ParseContext,
+    _pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -224,10 +223,10 @@ pub fn structt<'x>(
 }
 
 pub fn substitution<'x>(
-    pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
+    _pc: &ParseContext,
+    _env: &mut Environment<'x>,
+    _scope: Box<dyn Scope>,
+    _node: &Node<'x>,
 ) -> ConstructId {
     // assert_eq!(node.children, &["[", "]"]);
     // assert!(node.children.len() <= 2);
@@ -258,7 +257,7 @@ pub fn substitution<'x>(
 }
 
 pub fn unique<'x>(
-    pc: &ParseContext,
+    _pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,

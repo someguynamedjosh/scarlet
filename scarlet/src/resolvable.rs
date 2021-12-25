@@ -27,7 +27,11 @@ impl<'x> Resolvable<'x> for RPlaceholder {
         Box::new(self.clone())
     }
 
-    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x> {
+    fn resolve(
+        &self,
+        _env: &mut Environment<'x>,
+        _scope: Box<dyn Scope>,
+    ) -> ConstructDefinition<'x> {
         unreachable!()
     }
 }
@@ -98,7 +102,11 @@ impl<'x> Resolvable<'x> for RVariable {
         Box::new(self.clone())
     }
 
-    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x> {
+    fn resolve(
+        &self,
+        env: &mut Environment<'x>,
+        _scope: Box<dyn Scope>,
+    ) -> ConstructDefinition<'x> {
         let depends_on = self
             .depends_on
             .iter()

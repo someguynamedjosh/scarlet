@@ -1,6 +1,4 @@
-use std::fmt::{self, Debug, Formatter};
-
-use typed_arena::Arena;
+use std::fmt::Debug;
 
 use super::{
     node::Node,

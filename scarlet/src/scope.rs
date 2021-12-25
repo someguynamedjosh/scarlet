@@ -82,16 +82,16 @@ impl Scope for SPlain {
 
     fn local_reverse_lookup_ident<'x>(
         &self,
-        env: &mut Environment<'x>,
-        value: ConstructId,
+        _env: &mut Environment<'x>,
+        _value: ConstructId,
     ) -> Option<String> {
         None
     }
 
     fn local_lookup_invariant<'x>(
         &self,
-        env: &mut Environment<'x>,
-        invariant: ConstructId,
+        _env: &mut Environment<'x>,
+        _invariant: ConstructId,
     ) -> bool {
         false
     }
@@ -167,24 +167,24 @@ impl Scope for SPlaceholder {
 
     fn local_lookup_ident<'x>(
         &self,
-        env: &mut Environment<'x>,
-        ident: &str,
+        _env: &mut Environment<'x>,
+        _ident: &str,
     ) -> Option<ConstructId> {
         unreachable!()
     }
 
     fn local_reverse_lookup_ident<'x>(
         &self,
-        env: &mut Environment<'x>,
-        value: ConstructId,
+        _env: &mut Environment<'x>,
+        _value: ConstructId,
     ) -> Option<String> {
         unreachable!()
     }
 
     fn local_lookup_invariant<'x>(
         &self,
-        env: &mut Environment<'x>,
-        invariant: ConstructId,
+        _env: &mut Environment<'x>,
+        _invariant: ConstructId,
     ) -> bool {
         unreachable!()
     }

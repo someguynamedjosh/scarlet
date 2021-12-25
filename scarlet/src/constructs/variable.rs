@@ -93,19 +93,19 @@ impl Construct for CVariable {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
-        env: &mut Environment<'x>,
+        _this: ConstructId,
+        _env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         self.invariants.clone()
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
         let mut deps = self.depends_on.clone();
         deps.push(self.clone());
         deps
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         if let Some(other) = downcast_construct::<Self>(other) {
             if self.is_same_variable_as(other) {
                 return TripleBool::True;
@@ -177,7 +177,7 @@ impl Scope for SVariableInvariants {
 
     fn local_reverse_lookup_ident<'a, 'x>(
         &self,
-        env: &'a mut Environment<'x>,
+        _env: &'a mut Environment<'x>,
         value: ConstructId,
     ) -> Option<String> {
         if value == self.0 {
@@ -189,8 +189,8 @@ impl Scope for SVariableInvariants {
 
     fn local_lookup_invariant<'x>(
         &self,
-        env: &mut Environment<'x>,
-        invariant: ConstructId,
+        _env: &mut Environment<'x>,
+        _invariant: ConstructId,
     ) -> bool {
         false
     }

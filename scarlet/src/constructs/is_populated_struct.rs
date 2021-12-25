@@ -1,14 +1,9 @@
-use itertools::Itertools;
-
 use super::{
     downcast_construct, structt::CPopulatedStruct, substitution::Substitutions, unique::CUnique,
     variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment,
-    impl_any_eq_for_construct,
-    scope::{SPlain, Scope},
-    shared::TripleBool,
+    environment::Environment, impl_any_eq_for_construct, scope::Scope, shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -31,7 +26,7 @@ impl Construct for CIsPopulatedStruct {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         env.generated_invariants(self.0)

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use indexmap::IndexMap;
 use regex::Regex;
 

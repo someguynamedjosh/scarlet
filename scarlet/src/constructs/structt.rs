@@ -6,10 +6,7 @@ use super::{
     Construct,
 };
 use crate::{
-    environment::Environment,
-    impl_any_eq_for_construct,
-    scope::{SPlain, Scope},
-    shared::TripleBool,
+    environment::Environment, impl_any_eq_for_construct, scope::Scope, shared::TripleBool,
 };
 
 pub fn struct_from_unnamed_fields<'x>(
@@ -65,7 +62,7 @@ impl Construct for CPopulatedStruct {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         [
@@ -120,7 +117,7 @@ impl Construct for CAtomicStructMember {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         env.generated_invariants(self.0)
@@ -204,9 +201,9 @@ impl Scope for SField {
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
-        invariant: ConstructId,
+        _invariant: ConstructId,
     ) -> bool {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
+        if let Some(_structt) = as_struct(&**env.get_construct_definition(self.0)) {
             false
         } else {
             unreachable!()
@@ -241,7 +238,7 @@ fn reverse_lookup_ident_in<'x>(
     value: ConstructId,
     inn: &CPopulatedStruct,
 ) -> Option<String> {
-    if inn.value == value{
+    if inn.value == value {
         Some(inn.label.clone())
     } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
@@ -272,7 +269,7 @@ impl Scope for SFieldAndRest {
     fn local_reverse_lookup_ident<'a, 'x>(
         &self,
         env: &'a mut Environment<'x>,
-        value: ConstructId
+        value: ConstructId,
     ) -> Option<String> {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
@@ -284,8 +281,8 @@ impl Scope for SFieldAndRest {
 
     fn local_lookup_invariant<'x>(
         &self,
-        env: &mut Environment<'x>,
-        invariant: ConstructId,
+        _env: &mut Environment<'x>,
+        _invariant: ConstructId,
     ) -> bool {
         false
     }

@@ -3,15 +3,9 @@ use regex::Regex;
 use super::{
     matchh::{MatchSuccess, StackAction},
     node::{Node, NodeChild},
-    phrase::{Phrase, PhraseTable, Precedence},
+    phrase::PhraseTable,
 };
-use crate::{
-    constructs::ConstructId,
-    environment::Environment,
-    parser::{matchh, scarlet_phrases, stack::Stack},
-    resolvable::RIdentifier,
-    scope::Scope,
-};
+use crate::parser::{matchh, scarlet_phrases, stack::Stack};
 
 pub struct ParseContext {
     pub(super) phrases: PhraseTable,

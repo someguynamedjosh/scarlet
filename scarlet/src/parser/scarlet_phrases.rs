@@ -1,8 +1,4 @@
-use super::{
-    phrase::{self, Phrase},
-    scarlet_creators,
-    stack::CreateFn,
-};
+use super::{phrase::Phrase, scarlet_creators};
 use crate::constructs::structt::AtomicStructMember;
 
 macro_rules! phrase {

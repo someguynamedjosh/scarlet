@@ -1,13 +1,7 @@
 use regex::Regex;
 
-use super::{phrase::{Phrase, PhraseTable, Precedence}, node::{Node, NodeChild}};
-use crate::{
-    constructs::ConstructId,
-    environment::Environment,
-    parser::{scarlet_phrases, stack::Stack},
-    resolvable::RIdentifier,
-    scope::Scope,
-};
+use super::phrase::{Phrase, PhraseTable, Precedence};
+use crate::parser::stack::Stack;
 
 pub fn anchored_find<'a>(regex: &Regex, input: &'a str) -> Option<&'a str> {
     if let Some(matchh) = regex.find(input) {

@@ -8,7 +8,6 @@ use crate::{
         NodeChild::{self, *},
     },
     scope::Scope,
-    shared::OwnedOrBorrowed,
 };
 
 #[derive(Clone, Debug)]

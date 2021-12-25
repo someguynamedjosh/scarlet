@@ -1,6 +1,5 @@
-use crate::constructs::{Construct, ConstructDefinition};
-
 use super::{ConstructId, Environment};
+use crate::constructs::{Construct, ConstructDefinition};
 
 impl<'x> Environment<'x> {
     pub fn dereference(&self, con_id: ConstructId) -> ConstructId {

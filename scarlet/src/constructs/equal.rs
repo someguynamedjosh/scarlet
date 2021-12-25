@@ -8,7 +8,7 @@ use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
     scope::{SPlain, Scope},
-    shared::{Id, TripleBool},
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

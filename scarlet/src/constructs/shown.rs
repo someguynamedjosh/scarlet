@@ -3,7 +3,7 @@ use super::{
     substitution::Substitutions,
     variable::CVariable,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, scope::{SPlain, Scope}};
+use crate::{environment::Environment, impl_any_eq_for_construct, scope::Scope};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CShown(ConstructId);
@@ -29,7 +29,7 @@ impl Construct for CShown {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         env.generated_invariants(self.0)

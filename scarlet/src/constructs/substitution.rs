@@ -1,10 +1,8 @@
-use itertools::Itertools;
-
 use super::{variable::CVariable, Construct, ConstructDefinition, ConstructId};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::{SPlaceholder, SPlain, Scope},
+    scope::Scope,
     shared::{OrderedMap, TripleBool},
 };
 
