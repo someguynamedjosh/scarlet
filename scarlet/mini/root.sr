@@ -1,7 +1,14 @@
 {
-    asdf IS true.SHOWN
+    asdf.SHOWN
+    asdf IS true[ ]
+    # bool_and[ false true ].SHOWN
 
-    true IS UNIQUE.AS_BUILTIN_ITEM[true]
-    false IS UNIQUE.AS_BUILTIN_ITEM[false]
-    void IS UNIQUE.AS_BUILTIN_ITEM[void]
+    a IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
+    b IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
+
+    bool_and IS IF_THEN_ELSE[ a b false ]
+
+    true IS UNIQUE.AS_BUILTIN_ITEM[ true ]
+    false IS UNIQUE.AS_BUILTIN_ITEM[ false ]
+    void IS UNIQUE.AS_BUILTIN_ITEM[ void ]
 }

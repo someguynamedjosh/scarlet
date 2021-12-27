@@ -17,7 +17,7 @@ use crate::{
     },
     environment::Environment,
     parser::node::NodeChild,
-    resolvable::{RIdentifier, RVariable},
+    resolvable::{RIdentifier, RSubstitution, RVariable},
     scope::{SPlain, Scope},
 };
 
@@ -223,37 +223,37 @@ pub fn structt<'x>(
 }
 
 pub fn substitution<'x>(
-    _pc: &ParseContext,
-    _env: &mut Environment<'x>,
-    _scope: Box<dyn Scope>,
-    _node: &Node<'x>,
+    pc: &ParseContext,
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
+    node: &Node<'x>,
 ) -> ConstructId {
-    // assert_eq!(node.children, &["[", "]"]);
-    // assert!(node.children.len() <= 2);
-    // let this = env.push_placeholder(scope);
-    // let base = node.children[0].as_construct(pc, env, SPlain(this));
-    // let mut named_subs = Vec::new();
-    // let mut anonymous_subs = Vec::new();
-    // for sub in collect_comma_list(node.children.get(1)) {
-    //     if sub.children == &["IS"] {
-    //         named_subs.push((
-    //             sub.children[0].as_ident(),
-    //             sub.children[1].as_construct(pc, env, SPlain(this)),
-    //         ));
-    //     } else {
-    //         anonymous_subs.push(sub.as_construct(pc, env, SPlain(this)));
-    //     }
-    // }
-    // env.define_unresolved(
-    //     this,
-    //     RSubstitution {
-    //         base,
-    //         named_subs,
-    //         anonymous_subs,
-    //     },
-    // );
-    // this
-    todo!()
+    assert_eq!(node.children[1], Text("["));
+    assert_eq!(node.children[3], Text("]"));
+    assert!(node.children.len() == 4);
+    let this = env.push_placeholder(scope);
+    let base = node.children[0].as_construct(pc, env, SPlain(this));
+    let mut named_subs = Vec::new();
+    let mut anonymous_subs = Vec::new();
+    for sub in collect_comma_list(&node.children[2]) {
+        if sub.phrase == "is" {
+            named_subs.push((
+                sub.children[0].as_node().as_ident(),
+                sub.children[2].as_construct(pc, env, SPlain(this)),
+            ));
+        } else {
+            anonymous_subs.push(sub.as_construct(pc, env, SPlain(this)));
+        }
+    }
+    env.define_unresolved(
+        this,
+        RSubstitution {
+            base,
+            named_subs,
+            anonymous_subs,
+        },
+    );
+    this
 }
 
 pub fn unique<'x>(
@@ -280,7 +280,7 @@ pub fn variable<'x>(
     let mut depends_on = Vec::new();
     let mut mode = 0;
     let this = env.push_placeholder(scope);
-    for arg in collect_comma_list(&node.children[1]) {
+    for arg in collect_comma_list(&node.children[2]) {
         if arg.phrase == "identifier" && arg.children == &[Text("DEPENDS_ON")] {
             mode = 1;
         } else if mode == 0 {
