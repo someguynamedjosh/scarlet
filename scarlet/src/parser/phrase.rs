@@ -1,7 +1,8 @@
 use indexmap::IndexMap;
 use regex::Regex;
 
-use super::stack::CreateFn;
+use super::{Node, ParseContext};
+use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
 pub type Precedence = u8;
 pub type PhraseName = String;
@@ -48,6 +49,9 @@ impl PhraseComponent {
         matches!(self, Self::Text(..))
     }
 }
+
+pub type CreateFn =
+    for<'x> fn(&ParseContext, &mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
 
 pub struct Phrase {
     pub name: &'static str,

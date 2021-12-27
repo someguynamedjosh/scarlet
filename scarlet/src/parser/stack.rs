@@ -9,9 +9,6 @@ use crate::{
     constructs::ConstructId, environment::Environment, parser::node::NodeChild, scope::Scope,
 };
 
-pub type CreateFn =
-    for<'x> fn(&ParseContext, &mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
-
 #[derive(Debug)]
 pub struct Stack<'a>(pub Vec<Node<'a>>);
 
