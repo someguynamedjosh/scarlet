@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::{downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId};
 use crate::{
     environment::Environment,
@@ -56,7 +58,11 @@ impl Construct for CSubstitution {
         let mut deps = Vec::new();
         for dep in env.get_dependencies(self.0) {
             if let Some(rep) = self.1.get(&dep) {
-                deps.append(&mut env.get_dependencies(*rep));
+                for replaced_dep in env.get_dependencies(*rep) {
+                    if !dep.get_depends_on().contains(&replaced_dep) {
+                        deps.push(replaced_dep);
+                    }
+                }
             } else {
                 deps.push(dep);
             }
@@ -89,6 +95,7 @@ impl Construct for CSubstitution {
         env.reduce(subbed);
         let mut remaining_subs = Substitutions::new();
         for dep in env.get_dependencies(subbed) {
+            println!("{:#?}", dep);
             if let Some(value) = self.1.get(&dep) {
                 remaining_subs.insert_no_replace(dep, *value);
             }

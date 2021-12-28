@@ -73,7 +73,7 @@ fn uncreate<'a>(
                 .collect_vec(),
         );
         Some(Node {
-            phrase: "if then else",
+            phrase: "substitution",
             children: vec![
                 NodeChild::Node(env.vomit(4, pc, code_arena, csub.base(), from)),
                 NodeChild::Text("["),
