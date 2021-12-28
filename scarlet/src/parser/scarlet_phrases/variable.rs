@@ -1,9 +1,19 @@
+use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{unique::CUnique, variable::SVariableInvariants, ConstructId},
+    constructs::{
+        downcast_construct,
+        unique::CUnique,
+        variable::{CVariable, SVariableInvariants},
+        Construct, ConstructId,
+    },
     environment::Environment,
-    parser::{phrase::Phrase, util, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::Phrase,
+        util::{self, create_comma_list},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     resolvable::RVariable,
     scope::{SPlain, Scope},
@@ -50,7 +60,39 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: ConstructId,
 ) -> Option<Node<'a>> {
-    None
+    if let Some(cvar) = downcast_construct::<CVariable>(&**env.get_construct_definition(uncreate)) {
+        let cvar = cvar.clone();
+        let invariants = cvar
+            .get_invariants()
+            .into_iter()
+            .map(|inv| env.vomit(255, pc, code_arena, *inv, from))
+            .collect_vec();
+        let depends_on = cvar
+            .get_depends_on()
+            .into_iter()
+            .map(|inv| env.vomit_var(pc, code_arena, inv, from))
+            .collect_vec();
+        let mut body = invariants;
+        if depends_on.len() > 0 {
+            body.push(Node {
+                phrase: "identifier",
+                children: vec![NodeChild::Text("DEPENDS_ON")],
+            });
+            let mut depends_on = depends_on;
+            body.append(&mut depends_on);
+        }
+        Some(Node {
+            phrase: "variable",
+            children: vec![
+                NodeChild::Text("VAR"),
+                NodeChild::Text("["),
+                create_comma_list(body),
+                NodeChild::Text("]"),
+            ],
+        })
+    } else {
+        None
+    }
 }
 
 pub fn phrase() -> Phrase {

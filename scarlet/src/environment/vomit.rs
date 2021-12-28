@@ -9,7 +9,6 @@ use crate::{
 
 impl<'x> Environment<'x> {
     pub fn show_all_requested(&mut self) {
-        let code_arena = Arena::new();
         let mut to_vomit = Vec::new();
         for (from, acon) in &self.constructs {
             if let ConstructDefinition::Resolved(con) = &acon.definition {
@@ -19,37 +18,61 @@ impl<'x> Environment<'x> {
                 }
             }
         }
-        let pc = ParseContext::new();
         for (con_id, from) in to_vomit {
-            let vomited = self.vomit(255, &pc, &code_arena, con_id, from);
-            println!("{:?} is\n{:?}", con_id, vomited);
-            println!("proves:");
-            for invariant in self.generated_invariants(con_id) {
-                println!(
-                    "    {}",
-                    indented(&format!(
-                        "{:?}",
-                        self.vomit(255, &pc, &code_arena, invariant, from)
-                    ))
-                );
-            }
-            println!("depends on:");
-            for dep in self.get_dependencies(con_id) {
-                let kind = match dep.is_capturing() {
-                    true => "capturing",
-                    false => "without capturing",
-                };
-                println!(
-                    "    {} {}",
-                    kind,
-                    indented(&format!(
-                        "{:?}",
-                        self.vomit_var(&pc, &code_arena, &dep, from)
-                    ))
-                );
-            }
+            self.show(con_id, from);
             println!();
         }
+    }
+
+    pub fn show(&mut self, con_id: ConstructId, from: ConstructId) {
+        let code_arena = Arena::new();
+        let pc = ParseContext::new();
+        let vomited = self.vomit(255, &pc, &code_arena, con_id, from);
+        println!("({:?})", con_id);
+        println!("{:?}", vomited);
+        println!("proves:");
+        for invariant in self.generated_invariants(con_id) {
+            println!(
+                "    {}",
+                indented(&format!(
+                    "{:?}",
+                    self.vomit(255, &pc, &code_arena, invariant, from)
+                ))
+            );
+        }
+        println!("depends on:");
+        for dep in self.get_dependencies(con_id) {
+            let kind = match dep.is_capturing() {
+                true => "capturing",
+                false => "without capturing",
+            };
+            println!(
+                "    {} {}",
+                kind,
+                indented(&format!(
+                    "{:?}",
+                    self.vomit_var(&pc, &code_arena, &dep, from)
+                ))
+            );
+        }
+    }
+
+    pub fn show_var(&mut self, var: &CVariable, from: ConstructId) {
+        let mut next_id = self.constructs.first();
+        while let Some(id) = next_id {
+            if self.constructs[id]
+                .definition
+                .as_resolved()
+                .map(|con| con.dyn_clone())
+                .map(|con| con.is_def_equal(self, var))
+                == Some(TripleBool::True)
+            {
+                return self.show(id, from);
+            } else {
+                next_id = self.constructs.next(id);
+            }
+        }
+        panic!("Variable does not exist.")
     }
 
     pub fn vomit_var<'a>(

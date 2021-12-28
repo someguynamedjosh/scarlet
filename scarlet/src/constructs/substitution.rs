@@ -36,11 +36,18 @@ impl Construct for CSubstitution {
         for (target, value) in &self.1 {
             if !target.can_be_assigned(*value, env) {
                 println!("{:#?}", env);
-                todo!(
-                    "nice error, argument {:?} does not meet all of {:?}'s invariants",
-                    value,
-                    target
-                );
+                println!("THIS EXPRESSION:");
+                env.show(*value, *value);
+                println!("DOES NOT SATISFY ALL OF THE FOLLOWING REQUIREMENTS:");
+                for inv in target.get_invariants() {
+                    println!("Must satisfy invariant ");
+                    env.show(*inv, *value);
+                }
+                for dep in target.get_depends_on() {
+                    println!("Must depend on ");
+                    env.show_var(dep, *value);
+                }
+                todo!("nice error.");
             }
         }
     }

@@ -8,7 +8,7 @@ use super::{
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
-    scope::{SPlain, Scope},
+    scope::{SPlain, SRoot, Scope},
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
@@ -48,12 +48,27 @@ impl CVariable {
         &self.invariants[..]
     }
 
+    pub(crate) fn get_depends_on(&self) -> &[CVariable] {
+        &self.depends_on[..]
+    }
+
     pub(crate) fn is_capturing(&self) -> bool {
         self.capturing
     }
 
     pub fn is_same_variable_as(&self, other: &Self) -> bool {
-        self.id == other.id && self.capturing == other.capturing
+        if !(self.id == other.id && self.capturing == other.capturing) {
+            return false
+        }
+        if self.depends_on.len() != other.depends_on.len() {
+            return false
+        }
+        for dep in &self.depends_on {
+            if !other.depends_on.contains(dep) {
+                return false
+            }
+        }
+        true
     }
 
     pub fn can_be_assigned<'x>(&self, value: ConstructId, env: &mut Environment<'x>) -> bool {
@@ -131,12 +146,16 @@ impl Construct for CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        let con = Self::new(
-            self.id,
-            invariants.clone(),
-            self.capturing,
-            self.depends_on.clone(),
-        );
+        let mut depends_on = Vec::new();
+        for dep in &self.depends_on {
+            let subbed = dep.substitute(env, substitutions, Box::new(SRoot));
+            if let Some(var) =  downcast_construct::<CVariable>(&**env.get_construct_definition(subbed)) {
+                depends_on.push(var.clone());
+            } else {
+                depends_on.push(dep.clone());
+            }
+        }
+        let con = Self::new(self.id, invariants.clone(), self.capturing, depends_on);
         env.push_construct(con, scope)
     }
 }

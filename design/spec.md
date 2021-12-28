@@ -70,11 +70,11 @@ f IS VAR[DEPENDS_ON x]
 # Don't know what to call this. Proves
 # a = b IMP f[ a ] = f[ b ]
 value_ext IS
-AE[ a  b  f[ a ] = f[ $ ] ]
+AE[ a  b  f[ a ] = f[ x ] ]
 
 # Proves b = a IMP f[ a ] = f[ b ]
 rev_value_ext IS
-AE[ b  a  f[ $ ] = f[ b ] ]
+AE[ b  a  f[ x ] = f[ b ] ]
 
 # Requires x FROM Bool, f[ true ] and 
 # f[ false ], proves f[ x ]
