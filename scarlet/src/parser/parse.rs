@@ -8,7 +8,7 @@ use super::{
 use crate::parser::{matchh, scarlet_phrases, stack::Stack};
 
 pub struct ParseContext {
-    pub(super) phrases: PhraseTable,
+    pub(crate) phrases: PhraseTable,
 }
 
 impl ParseContext {

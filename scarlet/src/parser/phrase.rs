@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
 use regex::Regex;
+use typed_arena::Arena;
 
 use super::{Node, ParseContext};
 use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
@@ -53,10 +54,18 @@ impl PhraseComponent {
 pub type CreateFn =
     for<'x> fn(&ParseContext, &mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ConstructId;
 
+pub type UncreateFn = for<'a, 'x> fn(
+    &ParseContext,
+    &mut Environment<'x>,
+    &'a Arena<String>,
+    ConstructId,
+    ConstructId,
+) -> Option<Node<'a>>;
+
 pub struct Phrase {
     pub name: &'static str,
     pub components: Vec<PhraseComponent>,
-    pub create_item: Option<CreateFn>,
+    pub create_and_uncreate: Option<(CreateFn, UncreateFn)>,
     pub precedence: Precedence,
 }
 

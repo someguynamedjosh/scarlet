@@ -107,8 +107,9 @@ impl<'x> Node<'x> {
         pc.phrases
             .get(self.phrase)
             .unwrap()
-            .create_item
-            .expect(&format!("{} is not a construct", self.phrase))(pc, env, scope, self)
+            .create_and_uncreate
+            .expect(&format!("{} is not a construct", self.phrase))
+            .0(pc, env, scope, self)
     }
 
     pub fn as_ident(&self) -> &'x str {
