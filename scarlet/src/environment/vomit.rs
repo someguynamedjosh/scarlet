@@ -26,8 +26,11 @@ impl<'x> Environment<'x> {
             println!("proves:");
             for invariant in self.generated_invariants(con_id) {
                 println!(
-                    "    {:?}",
-                    self.vomit(255, &pc, &code_arena, invariant, from)
+                    "    {}",
+                    indented(&format!(
+                        "{:?}",
+                        self.vomit(255, &pc, &code_arena, invariant, from)
+                    ))
                 );
             }
             println!("depends on:");
@@ -73,7 +76,7 @@ impl<'x> Environment<'x> {
         panic!("Variable does not exist.")
     }
 
-    fn vomit<'a>(
+    pub fn vomit<'a>(
         &mut self,
         max_precedence: u8,
         pc: &ParseContext,

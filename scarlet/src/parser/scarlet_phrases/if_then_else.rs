@@ -3,7 +3,11 @@ use typed_arena::Arena;
 use crate::{
     constructs::{downcast_construct, if_then_else::CIfThenElse, unique::CUnique, ConstructId},
     environment::Environment,
-    parser::{phrase::Phrase, util, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::Phrase,
+        util::{self, create_comma_list},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
 };
@@ -36,8 +40,22 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: ConstructId,
 ) -> Option<Node<'a>> {
-    if let Some(cite) = downcast_construct::<CIfThenElse>(&**env.get_construct_definition(uncreate)) {
-        Some()
+    if let Some(cite) = downcast_construct::<CIfThenElse>(&**env.get_construct_definition(uncreate))
+    {
+        let cite = cite.clone();
+        Some(Node {
+            phrase: "if then else",
+            children: vec![
+                NodeChild::Text("IF_THEN_ELSE"),
+                NodeChild::Text("["),
+                create_comma_list(vec![
+                    env.vomit(255, pc, code_arena, cite.condition(), from),
+                    env.vomit(255, pc, code_arena, cite.then(), from),
+                    env.vomit(255, pc, code_arena, cite.elsee(), from),
+                ]),
+                NodeChild::Text("]"),
+            ],
+        })
     } else {
         None
     }

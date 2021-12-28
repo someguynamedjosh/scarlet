@@ -24,6 +24,18 @@ impl CIfThenElse {
             elsee,
         }
     }
+
+    pub fn condition(&self) -> ConstructId {
+        self.condition
+    }
+
+    pub fn then(&self) -> ConstructId {
+        self.then
+    }
+
+    pub fn elsee(&self) -> ConstructId {
+        self.elsee
+    }
 }
 
 impl_any_eq_for_construct!(CIfThenElse);

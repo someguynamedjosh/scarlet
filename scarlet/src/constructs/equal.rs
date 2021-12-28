@@ -21,6 +21,14 @@ impl CEqual {
     pub fn new<'x>(left: ConstructId, right: ConstructId) -> Self {
         Self { left, right }
     }
+
+    pub fn left(&self) -> ConstructId {
+        self.left
+    }
+
+    pub fn right(&self) -> ConstructId {
+        self.right
+    }
 }
 
 impl_any_eq_for_construct!(CEqual);

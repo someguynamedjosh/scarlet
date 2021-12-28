@@ -18,8 +18,7 @@ mod substitution;
 mod value_access;
 mod variable;
 
-use super::{phrase::Phrase, scarlet_creators};
-use crate::constructs::structt::AtomicStructMember;
+use super::phrase::Phrase;
 
 #[macro_export]
 macro_rules! phrase {

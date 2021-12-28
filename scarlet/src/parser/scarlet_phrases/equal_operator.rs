@@ -1,11 +1,11 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{unique::CUnique, ConstructId, equal::CEqual},
+    constructs::{downcast_construct, equal::CEqual, unique::CUnique, ConstructId},
     environment::Environment,
     parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,
-    scope::{Scope, SPlain},
+    scope::{SPlain, Scope},
 };
 
 fn create<'x>(
@@ -30,7 +30,19 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: ConstructId,
 ) -> Option<Node<'a>> {
-    todo!()
+    if let Some(ceq) = downcast_construct::<CEqual>(&**env.get_construct_definition(uncreate)) {
+        let ceq = ceq.clone();
+        Some(Node {
+            phrase: "equal operator",
+            children: vec![
+                NodeChild::Node(env.vomit(63, pc, code_arena, ceq.left(), from)),
+                NodeChild::Text("="),
+                NodeChild::Node(env.vomit(63, pc, code_arena, ceq.right(), from)),
+            ],
+        })
+    } else {
+        None
+    }
 }
 
 pub fn phrase() -> Phrase {

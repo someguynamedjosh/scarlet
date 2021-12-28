@@ -29,7 +29,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: ConstructId,
 ) -> Option<Node<'a>> {
-    todo!()
+    None
 }
 
 pub fn phrase() -> Phrase {
