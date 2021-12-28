@@ -44,7 +44,7 @@ impl<'x> Environment<'x> {
                     kind,
                     indented(&format!(
                         "{:?}",
-                        self.vomit_var(&pc, &code_arena, dep, from)
+                        self.vomit_var(&pc, &code_arena, &dep, from)
                     ))
                 );
             }
@@ -52,11 +52,11 @@ impl<'x> Environment<'x> {
         }
     }
 
-    fn vomit_var<'a>(
+    pub fn vomit_var<'a>(
         &mut self,
         pc: &ParseContext,
         code_arena: &'a Arena<String>,
-        var: CVariable,
+        var: &CVariable,
         from: ConstructId,
     ) -> Node<'a> {
         let mut next_id = self.constructs.first();
@@ -65,7 +65,7 @@ impl<'x> Environment<'x> {
                 .definition
                 .as_resolved()
                 .map(|con| con.dyn_clone())
-                .map(|con| con.is_def_equal(self, &var))
+                .map(|con| con.is_def_equal(self, var))
                 == Some(TripleBool::True)
             {
                 return self.vomit(255, pc, code_arena, id, from);

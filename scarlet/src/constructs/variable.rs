@@ -137,21 +137,7 @@ impl Construct for CVariable {
             self.capturing,
             self.depends_on.clone(),
         );
-        let mut remaining_subs = Substitutions::new();
-        for (target, value) in substitutions {
-            if self.depends_on.contains(target) {
-                remaining_subs.insert_no_replace(target.clone(), *value);
-            }
-        }
-        if remaining_subs.len() > 0 {
-            let subbed = env.push_placeholder(scope);
-            let id = env.push_construct(con, Box::new(SPlain(subbed)));
-            let con = CSubstitution::new(id, remaining_subs);
-            env.define_construct(subbed, con);
-            subbed
-        } else {
-            env.push_construct(con, scope)
-        }
+        env.push_construct(con, scope)
     }
 }
 

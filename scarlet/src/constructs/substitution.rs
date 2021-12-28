@@ -1,4 +1,4 @@
-use super::{variable::CVariable, Construct, ConstructDefinition, ConstructId};
+use super::{downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
@@ -14,6 +14,14 @@ pub struct CSubstitution(ConstructId, Substitutions);
 impl CSubstitution {
     pub fn new<'x>(base: ConstructId, subs: Substitutions) -> Self {
         Self(base, subs.clone())
+    }
+
+    pub fn base(&self) -> ConstructId {
+        self.0
+    }
+
+    pub fn substitutions(&self) -> &Substitutions {
+        &self.1
     }
 }
 
@@ -49,15 +57,39 @@ impl Construct for CSubstitution {
         deps
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
-        TripleBool::Unknown
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            let mut result = env.is_def_equal(self.0, other.0);
+            if self.1.len() != other.1.len() {
+                result = TripleBool::False;
+            }
+            for (target, value) in &self.1 {
+                if let Some(other_value) = other.1.get(target) {
+                    result = TripleBool::and(vec![result, env.is_def_equal(*value, *other_value)]);
+                } else {
+                    result = TripleBool::False
+                }
+            }
+            result
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
         self.check(env);
         let subbed = env.substitute(self.0, &self.1);
-        env.reduce(subbed);
-        subbed.into()
+        let mut remaining_subs = Substitutions::new();
+        for dep in env.get_dependencies(subbed) {
+            if let Some(value) = self.1.get(&dep) {
+                remaining_subs.insert_no_replace(dep, *value);
+            }
+        }
+        if remaining_subs.len() == 0 {
+            subbed.into()
+        } else {
+            ConstructDefinition::Resolved(Box::new(Self(subbed, remaining_subs)))
+        }
     }
 
     fn substitute<'x>(
