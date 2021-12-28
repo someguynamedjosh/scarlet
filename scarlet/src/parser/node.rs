@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 
 use super::{phrase::PhraseTable, ParseContext};
-use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
+use crate::{constructs::ConstructId, environment::Environment, scope::Scope, shared::indented};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum NodeChild<'a> {
@@ -64,7 +64,11 @@ pub struct Node<'a> {
 
 impl<'a> Debug for Node<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?} {:#?}", self.phrase, self.children)
+        write!(f, "{}:", self.phrase)?;
+        for child in &self.children {
+            write!(f, "\n    {}", indented(&format!("{:?}", child)))?;
+        }
+        Ok(())
     }
 }
 

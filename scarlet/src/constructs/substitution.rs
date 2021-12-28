@@ -79,6 +79,7 @@ impl Construct for CSubstitution {
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
         self.check(env);
         let subbed = env.substitute(self.0, &self.1);
+        env.reduce(subbed);
         let mut remaining_subs = Substitutions::new();
         for dep in env.get_dependencies(subbed) {
             if let Some(value) = self.1.get(&dep) {
