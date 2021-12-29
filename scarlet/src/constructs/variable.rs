@@ -85,6 +85,29 @@ impl CVariable {
         }
         true
     }
+
+    pub fn inline_substitute(&self,
+        env: &mut Environment,
+        substitutions: &Substitutions,
+    ) -> Option<Self> {
+        for (target, _) in substitutions {
+            if self.is_same_variable_as(env, target) {
+                return None
+            }
+        }
+        let invariants = self
+            .invariants
+            .iter()
+            .copied()
+            .map(|x| env.substitute(x, substitutions))
+            .collect_vec();
+        let substitutions = self
+            .substitutions
+            .iter()
+            .map(|&sub| env.substitute(sub, substitutions))
+            .collect();
+        Some(Self::new(self.id, invariants.clone(), substitutions))
+    }
 }
 
 impl_any_eq_for_construct!(CVariable);
@@ -130,7 +153,14 @@ impl Construct for CVariable {
     ) -> ConstructId {
         for (target, value) in substitutions {
             if self.is_same_variable_as(env, target) {
-                return *value;
+                let deps = env.get_dependencies(*value);
+                let mut stored_subs = Substitutions::new();
+                for (target, &value) in deps.iter().zip(self.substitutions.iter()) {
+                    stored_subs.insert_no_replace(target.clone(), value);
+                }
+                println!("{:#?}", &self.substitutions);
+                println!("{:#?}", stored_subs);
+                return env.substitute(*value, &stored_subs);
             }
         }
         let invariants = self
@@ -139,7 +169,7 @@ impl Construct for CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        let mut substitutions = self
+        let substitutions = self
             .substitutions
             .iter()
             .map(|&sub| env.substitute(sub, substitutions))
