@@ -159,10 +159,8 @@ impl Construct for CVariable {
                 for (target, &value) in deps.iter().zip(self.substitutions.iter()) {
                     stored_subs.insert_no_replace(target.clone(), value);
                 }
-                println!("{:#?}", &self.substitutions);
-                println!("{:#?}", stored_subs);
                 let value_def = env.get_construct_definition(*value).dyn_clone();
-                return value_def.substitute(env, substitutions);
+                return value_def.substitute(env, &stored_subs);
             }
         }
         let invariants = self
