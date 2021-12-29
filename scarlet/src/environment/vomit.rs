@@ -42,10 +42,11 @@ impl<'x> Environment<'x> {
         }
         println!("depends on:");
         for dep in self.get_dependencies(con_id) {
-            let kind = match dep.is_capturing() {
-                true => "capturing",
-                false => "without capturing",
-            };
+            // let kind = match dep.is_capturing() {
+            //     true => "capturing",
+            //     false => "without capturing",
+            // };
+            let kind = "capturing";
             println!(
                 "    {} {}",
                 kind,

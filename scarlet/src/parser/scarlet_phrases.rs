@@ -1,4 +1,4 @@
-mod as_builtin_item;
+mod as_language_item;
 mod equal_operator;
 mod identifier;
 mod if_then_else;
@@ -46,7 +46,7 @@ pub fn phrases() -> Vec<Phrase> {
         rest_access::phrase(),
         is_populated_struct::phrase(),
         shown::phrase(),
-        as_builtin_item::phrase(),
+        as_language_item::phrase(),
         member_access::phrase(),
         substitution::phrase(),
         is::phrase(),

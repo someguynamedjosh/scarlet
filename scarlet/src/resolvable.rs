@@ -94,7 +94,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
 pub struct RVariable {
     pub id: VariableId,
     pub invariants: Vec<ConstructId>,
-    pub depends_on: Vec<ConstructId>,
+    pub substitutions: Vec<ConstructId>,
 }
 
 impl<'x> Resolvable<'x> for RVariable {
@@ -107,18 +107,7 @@ impl<'x> Resolvable<'x> for RVariable {
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
-        let depends_on = self
-            .depends_on
-            .iter()
-            .map(|&dep| {
-                if let Some(var) = as_variable(&**env.get_construct_definition(dep)) {
-                    var.clone()
-                } else {
-                    panic!("{:?} is not a variable", dep);
-                }
-            })
-            .collect();
-        let con = CVariable::new(self.id, self.invariants.clone(), false, depends_on);
+        let con = CVariable::new(self.id, self.invariants.clone(), self.substitutions.clone());
         ConstructDefinition::Resolved(Box::new(con))
     }
 }

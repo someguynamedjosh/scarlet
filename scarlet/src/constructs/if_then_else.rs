@@ -52,7 +52,7 @@ impl Construct for CIfThenElse {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
-        let truee = env.get_builtin_item("true");
+        let truee = env.get_language_item("true");
         let true_invs = env.generated_invariants(self.then);
         let mut false_invs = env.generated_invariants(self.then);
         let mut result = Vec::new();
@@ -105,7 +105,7 @@ impl Construct for CIfThenElse {
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
         env.reduce(self.condition);
-        match env.is_def_equal(self.condition, env.get_builtin_item("true")) {
+        match env.is_def_equal(self.condition, env.get_language_item("true")) {
             TripleBool::True => {
                 env.reduce(self.then);
                 self.then.into()

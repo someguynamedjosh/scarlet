@@ -29,25 +29,25 @@ fn create<'x>(
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let mut invariants = Vec::new();
-    let mut depends_on = Vec::new();
+    let mut substitutions = Vec::new();
     let mut mode = 0;
     let this = env.push_placeholder(scope);
     for arg in util::collect_comma_list(&node.children[2]) {
-        if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEPENDS_ON")] {
+        if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("SUB")] {
             mode = 1;
         } else if mode == 0 {
             let con = arg.as_construct(pc, env, SVariableInvariants(this));
             invariants.push(con);
         } else {
             let con = arg.as_construct(pc, env, SPlain(this));
-            depends_on.push(con);
+            substitutions.push(con);
         }
     }
     let id = env.push_variable();
     let def = RVariable {
         id,
         invariants,
-        depends_on,
+        substitutions,
     };
     env.define_unresolved(this, def);
     this
@@ -65,20 +65,20 @@ fn uncreate<'a>(
         let invariants = cvar
             .get_invariants()
             .into_iter()
-            .map(|inv| env.vomit(255, pc, code_arena, *inv, from))
+            .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
             .collect_vec();
-        let depends_on = cvar
-            .get_depends_on()
+        let substitutions = cvar
+            .get_substitutions()
             .into_iter()
-            .map(|inv| env.vomit_var(pc, code_arena, inv, from))
+            .map(|&sub| env.vomit(255, pc, code_arena, sub, from))
             .collect_vec();
         let mut body = invariants;
-        if depends_on.len() > 0 {
+        if substitutions.len() > 0 {
             body.push(Node {
                 phrase: "identifier",
-                children: vec![NodeChild::Text("DEPENDS_ON")],
+                children: vec![NodeChild::Text("SUB")],
             });
-            let mut depends_on = depends_on;
+            let mut depends_on = substitutions;
             body.append(&mut depends_on);
         }
         Some(Node {

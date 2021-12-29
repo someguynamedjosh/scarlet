@@ -53,8 +53,8 @@ impl Construct for CEqual {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
-        let truee = env.get_builtin_item("true");
-        let falsee = env.get_builtin_item("false");
+        let truee = env.get_language_item("true");
+        let falsee = env.get_language_item("false");
         let is_true = this;
         let is_false = env.push_construct(Self::new(this, falsee), Box::new(SPlain(this)));
         let is_bool = env.push_construct(
@@ -87,8 +87,8 @@ impl Construct for CEqual {
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
         match env.is_def_equal(self.left, self.right) {
-            TripleBool::True => env.get_builtin_item("true").into(),
-            TripleBool::False => env.get_builtin_item("false").into(),
+            TripleBool::True => env.get_language_item("true").into(),
+            TripleBool::False => env.get_language_item("false").into(),
             TripleBool::Unknown => self.dyn_clone().into(),
         }
     }

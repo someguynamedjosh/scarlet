@@ -115,9 +115,9 @@ impl Scope for SRoot {
         ident: &str,
     ) -> Option<ConstructId> {
         if ident == "true" {
-            Some(env.get_builtin_item("true").into())
+            Some(env.get_language_item("true").into())
         } else if ident == "false" {
-            Some(env.get_builtin_item("false").into())
+            Some(env.get_language_item("false").into())
         // } else if let Ok(_) = ident.parse() {
         //     todo!()
         } else {
@@ -130,9 +130,9 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         value: ConstructId,
     ) -> Option<String> {
-        if value == env.get_builtin_item("true") {
+        if value == env.get_language_item("true") {
             Some("true".to_owned())
-        } else if value == env.get_builtin_item("false") {
+        } else if value == env.get_language_item("false") {
             Some("false".to_owned())
         } else {
             None
@@ -144,7 +144,7 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> bool {
-        let truee = env.get_builtin_item("true");
+        let truee = env.get_language_item("true");
         env.is_def_equal(invariant, truee) == TripleBool::True
     }
 

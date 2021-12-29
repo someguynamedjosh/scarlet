@@ -21,11 +21,11 @@ use crate::{
     shared::{Pool, TripleBool},
 };
 
-pub const BUILTIN_ITEM_NAMES: &[&str] = &["true", "false", "void"];
+pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 
 #[derive(Debug)]
 pub struct Environment<'x> {
-    builtin_items: HashMap<&'static str, ConstructId>,
+    language_items: HashMap<&'static str, ConstructId>,
     pub(crate) constructs: ConstructPool<'x>,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
@@ -34,20 +34,20 @@ pub struct Environment<'x> {
 impl<'x> Environment<'x> {
     pub fn new() -> Self {
         let mut this = Self {
-            builtin_items: HashMap::new(),
+            language_items: HashMap::new(),
             constructs: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
         };
-        for &name in BUILTIN_ITEM_NAMES {
+        for &name in LANGUAGE_ITEM_NAMES {
             let id = this.push_placeholder(Box::new(SRoot));
-            this.builtin_items.insert(name, id);
+            this.language_items.insert(name, id);
         }
         this
     }
 
-    pub fn define_builtin_item(&mut self, name: &str, definition: ConstructId) {
-        let id = self.get_builtin_item(name);
+    pub fn define_language_item(&mut self, name: &str, definition: ConstructId) {
+        let id = self.get_language_item(name);
         self.constructs[id].definition = definition.into();
     }
 
@@ -68,11 +68,11 @@ impl<'x> Environment<'x> {
             ConstructDefinition::Unresolved(Box::new(definition));
     }
 
-    pub fn get_builtin_item(&self, name: &str) -> ConstructId {
+    pub fn get_language_item(&self, name: &str) -> ConstructId {
         *self
-            .builtin_items
+            .language_items
             .get(name)
-            .unwrap_or_else(|| todo!("nice error, no builtin item named {}", name))
+            .unwrap_or_else(|| todo!("nice error, no language item named {}", name))
     }
 
     pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ConstructId {

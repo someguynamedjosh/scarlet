@@ -21,22 +21,19 @@ pub type VariableId = Id<'V'>;
 pub struct CVariable {
     id: VariableId,
     invariants: Vec<ConstructId>,
-    capturing: bool,
-    depends_on: Vec<CVariable>,
+    substitutions: Vec<ConstructId>,
 }
 
 impl CVariable {
     pub fn new<'x>(
         id: VariableId,
         invariants: Vec<ConstructId>,
-        capturing: bool,
-        depends_on: Vec<CVariable>,
+        substitutions: Vec<ConstructId>,
     ) -> Self {
         Self {
             id,
             invariants: invariants.clone(),
-            capturing,
-            depends_on,
+            substitutions,
         }
     }
 
@@ -48,24 +45,20 @@ impl CVariable {
         &self.invariants[..]
     }
 
-    pub(crate) fn get_depends_on(&self) -> &[CVariable] {
-        &self.depends_on[..]
+    pub(crate) fn get_substitutions(&self) -> &[ConstructId] {
+        &self.substitutions[..]
     }
 
-    pub(crate) fn is_capturing(&self) -> bool {
-        self.capturing
-    }
-
-    pub fn is_same_variable_as(&self, other: &Self) -> bool {
-        if !(self.id == other.id && self.capturing == other.capturing) {
-            return false
+    pub fn is_same_variable_as(&self, env: &mut Environment, other: &Self) -> bool {
+        if !(self.id == other.id) {
+            return false;
         }
-        if self.depends_on.len() != other.depends_on.len() {
-            return false
+        if self.substitutions.len() != other.substitutions.len() {
+            return false;
         }
-        for dep in &self.depends_on {
-            if !other.depends_on.contains(dep) {
-                return false
+        for (&left, &right) in self.substitutions.iter().zip(other.substitutions.iter()) {
+            if env.is_def_equal(left, right) != TripleBool::True {
+                return false;
             }
         }
         true
@@ -81,15 +74,12 @@ impl CVariable {
                 return false;
             }
         }
-        for required_dep in &self.depends_on {
-            let mut met = false;
-            for value_dep in env.get_dependencies(value) {
-                if value_dep.is_same_variable_as(&required_dep) {
-                    met = true;
-                    break;
-                }
-            }
-            if !met {
+        let deps = env.get_dependencies(value);
+        if deps.len() < self.substitutions.len() {
+            return false;
+        }
+        for (target, &value) in deps.iter().zip(self.substitutions.iter()) {
+            if !target.can_be_assigned(value, env) {
                 return false;
             }
         }
@@ -114,15 +104,18 @@ impl Construct for CVariable {
         self.invariants.clone()
     }
 
-    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut deps = self.depends_on.clone();
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+        let mut deps = Vec::new();
+        for &sub in &self.substitutions {
+            deps.append(&mut env.get_dependencies(sub));
+        }
         deps.push(self.clone());
         deps
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         if let Some(other) = downcast_construct::<Self>(other) {
-            if self.is_same_variable_as(other) {
+            if self.is_same_variable_as(env, other) {
                 return TripleBool::True;
             }
         }
@@ -136,7 +129,7 @@ impl Construct for CVariable {
         scope: Box<dyn Scope>,
     ) -> ConstructId {
         for (target, value) in substitutions {
-            if target.id == self.id && target.capturing == self.capturing {
+            if self.is_same_variable_as(env, target) {
                 return *value;
             }
         }
@@ -146,16 +139,12 @@ impl Construct for CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        let mut depends_on = Vec::new();
-        for dep in &self.depends_on {
-            let subbed = dep.substitute(env, substitutions, Box::new(SRoot));
-            if let Some(var) =  downcast_construct::<CVariable>(&**env.get_construct_definition(subbed)) {
-                depends_on.push(var.clone());
-            } else {
-                depends_on.push(dep.clone());
-            }
-        }
-        let con = Self::new(self.id, invariants.clone(), self.capturing, depends_on);
+        let mut substitutions = self
+            .substitutions
+            .iter()
+            .map(|&sub| env.substitute(sub, substitutions))
+            .collect();
+        let con = Self::new(self.id, invariants.clone(), substitutions);
         env.push_construct(con, scope)
     }
 }

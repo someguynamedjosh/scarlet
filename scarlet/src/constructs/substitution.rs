@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::{downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId};
 use crate::{
     environment::Environment,
@@ -41,13 +39,13 @@ impl Construct for CSubstitution {
                 println!("THIS EXPRESSION:");
                 env.show(*value, *value);
                 println!("DOES NOT SATISFY ALL OF THE FOLLOWING REQUIREMENTS:");
-                for inv in target.get_invariants() {
-                    println!("Must satisfy invariant ");
-                    env.show(*inv, *value);
+                for &inv in target.get_invariants() {
+                    println!("Must satisfy invariant:");
+                    env.show(inv, *value);
                 }
-                for dep in target.get_depends_on() {
-                    println!("Must depend on ");
-                    env.show_var(dep, *value);
+                for &sub in target.get_substitutions() {
+                    println!("Must have a dependency that can be assigned:");
+                    env.show(sub, *value);
                 }
                 todo!("nice error.");
             }
@@ -58,10 +56,12 @@ impl Construct for CSubstitution {
         let mut deps = Vec::new();
         for dep in env.get_dependencies(self.0) {
             if let Some(rep) = self.1.get(&dep) {
-                for replaced_dep in env.get_dependencies(*rep) {
-                    if !dep.get_depends_on().contains(&replaced_dep) {
-                        deps.push(replaced_dep);
-                    }
+                let replaced_deps = env.get_dependencies(*rep);
+                for rdep in replaced_deps
+                    .into_iter()
+                    .skip(dep.get_substitutions().len())
+                {
+                    deps.push(rdep);
                 }
             } else {
                 deps.push(dep);
@@ -93,18 +93,7 @@ impl Construct for CSubstitution {
         self.check(env);
         let subbed = env.substitute(self.0, &self.1);
         env.reduce(subbed);
-        let mut remaining_subs = Substitutions::new();
-        for dep in env.get_dependencies(subbed) {
-            println!("{:#?}", dep);
-            if let Some(value) = self.1.get(&dep) {
-                remaining_subs.insert_no_replace(dep, *value);
-            }
-        }
-        if remaining_subs.len() == 0 {
-            subbed.into()
-        } else {
-            ConstructDefinition::Resolved(Box::new(Self(subbed, remaining_subs)))
-        }
+        subbed.into()
     }
 
     fn substitute<'x>(
@@ -122,7 +111,7 @@ impl Construct for CSubstitution {
         for (target, value) in substitutions {
             let mut already_present = false;
             for (existing_target, _) in &new_subs {
-                if existing_target.is_same_variable_as(target) {
+                if existing_target.is_same_variable_as(env, target) {
                     already_present = true;
                     break;
                 }

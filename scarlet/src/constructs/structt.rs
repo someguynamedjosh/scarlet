@@ -15,7 +15,7 @@ pub fn struct_from_unnamed_fields<'x>(
     scope: Box<dyn Scope>,
 ) -> ConstructId {
     if fields.is_empty() {
-        env.get_builtin_item("void")
+        env.get_language_item("void")
     } else {
         let first_field = fields.remove(0);
         let this = env.push_placeholder(scope);

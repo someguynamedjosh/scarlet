@@ -19,7 +19,7 @@ fn struct_from_fields<'x>(
     scope: Box<dyn Scope>,
 ) -> ConstructId {
     if fields.is_empty() {
-        env.get_builtin_item("void")
+        env.get_language_item("void")
     } else {
         let (label, field) = fields.remove(0);
         let label = label.unwrap_or("").to_owned();

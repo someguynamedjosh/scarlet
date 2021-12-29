@@ -15,12 +15,12 @@ fn create<'x>(
     node: &Node<'x>,
 ) -> ConstructId {
     assert_eq!(node.children.len(), 5);
-    assert_eq!(node.children[1], NodeChild::Text(".AS_BUILTIN_ITEM"));
+    assert_eq!(node.children[1], NodeChild::Text(".AS_LANGUAGE_ITEM"));
     assert_eq!(node.children[2], NodeChild::Text("["));
     assert_eq!(node.children[4], NodeChild::Text("]"));
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
     let name = node.children[3].as_node().as_ident();
-    env.define_builtin_item(name, base);
+    env.define_language_item(name, base);
     base
 }
 
@@ -36,8 +36,8 @@ fn uncreate<'a>(
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "as builtin item",
+        "as language item",
         Some((create, uncreate)),
-        4 => 4, r"\.AS_BUILTIN_ITEM", r"\[", 255, r"\]"
+        4 => 4, r"\.AS_LANGUAGE_ITEM", r"\[", 255, r"\]"
     )
 }

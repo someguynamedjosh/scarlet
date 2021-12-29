@@ -1,53 +1,18 @@
 {
-    # Struct[{true}]
+    f[ a ][ true ].SHOWN
 
-    true IS UNIQUE.AS_LANG_ITEM[true]
-    false IS UNIQUE.AS_LANG_ITEM[false]
-    void IS UNIQUE.AS_LANG_ITEM[void]
+    a IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
+    b IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
 
-    Any IS VAR[]
+    x IS VAR[ ]
+    f IS VAR[ DEPENDS_ON x ]
 
-    Bool IS VAR[
-        IF_THEN_ELSE[
-            SELF  true  SELF = false
-        ]
-    ]
-    left IS VAR[
-        IF_THEN_ELSE[
-            SELF  true  SELF = false
-        ]
-    ]
-    right IS VAR[
-        IF_THEN_ELSE[
-            SELF  true  SELF = false
-        ]
-    ]
+    bool_and IS IF_THEN_ELSE[ a b false ]
+    bool_or IS IF_THEN_ELSE[ a true b ]
+    bool_implies IS IF_THEN_ELSE[ a b true ]
+    bool_not IS IF_THEN_ELSE[ a false true ]
 
-    bool_and IS IF_THEN_ELSE[
-        left  right  false
-    ]
-
-    bool_or IS IF_THEN_ELSE[
-        left  true  right
-    ]
-
-    Struct IS VAR[
-        bool_or[
-            SELF.IS_POPULATED_STRUCT
-            SELF = void
-        ]
-    ]
-
-    # Nat IS VAR[
-    #     IF_THEN_ELSE[
-    #         SELF IS_POPULATED_STRUCT
-    #         bool_and[
-    #             SELF.VALUE FROM Bool
-    #             SELF.REST FROM Nat
-    #         ]
-    #         SELF = EMPTY_STRUCT
-    #     ]
-    # ]
-    # zero IS EMPTY_STRUCT
-    # one IS { true }
-}.VALUE
+    true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
+    false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
+    void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
+}
