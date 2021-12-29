@@ -21,6 +21,8 @@ use crate::{
     shared::{Pool, TripleBool},
 };
 
+use self::substitute::SubstituteStack;
+
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 
 #[derive(Debug)]
@@ -29,6 +31,7 @@ pub struct Environment<'x> {
     pub(crate) constructs: ConstructPool<'x>,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
+    pub(super) substitute_stack: SubstituteStack,
 }
 
 impl<'x> Environment<'x> {
@@ -38,6 +41,7 @@ impl<'x> Environment<'x> {
             constructs: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
+            substitute_stack: SubstituteStack::new(),
         };
         for &name in LANGUAGE_ITEM_NAMES {
             let id = this.push_placeholder(Box::new(SRoot));

@@ -97,10 +97,9 @@ impl Construct for CEqual {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> Box<dyn Construct> {
         let left = env.substitute(self.left, substitutions);
         let right = env.substitute(self.right, substitutions);
-        env.push_construct(Self::new(left, right), scope)
+        Self::new(left, right).dyn_clone()
     }
 }

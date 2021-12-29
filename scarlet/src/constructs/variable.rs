@@ -4,6 +4,7 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::{CSubstitution, Substitutions},
+    BoxedConstruct, ConstructDefinition,
 };
 use crate::{
     environment::Environment,
@@ -86,13 +87,14 @@ impl CVariable {
         true
     }
 
-    pub fn inline_substitute(&self,
+    pub fn inline_substitute(
+        &self,
         env: &mut Environment,
         substitutions: &Substitutions,
     ) -> Option<Self> {
         for (target, _) in substitutions {
             if self.is_same_variable_as(env, target) {
-                return None
+                return None;
             }
         }
         let invariants = self
@@ -149,8 +151,7 @@ impl Construct for CVariable {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> BoxedConstruct {
         for (target, value) in substitutions {
             if self.is_same_variable_as(env, target) {
                 let deps = env.get_dependencies(*value);
@@ -160,7 +161,8 @@ impl Construct for CVariable {
                 }
                 println!("{:#?}", &self.substitutions);
                 println!("{:#?}", stored_subs);
-                return env.substitute(*value, &stored_subs);
+                let value_def = env.get_construct_definition(*value).dyn_clone();
+                return value_def.substitute(env, substitutions);
             }
         }
         let invariants = self
@@ -174,8 +176,7 @@ impl Construct for CVariable {
             .iter()
             .map(|&sub| env.substitute(sub, substitutions))
             .collect();
-        let con = Self::new(self.id, invariants.clone(), substitutions);
-        env.push_construct(con, scope)
+        Self::new(self.id, invariants.clone(), substitutions).dyn_clone()
     }
 }
 

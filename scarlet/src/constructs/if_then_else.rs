@@ -122,11 +122,10 @@ impl Construct for CIfThenElse {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> Box<dyn Construct> {
         let condition = env.substitute(self.condition, substitutions);
         let then = env.substitute(self.then, substitutions);
         let elsee = env.substitute(self.elsee, substitutions);
-        env.push_construct(Self::new(condition, then, elsee), scope)
+        Self::new(condition, then, elsee).dyn_clone()
     }
 }

@@ -88,11 +88,10 @@ impl Construct for CPopulatedStruct {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> Box<dyn Construct> {
         let value = env.substitute(self.value, substitutions);
         let rest = env.substitute(self.rest, substitutions);
-        env.push_construct(Self::new(self.label.clone(), value, rest), scope)
+        Self::new(self.label.clone(), value, rest).dyn_clone()
     }
 }
 
@@ -148,11 +147,9 @@ impl Construct for CAtomicStructMember {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> Box<dyn Construct> {
         let subbed_base = env.substitute(self.0, substitutions);
-        let subbed = Self(subbed_base, self.1);
-        env.push_construct(subbed, scope)
+        Self(subbed_base, self.1).dyn_clone()
     }
 }
 

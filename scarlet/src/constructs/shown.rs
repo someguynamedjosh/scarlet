@@ -1,7 +1,7 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::CVariable,
+    variable::CVariable, ConstructDefinition,
 };
 use crate::{environment::Environment, impl_any_eq_for_construct, scope::Scope};
 
@@ -43,9 +43,8 @@ impl Construct for CShown {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> Box<dyn Construct> {
         let base = env.substitute(self.0, substitutions);
-        env.push_construct(Self::new(base), scope)
+        Self::new(base).dyn_clone()
     }
 }

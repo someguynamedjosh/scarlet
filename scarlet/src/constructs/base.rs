@@ -15,6 +15,10 @@ pub enum ConstructDefinition<'x> {
     Unresolved(BoxedResolvable<'x>),
 }
 
+pub fn rcd<'x>(construct: impl Construct) -> ConstructDefinition<'x> {
+    ConstructDefinition::Resolved(Box::new(construct))
+}
+
 impl<'x> ConstructDefinition<'x> {
     pub fn as_resolved(&self) -> Option<&BoxedConstruct> {
         match self {
@@ -82,8 +86,11 @@ pub trait Construct: Any + Debug + AnyEq {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId;
+    ) -> Box<dyn Construct>;
+
+    fn as_def<'x>(&self) -> ConstructDefinition<'x> {
+        ConstructDefinition::Resolved(self.dyn_clone())
+    }
 }
 
 pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {

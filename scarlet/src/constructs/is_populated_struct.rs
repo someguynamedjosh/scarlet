@@ -55,9 +55,8 @@ impl Construct for CIsPopulatedStruct {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> Box<dyn Construct> {
         let base = env.substitute(self.0, substitutions);
-        env.push_construct(Self::new(base), scope)
+        Self::new(base).dyn_clone()
     }
 }

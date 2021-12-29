@@ -1,4 +1,4 @@
-use super::{downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId};
+use super::{downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId, BoxedConstruct};
 use crate::{
     environment::Environment,
     impl_any_eq_for_construct,
@@ -101,8 +101,7 @@ impl Construct for CSubstitution {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> BoxedConstruct {
         let base = self.0;
         let mut new_subs = self.1.clone();
         for (_, value) in &mut new_subs {
@@ -121,6 +120,6 @@ impl Construct for CSubstitution {
                 new_subs.insert_no_replace(target.clone(), *value);
             }
         }
-        env.push_construct(Self::new(base, new_subs), scope)
+        Self::new(base, new_subs).dyn_clone()
     }
 }

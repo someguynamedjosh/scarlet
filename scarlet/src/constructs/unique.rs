@@ -2,7 +2,7 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::Substitutions,
-    variable::CVariable,
+    variable::CVariable, ConstructDefinition, BoxedConstruct,
 };
 use crate::{
     environment::Environment,
@@ -54,8 +54,7 @@ impl Construct for CUnique {
         &self,
         env: &mut Environment<'x>,
         _substitutions: &Substitutions,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
-        env.push_construct(Self::new(self.0), scope)
+    ) -> BoxedConstruct {
+        Self::new(self.0).dyn_clone()
     }
 }
