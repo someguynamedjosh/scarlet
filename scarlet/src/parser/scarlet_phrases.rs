@@ -22,11 +22,12 @@ use super::phrase::Phrase;
 
 #[macro_export]
 macro_rules! phrase {
-    ($name:expr, $create_and_uncreate:expr, $prec:expr => $($component:expr),*) => {
+    ($name:expr, $create_and_uncreate:expr, $vomit:expr, $prec:expr => $($component:expr),*) => {
         Phrase {
             name: $name,
             components: vec![$($component.into()),*],
             create_and_uncreate: $create_and_uncreate,
+            vomit: $vomit,
             precedence: $prec
         }
     }
@@ -39,7 +40,6 @@ pub fn phrases() -> Vec<Phrase> {
         variable::phrase(),
         populated_struct::phrase(),
         if_then_else::phrase(),
-        parentheses::phrase(),
         structt::phrase(),
         label_access::phrase(),
         value_access::phrase(),
@@ -62,6 +62,7 @@ pub fn phrases() -> Vec<Phrase> {
         //     10 => 9, r"\^", 10
         // ),
         multiple_constructs::phrase(),
+        parentheses::phrase(),
         identifier::phrase(),
     ]
 }

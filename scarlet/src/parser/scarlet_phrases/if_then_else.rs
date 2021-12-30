@@ -61,10 +61,15 @@ fn uncreate<'a>(
     }
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("IF_THEN_ELSE[ {} ]", src.children[2].as_node().vomit(pc))
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "if then else",
         Some((create, uncreate)),
+        vomit,
         0 => r"\bIF_THEN_ELSE\b" , r"\[", 255, r"\]"
     )
 }

@@ -5,7 +5,7 @@ use crate::{
     constructs::{downcast_construct, substitution::CSubstitution, unique::CUnique, ConstructId},
     environment::Environment,
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -86,10 +86,15 @@ fn uncreate<'a>(
     }
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{:#?}", src)
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "substitution",
         Some((create, uncreate)),
+        vomit,
         4 => 4, r"\[", 255, r"\]"
     )
 }

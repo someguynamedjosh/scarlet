@@ -35,9 +35,9 @@ fn uncreate<'a>(
         Some(Node {
             phrase: "equal operator",
             children: vec![
-                NodeChild::Node(env.vomit(63, pc, code_arena, ceq.left(), from)),
+                NodeChild::Node(env.vomit(64, pc, code_arena, ceq.left(), from)),
                 NodeChild::Text("="),
-                NodeChild::Node(env.vomit(63, pc, code_arena, ceq.right(), from)),
+                NodeChild::Node(env.vomit(64, pc, code_arena, ceq.right(), from)),
             ],
         })
     } else {
@@ -45,10 +45,19 @@ fn uncreate<'a>(
     }
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!(
+        "{} = {}",
+        src.children[0].as_node().vomit(pc),
+        src.children[2].as_node().vomit(pc)
+    )
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "equal operator",
         Some((create, uncreate)),
+        vomit,
         65 => 65, r"=", 65
     )
 }

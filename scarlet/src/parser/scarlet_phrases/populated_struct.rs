@@ -7,7 +7,7 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, util, Node, NodeChild, ParseContext},
+    parser::{phrase::{Phrase}, util, Node, NodeChild, ParseContext},
     phrase,
     scope::Scope,
 };
@@ -43,10 +43,15 @@ fn uncreate<'a>(
     None
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{:#?}", src)
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "populated struct",
         Some((create, uncreate)),
+        vomit,
         0 => r"\bPOPULATED_STRUCT\b" , r"\[", 255, r"\]"
     )
 }

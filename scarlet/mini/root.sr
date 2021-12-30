@@ -1,12 +1,14 @@
 {
-    f[ false ][ bool_not ].SHOWN #[ true ].SHOWN
+    bool_equal[ false ].SHOWN
 
     a IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
+    b IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
 
     x IS VAR[ ]
     f IS VAR[ SUB x ]
 
-    bool_not IS IF_THEN_ELSE[ a false true ]
+    bool_not IS a = false
+    bool_equal IS IF_THEN_ELSE[ a  b  b = false ]
 
     true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
     false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

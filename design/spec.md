@@ -46,10 +46,18 @@ x[ y IS 123  z IS 456 ]
 # are definitionally equal
 x = y
 
-# Axiom of Equality, requires 
+# Axiom of Invariant Truth, requires
+# x
 # f FROM Bool
 # Produces invariant:
-# a = b IMP bool.equal[ f[ a ]  f[ b ] ]
+# bool.equal[ f[ true ]  f[ x ] ]
+AXIOM_OF_INVARIANT_TRUTH[ x f ]
+
+# Axiom of Equality, requires 
+# f FROM Bool
+# a = b
+# Produces invariant:
+# bool.equal[ f[ a ]  f[ b ] ]
 AXIOM_OF_EQUALITY[ a b f ]
 
 # Returns 'x' if c is true, otherwise 
@@ -64,84 +72,11 @@ b IS VAR[]
 c IS VF[ Bool ]
 c1 IS VF[ Bool ]
 c2 IS VF[ Bool ]
-x IS VAR[]
-f IS VAR[DEPENDS_ON x]
-
-# Don't know what to call this. Proves
-# a = b IMP f[ a ] = f[ b ]
-value_ext IS
-AE[ a  b  f[ a ] = f[ x ] ]
-
-# Proves b = a IMP f[ a ] = f[ b ]
-rev_value_ext IS
-AE[ b  a  f[ x ] = f[ b ] ]
-
-# Requires x FROM Bool, f[ true ] and 
-# f[ false ], proves f[ x ]
-prove_bool_by_cases
-PICK[
-    ON x  AE[ true  x f ] 
-    ELSE  AE[ false x f ]
-]
-USING {
-    x IS VF[ Bool ]
-    f IS VAR[ 
-        SELF FROM Bool  
-        SELF[ true ] 
-        SELF[ false ] 
-        DEPENDS_ON x 
-    ]
-}
+x IS VAR[ ]
+fx IS VAR[ SUB x ]
+fc IS VAR[ SUB c ]
 
 
-
-# Proves c = (c = true)
-eq_true_is_ident IS
-prove_bool_by_cases[ 
-    c  
-    $ = ($ = true) 
-]
-
-# Proves c NOT = (c = false)
-eq_false_is_not IS
-prove_bool_by_cases[
-    c
-    $ NOT = ($ = false)
-]
-
-# Proves c IMP IF_THEN_ELSE[ c a b ] = a
-prove_bool_by_cases[
-    c
-    $ IMP IF_THEN_ELSE [ $ a b ] = a
-]
-
-# Proves IF_THEN_ELSE[ b = a  b  a ] = a
-equal_branch_is_identity IS
-PICK[
-    ON b = a
-    AE[ true  b = a  s ]
-]
-USING {
-    s IS IF_THEN_ELSE[ $ b a ] = a
-}
-
-x IS VAR[SELF = a OR SELF = b]
-swap IS
-PICK[
-    ON x = a  b
-    ELSE      a
-]
-
-# Proves (a = b) = (b = a)
-eq_symm IS
-USING {
-    # Proves a = b IMP b = PICK[ ON b = a  b  ELSE  a ]
-    value_ext[ a b swap ]
-    # Proves a = b IMP b = a
-    AE[ swap[ a ]  b  a = b IMP b = $ ]
-}
-
-# Need something that from a OR b, a IMP c, b IMP c proves c.
 ```
 
 # Syntax Sugars

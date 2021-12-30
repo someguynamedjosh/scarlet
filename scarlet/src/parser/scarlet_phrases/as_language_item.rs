@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::{unique::CUnique, ConstructId},
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::Scope,
 };
@@ -34,10 +37,15 @@ fn uncreate<'a>(
     None
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{:#?}", src)
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "as language item",
         Some((create, uncreate)),
+        vomit,
         4 => 4, r"\.AS_LANGUAGE_ITEM", r"\[", 255, r"\]"
     )
 }

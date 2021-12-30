@@ -27,16 +27,17 @@ impl<'x> Environment<'x> {
     pub fn show(&mut self, con_id: ConstructId, from: ConstructId) {
         let code_arena = Arena::new();
         let pc = ParseContext::new();
-        let vomited = self.vomit(255, &pc, &code_arena, con_id, from);
+        let vomited = self.vomit(255, &pc, &code_arena, con_id, from).vomit(&pc);
         println!("({:?})", con_id);
-        println!("{:?}", vomited);
+        println!("{}", vomited);
         println!("proves:");
         for invariant in self.generated_invariants(con_id) {
             println!(
                 "    {}",
                 indented(&format!(
-                    "{:?}",
+                    "{}",
                     self.vomit(255, &pc, &code_arena, invariant, from)
+                        .vomit(&pc)
                 ))
             );
         }
@@ -51,8 +52,8 @@ impl<'x> Environment<'x> {
                 "    {} {}",
                 kind,
                 indented(&format!(
-                    "{:?}",
-                    self.vomit_var(&pc, &code_arena, &dep, from)
+                    "{}",
+                    self.vomit_var(&pc, &code_arena, &dep, from).vomit(&pc)
                 ))
             );
         }

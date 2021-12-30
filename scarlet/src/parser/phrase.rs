@@ -62,10 +62,13 @@ pub type UncreateFn = for<'a, 'x> fn(
     ConstructId,
 ) -> Option<Node<'a>>;
 
+pub type VomitFn = fn(&ParseContext, &Node) -> String;
+
 pub struct Phrase {
     pub name: &'static str,
     pub components: Vec<PhraseComponent>,
     pub create_and_uncreate: Option<(CreateFn, UncreateFn)>,
+    pub vomit: VomitFn,
     pub precedence: Precedence,
 }
 

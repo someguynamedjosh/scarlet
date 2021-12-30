@@ -10,7 +10,7 @@ use crate::{
     },
     environment::Environment,
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -95,10 +95,15 @@ fn uncreate<'a>(
     }
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{:#?}", src)
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "variable",
         Some((create, uncreate)),
+        vomit,
         0 => r"\b(VARIABLE|VAR|V)\b" , r"\[", 255, r"\]"
     )
 }

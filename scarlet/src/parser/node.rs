@@ -73,6 +73,10 @@ impl<'a> Debug for Node<'a> {
 }
 
 impl<'x> Node<'x> {
+    pub fn vomit(&self, pc: &ParseContext) -> String {
+        (pc.phrases.get(self.phrase).unwrap().vomit)(pc, self)
+    }
+
     pub fn will_wait_for_text(&self, pt: &PhraseTable) -> bool {
         let phrase = pt.get(self.phrase).unwrap();
         for component in &phrase.components[self.children.len()..] {

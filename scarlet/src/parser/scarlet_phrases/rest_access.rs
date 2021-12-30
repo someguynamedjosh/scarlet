@@ -3,7 +3,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::{unique::CUnique, ConstructId, structt::{CAtomicStructMember, AtomicStructMember}},
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{phrase::{Phrase}, Node, NodeChild, ParseContext},
     scope::{Scope, SPlain},
     phrase,
 };
@@ -31,10 +31,15 @@ fn uncreate<'a>(
     None
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{:#?}", src)
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "rest access",
         Some((create, uncreate)),
+        vomit,
         4 => 4, r"\.REST"
     )
 }

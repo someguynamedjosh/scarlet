@@ -7,7 +7,7 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{phrase::{Phrase}, Node, NodeChild, ParseContext},
     phrase,
     scope::{SPlain, Scope},
 };
@@ -35,10 +35,15 @@ fn uncreate<'a>(
     None
 }
 
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{:#?}", src)
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "value access",
         Some((create, uncreate)),
+        vomit,
         4 => 4, r"\.VALUE"
     )
 }

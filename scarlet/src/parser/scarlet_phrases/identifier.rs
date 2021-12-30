@@ -5,7 +5,8 @@ use crate::{
     environment::Environment,
     parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,
-    scope::Scope, resolvable::RIdentifier,
+    resolvable::RIdentifier,
+    scope::Scope,
 };
 
 fn create<'x>(
@@ -29,10 +30,15 @@ fn uncreate<'a>(
     None
 }
 
+fn vomit(_pc: &ParseContext, src: &Node) -> String {
+    format!("{}", src.children[0].as_text())
+}
+
 pub fn phrase() -> Phrase {
     phrase!(
         "identifier",
         Some((create, uncreate)),
+        vomit,
         0 => r"[a-zA-Z0-9_]+"
     )
 }

@@ -4,8 +4,8 @@ use crate::{
     constructs::{unique::CUnique, ConstructId},
     environment::Environment,
     parser::{phrase::Phrase, Node, NodeChild, ParseContext},
-    scope::Scope,
     phrase,
+    scope::Scope,
 };
 
 fn create<'x>(
@@ -27,13 +27,25 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: ConstructId,
 ) -> Option<Node<'a>> {
-    None
+    Some(Node {
+        phrase: "parentheses",
+        children: vec![
+            NodeChild::Text("("),
+            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)),
+            NodeChild::Text(")"),
+        ],
+    })
+}
+
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("({})", src.children[1].as_node().vomit(pc))
 }
 
 pub fn phrase() -> Phrase {
     phrase!(
         "parentheses",
         Some((create, uncreate)),
+        vomit,
         0 => r"\(", 255, r"\)"
     )
 }
