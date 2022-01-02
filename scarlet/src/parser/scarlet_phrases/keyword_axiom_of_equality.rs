@@ -22,7 +22,7 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
     None
 }

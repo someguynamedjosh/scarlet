@@ -5,7 +5,7 @@ use super::{
     variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment,
+    environment::{Environment, dependencies::Dependencies},
     impl_any_eq_for_construct,
     scope::{SPlain, Scope},
     shared::TripleBool,
@@ -40,12 +40,10 @@ impl Construct for CEqual {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        [
-            env.get_dependencies(self.left),
-            env.get_dependencies(self.right),
-        ]
-        .concat()
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+        let mut deps = env.get_dependencies(self.left);
+        deps.append(env.get_dependencies(self.right));
+        deps
     }
 
     fn generated_invariants<'x>(

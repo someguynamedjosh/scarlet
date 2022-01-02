@@ -193,3 +193,44 @@ impl Scope for SPlaceholder {
         unreachable!()
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct SWithParent<Base: Scope + Clone>(pub Base, pub ConstructId);
+
+impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
+    fn dyn_clone(&self) -> Box<dyn Scope> {
+        Box::new(self.clone())
+    }
+
+    fn is_placeholder(&self) -> bool {
+        false
+    }
+
+    fn local_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        ident: &str,
+    ) -> Option<ConstructId> {
+        self.0.local_lookup_ident(env, ident)
+    }
+
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        value: ConstructId,
+    ) -> Option<String> {
+        self.0.local_reverse_lookup_ident(env, value)
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> bool {
+        self.0.local_lookup_invariant(env, invariant)
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        Some(self.1)
+    }
+}

@@ -5,7 +5,7 @@ use crate::{
     constructs::{downcast_construct, substitution::CSubstitution, unique::CUnique, ConstructId},
     environment::Environment,
     parser::{
-        phrase::{Phrase},
+        phrase::Phrase,
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -53,7 +53,7 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(csub) =
         downcast_construct::<CSubstitution>(&**env.get_construct_definition(uncreate))
@@ -67,7 +67,7 @@ fn uncreate<'a>(
                     children: vec![
                         NodeChild::Node(env.vomit_var(pc, code_arena, target, from)),
                         NodeChild::Text("IS"),
-                        NodeChild::Node(env.vomit(254, pc, code_arena, *value, from)),
+                        NodeChild::Node(env.vomit(254, true, pc, code_arena, *value, from)),
                     ],
                 })
                 .collect_vec(),
@@ -75,7 +75,7 @@ fn uncreate<'a>(
         Some(Node {
             phrase: "substitution",
             children: vec![
-                NodeChild::Node(env.vomit(4, pc, code_arena, csub.base(), from)),
+                NodeChild::Node(env.vomit(4, true, pc, code_arena, csub.base(), from)),
                 NodeChild::Text("["),
                 subs,
                 NodeChild::Text("]"),

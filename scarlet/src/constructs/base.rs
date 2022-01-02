@@ -2,7 +2,7 @@ use std::{any::Any, fmt::Debug};
 
 use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
-    environment::Environment,
+    environment::{Environment, dependencies::Dependencies},
     resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},
@@ -61,7 +61,7 @@ pub trait Construct: Any + Debug + AnyEq {
 
     fn check<'x>(&self, env: &mut Environment<'x>);
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable>;
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies;
 
     #[allow(unused_variables)]
     fn generated_invariants<'x>(

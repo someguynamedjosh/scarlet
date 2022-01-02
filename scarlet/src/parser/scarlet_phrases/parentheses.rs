@@ -25,13 +25,13 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
     Some(Node {
         phrase: "parentheses",
         children: vec![
             NodeChild::Text("("),
-            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)),
+            NodeChild::Node(env.vomit(255, true, pc, code_arena, uncreate, from)),
             NodeChild::Text(")"),
         ],
     })

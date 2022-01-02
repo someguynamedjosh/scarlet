@@ -6,7 +6,10 @@ use super::{
     Construct,
 };
 use crate::{
-    environment::Environment, impl_any_eq_for_construct, scope::Scope, shared::TripleBool,
+    environment::{dependencies::Dependencies, Environment},
+    impl_any_eq_for_construct,
+    scope::Scope,
+    shared::TripleBool,
 };
 
 pub fn struct_from_unnamed_fields<'x>(
@@ -72,12 +75,10 @@ impl Construct for CPopulatedStruct {
         .concat()
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        [
-            env.get_dependencies(self.rest),
-            env.get_dependencies(self.value),
-        ]
-        .concat()
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+        let mut deps = env.get_dependencies(self.rest);
+        deps.append(env.get_dependencies(self.value));
+        deps
     }
 
     fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
@@ -122,7 +123,7 @@ impl Construct for CAtomicStructMember {
         env.generated_invariants(self.0)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         env.get_dependencies(self.0)
     }
 

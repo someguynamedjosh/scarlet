@@ -28,16 +28,16 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(ceq) = downcast_construct::<CEqual>(&**env.get_construct_definition(uncreate)) {
         let ceq = ceq.clone();
         Some(Node {
             phrase: "equal operator",
             children: vec![
-                NodeChild::Node(env.vomit(64, pc, code_arena, ceq.left(), from)),
+                NodeChild::Node(env.vomit(64, true, pc, code_arena, ceq.left(), from)),
                 NodeChild::Text("="),
-                NodeChild::Node(env.vomit(64, pc, code_arena, ceq.right(), from)),
+                NodeChild::Node(env.vomit(64, true, pc, code_arena, ceq.right(), from)),
             ],
         })
     } else {

@@ -7,7 +7,7 @@ use super::{
     BoxedConstruct, ConstructDefinition,
 };
 use crate::{
-    environment::Environment,
+    environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::{SPlain, SRoot, Scope},
     shared::{Id, OrderedMap, Pool, TripleBool},
@@ -50,19 +50,8 @@ impl CVariable {
         &self.substitutions[..]
     }
 
-    pub fn is_same_variable_as(&self, env: &mut Environment, other: &Self) -> bool {
-        if !(self.id == other.id) {
-            return false;
-        }
-        if self.substitutions.len() != other.substitutions.len() {
-            return false;
-        }
-        for (&left, &right) in self.substitutions.iter().zip(other.substitutions.iter()) {
-            if env.is_def_equal(left, right) != TripleBool::True {
-                return false;
-            }
-        }
-        true
+    pub fn is_same_variable_as(&self, other: &Self) -> bool {
+        self.id == other.id
     }
 
     pub fn can_be_assigned<'x>(&self, value: ConstructId, env: &mut Environment<'x>) -> bool {
@@ -76,10 +65,10 @@ impl CVariable {
             }
         }
         let deps = env.get_dependencies(value);
-        if deps.len() < self.substitutions.len() {
+        if deps.num_variables() < self.substitutions.len() {
             return false;
         }
-        for (target, &value) in deps.iter().zip(self.substitutions.iter()) {
+        for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
             if !target.can_be_assigned(value, env) {
                 return false;
             }
@@ -93,7 +82,7 @@ impl CVariable {
         substitutions: &Substitutions,
     ) -> Option<Self> {
         for (target, _) in substitutions {
-            if self.is_same_variable_as(env, target) {
+            if self.is_same_variable_as(target) {
                 return None;
             }
         }
@@ -129,18 +118,26 @@ impl Construct for CVariable {
         self.invariants.clone()
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut deps = Vec::new();
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+        let mut deps = Dependencies::new();
         for &sub in &self.substitutions {
-            deps.append(&mut env.get_dependencies(sub));
+            deps.append(env.get_dependencies(sub));
         }
-        deps.push(self.clone());
+        deps.push_eager(self.clone());
         deps
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         if let Some(other) = downcast_construct::<Self>(other) {
-            if self.is_same_variable_as(env, other) {
+            if self.substitutions.len() != other.substitutions.len() {
+                return TripleBool::Unknown;
+            }
+            for (&left, &right) in self.substitutions.iter().zip(other.substitutions.iter()) {
+                if env.is_def_equal(left, right) != TripleBool::True {
+                    return TripleBool::Unknown;
+                }
+            }
+            if self.is_same_variable_as(other) {
                 return TripleBool::True;
             }
         }
@@ -153,10 +150,10 @@ impl Construct for CVariable {
         substitutions: &Substitutions,
     ) -> BoxedConstruct {
         for (target, value) in substitutions {
-            if self.is_same_variable_as(env, target) {
+            if self.is_same_variable_as(target) {
                 let deps = env.get_dependencies(*value);
                 let mut stored_subs = Substitutions::new();
-                for (target, &value) in deps.iter().zip(self.substitutions.iter()) {
+                for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
                     stored_subs.insert_no_replace(target.clone(), value);
                 }
                 let value_def = env.get_construct_definition(*value).dyn_clone();

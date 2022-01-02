@@ -38,7 +38,7 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(cite) = downcast_construct::<CIfThenElse>(&**env.get_construct_definition(uncreate))
     {
@@ -49,9 +49,9 @@ fn uncreate<'a>(
                 NodeChild::Text("IF_THEN_ELSE"),
                 NodeChild::Text("["),
                 create_comma_list(vec![
-                    env.vomit(255, pc, code_arena, cite.condition(), from),
-                    env.vomit(255, pc, code_arena, cite.then(), from),
-                    env.vomit(255, pc, code_arena, cite.elsee(), from),
+                    env.vomit(255, true, pc, code_arena, cite.condition(), from),
+                    env.vomit(255, true, pc, code_arena, cite.then(), from),
+                    env.vomit(255, true, pc, code_arena, cite.elsee(), from),
                 ]),
                 NodeChild::Text("]"),
             ],

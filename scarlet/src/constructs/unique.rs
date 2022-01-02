@@ -2,10 +2,11 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::Substitutions,
-    variable::CVariable, ConstructDefinition, BoxedConstruct,
+    variable::CVariable,
+    BoxedConstruct, ConstructDefinition,
 };
 use crate::{
-    environment::Environment,
+    environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::Scope,
     shared::{Id, Pool, TripleBool},
@@ -34,8 +35,8 @@ impl Construct for CUnique {
 
     fn check<'x>(&self, _env: &mut Environment<'x>) {}
 
-    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Vec<CVariable> {
-        vec![]
+    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Dependencies {
+        Dependencies::new()
     }
 
     fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {

@@ -70,20 +70,17 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         for &(name, value) in &self.named_subs {
             let target = scope.lookup_ident(env, name).unwrap();
             if let Some(var) = as_variable(&**env.get_construct_definition(target)) {
-                let index = remaining_deps.iter().position(|x| x == var);
-                if let Some(index) = index {
-                    remaining_deps.remove(index);
-                }
+                remaining_deps.remove(var);
                 subs.insert_no_replace(var.clone(), value);
             } else {
                 panic!("{} is a valid name, but it is not a variable", name)
             }
         }
         for &value in &self.anonymous_subs {
-            if remaining_deps.len() == 0 {
+            if remaining_deps.num_variables() == 0 {
                 panic!("No more dependencies left to substitute!");
             }
-            let dep = remaining_deps.remove(0);
+            let dep = remaining_deps.pop_front();
             subs.insert_no_replace(dep, value);
         }
         ConstructDefinition::Resolved(Box::new(CSubstitution::new(self.base, subs)))

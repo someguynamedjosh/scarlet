@@ -10,13 +10,13 @@ use crate::{
     },
     environment::Environment,
     parser::{
-        phrase::{Phrase},
+        phrase::Phrase,
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
     phrase,
     resolvable::RVariable,
-    scope::{SPlain, Scope},
+    scope::{SPlain, SWithParent, Scope},
 };
 
 fn create<'x>(
@@ -58,19 +58,21 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
+    let from_con = env.push_scope(from.dyn_clone());
+    let from = &SWithParent(SVariableInvariants(uncreate), from_con);
     if let Some(cvar) = downcast_construct::<CVariable>(&**env.get_construct_definition(uncreate)) {
         let cvar = cvar.clone();
         let invariants = cvar
             .get_invariants()
             .into_iter()
-            .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
+            .map(|&inv| env.vomit(255, true, pc, code_arena, inv, from))
             .collect_vec();
         let substitutions = cvar
             .get_substitutions()
             .into_iter()
-            .map(|&sub| env.vomit(255, pc, code_arena, sub, from))
+            .map(|&sub| env.vomit(255, true, pc, code_arena, sub, from))
             .collect_vec();
         let mut body = invariants;
         if substitutions.len() > 0 {
@@ -96,7 +98,7 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+    format!("VAR[ {} ]", src.children[2].as_node().vomit(pc))
 }
 
 pub fn phrase() -> Phrase {

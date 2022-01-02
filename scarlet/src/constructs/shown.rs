@@ -3,7 +3,7 @@ use super::{
     substitution::Substitutions,
     variable::CVariable, ConstructDefinition,
 };
-use crate::{environment::Environment, impl_any_eq_for_construct, scope::Scope};
+use crate::{environment::{Environment, dependencies::Dependencies}, impl_any_eq_for_construct, scope::Scope};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CShown(ConstructId);
@@ -35,7 +35,7 @@ impl Construct for CShown {
         env.generated_invariants(self.0)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         env.get_dependencies(self.0)
     }
 

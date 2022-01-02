@@ -59,7 +59,7 @@ pub type UncreateFn = for<'a, 'x> fn(
     &mut Environment<'x>,
     &'a Arena<String>,
     ConstructId,
-    ConstructId,
+    &dyn Scope,
 ) -> Option<Node<'a>>;
 
 pub type VomitFn = fn(&ParseContext, &Node) -> String;

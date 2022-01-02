@@ -1,19 +1,29 @@
+use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
     constructs::{unique::CUnique, ConstructId},
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{phrase::Phrase, util::collect_comma_list, Node, NodeChild, ParseContext},
     phrase,
     scope::Scope,
+    shared::indented,
 };
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!(
-        "{}  {}",
-        src.children[0].as_node().vomit(pc),
-        src.children[2].as_node().vomit(pc)
-    )
+    let child = NodeChild::Node(src.clone());
+    let list = collect_comma_list(&child);
+    let list = list.into_iter().map(|entry| entry.vomit(pc)).collect_vec();
+    if list.iter().map(|x| x.len() + 2).sum::<usize>() >= 40 {
+        let mut result = String::new();
+        for entry in list {
+            result.push_str(&format!("\n    {}", indented(&entry)));
+        }
+        result.push_str("\n");
+        result
+    } else {
+        list.join("  ")
+    }
 }
 
 pub fn phrase() -> Phrase {

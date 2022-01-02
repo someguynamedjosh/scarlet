@@ -2,8 +2,14 @@ use typed_arena::Arena;
 
 use super::{path::PathOverlay, Construct, ConstructId, Environment};
 use crate::{
-    constructs::{downcast_construct, shown::CShown, variable::CVariable, ConstructDefinition},
+    constructs::{
+        downcast_construct,
+        shown::CShown,
+        variable::{CVariable, SVariableInvariants},
+        ConstructDefinition,
+    },
     parser::{Node, ParseContext},
+    scope::{SWithParent, Scope},
     shared::{indented, TripleBool},
 };
 
@@ -24,10 +30,14 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn show(&mut self, con_id: ConstructId, from: ConstructId) {
+    pub fn show(&mut self, con_id: ConstructId, from_con: ConstructId) {
+        let from = self.constructs[from_con].scope.dyn_clone();
+        let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
         let code_arena = Arena::new();
         let pc = ParseContext::new();
-        let vomited = self.vomit(255, &pc, &code_arena, con_id, from).vomit(&pc);
+        let vomited = self
+            .vomit(255, false, &pc, &code_arena, con_id, &*from)
+            .vomit(&pc);
         println!("({:?})", con_id);
         println!("{}", vomited);
         println!("proves:");
@@ -36,13 +46,13 @@ impl<'x> Environment<'x> {
                 "    {}",
                 indented(&format!(
                     "{}",
-                    self.vomit(255, &pc, &code_arena, invariant, from)
+                    self.vomit(255, true, &pc, &code_arena, invariant, &inv_from)
                         .vomit(&pc)
                 ))
             );
         }
         println!("depends on:");
-        for dep in self.get_dependencies(con_id) {
+        for dep in self.get_dependencies(con_id).into_variables() {
             // let kind = match dep.is_capturing() {
             //     true => "capturing",
             //     false => "without capturing",
@@ -53,7 +63,7 @@ impl<'x> Environment<'x> {
                 kind,
                 indented(&format!(
                     "{}",
-                    self.vomit_var(&pc, &code_arena, &dep, from).vomit(&pc)
+                    self.vomit_var(&pc, &code_arena, &dep, &inv_from).vomit(&pc)
                 ))
             );
         }
@@ -82,7 +92,7 @@ impl<'x> Environment<'x> {
         pc: &ParseContext,
         code_arena: &'a Arena<String>,
         var: &CVariable,
-        from: ConstructId,
+        from: &dyn Scope,
     ) -> Node<'a> {
         let mut next_id = self.constructs.first();
         while let Some(id) = next_id {
@@ -93,7 +103,7 @@ impl<'x> Environment<'x> {
                 .map(|con| con.is_def_equal(self, var))
                 == Some(TripleBool::True)
             {
-                return self.vomit(255, pc, code_arena, id, from);
+                return self.vomit(255, true, pc, code_arena, id, from);
             } else {
                 next_id = self.constructs.next(id);
             }
@@ -104,25 +114,17 @@ impl<'x> Environment<'x> {
     pub fn vomit<'a>(
         &mut self,
         max_precedence: u8,
+        allow_paths: bool,
         pc: &ParseContext,
         code_arena: &'a Arena<String>,
         con_id: ConstructId,
-        from: ConstructId,
+        from: &dyn Scope,
     ) -> Node<'a> {
         let con_id = self.dereference(con_id);
-        let from_scope = self.constructs[from].scope.dyn_clone();
-        let mut next_original_id = self.constructs.first();
-        while let Some(original_id) = next_original_id {
-            if self.is_def_equal(con_id, original_id) == TripleBool::True {
-                let mut paths = PathOverlay::new(self);
-                let path = paths.get_path(original_id, &*from_scope);
-                if let Some(path) = path {
-                    if max_precedence >= 4 {
-                        return path.vomit(code_arena);
-                    }
-                }
+        if allow_paths {
+            if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena) {
+                return value;
             }
-            next_original_id = self.constructs.next(original_id);
         }
         for (_, phrase) in &pc.phrases {
             if phrase.precedence > max_precedence {
@@ -139,5 +141,28 @@ impl<'x> Environment<'x> {
             "{:?} could not be vomited (at least one parser phrase should apply)",
             con_id
         );
+    }
+
+    fn get_path<'a>(
+        &mut self,
+        con_id: ConstructId,
+        from: &dyn Scope,
+        max_precedence: u8,
+        code_arena: &'a Arena<String>,
+    ) -> Option<Node<'a>> {
+        let mut next_original_id = self.constructs.first();
+        while let Some(original_id) = next_original_id {
+            if self.is_def_equal(con_id, original_id) == TripleBool::True {
+                let mut paths = PathOverlay::new(self);
+                let path = paths.get_path(original_id, &*from);
+                if let Some(path) = path {
+                    if max_precedence >= 4 {
+                        return Some(path.vomit(code_arena));
+                    }
+                }
+            }
+            next_original_id = self.constructs.next(original_id);
+        }
+        None
     }
 }

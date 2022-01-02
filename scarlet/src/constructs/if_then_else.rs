@@ -3,7 +3,7 @@ use super::{
     ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment,
+    environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::{SPlain, Scope},
     shared::TripleBool,
@@ -82,13 +82,11 @@ impl Construct for CIfThenElse {
         result
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        [
-            env.get_dependencies(self.condition),
-            env.get_dependencies(self.then),
-            env.get_dependencies(self.elsee),
-        ]
-        .concat()
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+        let mut deps = env.get_dependencies(self.condition);
+        deps.append(env.get_dependencies(self.then));
+        deps.append(env.get_dependencies(self.elsee));
+        deps
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {

@@ -1,6 +1,9 @@
-use super::{downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId, BoxedConstruct};
+use super::{
+    downcast_construct, variable::CVariable, BoxedConstruct, Construct, ConstructDefinition,
+    ConstructId,
+};
 use crate::{
-    environment::Environment,
+    environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::Scope,
     shared::{OrderedMap, TripleBool},
@@ -34,6 +37,7 @@ impl Construct for CSubstitution {
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
         for (target, value) in &self.1 {
+            env.reduce(*value);
             if !target.can_be_assigned(*value, env) {
                 println!("{:#?}", env);
                 println!("THIS EXPRESSION:");
@@ -52,22 +56,37 @@ impl Construct for CSubstitution {
         }
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
-        let mut deps = Vec::new();
-        for dep in env.get_dependencies(self.0) {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+        let mut deps = Dependencies::new();
+        let base = env.get_dependencies(self.0);
+        for dep in base.as_variables() {
             if let Some(rep) = self.1.get(&dep) {
                 let replaced_deps = env.get_dependencies(*rep);
                 for rdep in replaced_deps
-                    .into_iter()
+                    .into_variables()
                     .skip(dep.get_substitutions().len())
                 {
-                    deps.push(rdep);
+                    deps.push_eager(rdep);
                 }
             } else {
-                deps.push(dep.inline_substitute(env, &self.1).unwrap());
+                deps.push_eager(dep.inline_substitute(env, &self.1).unwrap());
             }
         }
         deps
+    }
+
+    fn generated_invariants<'x>(
+        &self,
+        this: ConstructId,
+        env: &mut Environment<'x>,
+    ) -> Vec<ConstructId> {
+        let mut invs = Vec::new();
+        for inv in env.generated_invariants(self.0) {
+            let inv = env.substitute(inv, &self.1);
+            env.reduce(inv);
+            invs.push(inv);
+        }
+        invs
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
@@ -111,7 +130,7 @@ impl Construct for CSubstitution {
         for (target, value) in substitutions {
             let mut already_present = false;
             for (existing_target, _) in &new_subs {
-                if existing_target.is_same_variable_as(env, target) {
+                if existing_target.is_same_variable_as(target) {
                     already_present = true;
                     break;
                 }

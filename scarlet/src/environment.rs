@@ -9,6 +9,7 @@ mod vomit;
 
 use std::collections::HashMap;
 
+use self::substitute::SubstituteStack;
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
@@ -20,8 +21,6 @@ use crate::{
     scope::{SRoot, Scope},
     shared::{Pool, TripleBool},
 };
-
-use self::substitute::SubstituteStack;
 
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 
@@ -85,6 +84,14 @@ impl<'x> Environment<'x> {
             scope,
         };
         self.constructs.push(con)
+    }
+
+    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ConstructId {
+        let void = self.get_language_item("void");
+        self.constructs.push(AnnotatedConstruct {
+            definition: ConstructDefinition::Other(void),
+            scope,
+        })
     }
 
     pub fn push_construct(

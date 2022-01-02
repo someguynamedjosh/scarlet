@@ -3,7 +3,10 @@ use super::{
     variable::CVariable, Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::Environment, impl_any_eq_for_construct, scope::Scope, shared::TripleBool,
+    environment::{dependencies::Dependencies, Environment},
+    impl_any_eq_for_construct,
+    scope::Scope,
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -32,7 +35,7 @@ impl Construct for CIsPopulatedStruct {
         env.generated_invariants(self.0)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Vec<CVariable> {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         env.get_dependencies(self.0)
     }
 
