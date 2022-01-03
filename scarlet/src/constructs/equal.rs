@@ -1,11 +1,11 @@
 use itertools::Itertools;
 
 use super::{
-    downcast_construct, if_then_else::CIfThenElse, substitution::Substitutions,
-    variable::CVariable, Construct, ConstructDefinition, ConstructId,
+    downcast_construct, if_then_else::CIfThenElse, substitution::Substitutions, Construct,
+    ConstructDefinition, ConstructId,
 };
 use crate::{
-    environment::{Environment, dependencies::Dependencies},
+    environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::{SPlain, Scope},
     shared::TripleBool,

@@ -3,11 +3,8 @@ use std::fmt::Debug;
 use super::{
     node::Node,
     phrase::{PhraseTable, Precedence},
-    ParseContext,
 };
-use crate::{
-    constructs::ConstructId, environment::Environment, parser::node::NodeChild, scope::Scope,
-};
+use crate::parser::node::NodeChild;
 
 #[derive(Debug)]
 pub struct Stack<'a>(pub Vec<Node<'a>>);

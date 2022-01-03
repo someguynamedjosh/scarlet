@@ -1,14 +1,9 @@
-use typed_arena::Arena;
-
 use crate::{
-    constructs::{unique::CUnique, ConstructId},
-    environment::Environment,
-    parser::{phrase::{Phrase}, Node, NodeChild, ParseContext},
-    scope::Scope,
+    parser::{phrase::Phrase, Node, ParseContext},
     phrase,
 };
 
-fn vomit(pc: &ParseContext, src: &Node) -> String {
+fn vomit(_pc: &ParseContext, src: &Node) -> String {
     format!("{:#?}", src)
 }
 

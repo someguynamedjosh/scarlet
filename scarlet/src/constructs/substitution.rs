@@ -77,7 +77,7 @@ impl Construct for CSubstitution {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<ConstructId> {
         let mut invs = Vec::new();

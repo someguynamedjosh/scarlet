@@ -1,33 +1,33 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{unique::CUnique, ConstructId},
+    constructs::ConstructId,
     environment::Environment,
-    parser::{phrase::{Phrase}, Node, NodeChild, ParseContext},
-    scope::Scope,
+    parser::{phrase::Phrase, Node, ParseContext},
     phrase,
+    scope::Scope,
 };
 
 fn create<'x>(
     _pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
+    _env: &mut Environment<'x>,
+    _scope: Box<dyn Scope>,
+    _node: &Node<'x>,
 ) -> ConstructId {
     todo!()
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
-    env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    _pc: &ParseContext,
+    _env: &mut Environment,
+    _code_arena: &'a Arena<String>,
+    _uncreate: ConstructId,
+    _from: &dyn Scope,
 ) -> Option<Node<'a>> {
     None
 }
 
-fn vomit(pc: &ParseContext, src: &Node) -> String {
+fn vomit(_pc: &ParseContext, src: &Node) -> String {
     format!("{:#?}", src)
 }
 

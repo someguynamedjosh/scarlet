@@ -1,10 +1,4 @@
-use super::{
-    base::{Construct, ConstructId},
-    downcast_construct,
-    substitution::Substitutions,
-    variable::CVariable,
-    BoxedConstruct, ConstructDefinition,
-};
+use super::{base::Construct, downcast_construct, substitution::Substitutions, BoxedConstruct};
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
@@ -53,7 +47,7 @@ impl Construct for CUnique {
 
     fn substitute<'x>(
         &self,
-        env: &mut Environment<'x>,
+        _env: &mut Environment<'x>,
         _substitutions: &Substitutions,
     ) -> BoxedConstruct {
         Self::new(self.0).dyn_clone()

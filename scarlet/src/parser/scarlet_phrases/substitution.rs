@@ -2,7 +2,7 @@ use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{downcast_construct, substitution::CSubstitution, unique::CUnique, ConstructId},
+    constructs::{downcast_construct, substitution::CSubstitution, ConstructId},
     environment::Environment,
     parser::{
         phrase::Phrase,
@@ -86,7 +86,7 @@ fn uncreate<'a>(
     }
 }
 
-fn vomit(pc: &ParseContext, src: &Node) -> String {
+fn vomit(_pc: &ParseContext, src: &Node) -> String {
     format!("{:#?}", src)
 }
 

@@ -1,6 +1,6 @@
 use super::{
     downcast_construct, structt::CPopulatedStruct, substitution::Substitutions, unique::CUnique,
-    variable::CVariable, Construct, ConstructDefinition, ConstructId,
+    Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},

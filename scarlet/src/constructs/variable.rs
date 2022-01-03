@@ -3,13 +3,13 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     downcast_construct,
-    substitution::{CSubstitution, Substitutions},
-    BoxedConstruct, ConstructDefinition,
+    substitution::Substitutions,
+    BoxedConstruct,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
-    scope::{SPlain, SRoot, Scope},
+    scope::Scope,
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 

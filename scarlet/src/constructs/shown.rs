@@ -1,9 +1,12 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    variable::CVariable, ConstructDefinition,
 };
-use crate::{environment::{Environment, dependencies::Dependencies}, impl_any_eq_for_construct, scope::Scope};
+use crate::{
+    environment::{dependencies::Dependencies, Environment},
+    impl_any_eq_for_construct,
+    scope::Scope,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CShown(ConstructId);

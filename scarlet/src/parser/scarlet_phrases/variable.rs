@@ -4,7 +4,6 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         downcast_construct,
-        unique::CUnique,
         variable::{CVariable, SVariableInvariants},
         Construct, ConstructId,
     },

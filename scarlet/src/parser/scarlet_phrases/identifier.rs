@@ -1,9 +1,9 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{unique::CUnique, ConstructId},
+    constructs::ConstructId,
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{phrase::Phrase, Node, ParseContext},
     phrase,
     resolvable::RIdentifier,
     scope::Scope,
@@ -21,11 +21,11 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
-    env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    _pc: &ParseContext,
+    _env: &mut Environment,
+    _code_arena: &'a Arena<String>,
+    _uncreate: ConstructId,
+    _from: &dyn Scope,
 ) -> Option<Node<'a>> {
     None
 }

@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{downcast_construct, equal::CEqual, unique::CUnique, ConstructId},
+    constructs::{downcast_construct, equal::CEqual, ConstructId},
     environment::Environment,
     parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,

@@ -2,7 +2,7 @@ use std::{any::Any, fmt::Debug};
 
 use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
-    environment::{Environment, dependencies::Dependencies},
+    environment::{dependencies::Dependencies, Environment},
     resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},

@@ -2,7 +2,6 @@ use super::{
     as_struct,
     base::{ConstructDefinition, ConstructId},
     substitution::Substitutions,
-    variable::CVariable,
     Construct,
 };
 use crate::{

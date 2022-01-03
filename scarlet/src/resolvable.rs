@@ -101,7 +101,7 @@ impl<'x> Resolvable<'x> for RVariable {
 
     fn resolve(
         &self,
-        env: &mut Environment<'x>,
+        _env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
         let con = CVariable::new(self.id, self.invariants.clone(), self.substitutions.clone());

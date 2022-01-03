@@ -1,12 +1,8 @@
 use itertools::Itertools;
-use typed_arena::Arena;
 
 use crate::{
-    constructs::{unique::CUnique, ConstructId},
-    environment::Environment,
     parser::{phrase::Phrase, util::collect_comma_list, Node, NodeChild, ParseContext},
     phrase,
-    scope::Scope,
     shared::indented,
 };
 

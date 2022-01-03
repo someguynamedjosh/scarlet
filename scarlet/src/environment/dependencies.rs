@@ -57,7 +57,7 @@ impl<'x> Environment<'x> {
             .get_dependencies(self)
     }
 
-    pub fn get_non_capturing_dependencies(&mut self, con_id: ConstructId) -> Vec<CVariable> {
+    pub fn get_non_capturing_dependencies(&mut self, _con_id: ConstructId) -> Vec<CVariable> {
         todo!()
     }
 }

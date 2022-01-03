@@ -1,6 +1,5 @@
 use super::{
-    downcast_construct, substitution::Substitutions, variable::CVariable, Construct,
-    ConstructDefinition, ConstructId,
+    downcast_construct, substitution::Substitutions, Construct, ConstructDefinition, ConstructId,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},

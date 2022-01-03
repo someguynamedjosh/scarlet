@@ -3,9 +3,9 @@ use typed_arena::Arena;
 use crate::{
     constructs::{unique::CUnique, ConstructId},
     environment::Environment,
-    parser::{phrase::{Phrase}, Node, NodeChild, ParseContext},
-    scope::Scope,
+    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,
+    scope::Scope,
 };
 
 fn create<'x>(
@@ -20,16 +20,16 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
-    env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    _pc: &ParseContext,
+    _env: &mut Environment,
+    _code_arena: &'a Arena<String>,
+    _uncreate: ConstructId,
+    _from: &dyn Scope,
 ) -> Option<Node<'a>> {
     None
 }
 
-fn vomit(pc: &ParseContext, src: &Node) -> String {
+fn vomit(_pc: &ParseContext, src: &Node) -> String {
     format!("{:#?}", src)
 }
 
