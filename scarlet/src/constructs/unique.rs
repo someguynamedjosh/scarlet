@@ -2,7 +2,6 @@ use super::{base::Construct, downcast_construct, substitution::Substitutions, Bo
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
-    scope::Scope,
     shared::{Id, Pool, TripleBool},
 };
 

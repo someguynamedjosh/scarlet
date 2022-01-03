@@ -4,7 +4,7 @@ use super::{
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
-    scope::{SPlain, Scope},
+    scope::SPlain,
     shared::TripleBool,
 };
 

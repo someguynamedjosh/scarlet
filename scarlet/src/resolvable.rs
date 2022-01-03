@@ -5,7 +5,7 @@ use crate::{
         as_variable,
         substitution::CSubstitution,
         variable::{CVariable, VariableId},
-        Construct, ConstructDefinition, ConstructId,
+        ConstructDefinition, ConstructId,
     },
     environment::Environment,
     scope::Scope,

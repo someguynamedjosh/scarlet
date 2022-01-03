@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::{
     downcast_construct, if_then_else::CIfThenElse, substitution::Substitutions, Construct,
     ConstructDefinition, ConstructId,
@@ -7,7 +5,7 @@ use super::{
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
-    scope::{SPlain, Scope},
+    scope::SPlain,
     shared::TripleBool,
 };
 

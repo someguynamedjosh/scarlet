@@ -15,10 +15,6 @@ pub enum ConstructDefinition<'x> {
     Unresolved(BoxedResolvable<'x>),
 }
 
-pub fn rcd<'x>(construct: impl Construct) -> ConstructDefinition<'x> {
-    ConstructDefinition::Resolved(Box::new(construct))
-}
-
 impl<'x> ConstructDefinition<'x> {
     pub fn as_resolved(&self) -> Option<&BoxedConstruct> {
         match self {

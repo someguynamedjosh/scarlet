@@ -5,7 +5,7 @@ use crate::{
     constructs::{
         downcast_construct,
         variable::{CVariable, SVariableInvariants},
-        Construct, ConstructId,
+        ConstructId,
     },
     environment::Environment,
     parser::{

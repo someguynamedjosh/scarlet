@@ -1,6 +1,6 @@
 use typed_arena::Arena;
 
-use super::{path::PathOverlay, Construct, ConstructId, Environment};
+use super::{path::PathOverlay, ConstructId, Environment};
 use crate::{
     constructs::{
         downcast_construct,

@@ -27,8 +27,8 @@ fn uncreate<'a>(
     None
 }
 
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+fn vomit(_pc: &ParseContext, _src: &Node) -> String {
+    format!("AXIOM_OF_EQUALITY")
 }
 
 pub fn phrase() -> Phrase {

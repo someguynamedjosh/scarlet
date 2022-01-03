@@ -11,23 +11,6 @@ use crate::{
     shared::TripleBool,
 };
 
-pub fn struct_from_unnamed_fields<'x>(
-    env: &mut Environment<'x>,
-    mut fields: Vec<ConstructId>,
-    scope: Box<dyn Scope>,
-) -> ConstructId {
-    if fields.is_empty() {
-        env.get_language_item("void")
-    } else {
-        let first_field = fields.remove(0);
-        let this = env.push_placeholder(scope);
-        let rest = struct_from_unnamed_fields(env, fields, Box::new(SField(this)));
-        let this_def = CPopulatedStruct::new(String::new(), first_field, rest);
-        env.define_dyn_construct(this, Box::new(this_def));
-        this
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CPopulatedStruct {
     label: String,
