@@ -35,9 +35,12 @@ impl Construct for CSubstitution {
     }
 
     fn check<'x>(&self, env: &mut Environment<'x>) {
+        let mut previous_subs = Substitutions::new();
         for (target, value) in &self.1 {
             env.reduce(*value);
-            if !target.can_be_assigned(*value, env) {
+            if target.can_be_assigned(*value, env, &previous_subs) {
+                previous_subs.insert_no_replace(target.clone(), *value);
+            } else {
                 println!("{:#?}", env);
                 println!("THIS EXPRESSION:");
                 env.show(*value, *value);

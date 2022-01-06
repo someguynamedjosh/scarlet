@@ -151,18 +151,26 @@ impl<'x> Environment<'x> {
         code_arena: &'a Arena<String>,
     ) -> Option<Node<'a>> {
         let mut next_original_id = self.constructs.first();
+        let mut shortest_path: Option<Node> = None;
         while let Some(original_id) = next_original_id {
             if self.is_def_equal(con_id, original_id) == TripleBool::True {
                 let mut paths = PathOverlay::new(self);
                 let path = paths.get_path(original_id, &*from);
                 if let Some(path) = path {
                     if max_precedence >= 4 {
-                        return Some(path.vomit(code_arena));
+                        let path = path.vomit(code_arena);
+                        if shortest_path
+                            .as_ref()
+                            .map(|p| format!("{:?}", p).len() > format!("{:?}", path).len())
+                            .unwrap_or(true)
+                        {
+                            shortest_path = Some(path)
+                        }
                     }
                 }
             }
             next_original_id = self.constructs.next(original_id);
         }
-        None
+        shortest_path
     }
 }

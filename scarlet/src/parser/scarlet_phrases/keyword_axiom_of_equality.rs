@@ -1,34 +1,42 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
+    constructs::{axiom_of_equality::CAxiom, downcast_construct, ConstructId},
     environment::Environment,
-    parser::{phrase::Phrase, Node, ParseContext},
+    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,
     scope::Scope,
 };
 
 fn create<'x>(
     _pc: &ParseContext,
-    _env: &mut Environment<'x>,
-    _scope: Box<dyn Scope>,
+    env: &mut Environment<'x>,
+    scope: Box<dyn Scope>,
     _node: &Node<'x>,
 ) -> ConstructId {
-    todo!()
+    let con = CAxiom::axiom_of_equality(env);
+    env.push_construct(con, scope)
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    pc: &ParseContext,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    uncreate: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    None
+    if let Some(axiom) = downcast_construct::<CAxiom>(&**env.get_construct_definition(uncreate)) {
+        Some(Node {
+            phrase: "keyword AXIOM_OF_EQUALITY",
+            children: vec![NodeChild::Text("AXIOM_OF_EQUALITY")],
+        })
+    } else {
+        None
+    }
 }
 
 fn vomit(_pc: &ParseContext, _src: &Node) -> String {
-    format!("AXIOM_OF_EQUALITY")
+    format!("AXIOM")
 }
 
 pub fn phrase() -> Phrase {

@@ -34,8 +34,8 @@ fn uncreate<'a>(
     None
 }
 
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{}.REST", src.children[0].as_node().vomit(pc))
 }
 
 pub fn phrase() -> Phrase {

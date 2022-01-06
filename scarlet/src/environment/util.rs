@@ -1,12 +1,24 @@
 use super::{ConstructId, Environment};
 use crate::{
     constructs::{base::BoxedConstruct, AnnotatedConstruct, ConstructDefinition},
+    scope::Scope,
     shared::TripleBool,
 };
 
 impl<'x> Environment<'x> {
     pub fn get_construct(&self, con_id: ConstructId) -> &AnnotatedConstruct<'x> {
         &self.constructs[con_id]
+    }
+
+    pub fn get_original_construct_scope(&mut self, con_id: ConstructId) -> &dyn Scope {
+        self.resolve(con_id);
+        self.reduce(con_id);
+        let con = self.get_construct(con_id);
+        match &con.definition {
+            ConstructDefinition::Other(other) => self.get_original_construct_scope(*other),
+            ConstructDefinition::Resolved(_) => &*self.get_construct(con_id).scope,
+            ConstructDefinition::Unresolved(_) => unreachable!(),
+        }
     }
 
     pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {

@@ -54,8 +54,13 @@ impl CVariable {
         self.id == other.id
     }
 
-    pub fn can_be_assigned<'x>(&self, value: ConstructId, env: &mut Environment<'x>) -> bool {
-        let mut substitutions = OrderedMap::new();
+    pub fn can_be_assigned<'x>(
+        &self,
+        value: ConstructId,
+        env: &mut Environment<'x>,
+        other_subs: &Substitutions,
+    ) -> bool {
+        let mut substitutions = other_subs.clone();
         substitutions.insert_no_replace(self.clone(), value);
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
@@ -69,7 +74,7 @@ impl CVariable {
             return false;
         }
         for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
-            if !target.can_be_assigned(value, env) {
+            if !target.can_be_assigned(value, env, &Substitutions::new()) {
                 return false;
             }
         }
