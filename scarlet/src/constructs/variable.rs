@@ -9,6 +9,7 @@ use super::{
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
+    parser::ParseContext,
     scope::Scope,
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
@@ -59,26 +60,34 @@ impl CVariable {
         value: ConstructId,
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
-    ) -> bool {
+    ) -> Result<(), String> {
         let mut substitutions = other_subs.clone();
         substitutions.insert_no_replace(self.clone(), value);
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
             env.reduce(subbed);
             if !env.has_invariant(subbed, value) {
-                return false;
+                return Err(format!(
+                    "Failed to find invariant: {}",
+                    env.show(subbed, value)
+                ));
             }
         }
         let deps = env.get_dependencies(value);
         if deps.num_variables() < self.substitutions.len() {
-            return false;
+            return Err(format!(
+                "Expected at least {} dependencies, got {} instead.",
+                self.substitutions.len(),
+                deps.num_variables(),
+            ));
         }
         for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
-            if !target.can_be_assigned(value, env, &Substitutions::new()) {
-                return false;
-            }
+            let value_vom = "todo";
+            target
+                .can_be_assigned(value, env, &Substitutions::new())
+                .map_err(|err| format!("while substituting {}:\n{}", value_vom, err))?;
         }
-        true
+        Ok(())
     }
 
     pub fn inline_substitute(

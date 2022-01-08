@@ -25,12 +25,13 @@ impl<'x> Environment<'x> {
             }
         }
         for (con_id, from) in to_vomit {
-            self.show(con_id, from);
-            println!();
+            println!("{}", self.show(con_id, from));
         }
     }
 
-    pub fn show(&mut self, con_id: ConstructId, from_con: ConstructId) {
+    pub fn show(&mut self, con_id: ConstructId, from_con: ConstructId) -> String {
+        let mut result = String::new();
+
         let from = self.constructs[from_con].scope.dyn_clone();
         let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
         let code_arena = Arena::new();
@@ -38,38 +39,39 @@ impl<'x> Environment<'x> {
         let vomited = self
             .vomit(255, false, &pc, &code_arena, con_id, &*from)
             .vomit(&pc);
-        println!("({:?})", con_id);
-        println!("{}", vomited);
-        println!("proves:");
+        result.push_str(&format!("({:?})\n", con_id));
+        result.push_str(&format!("{}\n", vomited));
+        result.push_str(&format!("proves:\n"));
         for invariant in self.generated_invariants(con_id) {
-            println!(
-                "    {}",
+            result.push_str(&format!(
+                "    {}\n",
                 indented(&format!(
                     "{}",
                     self.vomit(255, true, &pc, &code_arena, invariant, &inv_from)
                         .vomit(&pc)
                 ))
-            );
+            ));
         }
-        println!("depends on:");
+        result.push_str(&format!("depends on:\n"));
         for dep in self.get_dependencies(con_id).into_variables() {
             // let kind = match dep.is_capturing() {
             //     true => "capturing",
             //     false => "without capturing",
             // };
             let kind = "capturing";
-            println!(
-                "    {} {}",
+            result.push_str(&format!(
+                "    {} {}\n",
                 kind,
                 indented(&format!(
                     "{}",
                     self.vomit_var(&pc, &code_arena, &dep, &inv_from).vomit(&pc)
                 ))
-            );
+            ));
         }
+        result
     }
 
-    pub fn show_var(&mut self, var: &CVariable, from: ConstructId) {
+    pub fn show_var(&mut self, var: &CVariable, from: ConstructId) -> String {
         let mut next_id = self.constructs.first();
         while let Some(id) = next_id {
             if self.constructs[id]

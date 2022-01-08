@@ -44,6 +44,14 @@ impl<'a> NodeChild<'a> {
     ) -> ConstructId {
         self.as_node().as_construct_dyn_scope(pc, env, scope)
     }
+
+    pub fn vomit(&self, pc: &ParseContext) -> String {
+        match self {
+            NodeChild::Node(node) => node.vomit(pc),
+            &NodeChild::Text(text) => text.to_owned(),
+            NodeChild::Missing => "".into(),
+        }
+    }
 }
 
 impl<'a> Debug for NodeChild<'a> {

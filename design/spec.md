@@ -76,7 +76,7 @@ x IS VAR[ ]
 fx IS VAR[ SUB x ]
 fc IS VAR[ SUB c ]
 
-
+AXIOM_OF_EQUALITY[ a  b  x = a ]
 ```
 
 # Syntax Sugars

@@ -38,22 +38,14 @@ impl Construct for CSubstitution {
         let mut previous_subs = Substitutions::new();
         for (target, value) in &self.1 {
             env.reduce(*value);
-            if target.can_be_assigned(*value, env, &previous_subs) {
-                previous_subs.insert_no_replace(target.clone(), *value);
-            } else {
-                println!("{:#?}", env);
+            if let Err(err) = target.can_be_assigned(*value, env, &previous_subs) {
                 println!("THIS EXPRESSION:");
-                env.show(*value, *value);
-                println!("DOES NOT SATISFY ALL OF THE FOLLOWING REQUIREMENTS:");
-                for &inv in target.get_invariants() {
-                    println!("Must satisfy invariant:");
-                    env.show(inv, *value);
-                }
-                for &sub in target.get_substitutions() {
-                    println!("Must have a dependency that can be assigned:");
-                    env.show(sub, *value);
-                }
+                println!("{}", env.show(*value, *value));
+                println!("DOES NOT SATISFY THE FOLLOWING REQUIREMENT:");
+                println!("{}", err);
                 todo!("nice error.");
+            } else {
+                previous_subs.insert_no_replace(target.clone(), *value);
             }
         }
     }
