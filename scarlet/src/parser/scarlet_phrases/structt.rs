@@ -2,6 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
+        downcast_construct,
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ConstructId,
     },
@@ -58,13 +59,19 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    pc: &ParseContext,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    uncreate: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    None
+    if let Some(structt) =
+        downcast_construct::<CPopulatedStruct>(&**env.get_construct_definition(uncreate))
+    {
+        todo!()
+    } else {
+        None
+    }
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {

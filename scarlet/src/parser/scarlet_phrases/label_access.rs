@@ -2,11 +2,12 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
+        downcast_construct,
         structt::{AtomicStructMember, CAtomicStructMember},
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, Node, ParseContext},
+    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,
     scope::{SPlain, Scope},
 };
@@ -25,13 +26,30 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    pc: &ParseContext,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    uncreate: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    None
+    if let Some(asm) =
+        downcast_construct::<CAtomicStructMember>(&**env.get_construct_definition(uncreate))
+    {
+        if asm.1 == AtomicStructMember::Label {
+            let id = asm.0;
+            Some(Node {
+                phrase: "label access",
+                children: vec![
+                    NodeChild::Node(env.vomit(4, true, pc, code_arena, id, from)),
+                    NodeChild::Text(".LABEL"),
+                ],
+            })
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {
