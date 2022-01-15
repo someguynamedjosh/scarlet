@@ -1,11 +1,10 @@
 # Data
 
-Just like how in set theory, everything is a set, in Scarlet, everything is
-one of these three kinds of values:
+Just like how in set theory, everything is a set, in Scarlet, everything is one
+of these two kinds of values:
 ```py
 UNIQUE
-EMPTY_STRUCT
-POPULATED_STRUCT[ label value rest ]
+PAIR[ left right ]
 ```
 Each different usage of "UNIQUE" is, as the name suggests, UNIQUE. So if I have
 in a file "x IS UNIQUE y IS UNIQUE", "x =not y" is a true statement.  There is
@@ -24,13 +23,10 @@ UNIQUE
 
 # Provides a single field prepended to
 # the fields specified in "rest".
-# Consumes Invariants:
-# rest FROM Struct
-POPULATED_STRUCT[ label value rest ]
-struct.LABEL
-struct.VALUE
-struct.REST
-struct IS_POPULATED_STRUCT
+PAIR[ left right ]
+pair.LEFT
+pair.RIGHT
+pair.IS_PAIR
 
 # Declares a new variable. x, y, and z
 # are the conditions that must be true
@@ -42,27 +38,121 @@ VARIABLE[ x y z ]
 # the expression x.
 x[ y IS 123  z IS 456 ]
 
-# Returns 'true' if the two expressions
-# are definitionally equal
-x = y
+# Flat Axiom
+# Requires:
+# x =NOT y
+# DECIDE[ a b x y ] = x
+# Produces:
+# a = b
+t_flat[ a b x y ]
 
-# Axiom of Invariant Truth, requires
+# Or alternatively, all expressions of
+# the form:
+# DECIDE[ DECIDE[ a b x y ] x u v ]
+# Where x =NOT y
+# Reduces to
+# DECIDE[ a b u v ]
+#
+# And also:
+# DECIDE[ DECIDE[ a b x y ] y u v ]
+# Where x =NOT y
+# Reduces to
+# DECIDE[ a b v u ]
+
+# Invariant Truth Axiom
+# Given
 # x
-# f FROM Bool
-# Produces invariant:
-# bool.equal[ f[ true ]  f[ x ] ]
-AXIOM_OF_INVARIANT_TRUTH[ x f ]
+# Proves
+# x = true
+t_invariant_truth[ x ]
 
-# Axiom of Equality, requires 
-# f FROM Bool
+# Invariant Truth Inverse Axiom
+# Given
+# x = true
+# Proves
+# x
+t_invariant_truth_inv[ x ]
+
+# Equality Axiom, requires 
 # a = b
 # Produces invariant:
-# bool.equal[ f[ a ]  f[ b ] ]
-AXIOM_OF_EQUALITY[ a b f ]
+# f[ a ] = f[ b ]
+t_equal_ext[ a b f ]
 
-# Returns 'x' if c is true, otherwise 
+# Equality Extension Inverse Axiom
+# Given
+# f[ a ] =not f[ b ]
+# Produces invariant:
+# a =not b
+t_equal_ext_inv[ a b f ]
+
+# Given
+# false
+# Proves
+# x
+t_explode IS
+t_invariant_truth_inv[ x ]
+USING {
+    # Proves false = true
+    t_invariant_truth[ false ]
+    # Proves x = true
+    t_equal_ext[
+        false
+        true
+        DECIDE[ $ true true x ]
+    ]
+}
+
+# Given
+# a = b
+# Proves
+# DECIDE[ a b x y ] = x
+t_decide_equal IS
+t_equal_ext[ a  b  DECIDE[ $ b x y ] ]
+
+# Given
+# a =NOT b (DECIDE[ a b false true ])
+# Proves
+# (a = b) = false (DECIDE[ DECIDE[ a b true false ] false true false ])
+# Not needed because (a = b) = false reduces to a =NOT b
+
+# Given
+# a =NOT b
+# Proves
+# DECIDE[ a b x y ] = y
+#
+# DECIDE[ DECIDE[ a b false true ] false x y ]
+t_decide_unequal IS
+DECIDE[
+    a
+    b
+
+    t_equal_ext[
+        a =NOT b
+        true
+        DECIDE[ $ false x y ]
+    ]
+]
+USING {
+    # Proves (a =NOT b) = true
+    t_invariant_truth[ a =NOT b ]
+}
+
+# Need something that says
+# Given 
+# DECIDE[ x y true false ] = false
+# Proves
+# DECIDE[ DECIDE[ a b x y ] x u v ] 
+# = DECIDE[ a b u v ]
+t_chain IS DECIDE[
+    a b
+
+
+]
+
+# If a = b, returns x, otherwise 
 # returns y.
-IF_THEN_ELSE[ c x y ]
+DECIDE[ a b x y ]
 ```
 
 ```py

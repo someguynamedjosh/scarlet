@@ -128,8 +128,6 @@ impl<'x> Environment<'x> {
                 return value;
             }
         }
-        // println!("{:#?}", self);
-        println!("{:?}", con_id);
         for (_, phrase) in &pc.phrases {
             if phrase.precedence > max_precedence {
                 continue;

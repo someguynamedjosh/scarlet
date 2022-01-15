@@ -10,6 +10,7 @@ use crate::{
     parser::{phrase::Phrase, util, Node, NodeChild, ParseContext},
     phrase,
     scope::Scope,
+    shared::TripleBool,
 };
 
 fn struct_from_fields<'x>(
@@ -65,10 +66,33 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(structt) =
+    let mut maybe_structt = uncreate;
+    let mut fields = Vec::new();
+    while let Some(structt) =
         downcast_construct::<CPopulatedStruct>(&**env.get_construct_definition(uncreate))
     {
-        todo!()
+        let label = code_arena.alloc(structt.get_label().to_owned());
+        let value = structt.get_value();
+        maybe_structt = structt.get_rest();
+        fields.push(NodeChild::Node(Node {
+            phrase: "is",
+            children: vec![
+                NodeChild::Text(label),
+                NodeChild::Text("is"),
+                NodeChild::Node(env.vomit(255, true, pc, code_arena, value, from)),
+            ],
+        }));
+    }
+    if env.is_def_equal(maybe_structt, env.get_language_item("void")) == TripleBool::True {
+        Some(Node {
+            phrase: "struct",
+            children: [
+                vec![NodeChild::Text("{")],
+                fields,
+                vec![NodeChild::Text("}")],
+            ]
+            .concat(),
+        })
     } else {
         None
     }
