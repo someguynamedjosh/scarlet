@@ -38,118 +38,6 @@ VARIABLE[ x y z ]
 # the expression x.
 x[ y IS 123  z IS 456 ]
 
-# Flat Axiom
-# Requires:
-# x =NOT y
-# DECIDE[ a b x y ] = x
-# Produces:
-# a = b
-t_flat[ a b x y ]
-
-# Or alternatively, all expressions of
-# the form:
-# DECIDE[ DECIDE[ a b x y ] x u v ]
-# Where x =NOT y
-# Reduces to
-# DECIDE[ a b u v ]
-#
-# And also:
-# DECIDE[ DECIDE[ a b x y ] y u v ]
-# Where x =NOT y
-# Reduces to
-# DECIDE[ a b v u ]
-
-# Invariant Truth Axiom
-# Given
-# x
-# Proves
-# x = true
-t_invariant_truth[ x ]
-
-# Invariant Truth Inverse Axiom
-# Given
-# x = true
-# Proves
-# x
-t_invariant_truth_inv[ x ]
-
-# Equality Axiom, requires 
-# a = b
-# Produces invariant:
-# f[ a ] = f[ b ]
-t_equal_ext[ a b f ]
-
-# Equality Extension Inverse Axiom
-# Given
-# f[ a ] =not f[ b ]
-# Produces invariant:
-# a =not b
-t_equal_ext_inv[ a b f ]
-
-# Given
-# false
-# Proves
-# x
-t_explode IS
-t_invariant_truth_inv[ x ]
-USING {
-    # Proves false = true
-    t_invariant_truth[ false ]
-    # Proves x = true
-    t_equal_ext[
-        false
-        true
-        DECIDE[ $ true true x ]
-    ]
-}
-
-# Given
-# a = b
-# Proves
-# DECIDE[ a b x y ] = x
-t_decide_equal IS
-t_equal_ext[ a  b  DECIDE[ $ b x y ] ]
-
-# Given
-# a =NOT b (DECIDE[ a b false true ])
-# Proves
-# (a = b) = false (DECIDE[ DECIDE[ a b true false ] false true false ])
-# Not needed because (a = b) = false reduces to a =NOT b
-
-# Given
-# a =NOT b
-# Proves
-# DECIDE[ a b x y ] = y
-#
-# DECIDE[ DECIDE[ a b false true ] false x y ]
-t_decide_unequal IS
-DECIDE[
-    a
-    b
-
-    t_equal_ext[
-        a =NOT b
-        true
-        DECIDE[ $ false x y ]
-    ]
-]
-USING {
-    # Proves (a =NOT b) = true
-    t_invariant_truth[ a =NOT b ]
-}
-
-# Need something that says
-# Given 
-# DECIDE[ x y true false ] = false
-# Proves
-# DECIDE[ DECIDE[ a b x y ] x u v ] 
-# = DECIDE[ a b u v ]
-t_chain IS DECIDE[
-    a b
-
-
-]
-
 # If a = b, returns x, otherwise 
 # returns y.
 DECIDE[ a b x y ]
@@ -165,8 +53,71 @@ c2 IS VF[ Bool ]
 x IS VAR[ ]
 fx IS VAR[ SUB x ]
 fc IS VAR[ SUB c ]
+y IS VAR[ ]
+u IS VAR[ ]
+v IS VAR[ ]
 
-AXIOM_OF_EQUALITY[ a  b  x = a ]
+# Axiom, proves
+# true
+t_trivial
+
+# Axiom, from
+# x
+# Proves
+# x = true
+t_invariant_truth[ x ]
+
+# Axiom, from
+# x = true
+# Proves
+# x
+t_invariant_truth_inv[ x ]
+
+# Axiom, from
+# a = b
+# Proves
+# fx[ b ] = fx[ a ]
+t_eq_ext_rev[ a b fx ]
+
+# Reduction axiom, from
+# a = b
+# proves
+# DECIDE[ a b x y ] = x
+t_decide_true[ a b x y ]
+
+# Reduction axiom, from
+# a =NOT b
+# proves
+# DECIDE[ a b x y ] = y
+t_decide_true[ a b x y ]
+
+# From
+# a = b
+# Proves
+# b = a
+t_eq_symm IS t_eq_ext_rev[ a b x ]
+
+# From
+# a = b
+# Proves
+# fx[ a ] = fx[ b ]
+t_eq_ext IS 
+# Proves fx[ a ] = fx[ b ] from b = a
+t_eq_ext_rev[ b a fx ]
+USING {
+    # Proves b = a
+    t_eq_symm[ a b ]
+}
+
+# From
+# (x = y) = (u = v)
+# Proves
+# DECIDE[ DECIDE[ a b x y ] x u v ] = DECIDE[ a b u v ]
+
+# From
+# (x = y) = (u = v)
+# Proves
+# DECIDE[ DECIDE[ a b x y ] y u v ] = DECIDE[ a b v u ]
 ```
 
 # Syntax Sugars
@@ -174,30 +125,16 @@ Some of these use standard library definitions
 ```py
 { something IS 123 }               
 # Sugar for...
-POPULATED_STRUCT[ 
-    "something" 
-    123 
-    EMPTY_STRUCT 
-]
+PAIR[ PAIR[ "something" 123 ]  void ]
 
 { x y z }                          
 # Sugar for...
-POPULATED_STRUCT[ 
-    "" 
-    x 
-
-    POPULATED_STRUCT[
-        "" 
-        y 
-
-        POPULATED_STRUCT[
-            "" 
-            z 
-            EMPTY_STRUCT
-        ]
-
+PAIR[ 
+    PAIR[ "" x ]
+    PAIR[
+        PAIR[ "" y ]
+        PAIR[ PAIR[ "" z ]  void ]
     ]
-
 ]
 
 x[ 123 456 ]
@@ -217,10 +154,11 @@ PICK[
     ELSE v3
 ]
 # sugar for...
-IF_THEN_ELSE[
+DECIDE[
     c1
+    true
     v1
-    IF_THEN_ELSE[ c2 v2 v3 ]
+    DECIDE[ c2 true v2 v3 ]
 ]
 
 x AND y
@@ -239,11 +177,10 @@ bool.or[ x y ]
 # way to handle the case `true FROM
 # (hash = expected)`
 expr FROM source
-# When source is a struct, sugar for...
-expr IS_POPULATED_STRUCT
-    AND expr.LABEL = source.LABEL
-    AND expr.0 FROM source.0
-    AND expr.REST FROM source.REST
+# When source is a pair, sugar for...
+expr.IS_PAIR
+    AND expr.LEFT FROM source.LEFT
+    AND expr.RIGHT FROM source.RIGHT
 # When source is a variable, sugar 
 # for... (in other words, sugar for if 
 # expr matches source's invariants)
@@ -260,15 +197,14 @@ USING {
     b IS 456
 }
 # Sugar for...
-POPULATED_STRUCT[
-    ""
+PAIR[
     a + b
     {
         a IS 123
         b IS 456
     }
 ]
-.VALUE
+.LEFT
 ```
 
 # Syntactic Constructs again, but with the sugars the average programmer would use.
