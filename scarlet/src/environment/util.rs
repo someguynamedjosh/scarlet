@@ -21,11 +21,25 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
+    pub fn get_reduced_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
+        let old_con_id = con_id;
+        self.reduce(con_id);
+        if let &ConstructDefinition::Other(id) = &self.constructs[con_id].reduced {
+            self.get_reduced_construct_definition(id)
+        } else if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].reduced {
+            def
+        } else {
+            println!("{:#?}", self);
+            println!("{:?} -> {:?}", old_con_id, con_id);
+            unreachable!()
+        }
+    }
+
+    pub fn get_original_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
         let old_con_id = con_id;
         self.resolve(con_id);
         if let &ConstructDefinition::Other(id) = &self.constructs[con_id].definition {
-            self.get_construct_definition(id)
+            self.get_original_construct_definition(id)
         } else if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
             def
         } else {
@@ -36,7 +50,7 @@ impl<'x> Environment<'x> {
     }
 
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<ConstructId> {
-        let context = self.get_construct_definition(con_id).dyn_clone();
+        let context = self.get_original_construct_definition(con_id).dyn_clone();
         context.generated_invariants(con_id, self)
     }
 

@@ -11,10 +11,19 @@ impl<'x> Environment<'x> {
     }
 
     pub fn reduce(&mut self, con_id: ConstructId) {
-        let con_id = self.dereference(con_id);
-        let con = self.get_construct_definition(con_id).dyn_clone();
-        let reduced = con.reduce(self);
-        self.constructs[con_id].definition = reduced;
+        self.resolve(con_id);
+        if self.constructs[con_id].reduced.is_placeholder() {
+            match &self.constructs[con_id].definition {
+                &ConstructDefinition::Other(id) => {
+                    self.constructs[con_id].reduced = ConstructDefinition::Other(id);
+                },
+                ConstructDefinition::Resolved(con) => {
+                    let reduced = con.dyn_clone().reduce(self);
+                    self.constructs[con_id].reduced = reduced;
+                }
+                ConstructDefinition::Unresolved(_) => unreachable!(),
+            }
+        }
     }
 
     pub fn reduce_all(&mut self) {

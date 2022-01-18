@@ -46,7 +46,7 @@ impl<'x> Environment<'x> {
             result.push_str(&format!(
                 "    {}\n",
                 indented(&format!(
-                    "{}",
+                    "{:?}",
                     self.vomit(255, true, &pc, &code_arena, invariant, &inv_from)
                         .vomit(&pc)
                 ))

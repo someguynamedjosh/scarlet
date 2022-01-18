@@ -41,7 +41,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cite) = downcast_construct::<CIfThenElse>(&**env.get_construct_definition(uncreate))
+    if let Some(cite) = downcast_construct::<CIfThenElse>(&**env.get_reduced_construct_definition(uncreate))
     {
         let cite = cite.clone();
         Some(Node {

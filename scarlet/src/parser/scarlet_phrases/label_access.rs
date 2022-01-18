@@ -33,7 +33,7 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(asm) =
-        downcast_construct::<CAtomicStructMember>(&**env.get_construct_definition(uncreate))
+        downcast_construct::<CAtomicStructMember>(&**env.get_reduced_construct_definition(uncreate))
     {
         if asm.1 == AtomicStructMember::Label {
             let id = asm.0;

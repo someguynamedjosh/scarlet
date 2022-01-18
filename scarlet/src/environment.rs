@@ -22,7 +22,13 @@ use crate::{
     shared::{Pool, TripleBool},
 };
 
-pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "t_just_statement", "t_trivial_statement"];
+pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
+    "true",
+    "false",
+    "void",
+    "t_just_statement",
+    "t_trivial_statement",
+];
 
 #[derive(Debug)]
 pub struct Environment<'x> {
@@ -81,6 +87,7 @@ impl<'x> Environment<'x> {
     pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ConstructId {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             scope,
         };
         self.constructs.push(con)
@@ -90,6 +97,7 @@ impl<'x> Environment<'x> {
         let void = self.get_language_item("void");
         self.constructs.push(AnnotatedConstruct {
             definition: ConstructDefinition::Other(void),
+            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             scope,
         })
     }
@@ -109,6 +117,7 @@ impl<'x> Environment<'x> {
     ) -> ConstructId {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Resolved(construct),
+            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             scope,
         };
         self.constructs.push(con)
@@ -137,12 +146,13 @@ impl<'x> Environment<'x> {
     ) -> ConstructId {
         self.constructs.push(AnnotatedConstruct {
             definition: ConstructDefinition::Unresolved(definition),
+            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             scope,
         })
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {
-        let con = self.get_construct_definition(con_id).dyn_clone();
+        let con = self.get_reduced_construct_definition(con_id).dyn_clone();
         con.check(self);
     }
 
@@ -155,8 +165,8 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {
-        let other = self.get_construct_definition(right).dyn_clone();
-        self.get_construct_definition(left)
+        let other = self.get_reduced_construct_definition(right).dyn_clone();
+        self.get_reduced_construct_definition(left)
             .dyn_clone()
             .is_def_equal(self, &*other)
     }

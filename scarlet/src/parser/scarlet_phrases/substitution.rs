@@ -56,7 +56,7 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(csub) =
-        downcast_construct::<CSubstitution>(&**env.get_construct_definition(uncreate))
+        downcast_construct::<CSubstitution>(&**env.get_reduced_construct_definition(uncreate))
     {
         let csub = csub.clone();
         let subs = create_comma_list(

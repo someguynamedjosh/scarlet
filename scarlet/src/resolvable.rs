@@ -13,6 +13,9 @@ use crate::{
 };
 
 pub trait Resolvable<'x>: Debug {
+    fn is_placeholder(&self) -> bool {
+        false
+    }
     fn dyn_clone(&self) -> BoxedResolvable<'x>;
     fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x>;
 }
@@ -23,6 +26,10 @@ pub type BoxedResolvable<'x> = Box<dyn Resolvable<'x> + 'x>;
 pub struct RPlaceholder;
 
 impl<'x> Resolvable<'x> for RPlaceholder {
+    fn is_placeholder(&self) -> bool {
+        true
+    }
+
     fn dyn_clone(&self) -> BoxedResolvable<'x> {
         Box::new(self.clone())
     }
@@ -71,7 +78,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, name).unwrap();
             println!("{} is {:?}", name, target);
-            if let Some(var) = as_variable(&**env.get_construct_definition(target)) {
+            if let Some(var) = as_variable(&**env.get_reduced_construct_definition(target)) {
                 remaining_deps.remove(var);
                 subs.insert_no_replace(var.clone(), value);
             } else {

@@ -69,7 +69,7 @@ fn uncreate<'a>(
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
     while let Some(structt) =
-        downcast_construct::<CPopulatedStruct>(&**env.get_construct_definition(uncreate))
+        downcast_construct::<CPopulatedStruct>(&**env.get_reduced_construct_definition(uncreate))
     {
         let label = code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();

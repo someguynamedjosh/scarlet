@@ -39,8 +39,11 @@ pub trait Scope: Debug {
         value: ConstructId,
     ) -> Option<String> {
         if let Some(result) = self.local_reverse_lookup_ident(env, value) {
-            Some(result.to_owned())
-        } else if let Some(parent) = self.parent() {
+            if result.len() > 0 {
+                return Some(result.to_owned())
+            }
+        } 
+        if let Some(parent) = self.parent() {
             env.get_construct(parent)
                 .scope
                 .dyn_clone()

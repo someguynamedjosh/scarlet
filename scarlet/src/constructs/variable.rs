@@ -170,7 +170,7 @@ impl Construct for CVariable {
                 for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
                     stored_subs.insert_no_replace(target.clone(), value);
                 }
-                let value_def = env.get_construct_definition(*value).dyn_clone();
+                let value_def = env.get_reduced_construct_definition(*value).dyn_clone();
                 return value_def.substitute(env, &stored_subs);
             }
         }

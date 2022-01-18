@@ -32,7 +32,7 @@ impl<'x> Environment<'x> {
             into,
         });
 
-        let def = self.get_construct_definition(con_id).dyn_clone();
+        let def = self.get_reduced_construct_definition(con_id).dyn_clone();
         let subbed = def.substitute(self, substitutions);
         let frame = self.substitute_stack.pop().unwrap();
         assert_eq!(frame.into, into);

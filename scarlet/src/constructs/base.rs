@@ -16,6 +16,13 @@ pub enum ConstructDefinition<'x> {
 }
 
 impl<'x> ConstructDefinition<'x> {
+    pub fn is_placeholder(&self) -> bool {
+        match self {
+            Self::Unresolved(resolvable) => resolvable.is_placeholder(),
+            _ => false,
+        }
+    }
+
     pub fn as_resolved(&self) -> Option<&BoxedConstruct> {
         match self {
             Self::Resolved(con) => Some(con),
@@ -45,6 +52,7 @@ impl<'x> From<ConstructId> for ConstructDefinition<'x> {
 #[derive(Debug)]
 pub struct AnnotatedConstruct<'x> {
     pub definition: ConstructDefinition<'x>,
+    pub reduced: ConstructDefinition<'x>,
     pub scope: Box<dyn Scope>,
 }
 
