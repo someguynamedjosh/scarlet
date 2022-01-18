@@ -1,6 +1,5 @@
 pub mod base;
-pub mod equal;
-pub mod if_then_else;
+pub mod decision;
 pub mod is_populated_struct;
 pub mod shown;
 pub mod structt;

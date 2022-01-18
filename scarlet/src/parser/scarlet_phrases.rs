@@ -1,7 +1,6 @@
 mod as_language_item;
-mod equal_operator;
 mod identifier;
-mod if_then_else;
+mod decision;
 mod is;
 mod is_populated_struct;
 mod keyword_axiom_of_equality;
@@ -39,7 +38,7 @@ pub fn phrases() -> Vec<Phrase> {
         keyword_axiom_of_equality::phrase(),
         variable::phrase(),
         populated_struct::phrase(),
-        if_then_else::phrase(),
+        decision::phrase(),
         structt::phrase(),
         label_access::phrase(),
         value_access::phrase(),
@@ -50,7 +49,6 @@ pub fn phrases() -> Vec<Phrase> {
         member_access::phrase(),
         substitution::phrase(),
         is::phrase(),
-        equal_operator::phrase(),
         // phrase!(
         //     "add operator",
         //     None,

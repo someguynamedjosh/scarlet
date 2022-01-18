@@ -40,7 +40,7 @@ x[ y IS 123  z IS 456 ]
 
 # If a = b, returns x, otherwise 
 # returns y.
-DECIDE[ a b x y ]
+DECISION[ a b x y ]
 ```
 
 ```py
@@ -57,6 +57,12 @@ y IS VAR[ ]
 u IS VAR[ ]
 v IS VAR[ ]
 
+# Axiom, from
+# a
+# proves
+# a
+t_just[ a ]
+
 # Axiom, proves
 # true
 t_trivial
@@ -64,38 +70,68 @@ t_trivial
 # Axiom, from
 # x
 # Proves
-# x = true
+# x = true (DECISION[ x true true false ])
 t_invariant_truth[ x ]
 
 # Axiom, from
-# x = true
+# x = true (DECISION[ x true true false ])
 # Proves
 # x
 t_invariant_truth_inv[ x ]
 
+# Axiom, proves
+# x = x (DECISION[ x x true false ])
+t_eq_refl[ x ]
+
 # Axiom, from
-# a = b
+# a = b (DECISION[ a b true false ])
 # Proves
-# fx[ b ] = fx[ a ]
+# fx[ b ] = fx[ a ] (DECISION[ fx[ b]  fx[ a ]  true  false ])
 t_eq_ext_rev[ a b fx ]
+
+# Axiom, From
+# a = b (DECISION[ a b true false ])
+# a
+# Proves
+# b
+t_inv_eq[ a b ]
 
 # Reduction axiom, from
 # a = b
-# proves
-# DECIDE[ a b x y ] = x
-t_decide_true[ a b x y ]
+# replaces
+# DECISION[ a b x y ] 
+# with 
+# x
 
 # Reduction axiom, from
 # a =NOT b
-# proves
-# DECIDE[ a b x y ] = y
-t_decide_true[ a b x y ]
+# replaces
+# DECISION[ a b x y ]
+# with
+# y
+
+# Reduction axiom, replaces
+# x[ x IS y ]
+# with
+# y
+
+# Reduction axiom, replaces
+# a[ x IS y ]
+# with
+# a
+# (when no other reduction rule applies)
 
 # From
 # a = b
 # Proves
 # b = a
 t_eq_symm IS t_eq_ext_rev[ a b x ]
+
+# From
+# a =NOT b
+# Proves
+# b =NOT a
+t_eq_symm IS todo
 
 # From
 # a = b
@@ -110,14 +146,177 @@ USING {
 }
 
 # From
-# (x = y) = (u = v)
+# false
+# proves
+# b
+t_explode_false IS
+t_inv_eq_ext[ false true true_or_b ]
+USING {
+    true_or_b IS
+    DECISION[ $ false true b ]
+    # Proves false = true
+    t_invariant_truth[ false ]
+}
+
+# From
+# a
+# a = false
+# proves
+# b
+t_explode_contradiction IS
+t_explode_false
+USING {
+    # Proves false
+    t_invariant_truth_inv[ false ]
+    # Proves false = true
+    t_eq_trans[ false a true ]
+    # Proves false = a
+    t_eq_symm[ a false ]
+    # Proves a = true
+    t_invariant_truth[ a ]
+}
+
+# From
+# a = b
+# fx[ a ]
 # Proves
-# DECIDE[ DECIDE[ a b x y ] x u v ] = DECIDE[ a b u v ]
+# fx[ b ]
+t_inv_eq_ext IS 
+t_inv_eq[ fx[ a ]  fx[ b ] ]
+USING {
+    # Proves fx[ a ] = fx[ b ]
+    t_eq_ext[ a b fx ]
+}
+
+# From
+# a = b
+# b = x
+# Proves
+# a = x
+t_eq_trans IS 
+t_inv_eq[ a = b  a = x ]
+USING {
+    # Proves (a = b) = (a = x)
+    t_eq_ext[ b  x  a = $ ]
+}
+
+# From
+# DECISION[ a  b  x = u  x = v ]
+# Proves
+# x = DECISION[ a b u v ]
+t_extract_eq_from_decision
+DECISION[
+    a b
+
+    t_just[ x = conclusion_right ]
+    USING {
+        # Proves x = conclusion_right
+        # conclusion_right -> u by a = b
+        t_inv_eq_ext[ u  x  $ = conclusion_right ]
+
+        # Proves x = u from (x = u) = (x = u)
+        # hypothesis -> (x = u) by a = b
+        t_inv_eq[ hypothesis  x = u ]
+
+        t_refl[ x = u ]
+    }
+
+    t_just[ x = conclusion_right ]
+    USING {
+        # Proves x = conclusion_right
+        # conclusion_right -> v by a = b
+        t_inv_eq_ext[ v  x  $ = conclusion_right ]
+
+        # Proves x = v from (x = v) = (x = v)
+        # hypothesis -> (x = v) by a = b
+        t_inv_eq[ hypothesis  x = v ]
+
+        t_refl[ x = v ]
+    }
+]
+USING {
+    hypothesis IS DECISION[ a  b  x = u  x = v ]
+    conclusion IS x = conclusion_right
+    conclusion_right IS DECISION[ a b u v ]
+}
+
+# From
+# (a = b) = false
+# proves
+# (a =NOT b)
+t_equal_then_not_is_eqn IS
+
+
+# Proves
+# DECISION[ a b x x ] = x
+t_decision_illusion
+DECISION[
+    a b
+    t_just[ statement ]
+    t_just[ statement ]
+]
+USING {
+    statement IS DECISION[ a b x y ] = x
+}
+
+# From
+# x = y
+# Proves
+# DECISION[ a b x y ] = x
+t_decision_eq_illusion IS
+t_inv_eq_ext[ x  y  DECISION[ a b x $ ] = x ]
+USING {
+    # Proves DECISION[ a b x x ] = x
+    t_decision_illusion[ a b x y ]
+}
+DEPENDING_ON[ a b x y ]
 
 # From
 # (x = y) = (u = v)
 # Proves
-# DECIDE[ DECIDE[ a b x y ] y u v ] = DECIDE[ a b v u ]
+# DECISION[ DECISION[ a b x y ] x u v ] = DECISION[ a b u v ]
+DECISION[
+    a b
+
+    t_just[ abxy_xuv = u ]
+    USING {
+        t_just[ abxy = x ]
+    }
+
+    DECISION[
+        x y
+
+        t_just[ abxy_xuv = abuv ]
+        USING {
+            # Proves abxy_xuv = v
+            t_inv_eq_ext[ u  v  abxy_xuv = $ ]
+            # Proves abxy_xuv = u
+            t_decision_eq_illusion[ abxy x u v ]
+            # Proves u = v
+            t_inv_eq[ x = y  u = v ]
+        }
+
+        USING {
+            # Proves y =NOT x
+            t_eqn_symm[ x y ]
+
+            t_just[ x =NOT y ]
+        }
+    ]
+    USING {
+        t_just[ abxy = y ]
+    }
+]
+USING {
+    abxy IS DECISION[ a b x y ]
+    abxy_xuv IS DECISION[ abxy x u v ]
+    abuv IS DECISION[ a b u v ]
+}
+
+# From
+# (x = y) = (u = v)
+# Proves
+# DECISION[ DECISION[ a b x y ] y u v ] = DECISION[ a b v u ]
 ```
 
 # Syntax Sugars
@@ -154,11 +353,11 @@ PICK[
     ELSE v3
 ]
 # sugar for...
-DECIDE[
+DECISION[
     c1
     true
     v1
-    DECIDE[ c2 true v2 v3 ]
+    DECISION[ c2 true v2 v3 ]
 ]
 
 x AND y
