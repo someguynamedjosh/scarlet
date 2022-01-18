@@ -22,7 +22,7 @@ use crate::{
     shared::{Pool, TripleBool},
 };
 
-pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "ae_statement"];
+pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "t_just_statement", "t_trivial_statement"];
 
 #[derive(Debug)]
 pub struct Environment<'x> {

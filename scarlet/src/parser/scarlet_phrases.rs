@@ -1,9 +1,9 @@
 mod as_language_item;
-mod identifier;
+mod axiom;
 mod decision;
+mod identifier;
 mod is;
 mod is_populated_struct;
-mod keyword_axiom_of_equality;
 mod keyword_unique;
 mod label_access;
 mod member_access;
@@ -35,7 +35,7 @@ macro_rules! phrase {
 pub fn phrases() -> Vec<Phrase> {
     vec![
         keyword_unique::phrase(),
-        keyword_axiom_of_equality::phrase(),
+        axiom::phrase(),
         variable::phrase(),
         populated_struct::phrase(),
         decision::phrase(),
