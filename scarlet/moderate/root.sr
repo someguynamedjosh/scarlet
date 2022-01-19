@@ -1,38 +1,53 @@
 {
-    equality.VALUE[ 
-        f IS (x = equality.REST.REST.VALUE)[ equality.REST.VALUE ]
-    ].SHOWN
-    # identify_void.SHOWN
-    # equality.REST.REST.REST.REST.REST.VALUE.SHOWN
-    x IS VAR[ ]
-    identify_void IS x = void
+  t_eq_ext_rev[ ].SHOWN
+  # t_invariant_truth[ a ].SHOWN
+  # t_invariant_truth_inv[ a ].SHOWN
+  # t_invariant_truth[ false ]
+  # t_invariant_truth_inv[ false ]
 
-    a IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
-    b IS VAR[ IF_THEN_ELSE[ SELF  true  SELF = false ] ]
+  a IS VAR[ ]
+  b IS VAR[ a = SELF ]
 
-    bool_not IS a = false
-    bool_equal IS IF_THEN_ELSE[ a  b  b = false ]
+  t_just IS VAR[ SELF ]
+  t_trivial IS AXIOM[ t_trivial ]
 
-    equality IS 
-    {
-        axiom IS AXIOM_OF_EQUALITY
+  t_invariant_truth IS 
+  AXIOM[ t_invariant_truth ]
 
-        x IS VAR[ ]
+  t_invariant_truth_inv IS 
+  AXIOM[ t_invariant_truth_inv ]
 
-        a IS VAR[ ]
-        b IS VAR[ a = b ]
+  t_eq_ext_rev IS AXIOM[ t_eq_ext_rev ]
 
-        equality_statement IS 
-        bool_equal[ f[ a ]  f[ b ] ]
-        .AS_LANGUAGE_ITEM[ ae_statement ]
+  true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
+  {
+    a IS VAR[ SELF ]
 
-        f IS VAR[ 
-            IF_THEN_ELSE[ SELF  true  SELF = false ] 
-            SUB x 
-        ]
-    }
+    (a = true)
+    .AS_LANGUAGE_ITEM[ 
+      t_invariant_truth_statement 
+    ]
+  }
+  {
+    a IS VAR[ SELF = true ]
 
-    true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
-    false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
-    void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
+    a
+    .AS_LANGUAGE_ITEM[ 
+      t_invariant_truth_inv_statement 
+    ]
+  }
+  {
+    a IS VAR[]
+    b IS VAR[ a = SELF ]
+
+    (fx[ b ] = fx[ a ])
+    .AS_LANGUAGE_ITEM[ t_eq_ext_rev_statement ]
+  }
+
+  fx IS VAR[ SUB x ]
+  x IS VAR[]
+
+  true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
+  false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
+  void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
 }

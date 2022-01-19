@@ -26,10 +26,10 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "true",
     "false",
     "void",
-    "t_trivial_statement",
-    "t_invariant_truth_statement",
-    "t_invariant_truth_inv_statement",
-    "t_eq_ext_rev_statement",
+    // "t_trivial_statement",
+    // "t_invariant_truth_statement",
+    // "t_invariant_truth_inv_statement",
+    // "t_eq_ext_rev_statement",
 ];
 
 #[derive(Debug)]

@@ -37,9 +37,13 @@ impl<'x> Environment<'x> {
         let code_arena = Arena::new();
         let pc = ParseContext::new();
         self.use_reduced_definitions_while_vomiting = false;
-        let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
+        let original_vomit = self
+            .vomit_restricting_path(255, &pc, &code_arena, con_id, &*from)
+            .vomit(&pc);
         self.use_reduced_definitions_while_vomiting = true;
-        let reduced_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
+        let reduced_vomit = self
+            .vomit_restricting_path(255, &pc, &code_arena, con_id, &*from)
+            .vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("reduces to:\n"));
         result.push_str(&format!("{}\n", reduced_vomit));
@@ -97,7 +101,7 @@ impl<'x> Environment<'x> {
         let mut next_id = self.constructs.first();
         while let Some(id) = next_id {
             if self.constructs[id]
-                .definition
+                .reduced
                 .as_resolved()
                 .map(|con| con.dyn_clone())
                 .map(|con| con.is_def_equal(self, var))
@@ -111,7 +115,7 @@ impl<'x> Environment<'x> {
         panic!("Variable does not exist.")
     }
 
-    pub fn vomit<'a>(
+    fn vomit_restricting_path<'a>(
         &mut self,
         max_precedence: u8,
         pc: &ParseContext,
@@ -119,7 +123,7 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         from: &dyn Scope,
     ) -> Node<'a> {
-        if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena) {
+        if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena, true) {
             return value;
         }
         for (_, phrase) in &pc.phrases {
@@ -139,19 +143,36 @@ impl<'x> Environment<'x> {
         );
     }
 
+    pub fn vomit<'a>(
+        &mut self,
+        max_precedence: u8,
+        pc: &ParseContext,
+        code_arena: &'a Arena<String>,
+        con_id: ConstructId,
+        from: &dyn Scope,
+    ) -> Node<'a> {
+        if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena, false) {
+            return value;
+        }
+        self.vomit_restricting_path(max_precedence, pc, code_arena, con_id, from)
+    }
+
     fn get_path<'a>(
         &mut self,
         con_id: ConstructId,
         from: &dyn Scope,
         max_precedence: u8,
         code_arena: &'a Arena<String>,
+        strict: bool,
     ) -> Option<Node<'a>> {
         let mut next_original_id = self.constructs.first();
         let mut shortest_path: Option<Node> = None;
         while let Some(original_id) = next_original_id {
-            if self.is_def_equal_for_vomiting(original_id, con_id) == TripleBool::True
-                && con_id != original_id
-            {
+            next_original_id = self.constructs.next(original_id);
+            if self.is_def_equal_for_vomiting(original_id, con_id) == TripleBool::True {
+                if strict && original_id == con_id {
+                    continue;
+                }
                 let mut paths = PathOverlay::new(self);
                 let path = paths.get_path(original_id, &*from);
                 if let Some(path) = path {
@@ -167,7 +188,6 @@ impl<'x> Environment<'x> {
                     }
                 }
             }
-            next_original_id = self.constructs.next(original_id);
         }
         shortest_path
     }
