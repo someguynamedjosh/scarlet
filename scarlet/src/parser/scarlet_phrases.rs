@@ -1,6 +1,7 @@
 mod as_language_item;
 mod axiom;
 mod decision;
+mod equal;
 mod identifier;
 mod is;
 mod is_populated_struct;
@@ -38,6 +39,7 @@ pub fn phrases() -> Vec<Phrase> {
         axiom::phrase(),
         variable::phrase(),
         populated_struct::phrase(),
+        equal::phrase(),
         decision::phrase(),
         structt::phrase(),
         label_access::phrase(),
