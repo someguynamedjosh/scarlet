@@ -1,15 +1,15 @@
 {
-    t_just[ true ].SHOWN
+    t_invariant_truth[ a ].SHOWN
+
+    a IS VAR[ SELF ]
 
     t_just IS VAR[ SELF ]
     t_trivial IS AXIOM[ t_trivial ]
     t_invariant_truth IS AXIOM[ t_invariant_truth ]
 
     true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
-    VAR[ SELF = true ]
+    DECISION[ VAR[ SELF ] true true false ]
         .AS_LANGUAGE_ITEM[ t_invariant_truth_statement ]
-
-    a IS VAR[]
 
     true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
     false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

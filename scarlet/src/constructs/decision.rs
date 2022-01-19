@@ -9,14 +9,14 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CIfThenElse {
+pub struct CDecision {
     left: ConstructId,
     right: ConstructId,
     equal: ConstructId,
     unequal: ConstructId,
 }
 
-impl CIfThenElse {
+impl CDecision {
     pub fn new<'x>(
         left: ConstructId,
         right: ConstructId,
@@ -39,18 +39,18 @@ impl CIfThenElse {
         self.right
     }
 
-    pub fn then(&self) -> ConstructId {
+    pub fn equal(&self) -> ConstructId {
         self.equal
     }
 
-    pub fn elsee(&self) -> ConstructId {
+    pub fn unequal(&self) -> ConstructId {
         self.unequal
     }
 }
 
-impl_any_eq_for_construct!(CIfThenElse);
+impl_any_eq_for_construct!(CDecision);
 
-impl Construct for CIfThenElse {
+impl Construct for CDecision {
     fn dyn_clone(&self) -> Box<dyn Construct> {
         Box::new(self.clone())
     }

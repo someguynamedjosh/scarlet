@@ -27,6 +27,7 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "false",
     "void",
     "t_trivial_statement",
+    "t_invariant_truth_statement",
 ];
 
 #[derive(Debug)]
