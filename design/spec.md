@@ -57,11 +57,11 @@ y IS VAR[ ]
 u IS VAR[ ]
 v IS VAR[ ]
 
-# Axiom, from
-# a
+# from
+# t_just
 # proves
-# a
-t_just[ a ]
+# t_just
+t_just IS VAR[ SELF ]
 
 # Axiom, proves
 # true

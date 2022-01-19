@@ -26,8 +26,6 @@ impl Construct for CUnique {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, _env: &mut Environment<'x>) {}
-
     fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Dependencies {
         Dependencies::new()
     }

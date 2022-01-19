@@ -19,7 +19,7 @@ fn create<'x>(
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let name = node.children[2].as_node().as_ident();
-    let con = CAxiom::from_name(env, name).unwrap();
+    let con = CAxiom::from_name(env, name);
     env.push_construct(con, scope)
 }
 

@@ -5,6 +5,7 @@ use super::{
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
+    scope::Scope,
     shared::{OrderedMap, TripleBool},
 };
 
@@ -34,7 +35,7 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>) {
+    fn check<'x>(&self, env: &mut Environment<'x>, this: ConstructId, scope: Box<dyn Scope>) {
         let mut previous_subs = Substitutions::new();
         for (target, value) in &self.1 {
             env.reduce(*value);
@@ -103,7 +104,6 @@ impl Construct for CSubstitution {
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        self.check(env);
         env.reduce(self.0);
         let subbed = env.substitute(self.0, &self.1);
         env.reduce(subbed);

@@ -26,7 +26,6 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "true",
     "false",
     "void",
-    "t_just_statement",
     "t_trivial_statement",
 ];
 
@@ -152,8 +151,9 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {
-        let con = self.get_reduced_construct_definition(con_id).dyn_clone();
-        con.check(self);
+        let con = self.get_original_construct_definition(con_id).dyn_clone();
+        let scope = self.get_original_construct_scope(con_id).dyn_clone();
+        con.check(self, con_id, scope);
     }
 
     pub(crate) fn check_all(&mut self) {

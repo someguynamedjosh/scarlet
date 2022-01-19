@@ -1,9 +1,13 @@
 {
-    t_just IS AXIOM[ t_just ]
-    t_trivial IS AXIOM[ t_trivial ].SHOWN
+    t_just[ true ].SHOWN
 
-    a.AS_LANGUAGE_ITEM[ t_just_statement ]
+    t_just IS VAR[ SELF ]
+    t_trivial IS AXIOM[ t_trivial ]
+    t_invariant_truth IS AXIOM[ t_invariant_truth ]
+
     true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
+    VAR[ SELF = true ]
+        .AS_LANGUAGE_ITEM[ t_invariant_truth_statement ]
 
     a IS VAR[]
 

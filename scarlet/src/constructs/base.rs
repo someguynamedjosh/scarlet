@@ -63,7 +63,7 @@ pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {
     fn dyn_clone(&self) -> Box<dyn Construct>;
 
-    fn check<'x>(&self, env: &mut Environment<'x>);
+    fn check<'x>(&self, env: &mut Environment<'x>, this: ConstructId, scope: Box<dyn Scope>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies;
 

@@ -24,8 +24,6 @@ impl Construct for CIsPopulatedStruct {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, _env: &mut Environment<'x>) {}
-
     fn generated_invariants<'x>(
         &self,
         _this: ConstructId,

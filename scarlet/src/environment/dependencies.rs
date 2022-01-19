@@ -52,7 +52,7 @@ impl Dependencies {
 
 impl<'x> Environment<'x> {
     pub fn get_dependencies(&mut self, con_id: ConstructId) -> Dependencies {
-        self.get_reduced_construct_definition(con_id)
+        self.get_original_construct_definition(con_id)
             .dyn_clone()
             .get_dependencies(self)
     }
