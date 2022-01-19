@@ -31,7 +31,7 @@ fn uncreate<'a>(
         phrase: "parentheses",
         children: vec![
             NodeChild::Text("("),
-            NodeChild::Node(env.vomit(255, true, pc, code_arena, uncreate, from)),
+            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)),
             NodeChild::Text(")"),
         ],
     })

@@ -72,13 +72,13 @@ fn uncreate<'a>(
 ) -> Option<Node<'a>> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Some(structt) = downcast_construct::<CPopulatedStruct>(
-        &**env.get_original_construct_definition(maybe_structt),
-    ) {
+    while let Some(structt) =
+        env.get_construct_definition_for_vomiting::<CPopulatedStruct>(uncreate)
+    {
         let label = code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
         maybe_structt = structt.get_rest();
-        let value = env.vomit(255, true, pc, code_arena, value, from);
+        let value = env.vomit(255, pc, code_arena, value, from);
         if label.len() > 0 {
             fields.push(Node {
                 phrase: "is",

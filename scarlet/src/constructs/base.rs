@@ -101,6 +101,10 @@ pub fn downcast_construct<T: Construct>(from: &dyn Construct) -> Option<&T> {
     (from as &dyn Any).downcast_ref()
 }
 
+pub fn downcast_boxed_construct<T: Construct>(from: Box<dyn Construct>) -> Option<T> {
+    (from as Box<dyn Any>).downcast().ok().map(|b| *b)
+}
+
 pub fn as_struct(from: &dyn Construct) -> Option<&CPopulatedStruct> {
     downcast_construct(from)
 }

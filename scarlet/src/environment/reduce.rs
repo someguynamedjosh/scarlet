@@ -10,6 +10,22 @@ impl<'x> Environment<'x> {
         }
     }
 
+    pub fn dereference_reduced(&self, con_id: ConstructId) -> ConstructId {
+        if let ConstructDefinition::Other(con_id) = &self.constructs[con_id].reduced {
+            self.dereference_reduced(*con_id)
+        } else {
+            con_id
+        }
+    }
+
+    pub fn dereference_for_vomiting(&self, con_id: ConstructId) -> ConstructId {
+        if self.use_reduced_definitions_while_vomiting {
+            self.dereference_reduced(con_id)
+        } else {
+            self.dereference_original(con_id)
+        }
+    }
+
     pub fn reduce(&mut self, con_id: ConstructId) {
         self.resolve(con_id);
         if self.constructs[con_id].reduced.is_placeholder() {

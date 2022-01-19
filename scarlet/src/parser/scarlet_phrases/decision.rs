@@ -41,9 +41,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cite) =
-        downcast_construct::<CDecision>(&**env.get_original_construct_definition(uncreate))
-    {
+    if let Some(cite) = env.get_construct_definition_for_vomiting::<CDecision>(uncreate) {
         let cite = cite.clone();
         Some(Node {
             phrase: "decision",
@@ -51,10 +49,10 @@ fn uncreate<'a>(
                 NodeChild::Text("DECISION"),
                 NodeChild::Text("["),
                 create_comma_list(vec![
-                    env.vomit(255, true, pc, code_arena, cite.left(), from),
-                    env.vomit(255, true, pc, code_arena, cite.right(), from),
-                    env.vomit(255, true, pc, code_arena, cite.equal(), from),
-                    env.vomit(255, true, pc, code_arena, cite.unequal(), from),
+                    env.vomit(255, pc, code_arena, cite.left(), from),
+                    env.vomit(255, pc, code_arena, cite.right(), from),
+                    env.vomit(255, pc, code_arena, cite.equal(), from),
+                    env.vomit(255, pc, code_arena, cite.unequal(), from),
                 ]),
                 NodeChild::Text("]"),
             ],

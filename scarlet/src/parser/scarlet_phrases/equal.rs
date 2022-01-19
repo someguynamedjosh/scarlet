@@ -34,9 +34,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cite) =
-        downcast_construct::<CDecision>(&**env.get_original_construct_definition(uncreate))
-    {
+    if let Some(cite) = env.get_construct_definition_for_vomiting::<CDecision>(uncreate) {
         let cite = cite.clone();
         let truee = env.get_language_item("true");
         let falsee = env.get_language_item("false");
@@ -46,9 +44,9 @@ fn uncreate<'a>(
             Some(Node {
                 phrase: "equal",
                 children: vec![
-                    NodeChild::Node(env.vomit(127, true, pc, code_arena, cite.left(), from)),
+                    NodeChild::Node(env.vomit(127, pc, code_arena, cite.left(), from)),
                     NodeChild::Text("="),
-                    NodeChild::Node(env.vomit(127, true, pc, code_arena, cite.right(), from)),
+                    NodeChild::Node(env.vomit(127, pc, code_arena, cite.right(), from)),
                 ],
             })
         } else {

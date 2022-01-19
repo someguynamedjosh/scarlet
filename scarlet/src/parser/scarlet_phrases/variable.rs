@@ -61,17 +61,17 @@ fn uncreate<'a>(
 ) -> Option<Node<'a>> {
     let from_con = env.push_scope(from.dyn_clone());
     let from = &SWithParent(SVariableInvariants(uncreate), from_con);
-    if let Some(cvar) = downcast_construct::<CVariable>(&**env.get_original_construct_definition(uncreate)) {
+    if let Some(cvar) = env.get_construct_definition_for_vomiting::<CVariable>(uncreate) {
         let cvar = cvar.clone();
         let invariants = cvar
             .get_invariants()
             .into_iter()
-            .map(|&inv| env.vomit(255, true, pc, code_arena, inv, from))
+            .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
             .collect_vec();
         let substitutions = cvar
             .get_substitutions()
             .into_iter()
-            .map(|&sub| env.vomit(255, true, pc, code_arena, sub, from))
+            .map(|&sub| env.vomit(255, pc, code_arena, sub, from))
             .collect_vec();
         let mut body = invariants;
         if substitutions.len() > 0 {

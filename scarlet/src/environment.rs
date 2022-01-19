@@ -26,9 +26,9 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "true",
     "false",
     "void",
-    "t_trivial_statement",
-    "t_invariant_truth_statement",
-    "t_invariant_truth_inv_statement",
+    // "t_trivial_statement",
+    // "t_invariant_truth_statement",
+    // "t_invariant_truth_inv_statement",
 ];
 
 #[derive(Debug)]
@@ -38,6 +38,7 @@ pub struct Environment<'x> {
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) substitute_stack: SubstituteStack,
+    use_reduced_definitions_while_vomiting: bool,
 }
 
 impl<'x> Environment<'x> {
@@ -48,6 +49,7 @@ impl<'x> Environment<'x> {
             uniques: Pool::new(),
             variables: Pool::new(),
             substitute_stack: SubstituteStack::new(),
+            use_reduced_definitions_while_vomiting: true,
         };
         for &name in LANGUAGE_ITEM_NAMES {
             let id = this.push_placeholder(Box::new(SRoot));

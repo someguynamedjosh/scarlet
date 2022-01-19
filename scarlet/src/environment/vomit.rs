@@ -36,18 +36,21 @@ impl<'x> Environment<'x> {
         let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
         let code_arena = Arena::new();
         let pc = ParseContext::new();
-        let vomited = self
-            .vomit(255, false, &pc, &code_arena, con_id, &*from)
-            .vomit(&pc);
+        self.use_reduced_definitions_while_vomiting = false;
+        let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
+        self.use_reduced_definitions_while_vomiting = true;
+        let reduced_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
         result.push_str(&format!("({:?})\n", con_id));
-        result.push_str(&format!("{}\n", vomited));
+        result.push_str(&format!("{}\n", original_vomit));
+        result.push_str(&format!("reduces to:\n"));
+        result.push_str(&format!("{}\n", reduced_vomit));
         result.push_str(&format!("proves:\n"));
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {}\n",
                 indented(&format!(
                     "{:?}",
-                    self.vomit(255, true, &pc, &code_arena, invariant, &inv_from)
+                    self.vomit(255, &pc, &code_arena, invariant, &inv_from)
                         .vomit(&pc)
                 ))
             ));
@@ -99,7 +102,7 @@ impl<'x> Environment<'x> {
                 .map(|con| con.is_def_equal(self, var))
                 == Some(TripleBool::True)
             {
-                return self.vomit(255, true, pc, code_arena, id, from);
+                return self.vomit(255, pc, code_arena, id, from);
             } else {
                 next_id = self.constructs.next(id);
             }
@@ -110,16 +113,13 @@ impl<'x> Environment<'x> {
     pub fn vomit<'a>(
         &mut self,
         max_precedence: u8,
-        allow_paths: bool,
         pc: &ParseContext,
         code_arena: &'a Arena<String>,
         con_id: ConstructId,
         from: &dyn Scope,
     ) -> Node<'a> {
-        if allow_paths {
-            if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena) {
-                return value;
-            }
+        if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena) {
+            return value;
         }
         for (_, phrase) in &pc.phrases {
             if phrase.precedence > max_precedence {
@@ -148,7 +148,9 @@ impl<'x> Environment<'x> {
         let mut next_original_id = self.constructs.first();
         let mut shortest_path: Option<Node> = None;
         while let Some(original_id) = next_original_id {
-            if self.dereference_original(con_id) == self.dereference_original(original_id) {
+            if self.dereference_for_vomiting(con_id) == self.dereference_for_vomiting(original_id)
+                && con_id != original_id
+            {
                 let mut paths = PathOverlay::new(self);
                 let path = paths.get_path(original_id, &*from);
                 if let Some(path) = path {

@@ -40,9 +40,9 @@ pub trait Scope: Debug {
     ) -> Option<String> {
         if let Some(result) = self.local_reverse_lookup_ident(env, value) {
             if result.len() > 0 {
-                return Some(result.to_owned())
+                return Some(result.to_owned());
             }
-        } 
+        }
         if let Some(parent) = self.parent() {
             env.get_construct(parent)
                 .scope
@@ -117,15 +117,9 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         ident: &str,
     ) -> Option<ConstructId> {
-        if ident == "true" {
-            Some(env.get_language_item("true").into())
-        } else if ident == "false" {
-            Some(env.get_language_item("false").into())
         // } else if let Ok(_) = ident.parse() {
         //     todo!()
-        } else {
-            None
-        }
+        None
     }
 
     fn local_reverse_lookup_ident<'x>(
@@ -133,13 +127,7 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         value: ConstructId,
     ) -> Option<String> {
-        if value == env.get_language_item("true") {
-            Some("true".to_owned())
-        } else if value == env.get_language_item("false") {
-            Some("false".to_owned())
-        } else {
-            None
-        }
+        None
     }
 
     fn local_lookup_invariant<'x>(

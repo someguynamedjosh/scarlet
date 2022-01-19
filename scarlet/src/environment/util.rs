@@ -1,6 +1,9 @@
 use super::{ConstructId, Environment};
 use crate::{
-    constructs::{base::BoxedConstruct, AnnotatedConstruct, ConstructDefinition},
+    constructs::{
+        base::BoxedConstruct, downcast_boxed_construct, downcast_construct, AnnotatedConstruct,
+        Construct, ConstructDefinition,
+    },
     scope::Scope,
     shared::TripleBool,
 };
@@ -47,6 +50,18 @@ impl<'x> Environment<'x> {
             println!("{:?} -> {:?}", old_con_id, con_id);
             unreachable!()
         }
+    }
+
+    pub fn get_construct_definition_for_vomiting<CastTo: Construct>(
+        &mut self,
+        con_id: ConstructId,
+    ) -> Option<CastTo> {
+        let def = if self.use_reduced_definitions_while_vomiting {
+            self.get_reduced_construct_definition(con_id)
+        } else {
+            self.get_original_construct_definition(con_id)
+        };
+        downcast_boxed_construct(def.dyn_clone())
     }
 
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<ConstructId> {

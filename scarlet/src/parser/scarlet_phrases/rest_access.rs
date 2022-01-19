@@ -32,15 +32,13 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(asm) =
-        downcast_construct::<CAtomicStructMember>(&**env.get_original_construct_definition(uncreate))
-    {
+    if let Some(asm) = env.get_construct_definition_for_vomiting::<CAtomicStructMember>(uncreate) {
         if asm.1 == AtomicStructMember::Rest {
             let id = asm.0;
             Some(Node {
                 phrase: "rest access",
                 children: vec![
-                    NodeChild::Node(env.vomit(4, true, pc, code_arena, id, from)),
+                    NodeChild::Node(env.vomit(4, pc, code_arena, id, from)),
                     NodeChild::Text(".REST"),
                 ],
             })
