@@ -176,9 +176,15 @@ impl Scope for SField {
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
-        _invariant: ConstructId,
+        invariant: ConstructId,
     ) -> bool {
-        if let Some(_structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+            let structt = structt.clone();
+            for maybe_match in env.generated_invariants(structt.value) {
+                if env.is_def_equal(invariant, maybe_match) == TripleBool::True {
+                    return true;
+                }
+            }
             false
         } else {
             unreachable!()
@@ -223,6 +229,25 @@ fn reverse_lookup_ident_in<'x>(
     }
 }
 
+fn lookup_invariant_in<'x>(
+    env: &mut Environment<'x>,
+    invariant: ConstructId,
+    inn: &CPopulatedStruct,
+) -> bool {
+    if let Some(rest) = as_struct(&**env.get_reduced_construct_definition(inn.rest)) {
+        let rest = rest.clone();
+    for maybe_match in env.generated_invariants(rest.value) {
+        if env.is_def_equal(invariant, maybe_match) == TripleBool::True {
+            println!("{:?}", inn.value);
+            return true;
+        }
+    }
+        lookup_invariant_in(env, invariant, &rest)
+    } else {
+        false
+    }
+}
+
 impl Scope for SFieldAndRest {
     fn dyn_clone(&self) -> Box<dyn Scope> {
         Box::new(self.clone())
@@ -256,10 +281,15 @@ impl Scope for SFieldAndRest {
 
     fn local_lookup_invariant<'x>(
         &self,
-        _env: &mut Environment<'x>,
-        _invariant: ConstructId,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
     ) -> bool {
-        false
+        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+            let structt = structt.clone();
+            lookup_invariant_in(env, invariant, &structt)
+        } else {
+            unreachable!()
+        }
     }
 
     fn parent(&self) -> Option<ConstructId> {

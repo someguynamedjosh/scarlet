@@ -36,9 +36,9 @@ fn main() {
     println!("Root: {:?}", root);
     env.resolve_all();
     env.reduce_all();
-    env.check_all();
     println!("{:#?}", env);
     println!("Root: {:?}", root);
     println!();
     env.show_all_requested();
+    env.check_all();
 }
