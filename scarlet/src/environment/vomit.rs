@@ -46,7 +46,7 @@ impl<'x> Environment<'x> {
         result.push_str(&format!("{}\n", reduced_vomit));
         result.push_str(&format!("proves:\n"));
         self.use_reduced_definitions_while_vomiting = false;
-        for invariant in self.generated_invariants(con_id, &[]) {
+        for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {} ({:?} from",
                 indented(&format!(

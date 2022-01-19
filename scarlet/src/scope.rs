@@ -24,7 +24,7 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Option<Invariant>;
     fn parent(&self) -> Option<ConstructId>;
 
@@ -65,15 +65,15 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Option<Invariant> {
-        if let Some(inv) = self.local_lookup_invariant(env, invariant, disallowed_invariants) {
+        if let Some(inv) = self.local_lookup_invariant(env, invariant) {
             Some(inv)
         } else if let Some(parent) = self.parent() {
             env.get_construct(parent)
                 .scope
                 .dyn_clone()
-                .lookup_invariant(env, invariant, disallowed_invariants)
+                .lookup_invariant(env, invariant)
         } else {
             None
         }
@@ -108,7 +108,7 @@ impl Scope for SPlain {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Option<Invariant> {
         None
     }
@@ -148,11 +148,10 @@ impl Scope for SRoot {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Option<Invariant> {
         let truee = env.get_language_item("true");
         if env.is_def_equal(invariant, truee) == TripleBool::True
-            && !disallowed_invariants.contains(&truee)
         {
             Some(Invariant::axiom(truee))
         } else {
@@ -197,7 +196,7 @@ impl Scope for SPlaceholder {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Option<Invariant> {
         unreachable!()
     }
@@ -239,10 +238,10 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Option<Invariant> {
         self.0
-            .local_lookup_invariant(env, invariant, disallowed_invariants)
+            .local_lookup_invariant(env, invariant)
     }
 
     fn parent(&self) -> Option<ConstructId> {

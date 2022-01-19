@@ -105,7 +105,7 @@ pub trait Construct: Any + Debug + AnyEq {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Vec<Invariant> {
         vec![]
     }

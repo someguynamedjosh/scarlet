@@ -32,9 +32,9 @@ impl Construct for CShown {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Vec<Invariant> {
-        env.generated_invariants(self.0, disallowed_invariants)
+        env.generated_invariants(self.0)
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

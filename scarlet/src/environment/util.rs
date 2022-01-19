@@ -70,12 +70,7 @@ impl<'x> Environment<'x> {
         downcast_boxed_construct(def.dyn_clone())
     }
 
-    pub fn generated_invariants(
-        &mut self,
-        con_id: ConstructId,
-        disallowed_invariants: &[ConstructId],
-    ) -> Vec<Invariant> {
-        println!("GET {:?} DISALLOWING {:?}", con_id, disallowed_invariants);
+    pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<Invariant> {
         for frame in &self.invariant_stack {
             if frame.con_id == con_id {
                 return Vec::new();
@@ -84,26 +79,12 @@ impl<'x> Environment<'x> {
         self.invariant_stack.push(InvariantStackFrame { con_id });
 
         if let Some(invariants) = &self.constructs[con_id].invariants {
-            let result = invariants
-                .iter()
-                .filter(|i| {
-                    if disallowed_invariants.contains(&i.statement) {
-                        return false;
-                    }
-                    for just in &i.justified_by {
-                        if disallowed_invariants.contains(just) {
-                            return false;
-                        }
-                    }
-                    true
-                })
-                .cloned()
-                .collect();
+            let result = invariants.clone();
             self.invariant_stack.pop();
             result
         } else {
             let context = self.get_original_construct_definition(con_id).dyn_clone();
-            let invs = context.generated_invariants(con_id, self, &[]);
+            let invs = context.generated_invariants(con_id, self);
             self.constructs[con_id].invariants = Some(invs.clone());
             self.invariant_stack.pop();
             invs
@@ -114,20 +95,15 @@ impl<'x> Environment<'x> {
         &mut self,
         statement: ConstructId,
         context_id: ConstructId,
-        disallowed_invariants: &[ConstructId],
     ) -> Option<Invariant> {
-        let generated_invariants = self.generated_invariants(context_id, disallowed_invariants);
+        let generated_invariants = self.generated_invariants(context_id);
         for inv in generated_invariants {
-            if self.is_def_equal(statement, inv.statement) == TripleBool::True
-                && !disallowed_invariants.contains(&inv.statement)
-            {
+            if self.is_def_equal(statement, inv.statement) == TripleBool::True {
                 return Some(inv);
             }
         }
         let scope = self.get_construct(context_id).scope.dyn_clone();
-        let inv = scope.lookup_invariant(self, statement, disallowed_invariants);
-        inv.as_ref()
-            .map(|i| assert!(!disallowed_invariants.contains(&i.statement)));
+        let inv = scope.lookup_invariant(self, statement);
         inv
     }
 }

@@ -60,11 +60,11 @@ impl Construct for CDecision {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-        disallowed_invariants: &[ConstructId],
+
     ) -> Vec<Invariant> {
         let truee = env.get_language_item("true");
-        let true_invs = env.generated_invariants(self.equal, disallowed_invariants);
-        let mut false_invs = env.generated_invariants(self.equal, disallowed_invariants);
+        let true_invs = env.generated_invariants(self.equal);
+        let mut false_invs = env.generated_invariants(self.equal);
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {

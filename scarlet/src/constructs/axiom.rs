@@ -38,13 +38,8 @@ impl Construct for CAxiom {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
-        if disallowed_invariants.contains(&self.statement) {
-            vec![]
-        } else {
-            vec![Invariant::axiom(self.statement)]
-        }
+        vec![Invariant::axiom(self.statement)]
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

@@ -58,7 +58,6 @@ impl CVariable {
     pub fn can_be_assigned<'x>(
         &self,
         value: ConstructId,
-        disallowed_invariants: &[ConstructId],
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
     ) -> Result<Vec<Invariant>, String> {
@@ -67,9 +66,7 @@ impl CVariable {
         substitutions.insert_no_replace(self.clone(), value);
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
-            let mut disallowed_here = Vec::from(disallowed_invariants);
-            disallowed_here.push(subbed);
-            if let Some(inv) = env.get_produced_invariant(subbed, value, &disallowed_here[..]) {
+            if let Some(inv) = env.get_produced_invariant(subbed, value) {
                 invariants.push(inv);
             } else {
                 return Err(format!(
@@ -89,7 +86,7 @@ impl CVariable {
         for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
             let value_vom = "todo";
             target
-                .can_be_assigned(value, disallowed_invariants, env, &Substitutions::new())
+                .can_be_assigned(value, env, &Substitutions::new())
                 .map_err(|err| format!("while substituting {}:\n{}", value_vom, err))?;
         }
         Ok(invariants)
@@ -131,11 +128,9 @@ impl Construct for CVariable {
         &self,
         _this: ConstructId,
         _env: &mut Environment<'x>,
-        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
         self.invariants
             .iter()
-            .filter(|&i| !disallowed_invariants.contains(i))
             .map(|&i| Invariant::axiom(i))
             .collect()
     }
@@ -233,7 +228,6 @@ impl Scope for SVariableInvariants {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-        disallowed_invariants: &[ConstructId],
     ) -> Option<Invariant> {
         None
     }
