@@ -7,7 +7,11 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, util, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::Phrase,
+        util::{self, create_comma_list},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::Scope,
     shared::TripleBool,
@@ -68,38 +72,45 @@ fn uncreate<'a>(
 ) -> Option<Node<'a>> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Some(structt) =
-        downcast_construct::<CPopulatedStruct>(&**env.get_reduced_construct_definition(uncreate))
-    {
+    while let Some(structt) = downcast_construct::<CPopulatedStruct>(
+        &**env.get_reduced_construct_definition(maybe_structt),
+    ) {
         let label = code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
         maybe_structt = structt.get_rest();
-        fields.push(NodeChild::Node(Node {
-            phrase: "is",
-            children: vec![
-                NodeChild::Text(label),
-                NodeChild::Text("is"),
-                NodeChild::Node(env.vomit(255, true, pc, code_arena, value, from)),
-            ],
-        }));
+        let value = env.vomit(255, true, pc, code_arena, value, from);
+        if label.len() > 0 {
+            fields.push(Node {
+                phrase: "is",
+                children: vec![
+                    NodeChild::Node(Node {
+                        phrase: "identifier",
+                        children: vec![NodeChild::Text(label)],
+                    }),
+                    NodeChild::Text("IS"),
+                    NodeChild::Node(value),
+                ],
+            });
+        } else {
+            fields.push(value);
+        }
     }
     if env.is_def_equal(maybe_structt, env.get_language_item("void")) == TripleBool::True {
         Some(Node {
             phrase: "struct",
-            children: [
-                vec![NodeChild::Text("{")],
-                fields,
-                vec![NodeChild::Text("}")],
-            ]
-            .concat(),
+            children: vec![
+                NodeChild::Text("{"),
+                create_comma_list(fields),
+                NodeChild::Text("}"),
+            ],
         })
     } else {
         None
     }
 }
 
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{{ {} }}", src.children[1].vomit(pc))
 }
 
 pub fn phrase() -> Phrase {

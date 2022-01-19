@@ -3,8 +3,12 @@ use crate::{
     phrase,
 };
 
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!(
+        "{} IS {}",
+        src.children[0].as_node().vomit(pc),
+        src.children[2].as_node().vomit(pc)
+    )
 }
 
 pub fn phrase() -> Phrase {
