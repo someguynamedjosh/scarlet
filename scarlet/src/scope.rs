@@ -153,7 +153,7 @@ impl Scope for SRoot {
         let truee = env.get_language_item("true");
         if env.is_def_equal(invariant, truee) == TripleBool::True
         {
-            Some(Invariant::axiom(truee))
+            Some(Invariant::new(truee))
         } else {
             None
         }

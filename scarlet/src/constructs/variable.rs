@@ -131,7 +131,7 @@ impl Construct for CVariable {
     ) -> Vec<Invariant> {
         self.invariants
             .iter()
-            .map(|&i| Invariant::axiom(i))
+            .map(|&i| Invariant::new(i))
             .collect()
     }
 

@@ -39,7 +39,7 @@ impl Construct for CAxiom {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        vec![Invariant::axiom(self.statement)]
+        vec![Invariant::new(self.statement)]
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

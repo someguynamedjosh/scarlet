@@ -40,15 +40,14 @@ impl<'x> Environment<'x> {
         let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
         self.use_reduced_definitions_while_vomiting = true;
         let reduced_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
-        result.push_str(&format!("({:?})\n", con_id));
-        result.push_str(&format!("{}\n", original_vomit));
+        result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("reduces to:\n"));
         result.push_str(&format!("{}\n", reduced_vomit));
         result.push_str(&format!("proves:\n"));
         self.use_reduced_definitions_while_vomiting = false;
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
-                "    {} ({:?} from",
+                "    {} ({:?})\n",
                 indented(&format!(
                     "{:?}",
                     self.vomit(255, &pc, &code_arena, invariant.statement, &inv_from)
@@ -56,10 +55,6 @@ impl<'x> Environment<'x> {
                 )),
                 invariant.statement,
             ));
-            for &just in &invariant.justified_by {
-                result.push_str(&format!(" {:?}", just))
-            }
-            result.push_str(")\n");
         }
         result.push_str(&format!("depends on:\n"));
         for dep in self.get_dependencies(con_id).into_variables() {

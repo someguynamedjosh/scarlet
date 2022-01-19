@@ -27,11 +27,7 @@ impl CSubstitution {
         &self.1
     }
 
-    fn substitution_justifications(
-        &self,
-        env: &mut Environment,
-
-    ) -> Result<Vec<Invariant>, String> {
+    fn substitution_justifications(&self, env: &mut Environment) -> Result<Vec<Invariant>, String> {
         let mut previous_subs = Substitutions::new();
         let mut invariants = Vec::new();
         for (target, value) in &self.1 {
@@ -90,7 +86,6 @@ impl Construct for CSubstitution {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-
     ) -> Vec<Invariant> {
         let mut invs = Vec::new();
         let justification = match self.substitution_justifications(env) {
@@ -102,7 +97,7 @@ impl Construct for CSubstitution {
         };
         for inv in env.generated_invariants(self.0) {
             let subbed_statement = env.substitute(inv.statement, &self.1);
-            invs.push(Invariant::from(subbed_statement, &justification));
+            invs.push(Invariant::new(subbed_statement));
         }
         invs
     }

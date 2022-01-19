@@ -11,32 +11,11 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Invariant {
     pub statement: ConstructId,
-    pub justified_by: Vec<ConstructId>,
 }
 
 impl Invariant {
-    pub fn new(statement: ConstructId, justified_by: Vec<ConstructId>) -> Self {
-        Self {
-            statement,
-            justified_by,
-        }
-    }
-
-    pub fn axiom(statement: ConstructId) -> Self {
-        Self {
-            statement,
-            justified_by: vec![],
-        }
-    }
-
-    pub fn from(statement: ConstructId, justified_by: &[Invariant]) -> Self {
-        let justified_by_invariants = justified_by;
-        let mut justified_by = vec![];
-        for inv in justified_by_invariants {
-            justified_by.push(inv.statement);
-            justified_by.extend(inv.justified_by.iter().copied());
-        }
-        Self::new(statement, justified_by)
+    pub fn new(statement: ConstructId) -> Self {
+        Self { statement }
     }
 }
 
@@ -105,7 +84,6 @@ pub trait Construct: Any + Debug + AnyEq {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-
     ) -> Vec<Invariant> {
         vec![]
     }

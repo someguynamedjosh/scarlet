@@ -60,7 +60,6 @@ impl Construct for CDecision {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-
     ) -> Vec<Invariant> {
         let truee = env.get_language_item("true");
         let true_invs = env.generated_invariants(self.equal);
@@ -68,11 +67,8 @@ impl Construct for CDecision {
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
-                if env.is_def_equal(true_inv.statement, false_inv.statement) == TripleBool::True {
-                    result.push(Invariant::from(
-                        true_inv.statement,
-                        &[true_inv.clone(), false_inv],
-                    ));
+                if env.originals_are_def_equal(true_inv.statement, false_inv.statement) == TripleBool::True {
+                    result.push(Invariant::new(true_inv.statement));
                     false_invs.remove(index);
                 }
             }

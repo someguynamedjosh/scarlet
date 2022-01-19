@@ -79,9 +79,8 @@ t_invariant_truth[ x ]
 # x
 t_invariant_truth_inv[ x ]
 
-# Axiom, proves
-# x = x (DECISION[ x x true false ])
-t_eq_refl[ x ]
+# Reduction axiom, proves
+# x = x
 
 # Axiom, from
 # a = b (DECISION[ a b true false ])

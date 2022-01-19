@@ -1,8 +1,6 @@
 {
     t_invariant_truth[ a ].SHOWN
     t_invariant_truth_inv[ a ].SHOWN
-    # t_invariant_truth[ false ].SHOWN
-    # t_invariant_truth_inv[ false ].SHOWN
 
     a IS VAR[ SELF ]
 
@@ -12,10 +10,14 @@
     t_invariant_truth_inv IS AXIOM[ t_invariant_truth_inv ]
 
     true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
-    (VAR[ SELF ] = true)
-        .AS_LANGUAGE_ITEM[ t_invariant_truth_statement ]
-    VAR[ SELF = true ]
-        .AS_LANGUAGE_ITEM[ t_invariant_truth_inv_statement ]
+    {
+        a IS VAR[ SELF ]
+        (a = true).AS_LANGUAGE_ITEM[ t_invariant_truth_statement ]
+    }
+    {
+        a IS VAR[ SELF = true ]
+        a.AS_LANGUAGE_ITEM[ t_invariant_truth_inv_statement ]
+    }
 
     true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
     false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
