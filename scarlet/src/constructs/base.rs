@@ -31,7 +31,7 @@ impl Invariant {
 
     pub fn from(statement: ConstructId, justified_by: &[Invariant]) -> Self {
         let justified_by_invariants = justified_by;
-        let mut justified_by= vec![];
+        let mut justified_by = vec![];
         for inv in justified_by_invariants {
             justified_by.push(inv.statement);
             justified_by.extend(inv.justified_by.iter().copied());
@@ -104,6 +104,7 @@ pub trait Construct: Any + Debug + AnyEq {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
+        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
         vec![]
     }

@@ -58,15 +58,20 @@ impl CVariable {
     pub fn can_be_assigned<'x>(
         &self,
         value: ConstructId,
+        disallowed_invariants: &[ConstructId],
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
-    ) -> Result<(), String> {
+    ) -> Result<Vec<Invariant>, String> {
         let mut substitutions = other_subs.clone();
+        let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.clone(), value);
         for inv in &self.invariants {
             let subbed = env.substitute(*inv, &substitutions);
-            env.reduce(subbed);
-            if !env.has_invariant(subbed, value) {
+            let mut disallowed_here = Vec::from(disallowed_invariants);
+            disallowed_here.push(subbed);
+            if let Some(inv) = env.get_produced_invariant(subbed, value, &disallowed_here[..]) {
+                invariants.push(inv);
+            } else {
                 return Err(format!(
                     "Failed to find invariant: {}",
                     env.show(subbed, value)
@@ -84,10 +89,10 @@ impl CVariable {
         for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
             let value_vom = "todo";
             target
-                .can_be_assigned(value, env, &Substitutions::new())
+                .can_be_assigned(value, disallowed_invariants, env, &Substitutions::new())
                 .map_err(|err| format!("while substituting {}:\n{}", value_vom, err))?;
         }
-        Ok(())
+        Ok(invariants)
     }
 
     pub fn inline_substitute(
@@ -126,9 +131,11 @@ impl Construct for CVariable {
         &self,
         _this: ConstructId,
         _env: &mut Environment<'x>,
+        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
         self.invariants
             .iter()
+            .filter(|&i| !disallowed_invariants.contains(i))
             .map(|&i| Invariant::axiom(i))
             .collect()
     }
@@ -226,8 +233,9 @@ impl Scope for SVariableInvariants {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-    ) -> bool {
-        false
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
+        None
     }
 
     fn parent(&self) -> Option<ConstructId> {

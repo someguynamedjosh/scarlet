@@ -26,6 +26,32 @@ impl CSubstitution {
     pub fn substitutions(&self) -> &Substitutions {
         &self.1
     }
+
+    fn substitution_justifications(
+        &self,
+        env: &mut Environment,
+        disallowed_invariants: &[ConstructId],
+    ) -> Result<Vec<Invariant>, String> {
+        println!("JUSTIFICATION OF {:?} FORBIDDING {:?}", self, disallowed_invariants);
+        let mut previous_subs = Substitutions::new();
+        let mut invariants = Vec::new();
+        for (target, value) in &self.1 {
+            match target.can_be_assigned(*value, disallowed_invariants, env, &previous_subs) {
+                Ok(mut new_invs) => {
+                    previous_subs.insert_no_replace(target.clone(), *value);
+                    invariants.append(&mut new_invs)
+                }
+                Err(err) => {
+                    return Err(format!(
+                        "THIS EXPRESSION:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
+                        env.show(*value, *value),
+                        err
+                    ))
+                }
+            }
+        }
+        Ok(invariants)
+    }
 }
 
 impl_any_eq_for_construct!(CSubstitution);
@@ -36,18 +62,9 @@ impl Construct for CSubstitution {
     }
 
     fn check<'x>(&self, env: &mut Environment<'x>, this: ConstructId, scope: Box<dyn Scope>) {
-        let mut previous_subs = Substitutions::new();
-        for (target, value) in &self.1 {
-            env.reduce(*value);
-            if let Err(err) = target.can_be_assigned(*value, env, &previous_subs) {
-                println!("THIS EXPRESSION:");
-                println!("{}", env.show(*value, *value));
-                println!("DOES NOT SATISFY THE FOLLOWING REQUIREMENT:");
-                println!("{}", err);
-                todo!("nice error.");
-            } else {
-                previous_subs.insert_no_replace(target.clone(), *value);
-            }
+        if let Err(err) = self.substitution_justifications(env, &[]) {
+            println!("{}", err);
+            todo!("nice error");
         }
     }
 
@@ -72,13 +89,17 @@ impl Construct for CSubstitution {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        this: ConstructId,
         env: &mut Environment<'x>,
+        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
         let mut invs = Vec::new();
-        for inv in env.generated_invariants(self.0) {
-            let statement = env.substitute(inv.statement, &self.1);
-            invs.push(Invariant::from(statement, &[inv]));
+        let justification = self
+            .substitution_justifications(env, disallowed_invariants)
+            .unwrap();
+        for inv in env.generated_invariants(self.0, disallowed_invariants) {
+            let subbed_statement = env.substitute(inv.statement, &self.1);
+            invs.push(Invariant::from(subbed_statement, &justification));
         }
         invs
     }

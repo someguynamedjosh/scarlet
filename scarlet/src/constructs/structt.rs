@@ -47,10 +47,11 @@ impl Construct for CPopulatedStruct {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
+        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
         [
-            env.generated_invariants(self.value),
-            env.generated_invariants(self.rest),
+            env.generated_invariants(self.value, disallowed_invariants),
+            env.generated_invariants(self.rest, disallowed_invariants),
         ]
         .concat()
     }
@@ -97,8 +98,9 @@ impl Construct for CAtomicStructMember {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
+        disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
-        env.generated_invariants(self.0)
+        env.generated_invariants(self.0, disallowed_invariants)
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
@@ -177,15 +179,16 @@ impl Scope for SField {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-    ) -> bool {
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
         if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
             let structt = structt.clone();
-            for maybe_match in env.generated_invariants(structt.value) {
+            for maybe_match in env.generated_invariants(structt.value, disallowed_invariants) {
                 if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
-                    return true;
+                    return Some(maybe_match);
                 }
             }
-            false
+            None
         } else {
             unreachable!()
         }
@@ -233,18 +236,19 @@ fn lookup_invariant_in<'x>(
     env: &mut Environment<'x>,
     invariant: ConstructId,
     inn: &CPopulatedStruct,
-) -> bool {
+    disallowed_invariants: &[ConstructId],
+) -> Option<Invariant> {
     if let Some(rest) = as_struct(&**env.get_reduced_construct_definition(inn.rest)) {
         let rest = rest.clone();
-        for maybe_match in env.generated_invariants(rest.value) {
+        for maybe_match in env.generated_invariants(rest.value, disallowed_invariants) {
             if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
                 println!("{:?}", inn.value);
-                return true;
+                return Some(maybe_match);
             }
         }
-        lookup_invariant_in(env, invariant, &rest)
+        lookup_invariant_in(env, invariant, &rest, disallowed_invariants)
     } else {
-        false
+        None
     }
 }
 
@@ -283,10 +287,11 @@ impl Scope for SFieldAndRest {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-    ) -> bool {
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
         if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
             let structt = structt.clone();
-            lookup_invariant_in(env, invariant, &structt)
+            lookup_invariant_in(env, invariant, &structt, disallowed_invariants)
         } else {
             unreachable!()
         }

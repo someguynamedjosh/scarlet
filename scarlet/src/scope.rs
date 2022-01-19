@@ -1,6 +1,10 @@
 use std::fmt::Debug;
 
-use crate::{constructs::ConstructId, environment::Environment, shared::TripleBool};
+use crate::{
+    constructs::{ConstructId, Invariant},
+    environment::Environment,
+    shared::TripleBool,
+};
 
 pub trait Scope: Debug {
     fn dyn_clone(&self) -> Box<dyn Scope>;
@@ -16,8 +20,12 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         value: ConstructId,
     ) -> Option<String>;
-    fn local_lookup_invariant<'x>(&self, env: &mut Environment<'x>, invariant: ConstructId)
-        -> bool;
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant>;
     fn parent(&self) -> Option<ConstructId>;
 
     fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
@@ -53,16 +61,21 @@ pub trait Scope: Debug {
         }
     }
 
-    fn lookup_invariant<'x>(&self, env: &mut Environment<'x>, invariant: ConstructId) -> bool {
-        if self.local_lookup_invariant(env, invariant) {
-            true
+    fn lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
+        if let Some(inv) = self.local_lookup_invariant(env, invariant, disallowed_invariants) {
+            Some(inv)
         } else if let Some(parent) = self.parent() {
             env.get_construct(parent)
                 .scope
                 .dyn_clone()
-                .lookup_invariant(env, invariant)
+                .lookup_invariant(env, invariant, disallowed_invariants)
         } else {
-            false
+            None
         }
     }
 }
@@ -95,8 +108,9 @@ impl Scope for SPlain {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-    ) -> bool {
-        false
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
+        None
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -134,9 +148,16 @@ impl Scope for SRoot {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-    ) -> bool {
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
         let truee = env.get_language_item("true");
-        env.is_def_equal(invariant, truee) == TripleBool::True
+        if env.is_def_equal(invariant, truee) == TripleBool::True
+            && !disallowed_invariants.contains(&truee)
+        {
+            Some(Invariant::axiom(truee))
+        } else {
+            None
+        }
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -176,7 +197,8 @@ impl Scope for SPlaceholder {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-    ) -> bool {
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
         unreachable!()
     }
 
@@ -217,8 +239,10 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-    ) -> bool {
-        self.0.local_lookup_invariant(env, invariant)
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
+        self.0
+            .local_lookup_invariant(env, invariant, disallowed_invariants)
     }
 
     fn parent(&self) -> Option<ConstructId> {

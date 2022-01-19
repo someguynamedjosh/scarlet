@@ -64,19 +64,33 @@ impl<'x> Environment<'x> {
         downcast_boxed_construct(def.dyn_clone())
     }
 
-    pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<Invariant> {
+    pub fn generated_invariants(
+        &mut self,
+        con_id: ConstructId,
+        disallowed_invariants: &[ConstructId],
+    ) -> Vec<Invariant> {
         let context = self.get_original_construct_definition(con_id).dyn_clone();
-        context.generated_invariants(con_id, self)
+        context.generated_invariants(con_id, self, disallowed_invariants)
     }
 
-    pub fn has_invariant(&mut self, expression: ConstructId, context_id: ConstructId) -> bool {
-        let generated_invariants = self.generated_invariants(context_id);
+    pub fn get_produced_invariant(
+        &mut self,
+        statement: ConstructId,
+        context_id: ConstructId,
+        disallowed_invariants: &[ConstructId],
+    ) -> Option<Invariant> {
+        let generated_invariants = self.generated_invariants(context_id, disallowed_invariants);
         for inv in generated_invariants {
-            if self.is_def_equal(expression, inv.statement) == TripleBool::True {
-                return true;
+            if self.is_def_equal(statement, inv.statement) == TripleBool::True
+                && !disallowed_invariants.contains(&inv.statement)
+            {
+                return Some(inv);
             }
         }
         let scope = self.get_construct(context_id).scope.dyn_clone();
-        scope.lookup_invariant(self, expression)
+        let inv = scope.lookup_invariant(self, statement, disallowed_invariants);
+        inv.as_ref()
+            .map(|i| assert!(!disallowed_invariants.contains(&i.statement)));
+        inv
     }
 }
