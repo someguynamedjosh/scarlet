@@ -26,9 +26,9 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "true",
     "false",
     "void",
-    // "t_trivial_statement",
-    // "t_invariant_truth_statement",
-    // "t_invariant_truth_inv_statement",
+    "t_trivial_statement",
+    "t_invariant_truth_statement",
+    "t_invariant_truth_inv_statement",
 ];
 
 #[derive(Debug)]
@@ -168,10 +168,33 @@ impl<'x> Environment<'x> {
         }
     }
 
+    pub(crate) fn originals_are_def_equal(
+        &mut self,
+        left: ConstructId,
+        right: ConstructId,
+    ) -> TripleBool {
+        let other = self.get_original_construct_definition(right).dyn_clone();
+        self.get_original_construct_definition(left)
+            .dyn_clone()
+            .is_def_equal(self, &*other)
+    }
+
     pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {
         let other = self.get_reduced_construct_definition(right).dyn_clone();
         self.get_reduced_construct_definition(left)
             .dyn_clone()
             .is_def_equal(self, &*other)
+    }
+
+    pub(crate) fn is_def_equal_for_vomiting(
+        &mut self,
+        left: ConstructId,
+        right: ConstructId,
+    ) -> TripleBool {
+        if self.use_reduced_definitions_while_vomiting {
+            self.is_def_equal(left, right)
+        } else {
+            self.originals_are_def_equal(left, right)
+        }
     }
 }

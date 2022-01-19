@@ -20,7 +20,7 @@ impl<'x> Environment<'x> {
             if let ConstructDefinition::Resolved(con) = &acon.definition {
                 if let Some(shown) = downcast_construct::<CShown>(&**con) {
                     let base = shown.get_base();
-                    to_vomit.push((base, from));
+                    to_vomit.push((base, base));
                 }
             }
         }
@@ -45,6 +45,7 @@ impl<'x> Environment<'x> {
         result.push_str(&format!("reduces to:\n"));
         result.push_str(&format!("{}\n", reduced_vomit));
         result.push_str(&format!("proves:\n"));
+        self.use_reduced_definitions_while_vomiting = false;
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {}\n",
@@ -148,7 +149,7 @@ impl<'x> Environment<'x> {
         let mut next_original_id = self.constructs.first();
         let mut shortest_path: Option<Node> = None;
         while let Some(original_id) = next_original_id {
-            if self.dereference_for_vomiting(con_id) == self.dereference_for_vomiting(original_id)
+            if self.is_def_equal_for_vomiting(original_id, con_id) == TripleBool::True
                 && con_id != original_id
             {
                 let mut paths = PathOverlay::new(self);
