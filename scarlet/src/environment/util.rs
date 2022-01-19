@@ -8,6 +8,12 @@ use crate::{
     shared::TripleBool,
 };
 
+#[derive(Debug)]
+pub struct InvariantStackFrame {
+    con_id: ConstructId,
+}
+pub type InvariantStack = Vec<InvariantStackFrame>;
+
 impl<'x> Environment<'x> {
     pub fn get_construct(&self, con_id: ConstructId) -> &AnnotatedConstruct<'x> {
         &self.constructs[con_id]
@@ -69,8 +75,39 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
-        let context = self.get_original_construct_definition(con_id).dyn_clone();
-        context.generated_invariants(con_id, self, disallowed_invariants)
+        println!("GET {:?} DISALLOWING {:?}", con_id, disallowed_invariants);
+        for frame in &self.invariant_stack {
+            if frame.con_id == con_id {
+                return Vec::new();
+            }
+        }
+        self.invariant_stack.push(InvariantStackFrame { con_id });
+
+        if let Some(invariants) = &self.constructs[con_id].invariants {
+            let result = invariants
+                .iter()
+                .filter(|i| {
+                    if disallowed_invariants.contains(&i.statement) {
+                        return false;
+                    }
+                    for just in &i.justified_by {
+                        if disallowed_invariants.contains(just) {
+                            return false;
+                        }
+                    }
+                    true
+                })
+                .cloned()
+                .collect();
+            self.invariant_stack.pop();
+            result
+        } else {
+            let context = self.get_original_construct_definition(con_id).dyn_clone();
+            let invs = context.generated_invariants(con_id, self, &[]);
+            self.constructs[con_id].invariants = Some(invs.clone());
+            self.invariant_stack.pop();
+            invs
+        }
     }
 
     pub fn get_produced_invariant(

@@ -9,7 +9,7 @@ mod vomit;
 
 use std::collections::HashMap;
 
-use self::substitute::SubstituteStack;
+use self::{substitute::SubstituteStack, util::InvariantStack};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
@@ -38,6 +38,7 @@ pub struct Environment<'x> {
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) substitute_stack: SubstituteStack,
+    pub(super) invariant_stack: InvariantStack,
     use_reduced_definitions_while_vomiting: bool,
 }
 
@@ -49,6 +50,7 @@ impl<'x> Environment<'x> {
             uniques: Pool::new(),
             variables: Pool::new(),
             substitute_stack: SubstituteStack::new(),
+            invariant_stack: InvariantStack::new(),
             use_reduced_definitions_while_vomiting: true,
         };
         for &name in LANGUAGE_ITEM_NAMES {
@@ -91,6 +93,7 @@ impl<'x> Environment<'x> {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+            invariants: None,
             scope,
         };
         self.constructs.push(con)
@@ -101,6 +104,7 @@ impl<'x> Environment<'x> {
         self.constructs.push(AnnotatedConstruct {
             definition: ConstructDefinition::Other(void),
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+            invariants: None,
             scope,
         })
     }
@@ -121,6 +125,7 @@ impl<'x> Environment<'x> {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Resolved(construct),
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+            invariants: None,
             scope,
         };
         self.constructs.push(con)
@@ -150,6 +155,7 @@ impl<'x> Environment<'x> {
         self.constructs.push(AnnotatedConstruct {
             definition: ConstructDefinition::Unresolved(definition),
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+            invariants: None,
             scope,
         })
     }

@@ -32,7 +32,6 @@ impl CSubstitution {
         env: &mut Environment,
         disallowed_invariants: &[ConstructId],
     ) -> Result<Vec<Invariant>, String> {
-        println!("JUSTIFICATION OF {:?} FORBIDDING {:?}", self, disallowed_invariants);
         let mut previous_subs = Substitutions::new();
         let mut invariants = Vec::new();
         for (target, value) in &self.1 {
@@ -94,9 +93,13 @@ impl Construct for CSubstitution {
         disallowed_invariants: &[ConstructId],
     ) -> Vec<Invariant> {
         let mut invs = Vec::new();
-        let justification = self
-            .substitution_justifications(env, disallowed_invariants)
-            .unwrap();
+        let justification = match self.substitution_justifications(env, disallowed_invariants) {
+            Ok(ok) => ok,
+            Err(err) => {
+                println!("{}", err);
+                todo!("Nice error");
+            }
+        };
         for inv in env.generated_invariants(self.0, disallowed_invariants) {
             let subbed_statement = env.substitute(inv.statement, &self.1);
             invs.push(Invariant::from(subbed_statement, &justification));

@@ -85,6 +85,7 @@ impl<'x> From<ConstructId> for ConstructDefinition<'x> {
 pub struct AnnotatedConstruct<'x> {
     pub definition: ConstructDefinition<'x>,
     pub reduced: ConstructDefinition<'x>,
+    pub invariants: Option<Vec<Invariant>>,
     pub scope: Box<dyn Scope>,
 }
 
