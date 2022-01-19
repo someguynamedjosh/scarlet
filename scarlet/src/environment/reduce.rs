@@ -2,9 +2,9 @@ use super::{ConstructId, Environment};
 use crate::constructs::ConstructDefinition;
 
 impl<'x> Environment<'x> {
-    pub fn dereference(&self, con_id: ConstructId) -> ConstructId {
+    pub fn dereference_original(&self, con_id: ConstructId) -> ConstructId {
         if let ConstructDefinition::Other(con_id) = &self.constructs[con_id].definition {
-            self.dereference(*con_id)
+            self.dereference_original(*con_id)
         } else {
             con_id
         }

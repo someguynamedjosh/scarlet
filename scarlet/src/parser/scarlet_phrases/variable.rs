@@ -61,7 +61,7 @@ fn uncreate<'a>(
 ) -> Option<Node<'a>> {
     let from_con = env.push_scope(from.dyn_clone());
     let from = &SWithParent(SVariableInvariants(uncreate), from_con);
-    if let Some(cvar) = downcast_construct::<CVariable>(&**env.get_reduced_construct_definition(uncreate)) {
+    if let Some(cvar) = downcast_construct::<CVariable>(&**env.get_original_construct_definition(uncreate)) {
         let cvar = cvar.clone();
         let invariants = cvar
             .get_invariants()

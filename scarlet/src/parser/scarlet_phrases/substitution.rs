@@ -56,7 +56,7 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(csub) =
-        downcast_construct::<CSubstitution>(&**env.get_reduced_construct_definition(uncreate))
+        downcast_construct::<CSubstitution>(&**env.get_original_construct_definition(uncreate))
     {
         let csub = csub.clone();
         let subs = create_comma_list(
@@ -86,8 +86,12 @@ fn uncreate<'a>(
     }
 }
 
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!(
+        "{}[ {} ]",
+        src.children[0].vomit(pc),
+        src.children[2].vomit(pc)
+    )
 }
 
 pub fn phrase() -> Phrase {

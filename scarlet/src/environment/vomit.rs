@@ -54,14 +54,8 @@ impl<'x> Environment<'x> {
         }
         result.push_str(&format!("depends on:\n"));
         for dep in self.get_dependencies(con_id).into_variables() {
-            // let kind = match dep.is_capturing() {
-            //     true => "capturing",
-            //     false => "without capturing",
-            // };
-            let kind = "capturing";
             result.push_str(&format!(
-                "    {} {}\n",
-                kind,
+                "    {}\n",
                 indented(&format!(
                     "{}",
                     self.vomit_var(&pc, &code_arena, &dep, &inv_from).vomit(&pc)
@@ -122,7 +116,6 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         from: &dyn Scope,
     ) -> Node<'a> {
-        let con_id = self.dereference(con_id);
         if allow_paths {
             if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena) {
                 return value;
@@ -155,7 +148,7 @@ impl<'x> Environment<'x> {
         let mut next_original_id = self.constructs.first();
         let mut shortest_path: Option<Node> = None;
         while let Some(original_id) = next_original_id {
-            if self.is_def_equal(con_id, original_id) == TripleBool::True {
+            if self.dereference_original(con_id) == self.dereference_original(original_id) {
                 let mut paths = PathOverlay::new(self);
                 let path = paths.get_path(original_id, &*from);
                 if let Some(path) = path {

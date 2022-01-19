@@ -35,7 +35,7 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     if let Some(cite) =
-        downcast_construct::<CDecision>(&**env.get_reduced_construct_definition(uncreate))
+        downcast_construct::<CDecision>(&**env.get_original_construct_definition(uncreate))
     {
         let cite = cite.clone();
         let truee = env.get_language_item("true");

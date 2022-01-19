@@ -41,7 +41,6 @@ pub fn phrases() -> Vec<Phrase> {
         populated_struct::phrase(),
         equal::phrase(),
         decision::phrase(),
-        structt::phrase(),
         label_access::phrase(),
         value_access::phrase(),
         rest_access::phrase(),
@@ -50,6 +49,7 @@ pub fn phrases() -> Vec<Phrase> {
         as_language_item::phrase(),
         member_access::phrase(),
         substitution::phrase(),
+        structt::phrase(),
         is::phrase(),
         // phrase!(
         //     "add operator",

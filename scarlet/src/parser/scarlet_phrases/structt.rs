@@ -73,7 +73,7 @@ fn uncreate<'a>(
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
     while let Some(structt) = downcast_construct::<CPopulatedStruct>(
-        &**env.get_reduced_construct_definition(maybe_structt),
+        &**env.get_original_construct_definition(maybe_structt),
     ) {
         let label = code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
@@ -110,7 +110,12 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("{{ {} }}", src.children[1].vomit(pc))
+    let contents = src.children[1].vomit(pc);
+    if contents.len() > 0 {
+        format!("{{ {} }}", contents)
+    } else {
+        format!("{{}}")
+    }
 }
 
 pub fn phrase() -> Phrase {
