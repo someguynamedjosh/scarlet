@@ -2,7 +2,7 @@ use super::{ConstructId, Environment};
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_boxed_construct, downcast_construct, AnnotatedConstruct,
-        Construct, ConstructDefinition,
+        Construct, ConstructDefinition, Invariant,
     },
     scope::Scope,
     shared::TripleBool,
@@ -64,7 +64,7 @@ impl<'x> Environment<'x> {
         downcast_boxed_construct(def.dyn_clone())
     }
 
-    pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<ConstructId> {
+    pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<Invariant> {
         let context = self.get_original_construct_definition(con_id).dyn_clone();
         context.generated_invariants(con_id, self)
     }
@@ -72,7 +72,7 @@ impl<'x> Environment<'x> {
     pub fn has_invariant(&mut self, expression: ConstructId, context_id: ConstructId) -> bool {
         let generated_invariants = self.generated_invariants(context_id);
         for inv in generated_invariants {
-            if self.is_def_equal(expression, inv) == TripleBool::True {
+            if self.is_def_equal(expression, inv.statement) == TripleBool::True {
                 return true;
             }
         }

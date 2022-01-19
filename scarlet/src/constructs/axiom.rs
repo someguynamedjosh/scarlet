@@ -3,6 +3,7 @@ use super::{
     ConstructDefinition, ConstructId,
 };
 use crate::{
+    constructs::Invariant,
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::Scope,
@@ -37,8 +38,8 @@ impl Construct for CAxiom {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
-        vec![self.statement]
+    ) -> Vec<Invariant> {
+        vec![Invariant::axiom(self.statement)]
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

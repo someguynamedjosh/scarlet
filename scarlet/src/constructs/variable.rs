@@ -4,7 +4,7 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::Substitutions,
-    BoxedConstruct,
+    BoxedConstruct, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -126,8 +126,11 @@ impl Construct for CVariable {
         &self,
         _this: ConstructId,
         _env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
-        self.invariants.clone()
+    ) -> Vec<Invariant> {
+        self.invariants
+            .iter()
+            .map(|&i| Invariant::axiom(i))
+            .collect()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

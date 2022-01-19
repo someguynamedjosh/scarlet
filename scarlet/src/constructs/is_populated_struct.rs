@@ -1,6 +1,6 @@
 use super::{
     downcast_construct, structt::CPopulatedStruct, substitution::Substitutions, unique::CUnique,
-    Construct, ConstructDefinition, ConstructId,
+    Construct, ConstructDefinition, ConstructId, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -28,7 +28,7 @@ impl Construct for CIsPopulatedStruct {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
+    ) -> Vec<Invariant> {
         env.generated_invariants(self.0)
     }
 

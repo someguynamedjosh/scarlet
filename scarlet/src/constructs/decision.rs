@@ -1,5 +1,6 @@
 use super::{
     downcast_construct, substitution::Substitutions, Construct, ConstructDefinition, ConstructId,
+    Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -59,18 +60,19 @@ impl Construct for CDecision {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
+    ) -> Vec<Invariant> {
         let truee = env.get_language_item("true");
         let true_invs = env.generated_invariants(self.equal);
         let mut false_invs = env.generated_invariants(self.equal);
         let mut result = Vec::new();
         for true_inv in true_invs {
-            let mut is_conditional = true;
-            for (index, &false_inv) in false_invs.clone().iter().enumerate() {
-                if env.is_def_equal(true_inv, false_inv) == TripleBool::True {
-                    result.push(true_inv);
+            for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
+                if env.is_def_equal(true_inv.statement, false_inv.statement) == TripleBool::True {
+                    result.push(Invariant::from(
+                        true_inv.statement,
+                        &[true_inv.clone(), false_inv],
+                    ));
                     false_invs.remove(index);
-                    is_conditional = false;
                 }
             }
         }

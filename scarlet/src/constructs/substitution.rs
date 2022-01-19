@@ -1,6 +1,6 @@
 use super::{
     downcast_construct, variable::CVariable, BoxedConstruct, Construct, ConstructDefinition,
-    ConstructId,
+    ConstructId, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -74,12 +74,11 @@ impl Construct for CSubstitution {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
+    ) -> Vec<Invariant> {
         let mut invs = Vec::new();
         for inv in env.generated_invariants(self.0) {
-            let inv = env.substitute(inv, &self.1);
-            env.reduce(inv);
-            invs.push(inv);
+            let statement = env.substitute(inv.statement, &self.1);
+            invs.push(Invariant::from(statement, &[inv]));
         }
         invs
     }

@@ -2,7 +2,7 @@ use super::{
     as_struct,
     base::{ConstructDefinition, ConstructId},
     substitution::Substitutions,
-    Construct,
+    Construct, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -47,7 +47,7 @@ impl Construct for CPopulatedStruct {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
+    ) -> Vec<Invariant> {
         [
             env.generated_invariants(self.value),
             env.generated_invariants(self.rest),
@@ -97,7 +97,7 @@ impl Construct for CAtomicStructMember {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
+    ) -> Vec<Invariant> {
         env.generated_invariants(self.0)
     }
 
@@ -181,7 +181,7 @@ impl Scope for SField {
         if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
             let structt = structt.clone();
             for maybe_match in env.generated_invariants(structt.value) {
-                if env.is_def_equal(invariant, maybe_match) == TripleBool::True {
+                if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
                     return true;
                 }
             }
@@ -236,12 +236,12 @@ fn lookup_invariant_in<'x>(
 ) -> bool {
     if let Some(rest) = as_struct(&**env.get_reduced_construct_definition(inn.rest)) {
         let rest = rest.clone();
-    for maybe_match in env.generated_invariants(rest.value) {
-        if env.is_def_equal(invariant, maybe_match) == TripleBool::True {
-            println!("{:?}", inn.value);
-            return true;
+        for maybe_match in env.generated_invariants(rest.value) {
+            if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
+                println!("{:?}", inn.value);
+                return true;
+            }
         }
-    }
         lookup_invariant_in(env, invariant, &rest)
     } else {
         false

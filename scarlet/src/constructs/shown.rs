@@ -1,6 +1,7 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
+    Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -31,7 +32,7 @@ impl Construct for CShown {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<ConstructId> {
+    ) -> Vec<Invariant> {
         env.generated_invariants(self.0)
     }
 

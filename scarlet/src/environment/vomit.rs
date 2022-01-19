@@ -48,13 +48,17 @@ impl<'x> Environment<'x> {
         self.use_reduced_definitions_while_vomiting = false;
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
-                "    {}\n",
+                "    {} (",
                 indented(&format!(
                     "{:?}",
-                    self.vomit(255, &pc, &code_arena, invariant, &inv_from)
+                    self.vomit(255, &pc, &code_arena, invariant.statement, &inv_from)
                         .vomit(&pc)
                 ))
             ));
+            for &just in &invariant.justified_by {
+                result.push_str(&format!(" {:?}", just))
+            }
+            result.push_str(")\n");
         }
         result.push_str(&format!("depends on:\n"));
         for dep in self.get_dependencies(con_id).into_variables() {

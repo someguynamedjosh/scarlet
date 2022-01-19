@@ -1,8 +1,8 @@
 {
     # t_invariant_truth[ a ].SHOWN
     # t_invariant_truth_inv[ a ].SHOWN
-    t_invariant_truth[ false ]
-    t_invariant_truth_inv[ false ]
+    t_invariant_truth[ false ].SHOWN
+    t_invariant_truth_inv[ false ].SHOWN
 
     a IS VAR[ SELF ]
 
