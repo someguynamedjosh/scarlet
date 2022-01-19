@@ -52,7 +52,7 @@ impl Construct for CAxiom {
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
         if let Some(other) = downcast_construct::<Self>(other) {
-            TripleBool::True
+            env.is_def_equal(self.statement, other.statement)
         } else {
             TripleBool::Unknown
         }
