@@ -48,7 +48,8 @@
                 "args": [
                     "build",
                     "--bin=scarlet",
-                    "--package=scarlet"
+                    "--package=scarlet",
+                    "--features=no_axioms"
                 ],
                 "filter": {
                     "name": "scarlet",

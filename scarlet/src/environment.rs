@@ -224,10 +224,14 @@ impl<'x> Environment<'x> {
         left: ConstructId,
         right: ConstructId,
     ) -> TripleBool {
-        if self.use_reduced_definitions_while_vomiting {
+        let val = if self.use_reduced_definitions_while_vomiting {
             self.is_def_equal(left, right)
         } else {
             self.originals_are_def_equal(left, right)
+        };
+        if left == right {
+            assert_eq!(val, TripleBool::True);
         }
+        val
     }
 }

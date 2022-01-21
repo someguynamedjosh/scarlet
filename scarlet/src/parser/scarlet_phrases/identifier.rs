@@ -27,8 +27,11 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    let uncreate = env.dereference_for_vomiting(uncreate);
-    if let Some(ident) = from.reverse_lookup_ident(env, uncreate) {
+    let dereffed = env.dereference_for_vomiting(uncreate);
+    if dereffed == uncreate {
+        return None;
+    }
+    if let Some(ident) = from.reverse_lookup_ident(env, dereffed) {
         Some(Node {
             phrase: "identifier",
             children: vec![NodeChild::Text(code_arena.alloc(ident))],

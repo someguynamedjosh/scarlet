@@ -5,6 +5,7 @@ use super::{
     Construct, Invariant,
 };
 use crate::{
+    constructs::downcast_construct,
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
     scope::Scope,
@@ -61,8 +62,18 @@ impl Construct for CPopulatedStruct {
         deps
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
-        TripleBool::Unknown
+    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            if self.label != other.label {
+                return TripleBool::False;
+            }
+            TripleBool::and(vec![
+                env.is_def_equal(self.value, other.value),
+                env.is_def_equal(self.rest, other.rest),
+            ])
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn substitute<'x>(
