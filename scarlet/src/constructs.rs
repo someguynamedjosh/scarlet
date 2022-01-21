@@ -7,5 +7,6 @@ pub mod substitution;
 pub mod unique;
 pub mod variable;
 pub mod axiom;
+pub mod with_dependencies;
 
 pub use base::*;

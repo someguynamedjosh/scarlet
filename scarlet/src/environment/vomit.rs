@@ -52,11 +52,11 @@ impl<'x> Environment<'x> {
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {} ({:?})\n",
-                indented(&format!(
-                    "{:?}",
-                    self.vomit(255, &pc, &code_arena, invariant.statement, &inv_from)
+                indented(
+                    &self
+                        .vomit(255, &pc, &code_arena, invariant.statement, &inv_from)
                         .vomit(&pc)
-                )),
+                ),
                 invariant.statement,
             ));
         }

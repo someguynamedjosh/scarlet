@@ -1,5 +1,5 @@
 {
-  t_eq_ext_rev[ ].SHOWN
+  t_eq_ext_rev[ a b ].SHOWN
   # t_invariant_truth[ a ].SHOWN
   # t_invariant_truth_inv[ a ].SHOWN
   # t_invariant_truth[ false ]
@@ -41,6 +41,7 @@
     b IS VAR[ a = SELF ]
 
     (fx[ b ] = fx[ a ])
+    .WITH_DEPENDENCIES[ a b fx ]
     .AS_LANGUAGE_ITEM[ t_eq_ext_rev_statement ]
   }
 

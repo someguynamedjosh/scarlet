@@ -48,6 +48,10 @@ impl Dependencies {
     pub fn pop_front(&mut self) -> CVariable {
         self.eager.remove(0)
     }
+
+    pub(crate) fn contains(&self, dep: &CVariable) -> bool {
+        self.eager.contains(dep)
+    }
 }
 
 impl<'x> Environment<'x> {

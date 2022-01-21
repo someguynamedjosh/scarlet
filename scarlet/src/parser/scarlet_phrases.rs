@@ -17,6 +17,7 @@ mod structt;
 mod substitution;
 mod value_access;
 mod variable;
+mod with_dependencies;
 
 use super::phrase::Phrase;
 
@@ -47,6 +48,7 @@ pub fn phrases() -> Vec<Phrase> {
         is_populated_struct::phrase(),
         shown::phrase(),
         as_language_item::phrase(),
+        with_dependencies::phrase(),
         member_access::phrase(),
         substitution::phrase(),
         structt::phrase(),
