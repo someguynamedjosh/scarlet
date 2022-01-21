@@ -1,6 +1,8 @@
+use std::ops::ControlFlow;
+
 use typed_arena::Arena;
 
-use super::{path::PathOverlay, ConstructId, Environment};
+use super::{ConstructId, Environment};
 use crate::{
     constructs::{
         downcast_construct,
@@ -20,7 +22,7 @@ impl<'x> Environment<'x> {
             if let ConstructDefinition::Resolved(con) = &acon.definition {
                 if let Some(shown) = downcast_construct::<CShown>(&**con) {
                     let base = shown.get_base();
-                    to_vomit.push((base, base));
+                    to_vomit.push((base, from));
                 }
             }
         }
@@ -74,21 +76,20 @@ impl<'x> Environment<'x> {
     }
 
     pub fn show_var(&mut self, var: &CVariable, from: ConstructId) -> String {
-        let mut next_id = self.constructs.first();
-        while let Some(id) = next_id {
-            if self.constructs[id]
+        self.for_each_construct(|env, id| {
+            if env.constructs[id]
                 .definition
                 .as_resolved()
                 .map(|con| con.dyn_clone())
-                .map(|con| con.is_def_equal(self, var))
+                .map(|con| con.is_def_equal(env, var))
                 == Some(TripleBool::True)
             {
-                return self.show(id, from);
+                ControlFlow::Break(env.show(id, from))
             } else {
-                next_id = self.constructs.next(id);
+                ControlFlow::Continue(())
             }
-        }
-        panic!("Variable does not exist.")
+        })
+        .unwrap_or_else(|| panic!("Variable does not exist!"))
     }
 
     pub fn vomit_var<'a>(
@@ -98,21 +99,20 @@ impl<'x> Environment<'x> {
         var: &CVariable,
         from: &dyn Scope,
     ) -> Node<'a> {
-        let mut next_id = self.constructs.first();
-        while let Some(id) = next_id {
-            if self.constructs[id]
-                .reduced
+        self.for_each_construct(|env, id| {
+            if env.constructs[id]
+                .definition
                 .as_resolved()
                 .map(|con| con.dyn_clone())
-                .map(|con| con.is_def_equal(self, var))
+                .map(|con| con.is_def_equal(env, var))
                 == Some(TripleBool::True)
             {
-                return self.vomit(255, pc, code_arena, id, from);
+                ControlFlow::Break(env.vomit(255, pc, code_arena, id, from))
             } else {
-                next_id = self.constructs.next(id);
+                ControlFlow::Continue(())
             }
-        }
-        panic!("Variable does not exist.")
+        })
+        .unwrap_or_else(|| panic!("Variable does not exist!"))
     }
 
     fn vomit_restricting_path<'a>(

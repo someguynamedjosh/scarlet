@@ -7,7 +7,7 @@ pub mod substitute;
 pub mod util;
 mod vomit;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::ControlFlow};
 
 use self::{substitute::SubstituteStack, util::InvariantStack};
 use crate::{
@@ -34,11 +34,7 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
 ];
 
 #[cfg(feature = "no_axioms")]
-pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
-    "true",
-    "false",
-    "void",
-];
+pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 
 #[derive(Debug)]
 pub struct Environment<'x> {
@@ -169,6 +165,32 @@ impl<'x> Environment<'x> {
         })
     }
 
+    pub fn for_each_construct_returning_nothing(
+        &mut self,
+        mut visitor: impl FnMut(&mut Self, ConstructId) -> (),
+    ) {
+        let mut next_id = self.constructs.first();
+        while let Some(id) = next_id {
+            visitor(self, id);
+            next_id = self.constructs.next(id);
+        }
+    }
+
+    pub fn for_each_construct<T>(
+        &mut self,
+        mut visitor: impl FnMut(&mut Self, ConstructId) -> ControlFlow<T>,
+    ) -> Option<T> {
+        let mut next_id = self.constructs.first();
+        while let Some(id) = next_id {
+            match visitor(self, id) {
+                ControlFlow::Continue(()) => (),
+                ControlFlow::Break(value) => return Some(value),
+            }
+            next_id = self.constructs.next(id);
+        }
+        None
+    }
+
     pub(crate) fn check(&mut self, con_id: ConstructId) {
         let con = self.get_original_construct_definition(con_id).dyn_clone();
         let scope = self.get_original_construct_scope(con_id).dyn_clone();
@@ -176,11 +198,7 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn check_all(&mut self) {
-        let mut next_id = self.constructs.first();
-        while let Some(id) = next_id {
-            self.check(id);
-            next_id = self.constructs.next(id);
-        }
+        self.for_each_construct_returning_nothing(Self::check);
     }
 
     pub(crate) fn originals_are_def_equal(

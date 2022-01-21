@@ -32,7 +32,7 @@ impl<'x> Environment<'x> {
             match &self.constructs[con_id].definition {
                 &ConstructDefinition::Other(id) => {
                     self.constructs[con_id].reduced = ConstructDefinition::Other(id);
-                },
+                }
                 ConstructDefinition::Resolved(con) => {
                     let reduced = con.dyn_clone().reduce(self);
                     self.constructs[con_id].reduced = reduced;
@@ -43,10 +43,6 @@ impl<'x> Environment<'x> {
     }
 
     pub fn reduce_all(&mut self) {
-        let mut next_id = self.constructs.first();
-        while let Some(id) = next_id {
-            self.reduce(id);
-            next_id = self.constructs.next(id);
-        }
+        self.for_each_construct_returning_nothing(Self::reduce);
     }
 }

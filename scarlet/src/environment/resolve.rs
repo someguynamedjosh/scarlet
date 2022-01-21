@@ -3,11 +3,7 @@ use crate::constructs::ConstructDefinition;
 
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
-        let mut next_id = self.constructs.first();
-        while let Some(id) = next_id {
-            self.resolve(id);
-            next_id = self.constructs.next(id);
-        }
+        self.for_each_construct_returning_nothing(Self::resolve);
     }
 
     pub fn resolve(&mut self, con_id: ConstructId) {
