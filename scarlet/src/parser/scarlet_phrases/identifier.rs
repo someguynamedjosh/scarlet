@@ -27,6 +27,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
+    let uncreate = env.dereference_for_vomiting(uncreate);
     if let Some(ident) = from.reverse_lookup_ident(env, uncreate) {
         Some(Node {
             phrase: "identifier",

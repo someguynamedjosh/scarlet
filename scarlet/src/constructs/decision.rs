@@ -67,7 +67,9 @@ impl Construct for CDecision {
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
-                if env.originals_are_def_equal(true_inv.statement, false_inv.statement) == TripleBool::True {
+                if env.originals_are_def_equal(true_inv.statement, false_inv.statement)
+                    == TripleBool::True
+                {
                     result.push(Invariant::new(true_inv.statement));
                     false_invs.remove(index);
                 }
@@ -117,11 +119,11 @@ impl Construct for CDecision {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> Box<dyn Construct> {
+    ) -> ConstructDefinition<'x> {
         let left = env.substitute(self.left, substitutions);
         let right = env.substitute(self.right, substitutions);
         let equal = env.substitute(self.equal, substitutions);
         let unequal = env.substitute(self.unequal, substitutions);
-        Self::new(left, right, equal, unequal).dyn_clone()
+        ConstructDefinition::Resolved(Self::new(left, right, equal, unequal).dyn_clone())
     }
 }

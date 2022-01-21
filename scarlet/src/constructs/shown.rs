@@ -1,7 +1,7 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    Invariant,
+    Invariant, ConstructDefinition,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -32,7 +32,6 @@ impl Construct for CShown {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-
     ) -> Vec<Invariant> {
         env.generated_invariants(self.0)
     }
@@ -45,8 +44,8 @@ impl Construct for CShown {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> Box<dyn Construct> {
+    ) -> ConstructDefinition<'x> {
         let base = env.substitute(self.0, substitutions);
-        Self::new(base).dyn_clone()
+        ConstructDefinition::Resolved(Self::new(base).dyn_clone())
     }
 }

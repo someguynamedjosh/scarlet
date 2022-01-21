@@ -22,6 +22,7 @@ use crate::{
     shared::{Pool, TripleBool},
 };
 
+#[cfg(not(feature = "no_axioms"))]
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "true",
     "false",
@@ -30,6 +31,13 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "t_invariant_truth_statement",
     "t_invariant_truth_inv_statement",
     "t_eq_ext_rev_statement",
+];
+
+#[cfg(feature = "no_axioms")]
+pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
+    "true",
+    "false",
+    "void",
 ];
 
 #[derive(Debug)]

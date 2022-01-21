@@ -132,7 +132,7 @@ impl Construct for CSubstitution {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> BoxedConstruct {
+    ) -> ConstructDefinition<'x> {
         let base = self.0;
         let mut new_subs = self.1.clone();
         for (_, value) in &mut new_subs {
@@ -151,6 +151,6 @@ impl Construct for CSubstitution {
                 new_subs.insert_no_replace(target.clone(), *value);
             }
         }
-        Self::new(base, new_subs).dyn_clone()
+        ConstructDefinition::Resolved(Self::new(base, new_subs).dyn_clone())
     }
 }

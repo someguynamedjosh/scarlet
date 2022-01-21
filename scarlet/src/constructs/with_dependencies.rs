@@ -85,7 +85,7 @@ impl Construct for CWithDependencies {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> BoxedConstruct {
+    ) -> ConstructDefinition<'x> {
         let base = env.substitute(self.base, substitutions);
         let dependencies = self
             .dependencies
@@ -93,6 +93,6 @@ impl Construct for CWithDependencies {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        Self::new(base, dependencies).dyn_clone()
+        ConstructDefinition::Resolved(Self::new(base, dependencies).dyn_clone())
     }
 }

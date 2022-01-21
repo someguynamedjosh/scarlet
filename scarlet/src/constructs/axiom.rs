@@ -62,9 +62,9 @@ impl Construct for CAxiom {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> BoxedConstruct {
-        Box::new(Self {
+    ) -> ConstructDefinition<'x> {
+        ConstructDefinition::Resolved(Box::new(Self {
             statement: env.substitute(self.statement, substitutions),
-        })
+        }))
     }
 }

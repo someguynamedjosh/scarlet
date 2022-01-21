@@ -102,7 +102,7 @@ pub trait Construct: Any + Debug + AnyEq {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> Box<dyn Construct>;
+    ) -> ConstructDefinition<'x>;
 
     fn as_def<'x>(&self) -> ConstructDefinition<'x> {
         ConstructDefinition::Resolved(self.dyn_clone())

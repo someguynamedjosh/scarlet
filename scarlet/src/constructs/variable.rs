@@ -4,7 +4,7 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::Substitutions,
-    BoxedConstruct, Invariant,
+    BoxedConstruct, ConstructDefinition, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -129,10 +129,7 @@ impl Construct for CVariable {
         _this: ConstructId,
         _env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        self.invariants
-            .iter()
-            .map(|&i| Invariant::new(i))
-            .collect()
+        self.invariants.iter().map(|&i| Invariant::new(i)).collect()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
@@ -165,16 +162,16 @@ impl Construct for CVariable {
         &self,
         env: &mut Environment<'x>,
         substitutions: &Substitutions,
-    ) -> BoxedConstruct {
+    ) -> ConstructDefinition<'x> {
         for (target, value) in substitutions {
+            let value = *value;
             if self.is_same_variable_as(target) {
-                let deps = env.get_dependencies(*value);
+                let deps = env.get_dependencies(value);
                 let mut stored_subs = Substitutions::new();
                 for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
                     stored_subs.insert_no_replace(target.clone(), value);
                 }
-                let value_def = env.get_reduced_construct_definition(*value).dyn_clone();
-                return value_def.substitute(env, &stored_subs);
+                return env.substitute(value, &stored_subs).into();
             }
         }
         let invariants = self
@@ -188,7 +185,9 @@ impl Construct for CVariable {
             .iter()
             .map(|&sub| env.substitute(sub, substitutions))
             .collect();
-        Self::new(self.id, invariants.clone(), substitutions).dyn_clone()
+        ConstructDefinition::Resolved(
+            Self::new(self.id, invariants.clone(), substitutions).dyn_clone(),
+        )
     }
 }
 
