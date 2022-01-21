@@ -121,6 +121,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "struct",
+        128, 120,
         Some((create, uncreate)),
         vomit,
         0 => r"\{", 255, r"\}"

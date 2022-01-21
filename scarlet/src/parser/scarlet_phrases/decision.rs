@@ -69,6 +69,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "decision",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         0 => r"\bDECISION\b" , r"\[", 255, r"\]"

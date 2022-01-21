@@ -123,10 +123,7 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         from: &dyn Scope,
     ) -> Node<'a> {
-        if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena, true) {
-            return value;
-        }
-        for (_, phrase) in &pc.phrases {
+        for (_, phrase) in &pc.phrases_sorted_by_vomit_priority {
             if phrase.precedence > max_precedence {
                 continue;
             }
@@ -151,44 +148,6 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         from: &dyn Scope,
     ) -> Node<'a> {
-        if let Some(value) = self.get_path(con_id, from, max_precedence, code_arena, false) {
-            return value;
-        }
         self.vomit_restricting_path(max_precedence, pc, code_arena, con_id, from)
-    }
-
-    fn get_path<'a>(
-        &mut self,
-        con_id: ConstructId,
-        from: &dyn Scope,
-        max_precedence: u8,
-        code_arena: &'a Arena<String>,
-        strict: bool,
-    ) -> Option<Node<'a>> {
-        let mut next_original_id = self.constructs.first();
-        let mut shortest_path: Option<Node> = None;
-        while let Some(original_id) = next_original_id {
-            next_original_id = self.constructs.next(original_id);
-            if self.is_def_equal_for_vomiting(original_id, con_id) == TripleBool::True {
-                if strict && original_id == con_id {
-                    continue;
-                }
-                let mut paths = PathOverlay::new(self);
-                let path = paths.get_path(original_id, &*from);
-                if let Some(path) = path {
-                    if max_precedence >= 4 {
-                        let path = path.vomit(code_arena);
-                        if shortest_path
-                            .as_ref()
-                            .map(|p| format!("{:?}", p).len() > format!("{:?}", path).len())
-                            .unwrap_or(true)
-                        {
-                            shortest_path = Some(path)
-                        }
-                    }
-                }
-            }
-        }
-        shortest_path
     }
 }

@@ -3,7 +3,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::ConstructId,
     environment::Environment,
-    parser::{phrase::Phrase, Node, ParseContext},
+    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
     phrase,
     resolvable::RIdentifier,
     scope::Scope,
@@ -22,12 +22,19 @@ fn create<'x>(
 
 fn uncreate<'a>(
     _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    uncreate: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    None
+    if let Some(ident) = from.reverse_lookup_ident(env, uncreate) {
+        Some(Node {
+            phrase: "identifier",
+            children: vec![NodeChild::Text(code_arena.alloc(ident))],
+        })
+    } else {
+        None
+    }
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {
@@ -37,6 +44,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "identifier",
+        255, 0,
         Some((create, uncreate)),
         vomit,
         0 => r"[a-zA-Z0-9_]+"

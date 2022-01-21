@@ -49,6 +49,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "populated struct",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         0 => r"\bPOPULATED_STRUCT\b" , r"\[", 255, r"\]"

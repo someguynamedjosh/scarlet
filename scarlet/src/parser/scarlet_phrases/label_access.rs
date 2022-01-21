@@ -57,6 +57,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "label access",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         4 => 4, r"\.LABEL"

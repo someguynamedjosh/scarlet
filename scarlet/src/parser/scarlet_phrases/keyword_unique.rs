@@ -43,6 +43,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "keyword UNIQUE",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         0 => r"\bUNIQUE\b"

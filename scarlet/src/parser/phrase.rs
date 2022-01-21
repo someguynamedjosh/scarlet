@@ -6,6 +6,7 @@ use super::{Node, ParseContext};
 use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
 
 pub type Precedence = u8;
+pub type Priority = u8;
 pub type PhraseName = String;
 
 #[derive(Debug)]
@@ -70,6 +71,8 @@ pub struct Phrase {
     pub create_and_uncreate: Option<(CreateFn, UncreateFn)>,
     pub vomit: VomitFn,
     pub precedence: Precedence,
+    pub priority: Priority,
+    pub vomit_priority: Priority,
 }
 
 impl Phrase {

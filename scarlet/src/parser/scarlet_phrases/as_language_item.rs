@@ -41,6 +41,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "as language item",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         4 => 4, r"\.AS_LANGUAGE_ITEM", r"\[", 255, r"\]"

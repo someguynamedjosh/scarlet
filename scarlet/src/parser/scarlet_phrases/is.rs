@@ -14,6 +14,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "is",
+        128, 128,
         None,
         vomit,
         250 => 250, r"IS", 250

@@ -8,16 +8,30 @@ use super::{
 use crate::parser::{matchh, scarlet_phrases, stack::Stack};
 
 pub struct ParseContext {
-    pub(crate) phrases: PhraseTable,
+    pub(crate) phrases_sorted_by_priority: PhraseTable,
+    pub(crate) phrases_sorted_by_vomit_priority: PhraseTable,
 }
 
 impl ParseContext {
     pub fn new() -> Self {
-        let mut phrases = PhraseTable::new();
-        for phrase in scarlet_phrases::phrases() {
-            phrases.insert(phrase.name.to_owned(), phrase);
+        let mut phrases_sorted_by_priority = PhraseTable::new();
+        let mut source = scarlet_phrases::phrases();
+        source.sort_by_key(|p| p.priority);
+        for phrase in source {
+            phrases_sorted_by_priority.insert(phrase.name.to_owned(), phrase);
         }
-        Self { phrases }
+
+        let mut phrases_sorted_by_vomit_priority = PhraseTable::new();
+        let mut source = scarlet_phrases::phrases();
+        source.sort_by_key(|p| p.vomit_priority);
+        for phrase in source {
+            phrases_sorted_by_vomit_priority.insert(phrase.name.to_owned(), phrase);
+        }
+
+        Self {
+            phrases_sorted_by_priority,
+            phrases_sorted_by_vomit_priority,
+        }
     }
 }
 
@@ -61,7 +75,10 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
 pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
     let r_whitespace = Regex::new(r"[ \r\n\t]+|#[^\n]*").unwrap();
 
-    let ParseContext { phrases } = ctx;
+    let ParseContext {
+        phrases_sorted_by_priority: phrases,
+        ..
+    } = ctx;
 
     let mut stack = Stack(Vec::new());
 

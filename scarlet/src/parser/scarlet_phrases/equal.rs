@@ -68,6 +68,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "equal",
+        120, 120,
         Some((create, uncreate)),
         vomit,
         128 => 127, r"=", 127

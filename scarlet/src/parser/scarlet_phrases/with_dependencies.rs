@@ -78,6 +78,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "with dependencies",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         4 => 4, r"\.", r"WITH_DEPENDENCIES", r"\[", 255, r"\]"

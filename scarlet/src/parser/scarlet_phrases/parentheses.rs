@@ -44,6 +44,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "parentheses",
+        128, 255,
         Some((create, uncreate)),
         vomit,
         0 => r"\(", 255, r"\)"

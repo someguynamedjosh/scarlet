@@ -103,6 +103,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "variable",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         0 => r"\b(VARIABLE|VAR|V)\b" , r"\[", 255, r"\]"

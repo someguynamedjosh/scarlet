@@ -82,7 +82,10 @@ impl<'a> Debug for Node<'a> {
 
 impl<'x> Node<'x> {
     pub fn vomit(&self, pc: &ParseContext) -> String {
-        (pc.phrases.get(self.phrase).unwrap().vomit)(pc, self)
+        (pc.phrases_sorted_by_vomit_priority
+            .get(self.phrase)
+            .unwrap()
+            .vomit)(pc, self)
     }
 
     pub fn will_wait_for_text(&self, pt: &PhraseTable) -> bool {
@@ -120,7 +123,7 @@ impl<'x> Node<'x> {
         env: &mut Environment<'x>,
         scope: Box<dyn Scope>,
     ) -> ConstructId {
-        pc.phrases
+        pc.phrases_sorted_by_priority
             .get(self.phrase)
             .unwrap()
             .create_and_uncreate

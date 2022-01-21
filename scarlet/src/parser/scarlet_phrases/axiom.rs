@@ -40,6 +40,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "axiom",
+        128, 128,
         Some((create, uncreate)),
         vomit,
         4 => r"\bAXIOM\b", r"\[", 255, r"\]"
