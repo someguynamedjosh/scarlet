@@ -1,10 +1,9 @@
 {
   (false = false).SHOWN
 
-  {
-    true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
+  { 
+    true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   }
-
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
   void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
 }
