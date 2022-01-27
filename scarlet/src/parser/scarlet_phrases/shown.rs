@@ -23,13 +23,26 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    pc: &ParseContext,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    uncreate: ConstructId,
+    from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    None
+    if let Some(cshown) = env.get_construct_definition_for_vomiting::<CShown>(uncreate) {
+        Some(Node {
+            phrase: "shown",
+            children: vec![NodeChild::Node(env.vomit(
+                4,
+                pc,
+                code_arena,
+                cshown.get_base(),
+                from,
+            ))],
+        })
+    } else {
+        None
+    }
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {

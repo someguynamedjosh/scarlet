@@ -1,11 +1,11 @@
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
-    Invariant, ConstructDefinition,
+    ConstructDefinition, Invariant, downcast_construct,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
-    impl_any_eq_for_construct,
+    impl_any_eq_for_construct, shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -38,6 +38,18 @@ impl Construct for CShown {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         env.get_dependencies(self.0)
+    }
+
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        other: &dyn Construct,
+    ) -> TripleBool {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            env.is_def_equal(self.0, other.0)
+        } else {
+            TripleBool::Unknown
+        }
     }
 
     fn substitute<'x>(

@@ -230,7 +230,8 @@ impl<'x> Environment<'x> {
             self.originals_are_def_equal(left, right)
         };
         if left == right {
-            assert_eq!(val, TripleBool::True);
+            // println!("{:#?}", self);
+            assert_eq!(val, TripleBool::True, "{:?} should def_equal itself", left);
         }
         val
     }

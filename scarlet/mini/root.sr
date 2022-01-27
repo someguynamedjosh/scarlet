@@ -1,10 +1,6 @@
 {
-  vars.VALUE[ true ].SHOWN
-
-  vars IS {
-    fx IS VAR[ SUB x ]
-    x IS VAR[]
-  }
+  a IS VAR[]
+  a.SHOWN
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

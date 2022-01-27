@@ -34,6 +34,13 @@ impl<'x> ConstructDefinition<'x> {
         }
     }
 
+    pub fn as_other(&self) -> Option<ConstructId> {
+        match self {
+            &Self::Other(con) => Some(con),
+            _ => None,
+        }
+    }
+
     pub fn as_resolved(&self) -> Option<&BoxedConstruct> {
         match self {
             Self::Resolved(con) => Some(con),

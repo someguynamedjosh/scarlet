@@ -102,7 +102,9 @@ impl<'x> Environment<'x> {
         self.for_each_construct(|env, id| {
             if env.constructs[id]
                 .definition
-                .as_resolved()
+                .as_other()
+                .map(|con| env.constructs[con].definition.as_resolved())
+                .flatten()
                 .map(|con| con.dyn_clone())
                 .map(|con| con.is_def_equal(env, var))
                 == Some(TripleBool::True)
