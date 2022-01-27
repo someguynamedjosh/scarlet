@@ -1,41 +1,43 @@
 {
-  t_eq_ext_rev[ a b ].SHOWN
+  t_eq_ext_rev.SHOWN
   # t_invariant_truth[ a ].SHOWN
   # t_invariant_truth_inv[ a ].SHOWN
   # t_invariant_truth[ false ]
   # t_invariant_truth_inv[ false ]
 
-  a IS VAR[ ]
-  b IS VAR[ a = SELF ]
+  # a IS VAR[ ]
+  # b IS VAR[ a = SELF ]
 
-  t_just IS VAR[ SELF ]
-  t_trivial IS AXIOM[ t_trivial ]
+  # t_just IS VAR[ SELF ]
+  # t_trivial IS AXIOM[ t_trivial ]
 
-  t_invariant_truth IS 
-  AXIOM[ t_invariant_truth ]
+  # t_invariant_truth IS 
+  # AXIOM[ t_invariant_truth ]
 
-  t_invariant_truth_inv IS 
-  AXIOM[ t_invariant_truth_inv ]
+  # t_invariant_truth_inv IS 
+  # AXIOM[ t_invariant_truth_inv ]
 
   t_eq_ext_rev IS AXIOM[ t_eq_ext_rev ]
 
-  true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
-  {
-    a IS VAR[ SELF ]
+  UNIQUE.AS_LANGUAGE_ITEM[ t_trivial_statement ]
+  # {
+  #   a IS VAR[ SELF ]
 
-    (a = true)
-    .AS_LANGUAGE_ITEM[ 
-      t_invariant_truth_statement 
-    ]
-  }
-  {
-    a IS VAR[ SELF = true ]
+  #   (a = true)
+  #   .AS_LANGUAGE_ITEM[ 
+  #     t_invariant_truth_statement 
+  #   ]
+  # }
+  UNIQUE.AS_LANGUAGE_ITEM[ t_invariant_truth_statement ]
+  # {
+  #   a IS VAR[ SELF = true ]
 
-    a
-    .AS_LANGUAGE_ITEM[ 
-      t_invariant_truth_inv_statement 
-    ]
-  }
+  #   a
+  #   .AS_LANGUAGE_ITEM[ 
+  #     t_invariant_truth_inv_statement 
+  #   ]
+  # }
+  UNIQUE.AS_LANGUAGE_ITEM[ t_invariant_truth_inv_statement ]
   {
     a IS VAR[]
     b IS VAR[ a = SELF ]

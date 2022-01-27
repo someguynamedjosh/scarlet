@@ -2,7 +2,9 @@ use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{downcast_construct, substitution::CSubstitution, ConstructId},
+    constructs::{
+        downcast_construct, substitution::CSubstitution, variable::CVariable, ConstructId,
+    },
     environment::Environment,
     parser::{
         phrase::Phrase,
@@ -48,6 +50,31 @@ fn create<'x>(
     this
 }
 
+fn uncreate_substitution<'a>(
+    pc: &ParseContext,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    target: &CVariable,
+    value: ConstructId,
+    deps: &mut Vec<CVariable>,
+    from: &dyn Scope,
+) -> Node<'a> {
+    let value = env.vomit(254, pc, code_arena, value, from);
+    if deps.get(0).map(|v| v.is_same_variable_as(target)) == Some(true) {
+        deps.remove(0);
+        value
+    } else {
+        Node {
+            phrase: "is",
+            children: vec![
+                NodeChild::Node(env.vomit_var(pc, code_arena, target, from)),
+                NodeChild::Text("IS"),
+                NodeChild::Node(value),
+            ],
+        }
+    }
+}
+
 fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
@@ -57,16 +84,15 @@ fn uncreate<'a>(
 ) -> Option<Node<'a>> {
     if let Some(csub) = env.get_construct_definition_for_vomiting::<CSubstitution>(uncreate) {
         let csub = csub.clone();
+        let mut deps = env
+            .get_dependencies(csub.base())
+            .into_variables()
+            .collect_vec();
         let subs = create_comma_list(
             csub.substitutions()
                 .into_iter()
-                .map(|(target, value)| Node {
-                    phrase: "is",
-                    children: vec![
-                        NodeChild::Node(env.vomit_var(pc, code_arena, target, from)),
-                        NodeChild::Text("IS"),
-                        NodeChild::Node(env.vomit(254, pc, code_arena, *value, from)),
-                    ],
+                .map(|(target, value)| {
+                    uncreate_substitution(pc, env, code_arena, target, *value, &mut deps, from)
                 })
                 .collect_vec(),
         );

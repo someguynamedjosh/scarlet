@@ -136,6 +136,20 @@ impl<'x> Environment<'x> {
         self.constructs.push(con)
     }
 
+    pub fn push_other(
+        &mut self,
+        other: ConstructId,
+        scope: Box<dyn Scope>,
+    ) -> ConstructId {
+        let con = AnnotatedConstruct {
+            definition: ConstructDefinition::Other(other),
+            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+            invariants: None,
+            scope,
+        };
+        self.constructs.push(con)
+    }
+
     pub fn push_unique(&mut self) -> UniqueId {
         self.uniques.push(Unique)
     }

@@ -39,13 +39,9 @@ impl<'x> Environment<'x> {
         let code_arena = Arena::new();
         let pc = ParseContext::new();
         self.use_reduced_definitions_while_vomiting = false;
-        let original_vomit = self
-            .vomit_restricting_path(255, &pc, &code_arena, con_id, &*from)
-            .vomit(&pc);
+        let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
         self.use_reduced_definitions_while_vomiting = true;
-        let reduced_vomit = self
-            .vomit_restricting_path(255, &pc, &code_arena, con_id, &*from)
-            .vomit(&pc);
+        let reduced_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("reduces to:\n"));
         result.push_str(&format!("{}\n", reduced_vomit));
@@ -99,25 +95,26 @@ impl<'x> Environment<'x> {
         var: &CVariable,
         from: &dyn Scope,
     ) -> Node<'a> {
-        self.for_each_construct(|env, id| {
-            if env.constructs[id]
-                .definition
-                .as_other()
-                .map(|con| env.constructs[con].definition.as_resolved())
-                .flatten()
-                .map(|con| con.dyn_clone())
-                .map(|con| con.is_def_equal(env, var))
-                == Some(TripleBool::True)
-            {
-                ControlFlow::Break(env.vomit(255, pc, code_arena, id, from))
-            } else {
-                ControlFlow::Continue(())
-            }
-        })
-        .unwrap_or_else(|| panic!("Variable does not exist!"))
+        let base = self
+            .for_each_construct(|env, id| {
+                if env.constructs[id]
+                    .definition
+                    .as_resolved()
+                    .map(|con| con.dyn_clone())
+                    .map(|con| con.is_def_equal(env, var))
+                    == Some(TripleBool::True)
+                {
+                    ControlFlow::Break(id)
+                } else {
+                    ControlFlow::Continue(())
+                }
+            })
+            .unwrap_or_else(|| panic!("Variable {:?} does not exist!", var));
+        let id = self.push_other(base, from.dyn_clone());
+        self.vomit(255, pc, code_arena, id, from)
     }
 
-    fn vomit_restricting_path<'a>(
+    pub fn vomit<'a>(
         &mut self,
         max_precedence: u8,
         pc: &ParseContext,
@@ -140,16 +137,5 @@ impl<'x> Environment<'x> {
             "{:?} could not be vomited (at least one parser phrase should apply)",
             con_id
         );
-    }
-
-    pub fn vomit<'a>(
-        &mut self,
-        max_precedence: u8,
-        pc: &ParseContext,
-        code_arena: &'a Arena<String>,
-        con_id: ConstructId,
-        from: &dyn Scope,
-    ) -> Node<'a> {
-        self.vomit_restricting_path(max_precedence, pc, code_arena, con_id, from)
     }
 }
