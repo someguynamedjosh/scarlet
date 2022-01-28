@@ -1,12 +1,12 @@
 {
-  t_eq_ext_rev.SHOWN
+  t_eq_ext_rev[ a b ].SHOWN
   # t_invariant_truth[ a ].SHOWN
   # t_invariant_truth_inv[ a ].SHOWN
   # t_invariant_truth[ false ]
   # t_invariant_truth_inv[ false ]
 
-  # a IS VAR[ ]
-  # b IS VAR[ a = SELF ]
+  a IS VAR[ ]
+  b IS VAR[ a = SELF ]
 
   # t_just IS VAR[ SELF ]
   # t_trivial IS AXIOM[ t_trivial ]

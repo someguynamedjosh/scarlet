@@ -60,7 +60,8 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     let from_con = env.push_scope(from.dyn_clone());
-    let from = &SWithParent(SVariableInvariants(uncreate), from_con);
+    let scope_parent = env.dereference_for_vomiting(uncreate);
+    let from = &SWithParent(SVariableInvariants(scope_parent), from_con);
     if let Some(cvar) = env.get_construct_definition_for_vomiting::<CVariable>(uncreate) {
         let cvar = cvar.clone();
         let invariants = cvar

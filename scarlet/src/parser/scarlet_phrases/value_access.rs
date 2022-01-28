@@ -72,7 +72,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 pub fn phrase() -> Phrase {
     phrase!(
         "value access",
-        128, 120,
+        128, 136,
         Some((create, uncreate)),
         vomit,
         4 => 4, r"\.VALUE"
