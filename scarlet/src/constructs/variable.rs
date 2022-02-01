@@ -137,10 +137,10 @@ impl Construct for CVariable {
         for &sub in &self.substitutions {
             deps.append(env.get_dependencies(sub));
         }
-        // for &inv in &self.invariants {
-        //     deps.append(env.get_dependencies(inv));
-        // }
         deps.push_eager(self.clone());
+        for &inv in &self.invariants {
+            deps.append(env.get_dependencies(inv));
+        }
         deps
     }
 

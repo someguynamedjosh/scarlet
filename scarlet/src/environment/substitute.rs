@@ -18,6 +18,10 @@ impl<'x> Environment<'x> {
         con_id: ConstructId,
         substitutions: &Substitutions,
     ) -> ConstructId {
+        if substitutions.len() == 0 {
+            return con_id;
+        }
+
         for frame in &self.substitute_stack {
             if frame.base == con_id && &frame.substitutions == substitutions {
                 return frame.into;
@@ -32,7 +36,7 @@ impl<'x> Environment<'x> {
             into,
         });
 
-        let def = self.get_reduced_construct_definition(con_id).dyn_clone();
+        let def = self.get_original_construct_definition(con_id).dyn_clone();
         let subbed = def.substitute(self, substitutions);
         let frame = self.substitute_stack.pop().unwrap();
         assert_eq!(frame.into, into);

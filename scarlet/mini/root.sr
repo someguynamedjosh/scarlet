@@ -1,6 +1,6 @@
 {
-  fx IS VAR[ SELF[ void ]  SUB x ]
-  x IS VAR[]
+  a IS VAR[ ]
+  b IS VAR[ a = SELF ].SHOWN
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

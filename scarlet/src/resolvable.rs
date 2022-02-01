@@ -36,9 +36,10 @@ impl<'x> Resolvable<'x> for RPlaceholder {
 
     fn resolve(
         &self,
-        _env: &mut Environment<'x>,
+        env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
+        println!("{:#?}", env);
         unreachable!()
     }
 }
@@ -92,7 +93,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
             let dep = remaining_deps.pop_front();
             subs.insert_no_replace(dep, value);
         }
-        ConstructDefinition::Resolved(Box::new(CSubstitution::new(self.base, subs)))
+        ConstructDefinition::Resolved(Box::new(CSubstitution::new(self.base, subs, env)))
     }
 }
 

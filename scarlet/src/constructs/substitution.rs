@@ -1,5 +1,5 @@
 use super::{
-    downcast_construct, variable::CVariable, BoxedConstruct, Construct, ConstructDefinition,
+    downcast_construct, variable::CVariable, Construct, ConstructDefinition,
     ConstructId, Invariant,
 };
 use crate::{
@@ -10,13 +10,16 @@ use crate::{
 };
 
 pub type Substitutions = OrderedMap<CVariable, ConstructId>;
+type Justifications = Result<Vec<Invariant>, String>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CSubstitution(ConstructId, Substitutions);
+pub struct CSubstitution(ConstructId, Substitutions, Justifications);
 
 impl CSubstitution {
-    pub fn new<'x>(base: ConstructId, subs: Substitutions) -> Self {
-        Self(base, subs.clone())
+    pub fn new<'x>(base: ConstructId, subs: Substitutions, env: &mut Environment) -> Self {
+        let mut sel = Self(base, subs.clone(), Ok(vec![]));
+        sel.2 = sel.substitution_justifications(env);
+        sel
     }
 
     pub fn base(&self) -> ConstructId {
@@ -27,7 +30,7 @@ impl CSubstitution {
         &self.1
     }
 
-    fn substitution_justifications(&self, env: &mut Environment) -> Result<Vec<Invariant>, String> {
+    fn substitution_justifications(&self, env: &mut Environment) -> Justifications {
         let mut previous_subs = Substitutions::new();
         let mut invariants = Vec::new();
         for (target, value) in &self.1 {
@@ -37,11 +40,13 @@ impl CSubstitution {
                     invariants.append(&mut new_invs)
                 }
                 Err(err) => {
+                    eprintln!("{:#?}", self);
                     return Err(format!(
-                        "THIS EXPRESSION:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
+                        "THIS EXPRESSION:\n{}\nASSIGNED TO:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
                         env.show(*value, *value),
+                        env.show_var(target, *value),
                         err
-                    ))
+                    ));
                 }
             }
         }
@@ -56,8 +61,8 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>, this: ConstructId, scope: Box<dyn Scope>) {
-        if let Err(err) = self.substitution_justifications(env) {
+    fn check<'x>(&self, _env: &mut Environment<'x>, _this: ConstructId, _scope: Box<dyn Scope>) {
+        if let Err(err) = &self.2 {
             println!("{}", err);
             todo!("nice error");
         }
@@ -90,13 +95,6 @@ impl Construct for CSubstitution {
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
         let mut invs = Vec::new();
-        let justification = match self.substitution_justifications(env) {
-            Ok(ok) => ok,
-            Err(err) => {
-                println!("{}", err);
-                todo!("Nice error");
-            }
-        };
         for inv in env.generated_invariants(self.0) {
             let subbed_statement = env.substitute(inv.statement, &self.1);
             invs.push(Invariant::new(subbed_statement));
@@ -163,6 +161,6 @@ impl Construct for CSubstitution {
         // Substitute the base using any substitutions we don't already overwrite.
         let base = env.substitute(base, &base_subs);
         // Make a new substitution with the substituted base and substitutions.
-        ConstructDefinition::Resolved(Self::new(base, new_subs).dyn_clone())
+        ConstructDefinition::Resolved(Self(base, new_subs, self.2.clone()).dyn_clone())
     }
 }
