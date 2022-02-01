@@ -1,6 +1,10 @@
 use super::{ConstructId, Environment};
 use crate::constructs::variable::CVariable;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DepResStackFrame(pub(super) ConstructId);
+pub type DepResStack = Vec<DepResStackFrame>;
+
 #[derive(Debug)]
 pub struct Dependencies {
     eager: Vec<CVariable>,
@@ -56,12 +60,14 @@ impl Dependencies {
 
 impl<'x> Environment<'x> {
     pub fn get_dependencies(&mut self, con_id: ConstructId) -> Dependencies {
-        self.get_original_construct_definition(con_id)
-            .dyn_clone()
-            .get_dependencies(self)
-    }
-
-    pub fn get_non_capturing_dependencies(&mut self, _con_id: ConstructId) -> Vec<CVariable> {
-        todo!()
+        if self.dep_res_stack.iter().any(|i| i.0 == con_id) {
+            Dependencies::new()
+        } else {
+            let con = self.get_original_construct_definition(con_id).dyn_clone();
+            self.dep_res_stack.push(DepResStackFrame(con_id));
+            let deps = con.get_dependencies(self);
+            assert_eq!(self.dep_res_stack.pop(), Some(DepResStackFrame(con_id)));
+            deps
+        }
     }
 }

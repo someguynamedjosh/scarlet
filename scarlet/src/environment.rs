@@ -9,7 +9,7 @@ mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{substitute::SubstituteStack, util::InvariantStack};
+use self::{dependencies::DepResStack, substitute::SubstituteStack, util::InvariantStack};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
@@ -31,7 +31,7 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "t_invariant_truth_statement",
     "t_invariant_truth_rev_statement",
     "t_eq_ext_rev_statement",
-    "t_inv_eq_statement"
+    "t_inv_eq_statement",
 ];
 
 #[cfg(feature = "no_axioms")]
@@ -43,6 +43,7 @@ pub struct Environment<'x> {
     pub(crate) constructs: ConstructPool<'x>,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
+    pub(super) dep_res_stack: DepResStack,
     pub(super) substitute_stack: SubstituteStack,
     pub(super) invariant_stack: InvariantStack,
     use_reduced_definitions_while_vomiting: bool,
@@ -55,6 +56,7 @@ impl<'x> Environment<'x> {
             constructs: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
+            dep_res_stack: DepResStack::new(),
             substitute_stack: SubstituteStack::new(),
             invariant_stack: InvariantStack::new(),
             use_reduced_definitions_while_vomiting: true,
@@ -137,11 +139,7 @@ impl<'x> Environment<'x> {
         self.constructs.push(con)
     }
 
-    pub fn push_other(
-        &mut self,
-        other: ConstructId,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    pub fn push_other(&mut self, other: ConstructId, scope: Box<dyn Scope>) -> ConstructId {
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Other(other),
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
