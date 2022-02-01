@@ -130,7 +130,7 @@ t_eq_symm IS t_eq_ext_rev[ a b x ]
 # a =NOT b
 # Proves
 # b =NOT a
-t_eq_symm IS todo
+t_neq_symm IS todo
 
 # From
 # a = b

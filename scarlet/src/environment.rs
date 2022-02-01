@@ -29,8 +29,9 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "void",
     "t_trivial_statement",
     "t_invariant_truth_statement",
-    "t_invariant_truth_inv_statement",
+    "t_invariant_truth_rev_statement",
     "t_eq_ext_rev_statement",
+    "t_inv_eq_statement"
 ];
 
 #[cfg(feature = "no_axioms")]

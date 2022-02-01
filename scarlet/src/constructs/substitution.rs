@@ -76,7 +76,9 @@ impl Construct for CSubstitution {
                     deps.push_eager(rdep);
                 }
             } else {
-                deps.push_eager(dep.inline_substitute(env, &self.1).unwrap());
+                if let Some(subbed_var) = dep.inline_substitute(env, &self.1) {
+                    deps.push_eager(subbed_var);
+                }
             }
         }
         deps

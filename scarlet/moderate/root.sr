@@ -1,12 +1,27 @@
 {
-  t_eq_ext_rev[ a b ].SHOWN
   # t_invariant_truth[ a ].SHOWN
-  # t_invariant_truth_inv[ a ].SHOWN
+  # t_invariant_truth_rev[ a ].SHOWN
   # t_invariant_truth[ false ]
   # t_invariant_truth_inv[ false ]
 
+  # something IS fx[ fx IS VAR[] ].SHOWN
+
+  t_eq_symm IS 
+  {
+    t_eq_ext_rev[ a b x ]
+
+    a IS VAR[ ]
+    b IS VAR[ a = SELF ]
+    x IS VAR[ ]
+  }
+  .VALUE
+  .SHOWN
+
+  # t_eq_ext_rev[ a b x ].SHOWN
+  t_inv_eq.SHOWN
+
   a IS VAR[ ]
-  b IS VAR[ a = SELF ]
+  b IS VAR[ a = SELF  SELF ]
 
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]
@@ -14,10 +29,12 @@
   t_invariant_truth IS 
   AXIOM[ t_invariant_truth ]
 
-  t_invariant_truth_inv IS 
-  AXIOM[ t_invariant_truth_inv ]
+  t_invariant_truth_rev IS 
+  AXIOM[ t_invariant_truth_rev ]
 
   t_eq_ext_rev IS AXIOM[ t_eq_ext_rev ]
+
+  t_inv_eq IS AXIOM[ t_inv_eq ]
 
   true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
 
@@ -35,7 +52,7 @@
 
     a
     .AS_LANGUAGE_ITEM[ 
-      t_invariant_truth_inv_statement 
+      t_invariant_truth_rev_statement 
     ]
   }
 
@@ -46,6 +63,15 @@
     (fx[ b ] = fx[ a ])
     .WITH_DEPENDENCIES[ a b fx ]
     .AS_LANGUAGE_ITEM[ t_eq_ext_rev_statement ]
+  }
+
+  {
+    a IS VAR[ SELF ]
+    b IS VAR[ a = SELF ]
+
+    b
+    .WITH_DEPENDENCIES[ a b ]
+    .AS_LANGUAGE_ITEM[ t_inv_eq_statement ]
   }
 
   fx IS VAR[ SUB x ]

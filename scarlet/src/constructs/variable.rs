@@ -137,6 +137,9 @@ impl Construct for CVariable {
         for &sub in &self.substitutions {
             deps.append(env.get_dependencies(sub));
         }
+        // for &inv in &self.invariants {
+        //     deps.append(env.get_dependencies(inv));
+        // }
         deps.push_eager(self.clone());
         deps
     }
@@ -185,9 +188,7 @@ impl Construct for CVariable {
             .iter()
             .map(|&sub| env.substitute(sub, substitutions))
             .collect();
-        ConstructDefinition::Resolved(
-            Self::new(self.id, invariants.clone(), substitutions).dyn_clone(),
-        )
+        ConstructDefinition::Resolved(Self::new(self.id, invariants, substitutions).dyn_clone())
     }
 }
 
