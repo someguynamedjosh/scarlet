@@ -1,6 +1,5 @@
 use super::{
-    downcast_construct, variable::CVariable, Construct, ConstructDefinition,
-    ConstructId, Invariant,
+    downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -72,7 +71,7 @@ impl Construct for CSubstitution {
         let mut deps = Dependencies::new();
         let base = env.get_dependencies(self.0);
         for dep in base.as_variables() {
-            if let Some(rep) = self.1.get(&dep) {
+            if let Some((_, rep)) = self.1.iter().find(|(var, _)| var.is_same_variable_as(&dep)) {
                 let replaced_deps = env.get_dependencies(*rep);
                 for rdep in replaced_deps
                     .into_variables()

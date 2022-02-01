@@ -62,6 +62,6 @@ impl Construct for CShown {
         substitutions: &Substitutions,
     ) -> ConstructDefinition<'x> {
         let base = env.substitute(self.0, substitutions);
-        ConstructDefinition::Resolved(Self::new(base).dyn_clone())
+        base.into()
     }
 }
