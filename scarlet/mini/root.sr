@@ -1,5 +1,11 @@
 {
-  { VAR[ SELF = SELF ] }.SHOWN
+  (fx[ b ])[ b IS d  fx IS x ].SHOWN
+
+  b IS VAR[ ]
+  d IS VAR[ ]
+
+  fx IS VAR[ SUB x ]
+  x IS VAR[]
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

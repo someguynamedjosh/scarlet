@@ -4,37 +4,35 @@
   # t_invariant_truth[ false ]
   # t_invariant_truth_inv[ false ]
 
-  # something IS fx[ fx IS VAR[] ].SHOWN
+  # something IS fx[ a ][ fx IS VAR[ ] ].SHOWN
 
   t_eq_symm IS 
   {
-    t_eq_ext_rev[ a b x ]
+    t_eq_ext_rev[ a b x ].SHOWN
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
     x IS VAR[ ]
   }
   .VALUE
-  .SHOWN
 
-  # t_eq_ext_rev[ a b x ].SHOWN
-  t_inv_eq.SHOWN
+  (fx[ b ] = fx[ a ])[ a IS c  b IS d  fx IS x ].SHOWN
+  # t_just[ b = a ].SHOWN
 
   a IS VAR[ ]
-  b IS VAR[ a = SELF  SELF ]
+  b IS VAR[ a = SELF ]
+  c IS VAR[ ]
+  d IS VAR[ c = SELF ]
 
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]
-
-  t_invariant_truth IS 
-  AXIOM[ t_invariant_truth ]
+  t_invariant_truth IS AXIOM[ t_invariant_truth ]
+  t_eq_ext_rev IS AXIOM[ t_eq_ext_rev ]
+  t_inv_eq IS AXIOM[ t_inv_eq ]
 
   t_invariant_truth_rev IS 
   AXIOM[ t_invariant_truth_rev ]
 
-  t_eq_ext_rev IS AXIOM[ t_eq_ext_rev ]
-
-  t_inv_eq IS AXIOM[ t_inv_eq ]
 
   true.AS_LANGUAGE_ITEM[ t_trivial_statement ]
 

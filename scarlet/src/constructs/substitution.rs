@@ -137,22 +137,32 @@ impl Construct for CSubstitution {
     ) -> ConstructDefinition<'x> {
         let base = self.0;
         let mut new_subs = self.1.clone();
+        // Use `substitutions` to make new substituted values for `self.1`.
+        // E.G. convert thing[ sub ] to thing[ another ] if `substitutions`
+        // contains sub -> another.
         for (_, value) in &mut new_subs {
             let subbed = env.substitute(*value, substitutions);
             *value = subbed;
         }
+        // Figure out what substitutions should be applied to the base.
+        let mut base_subs = Substitutions::new();
         for (target, value) in substitutions {
             let mut already_present = false;
             for (existing_target, _) in &new_subs {
+                // Find if we already substitute that target with something else.
                 if existing_target.is_same_variable_as(target) {
                     already_present = true;
                     break;
                 }
             }
+            // If not, we should apply it to the base.
             if !already_present {
-                new_subs.insert_no_replace(target.clone(), *value);
+                base_subs.insert_no_replace(target.clone(), *value);
             }
         }
+        // Substitute the base using any substitutions we don't already overwrite.
+        let base = env.substitute(base, &base_subs);
+        // Make a new substitution with the substituted base and substitutions.
         ConstructDefinition::Resolved(Self::new(base, new_subs).dyn_clone())
     }
 }

@@ -172,6 +172,7 @@ impl Construct for CVariable {
                 let deps = env.get_dependencies(value);
                 let mut stored_subs = Substitutions::new();
                 for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
+                    let value = env.substitute(value, substitutions);
                     stored_subs.insert_no_replace(target.clone(), value);
                 }
                 return env.substitute(value, &stored_subs).into();
