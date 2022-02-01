@@ -109,11 +109,29 @@ impl Construct for CAtomicStructMember {
         _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        env.generated_invariants(self.0)
+        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+            let structt = structt.clone();
+            match self.1 {
+                AtomicStructMember::Label => todo!(),
+                AtomicStructMember::Value => env.generated_invariants(structt.value),
+                AtomicStructMember::Rest => env.generated_invariants(structt.rest),
+            }
+        } else {
+            env.generated_invariants(self.0)
+        }
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
-        env.get_dependencies(self.0)
+        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+            let structt = structt.clone();
+            match self.1 {
+                AtomicStructMember::Label => todo!(),
+                AtomicStructMember::Value => env.get_dependencies(structt.value),
+                AtomicStructMember::Rest => env.get_dependencies(structt.rest),
+            }
+        } else {
+            env.get_dependencies(self.0)
+        }
     }
 
     fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {

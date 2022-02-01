@@ -8,21 +8,21 @@
 
   t_eq_symm IS 
   {
-    t_eq_ext_rev[ a b x ].SHOWN
+    t_eq_ext_rev[ a b x ]
+    .WITH_DEPENDENCIES[ a b ]
+    .SHOWN
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
-    x IS VAR[ ]
+    # x IS VAR[ ]
   }
   .VALUE
 
-  (fx[ b ] = fx[ a ])[ a IS c  b IS d  fx IS x ].SHOWN
-  # t_just[ b = a ].SHOWN
-
-  a IS VAR[ ]
-  b IS VAR[ a = SELF ]
   c IS VAR[ ]
   d IS VAR[ c = SELF ]
+
+  t_eq_symm[ c d ].SHOWN
+  # t_just[ b = a ].SHOWN
 
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]

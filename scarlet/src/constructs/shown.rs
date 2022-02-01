@@ -52,6 +52,10 @@ impl Construct for CShown {
         }
     }
 
+    fn reduce<'x>(&self, _env: &mut Environment<'x>) -> ConstructDefinition<'x> {
+        self.0.into()
+    }
+
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
