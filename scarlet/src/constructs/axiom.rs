@@ -67,14 +67,4 @@ impl Construct for CAxiom {
             TripleBool::Unknown
         }
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        ConstructDefinition::Resolved(Box::new(Self {
-            statement: env.substitute(self.statement, substitutions),
-        }))
-    }
 }

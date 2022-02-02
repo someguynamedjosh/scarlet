@@ -69,19 +69,4 @@ impl Construct for CWithDependencies {
     ) -> TripleBool {
         env.is_def_equal(SubExpr(self.base, subs), other)
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        let base = env.substitute(self.base, substitutions);
-        let dependencies = self
-            .dependencies
-            .iter()
-            .copied()
-            .map(|x| env.substitute(x, substitutions))
-            .collect_vec();
-        ConstructDefinition::Resolved(Self::new(base, dependencies).dyn_clone())
-    }
 }

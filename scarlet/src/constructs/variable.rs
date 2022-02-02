@@ -180,37 +180,6 @@ impl Construct for CVariable {
         }
         TripleBool::Unknown
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        for (target, value) in substitutions {
-            let value = *value;
-            if self.is_same_variable_as(target) {
-                let deps = env.get_dependencies(value);
-                let mut stored_subs = Substitutions::new();
-                for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
-                    let value = env.substitute(value, substitutions);
-                    stored_subs.insert_no_replace(target.clone(), value);
-                }
-                return env.substitute(value, &stored_subs).into();
-            }
-        }
-        let invariants = self
-            .invariants
-            .iter()
-            .copied()
-            .map(|x| env.substitute(x, substitutions))
-            .collect_vec();
-        let substitutions = self
-            .substitutions
-            .iter()
-            .map(|&sub| env.substitute(sub, substitutions))
-            .collect();
-        ConstructDefinition::Resolved(Self::new(self.id, invariants, substitutions).dyn_clone())
-    }
 }
 
 #[derive(Debug, Clone)]

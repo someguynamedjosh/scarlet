@@ -5,17 +5,16 @@ pub mod overlay;
 pub mod path;
 mod reduce;
 pub mod resolve;
-pub mod substitute;
 pub mod util;
 mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, substitute::SubstituteStack, util::InvariantStack};
+use self::{dependencies::DepResStack, util::InvariantStack};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
-        substitution::{SubExpr, Substitutions},
+        substitution::{SubExpr, Substitutions, CSubstitution},
         unique::{Unique, UniqueId, UniquePool},
         variable::{Variable, VariableId, VariablePool},
         Construct,
@@ -47,7 +46,6 @@ pub struct Environment<'x> {
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
-    pub(super) substitute_stack: SubstituteStack,
     pub(super) invariant_stack: InvariantStack,
     use_reduced_definitions_while_vomiting: bool,
 }
@@ -60,7 +58,6 @@ impl<'x> Environment<'x> {
             uniques: Pool::new(),
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
-            substitute_stack: SubstituteStack::new(),
             invariant_stack: InvariantStack::new(),
             use_reduced_definitions_while_vomiting: true,
         };
@@ -240,5 +237,11 @@ impl<'x> Environment<'x> {
             SubExpr(left, &Default::default()),
             SubExpr(right, &Default::default()),
         )
+    }
+
+    pub(crate) fn substitute(&mut self, base: ConstructId, substitutions: &Substitutions) -> ConstructId {
+        let con = CSubstitution::new_unchecked(base, substitutions.clone());
+        let scope = self.constructs[base].scope.dyn_clone();
+        self.push_construct(con, scope)
     }
 }

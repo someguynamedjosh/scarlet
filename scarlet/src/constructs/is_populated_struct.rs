@@ -44,13 +44,4 @@ impl Construct for CIsPopulatedStruct {
     ) -> TripleBool {
         TripleBool::Unknown
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        let base = env.substitute(self.0, substitutions);
-        ConstructDefinition::Resolved(Self::new(base).dyn_clone())
-    }
 }

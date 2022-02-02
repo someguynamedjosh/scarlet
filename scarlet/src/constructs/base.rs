@@ -114,12 +114,6 @@ pub trait Construct: Any + Debug + AnyEq {
         TripleBool::Unknown
     }
 
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x>;
-
     fn as_def<'x>(&self) -> ConstructDefinition<'x> {
         ConstructDefinition::Resolved(self.dyn_clone())
     }

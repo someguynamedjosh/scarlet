@@ -81,16 +81,6 @@ impl Construct for CPopulatedStruct {
             TripleBool::Unknown
         }
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        let value = env.substitute(self.value, substitutions);
-        let rest = env.substitute(self.rest, substitutions);
-        ConstructDefinition::Resolved(Self::new(self.label.clone(), value, rest).dyn_clone())
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -147,15 +137,6 @@ impl Construct for CAtomicStructMember {
         other: SubExpr,
     ) -> TripleBool {
         TripleBool::Unknown
-    }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        let subbed_base = env.substitute(self.0, substitutions);
-        ConstructDefinition::Resolved(Self(subbed_base, self.1).dyn_clone())
     }
 }
 

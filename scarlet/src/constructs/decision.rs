@@ -125,16 +125,4 @@ impl Construct for CDecision {
             },
         ])
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        let left = env.substitute(self.left, substitutions);
-        let right = env.substitute(self.right, substitutions);
-        let equal = env.substitute(self.equal, substitutions);
-        let unequal = env.substitute(self.unequal, substitutions);
-        ConstructDefinition::Resolved(Self::new(left, right, equal, unequal).dyn_clone())
-    }
 }

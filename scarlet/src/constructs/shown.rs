@@ -51,13 +51,4 @@ impl Construct for CShown {
         let other = env.get_construct_definition(other).dyn_clone();
         other.is_def_equal(env, other_subs, SubExpr(self.0, subs))
     }
-
-    fn substitute<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        let base = env.substitute(self.0, substitutions);
-        base.into()
-    }
 }

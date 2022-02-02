@@ -51,12 +51,4 @@ impl Construct for CUnique {
             TripleBool::Unknown
         }
     }
-
-    fn substitute<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _substitutions: &Substitutions,
-    ) -> ConstructDefinition<'x> {
-        ConstructDefinition::Resolved(Self::new(self.0).dyn_clone())
-    }
 }
