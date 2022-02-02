@@ -57,8 +57,8 @@ impl Construct for CPopulatedStruct {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
-        let mut deps = env.get_dependencies(self.rest);
-        deps.append(env.get_dependencies(self.value));
+        let mut deps = env.get_dependencies(self.value);
+        deps.append(env.get_dependencies(self.rest));
         deps
     }
 

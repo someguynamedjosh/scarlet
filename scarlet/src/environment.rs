@@ -216,9 +216,17 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn is_def_equal(&mut self, left: SubExpr, right: SubExpr) -> TripleBool {
-        self.get_construct_definition(left.0)
+        let result = self
+            .get_construct_definition(left.0)
             .dyn_clone()
-            .is_def_equal(self, &left.1, right)
+            .is_def_equal(self, &left.1, right);
+        if result == TripleBool::Unknown {
+            self.get_construct_definition(right.0)
+                .dyn_clone()
+                .is_def_equal(self, &right.1, left)
+        } else {
+            result
+        }
     }
 
     pub(crate) fn is_def_equal_without_subs(
