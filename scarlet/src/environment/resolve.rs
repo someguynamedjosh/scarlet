@@ -9,7 +9,6 @@ impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId) {
         let con = &self.constructs[con_id];
         if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
-            // println!("{:#?}\n{:#?}", con_id, resolvable);
             self.dep_res_stack.push(DepResStackFrame(con_id));
             let resolvable = resolvable.dyn_clone();
             let scope = con.scope.dyn_clone();

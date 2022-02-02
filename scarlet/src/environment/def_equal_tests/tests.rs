@@ -30,6 +30,13 @@ impl<'a> Environment<'a> {
         self.push_construct(CVariable::new(id, vec![], vec![]), Box::new(SRoot))
     }
 
+    fn variable_full (&mut self) -> (ConstructId, CVariable) {
+        let id = self.push_variable();
+        let con = CVariable::new(id, vec![], vec![]);
+        let id = self.push_construct(con.clone(), Box::new(SRoot));
+        (id, con)
+    }
+
     fn assert_def_equal(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
             self.is_def_equal_without_subs(left, right),
@@ -41,6 +48,13 @@ impl<'a> Environment<'a> {
         assert_eq!(
             self.is_def_equal_without_subs(left, right),
             TripleBool::False
+        );
+    }
+
+    fn assert_def_equal_unknown(&mut self, left: ConstructId, right: ConstructId) {
+        assert_eq!(
+            self.is_def_equal_without_subs(left, right),
+            TripleBool::Unknown
         );
     }
 }
@@ -102,4 +116,13 @@ fn unique_equals_unique_is_false() {
     let right = env.unique();
     let decision = env.decision(left, right, truee, falsee);
     env.assert_def_equal(decision, falsee);
+}
+
+#[test]
+fn var_sub_not_equal_var() {
+    let mut env = env();
+    let truee = env.unique();
+    let (var_id, var) = env.variable_full();
+    let sub = env.substitute(var_id, &vec![(var, truee)].into_iter().collect());
+    env.assert_def_equal_unknown(sub, var_id);
 }

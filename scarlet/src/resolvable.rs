@@ -78,7 +78,6 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         let mut remaining_deps = env.get_dependencies(self.base);
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, name).unwrap();
-            println!("{} is {:?}", name, target);
             if let Some(var) = env.get_and_downcast_construct_definition(target) {
                 remaining_deps.remove(var);
                 subs.insert_no_replace(var.clone(), value);

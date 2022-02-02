@@ -65,8 +65,8 @@ impl CVariable {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.clone(), value);
-        for inv in &self.invariants {
-            let subbed = env.substitute(*inv, &substitutions);
+        for &inv in &self.invariants {
+            let subbed = env.substitute(inv, &substitutions);
             if let Some(inv) = env.get_produced_invariant(subbed, value) {
                 invariants.push(inv);
             } else {
@@ -164,6 +164,9 @@ impl Construct for CVariable {
         }
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             let other = other.clone();
+            if other_subs.iter().any(|(key, _)| key.is_same_variable_as(&other)) {
+                return TripleBool::Unknown;
+            }
             if self.substitutions.len() != other.substitutions.len() {
                 return TripleBool::Unknown;
             }

@@ -1,12 +1,13 @@
 {
-
   t_eq_symm IS 
   {
-    t_just[ b = a ]
+    t_just
+    [ b = a ]
     .WITH_DEPENDENCIES[ a b ]
     .SHOWN
 
     t_eq_ext_rev[ a b x ]
+    .SHOWN
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
