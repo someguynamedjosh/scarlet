@@ -205,8 +205,8 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn check(&mut self, con_id: ConstructId) {
-        let con = self.get_original_construct_definition(con_id).dyn_clone();
-        let scope = self.get_original_construct_scope(con_id).dyn_clone();
+        let con = self.get_construct_definition(con_id).dyn_clone();
+        let scope = self.get_construct_scope(con_id).dyn_clone();
         con.check(self, con_id, scope);
     }
 
@@ -214,38 +214,10 @@ impl<'x> Environment<'x> {
         self.for_each_construct_returning_nothing(Self::check);
     }
 
-    pub(crate) fn originals_are_def_equal(
-        &mut self,
-        left: ConstructId,
-        right: ConstructId,
-    ) -> TripleBool {
-        let other = self.get_original_construct_definition(right).dyn_clone();
-        self.get_original_construct_definition(left)
-            .dyn_clone()
-            .is_def_equal(self, &*other)
-    }
-
     pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {
-        let other = self.get_reduced_construct_definition(right).dyn_clone();
-        self.get_reduced_construct_definition(left)
+        let other = self.get_construct_definition(right).dyn_clone();
+        self.get_construct_definition(left)
             .dyn_clone()
             .is_def_equal(self, &*other)
-    }
-
-    pub(crate) fn is_def_equal_for_vomiting(
-        &mut self,
-        left: ConstructId,
-        right: ConstructId,
-    ) -> TripleBool {
-        let val = if self.use_reduced_definitions_while_vomiting {
-            self.is_def_equal(left, right)
-        } else {
-            self.originals_are_def_equal(left, right)
-        };
-        if left == right {
-            // println!("{:#?}", self);
-            assert_eq!(val, TripleBool::True, "{:?} should def_equal itself", left);
-        }
-        val
     }
 }

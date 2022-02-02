@@ -32,7 +32,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(asm) = env.get_construct_definition_for_vomiting::<CAtomicStructMember>(uncreate) {
+    if let Some(asm) = env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate) {
         if asm.1 == AtomicStructMember::Label {
             let id = asm.0;
             Some(Node {

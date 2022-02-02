@@ -1,6 +1,6 @@
 {
-  a IS VAR[ ]
-  b IS VAR[ a = SELF ].SHOWN
+  # a IS VAR[ ]
+  # b IS VAR[ a = SELF ].SHOWN
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

@@ -109,7 +109,7 @@ impl Construct for CAtomicStructMember {
         _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             match self.1 {
                 AtomicStructMember::Label => todo!(),
@@ -122,7 +122,7 @@ impl Construct for CAtomicStructMember {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             match self.1 {
                 AtomicStructMember::Label => todo!(),
@@ -139,7 +139,7 @@ impl Construct for CAtomicStructMember {
     }
 
     fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             match self.1 {
                 AtomicStructMember::Label => todo!(),
                 AtomicStructMember::Value => structt.value.into(),
@@ -173,7 +173,7 @@ impl Scope for SField {
         env: &mut Environment<'x>,
         ident: &str,
     ) -> Option<ConstructId> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             if structt.label == ident {
                 Some(structt.value)
@@ -190,7 +190,7 @@ impl Scope for SField {
         env: &mut Environment<'x>,
         value: ConstructId,
     ) -> Option<String> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             if structt.value == value {
                 Some(structt.label.clone())
@@ -207,7 +207,7 @@ impl Scope for SField {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> Option<Invariant> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             for maybe_match in env.generated_invariants(structt.value) {
                 if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
@@ -235,7 +235,7 @@ fn lookup_ident_in<'x>(
 ) -> Option<ConstructId> {
     if inn.label == ident {
         Some(inn.value)
-    } else if let Some(rest) = as_struct(&**env.get_reduced_construct_definition(inn.rest)) {
+    } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
         lookup_ident_in(env, ident, &rest)
     } else {
@@ -250,7 +250,7 @@ fn reverse_lookup_ident_in<'x>(
 ) -> Option<String> {
     if inn.value == value {
         Some(inn.label.clone())
-    } else if let Some(rest) = as_struct(&**env.get_reduced_construct_definition(inn.rest)) {
+    } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
         reverse_lookup_ident_in(env, value, &rest)
     } else {
@@ -263,7 +263,7 @@ fn lookup_invariant_in<'x>(
     invariant: ConstructId,
     inn: &CPopulatedStruct,
 ) -> Option<Invariant> {
-    if let Some(rest) = as_struct(&**env.get_reduced_construct_definition(inn.rest)) {
+    if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
         for maybe_match in env.generated_invariants(rest.value) {
             if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
@@ -286,7 +286,7 @@ impl Scope for SFieldAndRest {
         env: &mut Environment<'x>,
         ident: &str,
     ) -> Option<ConstructId> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)
         } else {
@@ -299,7 +299,7 @@ impl Scope for SFieldAndRest {
         env: &'a mut Environment<'x>,
         value: ConstructId,
     ) -> Option<String> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             reverse_lookup_ident_in(env, value, &structt)
         } else {
@@ -312,7 +312,7 @@ impl Scope for SFieldAndRest {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> Option<Invariant> {
-        if let Some(structt) = as_struct(&**env.get_reduced_construct_definition(self.0)) {
+        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             lookup_invariant_in(env, invariant, &structt)
         } else {

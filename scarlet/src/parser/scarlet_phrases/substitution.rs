@@ -82,7 +82,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(csub) = env.get_construct_definition_for_vomiting::<CSubstitution>(uncreate) {
+    if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate) {
         let csub = csub.clone();
         let mut deps = env
             .get_dependencies(csub.base())

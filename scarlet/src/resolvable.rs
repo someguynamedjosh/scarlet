@@ -73,13 +73,13 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
     }
 
     fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x> {
-        let base_scope = env.get_original_construct_scope(self.base).dyn_clone();
+        let base_scope = env.get_construct_scope(self.base).dyn_clone();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = env.get_dependencies(self.base);
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, name).unwrap();
             println!("{} is {:?}", name, target);
-            if let Some(var) = as_variable(&**env.get_reduced_construct_definition(target)) {
+            if let Some(var) = env.get_and_downcast_construct_definition(target) {
                 remaining_deps.remove(var);
                 subs.insert_no_replace(var.clone(), value);
             } else {

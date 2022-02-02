@@ -73,7 +73,7 @@ fn uncreate<'a>(
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
     while let Some(structt) =
-        env.get_construct_definition_for_vomiting::<CPopulatedStruct>(maybe_structt)
+        env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)
     {
         let label = code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();

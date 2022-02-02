@@ -26,7 +26,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(unique) = env.get_construct_definition_for_vomiting::<CUnique>(uncreate) {
+    if let Some(unique) = env.get_and_downcast_construct_definition::<CUnique>(uncreate) {
         Some(Node {
             phrase: "keyword UNIQUE",
             children: vec![NodeChild::Text("UNIQUE")],

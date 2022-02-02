@@ -63,7 +63,7 @@ impl<'x> Environment<'x> {
         if self.dep_res_stack.iter().any(|i| i.0 == con_id) {
             Dependencies::new()
         } else {
-            let con = self.get_original_construct_definition(con_id).dyn_clone();
+            let con = self.get_construct_definition(con_id).dyn_clone();
             self.dep_res_stack.push(DepResStackFrame(con_id));
             let deps = con.get_dependencies(self);
             assert_eq!(self.dep_res_stack.pop(), Some(DepResStackFrame(con_id)));

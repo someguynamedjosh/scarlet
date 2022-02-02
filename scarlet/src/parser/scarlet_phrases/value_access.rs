@@ -36,7 +36,7 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     let source = if let Some(asm) =
-        env.get_construct_definition_for_vomiting::<CAtomicStructMember>(uncreate)
+        env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)
     {
         if asm.1 == AtomicStructMember::Value {
             Some(asm.0)
@@ -45,9 +45,10 @@ fn uncreate<'a>(
         }
     } else {
         env.for_each_construct(|env, id| {
-            if let Some(cstruct) = env.get_construct_definition_for_vomiting::<CPopulatedStruct>(id)
+            if let Some(cstruct) = env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
             {
-                if env.is_def_equal_for_vomiting(cstruct.get_value(), uncreate) == TripleBool::True
+                let cstruct = cstruct.clone();
+                if env.is_def_equal(cstruct.get_value(), uncreate) == TripleBool::True
                     && from.parent() != Some(id)
                 {
                     return ControlFlow::Break(id);

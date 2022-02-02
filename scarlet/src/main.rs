@@ -32,6 +32,5 @@ fn main() {
     root.as_construct(&parse_context, &mut env, SRoot);
     env.show_all_requested();
     env.resolve_all();
-    env.reduce_all();
     env.check_all();
 }

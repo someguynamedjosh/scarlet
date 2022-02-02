@@ -1,8 +1,8 @@
-use super::{ConstructId, Environment, dependencies::DepResStackFrame};
+use super::{dependencies::DepResStackFrame, ConstructId, Environment};
 use crate::{
     constructs::{
-        base::BoxedConstruct, downcast_boxed_construct, downcast_construct, AnnotatedConstruct,
-        Construct, ConstructDefinition, Invariant,
+        base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
+        ConstructDefinition, Invariant,
     },
     scope::Scope,
     shared::TripleBool,
@@ -19,37 +19,21 @@ impl<'x> Environment<'x> {
         &self.constructs[con_id]
     }
 
-    pub fn get_original_construct_scope(&mut self, con_id: ConstructId) -> &dyn Scope {
+    pub fn get_construct_scope(&mut self, con_id: ConstructId) -> &dyn Scope {
         self.resolve(con_id);
-        self.reduce(con_id);
         let con = self.get_construct(con_id);
         match &con.definition {
-            ConstructDefinition::Other(other) => self.get_original_construct_scope(*other),
+            ConstructDefinition::Other(other) => self.get_construct_scope(*other),
             ConstructDefinition::Resolved(_) => &*self.get_construct(con_id).scope,
             ConstructDefinition::Unresolved(_) => unreachable!(),
         }
     }
 
-    pub fn get_reduced_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
-        let old_con_id = con_id;
-        self.reduce(con_id);
-        if let &ConstructDefinition::Other(id) = &self.constructs[con_id].reduced {
-            self.get_reduced_construct_definition(id)
-        } else if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].reduced {
-            def
-        } else {
-            println!("{:#?}", self);
-            println!("{:?} -> {:?}", old_con_id, con_id);
-            unreachable!()
-        }
-    }
-
-    pub fn get_original_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
+    pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
         let old_con_id = con_id;
         self.resolve(con_id);
-        if let &ConstructDefinition::Other(id) = &self.constructs[con_id].definition {
-            self.get_original_construct_definition(id)
-        } else if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
+        let con_id = self.dereference(con_id);
+        if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
             def
         } else {
             println!("{:#?}", self);
@@ -58,36 +42,31 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_construct_definition_for_vomiting<CastTo: Construct>(
+    pub fn get_and_downcast_construct_definition<C: Construct>(
         &mut self,
         con_id: ConstructId,
-    ) -> Option<CastTo> {
-        let def = if self.use_reduced_definitions_while_vomiting {
-            self.get_reduced_construct_definition(con_id)
-        } else {
-            self.get_original_construct_definition(con_id)
-        };
-        downcast_boxed_construct(def.dyn_clone())
+    ) -> Option<&C> {
+        downcast_construct(&**self.get_construct_definition(con_id))
     }
 
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<Invariant> {
-        for frame in &self.dep_res_stack{
+        for frame in &self.dep_res_stack {
             if frame.0 == con_id {
                 return Vec::new();
             }
         }
-        self.dep_res_stack.push(DepResStackFrame( con_id ));
+        self.dep_res_stack.push(DepResStackFrame(con_id));
 
         // if let Some(invariants) = &self.constructs[con_id].invariants {
         //     let result = invariants.clone();
         //     self.dep_res_stack.pop();
         //     result
         // } else {
-            let context = self.get_original_construct_definition(con_id).dyn_clone();
-            let invs = context.generated_invariants(con_id, self);
-            self.constructs[con_id].invariants = Some(invs.clone());
-            self.dep_res_stack.pop();
-            invs
+        let context = self.get_construct_definition(con_id).dyn_clone();
+        let invs = context.generated_invariants(con_id, self);
+        self.constructs[con_id].invariants = Some(invs.clone());
+        self.dep_res_stack.pop();
+        invs
         // }
     }
 

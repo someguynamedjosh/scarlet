@@ -29,7 +29,8 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cshown) = env.get_construct_definition_for_vomiting::<CShown>(uncreate) {
+    if let Some(cshown) = env.get_and_downcast_construct_definition::<CShown>(uncreate) {
+        let cshown = cshown.clone();
         Some(Node {
             phrase: "shown",
             children: vec![NodeChild::Node(env.vomit(

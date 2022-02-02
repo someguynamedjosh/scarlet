@@ -68,7 +68,7 @@ impl Construct for CDecision {
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
-                if env.originals_are_def_equal(true_inv.statement, false_inv.statement)
+                if env.is_def_equal(true_inv.statement, false_inv.statement)
                     == TripleBool::True
                 {
                     let mut deps = true_inv.dependencies;
@@ -103,22 +103,6 @@ impl Construct for CDecision {
             ])
         } else {
             TripleBool::Unknown
-        }
-    }
-
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        env.reduce(self.left);
-        env.reduce(self.right);
-        match env.is_def_equal(self.left, self.right) {
-            TripleBool::True => {
-                env.reduce(self.equal);
-                self.equal.into()
-            }
-            TripleBool::False => {
-                env.reduce(self.unequal);
-                self.unequal.into()
-            }
-            TripleBool::Unknown => self.dyn_clone().into(),
         }
     }
 

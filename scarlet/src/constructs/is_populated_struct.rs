@@ -40,17 +40,6 @@ impl Construct for CIsPopulatedStruct {
         TripleBool::Unknown
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        let base = env.get_reduced_construct_definition(self.0);
-        if downcast_construct::<CPopulatedStruct>(&**base).is_some() {
-            env.get_language_item("true").into()
-        } else if downcast_construct::<CUnique>(&**base).is_some() {
-            env.get_language_item("false").into()
-        } else {
-            self.dyn_clone().into()
-        }
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,

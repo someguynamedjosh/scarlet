@@ -43,7 +43,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cwd) = env.get_construct_definition_for_vomiting::<CWithDependencies>(uncreate) {
+    if let Some(cwd) = env.get_and_downcast_construct_definition::<CWithDependencies>(uncreate) {
         let cwd = cwd.clone();
         let deps = create_comma_list(
             cwd.dependencies()

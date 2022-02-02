@@ -34,7 +34,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cite) = env.get_construct_definition_for_vomiting::<CDecision>(uncreate) {
+    if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
         let cite = cite.clone();
         let truee = env.get_language_item("true");
         let falsee = env.get_language_item("false");

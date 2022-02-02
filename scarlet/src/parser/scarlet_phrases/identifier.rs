@@ -27,7 +27,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    let dereffed = env.dereference_for_vomiting(uncreate);
+    let dereffed = env.dereference(uncreate);
     if dereffed == uncreate {
         return None;
     }

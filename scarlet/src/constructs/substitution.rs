@@ -141,13 +141,6 @@ impl Construct for CSubstitution {
         }
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        env.reduce(self.0);
-        let subbed = env.substitute(self.0, &self.1);
-        env.reduce(subbed);
-        subbed.into()
-    }
-
     fn substitute<'x>(
         &self,
         env: &mut Environment<'x>,
