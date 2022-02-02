@@ -46,7 +46,7 @@ impl<'x> Environment<'x> {
         result.push_str(&format!("reduces to:\n"));
         result.push_str(&format!("{}\n", reduced_vomit));
         result.push_str(&format!("proves:\n"));
-        self.use_reduced_definitions_while_vomiting = false;
+        self.use_reduced_definitions_while_vomiting = true;
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {} ({:?})\n",
@@ -58,6 +58,7 @@ impl<'x> Environment<'x> {
                 invariant.statement,
             ));
         }
+        self.use_reduced_definitions_while_vomiting = false;
         result.push_str(&format!("depends on:\n"));
         for dep in self.get_dependencies(con_id).into_variables() {
             result.push_str(&format!(

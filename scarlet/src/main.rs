@@ -24,21 +24,14 @@ fn main() {
     println!("Reading source from {}", path);
 
     let root = file_tree::read_root(&path).unwrap();
-    println!("{:#?}", root);
 
     let parse_context = ParseContext::new();
     let root = parser::parse(&root.self_content, &parse_context);
-    println!("{:#?}", root);
 
     let mut env = Environment::new();
-    let root = root.as_construct(&parse_context, &mut env, SRoot);
-    println!("{:#?}", env);
-    println!("Root: {:?}", root);
+    root.as_construct(&parse_context, &mut env, SRoot);
     env.resolve_all();
     env.reduce_all();
-    println!("{:#?}", env);
-    println!("Root: {:?}", root);
-    println!();
     env.show_all_requested();
     env.check_all();
 }

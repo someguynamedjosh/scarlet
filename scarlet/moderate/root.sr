@@ -23,17 +23,61 @@
   }
   .VALUE
 
+  # From a=b  fx[ a ]
+  # Proves fx[ b ]
   t_inv_eq_ext IS 
   {
-    # From a=b  fx[ a ]
-    # Proves fx[ b ]
     t_inv_eq[ fx[ a ]  fx[ b ] ]
+    .WITH_DEPENDENCIES[ a b fx ]
     # Proves fx[ a ] = fx[ b ]
-    t_eq_ext[ a b fx ].SHOWN
+    t_eq_ext[ a b fx ]
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
     fx IS VAR[ SELF[ a ]  SUB x ]
+  }
+  .VALUE
+
+  # From false
+  # Proves b
+  t_explode_false IS
+  {
+    t_inv_eq_ext[ false true true_or_b ]
+    true_or_b IS DECISION[ x false true b ]
+    t_invariant_truth[ false ]
+    b IS VAR[ false ]
+  }
+  .VALUE
+
+  # From a = b  b = c
+  # Proves a = c
+  t_eq_trans IS 
+  {
+    t_inv_eq[ a = b  a = c ]
+    t_eq_ext[ b c a_equals_x ]
+    a_equals_x IS
+    (a = x).WITH_DEPENDENCIES[ x ]
+
+    a IS VAR[ ]
+    b IS VAR[ a = SELF ]
+    c IS VAR[ b = SELF ]
+  }
+  .VALUE
+
+  # From a  a = false
+  # Proves b
+  t_explode_contradiction IS
+  {
+    t_explode_false[ b ]
+    # Proves false
+    t_eq_trans[ false a true ]
+    # Proves false = a
+    t_eq_symm[ a false ]
+    # Proves a = true
+    t_invariant_truth[ a ]
+
+    a IS VAR[ SELF  SELF = false ]
+    b IS VAR[ ]
   }
   .VALUE
 

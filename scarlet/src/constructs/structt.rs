@@ -267,7 +267,6 @@ fn lookup_invariant_in<'x>(
         let rest = rest.clone();
         for maybe_match in env.generated_invariants(rest.value) {
             if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
-                println!("{:?}", inn.value);
                 return Some(maybe_match);
             }
         }

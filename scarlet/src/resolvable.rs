@@ -88,6 +88,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         }
         for &value in &self.anonymous_subs {
             if remaining_deps.num_variables() == 0 {
+                eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
                 panic!("No more dependencies left to substitute!");
             }
             let dep = remaining_deps.pop_front();
