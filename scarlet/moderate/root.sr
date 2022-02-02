@@ -81,6 +81,7 @@
     b IS VAR[ ]
   }
   .VALUE
+  # Deleting this breaks the code :(
   .SHOWN
 
   t_just IS VAR[ SELF ]
