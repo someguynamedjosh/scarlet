@@ -1,3 +1,5 @@
+#[cfg(test)]
+mod def_equal_tests;
 pub mod dependencies;
 pub mod overlay;
 pub mod path;

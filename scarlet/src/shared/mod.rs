@@ -45,7 +45,7 @@ impl TripleBool {
         let mut known_false = true;
         for b in over {
             match b {
-                TripleBool::True => return TripleBool::False,
+                TripleBool::True => return TripleBool::True,
                 TripleBool::False => (),
                 TripleBool::Unknown => known_false = false,
             }
