@@ -29,6 +29,25 @@ impl<'x> Environment<'x> {
         }
     }
 
+    pub(super) fn get_construct_definition_no_deref(&mut self, con_id: ConstructId) -> &BoxedConstruct {
+        let old_con_id = con_id;
+        self.resolve(con_id);
+        if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
+            def
+        } else {
+            println!("{:#?}", self);
+            println!("{:?} -> {:?}", old_con_id, con_id);
+            unreachable!()
+        }
+    }
+
+    pub(super) fn get_and_downcast_construct_definition_no_deref<C: Construct>(
+        &mut self,
+        con_id: ConstructId,
+    ) -> Option<&C> {
+        downcast_construct(&**self.get_construct_definition_no_deref(con_id))
+    }
+
     pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
         let old_con_id = con_id;
         self.resolve(con_id);

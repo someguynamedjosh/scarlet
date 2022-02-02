@@ -3,66 +3,67 @@
   {
     t_eq_ext_rev[ a b x ]
     .WITH_DEPENDENCIES[ a b ]
+    .SHOWN
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
   }
   .VALUE
 
-  # From a = b
-  # Proves fx[ a ] = fx[ b ]
-  t_eq_ext IS 
-  {
-    t_eq_ext_rev[ b a ]
-    .WITH_DEPENDENCIES[ a b ]
-    # Proves b = a
-    t_eq_symm[ a b ]
+  # # From a = b
+  # # Proves fx[ a ] = fx[ b ]
+  # t_eq_ext IS 
+  # {
+  #   t_eq_ext_rev[ b a ]
+  #   .WITH_DEPENDENCIES[ a b ]
+  #   # Proves b = a
+  #   t_eq_symm[ a b ]
 
-    a IS VAR[ ]
-    b IS VAR[ a = SELF ]
-  }
-  .VALUE
+  #   a IS VAR[ ]
+  #   b IS VAR[ a = SELF ]
+  # }
+  # .VALUE
 
-  # From a=b  fx[ a ]
-  # Proves fx[ b ]
-  t_inv_eq_ext IS 
-  {
-    t_inv_eq[ fx[ a ]  fx[ b ] ]
-    .WITH_DEPENDENCIES[ a b fx ]
-    # Proves fx[ a ] = fx[ b ]
-    t_eq_ext[ a b fx ]
+  # # From a=b  fx[ a ]
+  # # Proves fx[ b ]
+  # t_inv_eq_ext IS 
+  # {
+  #   t_inv_eq[ fx[ a ]  fx[ b ] ]
+  #   .WITH_DEPENDENCIES[ a b fx ]
+  #   # Proves fx[ a ] = fx[ b ]
+  #   t_eq_ext[ a b fx ]
 
-    a IS VAR[ ]
-    b IS VAR[ a = SELF ]
-    fx IS VAR[ SELF[ a ]  SUB x ]
-  }
-  .VALUE
+  #   a IS VAR[ ]
+  #   b IS VAR[ a = SELF ]
+  #   fx IS VAR[ SELF[ a ]  SUB x ]
+  # }
+  # .VALUE
 
-  # From false
-  # Proves b
-  t_explode_false IS
-  {
-    t_inv_eq_ext[ false true true_or_b ]
-    true_or_b IS DECISION[ x false true b ]
-    t_invariant_truth[ false ]
-    b IS VAR[ false ]
-  }
-  .VALUE
+  # # From false
+  # # Proves b
+  # t_explode_false IS
+  # {
+  #   t_inv_eq_ext[ false true true_or_b ]
+  #   true_or_b IS DECISION[ x false true b ]
+  #   t_invariant_truth[ false ]
+  #   b IS VAR[ false ]
+  # }
+  # .VALUE
 
-  # From a = b  b = c
-  # Proves a = c
-  t_eq_trans IS 
-  {
-    t_inv_eq[ a = b  a = c ]
-    t_eq_ext[ b c a_equals_x ]
-    a_equals_x IS
-    (a = x).WITH_DEPENDENCIES[ x ]
+  # # From a = b  b = c
+  # # Proves a = c
+  # t_eq_trans IS 
+  # {
+  #   t_inv_eq[ a = b  a = c ]
+  #   t_eq_ext[ b c a_equals_x ]
+  #   a_equals_x IS
+  #   (a = x).WITH_DEPENDENCIES[ x ]
 
-    a IS VAR[ ]
-    b IS VAR[ a = SELF ]
-    c IS VAR[ b = SELF ]
-  }
-  .VALUE
+  #   a IS VAR[ ]
+  #   b IS VAR[ a = SELF ]
+  #   c IS VAR[ b = SELF ]
+  # }
+  # .VALUE
 
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]

@@ -30,7 +30,7 @@ fn main() {
 
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
-    env.show_all_requested();
     env.resolve_all();
     env.check_all();
+    env.show_all_requested();
 }
