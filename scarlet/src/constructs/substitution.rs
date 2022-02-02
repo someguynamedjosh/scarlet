@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::{
     downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId, Invariant,
 };
@@ -51,6 +53,25 @@ impl CSubstitution {
         }
         Ok(invariants)
     }
+
+    fn invariants(&self, env: &mut Environment) -> Vec<Invariant> {
+        let mut invs = Vec::new();
+        for inv in env.generated_invariants(self.0) {
+            let subbed_statement = env.substitute(inv.statement, &self.1);
+            let mut new_deps: HashSet<_> = inv
+                .dependencies
+                .into_iter()
+                .map(|d| env.substitute(d, &self.1))
+                .collect();
+            for inv in self.2.iter().flatten() {
+                for &dep in &inv.dependencies {
+                    new_deps.insert(dep);
+                }
+            }
+            invs.push(Invariant::new(subbed_statement, new_deps));
+        }
+        invs
+    }
 }
 
 impl_any_eq_for_construct!(CSubstitution);
@@ -85,6 +106,11 @@ impl Construct for CSubstitution {
                 }
             }
         }
+        for inv in self.2.iter().flatten() {
+            for &dep in &inv.dependencies {
+                deps.append(env.get_dependencies(dep))
+            }
+        }
         deps
     }
 
@@ -93,12 +119,7 @@ impl Construct for CSubstitution {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        let mut invs = Vec::new();
-        for inv in env.generated_invariants(self.0) {
-            let subbed_statement = env.substitute(inv.statement, &self.1);
-            invs.push(Invariant::new(subbed_statement));
-        }
-        invs
+        self.invariants(env)
     }
 
     fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {

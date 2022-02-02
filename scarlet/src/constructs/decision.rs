@@ -1,3 +1,5 @@
+use maplit::hashset;
+
 use super::{
     downcast_construct, substitution::Substitutions, Construct, ConstructDefinition, ConstructId,
     Invariant,
@@ -61,7 +63,6 @@ impl Construct for CDecision {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        let truee = env.get_language_item("true");
         let true_invs = env.generated_invariants(self.equal);
         let mut false_invs = env.generated_invariants(self.equal);
         let mut result = Vec::new();
@@ -70,8 +71,14 @@ impl Construct for CDecision {
                 if env.originals_are_def_equal(true_inv.statement, false_inv.statement)
                     == TripleBool::True
                 {
-                    result.push(Invariant::new(true_inv.statement));
+                    let mut deps = true_inv.dependencies;
+                    deps.insert(this);
+                    result.push(Invariant::new(
+                        true_inv.statement,
+                        deps,
+                    ));
                     false_invs.remove(index);
+                    break;
                 }
             }
         }

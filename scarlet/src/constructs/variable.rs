@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use maplit::hashset;
 
 use super::{
     base::{Construct, ConstructId},
@@ -126,10 +127,13 @@ impl Construct for CVariable {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        this: ConstructId,
         _env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        self.invariants.iter().map(|&i| Invariant::new(i)).collect()
+        self.invariants
+            .iter()
+            .map(|&i| Invariant::new(i, hashset![this]))
+            .collect()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

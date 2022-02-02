@@ -1,3 +1,5 @@
+use maplit::hashset;
+
 use super::{
     base::Construct, downcast_construct, substitution::Substitutions, BoxedConstruct,
     ConstructDefinition, ConstructId,
@@ -39,7 +41,7 @@ impl Construct for CAxiom {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        vec![Invariant::new(self.statement)]
+        vec![Invariant::new(self.statement, hashset![])]
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {

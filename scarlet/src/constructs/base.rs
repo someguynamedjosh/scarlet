@@ -1,4 +1,4 @@
-use std::{any::Any, fmt::Debug};
+use std::{any::Any, collections::HashSet, fmt::Debug};
 
 use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
@@ -11,11 +11,15 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Invariant {
     pub statement: ConstructId,
+    pub dependencies: HashSet<ConstructId>,
 }
 
 impl Invariant {
-    pub fn new(statement: ConstructId) -> Self {
-        Self { statement }
+    pub fn new(statement: ConstructId, dependencies: HashSet<ConstructId>) -> Self {
+        Self {
+            statement,
+            dependencies,
+        }
     }
 }
 

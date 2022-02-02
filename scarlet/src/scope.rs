@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use maplit::hashset;
+
 use crate::{
     constructs::{ConstructId, Invariant},
     environment::Environment,
@@ -24,7 +26,6 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-
     ) -> Option<Invariant>;
     fn parent(&self) -> Option<ConstructId>;
 
@@ -65,7 +66,6 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-
     ) -> Option<Invariant> {
         if let Some(inv) = self.local_lookup_invariant(env, invariant) {
             Some(inv)
@@ -108,7 +108,6 @@ impl Scope for SPlain {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-
     ) -> Option<Invariant> {
         None
     }
@@ -148,12 +147,10 @@ impl Scope for SRoot {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-
     ) -> Option<Invariant> {
         let truee = env.get_language_item("true");
-        if env.is_def_equal(invariant, truee) == TripleBool::True
-        {
-            Some(Invariant::new(truee))
+        if env.is_def_equal(invariant, truee) == TripleBool::True {
+            Some(Invariant::new(truee, hashset![]))
         } else {
             None
         }
@@ -196,7 +193,6 @@ impl Scope for SPlaceholder {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
-
     ) -> Option<Invariant> {
         unreachable!()
     }
@@ -238,10 +234,8 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-
     ) -> Option<Invariant> {
-        self.0
-            .local_lookup_invariant(env, invariant)
+        self.0.local_lookup_invariant(env, invariant)
     }
 
     fn parent(&self) -> Option<ConstructId> {

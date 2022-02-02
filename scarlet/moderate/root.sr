@@ -69,6 +69,7 @@
   t_explode_contradiction IS
   {
     t_explode_false[ b ]
+    .WITH_DEPENDENCIES[ a b ]
     # Proves false
     t_eq_trans[ false a true ]
     # Proves false = a
@@ -80,8 +81,7 @@
     b IS VAR[ ]
   }
   .VALUE
-
-  t_explode_contradiction[ false ].SHOWN
+  .SHOWN
 
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]

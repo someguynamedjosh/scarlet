@@ -78,17 +78,17 @@ impl<'x> Environment<'x> {
         }
         self.dep_res_stack.push(DepResStackFrame( con_id ));
 
-        if let Some(invariants) = &self.constructs[con_id].invariants {
-            let result = invariants.clone();
-            self.dep_res_stack.pop();
-            result
-        } else {
+        // if let Some(invariants) = &self.constructs[con_id].invariants {
+        //     let result = invariants.clone();
+        //     self.dep_res_stack.pop();
+        //     result
+        // } else {
             let context = self.get_original_construct_definition(con_id).dyn_clone();
             let invs = context.generated_invariants(con_id, self);
             self.constructs[con_id].invariants = Some(invs.clone());
             self.dep_res_stack.pop();
             invs
-        }
+        // }
     }
 
     pub fn get_produced_invariant(

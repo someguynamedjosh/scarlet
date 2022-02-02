@@ -57,6 +57,14 @@ impl<'x> Environment<'x> {
                 ),
                 invariant.statement,
             ));
+            result.push_str("    depending on:\n");
+            for dep in invariant.dependencies {
+                result.push_str(&format!(
+                    "        {} ({:?})\n",
+                    indented(&self.vomit(255, &pc, &code_arena, dep, &inv_from).vomit(&pc)),
+                    dep,
+                ));
+            }
         }
         self.use_reduced_definitions_while_vomiting = false;
         result.push_str(&format!("depends on:\n"));
