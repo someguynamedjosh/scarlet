@@ -1,8 +1,10 @@
 use maplit::hashset;
 
 use super::{
-    base::Construct, downcast_construct, substitution::Substitutions, BoxedConstruct,
-    ConstructDefinition, ConstructId,
+    base::Construct,
+    downcast_construct,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    BoxedConstruct, ConstructDefinition, ConstructId,
 };
 use crate::{
     constructs::Invariant,
@@ -38,8 +40,8 @@ impl Construct for CAxiom {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
-        env: &mut Environment<'x>,
+        _this: ConstructId,
+        _env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
         vec![Invariant::new(self.statement, hashset![])]
     }
@@ -48,13 +50,19 @@ impl Construct for CAxiom {
         env.get_dependencies(self.statement)
     }
 
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        env.get_language_item("void").into()
-    }
-
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
-            env.is_def_equal(self.statement, other.statement)
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+    ) -> TripleBool {
+        let other_subs = other.1;
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other.0) {
+            let other = other.clone();
+            env.is_def_equal(
+                SubExpr(self.statement, subs),
+                SubExpr(other.statement, other_subs),
+            )
         } else {
             TripleBool::Unknown
         }

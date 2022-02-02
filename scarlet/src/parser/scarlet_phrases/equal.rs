@@ -38,8 +38,8 @@ fn uncreate<'a>(
         let cite = cite.clone();
         let truee = env.get_language_item("true");
         let falsee = env.get_language_item("false");
-        if env.is_def_equal(cite.equal(), truee) == TripleBool::True
-            && env.is_def_equal(cite.unequal(), falsee) == TripleBool::True
+        if env.is_def_equal_without_subs(cite.equal(), truee) == TripleBool::True
+            && env.is_def_equal_without_subs(cite.unequal(), falsee) == TripleBool::True
         {
             Some(Node {
                 phrase: "equal",

@@ -1,4 +1,9 @@
-use super::{base::Construct, downcast_construct, substitution::Substitutions, BoxedConstruct, ConstructDefinition};
+use super::{
+    base::Construct,
+    downcast_construct,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    BoxedConstruct, ConstructDefinition,
+};
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
@@ -30,8 +35,13 @@ impl Construct for CUnique {
         Dependencies::new()
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        SubExpr(other, _): SubExpr,
+    ) -> TripleBool {
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             if self.0 == other.0 {
                 TripleBool::True
             } else {

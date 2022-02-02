@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     downcast_construct,
-    substitution::Substitutions,
+    substitution::{Substitutions, NestedSubstitutions, SubExpr},
     BoxedConstruct, ConstructDefinition, Invariant,
 };
 use crate::{
@@ -61,24 +61,13 @@ impl Construct for CWithDependencies {
         deps
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
-            if self.dependencies.len() != other.dependencies.len() {
-                return TripleBool::Unknown;
-            }
-            for (&left, &right) in self.dependencies.iter().zip(other.dependencies.iter()) {
-                if env.is_def_equal(left, right) != TripleBool::True {
-                    return TripleBool::Unknown;
-                }
-            }
-            env.is_def_equal(self.base, other.base)
-        } else {
-            TripleBool::Unknown
-        }
-    }
-
-    fn reduce<'x>(&self, _env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        self.base.into()
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+    ) -> TripleBool {
+        env.is_def_equal(SubExpr(self.base, subs), other)
     }
 
     fn substitute<'x>(

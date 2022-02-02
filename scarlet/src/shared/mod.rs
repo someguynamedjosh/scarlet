@@ -40,4 +40,20 @@ impl TripleBool {
             TripleBool::Unknown
         }
     }
+
+    pub fn or(over: Vec<TripleBool>) -> TripleBool {
+        let mut known_false = true;
+        for b in over {
+            match b {
+                TripleBool::True => return TripleBool::False,
+                TripleBool::False => (),
+                TripleBool::Unknown => known_false = false,
+            }
+        }
+        if known_false {
+            TripleBool::False
+        } else {
+            TripleBool::Unknown
+        }
+    }
 }

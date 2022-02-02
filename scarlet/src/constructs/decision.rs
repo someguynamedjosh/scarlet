@@ -1,8 +1,9 @@
 use maplit::hashset;
 
 use super::{
-    downcast_construct, substitution::Substitutions, Construct, ConstructDefinition, ConstructId,
-    Invariant,
+    downcast_construct,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    Construct, ConstructDefinition, ConstructId, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -68,15 +69,14 @@ impl Construct for CDecision {
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
-                if env.is_def_equal(true_inv.statement, false_inv.statement)
-                    == TripleBool::True
+                if env.is_def_equal(
+                    SubExpr(true_inv.statement, &Default::default()),
+                    SubExpr(false_inv.statement, &Default::default()),
+                ) == TripleBool::True
                 {
                     let mut deps = true_inv.dependencies;
                     deps.insert(this);
-                    result.push(Invariant::new(
-                        true_inv.statement,
-                        deps,
-                    ));
+                    result.push(Invariant::new(true_inv.statement, deps));
                     false_invs.remove(index);
                     break;
                 }
@@ -93,17 +93,37 @@ impl Construct for CDecision {
         deps
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        SubExpr(other, other_subs): SubExpr,
+    ) -> TripleBool {
+        let base = if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
+            let other = other.clone();
             TripleBool::and(vec![
-                env.is_def_equal(self.left, other.left),
-                env.is_def_equal(self.right, other.right),
-                env.is_def_equal(self.equal, other.equal),
-                env.is_def_equal(self.unequal, other.unequal),
+                env.is_def_equal(SubExpr(self.left, subs), SubExpr(other.left, other_subs)),
+                env.is_def_equal(SubExpr(self.right, subs), SubExpr(other.right, other_subs)),
+                env.is_def_equal(SubExpr(self.equal, subs), SubExpr(other.equal, other_subs)),
+                env.is_def_equal(
+                    SubExpr(self.unequal, subs),
+                    SubExpr(other.unequal, other_subs),
+                ),
             ])
         } else {
             TripleBool::Unknown
-        }
+        };
+        let other = env.get_construct_definition(other).dyn_clone();
+        TripleBool::or(vec![
+            base,
+            match env.is_def_equal(SubExpr(self.left, subs), SubExpr(self.right, other_subs)) {
+                TripleBool::True => other.is_def_equal(env, other_subs, SubExpr(self.equal, subs)),
+                TripleBool::False => {
+                    other.is_def_equal(env, other_subs, SubExpr(self.unequal, subs))
+                }
+                TripleBool::Unknown => TripleBool::False,
+            },
+        ])
     }
 
     fn substitute<'x>(

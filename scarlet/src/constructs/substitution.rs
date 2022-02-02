@@ -11,6 +11,9 @@ use crate::{
 };
 
 pub type Substitutions = OrderedMap<CVariable, ConstructId>;
+#[derive(Clone, Copy, Debug)]
+pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
+pub type NestedSubstitutions<'a> = OrderedMap<CVariable, SubExpr<'a>>;
 type Justifications = Result<Vec<Invariant>, String>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -122,23 +125,17 @@ impl Construct for CSubstitution {
         self.invariants(env)
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
-            let mut result = env.is_def_equal(self.0, other.0);
-            if self.1.len() != other.1.len() {
-                result = TripleBool::False;
-            }
-            for (target, value) in &self.1 {
-                if let Some(other_value) = other.1.get(target) {
-                    result = TripleBool::and(vec![result, env.is_def_equal(*value, *other_value)]);
-                } else {
-                    result = TripleBool::False
-                }
-            }
-            result
-        } else {
-            TripleBool::Unknown
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+    ) -> TripleBool {
+        let mut new_subs = NestedSubstitutions::new();
+        for (target, value) in &self.1 {
+            new_subs.insert_no_replace(target.clone(), SubExpr(*value, subs));
         }
+        env.is_def_equal(SubExpr(self.0, &new_subs), other)
     }
 
     fn substitute<'x>(

@@ -48,7 +48,7 @@ fn uncreate<'a>(
             if let Some(cstruct) = env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
             {
                 let cstruct = cstruct.clone();
-                if env.is_def_equal(cstruct.get_rest(), uncreate) == TripleBool::True {
+                if env.is_def_equal_without_subs(cstruct.get_rest(), uncreate) == TripleBool::True {
                     return ControlFlow::Break(id);
                 }
             }

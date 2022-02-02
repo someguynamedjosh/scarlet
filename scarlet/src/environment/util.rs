@@ -1,8 +1,8 @@
 use super::{dependencies::DepResStackFrame, ConstructId, Environment};
 use crate::{
     constructs::{
-        base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
-        ConstructDefinition, Invariant,
+        base::BoxedConstruct, downcast_construct, substitution::SubExpr, AnnotatedConstruct,
+        Construct, ConstructDefinition, Invariant,
     },
     scope::Scope,
     shared::TripleBool,
@@ -29,7 +29,10 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(super) fn get_construct_definition_no_deref(&mut self, con_id: ConstructId) -> &BoxedConstruct {
+    pub(super) fn get_construct_definition_no_deref(
+        &mut self,
+        con_id: ConstructId,
+    ) -> &BoxedConstruct {
         let old_con_id = con_id;
         self.resolve(con_id);
         if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
@@ -96,7 +99,11 @@ impl<'x> Environment<'x> {
     ) -> Option<Invariant> {
         let generated_invariants = self.generated_invariants(context_id);
         for inv in generated_invariants {
-            if self.is_def_equal(statement, inv.statement) == TripleBool::True {
+            if self.is_def_equal(
+                SubExpr(statement, &Default::default()),
+                SubExpr(inv.statement, &Default::default()),
+            ) == TripleBool::True
+            {
                 return Some(inv);
             }
         }

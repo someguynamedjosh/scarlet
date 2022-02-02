@@ -41,13 +41,8 @@ impl<'x> Environment<'x> {
         let frame = self.substitute_stack.pop().unwrap();
         assert_eq!(frame.into, into);
         if let ConstructDefinition::Resolved(subbed) = subbed {
-            if def.is_def_equal(self, &*subbed) == TripleBool::True {
-                self.constructs[into].definition = ConstructDefinition::Other(con_id);
-                con_id
-            } else {
-                self.constructs[into].definition = ConstructDefinition::Resolved(subbed);
-                into
-            }
+            self.constructs[into].definition = ConstructDefinition::Resolved(subbed);
+            into
         } else {
             self.constructs[into].definition = subbed;
             into

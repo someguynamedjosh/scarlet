@@ -7,8 +7,9 @@ use crate::{
     constructs::{
         downcast_construct,
         shown::CShown,
+        substitution::SubExpr,
         variable::{CVariable, SVariableInvariants},
-        ConstructDefinition,
+        Construct, ConstructDefinition,
     },
     parser::{Node, ParseContext},
     scope::{SWithParent, Scope},
@@ -38,15 +39,9 @@ impl<'x> Environment<'x> {
         let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
         let code_arena = Arena::new();
         let pc = ParseContext::new();
-        self.use_reduced_definitions_while_vomiting = false;
         let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
-        self.use_reduced_definitions_while_vomiting = true;
-        let reduced_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
-        result.push_str(&format!("reduces to:\n"));
-        result.push_str(&format!("{}\n", reduced_vomit));
         result.push_str(&format!("proves:\n"));
-        self.use_reduced_definitions_while_vomiting = true;
         for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {} ({:?})\n",
@@ -66,7 +61,6 @@ impl<'x> Environment<'x> {
                 ));
             }
         }
-        self.use_reduced_definitions_while_vomiting = false;
         result.push_str(&format!("depends on:\n"));
         for dep in self.get_dependencies(con_id).into_variables() {
             result.push_str(&format!(
@@ -82,12 +76,8 @@ impl<'x> Environment<'x> {
 
     pub fn show_var(&mut self, var: &CVariable, from: ConstructId) -> String {
         self.for_each_construct(|env, id| {
-            if env.constructs[id]
-                .definition
-                .as_resolved()
-                .map(|con| con.dyn_clone())
-                .map(|con| con.is_def_equal(env, var))
-                == Some(TripleBool::True)
+            if var.is_def_equal(env, &Default::default(), SubExpr(id, &Default::default()))
+                == TripleBool::True
             {
                 ControlFlow::Break(env.show(id, from))
             } else {
@@ -106,12 +96,8 @@ impl<'x> Environment<'x> {
     ) -> Node<'a> {
         let base = self
             .for_each_construct(|env, id| {
-                if env.constructs[id]
-                    .definition
-                    .as_resolved()
-                    .map(|con| con.dyn_clone())
-                    .map(|con| con.is_def_equal(env, var))
-                    == Some(TripleBool::True)
+                if var.is_def_equal(env, &Default::default(), SubExpr(id, &Default::default()))
+                    == TripleBool::True
                 {
                     ControlFlow::Break(id)
                 } else {

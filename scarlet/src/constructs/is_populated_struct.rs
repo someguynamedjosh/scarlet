@@ -1,5 +1,5 @@
 use super::{
-    downcast_construct, structt::CPopulatedStruct, substitution::Substitutions, unique::CUnique,
+    downcast_construct, structt::CPopulatedStruct, substitution::{Substitutions, NestedSubstitutions, SubExpr}, unique::CUnique,
     Construct, ConstructDefinition, ConstructId, Invariant,
 };
 use crate::{
@@ -36,7 +36,12 @@ impl Construct for CIsPopulatedStruct {
         env.get_dependencies(self.0)
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+    ) -> TripleBool {
         TripleBool::Unknown
     }
 

@@ -1,6 +1,10 @@
 use std::{any::Any, collections::HashSet, fmt::Debug};
 
-use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
+use super::{
+    structt::CPopulatedStruct,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    variable::CVariable,
+};
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     resolvable::BoxedResolvable,
@@ -86,6 +90,7 @@ pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {
     fn dyn_clone(&self) -> Box<dyn Construct>;
 
+    #[allow(unused_variables)]
     fn check<'x>(&self, env: &mut Environment<'x>, this: ConstructId, scope: Box<dyn Scope>) {}
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies;
@@ -100,13 +105,13 @@ pub trait Construct: Any + Debug + AnyEq {
     }
 
     #[allow(unused_variables)]
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+    ) -> TripleBool {
         TripleBool::Unknown
-    }
-
-    #[allow(unused_variables)]
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        ConstructDefinition::Resolved(self.dyn_clone())
     }
 
     fn substitute<'x>(

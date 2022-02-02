@@ -1,7 +1,7 @@
 use super::{
     as_struct,
     base::{ConstructDefinition, ConstructId},
-    substitution::Substitutions,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
     Construct, Invariant,
 };
 use crate::{
@@ -62,14 +62,20 @@ impl Construct for CPopulatedStruct {
         deps
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        SubExpr(other, other_subs): SubExpr,
+    ) -> TripleBool {
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
+            let other = other.clone();
             if self.label != other.label {
                 return TripleBool::False;
             }
             TripleBool::and(vec![
-                env.is_def_equal(self.value, other.value),
-                env.is_def_equal(self.rest, other.rest),
+                env.is_def_equal(SubExpr(self.value, subs), SubExpr(other.value, other_subs)),
+                env.is_def_equal(SubExpr(self.rest, subs), SubExpr(other.rest, other_subs)),
             ])
         } else {
             TripleBool::Unknown
@@ -134,20 +140,13 @@ impl Construct for CAtomicStructMember {
         }
     }
 
-    fn is_def_equal<'x>(&self, _env: &mut Environment<'x>, _other: &dyn Construct) -> TripleBool {
+    fn is_def_equal<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+    ) -> TripleBool {
         TripleBool::Unknown
-    }
-
-    fn reduce<'x>(&self, env: &mut Environment<'x>) -> ConstructDefinition<'x> {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => structt.value.into(),
-                AtomicStructMember::Rest => structt.rest.into(),
-            }
-        } else {
-            self.dyn_clone().into()
-        }
     }
 
     fn substitute<'x>(
@@ -210,7 +209,11 @@ impl Scope for SField {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
             for maybe_match in env.generated_invariants(structt.value) {
-                if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
+                if env.is_def_equal(
+                    SubExpr(invariant, &Default::default()),
+                    SubExpr(maybe_match.statement, &Default::default()),
+                ) == TripleBool::True
+                {
                     return Some(maybe_match);
                 }
             }
@@ -266,7 +269,11 @@ fn lookup_invariant_in<'x>(
     if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
         for maybe_match in env.generated_invariants(rest.value) {
-            if env.is_def_equal(invariant, maybe_match.statement) == TripleBool::True {
+            if env.is_def_equal(
+                SubExpr(invariant, &Default::default()),
+                SubExpr(maybe_match.statement, &Default::default()),
+            ) == TripleBool::True
+            {
                 return Some(maybe_match);
             }
         }

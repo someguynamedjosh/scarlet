@@ -13,6 +13,7 @@ use self::{dependencies::DepResStack, substitute::SubstituteStack, util::Invaria
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
+        substitution::{SubExpr, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
         variable::{Variable, VariableId, VariablePool},
         Construct,
@@ -214,10 +215,20 @@ impl<'x> Environment<'x> {
         self.for_each_construct_returning_nothing(Self::check);
     }
 
-    pub(crate) fn is_def_equal(&mut self, left: ConstructId, right: ConstructId) -> TripleBool {
-        let other = self.get_construct_definition(right).dyn_clone();
-        self.get_construct_definition(left)
+    pub(crate) fn is_def_equal(&mut self, left: SubExpr, right: SubExpr) -> TripleBool {
+        self.get_construct_definition(left.0)
             .dyn_clone()
-            .is_def_equal(self, &*other)
+            .is_def_equal(self, &left.1, right)
+    }
+
+    pub(crate) fn is_def_equal_without_subs(
+        &mut self,
+        left: ConstructId,
+        right: ConstructId,
+    ) -> TripleBool {
+        self.is_def_equal(
+            SubExpr(left, &Default::default()),
+            SubExpr(right, &Default::default()),
+        )
     }
 }

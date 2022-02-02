@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use maplit::hashset;
 
 use crate::{
-    constructs::{ConstructId, Invariant},
+    constructs::{substitution::SubExpr, ConstructId, Invariant},
     environment::Environment,
     shared::TripleBool,
 };
@@ -149,7 +149,11 @@ impl Scope for SRoot {
         invariant: ConstructId,
     ) -> Option<Invariant> {
         let truee = env.get_language_item("true");
-        if env.is_def_equal(invariant, truee) == TripleBool::True {
+        if env.is_def_equal(
+            SubExpr(invariant, &Default::default()),
+            SubExpr(truee, &Default::default()),
+        ) == TripleBool::True
+        {
             Some(Invariant::new(truee, hashset![]))
         } else {
             None

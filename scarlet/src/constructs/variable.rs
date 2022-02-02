@@ -4,7 +4,7 @@ use maplit::hashset;
 use super::{
     base::{Construct, ConstructId},
     downcast_construct,
-    substitution::Substitutions,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
     BoxedConstruct, ConstructDefinition, Invariant,
 };
 use crate::{
@@ -148,17 +148,33 @@ impl Construct for CVariable {
         deps
     }
 
-    fn is_def_equal<'x>(&self, env: &mut Environment<'x>, other: &dyn Construct) -> TripleBool {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    fn is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        SubExpr(other, other_subs): SubExpr,
+    ) -> TripleBool {
+        for (target, value) in subs {
+            if target.is_same_variable_as(self) {
+                if self.substitutions.len() != 0 {
+                    todo!()
+                }
+                return env.is_def_equal(*value, SubExpr(other, other_subs));
+            }
+        }
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
+            let other = other.clone();
             if self.substitutions.len() != other.substitutions.len() {
                 return TripleBool::Unknown;
             }
             for (&left, &right) in self.substitutions.iter().zip(other.substitutions.iter()) {
-                if env.is_def_equal(left, right) != TripleBool::True {
+                if env.is_def_equal(SubExpr(left, subs), SubExpr(right, other_subs))
+                    != TripleBool::True
+                {
                     return TripleBool::Unknown;
                 }
             }
-            if self.is_same_variable_as(other) {
+            if self.is_same_variable_as(&other) {
                 return TripleBool::True;
             }
         }

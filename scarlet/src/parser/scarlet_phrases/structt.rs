@@ -96,7 +96,9 @@ fn uncreate<'a>(
             fields.push(value);
         }
     }
-    if env.is_def_equal(maybe_structt, env.get_language_item("void")) == TripleBool::True {
+    if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"))
+        == TripleBool::True
+    {
         Some(Node {
             phrase: "struct",
             children: vec![
