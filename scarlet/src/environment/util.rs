@@ -1,4 +1,4 @@
-use super::{ConstructId, Environment};
+use super::{ConstructId, Environment, dependencies::DepResStackFrame};
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_boxed_construct, downcast_construct, AnnotatedConstruct,
@@ -71,22 +71,22 @@ impl<'x> Environment<'x> {
     }
 
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<Invariant> {
-        for frame in &self.invariant_stack {
-            if frame.con_id == con_id {
+        for frame in &self.dep_res_stack{
+            if frame.0 == con_id {
                 return Vec::new();
             }
         }
-        self.invariant_stack.push(InvariantStackFrame { con_id });
+        self.dep_res_stack.push(DepResStackFrame( con_id ));
 
         if let Some(invariants) = &self.constructs[con_id].invariants {
             let result = invariants.clone();
-            self.invariant_stack.pop();
+            self.dep_res_stack.pop();
             result
         } else {
             let context = self.get_original_construct_definition(con_id).dyn_clone();
             let invs = context.generated_invariants(con_id, self);
             self.constructs[con_id].invariants = Some(invs.clone());
-            self.invariant_stack.pop();
+            self.dep_res_stack.pop();
             invs
         }
     }

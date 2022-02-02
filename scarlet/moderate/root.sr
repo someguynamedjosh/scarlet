@@ -81,6 +81,8 @@
   }
   .VALUE
 
+  t_explode_contradiction[ false ].SHOWN
+
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]
   t_invariant_truth IS AXIOM[ t_invariant_truth ]
