@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use crate::{
     constructs::{
         as_variable,
-        substitution::CSubstitution,
+        substitution::{CSubstitution, Substitutions},
         variable::{CVariable, VariableId},
         ConstructDefinition, ConstructId,
     },
@@ -111,10 +111,17 @@ impl<'x> Resolvable<'x> for RVariable {
 
     fn resolve(
         &self,
-        _env: &mut Environment<'x>,
+        env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
-        let con = CVariable::new(self.id, self.invariants.clone(), self.substitutions.clone());
+        let mut subs = Substitutions::new();
+        for &con in &self.substitutions {
+            let var = env
+                .get_and_downcast_construct_definition::<CVariable>(con)
+                .expect("TODO Nice error");
+            subs.insert_no_replace(var.clone(), con);
+        }
+        let con = CVariable::new(self.id, self.invariants.clone(), subs);
         ConstructDefinition::Resolved(Box::new(con))
     }
 }

@@ -24,14 +24,14 @@ pub type VariableId = Id<'V'>;
 pub struct CVariable {
     id: VariableId,
     invariants: Vec<ConstructId>,
-    substitutions: Vec<ConstructId>,
+    substitutions: Substitutions,
 }
 
 impl CVariable {
     pub fn new<'x>(
         id: VariableId,
         invariants: Vec<ConstructId>,
-        substitutions: Vec<ConstructId>,
+        substitutions: Substitutions,
     ) -> Self {
         Self {
             id,
@@ -48,8 +48,8 @@ impl CVariable {
         &self.invariants[..]
     }
 
-    pub(crate) fn get_substitutions(&self) -> &[ConstructId] {
-        &self.substitutions[..]
+    pub(crate) fn get_substitutions(&self) -> &Substitutions {
+        &self.substitutions
     }
 
     pub fn is_same_variable_as(&self, other: &Self) -> bool {
@@ -76,18 +76,10 @@ impl CVariable {
                 ));
             }
         }
-        let deps = env.get_dependencies(value);
-        if deps.num_variables() < self.substitutions.len() {
-            return Err(format!(
-                "Expected at least {} dependencies, got {} instead.",
-                self.substitutions.len(),
-                deps.num_variables(),
-            ));
-        }
-        for (target, &value) in deps.into_variables().zip(self.substitutions.iter()) {
+        for (target, value) in self.substitutions.iter() {
             let value_vom = "todo";
             target
-                .can_be_assigned(value, env, &Substitutions::new())
+                .can_be_assigned(*value, env, &Substitutions::new())
                 .map_err(|err| format!("while substituting {}:\n{}", value_vom, err))?;
         }
         Ok(invariants)
@@ -112,7 +104,7 @@ impl CVariable {
         let substitutions = self
             .substitutions
             .iter()
-            .map(|&sub| env.substitute(sub, substitutions))
+            .map(|(target, value)| (target.clone(), env.substitute(*value, substitutions)))
             .collect();
         Some(Self::new(self.id, invariants.clone(), substitutions))
     }
@@ -138,7 +130,7 @@ impl Construct for CVariable {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         let mut deps = Dependencies::new();
-        for &sub in &self.substitutions {
+        for &(_, sub) in &self.substitutions {
             deps.append(env.get_dependencies(sub));
         }
         deps.push_eager(self.clone());
@@ -156,22 +148,27 @@ impl Construct for CVariable {
     ) -> TripleBool {
         for (target, value) in subs {
             if target.is_same_variable_as(self) {
-                if self.substitutions.len() != 0 {
-                    todo!()
+                let mut new_subs = subs.clone();
+                for (target, value) in &self.substitutions {
+                    new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
                 }
                 return env.is_def_equal(*value, SubExpr(other, other_subs));
             }
         }
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             let other = other.clone();
-            if other_subs.iter().any(|(key, _)| key.is_same_variable_as(&other)) {
+            if other_subs
+                .iter()
+                .any(|(key, _)| key.is_same_variable_as(&other))
+            {
                 return TripleBool::Unknown;
             }
             if self.substitutions.len() != other.substitutions.len() {
                 return TripleBool::Unknown;
             }
-            for (&left, &right) in self.substitutions.iter().zip(other.substitutions.iter()) {
-                if env.is_def_equal(SubExpr(left, subs), SubExpr(right, other_subs))
+            for ((ltarget, lvalue), (rtarget, rvalue)) in self.substitutions.iter().zip(other.substitutions.iter()) {
+                assert_eq!(ltarget, rtarget);
+                if env.is_def_equal(SubExpr(*lvalue, subs), SubExpr(*rvalue, other_subs))
                     != TripleBool::True
                 {
                     return TripleBool::Unknown;

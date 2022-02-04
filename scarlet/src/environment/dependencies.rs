@@ -54,7 +54,12 @@ impl Dependencies {
     }
 
     pub(crate) fn contains(&self, dep: &CVariable) -> bool {
-        self.eager.contains(dep)
+        for target in &self.eager {
+            if target.is_same_variable_as(dep) {
+                return true
+            }
+        }
+        false
     }
 }
 

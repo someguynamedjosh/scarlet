@@ -72,7 +72,7 @@ fn uncreate<'a>(
         let substitutions = cvar
             .get_substitutions()
             .into_iter()
-            .map(|&sub| env.vomit(255, pc, code_arena, sub, from))
+            .map(|sub| env.vomit(255, pc, code_arena, sub.1, from))
             .collect_vec();
         let mut body = invariants;
         if substitutions.len() > 0 {

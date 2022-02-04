@@ -1,13 +1,7 @@
 {
   t_eq_symm IS 
   {
-    t_just
-    [ b = a ]
-    .WITH_DEPENDENCIES[ a b ]
-    .SHOWN
-
     t_eq_ext_rev[ a b x ]
-    .SHOWN
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
@@ -16,30 +10,35 @@
 
   # From a = b
   # Proves fx[ a ] = fx[ b ]
-  # t_eq_ext IS 
-  # {
-  #   t_just[ fx[ a ] = fx[ b ] ]
-  #   .SHOWN
+  t_eq_ext IS 
+  {
+    t_just[ fx[ a ] = fx[ b ] ]
+    .WITH_DEPENDENCIES[ a b fx ]
 
-  #   t_eq_ext_rev[ b a ]
-  #   .WITH_DEPENDENCIES[ a b ]
+    t_eq_ext_rev[ b a ]
 
-  #   # Proves b = a
-  #   t_eq_symm[ a b ]
+    # Proves b = a
+    t_eq_symm[ a b ]
 
-  #   a IS VAR[ ]
-  #   b IS VAR[ a = SELF ]
-  # }
-  # .VALUE
+    a IS VAR[ ]
+    b IS VAR[ a = SELF ]
+  }
+  .VALUE
 
   # # From a=b  fx[ a ]
   # # Proves fx[ b ]
   # t_inv_eq_ext IS 
   # {
-  #   t_inv_eq[ fx[ a ]  fx[ b ] ]
-  #   .WITH_DEPENDENCIES[ a b fx ]
+  #   # t_just[ fx[ b ] ]
+  #   # .WITH_DEPENDENCIES[ a b fx ]
+
+  #   # t_inv_eq[ fx[ a ]  fx[ b ] ]
+
+  #   t_just[ fx[ a ] = fx[ b ] ]
+
   #   # Proves fx[ a ] = fx[ b ]
-  #   t_eq_ext[ a b fx ]
+  #   t_eq_ext[ a b ]
+  #   .SHOWN
 
   #   a IS VAR[ ]
   #   b IS VAR[ a = SELF ]

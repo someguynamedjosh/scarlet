@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{cell::RefCell, collections::HashSet};
 
 use super::{
     downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId, Invariant,
@@ -11,23 +11,38 @@ use crate::{
 };
 
 pub type Substitutions = OrderedMap<CVariable, ConstructId>;
-#[derive(Clone, Copy, Debug)]
-pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
 pub type NestedSubstitutions<'a> = OrderedMap<CVariable, SubExpr<'a>>;
 type Justifications = Result<Vec<Invariant>, String>;
 
+#[derive(Clone, Copy, Debug)]
+pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
+
+impl<'a> SubExpr<'a> {
+    pub fn deps(&self, env: &mut Environment) -> Dependencies {
+        let mut result = Dependencies::new();
+        let base = env.get_dependencies(self.0);
+        for (target, value) in self.1.iter() {
+            if result.contains(target) {
+                result.append(value.deps(env));
+            } else {
+                result.push_eager(target.clone());
+            }
+        }
+        result
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CSubstitution(ConstructId, Substitutions, Justifications);
+pub struct CSubstitution(ConstructId, Substitutions, RefCell<Option<Justifications>>);
 
 impl CSubstitution {
     pub fn new<'x>(base: ConstructId, subs: Substitutions, env: &mut Environment) -> Self {
-        let mut sel = Self(base, subs.clone(), Ok(vec![]));
-        sel.2 = sel.substitution_justifications(env);
+        let mut sel = Self(base, subs.clone(), RefCell::new(None));
         sel
     }
 
     pub(crate) fn new_unchecked(base: ConstructId, subs: Substitutions) -> Self {
-        Self(base, subs, Ok(vec![]))
+        Self(base, subs, RefCell::new(Some(Ok(vec![]))))
     }
 
     pub fn base(&self) -> ConstructId {
@@ -38,7 +53,20 @@ impl CSubstitution {
         &self.1
     }
 
-    fn substitution_justifications(&self, env: &mut Environment) -> Justifications {
+    fn substitution_justifications(
+        &self,
+        env: &mut Environment,
+    ) -> &RefCell<Option<Justifications>> {
+        if self.2.borrow().is_some() {
+            return &self.2;
+        } else {
+            let just = self.create_substitution_justifications(env);
+            *self.2.borrow_mut() = Some(just);
+            &self.2
+        }
+    }
+
+    fn create_substitution_justifications(&self, env: &mut Environment) -> Justifications {
         let mut previous_subs = Substitutions::new();
         let mut invariants = Vec::new();
         for (target, value) in &self.1 {
@@ -48,7 +76,6 @@ impl CSubstitution {
                     invariants.append(&mut new_invs)
                 }
                 Err(err) => {
-                    eprintln!("{:#?}", self);
                     return Err(format!(
                         "THIS EXPRESSION:\n{}\nASSIGNED TO:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
                         env.show(*value, *value),
@@ -70,7 +97,13 @@ impl CSubstitution {
                 .into_iter()
                 .map(|d| env.substitute(d, &self.1))
                 .collect();
-            for inv in self.2.iter().flatten() {
+            for inv in self
+                .substitution_justifications(env)
+                .borrow()
+                .iter()
+                .flatten()
+                .flatten()
+            {
                 for &dep in &inv.dependencies {
                     new_deps.insert(dep);
                 }
@@ -88,8 +121,13 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, _env: &mut Environment<'x>, _this: ConstructId, _scope: Box<dyn Scope>) {
-        if let Err(err) = &self.2 {
+    fn check<'x>(&self, env: &mut Environment<'x>, _this: ConstructId, _scope: Box<dyn Scope>) {
+        if let Err(err) = self
+            .substitution_justifications(env)
+            .borrow()
+            .as_ref()
+            .unwrap()
+        {
             println!("{}", err);
             todo!("nice error");
         }
@@ -113,7 +151,13 @@ impl Construct for CSubstitution {
                 }
             }
         }
-        for inv in self.2.iter().flatten() {
+        for inv in self
+            .substitution_justifications(env)
+            .borrow()
+            .iter()
+            .flatten()
+            .flatten()
+        {
             for &dep in &inv.dependencies {
                 deps.append(env.get_dependencies(dep))
             }
@@ -135,9 +179,9 @@ impl Construct for CSubstitution {
         subs: &NestedSubstitutions,
         other: SubExpr,
     ) -> TripleBool {
-        let mut new_subs = NestedSubstitutions::new();
+        let mut new_subs = subs.clone();
         for (target, value) in &self.1 {
-            new_subs.insert_no_replace(target.clone(), SubExpr(*value, subs));
+            new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
         }
         env.is_def_equal(SubExpr(self.0, &new_subs), other)
     }

@@ -76,13 +76,12 @@ impl<'x> Environment<'x> {
 
     pub fn show_var(&mut self, var: &CVariable, from: ConstructId) -> String {
         self.for_each_construct(|env, id| {
-            if var.is_def_equal(env, &Default::default(), SubExpr(id, &Default::default()))
-                == TripleBool::True
-            {
-                ControlFlow::Break(env.show(id, from))
-            } else {
-                ControlFlow::Continue(())
+            if let Some(other_var) = env.get_and_downcast_construct_definition(id) {
+                if var.is_same_variable_as(other_var) {
+                    return ControlFlow::Break(env.show(id, from));
+                }
             }
+            ControlFlow::Continue(())
         })
         .unwrap_or_else(|| panic!("Variable does not exist!"))
     }

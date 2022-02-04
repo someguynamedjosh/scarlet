@@ -27,12 +27,15 @@ impl<'a> Environment<'a> {
 
     fn variable(&mut self) -> ConstructId {
         let id = self.push_variable();
-        self.push_construct(CVariable::new(id, vec![], vec![]), Box::new(SRoot))
+        self.push_construct(
+            CVariable::new(id, vec![], Default::default()),
+            Box::new(SRoot),
+        )
     }
 
-    fn variable_full (&mut self) -> (ConstructId, CVariable) {
+    fn variable_full(&mut self) -> (ConstructId, CVariable) {
         let id = self.push_variable();
-        let con = CVariable::new(id, vec![], vec![]);
+        let con = CVariable::new(id, vec![], Default::default());
         let id = self.push_construct(con.clone(), Box::new(SRoot));
         (id, con)
     }
