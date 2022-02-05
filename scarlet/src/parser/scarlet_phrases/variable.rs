@@ -28,25 +28,25 @@ fn create<'x>(
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let mut invariants = Vec::new();
-    let mut substitutions = Vec::new();
+    let mut dependencies = Vec::new();
     let mut mode = 0;
     let this = env.push_placeholder(scope);
     for arg in util::collect_comma_list(&node.children[2]) {
-        if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("SUB")] {
+        if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEP")] {
             mode = 1;
         } else if mode == 0 {
             let con = arg.as_construct(pc, env, SVariableInvariants(this));
             invariants.push(con);
         } else {
             let con = arg.as_construct(pc, env, SPlain(this));
-            substitutions.push(con);
+            dependencies.push(con);
         }
     }
     let id = env.push_variable();
     let def = RVariable {
         id,
         invariants,
-        substitutions,
+        dependencies,
     };
     env.define_unresolved(this, def);
     this
@@ -69,18 +69,18 @@ fn uncreate<'a>(
             .into_iter()
             .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
             .collect_vec();
-        let substitutions = cvar
-            .get_substitutions()
+        let dependencies = cvar
+            .get_dependencies()
             .into_iter()
-            .map(|sub| env.vomit(255, pc, code_arena, sub.1, from))
+            .map(|&dep| env.vomit(255, pc, code_arena, dep, from))
             .collect_vec();
         let mut body = invariants;
-        if substitutions.len() > 0 {
+        if dependencies.len() > 0 {
             body.push(Node {
                 phrase: "identifier",
-                children: vec![NodeChild::Text("SUB")],
+                children: vec![NodeChild::Text("DEP")],
             });
-            let mut depends_on = substitutions;
+            let mut depends_on = dependencies;
             body.append(&mut depends_on);
         }
         Some(Node {

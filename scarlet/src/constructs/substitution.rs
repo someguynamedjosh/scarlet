@@ -14,7 +14,7 @@ pub type Substitutions = OrderedMap<CVariable, ConstructId>;
 pub type NestedSubstitutions<'a> = OrderedMap<CVariable, SubExpr<'a>>;
 type Justifications = Result<Vec<Invariant>, String>;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
 
 impl<'a> SubExpr<'a> {
@@ -22,10 +22,8 @@ impl<'a> SubExpr<'a> {
         let mut result = Dependencies::new();
         let base = env.get_dependencies(self.0);
         for (target, value) in self.1.iter() {
-            if result.contains(target) {
+            if base.contains(target) {
                 result.append(value.deps(env));
-            } else {
-                result.push_eager(target.clone());
             }
         }
         result
@@ -37,8 +35,7 @@ pub struct CSubstitution(ConstructId, Substitutions, RefCell<Option<Justificatio
 
 impl CSubstitution {
     pub fn new<'x>(base: ConstructId, subs: Substitutions, env: &mut Environment) -> Self {
-        let mut sel = Self(base, subs.clone(), RefCell::new(None));
-        sel
+        Self(base, subs.clone(), RefCell::new(None))
     }
 
     pub(crate) fn new_unchecked(base: ConstructId, subs: Substitutions) -> Self {
@@ -141,7 +138,7 @@ impl Construct for CSubstitution {
                 let replaced_deps = env.get_dependencies(*rep);
                 for rdep in replaced_deps
                     .into_variables()
-                    .skip(dep.get_substitutions().len())
+                    .skip(dep.get_dependencies().len())
                 {
                     deps.push_eager(rdep);
                 }

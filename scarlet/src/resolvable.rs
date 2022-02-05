@@ -101,7 +101,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
 pub struct RVariable {
     pub id: VariableId,
     pub invariants: Vec<ConstructId>,
-    pub substitutions: Vec<ConstructId>,
+    pub dependencies: Vec<ConstructId>,
 }
 
 impl<'x> Resolvable<'x> for RVariable {
@@ -111,17 +111,10 @@ impl<'x> Resolvable<'x> for RVariable {
 
     fn resolve(
         &self,
-        env: &mut Environment<'x>,
+        _env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
-        let mut subs = Substitutions::new();
-        for &con in &self.substitutions {
-            let var = env
-                .get_and_downcast_construct_definition::<CVariable>(con)
-                .expect("TODO Nice error");
-            subs.insert_no_replace(var.clone(), con);
-        }
-        let con = CVariable::new(self.id, self.invariants.clone(), subs);
+        let con = CVariable::new(self.id, self.invariants.clone(), self.dependencies.clone());
         ConstructDefinition::Resolved(Box::new(con))
     }
 }

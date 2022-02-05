@@ -3,14 +3,12 @@ use maplit::hashset;
 
 use super::{
     base::{Construct, ConstructId},
-    downcast_construct,
     substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition, Invariant,
+    Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
-    parser::ParseContext,
     scope::Scope,
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
@@ -24,19 +22,19 @@ pub type VariableId = Id<'V'>;
 pub struct CVariable {
     id: VariableId,
     invariants: Vec<ConstructId>,
-    substitutions: Substitutions,
+    dependencies: Vec<ConstructId>,
 }
 
 impl CVariable {
     pub fn new<'x>(
         id: VariableId,
         invariants: Vec<ConstructId>,
-        substitutions: Substitutions,
+        dependencies: Vec<ConstructId>,
     ) -> Self {
         Self {
             id,
             invariants: invariants.clone(),
-            substitutions,
+            dependencies,
         }
     }
 
@@ -48,8 +46,8 @@ impl CVariable {
         &self.invariants[..]
     }
 
-    pub(crate) fn get_substitutions(&self) -> &Substitutions {
-        &self.substitutions
+    pub(crate) fn get_dependencies(&self) -> &[ConstructId] {
+        &self.dependencies
     }
 
     pub fn is_same_variable_as(&self, other: &Self) -> bool {
@@ -76,12 +74,6 @@ impl CVariable {
                 ));
             }
         }
-        for (target, value) in self.substitutions.iter() {
-            let value_vom = "todo";
-            target
-                .can_be_assigned(*value, env, &Substitutions::new())
-                .map_err(|err| format!("while substituting {}:\n{}", value_vom, err))?;
-        }
         Ok(invariants)
     }
 
@@ -101,12 +93,12 @@ impl CVariable {
             .copied()
             .map(|x| env.substitute(x, substitutions))
             .collect_vec();
-        let substitutions = self
-            .substitutions
+        let dependencies = self
+            .dependencies
             .iter()
-            .map(|(target, value)| (target.clone(), env.substitute(*value, substitutions)))
+            .map(|value| env.substitute(*value, substitutions))
             .collect();
-        Some(Self::new(self.id, invariants.clone(), substitutions))
+        Some(Self::new(self.id, invariants.clone(), dependencies))
     }
 }
 
@@ -130,8 +122,8 @@ impl Construct for CVariable {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         let mut deps = Dependencies::new();
-        for &(_, sub) in &self.substitutions {
-            deps.append(env.get_dependencies(sub));
+        for &dep in &self.dependencies {
+            deps.append(env.get_dependencies(dep));
         }
         deps.push_eager(self.clone());
         for &inv in &self.invariants {
@@ -148,11 +140,18 @@ impl Construct for CVariable {
     ) -> TripleBool {
         for (target, value) in subs {
             if target.is_same_variable_as(self) {
-                let mut new_subs = subs.clone();
-                for (target, value) in &self.substitutions {
-                    new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
+                let mut new_subs = value.1.clone();
+                for (target, value) in subs {
+                    if new_subs.contains_key(target) {
+                        if new_subs.get(target).unwrap() != value {
+                            println!("{:#?}", env);
+                            todo!("{:#?}, {:?} -> {:?}", new_subs, target, value);
+                        }
+                    } else {
+                        new_subs.insert_no_replace(target.clone(), *value);
+                    }
                 }
-                return env.is_def_equal(*value, SubExpr(other, other_subs));
+                return env.is_def_equal(SubExpr(value.0, &new_subs), SubExpr(other, other_subs));
             }
         }
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
@@ -162,17 +161,6 @@ impl Construct for CVariable {
                 .any(|(key, _)| key.is_same_variable_as(&other))
             {
                 return TripleBool::Unknown;
-            }
-            if self.substitutions.len() != other.substitutions.len() {
-                return TripleBool::Unknown;
-            }
-            for ((ltarget, lvalue), (rtarget, rvalue)) in self.substitutions.iter().zip(other.substitutions.iter()) {
-                assert_eq!(ltarget, rtarget);
-                if env.is_def_equal(SubExpr(*lvalue, subs), SubExpr(*rvalue, other_subs))
-                    != TripleBool::True
-                {
-                    return TripleBool::Unknown;
-                }
             }
             if self.is_same_variable_as(&other) {
                 return TripleBool::True;

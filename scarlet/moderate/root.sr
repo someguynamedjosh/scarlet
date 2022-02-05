@@ -1,6 +1,9 @@
 {
   t_eq_symm IS 
   {
+    t_just[ b = a ]
+    .WITH_DEPENDENCIES[ a b ]
+
     t_eq_ext_rev[ a b x ]
 
     a IS VAR[ ]
@@ -25,26 +28,26 @@
   }
   .VALUE
 
-  # # From a=b  fx[ a ]
-  # # Proves fx[ b ]
-  # t_inv_eq_ext IS 
-  # {
-  #   # t_just[ fx[ b ] ]
-  #   # .WITH_DEPENDENCIES[ a b fx ]
+  # From a=b  fx[ a ]
+  # Proves fx[ b ]
+  t_inv_eq_ext IS 
+  {
+    t_just[ fx[ b ] ]
+    .WITH_DEPENDENCIES[ a b fx ]
+    .SHOWN
 
-  #   # t_inv_eq[ fx[ a ]  fx[ b ] ]
+    t_inv_eq[ fx[ a ]  fx[ b ] ]
 
-  #   t_just[ fx[ a ] = fx[ b ] ]
+    t_just[ fx[ a ] = fx[ b ] ]
 
-  #   # Proves fx[ a ] = fx[ b ]
-  #   t_eq_ext[ a b ]
-  #   .SHOWN
+    # Proves fx[ a ] = fx[ b ]
+    t_eq_ext[ a b ]
 
-  #   a IS VAR[ ]
-  #   b IS VAR[ a = SELF ]
-  #   fx IS VAR[ SELF[ a ]  SUB x ]
-  # }
-  # .VALUE
+    a IS VAR[ ]
+    b IS VAR[ a = SELF ]
+    fx IS VAR[ SELF[ a ]  DEP x ]
+  }
+  .VALUE
 
   # # From false
   # # Proves b
@@ -120,7 +123,7 @@
     .AS_LANGUAGE_ITEM[ t_inv_eq_statement ]
   }
 
-  fx IS VAR[ SUB x ]
+  fx IS VAR[ DEP x ]
   x IS VAR[]
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ]
