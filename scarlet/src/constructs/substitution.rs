@@ -80,9 +80,8 @@ impl CSubstitution {
                 }
                 Err(err) => {
                     panic!(
-                        "THIS EXPRESSION:\n{}\nASSIGNED TO:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
+                        "THIS EXPRESSION:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
                         env.show(*value, *value),
-                        env.show_var(*target, *value),
                         err
                     );
                 }

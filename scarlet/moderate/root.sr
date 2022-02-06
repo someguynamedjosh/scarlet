@@ -16,10 +16,10 @@
   # Proves fx[ a ] = fx[ b ]
   t_eq_ext IS 
   {
-    t_just[ fx[ a ] = fx[ b ] ]
-    .WITH_DEPENDENCIES[ a b fx ]
+    # t_just[ fx[ a ] = fx[ b ] ]
+    # .WITH_DEPENDENCIES[ a b fx ]
 
-    t_eq_ext_rev[ b a ]
+    # t_eq_ext_rev[ b a ]
 
     # Proves b = a
     t_eq_symm[ a b ]
