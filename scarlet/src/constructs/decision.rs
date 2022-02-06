@@ -8,7 +8,7 @@ use super::{
 use crate::{
     environment::{dependencies::Dependencies, Environment},
     impl_any_eq_for_construct,
-    scope::SPlain,
+    scope::{SPlain, Scope},
     shared::TripleBool,
 };
 
@@ -124,5 +124,52 @@ impl Construct for CDecision {
                 TripleBool::Unknown => TripleBool::False,
             },
         ])
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct SWithInvariant(pub Invariant, pub ConstructId);
+
+impl Scope for SWithInvariant {
+    fn dyn_clone(&self) -> Box<dyn Scope> {
+        Box::new(self.clone())
+    }
+
+    fn local_lookup_ident<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        _ident: &str,
+    ) -> Option<ConstructId> {
+        None
+    }
+
+    fn local_reverse_lookup_ident<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        _value: ConstructId,
+    ) -> Option<String> {
+        None
+    }
+
+    fn local_lookup_invariant<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+    ) -> Option<Invariant> {
+        // No, I don't want
+        let no_subs = NestedSubstitutions::new();
+        if env.is_def_equal(
+            SubExpr(self.0.statement, &no_subs),
+            SubExpr(invariant, &no_subs),
+        ) == TripleBool::True
+        {
+            Some(self.0.clone())
+        } else {
+            None
+        }
+    }
+
+    fn parent(&self) -> Option<ConstructId> {
+        Some(self.1)
     }
 }

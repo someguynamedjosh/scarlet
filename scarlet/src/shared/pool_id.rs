@@ -55,3 +55,4 @@ impl<const C: char> Hash for Id<C> {
         state.write_u64(self.pool_id);
     }
 }
+

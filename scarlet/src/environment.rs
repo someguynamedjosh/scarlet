@@ -14,7 +14,7 @@ use self::{dependencies::DepResStack, util::InvariantStack};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
-        substitution::{SubExpr, Substitutions, CSubstitution},
+        substitution::{CSubstitution, SubExpr, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
         variable::{Variable, VariableId, VariablePool},
         Construct,
@@ -34,6 +34,9 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "t_invariant_truth_rev_statement",
     "t_eq_ext_rev_statement",
     "t_inv_eq_statement",
+    "t_refl_statement",
+    "t_decision_eq_statement",
+    "t_decision_neq_statement",
 ];
 
 #[cfg(feature = "no_axioms")]
@@ -245,7 +248,11 @@ impl<'x> Environment<'x> {
         )
     }
 
-    pub(crate) fn substitute(&mut self, base: ConstructId, substitutions: &Substitutions) -> ConstructId {
+    pub(crate) fn substitute(
+        &mut self,
+        base: ConstructId,
+        substitutions: &Substitutions,
+    ) -> ConstructId {
         let con = CSubstitution::new_unchecked(base, substitutions.clone());
         let scope = self.constructs[base].scope.dyn_clone();
         self.push_construct(con, scope)

@@ -1,7 +1,11 @@
+use maplit::hashmap;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{decision::CDecision, downcast_construct, ConstructId},
+    constructs::{
+        decision::{CDecision, SWithInvariant},
+        downcast_construct, ConstructId, Invariant,
+    },
     environment::Environment,
     parser::{
         phrase::Phrase,
@@ -26,10 +30,25 @@ fn create<'x>(
     assert_eq!(args.len(), 4);
     let this = env.push_placeholder(scope);
 
+    let truee = env.get_language_item("true");
+    let falsee = env.get_language_item("false");
     let left = args[0].as_construct(pc, env, SPlain(this));
     let right = args[1].as_construct(pc, env, SPlain(this));
-    let equal = args[2].as_construct(pc, env, SPlain(this));
-    let unequal = args[3].as_construct(pc, env, SPlain(this));
+
+    let eq_inv = env.push_construct(
+        CDecision::new(left, right, truee, falsee),
+        SPlain(this).dyn_clone(),
+    );
+    let eq_inv = Invariant::new(eq_inv, Default::default());
+    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
+
+    let neq_inv = env.push_construct(
+        CDecision::new(left, right, truee, falsee),
+        SPlain(this).dyn_clone(),
+    );
+    let neq_inv = Invariant::new(neq_inv, Default::default());
+    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
+
     env.define_construct(this, CDecision::new(left, right, equal, unequal));
     this
 }
