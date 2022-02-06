@@ -42,9 +42,7 @@ fn create<'x>(
             dependencies.push(con);
         }
     }
-    let id = env.push_variable();
     let def = RVariable {
-        id,
         invariants,
         dependencies,
     };
@@ -64,15 +62,23 @@ fn uncreate<'a>(
     let from = &SWithParent(SVariableInvariants(scope_parent), from_con);
     if let Some(cvar) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
         let cvar = cvar.clone();
-        let invariants = cvar
+        let invariants = env
+            .get_variable(cvar.get_id())
             .get_invariants()
             .into_iter()
-            .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
+            .copied()
+            .collect_vec()
+            .into_iter()
+            .map(|inv| env.vomit(255, pc, code_arena, inv, from))
             .collect_vec();
-        let dependencies = cvar
+        let dependencies = env
+            .get_variable(cvar.get_id())
             .get_dependencies()
             .into_iter()
-            .map(|&dep| env.vomit(255, pc, code_arena, dep, from))
+            .copied()
+            .collect_vec()
+            .into_iter()
+            .map(|dep| env.vomit(255, pc, code_arena, dep, from))
             .collect_vec();
         let mut body = invariants;
         if dependencies.len() > 0 {

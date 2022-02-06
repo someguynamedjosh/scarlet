@@ -1,5 +1,5 @@
 use super::{ConstructId, Environment};
-use crate::constructs::variable::CVariable;
+use crate::constructs::variable::{CVariable, Dependency, VariableId};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DepResStackFrame(pub(super) ConstructId);
@@ -7,7 +7,7 @@ pub type DepResStack = Vec<DepResStackFrame>;
 
 #[derive(Debug)]
 pub struct Dependencies {
-    eager: Vec<CVariable>,
+    eager: Vec<Dependency>,
 }
 
 impl Dependencies {
@@ -15,20 +15,20 @@ impl Dependencies {
         Self { eager: Vec::new() }
     }
 
-    pub fn push_eager(&mut self, dep: CVariable) {
+    pub fn push_eager(&mut self, dep: Dependency) {
         for var in &self.eager {
-            if dep.is_same_variable_as(var) {
+            if &dep == var {
                 return;
             }
         }
         self.eager.push(dep);
     }
 
-    pub fn as_variables(&self) -> impl Iterator<Item = &CVariable> {
+    pub fn as_variables(&self) -> impl Iterator<Item = &Dependency> {
         self.eager.iter()
     }
 
-    pub fn into_variables(self) -> impl Iterator<Item = CVariable> {
+    pub fn into_variables(self) -> impl Iterator<Item = Dependency> {
         self.eager.into_iter()
     }
 
@@ -42,21 +42,30 @@ impl Dependencies {
         self.as_variables().count()
     }
 
-    pub fn remove(&mut self, var: &CVariable) {
+    pub fn remove(&mut self, var: VariableId) {
         self.eager = std::mem::take(&mut self.eager)
             .into_iter()
-            .filter(|x| x != var)
+            .filter(|x| x.id != var)
             .collect();
     }
 
-    pub fn pop_front(&mut self) -> CVariable {
+    pub fn pop_front(&mut self) -> Dependency {
         self.eager.remove(0)
     }
 
-    pub(crate) fn contains(&self, dep: &CVariable) -> bool {
+    pub(crate) fn contains(&self, dep: &Dependency) -> bool {
         for target in &self.eager {
-            if target.is_same_variable_as(dep) {
-                return true
+            if target == dep {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub(crate) fn contains_var(&self, dep: VariableId) -> bool {
+        for target in &self.eager {
+            if target.id == dep {
+                return true;
             }
         }
         false

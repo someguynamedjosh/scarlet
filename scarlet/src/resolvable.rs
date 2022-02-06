@@ -4,7 +4,7 @@ use crate::{
     constructs::{
         as_variable,
         substitution::{CSubstitution, Substitutions},
-        variable::{CVariable, VariableId},
+        variable::{CVariable, Variable, VariableId},
         ConstructDefinition, ConstructId,
     },
     environment::Environment,
@@ -78,9 +78,9 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         let mut remaining_deps = env.get_dependencies(self.base);
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, name).unwrap();
-            if let Some(var) = env.get_and_downcast_construct_definition(target) {
-                remaining_deps.remove(var);
-                subs.insert_no_replace(var.clone(), value);
+            if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(target) {
+                subs.insert_no_replace(var.get_id(), value);
+                remaining_deps.remove(var.get_id());
             } else {
                 panic!("{} is a valid name, but it is not a variable", name)
             }
@@ -90,16 +90,15 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
                 eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
                 panic!("No more dependencies left to substitute!");
             }
-            let dep = remaining_deps.pop_front();
+            let dep = remaining_deps.pop_front().id;
             subs.insert_no_replace(dep, value);
         }
-        ConstructDefinition::Resolved(Box::new(CSubstitution::new(self.base, subs, env)))
+        ConstructDefinition::Resolved(Box::new(CSubstitution::new(self.base, subs)))
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct RVariable {
-    pub id: VariableId,
     pub invariants: Vec<ConstructId>,
     pub dependencies: Vec<ConstructId>,
 }
@@ -111,10 +110,15 @@ impl<'x> Resolvable<'x> for RVariable {
 
     fn resolve(
         &self,
-        _env: &mut Environment<'x>,
+        env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
-        let con = CVariable::new(self.id, self.invariants.clone(), self.dependencies.clone());
+        let id = env.push_variable(Variable {
+            id: None,
+            invariants: self.invariants.clone(),
+            dependencies: self.dependencies.clone(),
+        });
+        let con = CVariable::new(id);
         ConstructDefinition::Resolved(Box::new(con))
     }
 }

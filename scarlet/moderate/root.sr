@@ -34,7 +34,6 @@
   {
     t_just[ fx[ b ] ]
     .WITH_DEPENDENCIES[ a b fx ]
-    .SHOWN
 
     t_inv_eq[ fx[ a ]  fx[ b ] ]
 
@@ -49,16 +48,18 @@
   }
   .VALUE
 
-  # # From false
-  # # Proves b
-  # t_explode_false IS
-  # {
-  #   t_inv_eq_ext[ false true true_or_b ]
-  #   true_or_b IS DECISION[ x false true b ]
-  #   t_invariant_truth[ false ]
-  #   b IS VAR[ false ]
-  # }
-  # .VALUE
+  # From false
+  # Proves b
+  t_explode_false IS
+  {
+    t_just[ b ]
+
+    t_inv_eq_ext[ false true true_or_b ]
+    true_or_b IS DECISION[ x false true b ]
+    t_invariant_truth[ false ]
+    b IS VAR[ false ]
+  }
+  .VALUE
 
   # # From a = b  b = c
   # # Proves a = c

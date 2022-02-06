@@ -1,5 +1,10 @@
 use crate::{
-    constructs::{decision::CDecision, unique::CUnique, variable::CVariable, ConstructId},
+    constructs::{
+        decision::CDecision,
+        unique::CUnique,
+        variable::{CVariable, Variable, VariableId},
+        ConstructId,
+    },
     environment::Environment,
     scope::SRoot,
     shared::TripleBool,
@@ -26,25 +31,34 @@ impl<'a> Environment<'a> {
     }
 
     fn variable(&mut self) -> ConstructId {
-        let id = self.push_variable();
-        self.push_construct(
-            CVariable::new(id, vec![], Default::default()),
-            Box::new(SRoot),
-        )
+        let id = self.push_variable(Variable {
+            id: None,
+            invariants: vec![],
+            dependencies: vec![],
+        });
+        self.push_construct(CVariable::new(id), Box::new(SRoot))
     }
 
-    fn variable_full(&mut self) -> (ConstructId, CVariable) {
-        let id = self.push_variable();
-        let con = CVariable::new(id, vec![], Default::default());
-        let id = self.push_construct(con.clone(), Box::new(SRoot));
-        (id, con)
+    fn variable_full(&mut self) -> (ConstructId, VariableId) {
+        let id = self.push_variable(Variable {
+            id: None,
+            invariants: vec![],
+            dependencies: vec![],
+        });
+        let con = CVariable::new(id);
+        let cid = self.push_construct(con.clone(), Box::new(SRoot));
+        (cid, id)
     }
 
-    fn variable_full_with_deps(&mut self, deps: Vec<ConstructId>) -> (ConstructId, CVariable) {
-        let id = self.push_variable();
-        let con = CVariable::new(id, vec![], deps);
-        let id = self.push_construct(con.clone(), Box::new(SRoot));
-        (id, con)
+    fn variable_full_with_deps(&mut self, deps: Vec<ConstructId>) -> (ConstructId, VariableId) {
+        let id = self.push_variable(Variable {
+            id: None,
+            invariants: vec![],
+            dependencies: deps,
+        });
+        let con = CVariable::new(id);
+        let cid = self.push_construct(con.clone(), Box::new(SRoot));
+        (cid, id)
     }
 
     fn assert_def_equal(&mut self, left: ConstructId, right: ConstructId) {

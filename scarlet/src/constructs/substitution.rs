@@ -1,7 +1,9 @@
 use std::{cell::RefCell, collections::HashSet};
 
 use super::{
-    downcast_construct, variable::CVariable, Construct, ConstructDefinition, ConstructId, Invariant,
+    downcast_construct,
+    variable::{CVariable, VariableId},
+    Construct, ConstructDefinition, ConstructId, Invariant,
 };
 use crate::{
     environment::{dependencies::Dependencies, Environment},
@@ -10,8 +12,8 @@ use crate::{
     shared::{OrderedMap, TripleBool},
 };
 
-pub type Substitutions = OrderedMap<CVariable, ConstructId>;
-pub type NestedSubstitutions<'a> = OrderedMap<CVariable, SubExpr<'a>>;
+pub type Substitutions = OrderedMap<VariableId, ConstructId>;
+pub type NestedSubstitutions<'a> = OrderedMap<VariableId, SubExpr<'a>>;
 type Justifications = Result<Vec<Invariant>, String>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,7 +24,7 @@ impl<'a> SubExpr<'a> {
         let mut result = Dependencies::new();
         let base = env.get_dependencies(self.0);
         for (target, value) in self.1.iter() {
-            if base.contains(target) {
+            if base.contains_var(*target) {
                 result.append(value.deps(env));
             }
         }
@@ -34,7 +36,7 @@ impl<'a> SubExpr<'a> {
 pub struct CSubstitution(ConstructId, Substitutions, RefCell<Option<Justifications>>);
 
 impl CSubstitution {
-    pub fn new<'x>(base: ConstructId, subs: Substitutions, env: &mut Environment) -> Self {
+    pub fn new<'x>(base: ConstructId, subs: Substitutions) -> Self {
         Self(base, subs.clone(), RefCell::new(None))
     }
 
@@ -67,7 +69,11 @@ impl CSubstitution {
         let mut previous_subs = Substitutions::new();
         let mut invariants = Vec::new();
         for (target, value) in &self.1 {
-            match target.can_be_assigned(*value, env, &previous_subs) {
+            match env
+                .get_variable(*target)
+                .clone()
+                .can_be_assigned(*value, env, &previous_subs)
+            {
                 Ok(mut new_invs) => {
                     previous_subs.insert_no_replace(target.clone(), *value);
                     invariants.append(&mut new_invs)
@@ -76,7 +82,7 @@ impl CSubstitution {
                     return Err(format!(
                         "THIS EXPRESSION:\n{}\nASSIGNED TO:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
                         env.show(*value, *value),
-                        env.show_var(target, *value),
+                        env.show_var(*target, *value),
                         err
                     ));
                 }
@@ -134,18 +140,15 @@ impl Construct for CSubstitution {
         let mut deps = Dependencies::new();
         let base = env.get_dependencies(self.0);
         for dep in base.as_variables() {
-            if let Some((_, rep)) = self.1.iter().find(|(var, _)| var.is_same_variable_as(&dep)) {
+            if let Some((_, rep)) = self.1.iter().find(|(var, _)| *var == dep.id) {
                 let replaced_deps = env.get_dependencies(*rep);
-                for rdep in replaced_deps
-                    .into_variables()
-                    .skip(dep.get_dependencies().len())
-                {
-                    deps.push_eager(rdep);
+                for rdep in replaced_deps.into_variables() {
+                    if !dep.swallow.contains(&rdep.id) {
+                        deps.push_eager(rdep);
+                    }
                 }
             } else {
-                if let Some(subbed_var) = dep.inline_substitute(env, &self.1) {
-                    deps.push_eager(subbed_var);
-                }
+                deps.push_eager(dep.clone());
             }
         }
         for inv in self

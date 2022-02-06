@@ -3,7 +3,10 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
-        downcast_construct, substitution::CSubstitution, variable::CVariable, ConstructId,
+        downcast_construct,
+        substitution::CSubstitution,
+        variable::{CVariable, Dependency, VariableId},
+        ConstructId,
     },
     environment::Environment,
     parser::{
@@ -54,13 +57,13 @@ fn uncreate_substitution<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    target: &CVariable,
+    target: VariableId,
     value: ConstructId,
-    deps: &mut Vec<CVariable>,
+    deps: &mut Vec<Dependency>,
     from: &dyn Scope,
 ) -> Node<'a> {
     let value = env.vomit(254, pc, code_arena, value, from);
-    if deps.get(0).map(|v| v.is_same_variable_as(target)) == Some(true) {
+    if deps.get(0).map(|v| v.id == target) == Some(true) {
         deps.remove(0);
         value
     } else {
@@ -92,7 +95,7 @@ fn uncreate<'a>(
             csub.substitutions()
                 .into_iter()
                 .map(|(target, value)| {
-                    uncreate_substitution(pc, env, code_arena, target, *value, &mut deps, from)
+                    uncreate_substitution(pc, env, code_arena, *target, *value, &mut deps, from)
                 })
                 .collect_vec(),
         );

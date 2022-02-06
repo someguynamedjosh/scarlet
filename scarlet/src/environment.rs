@@ -153,8 +153,14 @@ impl<'x> Environment<'x> {
         self.uniques.push(Unique)
     }
 
-    pub fn push_variable(&mut self) -> VariableId {
-        self.variables.push(Variable)
+    pub fn push_variable(&mut self, var: Variable) -> VariableId {
+        let id = self.variables.push(var);
+        self.variables[id].id = Some(id);
+        id
+    }
+
+    pub fn get_variable(&self, id: VariableId) -> &Variable {
+        &self.variables[id]
     }
 
     pub fn push_unresolved(

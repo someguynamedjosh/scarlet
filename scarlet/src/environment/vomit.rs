@@ -8,7 +8,7 @@ use crate::{
         downcast_construct,
         shown::CShown,
         substitution::SubExpr,
-        variable::{CVariable, SVariableInvariants},
+        variable::{CVariable, SVariableInvariants, VariableId},
         Construct, ConstructDefinition,
     },
     parser::{Node, ParseContext},
@@ -67,17 +67,18 @@ impl<'x> Environment<'x> {
                 "    {}\n",
                 indented(&format!(
                     "{}",
-                    self.vomit_var(&pc, &code_arena, &dep, &inv_from).vomit(&pc)
+                    self.vomit_var(&pc, &code_arena, dep.id, &inv_from)
+                        .vomit(&pc)
                 ))
             ));
         }
         result
     }
 
-    pub fn show_var(&mut self, var: &CVariable, from: ConstructId) -> String {
+    pub fn show_var(&mut self, var: VariableId, from: ConstructId) -> String {
         self.for_each_construct(|env, id| {
-            if let Some(other_var) = env.get_and_downcast_construct_definition(id) {
-                if var.is_same_variable_as(other_var) {
+            if let Some(other_var) = env.get_and_downcast_construct_definition::<CVariable>(id) {
+                if var == other_var.get_id() {
                     return ControlFlow::Break(env.show(id, from));
                 }
             }
@@ -90,13 +91,14 @@ impl<'x> Environment<'x> {
         &mut self,
         pc: &ParseContext,
         code_arena: &'a Arena<String>,
-        var: &CVariable,
+        var: VariableId,
         from: &dyn Scope,
     ) -> Node<'a> {
         let base = self
             .for_each_construct(|env, id| {
-                if let Some(other_var) = env.get_and_downcast_construct_definition(id) {
-                    if var.is_same_variable_as(other_var) {
+                if let Some(other_var) = env.get_and_downcast_construct_definition::<CVariable>(id)
+                {
+                    if var == other_var.get_id() {
                         return ControlFlow::Break(id);
                     }
                 }

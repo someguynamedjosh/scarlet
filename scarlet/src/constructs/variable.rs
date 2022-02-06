@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use maplit::hashset;
 
 use super::{
@@ -14,44 +13,44 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Variable;
+pub struct Variable {
+    pub id: Option<VariableId>,
+    pub invariants: Vec<ConstructId>,
+    pub dependencies: Vec<ConstructId>,
+}
 pub type VariablePool = Pool<Variable, 'V'>;
 pub type VariableId = Id<'V'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CVariable {
-    id: VariableId,
-    invariants: Vec<ConstructId>,
-    dependencies: Vec<ConstructId>,
+pub struct Dependency {
+    pub id: VariableId,
+    pub swallow: Vec<VariableId>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CVariable(pub VariableId);
+
 impl CVariable {
-    pub fn new<'x>(
-        id: VariableId,
-        invariants: Vec<ConstructId>,
-        dependencies: Vec<ConstructId>,
-    ) -> Self {
-        Self {
-            id,
-            invariants: invariants.clone(),
-            dependencies,
-        }
+    pub fn new<'x>(id: VariableId) -> Self {
+        Self(id)
     }
 
     pub(crate) fn get_id(&self) -> VariableId {
-        self.id
+        self.0
     }
 
+    pub fn is_same_variable_as(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Variable {
     pub(crate) fn get_invariants(&self) -> &[ConstructId] {
         &self.invariants[..]
     }
 
     pub(crate) fn get_dependencies(&self) -> &[ConstructId] {
         &self.dependencies
-    }
-
-    pub fn is_same_variable_as(&self, other: &Self) -> bool {
-        self.id == other.id
     }
 
     pub fn can_be_assigned<'x>(
@@ -62,7 +61,7 @@ impl CVariable {
     ) -> Result<Vec<Invariant>, String> {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
-        substitutions.insert_no_replace(self.clone(), value);
+        substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
             if let Some(inv) = env.get_produced_invariant(subbed, value) {
@@ -76,30 +75,6 @@ impl CVariable {
         }
         Ok(invariants)
     }
-
-    pub fn inline_substitute(
-        &self,
-        env: &mut Environment,
-        substitutions: &Substitutions,
-    ) -> Option<Self> {
-        for (target, _) in substitutions {
-            if self.is_same_variable_as(target) {
-                return None;
-            }
-        }
-        let invariants = self
-            .invariants
-            .iter()
-            .copied()
-            .map(|x| env.substitute(x, substitutions))
-            .collect_vec();
-        let dependencies = self
-            .dependencies
-            .iter()
-            .map(|value| env.substitute(*value, substitutions))
-            .collect();
-        Some(Self::new(self.id, invariants.clone(), dependencies))
-    }
 }
 
 impl_any_eq_for_construct!(CVariable);
@@ -112,9 +87,10 @@ impl Construct for CVariable {
     fn generated_invariants<'x>(
         &self,
         this: ConstructId,
-        _env: &mut Environment<'x>,
+        env: &mut Environment<'x>,
     ) -> Vec<Invariant> {
-        self.invariants
+        env.get_variable(self.0)
+            .invariants
             .iter()
             .map(|&i| Invariant::new(i, hashset![this]))
             .collect()
@@ -122,11 +98,14 @@ impl Construct for CVariable {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
         let mut deps = Dependencies::new();
-        for &dep in &self.dependencies {
+        for dep in env.get_variable(self.0).dependencies.clone() {
             deps.append(env.get_dependencies(dep));
         }
-        deps.push_eager(self.clone());
-        for &inv in &self.invariants {
+        deps.push_eager(Dependency {
+            id: self.0,
+            swallow: deps.as_variables().map(|x| x.id).collect(),
+        });
+        for inv in env.get_variable(self.0).invariants.clone() {
             deps.append(env.get_dependencies(inv));
         }
         deps
@@ -139,7 +118,7 @@ impl Construct for CVariable {
         SubExpr(other, other_subs): SubExpr,
     ) -> TripleBool {
         for (target, value) in subs {
-            if target.is_same_variable_as(self) {
+            if *target == self.0 {
                 let mut new_subs = value.1.clone();
                 for (target, value) in subs {
                     if new_subs.contains_key(target) {
@@ -156,10 +135,7 @@ impl Construct for CVariable {
         }
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             let other = other.clone();
-            if other_subs
-                .iter()
-                .any(|(key, _)| key.is_same_variable_as(&other))
-            {
+            if other_subs.iter().any(|(key, _)| *key == other.get_id()) {
                 return TripleBool::Unknown;
             }
             if self.is_same_variable_as(&other) {

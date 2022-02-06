@@ -1,7 +1,10 @@
 {
-  t_just IS VAR[ SELF ]
-  # t_just[ false ]
-  t_other IS VAR[ t_just[ SELF ] ]
+  a IS VAR[ ]
+  x IS VAR[ ]
+  fx IS VAR[ DEP x ]
+
+  fx[ a ].SHOWN
+  [ fx IS x ].SHOWN
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
