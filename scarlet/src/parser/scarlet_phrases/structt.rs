@@ -96,7 +96,7 @@ fn uncreate<'a>(
             fields.push(value);
         }
     }
-    if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"))
+    if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"),1024)
         == TripleBool::True
     {
         Some(Node {

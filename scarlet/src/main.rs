@@ -27,10 +27,13 @@ fn main() {
 
     let parse_context = ParseContext::new();
     let root = parser::parse(&root.self_content, &parse_context);
+    println!("Parsed");
 
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
     env.resolve_all();
+    println!("Resolved");
     env.check_all();
+    println!("Checked");
     env.show_all_requested();
 }

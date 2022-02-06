@@ -178,11 +178,16 @@ impl Construct for CSubstitution {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         other: SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
-        let mut new_subs = subs.clone();
-        for (target, value) in &self.1 {
-            new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
+        if recursion_limit == 0 {
+            TripleBool::Unknown
+        } else {
+            let mut new_subs = subs.clone();
+            for (target, value) in &self.1 {
+                new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
+            }
+            env.is_def_equal(SubExpr(self.0, &new_subs), other, recursion_limit - 1)
         }
-        env.is_def_equal(SubExpr(self.0, &new_subs), other)
     }
 }

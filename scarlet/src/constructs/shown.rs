@@ -47,8 +47,9 @@ impl Construct for CShown {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         SubExpr(other, other_subs): SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
         let other = env.get_construct_definition(other).dyn_clone();
-        other.is_def_equal(env, other_subs, SubExpr(self.0, subs))
+        other.is_def_equal(env, other_subs, SubExpr(self.0, subs), recursion_limit)
     }
 }

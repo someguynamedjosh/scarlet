@@ -110,6 +110,7 @@ pub trait Construct: Any + Debug + AnyEq {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         other: SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
         TripleBool::Unknown
     }

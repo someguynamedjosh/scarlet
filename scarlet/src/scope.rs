@@ -26,6 +26,7 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
+        limit: u32,
     ) -> Option<Invariant>;
     fn parent(&self) -> Option<ConstructId>;
 
@@ -67,16 +68,21 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> Option<Invariant> {
-        if let Some(inv) = self.local_lookup_invariant(env, invariant) {
-            Some(inv)
-        } else if let Some(parent) = self.parent() {
-            env.get_construct(parent)
-                .scope
-                .dyn_clone()
-                .lookup_invariant(env, invariant)
-        } else {
-            None
+        for limit in 0..1024 {
+            if let Some(inv) = self.local_lookup_invariant(env, invariant, limit) {
+                return Some(inv);
+            } else if let Some(parent) = self.parent() {
+                let res = env
+                    .get_construct(parent)
+                    .scope
+                    .dyn_clone()
+                    .lookup_invariant(env, invariant);
+                if res.is_some() {
+                    return res;
+                }
+            }
         }
+        None
     }
 }
 
@@ -108,6 +114,7 @@ impl Scope for SPlain {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
+        _limit: u32,
     ) -> Option<Invariant> {
         None
     }
@@ -147,11 +154,13 @@ impl Scope for SRoot {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
+        limit: u32,
     ) -> Option<Invariant> {
         let truee = env.get_language_item("true");
         if env.is_def_equal(
             SubExpr(invariant, &Default::default()),
             SubExpr(truee, &Default::default()),
+            limit,
         ) == TripleBool::True
         {
             Some(Invariant::new(truee, hashset![]))
@@ -197,6 +206,7 @@ impl Scope for SPlaceholder {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
+        _limit: u32,
     ) -> Option<Invariant> {
         unreachable!()
     }
@@ -238,8 +248,9 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
+        limit: u32,
     ) -> Option<Invariant> {
-        self.0.local_lookup_invariant(env, invariant)
+        self.0.local_lookup_invariant(env, invariant, limit)
     }
 
     fn parent(&self) -> Option<ConstructId> {

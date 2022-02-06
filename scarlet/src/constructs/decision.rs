@@ -72,6 +72,7 @@ impl Construct for CDecision {
                 if env.is_def_equal(
                     SubExpr(true_inv.statement, &Default::default()),
                     SubExpr(false_inv.statement, &Default::default()),
+                    4,
                 ) == TripleBool::True
                 {
                     let mut deps = true_inv.dependencies;
@@ -98,16 +99,33 @@ impl Construct for CDecision {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         SubExpr(other, other_subs): SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
+        if recursion_limit == 0 {
+            return TripleBool::Unknown;
+        }
         let base = if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             let other = other.clone();
             TripleBool::and(vec![
-                env.is_def_equal(SubExpr(self.left, subs), SubExpr(other.left, other_subs)),
-                env.is_def_equal(SubExpr(self.right, subs), SubExpr(other.right, other_subs)),
-                env.is_def_equal(SubExpr(self.equal, subs), SubExpr(other.equal, other_subs)),
+                env.is_def_equal(
+                    SubExpr(self.left, subs),
+                    SubExpr(other.left, other_subs),
+                    recursion_limit - 1,
+                ),
+                env.is_def_equal(
+                    SubExpr(self.right, subs),
+                    SubExpr(other.right, other_subs),
+                    recursion_limit - 1,
+                ),
+                env.is_def_equal(
+                    SubExpr(self.equal, subs),
+                    SubExpr(other.equal, other_subs),
+                    recursion_limit - 1,
+                ),
                 env.is_def_equal(
                     SubExpr(self.unequal, subs),
                     SubExpr(other.unequal, other_subs),
+                    recursion_limit - 1,
                 ),
             ])
         } else {
@@ -116,11 +134,23 @@ impl Construct for CDecision {
         let other = env.get_construct_definition(other).dyn_clone();
         TripleBool::or(vec![
             base,
-            match env.is_def_equal(SubExpr(self.left, subs), SubExpr(self.right, other_subs)) {
-                TripleBool::True => other.is_def_equal(env, other_subs, SubExpr(self.equal, subs)),
-                TripleBool::False => {
-                    other.is_def_equal(env, other_subs, SubExpr(self.unequal, subs))
-                }
+            match env.is_def_equal(
+                SubExpr(self.left, subs),
+                SubExpr(self.right, other_subs),
+                recursion_limit - 1,
+            ) {
+                TripleBool::True => other.is_def_equal(
+                    env,
+                    other_subs,
+                    SubExpr(self.equal, subs),
+                    recursion_limit - 1,
+                ),
+                TripleBool::False => other.is_def_equal(
+                    env,
+                    other_subs,
+                    SubExpr(self.unequal, subs),
+                    recursion_limit - 1,
+                ),
                 TripleBool::Unknown => TripleBool::False,
             },
         ])
@@ -155,12 +185,14 @@ impl Scope for SWithInvariant {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
+        limit: u32,
     ) -> Option<Invariant> {
         // No, I don't want
         let no_subs = NestedSubstitutions::new();
         if env.is_def_equal(
             SubExpr(self.0.statement, &no_subs),
             SubExpr(invariant, &no_subs),
+            limit,
         ) == TripleBool::True
         {
             Some(self.0.clone())

@@ -63,21 +63,21 @@ impl<'a> Environment<'a> {
 
     fn assert_def_equal(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
-            self.is_def_equal_without_subs(left, right),
+            self.is_def_equal_without_subs(left, right, 1024),
             TripleBool::True
         );
     }
 
     fn assert_def_equal_not(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
-            self.is_def_equal_without_subs(left, right),
+            self.is_def_equal_without_subs(left, right, 1024),
             TripleBool::False
         );
     }
 
     fn assert_def_equal_unknown(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
-            self.is_def_equal_without_subs(left, right),
+            self.is_def_equal_without_subs(left, right, 1024),
             TripleBool::Unknown
         );
     }

@@ -223,28 +223,34 @@ impl<'x> Environment<'x> {
         self.for_each_construct_returning_nothing(Self::check);
     }
 
-    pub(crate) fn is_def_equal(&mut self, left: SubExpr, right: SubExpr) -> TripleBool {
+    pub(crate) fn is_def_equal(&mut self, left: SubExpr, right: SubExpr, limit: u32) -> TripleBool {
+        if left == right {
+            return TripleBool::True;
+        }
         let result = self
             .get_construct_definition(left.0)
             .dyn_clone()
-            .is_def_equal(self, &left.1, right);
-        if result == TripleBool::Unknown {
-            self.get_construct_definition(right.0)
-                .dyn_clone()
-                .is_def_equal(self, &right.1, left)
-        } else {
-            result
+            .is_def_equal(self, &left.1, right, limit);
+        if result != TripleBool::Unknown {
+            return result;
         }
+        let result = self
+            .get_construct_definition(right.0)
+            .dyn_clone()
+            .is_def_equal(self, &right.1, left, limit);
+        result
     }
 
     pub(crate) fn is_def_equal_without_subs(
         &mut self,
         left: ConstructId,
         right: ConstructId,
+        limit: u32,
     ) -> TripleBool {
         self.is_def_equal(
             SubExpr(left, &Default::default()),
             SubExpr(right, &Default::default()),
+            limit,
         )
     }
 

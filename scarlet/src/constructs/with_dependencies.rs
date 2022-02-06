@@ -66,7 +66,8 @@ impl Construct for CWithDependencies {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         other: SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
-        env.is_def_equal(SubExpr(self.base, subs), other)
+        env.is_def_equal(SubExpr(self.base, subs), other, recursion_limit)
     }
 }

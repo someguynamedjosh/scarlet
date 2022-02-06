@@ -55,13 +55,17 @@ impl Construct for CAxiom {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         other: SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
         let other_subs = other.1;
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other.0) {
+        if recursion_limit == 0 {
+            TripleBool::Unknown
+        } else if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other.0) {
             let other = other.clone();
             env.is_def_equal(
                 SubExpr(self.statement, subs),
                 SubExpr(other.statement, other_subs),
+                recursion_limit - 1,
             )
         } else {
             TripleBool::Unknown

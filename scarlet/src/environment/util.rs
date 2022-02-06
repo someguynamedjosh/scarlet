@@ -96,12 +96,14 @@ impl<'x> Environment<'x> {
         &mut self,
         statement: ConstructId,
         context_id: ConstructId,
+        limit: u32,
     ) -> Option<Invariant> {
         let generated_invariants = self.generated_invariants(context_id);
         for inv in generated_invariants {
             if self.is_def_equal(
                 SubExpr(statement, &Default::default()),
                 SubExpr(inv.statement, &Default::default()),
+                limit,
             ) == TripleBool::True
             {
                 return Some(inv);

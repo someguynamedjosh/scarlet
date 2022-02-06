@@ -40,6 +40,7 @@ impl Construct for CUnique {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         SubExpr(other, _): SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             if self.0 == other.0 {

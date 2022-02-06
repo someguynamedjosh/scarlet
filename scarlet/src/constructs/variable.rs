@@ -64,7 +64,7 @@ impl Variable {
         substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
-            if let Some(inv) = env.get_produced_invariant(subbed, value) {
+            if let Some(inv) = env.get_produced_invariant(subbed, value, 1024) {
                 invariants.push(inv);
             } else {
                 return Err(format!(
@@ -116,7 +116,11 @@ impl Construct for CVariable {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         SubExpr(other, other_subs): SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
+        if recursion_limit == 0 {
+            return TripleBool::Unknown;
+        }
         for (target, value) in subs {
             if *target == self.0 {
                 let mut new_subs = value.1.clone();
@@ -130,7 +134,11 @@ impl Construct for CVariable {
                         new_subs.insert_no_replace(target.clone(), *value);
                     }
                 }
-                return env.is_def_equal(SubExpr(value.0, &new_subs), SubExpr(other, other_subs));
+                return env.is_def_equal(
+                    SubExpr(value.0, &new_subs),
+                    SubExpr(other, other_subs),
+                    recursion_limit,
+                );
             }
         }
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
@@ -182,6 +190,7 @@ impl Scope for SVariableInvariants {
         &self,
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
+        _limit: u32,
     ) -> Option<Invariant> {
         None
     }

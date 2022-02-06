@@ -67,15 +67,26 @@ impl Construct for CPopulatedStruct {
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         SubExpr(other, other_subs): SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
+        if recursion_limit == 0 {
+            TripleBool::Unknown
+        } else if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
             let other = other.clone();
             if self.label != other.label {
                 return TripleBool::False;
             }
             TripleBool::and(vec![
-                env.is_def_equal(SubExpr(self.value, subs), SubExpr(other.value, other_subs)),
-                env.is_def_equal(SubExpr(self.rest, subs), SubExpr(other.rest, other_subs)),
+                env.is_def_equal(
+                    SubExpr(self.value, subs),
+                    SubExpr(other.value, other_subs),
+                    recursion_limit - 1,
+                ),
+                env.is_def_equal(
+                    SubExpr(self.rest, subs),
+                    SubExpr(other.rest, other_subs),
+                    recursion_limit - 1,
+                ),
             ])
         } else {
             TripleBool::Unknown
@@ -135,6 +146,7 @@ impl Construct for CAtomicStructMember {
         _env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
         other: SubExpr,
+        recursion_limit: u32,
     ) -> TripleBool {
         TripleBool::Unknown
     }
@@ -186,6 +198,7 @@ impl Scope for SField {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
+        limit: u32,
     ) -> Option<Invariant> {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
@@ -193,6 +206,7 @@ impl Scope for SField {
                 if env.is_def_equal(
                     SubExpr(invariant, &Default::default()),
                     SubExpr(maybe_match.statement, &Default::default()),
+                    limit,
                 ) == TripleBool::True
                 {
                     return Some(maybe_match);
@@ -246,6 +260,7 @@ fn lookup_invariant_in<'x>(
     env: &mut Environment<'x>,
     invariant: ConstructId,
     inn: &CPopulatedStruct,
+    limit: u32,
 ) -> Option<Invariant> {
     if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)) {
         let rest = rest.clone();
@@ -253,12 +268,13 @@ fn lookup_invariant_in<'x>(
             if env.is_def_equal(
                 SubExpr(invariant, &Default::default()),
                 SubExpr(maybe_match.statement, &Default::default()),
+                limit,
             ) == TripleBool::True
             {
                 return Some(maybe_match);
             }
         }
-        lookup_invariant_in(env, invariant, &rest)
+        lookup_invariant_in(env, invariant, &rest, limit)
     } else {
         None
     }
@@ -299,10 +315,11 @@ impl Scope for SFieldAndRest {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
+        limit: u32,
     ) -> Option<Invariant> {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)) {
             let structt = structt.clone();
-            lookup_invariant_in(env, invariant, &structt)
+            lookup_invariant_in(env, invariant, &structt, limit)
         } else {
             unreachable!()
         }
