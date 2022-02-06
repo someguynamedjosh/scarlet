@@ -127,7 +127,7 @@ impl Construct for CVariable {
                 for (target, value) in subs {
                     if new_subs.contains_key(target) {
                         if new_subs.get(target).unwrap() != value {
-                            println!("{:#?}", env);
+                            eprintln!("{:#?}", env);
                             todo!("{:#?}, {:?} -> {:?}", new_subs, target, value);
                         }
                     } else {

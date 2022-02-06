@@ -38,8 +38,8 @@ impl<'x> Environment<'x> {
         if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
             def
         } else {
-            println!("{:#?}", self);
-            println!("{:?} -> {:?}", old_con_id, con_id);
+            eprintln!("{:#?}", self);
+            eprintln!("{:?} -> {:?}", old_con_id, con_id);
             unreachable!()
         }
     }
@@ -58,8 +58,8 @@ impl<'x> Environment<'x> {
         if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
             def
         } else {
-            println!("{:#?}", self);
-            println!("{:?} -> {:?}", old_con_id, con_id);
+            eprintln!("{:#?}", self);
+            eprintln!("{:?} -> {:?}", old_con_id, con_id);
             unreachable!()
         }
     }
@@ -77,19 +77,19 @@ impl<'x> Environment<'x> {
                 return Vec::new();
             }
         }
-        self.dep_res_stack.push(DepResStackFrame(con_id));
 
-        // if let Some(invariants) = &self.constructs[con_id].invariants {
-        //     let result = invariants.clone();
-        //     self.dep_res_stack.pop();
-        //     result
-        // } else {
-        let context = self.get_construct_definition(con_id).dyn_clone();
-        let invs = context.generated_invariants(con_id, self);
-        self.constructs[con_id].invariants = Some(invs.clone());
-        self.dep_res_stack.pop();
-        invs
-        // }
+        let def = &self.constructs[con_id].definition ;
+        if def.as_other().is_some() || def.as_resolved().is_some() {
+            self.dep_res_stack.push(DepResStackFrame(con_id));
+            let context = self.get_construct_definition(con_id);
+            let context = context.dyn_clone();
+            let invs = context.generated_invariants(con_id, self);
+            self.constructs[con_id].invariants = Some(invs.clone());
+            self.dep_res_stack.pop();
+            invs
+        } else {
+            Vec::new()
+        }
     }
 
     pub fn get_produced_invariant(

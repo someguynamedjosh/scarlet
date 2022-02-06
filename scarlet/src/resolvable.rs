@@ -39,7 +39,7 @@ impl<'x> Resolvable<'x> for RPlaceholder {
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
     ) -> ConstructDefinition<'x> {
-        println!("{:#?}", env);
+        eprintln!("{:#?}", env);
         unreachable!()
     }
 }

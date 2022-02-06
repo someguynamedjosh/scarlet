@@ -79,12 +79,12 @@ impl CSubstitution {
                     invariants.append(&mut new_invs)
                 }
                 Err(err) => {
-                    return Err(format!(
+                    panic!(
                         "THIS EXPRESSION:\n{}\nASSIGNED TO:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
                         env.show(*value, *value),
                         env.show_var(*target, *value),
                         err
-                    ));
+                    );
                 }
             }
         }
@@ -131,7 +131,7 @@ impl Construct for CSubstitution {
             .as_ref()
             .unwrap()
         {
-            println!("{}", err);
+            eprintln!("{}", err);
             todo!("nice error");
         }
     }

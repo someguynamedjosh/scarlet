@@ -127,7 +127,7 @@ impl<'x> Environment<'x> {
                 }
             }
         }
-        println!("{:#?}", self);
+        eprintln!("{:#?}", self);
         todo!(
             "{:?} could not be vomited (at least one parser phrase should apply)",
             con_id

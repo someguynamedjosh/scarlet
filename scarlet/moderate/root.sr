@@ -5,6 +5,7 @@
     .WITH_DEPENDENCIES[ a b ]
 
     t_eq_ext_rev[ a b x ]
+    .SHOWN
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
@@ -28,92 +29,92 @@
   }
   .VALUE
 
-  # From a=b  fx[ a ]
-  # Proves fx[ b ]
-  t_inv_eq_ext IS 
-  {
-    t_just[ fx[ b ] ]
-    .WITH_DEPENDENCIES[ a b fx ]
+  # # From a=b  fx[ a ]
+  # # Proves fx[ b ]
+  # t_inv_eq_ext IS 
+  # {
+  #   t_just[ fx[ b ] ]
+  #   .WITH_DEPENDENCIES[ a b fx ]
 
-    t_inv_eq[ fx[ a ]  fx[ b ] ]
+  #   t_inv_eq[ fx[ a ]  fx[ b ] ]
 
-    t_just[ fx[ a ] = fx[ b ] ]
+  #   t_just[ fx[ a ] = fx[ b ] ]
 
-    # Proves fx[ a ] = fx[ b ]
-    t_eq_ext[ a b ]
+  #   # Proves fx[ a ] = fx[ b ]
+  #   t_eq_ext[ a b ]
 
-    a IS VAR[ ]
-    b IS VAR[ a = SELF ]
-    fx IS VAR[ SELF[ a ]  DEP x ]
-  }
-  .VALUE
+  #   a IS VAR[ ]
+  #   b IS VAR[ a = SELF ]
+  #   fx IS VAR[ SELF[ a ]  DEP x ]
+  # }
+  # .VALUE
 
-  # From false
-  # Proves b
-  t_explode_false IS
-  {
-    t_just[ b ]
+  # # From false
+  # # Proves b
+  # t_explode_false IS
+  # {
+  #   t_just[ b ]
 
-    t_inv_eq_ext[ false true true_or_b ]
-    true_or_b IS DECISION[ x false true b ]
-    t_invariant_truth[ false ]
-    b IS VAR[ false ]
-  }
-  .VALUE
+  #   t_inv_eq_ext[ false true true_or_b ]
+  #   true_or_b IS DECISION[ x false true b ]
+  #   t_invariant_truth[ false ]
+  #   b IS VAR[ false ]
+  # }
+  # .VALUE
 
-  # From a = b  b = c
-  # Proves a = c
-  t_eq_trans IS 
-  {
-    t_just[ a = c ]
-    .WITH_DEPENDENCIES[ a b c ]
+  # # From a = b  b = c
+  # # Proves a = c
+  # t_eq_trans IS 
+  # {
+  #   t_just[ a = c ]
+  #   .WITH_DEPENDENCIES[ a b c ]
 
-    t_inv_eq[ a = b  a = c ]
-    t_eq_ext[ b c a_equals_x ]
-    a_equals_x IS
-    (a = x).WITH_DEPENDENCIES[ x ]
+  #   t_inv_eq[ a = b  a = c ]
+  #   t_eq_ext[ b c a_equals_x ]
+  #   a_equals_x IS
+  #   (a = x).WITH_DEPENDENCIES[ x ]
 
-    a IS VAR[ ]
-    b IS VAR[ a = SELF ]
-    c IS VAR[ b = SELF ]
-  }
-  .VALUE
+  #   a IS VAR[ ]
+  #   b IS VAR[ a = SELF ]
+  #   c IS VAR[ b = SELF ]
+  # }
+  # .VALUE
 
-  # From DECISION[ a  b  x = u  x = v ]
-  # Proves x = DECISION[ a b u v ]
-  t_extract_eq_from_decision IS 
-  {
-    DECISION[
-      a b
+  # # From DECISION[ a  b  x = u  x = v ]
+  # # Proves x = DECISION[ a b u v ]
+  # t_extract_eq_from_decision IS 
+  # {
+  #   DECISION[
+  #     a b
 
-      {
-        # # Proves t = conclusion_right
-        # t_eq_trans[ t u conclusion_right ]
-        # # Proves u = conclusion_right
-        # t_eq_symm[ conclusion_right u ]
-        # Proves conclusion_right = u
-        t_decision_eq[ a b u v ]
-        # Proves t = u
-        t_inv_eq[ hypothesis  t = u ]
-        # Proves hypothesis = (t = u)
-        t_decision_eq[ a  b  t = u  t = v ]
-      }
-      .VALUE
+  #     {
+  #       # # Proves t = conclusion_right
+  #       # t_eq_trans[ t u conclusion_right ]
+  #       # # Proves u = conclusion_right
+  #       # t_eq_symm[ conclusion_right u ]
+  #       # Proves conclusion_right = u
+  #       t_decision_eq[ a b u v ]
+  #       # Proves t = u
+  #       t_inv_eq[ hypothesis  t = u ]
+  #       # Proves hypothesis = (t = u)
+  #       t_decision_eq[ a  b  t = u  t = v ]
+  #     }
+  #     .VALUE
 
-      void
-    ]
+  #     void
+  #   ]
 
-    hypothesis IS DECISION[ a  b  t = u  t = v ]
-    conclusion IS t = conclusion_right
-    conclusion_right IS DECISION[ a b u v ]
+  #   hypothesis IS DECISION[ a  b  t = u  t = v ]
+  #   conclusion IS t = conclusion_right
+  #   conclusion_right IS DECISION[ a b u v ]
 
-    a IS VAR[ ]
-    b IS VAR[ ]
-    t IS VAR[ ]
-    u IS VAR[ ]
-    v IS VAR[ hypothesis ]
-  }
-  .VALUE
+  #   a IS VAR[ ]
+  #   b IS VAR[ ]
+  #   t IS VAR[ ]
+  #   u IS VAR[ ]
+  #   v IS VAR[ hypothesis ]
+  # }
+  # .VALUE
 
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]

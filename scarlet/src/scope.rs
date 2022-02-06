@@ -68,21 +68,32 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> Option<Invariant> {
-        for limit in 0..1024 {
-            if let Some(inv) = self.local_lookup_invariant(env, invariant, limit) {
+        for limit in 0..8192 {
+            if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit) {
                 return Some(inv);
-            } else if let Some(parent) = self.parent() {
-                let res = env
-                    .get_construct(parent)
-                    .scope
-                    .dyn_clone()
-                    .lookup_invariant(env, invariant);
-                if res.is_some() {
-                    return res;
-                }
             }
         }
         None
+    }
+
+    fn lookup_invariant_limited<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        invariant: ConstructId,
+        limit: u32,
+    ) -> Option<Invariant> {
+        if let Some(inv) = self.local_lookup_invariant(env, invariant, limit) {
+            return Some(inv);
+        } else if let Some(parent) = self.parent() {
+            let res = env
+                .get_construct(parent)
+                .scope
+                .dyn_clone()
+                .lookup_invariant_limited(env, invariant, limit);
+            res
+        } else {
+            None
+        }
     }
 }
 
