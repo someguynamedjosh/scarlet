@@ -2,10 +2,13 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    ConstructDefinition, Invariant,
+    ConstructDefinition, GenInvResult, Invariant,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies},
+        DefEqualResult, Environment,
+    },
     impl_any_eq_for_construct,
     shared::TripleBool,
 };
@@ -34,11 +37,11 @@ impl Construct for CShown {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
+    ) -> GenInvResult {
         env.generated_invariants(self.0)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.0)
     }
 
@@ -48,8 +51,8 @@ impl Construct for CShown {
         subs: &NestedSubstitutions,
         SubExpr(other, other_subs): SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
-        let other = env.get_construct_definition(other).dyn_clone();
+    ) -> DefEqualResult {
+        let other = env.get_construct_definition(other)?.dyn_clone();
         other.is_def_equal(env, other_subs, SubExpr(self.0, subs), recursion_limit)
     }
 }

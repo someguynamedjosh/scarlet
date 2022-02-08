@@ -3,10 +3,13 @@ use std::{cell::RefCell, collections::HashSet};
 use super::{
     downcast_construct,
     variable::{CVariable, VariableId},
-    Construct, ConstructDefinition, ConstructId, Invariant,
+    Construct, ConstructDefinition, ConstructId, GenInvResult, Invariant,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies, DependencyError},
+        CheckResult, DefEqualResult, Environment, UnresolvedConstructError,
+    },
     impl_any_eq_for_construct,
     scope::Scope,
     shared::{OrderedMap, TripleBool},
@@ -20,15 +23,15 @@ type Justifications = Result<Vec<Invariant>, String>;
 pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
 
 impl<'a> SubExpr<'a> {
-    pub fn deps(&self, env: &mut Environment) -> Dependencies {
+    pub fn deps(&self, env: &mut Environment) -> DepResult {
         let mut result = Dependencies::new();
-        let base = env.get_dependencies(self.0);
+        let base = env.get_dependencies(self.0)?;
         for (target, value) in self.1.iter() {
             if base.contains_var(*target) {
-                result.append(value.deps(env));
+                result.append(value.deps(env)?);
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -55,24 +58,27 @@ impl CSubstitution {
     fn substitution_justifications(
         &self,
         env: &mut Environment,
-    ) -> &RefCell<Option<Justifications>> {
-        if self.2.borrow().is_some() {
-            return &self.2;
+    ) -> Result<&RefCell<Option<Justifications>>, UnresolvedConstructError> {
+        Ok(if self.2.borrow().is_some() {
+            &self.2
         } else {
-            let just = self.create_substitution_justifications(env);
+            let just = self.create_substitution_justifications(env)?;
             *self.2.borrow_mut() = Some(just);
             &self.2
-        }
+        })
     }
 
-    fn create_substitution_justifications(&self, env: &mut Environment) -> Justifications {
+    fn create_substitution_justifications(
+        &self,
+        env: &mut Environment,
+    ) -> Result<Justifications, UnresolvedConstructError> {
         let mut previous_subs = Substitutions::new();
         let mut invariants = Vec::new();
         for (target, value) in &self.1 {
             match env
                 .get_variable(*target)
                 .clone()
-                .can_be_assigned(*value, env, &previous_subs)
+                .can_be_assigned(*value, env, &previous_subs)?
             {
                 Ok(mut new_invs) => {
                     previous_subs.insert_no_replace(target.clone(), *value);
@@ -87,12 +93,12 @@ impl CSubstitution {
                 }
             }
         }
-        Ok(invariants)
+        Ok(Ok(invariants))
     }
 
-    fn invariants(&self, env: &mut Environment) -> Vec<Invariant> {
+    fn invariants(&self, env: &mut Environment) -> GenInvResult {
         let mut invs = Vec::new();
-        for inv in env.generated_invariants(self.0) {
+        for inv in env.generated_invariants(self.0)? {
             let subbed_statement = env.substitute(inv.statement, &self.1);
             let mut new_deps: HashSet<_> = inv
                 .dependencies
@@ -100,7 +106,7 @@ impl CSubstitution {
                 .map(|d| env.substitute(d, &self.1))
                 .collect();
             for inv in self
-                .substitution_justifications(env)
+                .substitution_justifications(env)?
                 .borrow()
                 .iter()
                 .flatten()
@@ -112,7 +118,7 @@ impl CSubstitution {
             }
             invs.push(Invariant::new(subbed_statement, new_deps));
         }
-        invs
+        Ok(invs)
     }
 }
 
@@ -123,9 +129,14 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
-    fn check<'x>(&self, env: &mut Environment<'x>, _this: ConstructId, _scope: Box<dyn Scope>) {
+    fn check<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        _this: ConstructId,
+        _scope: Box<dyn Scope>,
+    ) -> CheckResult {
         if let Err(err) = self
-            .substitution_justifications(env)
+            .substitution_justifications(env)?
             .borrow()
             .as_ref()
             .unwrap()
@@ -133,14 +144,15 @@ impl Construct for CSubstitution {
             eprintln!("{}", err);
             todo!("nice error");
         }
+        Ok(())
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
-        let base = env.get_dependencies(self.0);
+        let base = env.get_dependencies(self.0)?;
         for dep in base.as_variables() {
             if let Some((_, rep)) = self.1.iter().find(|(var, _)| *var == dep.id) {
-                let replaced_deps = env.get_dependencies(*rep);
+                let replaced_deps = env.get_dependencies(*rep)?;
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.id) {
                         deps.push_eager(rdep);
@@ -150,25 +162,27 @@ impl Construct for CSubstitution {
                 deps.push_eager(dep.clone());
             }
         }
-        for inv in self
-            .substitution_justifications(env)
-            .borrow()
-            .iter()
-            .flatten()
-            .flatten()
-        {
+        let sj = match self.substitution_justifications(env) {
+            Ok(ok) => ok,
+            Err(err) => {
+                let mut err = DependencyError::from_unresolved(err);
+                err.partial_deps = deps;
+                return Err(err);
+            }
+        };
+        for inv in sj.borrow().iter().flatten().flatten() {
             for &dep in &inv.dependencies {
-                deps.append(env.get_dependencies(dep))
+                deps.append(env.get_dependencies(dep)?)
             }
         }
-        deps
+        Ok(deps)
     }
 
     fn generated_invariants<'x>(
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
+    ) -> GenInvResult {
         self.invariants(env)
     }
 
@@ -178,15 +192,12 @@ impl Construct for CSubstitution {
         subs: &NestedSubstitutions,
         other: SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
-        if recursion_limit == 0 {
-            TripleBool::Unknown
-        } else {
-            let mut new_subs = subs.clone();
-            for (target, value) in &self.1 {
-                new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
-            }
-            env.is_def_equal(SubExpr(self.0, &new_subs), other, recursion_limit - 1)
+    ) -> DefEqualResult {
+        assert_ne!(recursion_limit, 0);
+        let mut new_subs = subs.clone();
+        for (target, value) in &self.1 {
+            new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
         }
+        env.is_def_equal(SubExpr(self.0, &new_subs), other, recursion_limit - 1)
     }
 }

@@ -1,5 +1,8 @@
 use super::{ConstructId, Environment};
-use crate::{constructs::ConstructDefinition, environment::dependencies::DepResStackFrame};
+use crate::{
+    constructs::ConstructDefinition,
+    environment::{dependencies::DepResStackFrame, UnresolvedConstructError},
+};
 
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
@@ -13,8 +16,11 @@ impl<'x> Environment<'x> {
             let resolvable = resolvable.dyn_clone();
             let scope = con.scope.dyn_clone();
             let new_def = resolvable.resolve(self, scope);
-            self.constructs[con_id].definition = new_def;
             assert_eq!(self.dep_res_stack.pop(), Some(DepResStackFrame(con_id)));
+            match new_def {
+                Ok(new_def) => self.constructs[con_id].definition = new_def,
+                Err(UnresolvedConstructError(unresolved)) => todo!(),
+            }
         }
     }
 }

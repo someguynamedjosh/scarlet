@@ -29,7 +29,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cshown) = env.get_and_downcast_construct_definition::<CShown>(uncreate) {
+    if let Ok(Some(cshown)) = env.get_and_downcast_construct_definition::<CShown>(uncreate) {
         let cshown = cshown.clone();
         Some(Node {
             phrase: "shown",

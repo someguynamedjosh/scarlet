@@ -6,7 +6,10 @@ use super::{
     variable::CVariable,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies, DependencyError},
+        CheckResult, Environment, UnresolvedConstructError,
+    },
     resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},
@@ -86,22 +89,31 @@ pub struct AnnotatedConstruct<'x> {
 pub type ConstructPool<'x> = Pool<AnnotatedConstruct<'x>, 'C'>;
 pub type ConstructId = Id<'C'>;
 
+pub type GenInvResult = Result<Vec<Invariant>, UnresolvedConstructError>;
+
 pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {
     fn dyn_clone(&self) -> Box<dyn Construct>;
 
     #[allow(unused_variables)]
-    fn check<'x>(&self, env: &mut Environment<'x>, this: ConstructId, scope: Box<dyn Scope>) {}
+    fn check<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        this: ConstructId,
+        scope: Box<dyn Scope>,
+    ) -> CheckResult {
+        Ok(())
+    }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies;
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult;
 
     #[allow(unused_variables)]
     fn generated_invariants<'x>(
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
-        vec![]
+    ) -> GenInvResult {
+        Ok(vec![])
     }
 
     #[allow(unused_variables)]
@@ -111,8 +123,8 @@ pub trait Construct: Any + Debug + AnyEq {
         subs: &NestedSubstitutions,
         other: SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
-        TripleBool::Unknown
+    ) -> Result<TripleBool, UnresolvedConstructError> {
+        Ok(TripleBool::Unknown)
     }
 
     fn as_def<'x>(&self) -> ConstructDefinition<'x> {

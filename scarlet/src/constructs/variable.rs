@@ -3,12 +3,15 @@ use maplit::hashset;
 use super::{
     base::{Construct, ConstructId},
     substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    Invariant,
+    GenInvResult, Invariant,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies},
+        DefEqualResult, Environment, UnresolvedConstructError,
+    },
     impl_any_eq_for_construct,
-    scope::Scope,
+    scope::{LookupIdentResult, ReverseLookupIdentResult, Scope, LookupInvariantResult},
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
@@ -58,22 +61,22 @@ impl Variable {
         value: ConstructId,
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
-    ) -> Result<Vec<Invariant>, String> {
+    ) -> Result<Result<Vec<Invariant>, String>, UnresolvedConstructError> {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
-            if let Some(inv) = env.get_produced_invariant(subbed, value, 1024) {
+            if let Some(inv) = env.get_produced_invariant(subbed, value, 1024)? {
                 invariants.push(inv);
             } else {
-                return Err(format!(
+                return Ok(Err(format!(
                     "Failed to find invariant: {}",
                     env.show(subbed, value)
-                ));
+                )));
             }
         }
-        Ok(invariants)
+        Ok(Ok(invariants))
     }
 }
 
@@ -88,27 +91,28 @@ impl Construct for CVariable {
         &self,
         this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
-        env.get_variable(self.0)
+    ) -> GenInvResult {
+        Ok(env
+            .get_variable(self.0)
             .invariants
             .iter()
             .map(|&i| Invariant::new(i, hashset![this]))
-            .collect()
+            .collect())
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
         for dep in env.get_variable(self.0).dependencies.clone() {
-            deps.append(env.get_dependencies(dep));
+            deps.append(env.get_dependencies(dep)?);
         }
         deps.push_eager(Dependency {
             id: self.0,
             swallow: deps.as_variables().map(|x| x.id).collect(),
         });
         for inv in env.get_variable(self.0).invariants.clone() {
-            deps.append(env.get_dependencies(inv));
+            deps.append(env.get_dependencies(inv)?);
         }
-        deps
+        Ok(deps)
     }
 
     fn is_def_equal<'x>(
@@ -117,10 +121,8 @@ impl Construct for CVariable {
         subs: &NestedSubstitutions,
         SubExpr(other, other_subs): SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
-        if recursion_limit == 0 {
-            return TripleBool::Unknown;
-        }
+    ) -> DefEqualResult {
+        assert_ne!(recursion_limit, 0);
         for (target, value) in subs {
             if *target == self.0 {
                 let mut new_subs = value.1.clone();
@@ -141,16 +143,16 @@ impl Construct for CVariable {
                 );
             }
         }
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
             let other = other.clone();
             if other_subs.iter().any(|(key, _)| *key == other.get_id()) {
-                return TripleBool::Unknown;
+                return Ok(TripleBool::Unknown);
             }
             if self.is_same_variable_as(&other) {
-                return TripleBool::True;
+                return Ok(TripleBool::True);
             }
         }
-        TripleBool::Unknown
+        Ok(TripleBool::Unknown)
     }
 }
 
@@ -162,28 +164,20 @@ impl Scope for SVariableInvariants {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        ident: &str,
-    ) -> Option<ConstructId> {
-        if ident == "SELF" {
-            Some(self.0)
-        } else {
-            None
-        }
+    fn local_lookup_ident<'x>(&self, _env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
+        Ok(if ident == "SELF" { Some(self.0) } else { None })
     }
 
     fn local_reverse_lookup_ident<'a, 'x>(
         &self,
         _env: &'a mut Environment<'x>,
         value: ConstructId,
-    ) -> Option<String> {
-        if value == self.0 {
+    ) -> ReverseLookupIdentResult {
+        Ok(if value == self.0 {
             Some("SELF".to_owned())
         } else {
             None
-        }
+        })
     }
 
     fn local_lookup_invariant<'x>(
@@ -191,8 +185,8 @@ impl Scope for SVariableInvariants {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> Option<Invariant> {
-        None
+    ) -> LookupInvariantResult {
+        Ok(None)
     }
 
     fn parent(&self) -> Option<ConstructId> {

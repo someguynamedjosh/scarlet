@@ -1,8 +1,8 @@
-use super::{dependencies::DepResStackFrame, ConstructId, Environment};
+use super::{dependencies::DepResStackFrame, ConstructId, Environment, UnresolvedConstructError};
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_construct, substitution::SubExpr, AnnotatedConstruct,
-        Construct, ConstructDefinition, Invariant,
+        Construct, ConstructDefinition, GenInvResult, Invariant,
     },
     scope::Scope,
     shared::TripleBool,
@@ -32,11 +32,12 @@ impl<'x> Environment<'x> {
     pub(super) fn get_construct_definition_no_deref(
         &mut self,
         con_id: ConstructId,
-    ) -> &BoxedConstruct {
+    ) -> Result<&BoxedConstruct, UnresolvedConstructError> {
         let old_con_id = con_id;
-        self.resolve(con_id);
         if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
-            def
+            Ok(def)
+        } else if let ConstructDefinition::Unresolved(..) = &self.constructs[con_id].definition {
+            Err(UnresolvedConstructError(con_id))
         } else {
             eprintln!("{:#?}", self);
             eprintln!("{:?} -> {:?}", old_con_id, con_id);
@@ -47,48 +48,50 @@ impl<'x> Environment<'x> {
     pub(super) fn get_and_downcast_construct_definition_no_deref<C: Construct>(
         &mut self,
         con_id: ConstructId,
-    ) -> Option<&C> {
-        downcast_construct(&**self.get_construct_definition_no_deref(con_id))
+    ) -> Result<Option<&C>, UnresolvedConstructError> {
+        Ok(downcast_construct(&**self.get_construct_definition_no_deref(con_id)?))
     }
 
-    pub fn get_construct_definition(&mut self, con_id: ConstructId) -> &BoxedConstruct {
+    pub fn get_construct_definition(
+        &mut self,
+        con_id: ConstructId,
+    ) -> Result<&BoxedConstruct, UnresolvedConstructError> {
         let old_con_id = con_id;
-        self.resolve(con_id);
-        let con_id = self.dereference(con_id);
+        let con_id = self.dereference(con_id)?;
         if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
-            def
+            Ok(def)
         } else {
-            eprintln!("{:#?}", self);
-            eprintln!("{:?} -> {:?}", old_con_id, con_id);
-            unreachable!()
+            Err(UnresolvedConstructError(con_id))
         }
     }
 
     pub fn get_and_downcast_construct_definition<C: Construct>(
         &mut self,
         con_id: ConstructId,
-    ) -> Option<&C> {
-        downcast_construct(&**self.get_construct_definition(con_id))
+    ) -> Result<Option<&C>, UnresolvedConstructError> {
+        Ok(downcast_construct(
+            &**self.get_construct_definition(con_id)?,
+        ))
     }
 
-    pub fn generated_invariants(&mut self, con_id: ConstructId) -> Vec<Invariant> {
+    pub fn generated_invariants(&mut self, con_id: ConstructId) -> GenInvResult {
         for frame in &self.dep_res_stack {
             if frame.0 == con_id {
-                return Vec::new();
+                return Ok(Vec::new());
             }
         }
 
-        let def = &self.constructs[con_id].definition ;
+        let def = &self.constructs[con_id].definition;
         if def.as_other().is_some() || def.as_resolved().is_some() {
             self.dep_res_stack.push(DepResStackFrame(con_id));
-            let context = self.get_construct_definition(con_id);
+            let context = self.get_construct_definition(con_id)?;
             let context = context.dyn_clone();
-            let invs = context.generated_invariants(con_id, self);
+            let invs = context.generated_invariants(con_id, self)?;
             self.constructs[con_id].invariants = Some(invs.clone());
             self.dep_res_stack.pop();
-            invs
+            Ok(invs)
         } else {
-            Vec::new()
+            Ok(Vec::new())
         }
     }
 
@@ -97,20 +100,20 @@ impl<'x> Environment<'x> {
         statement: ConstructId,
         context_id: ConstructId,
         limit: u32,
-    ) -> Option<Invariant> {
-        let generated_invariants = self.generated_invariants(context_id);
+    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
+        let generated_invariants = self.generated_invariants(context_id)?;
         for inv in generated_invariants {
             if self.is_def_equal(
                 SubExpr(statement, &Default::default()),
                 SubExpr(inv.statement, &Default::default()),
                 limit,
-            ) == TripleBool::True
+            )? == TripleBool::True
             {
-                return Some(inv);
+                return Ok(Some(inv));
             }
         }
         let scope = self.get_construct(context_id).scope.dyn_clone();
-        let inv = scope.lookup_invariant(self, statement);
-        inv
+        let inv = scope.lookup_invariant(self, statement)?;
+        Ok(inv)
     }
 }

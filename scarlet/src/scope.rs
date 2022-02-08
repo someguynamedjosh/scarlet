@@ -4,9 +4,13 @@ use maplit::hashset;
 
 use crate::{
     constructs::{substitution::SubExpr, ConstructId, Invariant},
-    environment::Environment,
+    environment::{Environment, UnresolvedConstructError},
     shared::TripleBool,
 };
+
+pub type LookupIdentResult = Result<Option<ConstructId>, UnresolvedConstructError>;
+pub type ReverseLookupIdentResult = Result<Option<String>, UnresolvedConstructError>;
+pub type LookupInvariantResult = Result<Option<Invariant>, UnresolvedConstructError>;
 
 pub trait Scope: Debug {
     fn dyn_clone(&self) -> Box<dyn Scope>;
@@ -15,31 +19,30 @@ pub trait Scope: Debug {
         false
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str)
-        -> Option<ConstructId>;
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult;
     fn local_reverse_lookup_ident<'x>(
         &self,
         env: &mut Environment<'x>,
         value: ConstructId,
-    ) -> Option<String>;
+    ) -> ReverseLookupIdentResult;
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> Option<Invariant>;
+    ) -> LookupInvariantResult;
     fn parent(&self) -> Option<ConstructId>;
 
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> Option<ConstructId> {
-        if let Some(result) = self.local_lookup_ident(env, ident) {
-            Some(result)
+    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
+        if let Some(result) = self.local_lookup_ident(env, ident)? {
+            Ok(Some(result))
         } else if let Some(parent) = self.parent() {
             env.get_construct(parent)
                 .scope
                 .dyn_clone()
                 .lookup_ident(env, ident)
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -47,10 +50,10 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         value: ConstructId,
-    ) -> Option<String> {
-        if let Some(result) = self.local_reverse_lookup_ident(env, value) {
+    ) -> ReverseLookupIdentResult {
+        if let Some(result) = self.local_reverse_lookup_ident(env, value)? {
             if result.len() > 0 {
-                return Some(result.to_owned());
+                return Ok(Some(result.to_owned()));
             }
         }
         if let Some(parent) = self.parent() {
@@ -59,7 +62,7 @@ pub trait Scope: Debug {
                 .dyn_clone()
                 .reverse_lookup_ident(env, value)
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -67,13 +70,13 @@ pub trait Scope: Debug {
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
-    ) -> Option<Invariant> {
+    ) -> LookupInvariantResult {
         for limit in 0..8192 {
-            if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit) {
-                return Some(inv);
+            if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit)? {
+                return Ok(Some(inv));
             }
         }
-        None
+        Ok(None)
     }
 
     fn lookup_invariant_limited<'x>(
@@ -81,9 +84,9 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> Option<Invariant> {
-        if let Some(inv) = self.local_lookup_invariant(env, invariant, limit) {
-            return Some(inv);
+    ) -> LookupInvariantResult {
+        if let Some(inv) = self.local_lookup_invariant(env, invariant, limit)? {
+            return Ok(Some(inv));
         } else if let Some(parent) = self.parent() {
             let res = env
                 .get_construct(parent)
@@ -92,7 +95,7 @@ pub trait Scope: Debug {
                 .lookup_invariant_limited(env, invariant, limit);
             res
         } else {
-            None
+            Ok(None)
         }
     }
 }
@@ -109,16 +112,16 @@ impl Scope for SPlain {
         &self,
         _env: &mut Environment<'x>,
         _ident: &str,
-    ) -> Option<ConstructId> {
-        None
+    ) -> LookupIdentResult {
+        Ok(None)
     }
 
     fn local_reverse_lookup_ident<'x>(
         &self,
         _env: &mut Environment<'x>,
         _value: ConstructId,
-    ) -> Option<String> {
-        None
+    ) -> ReverseLookupIdentResult {
+        Ok(None)
     }
 
     fn local_lookup_invariant<'x>(
@@ -126,8 +129,8 @@ impl Scope for SPlain {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> Option<Invariant> {
-        None
+    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
+        Ok(None)
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -143,22 +146,16 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        ident: &str,
-    ) -> Option<ConstructId> {
-        // } else if let Ok(_) = ident.parse() {
-        //     todo!()
-        None
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
+        Ok(None)
     }
 
     fn local_reverse_lookup_ident<'x>(
         &self,
         env: &mut Environment<'x>,
         value: ConstructId,
-    ) -> Option<String> {
-        None
+    ) -> ReverseLookupIdentResult {
+        Ok(None)
     }
 
     fn local_lookup_invariant<'x>(
@@ -166,18 +163,20 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> Option<Invariant> {
+    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
         let truee = env.get_language_item("true");
-        if env.is_def_equal(
-            SubExpr(invariant, &Default::default()),
-            SubExpr(truee, &Default::default()),
-            limit,
-        ) == TripleBool::True
-        {
-            Some(Invariant::new(truee, hashset![]))
-        } else {
-            None
-        }
+        Ok(
+            if env.is_def_equal(
+                SubExpr(invariant, &Default::default()),
+                SubExpr(truee, &Default::default()),
+                limit,
+            )? == TripleBool::True
+            {
+                Some(Invariant::new(truee, hashset![]))
+            } else {
+                None
+            },
+        )
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -201,7 +200,7 @@ impl Scope for SPlaceholder {
         &self,
         _env: &mut Environment<'x>,
         _ident: &str,
-    ) -> Option<ConstructId> {
+    ) -> LookupIdentResult {
         unreachable!()
     }
 
@@ -209,7 +208,7 @@ impl Scope for SPlaceholder {
         &self,
         _env: &mut Environment<'x>,
         _value: ConstructId,
-    ) -> Option<String> {
+    ) -> ReverseLookupIdentResult {
         unreachable!()
     }
 
@@ -218,7 +217,7 @@ impl Scope for SPlaceholder {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> Option<Invariant> {
+    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
         unreachable!()
     }
 
@@ -239,11 +238,7 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         false
     }
 
-    fn local_lookup_ident<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        ident: &str,
-    ) -> Option<ConstructId> {
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
         self.0.local_lookup_ident(env, ident)
     }
 
@@ -251,7 +246,7 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         &self,
         env: &mut Environment<'x>,
         value: ConstructId,
-    ) -> Option<String> {
+    ) -> ReverseLookupIdentResult {
         self.0.local_reverse_lookup_ident(env, value)
     }
 
@@ -260,7 +255,7 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> Option<Invariant> {
+    ) -> LookupInvariantResult {
         self.0.local_lookup_invariant(env, invariant, limit)
     }
 

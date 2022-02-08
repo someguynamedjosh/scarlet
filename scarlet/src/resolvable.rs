@@ -7,17 +7,19 @@ use crate::{
         variable::{CVariable, Variable, VariableId},
         ConstructDefinition, ConstructId,
     },
-    environment::Environment,
+    environment::{dependencies::get_partial_or_full_deps, Environment, UnresolvedConstructError},
     scope::Scope,
     shared::OrderedMap,
 };
+
+pub type ResolveResult<'x> = Result<ConstructDefinition<'x>, UnresolvedConstructError>;
 
 pub trait Resolvable<'x>: Debug {
     fn is_placeholder(&self) -> bool {
         false
     }
     fn dyn_clone(&self) -> BoxedResolvable<'x>;
-    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x>;
+    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ResolveResult<'x>;
 }
 
 pub type BoxedResolvable<'x> = Box<dyn Resolvable<'x> + 'x>;
@@ -34,11 +36,7 @@ impl<'x> Resolvable<'x> for RPlaceholder {
         Box::new(self.clone())
     }
 
-    fn resolve(
-        &self,
-        env: &mut Environment<'x>,
-        _scope: Box<dyn Scope>,
-    ) -> ConstructDefinition<'x> {
+    fn resolve(&self, env: &mut Environment<'x>, _scope: Box<dyn Scope>) -> ResolveResult<'x> {
         eprintln!("{:#?}", env);
         unreachable!()
     }
@@ -52,11 +50,11 @@ impl<'x> Resolvable<'x> for RIdentifier<'x> {
         Box::new(self.clone())
     }
 
-    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x> {
-        scope
-            .lookup_ident(env, self.0)
+    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ResolveResult<'x> {
+        Ok(scope
+            .lookup_ident(env, self.0)?
             .expect(&format!("Cannot find what {} refers to", self.0))
-            .into()
+            .into())
     }
 }
 
@@ -72,13 +70,14 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         Box::new(self.clone())
     }
 
-    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ConstructDefinition<'x> {
+    fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ResolveResult<'x> {
         let base_scope = env.get_construct_scope(self.base).dyn_clone();
         let mut subs = OrderedMap::new();
-        let mut remaining_deps = env.get_dependencies(self.base);
+        let remaining_deps = env.get_dependencies(self.base);
+        let (mut remaining_deps, partial_dep_error) = get_partial_or_full_deps(remaining_deps);
         for &(name, value) in &self.named_subs {
-            let target = base_scope.lookup_ident(env, name).unwrap();
-            if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(target) {
+            let target = base_scope.lookup_ident(env, name)?.unwrap();
+            if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(target)? {
                 subs.insert_no_replace(var.get_id(), value);
                 remaining_deps.remove(var.get_id());
             } else {
@@ -87,13 +86,19 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         }
         for &value in &self.anonymous_subs {
             if remaining_deps.num_variables() == 0 {
-                eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
-                panic!("No more dependencies left to substitute!");
+                if let Some(partial_dep_error) = partial_dep_error {
+                    return Err(partial_dep_error);
+                } else {
+                    eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
+                    panic!("No more dependencies left to substitute!");
+                }
             }
             let dep = remaining_deps.pop_front().id;
             subs.insert_no_replace(dep, value);
         }
-        ConstructDefinition::Resolved(Box::new(CSubstitution::new(self.base, subs)))
+        Ok(ConstructDefinition::Resolved(Box::new(CSubstitution::new(
+            self.base, subs,
+        ))))
     }
 }
 
@@ -108,17 +113,13 @@ impl<'x> Resolvable<'x> for RVariable {
         Box::new(self.clone())
     }
 
-    fn resolve(
-        &self,
-        env: &mut Environment<'x>,
-        _scope: Box<dyn Scope>,
-    ) -> ConstructDefinition<'x> {
+    fn resolve(&self, env: &mut Environment<'x>, _scope: Box<dyn Scope>) -> ResolveResult<'x> {
         let id = env.push_variable(Variable {
             id: None,
             invariants: self.invariants.clone(),
             dependencies: self.dependencies.clone(),
         });
         let con = CVariable::new(id);
-        ConstructDefinition::Resolved(Box::new(con))
+        Ok(ConstructDefinition::Resolved(Box::new(con)))
     }
 }

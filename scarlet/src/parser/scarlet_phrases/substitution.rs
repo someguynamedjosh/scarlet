@@ -85,10 +85,11 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate) {
+    if let Ok(Some(csub)) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate) {
         let csub = csub.clone();
         let mut deps = env
             .get_dependencies(csub.base())
+            .unwrap_or_default()
             .into_variables()
             .collect_vec();
         let subs = create_comma_list(

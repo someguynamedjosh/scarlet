@@ -4,11 +4,14 @@ use super::{
     base::Construct,
     downcast_construct,
     substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition, ConstructId,
+    BoxedConstruct, ConstructDefinition, ConstructId, GenInvResult,
 };
 use crate::{
     constructs::Invariant,
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies, DependencyError},
+        DefEqualResult, Environment, UnresolvedConstructError,
+    },
     impl_any_eq_for_construct,
     scope::Scope,
     shared::{Id, Pool, TripleBool},
@@ -42,11 +45,11 @@ impl Construct for CAxiom {
         &self,
         _this: ConstructId,
         _env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
-        vec![Invariant::new(self.statement, hashset![])]
+    ) -> GenInvResult {
+        Ok(vec![Invariant::new(self.statement, hashset![])])
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.statement)
     }
 
@@ -56,11 +59,10 @@ impl Construct for CAxiom {
         subs: &NestedSubstitutions,
         other: SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
+    ) -> DefEqualResult {
+        assert_ne!(recursion_limit, 0);
         let other_subs = other.1;
-        if recursion_limit == 0 {
-            TripleBool::Unknown
-        } else if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other.0) {
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other.0)? {
             let other = other.clone();
             env.is_def_equal(
                 SubExpr(self.statement, subs),
@@ -68,7 +70,7 @@ impl Construct for CAxiom {
                 recursion_limit - 1,
             )
         } else {
-            TripleBool::Unknown
+            Ok(TripleBool::Unknown)
         }
     }
 }

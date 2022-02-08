@@ -42,6 +42,12 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
 #[cfg(feature = "no_axioms")]
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct UnresolvedConstructError(pub ConstructId);
+
+pub type CheckResult = Result<(), UnresolvedConstructError>;
+pub type DefEqualResult = Result<TripleBool, UnresolvedConstructError>;
+
 #[derive(Debug)]
 pub struct Environment<'x> {
     language_items: HashMap<&'static str, ConstructId>,
@@ -213,29 +219,43 @@ impl<'x> Environment<'x> {
         None
     }
 
-    pub(crate) fn check(&mut self, con_id: ConstructId) {
-        let con = self.get_construct_definition(con_id).dyn_clone();
+    pub(crate) fn check(&mut self, con_id: ConstructId) -> CheckResult {
+        let con = self.get_construct_definition(con_id)?.dyn_clone();
         let scope = self.get_construct_scope(con_id).dyn_clone();
-        con.check(self, con_id, scope);
+        con.check(self, con_id, scope)
     }
 
-    pub(crate) fn check_all(&mut self) {
-        self.for_each_construct_returning_nothing(Self::check);
+    pub(crate) fn check_all(&mut self) -> CheckResult {
+        match self.for_each_construct(|env, id| match env.check(id) {
+            Ok(ok) => ControlFlow::Continue(ok),
+            Err(err) => ControlFlow::Break(err),
+        }) {
+            None => Ok(()),
+            Some(err) => Err(err),
+        }
     }
 
-    pub(crate) fn is_def_equal(&mut self, left: SubExpr, right: SubExpr, limit: u32) -> TripleBool {
+    pub(crate) fn is_def_equal(
+        &mut self,
+        left: SubExpr,
+        right: SubExpr,
+        limit: u32,
+    ) -> DefEqualResult {
         if left == right {
-            return TripleBool::True;
+            return Ok(TripleBool::True);
+        }
+        if limit == 0 {
+            return Ok(TripleBool::Unknown);
         }
         let result = self
-            .get_construct_definition(left.0)
+            .get_construct_definition(left.0)?
             .dyn_clone()
             .is_def_equal(self, &left.1, right, limit);
-        if result != TripleBool::Unknown {
+        if result.is_ok() && result != Ok(TripleBool::Unknown) {
             return result;
         }
         let result = self
-            .get_construct_definition(right.0)
+            .get_construct_definition(right.0)?
             .dyn_clone()
             .is_def_equal(self, &right.1, left, limit);
         result
@@ -246,7 +266,7 @@ impl<'x> Environment<'x> {
         left: ConstructId,
         right: ConstructId,
         limit: u32,
-    ) -> TripleBool {
+    ) -> DefEqualResult {
         self.is_def_equal(
             SubExpr(left, &Default::default()),
             SubExpr(right, &Default::default()),

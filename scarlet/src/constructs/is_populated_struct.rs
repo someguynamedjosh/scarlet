@@ -1,9 +1,9 @@
 use super::{
     downcast_construct, structt::CPopulatedStruct, substitution::{Substitutions, NestedSubstitutions, SubExpr}, unique::CUnique,
-    Construct, ConstructDefinition, ConstructId, Invariant,
+    Construct, ConstructDefinition, ConstructId, Invariant, GenInvResult,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{dependencies::{Dependencies, DepResult}, Environment, DefEqualResult},
     impl_any_eq_for_construct,
     shared::TripleBool,
 };
@@ -28,11 +28,11 @@ impl Construct for CIsPopulatedStruct {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
+    ) -> GenInvResult {
         env.generated_invariants(self.0)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.0)
     }
 
@@ -42,7 +42,7 @@ impl Construct for CIsPopulatedStruct {
         subs: &NestedSubstitutions,
         other: SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
-        TripleBool::Unknown
+    ) -> DefEqualResult {
+        Ok(TripleBool::Unknown)
     }
 }

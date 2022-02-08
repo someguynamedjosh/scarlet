@@ -60,7 +60,7 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
+    if let Ok(Some(cite)) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
         let cite = cite.clone();
         Some(Node {
             phrase: "decision",

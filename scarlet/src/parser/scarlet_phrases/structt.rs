@@ -72,7 +72,7 @@ fn uncreate<'a>(
 ) -> Option<Node<'a>> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Some(structt) =
+    while let Ok(Some(structt)) =
         env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)
     {
         let label = code_arena.alloc(structt.get_label().to_owned());
@@ -96,8 +96,8 @@ fn uncreate<'a>(
             fields.push(value);
         }
     }
-    if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"),1024)
-        == TripleBool::True
+    if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"), 1024)
+        == Ok(TripleBool::True)
     {
         Some(Node {
             phrase: "struct",

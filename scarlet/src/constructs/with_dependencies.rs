@@ -3,11 +3,14 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     downcast_construct,
-    substitution::{Substitutions, NestedSubstitutions, SubExpr},
-    BoxedConstruct, ConstructDefinition, Invariant,
+    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    BoxedConstruct, ConstructDefinition, GenInvResult, Invariant,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies},
+        DefEqualResult, Environment,
+    },
     impl_any_eq_for_construct,
     shared::TripleBool,
 };
@@ -43,22 +46,22 @@ impl Construct for CWithDependencies {
         &self,
         _this: ConstructId,
         env: &mut Environment<'x>,
-    ) -> Vec<Invariant> {
+    ) -> GenInvResult {
         env.generated_invariants(self.base)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> Dependencies {
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
-        let base_deps = env.get_dependencies(self.base);
+        let base_deps = env.get_dependencies(self.base)?;
         for &priority_dep in &self.dependencies {
-            for dep in env.get_dependencies(priority_dep).into_variables() {
+            for dep in env.get_dependencies(priority_dep)?.into_variables() {
                 if base_deps.contains(&dep) {
                     deps.push_eager(dep);
                 }
             }
         }
         deps.append(base_deps);
-        deps
+        Ok(deps)
     }
 
     fn is_def_equal<'x>(
@@ -67,7 +70,7 @@ impl Construct for CWithDependencies {
         subs: &NestedSubstitutions,
         other: SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
+    ) -> DefEqualResult {
         env.is_def_equal(SubExpr(self.base, subs), other, recursion_limit)
     }
 }

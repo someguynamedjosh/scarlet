@@ -58,27 +58,20 @@ fn uncreate<'a>(
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
     let from_con = env.push_scope(from.dyn_clone());
-    let scope_parent = env.dereference(uncreate);
+    let scope_parent = env.dereference(uncreate).unwrap();
     let from = &SWithParent(SVariableInvariants(scope_parent), from_con);
-    if let Some(cvar) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
+    if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
         let cvar = cvar.clone();
-        let invariants = env
-            .get_variable(cvar.get_id())
+        let var = env.get_variable(cvar.get_id()).clone();
+        let invariants = var
             .get_invariants()
             .into_iter()
-            .copied()
-            .collect_vec()
-            .into_iter()
-            .map(|inv| env.vomit(255, pc, code_arena, inv, from))
+            .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
             .collect_vec();
-        let dependencies = env
-            .get_variable(cvar.get_id())
+        let dependencies = var
             .get_dependencies()
             .into_iter()
-            .copied()
-            .collect_vec()
-            .into_iter()
-            .map(|dep| env.vomit(255, pc, code_arena, dep, from))
+            .map(|&dep| env.vomit(255, pc, code_arena, dep, from))
             .collect_vec();
         let mut body = invariants;
         if dependencies.len() > 0 {

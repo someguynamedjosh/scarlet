@@ -42,7 +42,7 @@ impl<'x> Environment<'x> {
         let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("proves:\n"));
-        for invariant in self.generated_invariants(con_id) {
+        for invariant in self.generated_invariants(con_id).unwrap_or_default() {
             result.push_str(&format!(
                 "    {} ({:?})\n",
                 indented(
@@ -62,7 +62,11 @@ impl<'x> Environment<'x> {
             }
         }
         result.push_str(&format!("depends on:\n"));
-        for dep in self.get_dependencies(con_id).into_variables() {
+        for dep in self
+            .get_dependencies(con_id)
+            .unwrap_or_default()
+            .into_variables()
+        {
             result.push_str(&format!(
                 "    {}\n",
                 indented(&format!(
@@ -77,7 +81,8 @@ impl<'x> Environment<'x> {
 
     pub fn show_var(&mut self, var: VariableId, from: ConstructId) -> String {
         self.for_each_construct(|env, id| {
-            if let Some(other_var) = env.get_and_downcast_construct_definition::<CVariable>(id) {
+            if let Ok(Some(other_var)) = env.get_and_downcast_construct_definition::<CVariable>(id)
+            {
                 if var == other_var.get_id() {
                     return ControlFlow::Break(env.show(id, from));
                 }
@@ -96,7 +101,8 @@ impl<'x> Environment<'x> {
     ) -> Node<'a> {
         let base = self
             .for_each_construct(|env, id| {
-                if let Some(other_var) = env.get_and_downcast_construct_definition::<CVariable>(id)
+                if let Ok(Some(other_var)) =
+                    env.get_and_downcast_construct_definition::<CVariable>(id)
                 {
                     if var == other_var.get_id() {
                         return ControlFlow::Break(id);

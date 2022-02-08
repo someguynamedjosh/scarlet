@@ -5,7 +5,10 @@ use super::{
     BoxedConstruct, ConstructDefinition,
 };
 use crate::{
-    environment::{dependencies::Dependencies, Environment},
+    environment::{
+        dependencies::{DepResult, Dependencies},
+        DefEqualResult, Environment,
+    },
     impl_any_eq_for_construct,
     shared::{Id, Pool, TripleBool},
 };
@@ -31,8 +34,8 @@ impl Construct for CUnique {
         Box::new(self.clone())
     }
 
-    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> Dependencies {
-        Dependencies::new()
+    fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> DepResult {
+        Ok(Dependencies::new())
     }
 
     fn is_def_equal<'x>(
@@ -41,15 +44,18 @@ impl Construct for CUnique {
         subs: &NestedSubstitutions,
         SubExpr(other, _): SubExpr,
         recursion_limit: u32,
-    ) -> TripleBool {
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other) {
-            if self.0 == other.0 {
-                TripleBool::True
+    ) -> DefEqualResult {
+        assert_ne!(recursion_limit, 0);
+        Ok(
+            if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
+                if self.0 == other.0 {
+                    TripleBool::True
+                } else {
+                    TripleBool::False
+                }
             } else {
-                TripleBool::False
-            }
-        } else {
-            TripleBool::Unknown
-        }
+                TripleBool::Unknown
+            },
+        )
     }
 }

@@ -34,12 +34,12 @@ fn uncreate<'a>(
     uncreate: ConstructId,
     from: &dyn Scope,
 ) -> Option<Node<'a>> {
-    if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
+    if let Ok(Some(cite)) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
         let cite = cite.clone();
         let truee = env.get_language_item("true");
         let falsee = env.get_language_item("false");
-        if env.is_def_equal_without_subs(cite.equal(), truee, 1024) == TripleBool::True
-            && env.is_def_equal_without_subs(cite.unequal(), falsee, 1024) == TripleBool::True
+        if env.is_def_equal_without_subs(cite.equal(), truee, 1024) == Ok(TripleBool::True)
+            && env.is_def_equal_without_subs(cite.unequal(), falsee, 1024) == Ok(TripleBool::True)
         {
             Some(Node {
                 phrase: "equal",
