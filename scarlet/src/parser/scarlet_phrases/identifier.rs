@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::ConstructId,
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     resolvable::RIdentifier,
     scope::Scope,
@@ -26,19 +29,18 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    let dereffed = env.dereference(uncreate).unwrap();
-    if dereffed == uncreate {
-        return None;
-    }
-    if let Ok(Some(ident)) = from.reverse_lookup_ident(env, dereffed) {
+) -> UncreateResult<'a> {
+    let dereffed = env.dereference(uncreate)?;
+    Ok(if dereffed == uncreate {
+        None
+    } else if let Ok(Some(ident)) = from.reverse_lookup_ident(env, dereffed) {
         Some(Node {
             phrase: "identifier",
             children: vec![NodeChild::Text(code_arena.alloc(ident))],
         })
     } else {
         None
-    }
+    })
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {

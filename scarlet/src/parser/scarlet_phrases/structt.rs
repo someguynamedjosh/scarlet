@@ -8,7 +8,7 @@ use crate::{
     },
     environment::Environment,
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -69,17 +69,17 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
+) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Ok(Some(structt)) =
-        env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)
+    while let Some(structt) =
+        env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)?
     {
         let label = code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
         let scope = SFieldAndRest(maybe_structt);
         maybe_structt = structt.get_rest();
-        let value = env.vomit(255, pc, code_arena, value, &scope);
+        let value = env.vomit(255, pc, code_arena, value, &scope)?;
         if label.len() > 0 {
             fields.push(Node {
                 phrase: "is",
@@ -96,20 +96,22 @@ fn uncreate<'a>(
             fields.push(value);
         }
     }
-    if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"), 1024)
-        == Ok(TripleBool::True)
-    {
-        Some(Node {
-            phrase: "struct",
-            children: vec![
-                NodeChild::Text("{"),
-                create_comma_list(fields),
-                NodeChild::Text("}"),
-            ],
-        })
-    } else {
-        None
-    }
+    Ok(
+        if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"), 1024)?
+            == TripleBool::True
+        {
+            Some(Node {
+                phrase: "struct",
+                children: vec![
+                    NodeChild::Text("{"),
+                    create_comma_list(fields),
+                    NodeChild::Text("}"),
+                ],
+            })
+        } else {
+            None
+        },
+    )
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

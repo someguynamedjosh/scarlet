@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use typed_arena::Arena;
 
-use super::{ConstructId, Environment};
+use super::{ConstructId, Environment, UnresolvedConstructError};
 use crate::{
     constructs::{
         downcast_construct,
@@ -28,18 +28,18 @@ impl<'x> Environment<'x> {
             }
         }
         for (con_id, from) in to_vomit {
-            println!("{}", self.show(con_id, from));
+            println!("{}", self.show(con_id, from).unwrap_or(format!("Unresolved")));
         }
     }
 
-    pub fn show(&mut self, con_id: ConstructId, from_con: ConstructId) -> String {
+    pub fn show(&mut self, con_id: ConstructId, from_con: ConstructId) -> Result<String, UnresolvedConstructError> {
         let mut result = String::new();
 
         let from = self.constructs[from_con].scope.dyn_clone();
         let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
         let code_arena = Arena::new();
         let pc = ParseContext::new();
-        let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from).vomit(&pc);
+        let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from)?.vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("proves:\n"));
         for invariant in self.generated_invariants(con_id).unwrap_or_default() {
@@ -47,7 +47,7 @@ impl<'x> Environment<'x> {
                 "    {} ({:?})\n",
                 indented(
                     &self
-                        .vomit(255, &pc, &code_arena, invariant.statement, &inv_from)
+                        .vomit(255, &pc, &code_arena, invariant.statement, &inv_from)?
                         .vomit(&pc)
                 ),
                 invariant.statement,
@@ -56,7 +56,7 @@ impl<'x> Environment<'x> {
             for dep in invariant.dependencies {
                 result.push_str(&format!(
                     "        {} ({:?})\n",
-                    indented(&self.vomit(255, &pc, &code_arena, dep, &inv_from).vomit(&pc)),
+                    indented(&self.vomit(255, &pc, &code_arena, dep, &inv_from)?.vomit(&pc)),
                     dep,
                 ));
             }
@@ -70,15 +70,15 @@ impl<'x> Environment<'x> {
                 "    {}\n",
                 indented(&format!(
                     "{}",
-                    self.vomit_var(&pc, &code_arena, dep.id, &inv_from)
+                    self.vomit_var(&pc, &code_arena, dep.id, &inv_from)?
                         .vomit(&pc)
                 ))
             ));
         }
-        result
+        Ok(result)
     }
 
-    pub fn show_var(&mut self, var: VariableId, from: ConstructId) -> String {
+    pub fn show_var(&mut self, var: VariableId, from: ConstructId) -> Result<String, UnresolvedConstructError> {
         self.for_each_construct(|env, id| {
             if let Ok(Some(other_var)) = env.get_and_downcast_construct_definition::<CVariable>(id)
             {
@@ -97,7 +97,7 @@ impl<'x> Environment<'x> {
         code_arena: &'a Arena<String>,
         var: VariableId,
         from: &dyn Scope,
-    ) -> Node<'a> {
+    ) -> Result<Node<'a>, UnresolvedConstructError> {
         let base = self
             .for_each_construct(|env, id| {
                 if let Ok(Some(other_var)) =
@@ -121,14 +121,14 @@ impl<'x> Environment<'x> {
         code_arena: &'a Arena<String>,
         con_id: ConstructId,
         from: &dyn Scope,
-    ) -> Node<'a> {
+    ) -> Result<Node<'a>, UnresolvedConstructError> {
         for (_, phrase) in &pc.phrases_sorted_by_vomit_priority {
             if phrase.precedence > max_precedence {
                 continue;
             }
             if let Some((_, uncreator)) = phrase.create_and_uncreate {
-                if let Some(uncreated) = uncreator(pc, self, code_arena, con_id, from) {
-                    return uncreated;
+                if let Some(uncreated) = uncreator(pc, self, code_arena, con_id, from)? {
+                    return Ok(uncreated);
                 }
             }
         }

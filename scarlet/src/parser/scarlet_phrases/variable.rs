@@ -9,13 +9,13 @@ use crate::{
     },
     environment::Environment,
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
     phrase,
     resolvable::RVariable,
-    scope::{SPlain, SWithParent, Scope},
+    scope::{self, SPlain, SWithParent, Scope},
 };
 
 fn create<'x>(
@@ -56,9 +56,9 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
+) -> UncreateResult<'a> {
     let from_con = env.push_scope(from.dyn_clone());
-    let scope_parent = env.dereference(uncreate).unwrap();
+    let scope_parent = env.dereference(uncreate)?;
     let from = &SWithParent(SVariableInvariants(scope_parent), from_con);
     if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
         let cvar = cvar.clone();
@@ -67,12 +67,12 @@ fn uncreate<'a>(
             .get_invariants()
             .into_iter()
             .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
-            .collect_vec();
+            .collect::<Result<Vec<_>, _>>()?;
         let dependencies = var
             .get_dependencies()
             .into_iter()
             .map(|&dep| env.vomit(255, pc, code_arena, dep, from))
-            .collect_vec();
+            .collect::<Result<Vec<_>, _>>()?;
         let mut body = invariants;
         if dependencies.len() > 0 {
             body.push(Node {
@@ -82,7 +82,7 @@ fn uncreate<'a>(
             let mut depends_on = dependencies;
             body.append(&mut depends_on);
         }
-        Some(Node {
+        Ok(Some(Node {
             phrase: "variable",
             children: vec![
                 NodeChild::Text("VAR"),
@@ -90,9 +90,9 @@ fn uncreate<'a>(
                 create_comma_list(body),
                 NodeChild::Text("]"),
             ],
-        })
+        }))
     } else {
-        None
+        Ok(None)
     }
 }
 

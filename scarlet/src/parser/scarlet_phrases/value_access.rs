@@ -9,7 +9,10 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
     shared::TripleBool,
@@ -34,9 +37,9 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    let source = if let Ok(Some(asm)) =
-        env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)
+) -> UncreateResult<'a> {
+    let source = if let Some(asm) =
+        env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)?
     {
         if asm.1 == AtomicStructMember::Value {
             Some(asm.0)
@@ -59,12 +62,16 @@ fn uncreate<'a>(
             ControlFlow::Continue(())
         })
     };
-    source.map(|id| Node {
-        phrase: "value access",
-        children: vec![
-            NodeChild::Node(env.vomit(4, pc, code_arena, id, from)),
-            NodeChild::Text(".VALUE"),
-        ],
+    Ok(if let Some(id) = source {
+        Some(Node {
+            phrase: "value access",
+            children: vec![
+                NodeChild::Node(env.vomit(4, pc, code_arena, id, from)?),
+                NodeChild::Text(".VALUE"),
+            ],
+        })
+    } else {
+        None
     })
 }
 

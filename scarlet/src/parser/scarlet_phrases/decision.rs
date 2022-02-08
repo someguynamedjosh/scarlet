@@ -8,7 +8,7 @@ use crate::{
     },
     environment::Environment,
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -59,25 +59,25 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    if let Ok(Some(cite)) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
+) -> UncreateResult<'a> {
+    if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {
         let cite = cite.clone();
-        Some(Node {
+        Ok(Some(Node {
             phrase: "decision",
             children: vec![
                 NodeChild::Text("DECISION"),
                 NodeChild::Text("["),
                 create_comma_list(vec![
-                    env.vomit(255, pc, code_arena, cite.left(), from),
-                    env.vomit(255, pc, code_arena, cite.right(), from),
-                    env.vomit(255, pc, code_arena, cite.equal(), from),
-                    env.vomit(255, pc, code_arena, cite.unequal(), from),
+                    env.vomit(255, pc, code_arena, cite.left(), from)?,
+                    env.vomit(255, pc, code_arena, cite.right(), from)?,
+                    env.vomit(255, pc, code_arena, cite.equal(), from)?,
+                    env.vomit(255, pc, code_arena, cite.unequal(), from)?,
                 ]),
                 NodeChild::Text("]"),
             ],
-        })
+        }))
     } else {
-        None
+        Ok(None)
     }
 }
 

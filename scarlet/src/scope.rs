@@ -71,6 +71,11 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> LookupInvariantResult {
+        println!(
+            "Start lookup {}",
+            env.show(invariant, invariant)
+                .unwrap_or(format!("Unresolved"))
+        );
         for limit in 0..8192 {
             if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit)? {
                 return Ok(Some(inv));

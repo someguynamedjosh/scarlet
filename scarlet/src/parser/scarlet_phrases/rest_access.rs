@@ -9,7 +9,10 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
     shared::TripleBool,
@@ -34,7 +37,7 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
+) -> UncreateResult<'a> {
     let source = if let Ok(Some(asm)) =
         env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)
     {
@@ -58,13 +61,16 @@ fn uncreate<'a>(
             ControlFlow::Continue(())
         })
     };
-    source.map(|id| Node {
-        phrase: "rest access",
-        children: vec![
-            NodeChild::Node(env.vomit(4, pc, code_arena, id, from)),
-            NodeChild::Text(".REST"),
-        ],
-    })
+    match source {
+        Some(id) => Ok(Some(Node {
+            phrase: "rest access",
+            children: vec![
+                NodeChild::Node(env.vomit(4, pc, code_arena, id, from)?),
+                NodeChild::Text(".REST"),
+            ],
+        })),
+        None => Ok(None),
+    }
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::ConstructId,
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::Scope,
 };
@@ -30,8 +33,8 @@ fn uncreate<'a>(
     _code_arena: &'a Arena<String>,
     _uncreate: ConstructId,
     _from: &dyn Scope,
-) -> Option<Node<'a>> {
-    None
+) -> UncreateResult<'a> {
+    Ok(None)
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {

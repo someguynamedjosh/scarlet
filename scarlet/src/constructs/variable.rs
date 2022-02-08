@@ -72,7 +72,7 @@ impl Variable {
             } else {
                 return Ok(Err(format!(
                     "Failed to find invariant: {}",
-                    env.show(subbed, value)
+                    env.show(subbed, value)?
                 )));
             }
         }

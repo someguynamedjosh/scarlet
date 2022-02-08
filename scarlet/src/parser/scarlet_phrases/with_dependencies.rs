@@ -8,7 +8,7 @@ use crate::{
     },
     environment::Environment,
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -42,7 +42,7 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
+) -> UncreateResult<'a> {
     if let Ok(Some(cwd)) = env.get_and_downcast_construct_definition::<CWithDependencies>(uncreate)
     {
         let cwd = cwd.clone();
@@ -50,21 +50,21 @@ fn uncreate<'a>(
             cwd.dependencies()
                 .into_iter()
                 .map(|dep| env.vomit(254, pc, code_arena, *dep, from))
-                .collect_vec(),
+                .collect::<Result<Vec<_>, _>>()?,
         );
-        Some(Node {
+        Ok(Some(Node {
             phrase: "with dependencies",
             children: vec![
-                NodeChild::Node(env.vomit(4, pc, code_arena, cwd.base(), from)),
+                NodeChild::Node(env.vomit(4, pc, code_arena, cwd.base(), from)?),
                 NodeChild::Text("."),
                 NodeChild::Text("WITH_DEPENDENCIES"),
                 NodeChild::Text("["),
                 deps,
                 NodeChild::Text("]"),
             ],
-        })
+        }))
     } else {
-        None
+        Ok(None)
     }
 }
 

@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::ConstructId,
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::Scope,
 };
@@ -26,15 +29,15 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    Some(Node {
+) -> UncreateResult<'a> {
+    Ok(Some(Node {
         phrase: "parentheses",
         children: vec![
             NodeChild::Text("("),
-            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)),
+            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)?),
             NodeChild::Text(")"),
         ],
-    })
+    }))
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

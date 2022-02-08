@@ -89,7 +89,11 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
                 if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error);
                 } else {
-                    eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
+                    eprintln!(
+                        "BASE:\n{}\n",
+                        env.show(self.base, self.base)
+                            .unwrap_or(format!("Unresolved"))
+                    );
                     panic!("No more dependencies left to substitute!");
                 }
             }

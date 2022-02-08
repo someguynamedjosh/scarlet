@@ -7,7 +7,10 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
 };
@@ -31,23 +34,27 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    if let Ok(Some(asm)) = env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate) {
-        if asm.1 == AtomicStructMember::Label {
-            let id = asm.0;
-            Some(Node {
-                phrase: "label access",
-                children: vec![
-                    NodeChild::Node(env.vomit(4, pc, code_arena, id, from)),
-                    NodeChild::Text(".LABEL"),
-                ],
-            })
+) -> UncreateResult<'a> {
+    Ok(
+        if let Some(asm) =
+            env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)?
+        {
+            if asm.1 == AtomicStructMember::Label {
+                let id = asm.0;
+                Some(Node {
+                    phrase: "label access",
+                    children: vec![
+                        NodeChild::Node(env.vomit(4, pc, code_arena, id, from)?),
+                        NodeChild::Text(".LABEL"),
+                    ],
+                })
+            } else {
+                None
+            }
         } else {
             None
-        }
-    } else {
-        None
-    }
+        },
+    )
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {

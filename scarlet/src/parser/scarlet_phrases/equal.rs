@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::{decision::CDecision, downcast_construct, Construct, ConstructId},
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
     shared::TripleBool,
@@ -33,28 +36,30 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    if let Ok(Some(cite)) = env.get_and_downcast_construct_definition::<CDecision>(uncreate) {
-        let cite = cite.clone();
-        let truee = env.get_language_item("true");
-        let falsee = env.get_language_item("false");
-        if env.is_def_equal_without_subs(cite.equal(), truee, 1024) == Ok(TripleBool::True)
-            && env.is_def_equal_without_subs(cite.unequal(), falsee, 1024) == Ok(TripleBool::True)
-        {
-            Some(Node {
-                phrase: "equal",
-                children: vec![
-                    NodeChild::Node(env.vomit(127, pc, code_arena, cite.left(), from)),
-                    NodeChild::Text("="),
-                    NodeChild::Node(env.vomit(127, pc, code_arena, cite.right(), from)),
-                ],
-            })
+) -> UncreateResult<'a> {
+    Ok(
+        if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {
+            let cite = cite.clone();
+            let truee = env.get_language_item("true");
+            let falsee = env.get_language_item("false");
+            if env.is_def_equal_without_subs(cite.equal(), truee, 1024)? == TripleBool::True
+                && env.is_def_equal_without_subs(cite.unequal(), falsee, 1024)? == TripleBool::True
+            {
+                Some(Node {
+                    phrase: "equal",
+                    children: vec![
+                        NodeChild::Node(env.vomit(127, pc, code_arena, cite.left(), from)?),
+                        NodeChild::Text("="),
+                        NodeChild::Node(env.vomit(127, pc, code_arena, cite.right(), from)?),
+                    ],
+                })
+            } else {
+                None
+            }
         } else {
             None
-        }
-    } else {
-        None
-    }
+        },
+    )
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

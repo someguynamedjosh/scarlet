@@ -110,6 +110,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<Option<Invariant>, UnresolvedConstructError> {
         let generated_invariants = self.generated_invariants(context_id)?;
+        // TODO: This can be optimized by interleaving def equals and lookups.
         for inv in generated_invariants {
             if self.is_def_equal(
                 SubExpr(statement, &Default::default()),

@@ -8,6 +8,10 @@ pub type ResolveStack = Vec<ResolveStackFrame>;
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
         self.for_each_construct_returning_nothing(Self::resolve);
+        self.for_each_construct_returning_nothing(|env, id| {
+            let def = &env.constructs[id].definition;
+            assert!(def.as_other().is_some() || def.as_resolved().is_some());
+        })
     }
 
     pub fn resolve(&mut self, con_id: ConstructId) {

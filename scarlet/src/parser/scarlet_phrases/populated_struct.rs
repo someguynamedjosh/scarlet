@@ -6,7 +6,7 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::Phrase, util, Node, NodeChild, ParseContext},
+    parser::{phrase::{Phrase, UncreateResult}, util, Node, NodeChild, ParseContext},
     phrase,
     scope::Scope,
 };
@@ -38,8 +38,8 @@ fn uncreate<'a>(
     _code_arena: &'a Arena<String>,
     _uncreate: ConstructId,
     _from: &dyn Scope,
-) -> Option<Node<'a>> {
-    None
+) -> UncreateResult<'a> {
+    Ok(None)
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {

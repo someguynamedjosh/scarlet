@@ -3,7 +3,11 @@ use regex::Regex;
 use typed_arena::Arena;
 
 use super::{Node, ParseContext};
-use crate::{constructs::ConstructId, environment::Environment, scope::Scope};
+use crate::{
+    constructs::ConstructId,
+    environment::{Environment, UnresolvedConstructError},
+    scope::Scope,
+};
 
 pub type Precedence = u8;
 pub type Priority = u8;
@@ -61,7 +65,8 @@ pub type UncreateFn = for<'a, 'x> fn(
     &'a Arena<String>,
     ConstructId,
     &dyn Scope,
-) -> Option<Node<'a>>;
+) -> UncreateResult<'a>;
+pub type UncreateResult<'a> = Result<Option<Node<'a>>, UnresolvedConstructError>;
 
 pub type VomitFn = fn(&ParseContext, &Node) -> String;
 

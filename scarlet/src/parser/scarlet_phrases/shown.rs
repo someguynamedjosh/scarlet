@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::{shown::CShown, ConstructId},
     environment::Environment,
-    parser::{phrase::Phrase, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
 };
@@ -28,22 +31,24 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    if let Ok(Some(cshown)) = env.get_and_downcast_construct_definition::<CShown>(uncreate) {
-        let cshown = cshown.clone();
-        Some(Node {
-            phrase: "shown",
-            children: vec![NodeChild::Node(env.vomit(
-                4,
-                pc,
-                code_arena,
-                cshown.get_base(),
-                from,
-            ))],
-        })
-    } else {
-        None
-    }
+) -> UncreateResult<'a> {
+    Ok(
+        if let Some(cshown) = env.get_and_downcast_construct_definition::<CShown>(uncreate)? {
+            let cshown = cshown.clone();
+            Some(Node {
+                phrase: "shown",
+                children: vec![NodeChild::Node(env.vomit(
+                    4,
+                    pc,
+                    code_arena,
+                    cshown.get_base(),
+                    from,
+                )?)],
+            })
+        } else {
+            None
+        },
+    )
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

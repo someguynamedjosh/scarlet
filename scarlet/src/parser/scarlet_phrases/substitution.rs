@@ -8,9 +8,9 @@ use crate::{
         variable::{CVariable, Dependency, VariableId},
         ConstructId,
     },
-    environment::Environment,
+    environment::{Environment, UnresolvedConstructError},
     parser::{
-        phrase::Phrase,
+        phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
@@ -61,21 +61,21 @@ fn uncreate_substitution<'a>(
     value: ConstructId,
     deps: &mut Vec<Dependency>,
     from: &dyn Scope,
-) -> Node<'a> {
-    let value = env.vomit(254, pc, code_arena, value, from);
-    if deps.get(0).map(|v| v.id == target) == Some(true) {
+) -> Result<Node<'a>, UnresolvedConstructError> {
+    let value = env.vomit(254, pc, code_arena, value, from)?;
+    Ok(if deps.get(0).map(|v| v.id == target) == Some(true) {
         deps.remove(0);
         value
     } else {
         Node {
             phrase: "is",
             children: vec![
-                NodeChild::Node(env.vomit_var(pc, code_arena, target, from)),
+                NodeChild::Node(env.vomit_var(pc, code_arena, target, from)?),
                 NodeChild::Text("IS"),
                 NodeChild::Node(value),
             ],
         }
-    }
+    })
 }
 
 fn uncreate<'a>(
@@ -84,8 +84,8 @@ fn uncreate<'a>(
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     from: &dyn Scope,
-) -> Option<Node<'a>> {
-    if let Ok(Some(csub)) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate) {
+) -> UncreateResult<'a> {
+    if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate)? {
         let csub = csub.clone();
         let mut deps = env
             .get_dependencies(csub.base())
@@ -97,19 +97,19 @@ fn uncreate<'a>(
                 .map(|(target, value)| {
                     uncreate_substitution(pc, env, code_arena, *target, *value, &mut deps, from)
                 })
-                .collect_vec(),
+                .collect::<Result<Vec<_>, _>>()?,
         );
-        Some(Node {
+        Ok(Some(Node {
             phrase: "substitution",
             children: vec![
-                NodeChild::Node(env.vomit(4, pc, code_arena, csub.base(), from)),
+                NodeChild::Node(env.vomit(4, pc, code_arena, csub.base(), from)?),
                 NodeChild::Text("["),
                 subs,
                 NodeChild::Text("]"),
             ],
-        })
+        }))
     } else {
-        None
+        Ok(None)
     }
 }
 
