@@ -89,7 +89,6 @@ fn uncreate<'a>(
         let csub = csub.clone();
         let mut deps = env
             .get_dependencies(csub.base())
-            .unwrap_or_default()
             .into_variables()
             .collect_vec();
         let subs = create_comma_list(

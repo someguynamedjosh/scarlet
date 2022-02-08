@@ -64,7 +64,6 @@ impl<'x> Environment<'x> {
         result.push_str(&format!("depends on:\n"));
         for dep in self
             .get_dependencies(con_id)
-            .unwrap_or_default()
             .into_variables()
         {
             result.push_str(&format!(

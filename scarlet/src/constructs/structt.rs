@@ -60,9 +60,9 @@ impl Construct for CPopulatedStruct {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
-        let mut deps = env.get_dependencies(self.value)?;
-        deps.append(env.get_dependencies(self.rest)?);
-        Ok(deps)
+        let mut deps = env.get_dependencies(self.value);
+        deps.append(env.get_dependencies(self.rest));
+        deps
     }
 
     fn is_def_equal<'x>(
@@ -133,7 +133,7 @@ impl Construct for CAtomicStructMember {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let base_def = match env.get_construct_definition(self.0) {
             Ok(def) => &**def,
-            Err(err) => return Err(DependencyError::from_unresolved(err)),
+            Err(err) => return Dependencies::new_error(err),
         };
         if let Some(structt) = as_struct(base_def) {
             let structt = structt.clone();
@@ -287,11 +287,7 @@ impl Scope for SFieldAndRest {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        ident: &str,
-    ) -> LookupIdentResult {
+    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)
@@ -304,7 +300,7 @@ impl Scope for SFieldAndRest {
         &self,
         env: &'a mut Environment<'x>,
         value: ConstructId,
-    ) -> ReverseLookupIdentResult{
+    ) -> ReverseLookupIdentResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
             reverse_lookup_ident_in(env, value, &structt)
@@ -318,7 +314,7 @@ impl Scope for SFieldAndRest {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupInvariantResult{
+    ) -> LookupInvariantResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
             lookup_invariant_in(env, invariant, &structt, limit)

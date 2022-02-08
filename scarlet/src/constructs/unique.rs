@@ -35,7 +35,7 @@ impl Construct for CUnique {
     }
 
     fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> DepResult {
-        Ok(Dependencies::new())
+        Dependencies::new()
     }
 
     fn is_def_equal<'x>(

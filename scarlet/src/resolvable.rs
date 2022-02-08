@@ -7,7 +7,7 @@ use crate::{
         variable::{CVariable, Variable, VariableId},
         ConstructDefinition, ConstructId,
     },
-    environment::{dependencies::get_partial_or_full_deps, Environment, UnresolvedConstructError},
+    environment::{Environment, UnresolvedConstructError},
     scope::Scope,
     shared::OrderedMap,
 };
@@ -71,10 +71,10 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
     }
 
     fn resolve(&self, env: &mut Environment<'x>, scope: Box<dyn Scope>) -> ResolveResult<'x> {
-        let base_scope = env.get_construct_scope(self.base).dyn_clone();
+        let base = env.dereference(self.base)?;
+        let base_scope = env.get_construct_scope(base).dyn_clone();
         let mut subs = OrderedMap::new();
-        let remaining_deps = env.get_dependencies(self.base);
-        let (mut remaining_deps, partial_dep_error) = get_partial_or_full_deps(remaining_deps);
+        let mut remaining_deps = env.get_dependencies(self.base);
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, name)?.unwrap();
             if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(target)? {
@@ -86,7 +86,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         }
         for &value in &self.anonymous_subs {
             if remaining_deps.num_variables() == 0 {
-                if let Some(partial_dep_error) = partial_dep_error {
+                if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error);
                 } else {
                     eprintln!("BASE:\n{}\n", env.show(self.base, self.base));

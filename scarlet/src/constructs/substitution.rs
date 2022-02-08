@@ -25,13 +25,13 @@ pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
 impl<'a> SubExpr<'a> {
     pub fn deps(&self, env: &mut Environment) -> DepResult {
         let mut result = Dependencies::new();
-        let base = env.get_dependencies(self.0)?;
+        let base = env.get_dependencies(self.0);
         for (target, value) in self.1.iter() {
             if base.contains_var(*target) {
-                result.append(value.deps(env)?);
+                result.append(value.deps(env));
             }
         }
-        Ok(result)
+        result
     }
 }
 
@@ -149,33 +149,40 @@ impl Construct for CSubstitution {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
-        let base = env.get_dependencies(self.0)?;
+        let base = env.get_dependencies(self.0);
+        let base_error = base.error();
         for dep in base.as_variables() {
             if let Some((_, rep)) = self.1.iter().find(|(var, _)| *var == dep.id) {
-                let replaced_deps = env.get_dependencies(*rep)?;
+                let replaced_deps = env.get_dependencies(*rep);
+                let replaced_err = replaced_deps.error();
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.id) {
                         deps.push_eager(rdep);
                     }
                 }
+                if let Some(err) = replaced_err {
+                    deps.append(Dependencies::new_error(err));
+                }
             } else {
                 deps.push_eager(dep.clone());
             }
         }
+        if let Some(err) = base_error {
+            deps.append(Dependencies::new_error(err));
+        }
         let sj = match self.substitution_justifications(env) {
             Ok(ok) => ok,
             Err(err) => {
-                let mut err = DependencyError::from_unresolved(err);
-                err.partial_deps = deps;
-                return Err(err);
+                deps.append(Dependencies::new_error(err));
+                return deps;
             }
         };
         for inv in sj.borrow().iter().flatten().flatten() {
             for &dep in &inv.dependencies {
-                deps.append(env.get_dependencies(dep)?)
+                deps.append(env.get_dependencies(dep))
             }
         }
-        Ok(deps)
+        deps
     }
 
     fn generated_invariants<'x>(

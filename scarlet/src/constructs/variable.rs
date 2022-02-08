@@ -103,16 +103,16 @@ impl Construct for CVariable {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
         for dep in env.get_variable(self.0).dependencies.clone() {
-            deps.append(env.get_dependencies(dep)?);
+            deps.append(env.get_dependencies(dep));
         }
         deps.push_eager(Dependency {
             id: self.0,
             swallow: deps.as_variables().map(|x| x.id).collect(),
         });
         for inv in env.get_variable(self.0).invariants.clone() {
-            deps.append(env.get_dependencies(inv)?);
+            deps.append(env.get_dependencies(inv));
         }
-        Ok(deps)
+        deps
     }
 
     fn is_def_equal<'x>(

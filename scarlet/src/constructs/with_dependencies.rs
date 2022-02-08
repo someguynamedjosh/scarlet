@@ -8,7 +8,7 @@ use super::{
 };
 use crate::{
     environment::{
-        dependencies::{DepResult, Dependencies},
+        dependencies::{DepResult, Dependencies, DependencyError},
         DefEqualResult, Environment,
     },
     impl_any_eq_for_construct,
@@ -52,16 +52,30 @@ impl Construct for CWithDependencies {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
-        let base_deps = env.get_dependencies(self.base)?;
+        let base_deps = env.get_dependencies(self.base);
         for &priority_dep in &self.dependencies {
-            for dep in env.get_dependencies(priority_dep)?.into_variables() {
+            let priority_dep_deps = env.get_dependencies(priority_dep);
+            let priority_dep_error = priority_dep_deps.error();
+            for dep in priority_dep_deps.into_variables() {
                 if base_deps.contains(&dep) {
                     deps.push_eager(dep);
+                } else if let Some(err) = priority_dep_error {
+                    deps.append(Dependencies::new_error(err));
+                } else if let Some(err) = base_deps.error() {
+                    // If the base had an error, we might not be accounting for
+                    // all the dependencies it has. We might be throwing out a
+                    // priority dep that it actually has, so we need to
+                    // terminate the dependency list now before anything else
+                    // gets added out of order.
+                    deps.append(Dependencies::new_error(err));
                 }
+            }
+            if let Some(err) = priority_dep_error {
+                deps.append(Dependencies::new_error(err));
             }
         }
         deps.append(base_deps);
-        Ok(deps)
+        deps
     }
 
     fn is_def_equal<'x>(

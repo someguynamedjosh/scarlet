@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use maplit::hashset;
 
 use super::{ConstructId, Environment, UnresolvedConstructError};
-use crate::constructs::variable::{CVariable, Dependency, VariableId};
+use crate::constructs::variable::{Dependency, VariableId};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DepResStackFrame(pub(super) ConstructId);
@@ -16,6 +16,9 @@ pub struct Dependencies {
     /// list of dependencies for each contained construct, due to that item
     /// recursively depending on itself.
     missing: HashSet<ConstructId>,
+    /// Signifies this dependency list is missing all the dependencies from a
+    /// particular item and any dependencies after it.
+    error: Option<UnresolvedConstructError>,
 }
 
 impl Dependencies {
@@ -23,6 +26,7 @@ impl Dependencies {
         Self {
             eager: Vec::new(),
             missing: HashSet::new(),
+            error: None,
         }
     }
 
@@ -30,10 +34,22 @@ impl Dependencies {
         Self {
             eager: Vec::new(),
             missing: hashset![con],
+            error: None,
+        }
+    }
+
+    pub fn new_error(error: UnresolvedConstructError) -> Self {
+        Self {
+            eager: Vec::new(),
+            missing: HashSet::new(),
+            error: Some(error),
         }
     }
 
     pub fn push_eager(&mut self, dep: Dependency) {
+        if self.error.is_some() {
+            return;
+        }
         for var in &self.eager {
             if &dep == var {
                 return;
@@ -51,9 +67,13 @@ impl Dependencies {
     }
 
     pub fn append(&mut self, other: Dependencies) {
+        if self.error.is_some() {
+            return;
+        }
         for &new_missing in other.missing() {
             self.missing.insert(new_missing);
         }
+        self.error = other.error;
         for eager in other.into_variables() {
             self.push_eager(eager);
         }
@@ -95,6 +115,10 @@ impl Dependencies {
     pub fn missing(&self) -> &HashSet<ConstructId> {
         &self.missing
     }
+
+    pub fn error(&self) -> Option<UnresolvedConstructError> {
+        self.error
+    }
 }
 
 pub struct DependencyError {
@@ -111,33 +135,22 @@ impl DependencyError {
     }
 }
 
-pub type DepResult = Result<Dependencies, DependencyError>;
-
-pub fn get_partial_or_full_deps(
-    from: DepResult,
-) -> (Dependencies, Option<UnresolvedConstructError>) {
-    match from {
-        Ok(deps) => (deps, None),
-        Err(error) => (error.partial_deps, Some(error.cause)),
-    }
-}
+pub type DepResult = Dependencies;
 
 impl<'x> Environment<'x> {
     pub fn get_dependencies(&mut self, con_id: ConstructId) -> DepResult {
         if self.dep_res_stack.iter().any(|i| i.0 == con_id) {
-            Ok(Dependencies::new_missing(con_id))
+            Dependencies::new_missing(con_id)
         } else {
             let con = match self.get_construct_definition(con_id) {
                 Ok(ok) => ok.dyn_clone(),
-                Err(err) => return Err(DependencyError::from_unresolved(err)),
+                Err(err) => return Dependencies::new_error(err),
             };
             self.dep_res_stack.push(DepResStackFrame(con_id));
-            let deps = con.get_dependencies(self);
+            let mut deps = con.get_dependencies(self);
             assert_eq!(self.dep_res_stack.pop(), Some(DepResStackFrame(con_id)));
-            deps.map(|mut ok| {
-                ok.missing.remove(&con_id);
-                ok
-            })
+            deps.missing.remove(&con_id);
+            deps
         }
     }
 }

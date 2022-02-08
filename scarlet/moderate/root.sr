@@ -1,33 +1,32 @@
 {
   t_eq_symm IS 
   {
-    t_just[ true ]
-    # t_just[ b = a ]
-    # .WITH_DEPENDENCIES[ a b ]
+    t_just[ b = a ]
+    .WITH_DEPENDENCIES[ a b ]
 
-    # t_eq_ext_rev[ a b x ]
-
-    # a IS VAR[ ]
-    # b IS VAR[ a = SELF ]
-  }
-  .VALUE
-
-  # From a = b
-  # Proves fx[ a ] = fx[ b ]
-  t_eq_ext IS 
-  {
-    # t_just[ fx[ a ] = fx[ b ] ]
-    # .WITH_DEPENDENCIES[ a b fx ]
-
-    # t_eq_ext_rev[ b a ]
-
-    # Proves b = a
-    t_eq_symm[ ]
+    t_eq_ext_rev[ a b x ]
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]
   }
   .VALUE
+
+  # From a = b
+  # Proves fx[ a ] = fx[ b ]
+  # t_eq_ext IS 
+  # {
+  #   # t_just[ fx[ a ] = fx[ b ] ]
+  #   # .WITH_DEPENDENCIES[ a b fx ]
+
+  #   # t_eq_ext_rev[ b a ]
+
+  #   # Proves b = a
+  #   t_eq_symm[ a b ]
+
+  #   a IS VAR[ ]
+  #   b IS VAR[ a = SELF ]
+  # }
+  # .VALUE
 
   # # From a=b  fx[ a ]
   # # Proves fx[ b ]
@@ -119,7 +118,6 @@
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]
   t_invariant_truth IS AXIOM[ t_invariant_truth ]
-  t_eq_ext_rev IS AXIOM[ t_eq_ext_rev ]
   t_inv_eq IS AXIOM[ t_inv_eq ]
   t_refl IS AXIOM[ t_refl ]
   t_decision_eq IS AXIOM[ t_decision_eq ]
@@ -148,14 +146,18 @@
     ]
   }
 
+  t_eq_ext_rev IS 
   {
-    a IS VAR[]
-    b IS VAR[ a = SELF ]
+    AXIOM[ t_eq_ext_rev ]
 
     (fx[ b ] = fx[ a ])
     .WITH_DEPENDENCIES[ a b fx ]
     .AS_LANGUAGE_ITEM[ t_eq_ext_rev_statement ]
+
+    a IS VAR[]
+    b IS VAR[ a = SELF ]
   }
+  .VALUE
 
   {
     a IS VAR[ SELF ]

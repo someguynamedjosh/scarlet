@@ -71,15 +71,12 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> LookupInvariantResult {
-        let mut default = Ok(None);
         for limit in 0..8192 {
-            match self.lookup_invariant_limited(env, invariant, limit) {
-                Ok(Some(inv)) => return Ok(Some(inv)),
-                Err(err) => default = Err(err),
-                _ => (),
+            if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit)? {
+                return Ok(Some(inv));
             }
         }
-        default
+        Ok(None)
     }
 
     fn lookup_invariant_limited<'x>(

@@ -90,11 +90,11 @@ impl Construct for CDecision {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
-        let mut deps = env.get_dependencies(self.left)?;
-        deps.append(env.get_dependencies(self.right)?);
-        deps.append(env.get_dependencies(self.equal)?);
-        deps.append(env.get_dependencies(self.unequal)?);
-        Ok(deps)
+        let mut deps = env.get_dependencies(self.left);
+        deps.append(env.get_dependencies(self.right));
+        deps.append(env.get_dependencies(self.equal));
+        deps.append(env.get_dependencies(self.unequal));
+        deps
     }
 
     fn is_def_equal<'x>(
