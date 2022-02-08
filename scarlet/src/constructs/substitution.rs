@@ -85,6 +85,7 @@ impl CSubstitution {
                     invariants.append(&mut new_invs)
                 }
                 Err(err) => {
+                    eprintln!("{:#?}", env);
                     panic!(
                         "THIS EXPRESSION:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
                         env.show(*value, *value)?,

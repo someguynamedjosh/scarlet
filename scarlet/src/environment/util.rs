@@ -73,6 +73,7 @@ impl<'x> Environment<'x> {
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> GenInvResult {
         for frame in &self.dep_res_stack {
             if frame.0 == con_id {
+                println!("Returned none on {:?}", con_id);
                 return Ok(Vec::new());
             }
         }
