@@ -10,7 +10,7 @@ mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, util::InvariantStack};
+use self::{dependencies::DepResStack, resolve::ResolveStack};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
@@ -55,7 +55,7 @@ pub struct Environment<'x> {
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
-    pub(super) invariant_stack: InvariantStack,
+    pub(super) resolve_stack: ResolveStack,
     use_reduced_definitions_while_vomiting: bool,
 }
 
@@ -67,7 +67,7 @@ impl<'x> Environment<'x> {
             uniques: Pool::new(),
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
-            invariant_stack: InvariantStack::new(),
+            resolve_stack: ResolveStack::new(),
             use_reduced_definitions_while_vomiting: true,
         };
         for &name in LANGUAGE_ITEM_NAMES {

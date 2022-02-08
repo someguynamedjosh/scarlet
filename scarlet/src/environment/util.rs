@@ -8,12 +8,6 @@ use crate::{
     shared::TripleBool,
 };
 
-#[derive(Debug)]
-pub struct InvariantStackFrame {
-    con_id: ConstructId,
-}
-pub type InvariantStack = Vec<InvariantStackFrame>;
-
 impl<'x> Environment<'x> {
     pub fn get_construct(&self, con_id: ConstructId) -> &AnnotatedConstruct<'x> {
         &self.constructs[con_id]

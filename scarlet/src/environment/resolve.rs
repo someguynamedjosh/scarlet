@@ -1,8 +1,9 @@
 use super::{ConstructId, Environment};
-use crate::{
-    constructs::ConstructDefinition,
-    environment::{dependencies::DepResStackFrame, UnresolvedConstructError},
-};
+use crate::{constructs::ConstructDefinition, environment::UnresolvedConstructError};
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ResolveStackFrame(ConstructId);
+pub type ResolveStack = Vec<ResolveStackFrame>;
 
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
@@ -11,15 +12,24 @@ impl<'x> Environment<'x> {
 
     pub fn resolve(&mut self, con_id: ConstructId) {
         let con = &self.constructs[con_id];
+        if self.resolve_stack.contains(&ResolveStackFrame(con_id)) {
+            todo!("Nice error, circular dependency");
+        }
         if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
-            self.dep_res_stack.push(DepResStackFrame(con_id));
+            self.resolve_stack.push(ResolveStackFrame(con_id));
             let resolvable = resolvable.dyn_clone();
             let scope = con.scope.dyn_clone();
             let new_def = resolvable.resolve(self, scope);
-            assert_eq!(self.dep_res_stack.pop(), Some(DepResStackFrame(con_id)));
             match new_def {
-                Ok(new_def) => self.constructs[con_id].definition = new_def,
-                Err(UnresolvedConstructError(unresolved)) => todo!(),
+                Ok(new_def) => {
+                    self.constructs[con_id].definition = new_def;
+                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
+                }
+                Err(UnresolvedConstructError(unresolved)) => {
+                    self.resolve(unresolved);
+                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
+                    self.resolve(con_id);
+                }
             }
         }
     }
