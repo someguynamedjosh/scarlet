@@ -43,7 +43,9 @@ impl<'x> Environment<'x> {
         &mut self,
         con_id: ConstructId,
     ) -> Result<Option<&C>, UnresolvedConstructError> {
-        Ok(downcast_construct(&**self.get_construct_definition_no_deref(con_id)?))
+        Ok(downcast_construct(
+            &**self.get_construct_definition_no_deref(con_id)?,
+        ))
     }
 
     pub fn get_construct_definition(
@@ -78,9 +80,21 @@ impl<'x> Environment<'x> {
         let def = &self.constructs[con_id].definition;
         if def.as_other().is_some() || def.as_resolved().is_some() {
             self.dep_res_stack.push(DepResStackFrame(con_id));
-            let context = self.get_construct_definition(con_id)?;
+            let context = match self.get_construct_definition(con_id) {
+                Ok(ok) => ok,
+                Err(err) => {
+                    self.dep_res_stack.pop();
+                    return Err(err);
+                }
+            };
             let context = context.dyn_clone();
-            let invs = context.generated_invariants(con_id, self)?;
+            let invs = match context.generated_invariants(con_id, self) {
+                Ok(ok) => ok,
+                Err(err) => {
+                    self.dep_res_stack.pop();
+                    return Err(err);
+                }
+            };
             self.constructs[con_id].invariants = Some(invs.clone());
             self.dep_res_stack.pop();
             Ok(invs)

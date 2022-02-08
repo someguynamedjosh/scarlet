@@ -1,14 +1,14 @@
 {
   t_eq_symm IS 
   {
-    t_just[ b = a ]
-    .WITH_DEPENDENCIES[ a b ]
+    t_just[ true ]
+    # t_just[ b = a ]
+    # .WITH_DEPENDENCIES[ a b ]
 
-    t_eq_ext_rev[ a b x ]
-    .SHOWN
+    # t_eq_ext_rev[ a b x ]
 
-    a IS VAR[ ]
-    b IS VAR[ a = SELF ]
+    # a IS VAR[ ]
+    # b IS VAR[ a = SELF ]
   }
   .VALUE
 
@@ -22,7 +22,7 @@
     # t_eq_ext_rev[ b a ]
 
     # Proves b = a
-    t_eq_symm[ a b ]
+    t_eq_symm[ ]
 
     a IS VAR[ ]
     b IS VAR[ a = SELF ]

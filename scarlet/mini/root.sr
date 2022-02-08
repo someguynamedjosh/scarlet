@@ -3,7 +3,7 @@
 
   a IS VAR[ ]
   x IS VAR[ ]
-  fx IS VAR[ SELF[ x IS a ] DEP x ]
+  fx IS VAR[ DEP x ]
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

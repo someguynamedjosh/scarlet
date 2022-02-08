@@ -13,6 +13,8 @@ impl<'x> Environment<'x> {
     pub fn resolve(&mut self, con_id: ConstructId) {
         let con = &self.constructs[con_id];
         if self.resolve_stack.contains(&ResolveStackFrame(con_id)) {
+            eprintln!("{:#?}", self);
+            eprintln!("{:?}", self.resolve_stack);
             todo!("Nice error, circular dependency");
         }
         if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
