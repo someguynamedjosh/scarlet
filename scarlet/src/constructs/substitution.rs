@@ -98,6 +98,7 @@ impl CSubstitution {
     }
 
     fn invariants(&self, env: &mut Environment) -> GenInvResult {
+        println!("Invariants requested on base {:?}", self.0);
         let mut invs = Vec::new();
         for inv in env.generated_invariants(self.0)? {
             let subbed_statement = env.substitute(inv.statement, &self.1);

@@ -1,9 +1,18 @@
 {
-  fx[ a ].SHOWN[ fx IS x ].SHOWN
+
+  struct IS {
+    just_var_inv IS t_just[ a = b ]
+
+    var IS VAR[ a = b ]
+  }
+  .SHOWN
+
+  final IS t_just[ a = b ] 
 
   a IS VAR[ ]
-  x IS VAR[ ]
-  fx IS VAR[ DEP x ]
+  b IS VAR[ ]
+
+  t_just IS VAR[ SELF ]
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

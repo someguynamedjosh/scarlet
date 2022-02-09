@@ -264,18 +264,18 @@ fn lookup_invariant_in<'x>(
     inn: &CPopulatedStruct,
     limit: u32,
 ) -> LookupInvariantResult {
+    for maybe_match in env.generated_invariants(inn.value)? {
+        if env.is_def_equal(
+            SubExpr(invariant, &Default::default()),
+            SubExpr(maybe_match.statement, &Default::default()),
+            limit,
+        )? == TripleBool::True
+        {
+            return Ok(Some(maybe_match));
+        }
+    }
     if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)?) {
         let rest = rest.clone();
-        for maybe_match in env.generated_invariants(rest.value)? {
-            if env.is_def_equal(
-                SubExpr(invariant, &Default::default()),
-                SubExpr(maybe_match.statement, &Default::default()),
-                limit,
-            )? == TripleBool::True
-            {
-                return Ok(Some(maybe_match));
-            }
-        }
         lookup_invariant_in(env, invariant, &rest, limit)
     } else {
         Ok(None)

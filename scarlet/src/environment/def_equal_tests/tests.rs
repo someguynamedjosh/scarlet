@@ -170,3 +170,43 @@ fn var_dep_x_sub_x_and_y_is_y() {
     let sub = env.substitute(var_id, &vec![(var, x_id), (x_var, y)].into_iter().collect());
     env.assert_def_equal(sub, y);
 }
+
+#[test]
+fn x_eq_y_sub_a_is_a_eq_y() {
+    let mut env = env();
+
+    let t = env.unique();
+    let f = env.unique();
+
+    let a = env.variable();
+    let (x, x_var) = env.variable_full();
+    let y = env.variable();
+
+    let x_eq_y = env.decision(x, y, t, f);
+    let a_eq_y = env.decision(a, y, t, f);
+    let x_eq_y_sub_a = env.substitute(x_eq_y, &vec![(x_var, a)].into_iter().collect());
+
+    env.assert_def_equal(x_eq_y_sub_a, a_eq_y);
+    env.assert_def_equal(a_eq_y, x_eq_y_sub_a);
+}
+
+#[test]
+fn x_eq_y_sub_a_is_ident_sub_a_eq_y() {
+    let mut env = env();
+
+    let t = env.unique();
+    let f = env.unique();
+
+    let a = env.variable();
+    let (x, x_var) = env.variable_full();
+    let y = env.variable();
+    let (ident, i_var) = env.variable_full();
+
+    let x_eq_y = env.decision(x, y, t, f);
+    let x_eq_y_sub_a = env.substitute(x_eq_y, &vec![(x_var, a)].into_iter().collect());
+    let a_eq_y = env.decision(a, y, t, f);
+    let ident_sub_a_eq_y = env.substitute(ident, &vec![(i_var, a_eq_y)].into_iter().collect());
+
+    env.assert_def_equal(x_eq_y_sub_a, ident_sub_a_eq_y);
+    env.assert_def_equal(ident_sub_a_eq_y, x_eq_y_sub_a);
+}
