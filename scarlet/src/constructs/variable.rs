@@ -11,7 +11,7 @@ use crate::{
         DefEqualResult, Environment, UnresolvedConstructError,
     },
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, ReverseLookupIdentResult, Scope, LookupInvariantResult},
+    scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
     shared::{Id, OrderedMap, Pool, TripleBool},
 };
 
@@ -67,7 +67,7 @@ impl Variable {
         substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
-            if let Some(inv) = env.get_produced_invariant(subbed, value, 1024)? {
+            if let Some(inv) = env.get_produced_invariant(subbed, value, 1024) {
                 invariants.push(inv);
             } else {
                 return Ok(Err(format!(
@@ -92,12 +92,11 @@ impl Construct for CVariable {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
-        Ok(env
-            .get_variable(self.0)
+        env.get_variable(self.0)
             .invariants
             .iter()
             .map(|&i| Invariant::new(i, hashset![this]))
-            .collect())
+            .collect()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

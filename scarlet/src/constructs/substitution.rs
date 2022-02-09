@@ -100,7 +100,7 @@ impl CSubstitution {
     fn invariants(&self, env: &mut Environment) -> GenInvResult {
         println!("Invariants requested on base {:?}", self.0);
         let mut invs = Vec::new();
-        for inv in env.generated_invariants(self.0)? {
+        for inv in env.generated_invariants(self.0) {
             let subbed_statement = env.substitute(inv.statement, &self.1);
             let mut new_deps: HashSet<_> = inv
                 .dependencies
@@ -108,7 +108,8 @@ impl CSubstitution {
                 .map(|d| env.substitute(d, &self.1))
                 .collect();
             for inv in self
-                .substitution_justifications(env)?
+                .substitution_justifications(env)
+                .unwrap()
                 .borrow()
                 .iter()
                 .flatten()
@@ -120,7 +121,7 @@ impl CSubstitution {
             }
             invs.push(Invariant::new(subbed_statement, new_deps));
         }
-        Ok(invs)
+        invs
     }
 }
 

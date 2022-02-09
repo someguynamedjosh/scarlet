@@ -52,11 +52,11 @@ impl Construct for CPopulatedStruct {
         _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
-        Ok([
-            env.generated_invariants(self.value)?,
-            env.generated_invariants(self.rest)?,
+        [
+            env.generated_invariants(self.value),
+            env.generated_invariants(self.rest),
         ]
-        .concat())
+        .concat()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
@@ -118,7 +118,9 @@ impl Construct for CAtomicStructMember {
         _this: ConstructId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Ok(Some(structt)) =
+            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
+        {
             let structt = structt.clone();
             match self.1 {
                 AtomicStructMember::Label => todo!(),
@@ -204,7 +206,7 @@ impl Scope for SField {
     ) -> LookupInvariantResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
-            for maybe_match in env.generated_invariants(structt.value)? {
+            for maybe_match in env.generated_invariants(structt.value) {
                 if env.is_def_equal(
                     SubExpr(invariant, &Default::default()),
                     SubExpr(maybe_match.statement, &Default::default()),
@@ -264,7 +266,7 @@ fn lookup_invariant_in<'x>(
     inn: &CPopulatedStruct,
     limit: u32,
 ) -> LookupInvariantResult {
-    for maybe_match in env.generated_invariants(inn.value)? {
+    for maybe_match in env.generated_invariants(inn.value) {
         if env.is_def_equal(
             SubExpr(invariant, &Default::default()),
             SubExpr(maybe_match.statement, &Default::default()),

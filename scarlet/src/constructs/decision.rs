@@ -67,8 +67,8 @@ impl Construct for CDecision {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
-        let true_invs = env.generated_invariants(self.equal)?;
-        let mut false_invs = env.generated_invariants(self.equal)?;
+        let true_invs = env.generated_invariants(self.equal);
+        let mut false_invs = env.generated_invariants(self.equal);
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
@@ -76,7 +76,7 @@ impl Construct for CDecision {
                     SubExpr(true_inv.statement, &Default::default()),
                     SubExpr(false_inv.statement, &Default::default()),
                     4,
-                )? == TripleBool::True
+                ) == Ok(TripleBool::True)
                 {
                     let mut deps = true_inv.dependencies;
                     deps.insert(this);
@@ -86,7 +86,7 @@ impl Construct for CDecision {
                 }
             }
         }
-        Ok(result)
+        result
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

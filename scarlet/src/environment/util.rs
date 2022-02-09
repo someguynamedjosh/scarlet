@@ -74,7 +74,7 @@ impl<'x> Environment<'x> {
         for frame in &self.dep_res_stack {
             if frame.0 == con_id {
                 println!("Returned none on {:?}", con_id);
-                return Ok(Vec::new());
+                return Vec::new();
             }
         }
 
@@ -83,20 +83,14 @@ impl<'x> Environment<'x> {
             Ok(ok) => ok,
             Err(err) => {
                 self.dep_res_stack.pop();
-                return Err(err);
+                return Vec::new();
             }
         };
         let context = context.dyn_clone();
-        let invs = match context.generated_invariants(con_id, self) {
-            Ok(ok) => ok,
-            Err(err) => {
-                self.dep_res_stack.pop();
-                return Err(err);
-            }
-        };
+        let invs = context.generated_invariants(con_id, self);
         self.constructs[con_id].invariants = Some(invs.clone());
         self.dep_res_stack.pop();
-        Ok(invs)
+        invs
     }
 
     pub fn get_produced_invariant(
@@ -104,21 +98,21 @@ impl<'x> Environment<'x> {
         statement: ConstructId,
         context_id: ConstructId,
         limit: u32,
-    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
-        let generated_invariants = self.generated_invariants(context_id)?;
+    ) -> Option<Invariant> {
+        let generated_invariants = self.generated_invariants(context_id);
         // TODO: This can be optimized by interleaving def equals and lookups.
         for inv in generated_invariants {
             if self.is_def_equal(
                 SubExpr(statement, &Default::default()),
                 SubExpr(inv.statement, &Default::default()),
                 limit,
-            )? == TripleBool::True
+            ) == Ok(TripleBool::True)
             {
-                return Ok(Some(inv));
+                return Some(inv);
             }
         }
         let scope = self.get_construct(context_id).scope.dyn_clone();
-        let inv = scope.lookup_invariant(self, statement)?;
-        Ok(inv)
+        let inv = scope.lookup_invariant_limited(self, statement, limit);
+        inv.unwrap_or_default()
     }
 }

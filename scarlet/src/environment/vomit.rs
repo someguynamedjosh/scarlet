@@ -42,7 +42,7 @@ impl<'x> Environment<'x> {
         let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from)?.vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("proves:\n"));
-        for invariant in self.generated_invariants(con_id).unwrap_or_default() {
+        for invariant in self.generated_invariants(con_id) {
             result.push_str(&format!(
                 "    {} ({:?})\n",
                 indented(

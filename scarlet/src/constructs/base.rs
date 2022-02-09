@@ -89,7 +89,7 @@ pub struct AnnotatedConstruct<'x> {
 pub type ConstructPool<'x> = Pool<AnnotatedConstruct<'x>, 'C'>;
 pub type ConstructId = Id<'C'>;
 
-pub type GenInvResult = Result<Vec<Invariant>, UnresolvedConstructError>;
+pub type GenInvResult = Vec<Invariant>;
 
 pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {
@@ -113,7 +113,7 @@ pub trait Construct: Any + Debug + AnyEq {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
-        Ok(vec![])
+        vec![]
     }
 
     #[allow(unused_variables)]

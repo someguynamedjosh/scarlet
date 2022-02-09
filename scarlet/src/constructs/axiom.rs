@@ -46,7 +46,7 @@ impl Construct for CAxiom {
         _this: ConstructId,
         _env: &mut Environment<'x>,
     ) -> GenInvResult {
-        Ok(vec![Invariant::new(self.statement, hashset![])])
+        vec![Invariant::new(self.statement, hashset![])]
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
