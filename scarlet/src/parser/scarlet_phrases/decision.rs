@@ -43,7 +43,7 @@ fn create<'x>(
     let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
 
     let neq_inv = env.push_construct(
-        CDecision::new(left, right, truee, falsee),
+        CDecision::new(left, right, falsee, truee),
         SPlain(this).dyn_clone(),
     );
     let neq_inv = Invariant::new(neq_inv, Default::default());
