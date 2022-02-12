@@ -1,15 +1,8 @@
 {
+  basics IS 
   {
-    a[ fx[ i ] ]
-
-    x IS VAR[ ]
-    i IS VAR[ ]
-    fx IS VAR[ SELF[ i ] DEP x ]
+    true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
+    false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
+    void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
   }
-
-  a IS VAR[ SELF ]
-
-  true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
-  false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
-  void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
 }

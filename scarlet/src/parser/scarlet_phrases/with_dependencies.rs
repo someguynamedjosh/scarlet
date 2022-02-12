@@ -82,6 +82,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\.", r"WITH_DEPENDENCIES", r"\[", 255, r"\]"
+        4 => 4, r"\.WITH_DEPENDENCIES", r"\[", 255, r"\]"
     )
 }

@@ -13,7 +13,7 @@ impl<'a> Stack<'a> {
     pub fn collapse(&mut self, pt: &PhraseTable) {
         assert!(self.0.len() >= 2);
         let top = self.0.pop().unwrap();
-        assert!(top.is_complete(pt));
+        assert!(top.is_complete(pt), "{:#?} {:#?}", self, top);
         let next = self.0.len() - 1;
         let next = &mut self.0[next];
         assert!(next.is_waiting_for_node(pt));
