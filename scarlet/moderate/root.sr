@@ -2,6 +2,7 @@
   t_eq_symm IS 
   {
     t_just[ b = a ]
+    .SHOWN
     .WITH_DEPENDENCIES[ a b ]
 
     t_eq_ext_rev[ a b x ]
@@ -15,12 +16,10 @@
   # Proves fx[ a ] = fx[ b ]
   t_eq_ext IS 
   {
-    # t_just[ fx[ a ] = fx[ b ] ]
-    # .WITH_DEPENDENCIES[ a b fx ]
+    t_just[ fx[ a ] = fx[ b ] ]
+    .WITH_DEPENDENCIES[ a b fx ]
 
-    # t_eq_ext_rev[ b a ]
-
-    t_just[ b = a ]
+    t_eq_ext_rev[ b a ]
 
     # Proves b = a
     t_eq_symm[ a b ]
@@ -30,34 +29,34 @@
   }
   .VALUE
 
-  # # From a=b  fx[ a ]
-  # # Proves fx[ b ]
-  # t_inv_eq_ext IS 
-  # {
-  #   t_just[ fx[ b ] ]
-  #   .WITH_DEPENDENCIES[ a b fx ]
+  # From a=b  fx[ a ]
+  # Proves fx[ b ]
+  t_inv_eq_ext IS 
+  {
+    t_just[ fx[ b ] ]
+    .WITH_DEPENDENCIES[ a b fx ]
 
-  #   t_inv_eq[ fx[ a ]  fx[ b ] ]
+    t_inv_eq[ fx[ a ]  fx[ b ] ]
 
-  #   t_just[ fx[ a ] = fx[ b ] ]
+    # Proves fx[ a ] = fx[ b ]
+    t_eq_ext[ a b fx ]
 
-  #   # Proves fx[ a ] = fx[ b ]
-  #   t_eq_ext[ a b ]
+    a IS VAR[ ]
+    b IS VAR[ a = SELF ]
+    fx IS VAR[ SELF[ a ]  DEP x ]
+  }
+  .VALUE
 
-  #   a IS VAR[ ]
-  #   b IS VAR[ a = SELF ]
-  #   fx IS VAR[ SELF[ a ]  DEP x ]
-  # }
-  # .VALUE
-
-  # # From false
-  # # Proves b
+  # From false
+  # Proves b
   # t_explode_false IS
   # {
-  #   t_just[ b ]
+  #   # t_just[ b ]
 
   #   t_inv_eq_ext[ false true true_or_b ]
   #   true_or_b IS DECISION[ x false true b ]
+
+  #   t_just[ false = true ]    
   #   t_invariant_truth[ false ]
   #   b IS VAR[ false ]
   # }
@@ -120,7 +119,6 @@
   t_just IS VAR[ SELF ]
   t_trivial IS AXIOM[ t_trivial ]
   t_invariant_truth IS AXIOM[ t_invariant_truth ]
-  t_inv_eq IS AXIOM[ t_inv_eq ]
   t_refl IS AXIOM[ t_refl ]
   t_decision_eq IS AXIOM[ t_decision_eq ]
   t_decision_neq IS AXIOM[ t_decision_neq ]
@@ -161,14 +159,17 @@
   }
   .VALUE
 
-  {
-    a IS VAR[ SELF ]
-    b IS VAR[ a = SELF ]
+  t_inv_eq IS {
+    AXIOM[ t_inv_eq ]
 
     b
     .WITH_DEPENDENCIES[ a b ]
     .AS_LANGUAGE_ITEM[ t_inv_eq_statement ]
+
+    a IS VAR[ SELF ]
+    b IS VAR[ a = SELF ]
   }
+  .VALUE
 
   {
     a IS VAR[ ]

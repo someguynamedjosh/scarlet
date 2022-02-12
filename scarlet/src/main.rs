@@ -32,7 +32,7 @@ fn main() {
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
     env.resolve_all();
-    println!("{:#?}", env);
+    // println!("{:#?}", env);
     println!("Resolved");
     env.check_all().unwrap();
     println!("Checked");

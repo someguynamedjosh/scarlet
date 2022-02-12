@@ -61,13 +61,14 @@ impl Variable {
         value: ConstructId,
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
+        limit: u32,
     ) -> Result<Result<Vec<Invariant>, String>, UnresolvedConstructError> {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
-            if let Some(inv) = env.get_produced_invariant(subbed, value, 1024) {
+            if let Some(inv) = env.get_produced_invariant(subbed, value, limit) {
                 invariants.push(inv);
             } else {
                 return Ok(Err(format!(

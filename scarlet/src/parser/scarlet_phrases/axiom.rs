@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::{axiom::CAxiom, ConstructId},
     environment::Environment,
-    parser::{phrase::{Phrase, UncreateResult}, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::Scope,
 };
@@ -24,17 +27,32 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    pc: &ParseContext,
+    env: &mut Environment,
+    code_arena: &'a Arena<String>,
+    uncreate: ConstructId,
+    from: &dyn Scope,
 ) -> UncreateResult<'a> {
-    Ok(None)
+    if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
+        let cax = cax.clone();
+        let statement = cax.get_statement(env);
+        let statement = &statement[..statement.len() - "_statement".len()];
+        Ok(Some(Node {
+            phrase: "axiom",
+            children: vec![
+                NodeChild::Text("AXIOM"),
+                NodeChild::Text("["),
+                NodeChild::Text(statement),
+                NodeChild::Text("]"),
+            ],
+        }))
+    } else {
+        Ok(None)
+    }
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+    format!("AXIOM[ {} ]", src.children[2].as_text())
 }
 
 pub fn phrase() -> Phrase {

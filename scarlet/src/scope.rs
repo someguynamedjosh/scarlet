@@ -71,7 +71,6 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
     ) -> LookupInvariantResult {
-        println!("Start lookup {:?} in {:?}", invariant, self);
         for limit in 0..8192 {
             if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit)? {
                 return Ok(Some(inv));
@@ -86,7 +85,6 @@ pub trait Scope: Debug {
         invariant: ConstructId,
         limit: u32,
     ) -> LookupInvariantResult {
-        println!("Looking in {:?}", self);
         if let Some(inv) = self.local_lookup_invariant(env, invariant, limit)? {
             return Ok(Some(inv));
         } else if let Some(parent) = self.parent() {

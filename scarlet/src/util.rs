@@ -1,3 +1,9 @@
+pub trait Ignorable {
+    fn ignore(&self) {}
+}
+
+impl<R, E> Ignorable for Result<R, E> {}
+
 // pub enum MaybeResult<T, E> {
 //     Ok(T),
 //     None,

@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use maplit::hashset;
 
 use super::{
@@ -31,6 +32,23 @@ impl CAxiom {
 
     pub fn from_name(env: &mut Environment, name: &str) -> Self {
         Self::new(env, &format!("{}_statement", name))
+    }
+
+    pub fn get_statement(&self, env: &mut Environment) -> &'static str {
+        for limit in 0..32 {
+            for lang_item_name in env.language_item_names().copied().collect_vec() {
+                let lang_item = env.get_language_item(lang_item_name);
+                if env.is_def_equal(
+                    SubExpr(self.statement, &Default::default()),
+                    SubExpr(lang_item, &Default::default()),
+                    limit,
+                ) == Ok(TripleBool::True)
+                {
+                    return lang_item_name;
+                }
+            }
+        }
+        panic!("{:?} is not an axiom statement", self.statement)
     }
 }
 

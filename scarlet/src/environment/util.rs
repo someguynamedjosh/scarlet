@@ -14,10 +14,9 @@ impl<'x> Environment<'x> {
     }
 
     pub fn get_construct_scope(&mut self, con_id: ConstructId) -> &dyn Scope {
-        self.resolve(con_id);
         let con = self.get_construct(con_id);
         match &con.definition {
-            ConstructDefinition::Other(other) => self.get_construct_scope(*other),
+            &ConstructDefinition::Other(other) => self.get_construct_scope(other),
             ConstructDefinition::Resolved(_) => &*self.get_construct(con_id).scope,
             ConstructDefinition::Unresolved(_) => unreachable!(),
         }
@@ -73,7 +72,6 @@ impl<'x> Environment<'x> {
     pub fn generated_invariants(&mut self, con_id: ConstructId) -> GenInvResult {
         for frame in &self.dep_res_stack {
             if frame.0 == con_id {
-                println!("Returned none on {:?}", con_id);
                 return Vec::new();
             }
         }
@@ -100,7 +98,6 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Option<Invariant> {
         let generated_invariants = self.generated_invariants(context_id);
-        // TODO: This can be optimized by interleaving def equals and lookups.
         for inv in generated_invariants {
             if self.is_def_equal(
                 SubExpr(statement, &Default::default()),

@@ -1,18 +1,13 @@
 {
+  {
+    a[ fx[ i ] ]
 
-  struct IS {
-    just_var_inv IS t_just[ a = b ]
-
-    var IS VAR[ a = b ]
+    x IS VAR[ ]
+    i IS VAR[ ]
+    fx IS VAR[ SELF[ i ] DEP x ]
   }
-  .SHOWN
 
-  final IS t_just[ a = b ] 
-
-  a IS VAR[ ]
-  b IS VAR[ ]
-
-  t_just IS VAR[ SELF ]
+  a IS VAR[ SELF ]
 
   true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
   false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]

@@ -36,92 +36,27 @@ impl<'a> SubExpr<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CSubstitution(ConstructId, Substitutions, RefCell<Option<Justifications>>);
+pub struct CSubstitution {
+    base: ConstructId,
+    subs: Substitutions,
+    invs: Vec<Invariant>,
+}
 
 impl CSubstitution {
-    pub fn new<'x>(base: ConstructId, subs: Substitutions) -> Self {
-        Self(base, subs.clone(), RefCell::new(None))
+    pub fn new<'x>(base: ConstructId, subs: Substitutions, invs: Vec<Invariant>) -> Self {
+        Self { base, subs, invs }
     }
 
-    pub(crate) fn new_unchecked(base: ConstructId, subs: Substitutions) -> Self {
-        Self(base, subs, RefCell::new(Some(Ok(vec![]))))
+    pub fn new_unchecked(base: ConstructId, subs: Substitutions) -> Self {
+        Self::new(base, subs, Vec::new())
     }
 
     pub fn base(&self) -> ConstructId {
-        self.0
+        self.base
     }
 
     pub fn substitutions(&self) -> &Substitutions {
-        &self.1
-    }
-
-    fn substitution_justifications(
-        &self,
-        env: &mut Environment,
-    ) -> Result<&RefCell<Option<Justifications>>, UnresolvedConstructError> {
-        Ok(if self.2.borrow().is_some() {
-            &self.2
-        } else {
-            let just = self.create_substitution_justifications(env)?;
-            *self.2.borrow_mut() = Some(just);
-            &self.2
-        })
-    }
-
-    fn create_substitution_justifications(
-        &self,
-        env: &mut Environment,
-    ) -> Result<Justifications, UnresolvedConstructError> {
-        let mut previous_subs = Substitutions::new();
-        let mut invariants = Vec::new();
-        for (target, value) in &self.1 {
-            match env
-                .get_variable(*target)
-                .clone()
-                .can_be_assigned(*value, env, &previous_subs)?
-            {
-                Ok(mut new_invs) => {
-                    previous_subs.insert_no_replace(target.clone(), *value);
-                    invariants.append(&mut new_invs)
-                }
-                Err(err) => {
-                    eprintln!("{:#?}", env);
-                    panic!(
-                        "THIS EXPRESSION:\n{}\nDOES NOT SATISFY THIS REQUIREMENT:\n{}",
-                        env.show(*value, *value)?,
-                        err
-                    );
-                }
-            }
-        }
-        Ok(Ok(invariants))
-    }
-
-    fn invariants(&self, env: &mut Environment) -> GenInvResult {
-        println!("Invariants requested on base {:?}", self.0);
-        let mut invs = Vec::new();
-        for inv in env.generated_invariants(self.0) {
-            let subbed_statement = env.substitute(inv.statement, &self.1);
-            let mut new_deps: HashSet<_> = inv
-                .dependencies
-                .into_iter()
-                .map(|d| env.substitute(d, &self.1))
-                .collect();
-            for inv in self
-                .substitution_justifications(env)
-                .unwrap()
-                .borrow()
-                .iter()
-                .flatten()
-                .flatten()
-            {
-                for &dep in &inv.dependencies {
-                    new_deps.insert(dep);
-                }
-            }
-            invs.push(Invariant::new(subbed_statement, new_deps));
-        }
-        invs
+        &self.subs
     }
 }
 
@@ -138,24 +73,15 @@ impl Construct for CSubstitution {
         _this: ConstructId,
         _scope: Box<dyn Scope>,
     ) -> CheckResult {
-        if let Err(err) = self
-            .substitution_justifications(env)?
-            .borrow()
-            .as_ref()
-            .unwrap()
-        {
-            eprintln!("{}", err);
-            todo!("nice error");
-        }
         Ok(())
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
-        let base = env.get_dependencies(self.0);
+        let base = env.get_dependencies(self.base);
         let base_error = base.error();
         for dep in base.as_variables() {
-            if let Some((_, rep)) = self.1.iter().find(|(var, _)| *var == dep.id) {
+            if let Some((_, rep)) = self.subs.iter().find(|(var, _)| *var == dep.id) {
                 let replaced_deps = env.get_dependencies(*rep);
                 let replaced_err = replaced_deps.error();
                 for rdep in replaced_deps.into_variables() {
@@ -173,14 +99,7 @@ impl Construct for CSubstitution {
         if let Some(err) = base_error {
             deps.append(Dependencies::new_error(err));
         }
-        let sj = match self.substitution_justifications(env) {
-            Ok(ok) => ok,
-            Err(err) => {
-                deps.append(Dependencies::new_error(err));
-                return deps;
-            }
-        };
-        for inv in sj.borrow().iter().flatten().flatten() {
+        for inv in self.invs.iter() {
             for &dep in &inv.dependencies {
                 deps.append(env.get_dependencies(dep))
             }
@@ -193,7 +112,7 @@ impl Construct for CSubstitution {
         this: ConstructId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
-        self.invariants(env)
+        self.invs.clone()
     }
 
     fn is_def_equal<'x>(
@@ -205,9 +124,9 @@ impl Construct for CSubstitution {
     ) -> DefEqualResult {
         assert_ne!(recursion_limit, 0);
         let mut new_subs = subs.clone();
-        for (target, value) in &self.1 {
+        for (target, value) in &self.subs {
             new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
         }
-        env.is_def_equal(SubExpr(self.0, &new_subs), other, recursion_limit - 1)
+        env.is_def_equal(SubExpr(self.base, &new_subs), other, recursion_limit - 1)
     }
 }

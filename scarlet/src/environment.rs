@@ -283,4 +283,8 @@ impl<'x> Environment<'x> {
         let scope = self.constructs[base].scope.dyn_clone();
         self.push_construct(con, scope)
     }
+
+    pub(crate) fn language_item_names(&self) -> impl Iterator<Item = &&'static str> {
+        self.language_items.keys()
+    }
 }
