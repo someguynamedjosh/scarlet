@@ -24,7 +24,7 @@ fn main() {
     println!("Reading source from {}", path);
 
     let root = file_tree::read_root(&path).unwrap();
-    println!("{:?}", root);
+    println!("{:#?}", root);
     return;
 
     let parse_context = ParseContext::new();
