@@ -7,4 +7,4 @@ mod stack;
 mod util;
 
 pub use node::{Node, NodeChild};
-pub use parse::{parse, ParseContext};
+pub use parse::{parse_tree, ParseContext};

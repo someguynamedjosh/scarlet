@@ -4,8 +4,12 @@ use super::{
     matchh::{MatchSuccess, StackAction},
     node::{Node, NodeChild},
     phrase::PhraseTable,
+    util,
 };
-use crate::parser::{matchh, scarlet_phrases, stack::Stack};
+use crate::{
+    file_tree::FileNode,
+    parser::{matchh, scarlet_phrases, stack::Stack},
+};
 
 pub struct ParseContext {
     pub(crate) phrases_sorted_by_priority: PhraseTable,
@@ -72,7 +76,7 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
     }
 }
 
-pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
+fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
     let r_whitespace = Regex::new(r"[ \r\n\t]+|#[^\n]*").unwrap();
 
     let ParseContext {
@@ -103,4 +107,34 @@ pub fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
     let result = stack.0.pop().unwrap();
 
     result
+}
+
+pub fn parse_tree<'x>(tree: &'x FileNode, ctx: &'x ParseContext) -> Node<'x> {
+    let mut children = Vec::new();
+    if tree.self_content.trim().len() > 0 {
+        for child in util::collect_comma_list(&NodeChild::Node(parse(&tree.self_content, ctx))) {
+            children.push(child.clone());
+        }
+    }
+    for (name, child) in &tree.children {
+        children.push(Node {
+            phrase: "is",
+            children: vec![
+                NodeChild::Node(Node {
+                    phrase: "identifier",
+                    children: vec![NodeChild::Text(name)],
+                }),
+                NodeChild::Text("IS"),
+                NodeChild::Node(parse_tree(child, ctx)),
+            ],
+        })
+    }
+    Node {
+        phrase: "struct",
+        children: vec![
+            NodeChild::Text("{"),
+            util::create_comma_list(children),
+            NodeChild::Text("}"),
+        ],
+    }
 }
