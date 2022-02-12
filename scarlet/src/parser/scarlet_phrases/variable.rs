@@ -1,9 +1,7 @@
-use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
     constructs::{
-        downcast_construct,
         variable::{CVariable, SVariableInvariants},
         ConstructId,
     },
@@ -15,7 +13,7 @@ use crate::{
     },
     phrase,
     resolvable::RVariable,
-    scope::{self, SPlain, SWithParent, Scope},
+    scope::{SPlain, SWithParent, Scope},
 };
 
 fn create<'x>(

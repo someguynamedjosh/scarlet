@@ -2,7 +2,6 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
-        downcast_construct,
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ConstructId,
     },
@@ -68,7 +67,7 @@ fn uncreate<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: &dyn Scope,
+    _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();

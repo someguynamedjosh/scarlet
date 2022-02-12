@@ -1,8 +1,6 @@
 use super::{
     base::Construct,
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition,
+    substitution::{NestedSubstitutions, SubExpr},
 };
 use crate::{
     environment::{
@@ -41,7 +39,7 @@ impl Construct for CUnique {
     fn is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
+        _subs: &NestedSubstitutions,
         SubExpr(other, _): SubExpr,
         recursion_limit: u32,
     ) -> DefEqualResult {

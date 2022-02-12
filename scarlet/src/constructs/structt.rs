@@ -1,13 +1,12 @@
 use super::{
     as_struct,
-    base::{ConstructDefinition, ConstructId},
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    Construct, GenInvResult, Invariant,
+    base::ConstructId,
+    substitution::{NestedSubstitutions, SubExpr},
+    Construct, GenInvResult,
 };
 use crate::{
-    constructs::downcast_construct,
     environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
+        dependencies::{DepResult, Dependencies},
         DefEqualResult, Environment,
     },
     impl_any_eq_for_construct,
@@ -152,9 +151,9 @@ impl Construct for CAtomicStructMember {
     fn is_def_equal<'x>(
         &self,
         _env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
+        _subs: &NestedSubstitutions,
+        _other: SubExpr,
+        _recursion_limit: u32,
     ) -> DefEqualResult {
         Ok(TripleBool::Unknown)
     }

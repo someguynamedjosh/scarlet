@@ -4,7 +4,6 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
-        downcast_construct,
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
         ConstructId,
     },

@@ -1,10 +1,9 @@
-use maplit::hashmap;
 use typed_arena::Arena;
 
 use crate::{
     constructs::{
         decision::{CDecision, SWithInvariant},
-        downcast_construct, ConstructId, Invariant,
+        ConstructId, Invariant,
     },
     environment::Environment,
     parser::{

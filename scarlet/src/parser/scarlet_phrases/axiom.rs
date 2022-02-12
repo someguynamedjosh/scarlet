@@ -12,7 +12,7 @@ use crate::{
 };
 
 fn create<'x>(
-    pc: &ParseContext,
+    _pc: &ParseContext,
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
@@ -27,11 +27,11 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
+    _pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    _code_arena: &'a Arena<String>,
     uncreate: ConstructId,
-    from: &dyn Scope,
+    _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
         let cax = cax.clone();

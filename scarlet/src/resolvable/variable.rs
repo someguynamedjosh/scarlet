@@ -1,15 +1,11 @@
-use std::collections::HashSet;
-
-use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
+use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     constructs::{
-        substitution::{CSubstitution, Substitutions},
         variable::{CVariable, Variable},
         ConstructDefinition, ConstructId,
     },
     environment::Environment,
     scope::Scope,
-    shared::OrderedMap,
 };
 
 #[derive(Clone, Debug)]

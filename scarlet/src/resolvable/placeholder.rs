@@ -1,16 +1,5 @@
-use std::collections::HashSet;
-
-use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
-use crate::{
-    constructs::{
-        substitution::{CSubstitution, Substitutions},
-        variable::CVariable,
-        ConstructDefinition, ConstructId,
-    },
-    environment::Environment,
-    scope::Scope,
-    shared::OrderedMap,
-};
+use super::{BoxedResolvable, Resolvable, ResolveResult};
+use crate::{environment::Environment, scope::Scope};
 
 #[derive(Clone, Debug)]
 pub struct RPlaceholder;

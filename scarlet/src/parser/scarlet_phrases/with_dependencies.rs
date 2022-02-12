@@ -1,11 +1,7 @@
-use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
-        downcast_construct, substitution::CSubstitution, with_dependencies::CWithDependencies,
-        ConstructId,
-    },
+    constructs::{with_dependencies::CWithDependencies, ConstructId},
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -13,7 +9,6 @@ use crate::{
         Node, NodeChild, ParseContext,
     },
     phrase,
-    resolvable::RSubstitution,
     scope::{SPlain, Scope},
 };
 

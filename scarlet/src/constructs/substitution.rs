@@ -1,18 +1,15 @@
-use std::{cell::RefCell, collections::HashSet};
-
 use super::{
-    downcast_construct,
     variable::{CVariable, VariableId},
-    Construct, ConstructDefinition, ConstructId, GenInvResult, Invariant,
+    Construct, ConstructId, GenInvResult, Invariant,
 };
 use crate::{
     environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
-        CheckResult, DefEqualResult, Environment, UnresolvedConstructError,
+        dependencies::{DepResult, Dependencies},
+        CheckResult, DefEqualResult, Environment,
     },
     impl_any_eq_for_construct,
     scope::Scope,
-    shared::{OrderedMap, TripleBool},
+    shared::OrderedMap,
 };
 
 pub type Substitutions = OrderedMap<VariableId, ConstructId>;
@@ -69,7 +66,7 @@ impl Construct for CSubstitution {
 
     fn check<'x>(
         &self,
-        env: &mut Environment<'x>,
+        _env: &mut Environment<'x>,
         _this: ConstructId,
         _scope: Box<dyn Scope>,
     ) -> CheckResult {
@@ -114,8 +111,8 @@ impl Construct for CSubstitution {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
-        env: &mut Environment<'x>,
+        _this: ConstructId,
+        _env: &mut Environment<'x>,
     ) -> GenInvResult {
         self.invs.clone()
     }

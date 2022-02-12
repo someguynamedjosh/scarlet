@@ -2,14 +2,11 @@ use std::{any::Any, collections::HashSet, fmt::Debug};
 
 use super::{
     structt::CPopulatedStruct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    substitution::{NestedSubstitutions, SubExpr},
     variable::CVariable,
 };
 use crate::{
-    environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
-        CheckResult, Environment, UnresolvedConstructError,
-    },
+    environment::{dependencies::DepResult, CheckResult, Environment, UnresolvedConstructError},
     resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},

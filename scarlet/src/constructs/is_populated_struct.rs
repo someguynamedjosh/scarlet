@@ -1,9 +1,9 @@
 use super::{
-    downcast_construct, structt::CPopulatedStruct, substitution::{Substitutions, NestedSubstitutions, SubExpr}, unique::CUnique,
-    Construct, ConstructDefinition, ConstructId, Invariant, GenInvResult,
+    substitution::{NestedSubstitutions, SubExpr},
+    Construct, ConstructId, GenInvResult,
 };
 use crate::{
-    environment::{dependencies::{Dependencies, DepResult}, Environment, DefEqualResult},
+    environment::{dependencies::DepResult, DefEqualResult, Environment},
     impl_any_eq_for_construct,
     shared::TripleBool,
 };
@@ -39,9 +39,9 @@ impl Construct for CIsPopulatedStruct {
     fn is_def_equal<'x>(
         &self,
         _env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
+        _subs: &NestedSubstitutions,
+        _other: SubExpr,
+        _recursion_limit: u32,
     ) -> DefEqualResult {
         Ok(TripleBool::Unknown)
     }

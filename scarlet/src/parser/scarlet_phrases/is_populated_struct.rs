@@ -3,7 +3,10 @@ use typed_arena::Arena;
 use crate::{
     constructs::{is_populated_struct::CIsPopulatedStruct, ConstructId},
     environment::Environment,
-    parser::{phrase::{Phrase, UncreateResult}, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::{SPlain, Scope},
 };

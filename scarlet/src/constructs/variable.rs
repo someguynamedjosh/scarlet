@@ -12,7 +12,7 @@ use crate::{
     },
     impl_any_eq_for_construct,
     scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
-    shared::{Id, OrderedMap, Pool, TripleBool},
+    shared::{Id, Pool, TripleBool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -1,17 +1,11 @@
-use maplit::hashset;
-
 use super::{
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    Construct, ConstructDefinition, ConstructId, GenInvResult, Invariant,
+    substitution::{NestedSubstitutions, SubExpr},
+    Construct, ConstructId, GenInvResult, Invariant,
 };
 use crate::{
-    environment::{
-        dependencies::{DepResult, Dependencies},
-        DefEqualResult, Environment, UnresolvedConstructError,
-    },
+    environment::{dependencies::DepResult, DefEqualResult, Environment},
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, SPlain, Scope},
+    scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
     shared::TripleBool,
 };
 

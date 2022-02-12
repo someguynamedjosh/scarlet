@@ -3,19 +3,14 @@ use maplit::hashset;
 
 use super::{
     base::Construct,
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition, ConstructId, GenInvResult,
+    substitution::{NestedSubstitutions, SubExpr},
+    ConstructId, GenInvResult,
 };
 use crate::{
     constructs::Invariant,
-    environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
-        DefEqualResult, Environment, UnresolvedConstructError,
-    },
+    environment::{dependencies::DepResult, DefEqualResult, Environment},
     impl_any_eq_for_construct,
-    scope::Scope,
-    shared::{Id, Pool, TripleBool},
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

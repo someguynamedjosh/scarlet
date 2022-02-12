@@ -1,16 +1,16 @@
 mod identifier;
+mod named_member;
 mod placeholder;
 mod substitution;
 mod variable;
-mod named_member;
 
 use std::fmt::Debug;
 
 pub use identifier::RIdentifier;
+pub use named_member::RNamedMember;
 pub use placeholder::RPlaceholder;
 pub use substitution::RSubstitution;
 pub use variable::RVariable;
-pub use named_member::RNamedMember;
 
 use crate::{
     constructs::ConstructDefinition,

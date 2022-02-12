@@ -27,7 +27,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
     fn resolve(
         &self,
         env: &mut Environment<'x>,
-        scope: Box<dyn Scope>,
+        _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult<'x> {
         let base = env.dereference(self.base)?;
@@ -84,9 +84,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         for inv in env.generated_invariants(base) {
             let mut new_inv = inv;
             for dep in std::mem::take(&mut new_inv.dependencies) {
-                if let Some(var) =
-                    env.get_and_downcast_construct_definition::<CVariable>(dep)?
-                {
+                if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(dep)? {
                     if subs.contains_key(&var.get_id()) {
                         // Don't include any dependencies that are substituted with new values,
                         // because those are justified by the dependencies in

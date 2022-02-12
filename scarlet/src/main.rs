@@ -29,7 +29,6 @@ fn main() {
     let root = parser::parse_tree(&root, &parse_context);
     println!("Parsed");
 
-
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
     // println!("{:#?}", env);

@@ -146,14 +146,18 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident<'x>(
+        &self,
+        _env: &mut Environment<'x>,
+        _ident: &str,
+    ) -> LookupIdentResult {
         Ok(None)
     }
 
     fn local_reverse_lookup_ident<'x>(
         &self,
-        env: &mut Environment<'x>,
-        value: ConstructId,
+        _env: &mut Environment<'x>,
+        _value: ConstructId,
     ) -> ReverseLookupIdentResult {
         Ok(None)
     }

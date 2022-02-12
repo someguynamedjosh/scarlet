@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{decision::CDecision, downcast_construct, Construct, ConstructId},
+    constructs::{decision::CDecision, ConstructId},
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
