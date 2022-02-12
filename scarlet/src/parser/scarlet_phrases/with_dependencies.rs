@@ -23,12 +23,12 @@ fn create<'x>(
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    assert_eq!(node.children[3], NodeChild::Text("["));
-    assert_eq!(node.children[5], NodeChild::Text("]"));
-    assert!(node.children.len() == 6);
+    assert_eq!(node.children[2], NodeChild::Text("["));
+    assert_eq!(node.children[4], NodeChild::Text("]"));
+    assert!(node.children.len() == 5);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    let deps = util::collect_comma_list(&node.children[4])
+    let deps = util::collect_comma_list(&node.children[3])
         .iter()
         .map(|c| c.as_construct(pc, env, SPlain(this)))
         .collect();
