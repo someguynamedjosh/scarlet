@@ -155,6 +155,18 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         let mut invs = Vec::new();
         for inv in env.generated_invariants(base) {
             let mut new_inv = inv;
+            for dep in std::mem::take(&mut new_inv.dependencies) {
+                if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(dep)? {
+                    if subs.contains_key(&var.get_id()) {
+                        // Don't include any dependencies that are substituted with new values,
+                        // because those are justified by the dependencies in justification_deps.
+                        continue;
+                    }
+                }
+                // However, if we don't substitute it, then we need to rely on the original
+                // justification.
+                new_inv.dependencies.insert(dep);
+            }
             for &&dep in &justification_deps {
                 new_inv.dependencies.insert(dep);
             }

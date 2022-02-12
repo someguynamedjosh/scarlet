@@ -101,7 +101,12 @@ impl Construct for CSubstitution {
         }
         for inv in self.invs.iter() {
             for &dep in &inv.dependencies {
-                deps.append(env.get_dependencies(dep))
+                if let Ok(Some(var)) = env.get_and_downcast_construct_definition::<CVariable>(dep) {
+                    let id = var.get_id();
+                    deps.push_eager(env.get_variable(id).clone().as_dependency(env));
+                } else {
+                    deps.append(env.get_dependencies(dep));
+                }
             }
         }
         deps

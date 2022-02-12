@@ -79,6 +79,17 @@ impl Variable {
         }
         Ok(Ok(invariants))
     }
+
+    pub fn as_dependency(&self, env: &mut Environment) -> Dependency {
+        let mut deps = Dependencies::new();
+        for &dep in &self.dependencies {
+            deps.append(env.get_dependencies(dep));
+        }
+        Dependency {
+            id: self.id.unwrap(),
+            swallow: deps.as_variables().map(|x| x.id).collect(),
+        }
+    }
 }
 
 impl_any_eq_for_construct!(CVariable);
@@ -105,10 +116,7 @@ impl Construct for CVariable {
         for dep in env.get_variable(self.0).dependencies.clone() {
             deps.append(env.get_dependencies(dep));
         }
-        deps.push_eager(Dependency {
-            id: self.0,
-            swallow: deps.as_variables().map(|x| x.id).collect(),
-        });
+        deps.push_eager(env.get_variable(self.0).clone().as_dependency(env));
         for inv in env.get_variable(self.0).invariants.clone() {
             deps.append(env.get_dependencies(inv));
         }
