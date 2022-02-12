@@ -29,13 +29,11 @@ fn main() {
     let root = parser::parse_tree(&root, &parse_context);
     println!("Parsed");
 
-    println!("{:#?}", root);
-    return;
 
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
-    env.resolve_all();
     // println!("{:#?}", env);
+    env.resolve_all();
     println!("Resolved");
     env.check_all().unwrap();
     println!("Checked");
