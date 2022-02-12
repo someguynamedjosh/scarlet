@@ -31,7 +31,6 @@ fn main() {
 
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
-    // println!("{:#?}", env);
     env.resolve_all();
     println!("Resolved");
     env.check_all().unwrap();

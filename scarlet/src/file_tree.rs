@@ -22,6 +22,12 @@ fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
         if !is_dir {
             name = name[..name.len() - 3].to_owned();
         }
+        if results
+            .iter()
+            .any(|(this_name, _): &(String, _)| &this_name[..] == name)
+        {
+            continue;
+        }
         if let Some(item) = read_path(&entry.path().with_extension("")) {
             results.push((name, item))
         }
