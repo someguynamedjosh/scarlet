@@ -1,0 +1,71 @@
+t_trivial IS 
+{
+   AXIOM[t_trivial]
+
+   true.AS_LANGUAGE_ITEM[t_trivial_statement]
+}
+.VALUE
+
+t_invariant_truth IS 
+{
+   AXIOM[t_invariant_truth]
+
+   (a = true)
+   .AS_LANGUAGE_ITEM[
+      t_invariant_truth_statement 
+  ]
+
+   a IS VAR[SELF]
+}
+.VALUE
+
+
+t_invariant_truth_rev IS 
+{
+   AXIOM[t_invariant_truth_rev]
+
+   a
+   .AS_LANGUAGE_ITEM[
+      t_invariant_truth_rev_statement 
+  ]
+
+   a IS VAR[SELF = true]
+}
+.VALUE
+
+t_eq_ext_rev IS 
+{
+   AXIOM[t_eq_ext_rev]
+
+   (fx[b] = fx[a])
+   .WITH_DEPENDENCIES[a b fx]
+   .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+   a IS VAR[]
+   b IS VAR[a = SELF]
+}
+.VALUE
+
+t_inv_eq IS 
+{
+   AXIOM[t_inv_eq]
+
+   b
+   .WITH_DEPENDENCIES[a b]
+   .AS_LANGUAGE_ITEM[t_inv_eq_statement]
+
+   a IS VAR[SELF]
+   b IS VAR[a = SELF]
+}
+.VALUE
+
+t_refl IS
+{
+   AXIOM[t_refl]
+
+   (a = a)
+   .AS_LANGUAGE_ITEM[t_refl_statement]
+
+   a IS VAR[]
+}
+.VALUE
