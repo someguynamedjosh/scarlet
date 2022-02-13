@@ -15,9 +15,8 @@ impl<'x> Environment<'x> {
         });
         let mut limit = 0;
         while limit < 128 {
-            let mut reset_limit = false;
+            let reset_limit = false;
             let mut still_unresolved = Vec::new();
-            let len = unresolved.len();
             for id in unresolved {
                 if reset_limit {
                     still_unresolved.push(id);
@@ -25,8 +24,10 @@ impl<'x> Environment<'x> {
                 }
                 let res = self.resolve(id, limit);
                 if let Ok(true) = res {
-                    println!("{:?} {} from {}", id, limit, len);
-                    reset_limit = limit != 0;
+                    // Right now this line actually significantly slows things
+                    // down. In theory it should accelerate things. Maybe we
+                    // need more complicated code for the effect to be
+                    // noticable. reset_limit = limit != 0;
                 } else {
                     still_unresolved.push(id);
                 }
