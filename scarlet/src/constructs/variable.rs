@@ -2,17 +2,19 @@ use maplit::hashset;
 
 use super::{
     base::{Construct, ConstructId},
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    substitution::Substitutions,
     GenInvResult, Invariant,
 };
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        DefEqualResult, Environment, UnresolvedConstructError,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment, UnresolvedConstructError,
     },
     impl_any_eq_for_construct,
     scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
-    shared::{Id, OrderedMap, Pool, TripleBool},
+    shared::{Id, Pool, TripleBool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -71,10 +73,11 @@ impl Variable {
             if let Some(inv) = env.get_produced_invariant(subbed, value, limit) {
                 invariants.push(inv);
             } else {
-                return Ok(Err(format!(
-                    "Failed to find invariant: {}",
-                    env.show(subbed, value)?
-                )));
+                // return Ok(Err(format!(
+                //     "Failed to find invariant: {}",
+                //     env.show(subbed, value)?
+                // )));
+                return Ok(Err(format!("Failed to find invariant",)));
             }
         }
         Ok(Ok(invariants))

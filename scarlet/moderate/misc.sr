@@ -1,0 +1,10 @@
+a IS VAR[]
+b IS VAR[a = b]
+
+std.theorems.t_eq_symm[a b]
+std.theorems.t_just[b = a]
+std.theorems.t_just[b = a]
+std.theorems.t_just[b = a]
+std.theorems.t_just[b = a]
+std.theorems.t_just[b = a]
+std.theorems.t_just[b = a]

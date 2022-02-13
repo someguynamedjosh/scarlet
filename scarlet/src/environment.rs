@@ -1,3 +1,4 @@
+pub mod def_equal;
 #[cfg(test)]
 mod def_equal_tests;
 pub mod dependencies;
@@ -5,16 +6,17 @@ pub mod overlay;
 pub mod path;
 mod reduce;
 pub mod resolve;
+pub mod sub_expr;
 pub mod util;
 mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, resolve::ResolveStack};
+use self::{dependencies::DepResStack, resolve::ResolveStack, def_equal::{DefEqualQuery, DefEqualResult}};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
-        substitution::{CSubstitution, SubExpr, Substitutions},
+        substitution::{CSubstitution, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
         variable::{Variable, VariableId, VariablePool},
         Construct,
@@ -46,7 +48,6 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
 pub struct UnresolvedConstructError(pub ConstructId);
 
 pub type CheckResult = Result<(), UnresolvedConstructError>;
-pub type DefEqualResult = Result<TripleBool, UnresolvedConstructError>;
 
 #[derive(Debug)]
 pub struct Environment<'x> {
@@ -56,6 +57,7 @@ pub struct Environment<'x> {
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
     pub(super) resolve_stack: ResolveStack,
+    pub(super) def_equal_memo_table: HashMap<DefEqualQuery, DefEqualResult>,
     use_reduced_definitions_while_vomiting: bool,
 }
 
@@ -68,6 +70,7 @@ impl<'x> Environment<'x> {
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
             resolve_stack: ResolveStack::new(),
+            def_equal_memo_table: HashMap::new(),
             use_reduced_definitions_while_vomiting: true,
         };
         for &name in LANGUAGE_ITEM_NAMES {
@@ -233,45 +236,6 @@ impl<'x> Environment<'x> {
             None => Ok(()),
             Some(err) => Err(err),
         }
-    }
-
-    pub(crate) fn is_def_equal(
-        &mut self,
-        left: SubExpr,
-        right: SubExpr,
-        limit: u32,
-    ) -> DefEqualResult {
-        if left == right {
-            return Ok(TripleBool::True);
-        }
-        if limit == 0 {
-            return Ok(TripleBool::Unknown);
-        }
-        let result = self
-            .get_construct_definition(left.0)?
-            .dyn_clone()
-            .is_def_equal(self, &left.1, right, limit);
-        if result.is_ok() && result != Ok(TripleBool::Unknown) {
-            return result;
-        }
-        let result = self
-            .get_construct_definition(right.0)?
-            .dyn_clone()
-            .is_def_equal(self, &right.1, left, limit);
-        result
-    }
-
-    pub(crate) fn is_def_equal_without_subs(
-        &mut self,
-        left: ConstructId,
-        right: ConstructId,
-        limit: u32,
-    ) -> DefEqualResult {
-        self.is_def_equal(
-            SubExpr(left, &Default::default()),
-            SubExpr(right, &Default::default()),
-            limit,
-        )
     }
 
     pub(crate) fn substitute(

@@ -1,9 +1,10 @@
 use super::{dependencies::DepResStackFrame, ConstructId, Environment, UnresolvedConstructError};
 use crate::{
     constructs::{
-        base::BoxedConstruct, downcast_construct, substitution::SubExpr, AnnotatedConstruct,
-        Construct, ConstructDefinition, GenInvResult, Invariant,
+        base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
+        ConstructDefinition, GenInvResult, Invariant,
     },
+    environment::sub_expr::SubExpr,
     scope::Scope,
     shared::TripleBool,
 };
@@ -51,7 +52,7 @@ impl<'x> Environment<'x> {
         &mut self,
         con_id: ConstructId,
     ) -> Result<&BoxedConstruct, UnresolvedConstructError> {
-        let old_con_id = con_id;
+        let _old_con_id = con_id;
         let con_id = self.dereference(con_id)?;
         if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
             Ok(def)
@@ -79,7 +80,7 @@ impl<'x> Environment<'x> {
         self.dep_res_stack.push(DepResStackFrame(con_id));
         let context = match self.get_construct_definition(con_id) {
             Ok(ok) => ok,
-            Err(err) => {
+            Err(_err) => {
                 self.dep_res_stack.pop();
                 return Vec::new();
             }

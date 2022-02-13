@@ -1,8 +1,5 @@
 use super::{ConstructId, Environment};
-use crate::{
-    constructs::ConstructDefinition, environment::UnresolvedConstructError,
-    resolvable::ResolveError, util::Ignorable,
-};
+use crate::{constructs::ConstructDefinition, resolvable::ResolveError, util::Ignorable};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ResolveStackFrame(ConstructId);
@@ -10,8 +7,39 @@ pub type ResolveStack = Vec<ResolveStackFrame>;
 
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
-        for limit in 0..128 {
-            self.for_each_construct_returning_nothing(|env, con| env.resolve(con, limit).ignore());
+        let mut unresolved = Vec::new();
+        self.for_each_construct_returning_nothing(|env, id| {
+            if env.constructs[id].definition.is_unresolved() {
+                unresolved.push(id);
+            }
+        });
+        let mut limit = 0;
+        while limit < 128 {
+            let reset_limit = false;
+            let mut still_unresolved = Vec::new();
+            for id in unresolved {
+                if reset_limit {
+                    still_unresolved.push(id);
+                    continue;
+                }
+                let res = self.resolve(id, limit);
+                if let Ok(true) = res {
+                    // Right now this line actually significantly slows things
+                    // down. In theory it should accelerate things. Maybe we
+                    // need more complicated code for the effect to be
+                    // noticable.
+
+                    // reset_limit = limit != 0;
+                } else {
+                    still_unresolved.push(id);
+                }
+            }
+            unresolved = still_unresolved;
+            if reset_limit {
+                limit = 0;
+            } else {
+                limit += 1;
+            }
         }
         let mut problem = false;
         self.for_each_construct_returning_nothing(|env, con| {
@@ -30,7 +58,9 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn resolve(&mut self, con_id: ConstructId, limit: u32) -> Result<(), ResolveError> {
+    /// Returns Ok(true) if the resolution was successful, or Ok(false) if it
+    /// was already resolved.
+    pub fn resolve(&mut self, con_id: ConstructId, limit: u32) -> Result<bool, ResolveError> {
         let con = &self.constructs[con_id];
         if self.resolve_stack.contains(&ResolveStackFrame(con_id)) {
             eprintln!("{:#?}", self);
@@ -46,7 +76,7 @@ impl<'x> Environment<'x> {
                 Ok(new_def) => {
                     self.constructs[con_id].definition = new_def;
                     assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
-                    Ok(())
+                    Ok(true)
                 }
                 Err(err) => {
                     assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
@@ -54,7 +84,7 @@ impl<'x> Environment<'x> {
                 }
             }
         } else {
-            Ok(())
+            Ok(false)
         }
     }
 }

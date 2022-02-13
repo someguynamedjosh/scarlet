@@ -3,9 +3,8 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
-        downcast_construct,
         substitution::CSubstitution,
-        variable::{CVariable, Dependency, VariableId},
+        variable::{Dependency, VariableId},
         ConstructId,
     },
     environment::{Environment, UnresolvedConstructError},

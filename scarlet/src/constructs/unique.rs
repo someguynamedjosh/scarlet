@@ -1,13 +1,10 @@
-use super::{
-    base::Construct,
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition,
-};
+use super::base::Construct;
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        DefEqualResult, Environment,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
     shared::{Id, Pool, TripleBool},
@@ -41,7 +38,7 @@ impl Construct for CUnique {
     fn is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
+        _subs: &NestedSubstitutions,
         SubExpr(other, _): SubExpr,
         recursion_limit: u32,
     ) -> DefEqualResult {

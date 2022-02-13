@@ -1,11 +1,7 @@
-use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
-        downcast_construct, substitution::CSubstitution, with_dependencies::CWithDependencies,
-        ConstructId,
-    },
+    constructs::{with_dependencies::CWithDependencies, ConstructId},
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -13,7 +9,6 @@ use crate::{
         Node, NodeChild, ParseContext,
     },
     phrase,
-    resolvable::RSubstitution,
     scope::{SPlain, Scope},
 };
 
@@ -23,12 +18,12 @@ fn create<'x>(
     scope: Box<dyn Scope>,
     node: &Node<'x>,
 ) -> ConstructId {
-    assert_eq!(node.children[3], NodeChild::Text("["));
-    assert_eq!(node.children[5], NodeChild::Text("]"));
-    assert!(node.children.len() == 6);
+    assert_eq!(node.children[2], NodeChild::Text("["));
+    assert_eq!(node.children[4], NodeChild::Text("]"));
+    assert!(node.children.len() == 5);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    let deps = util::collect_comma_list(&node.children[4])
+    let deps = util::collect_comma_list(&node.children[3])
         .iter()
         .map(|c| c.as_construct(pc, env, SPlain(this)))
         .collect();
@@ -82,6 +77,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\.", r"WITH_DEPENDENCIES", r"\[", 255, r"\]"
+        4 => 4, r"\.WITH_DEPENDENCIES", r"\[", 255, r"\]"
     )
 }

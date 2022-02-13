@@ -6,7 +6,10 @@ use crate::{
         ConstructId,
     },
     environment::Environment,
-    parser::{phrase::{Phrase, UncreateResult}, util, Node, NodeChild, ParseContext},
+    parser::{
+        phrase::{Phrase, UncreateResult},
+        util, Node, NodeChild, ParseContext,
+    },
     phrase,
     scope::Scope,
 };

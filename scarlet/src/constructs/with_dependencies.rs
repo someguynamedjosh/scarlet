@@ -2,17 +2,16 @@ use itertools::Itertools;
 
 use super::{
     base::{Construct, ConstructId},
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition, GenInvResult, Invariant,
+    GenInvResult,
 };
 use crate::{
     environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
-        DefEqualResult, Environment,
+        def_equal::DefEqualResult,
+        dependencies::{DepResult, Dependencies},
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

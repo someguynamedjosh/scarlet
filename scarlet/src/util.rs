@@ -1,74 +1,61 @@
+use std::{
+    collections::{hash_map::DefaultHasher, HashMap},
+    hash::{BuildHasher, Hash, Hasher},
+};
+
 pub trait Ignorable {
     fn ignore(&self) {}
 }
 
 impl<R, E> Ignorable for Result<R, E> {}
 
-// pub enum MaybeResult<T, E> {
-//     Ok(T),
-//     None,
-//     Err(E),
-// }
+/// Indicates that the type it is implemented on functions equivalently to the
+/// type in its template parameter.
+pub trait Isomorphism<EquivalentType: Eq + Hash>: Eq + Hash + Clone + Sized {
+    fn convert(self) -> EquivalentType;
+    fn equals(&self, other: &EquivalentType) -> bool;
 
-// pub use MaybeResult::{Err as MErr, None as MNone, Ok as MOk};
+    fn assertions(&self) {
+        let other = self.clone().convert();
+        let hash1 = {
+            let mut hasher = DefaultHasher::new();
+            self.hash(&mut hasher);
+            hasher.finish()
+        };
+        let hash2 = {
+            let mut hasher = DefaultHasher::new();
+            other.hash(&mut hasher);
+            hasher.finish()
+        };
+        assert_eq!(hash1, hash2, "The 'equivalent' value has a different hash!");
+        assert!(
+            self.equals(&other),
+            "The 'equivalent' value is not equal to the original value!"
+        );
+    }
+}
 
-// impl<T, E: Debug> MaybeResult<T, E> {
-// #[track_caller]
-// pub fn unwrap(self) -> T {
-//     match self {
-//         Self::Ok(t) => t,
-//         Self::None => panic!("Tried to unwrap a None value"),
-//         Self::Err(err) => panic!("Tried to unwrap an Error value: {:?}",
-// err),     }
-// }
+pub trait IsomorphicKeyIndexable<
+    OriginalKey: Eq + Hash,
+    IsomorphicKey: Isomorphism<OriginalKey>,
+    Result,
+>
+{
+    fn iso_get(&self, key: &IsomorphicKey) -> Option<(&OriginalKey, &Result)>;
+}
 
-// pub fn into_option_or_err(self) -> Result<Option<T>, E> {
-//     match self {
-//         Self::Ok(t) => Ok(Some(t)),
-//         Self::None => Ok(None),
-//         Self::Err(e) => Err(e),
-//     }
-// }
-// }
-
-// impl<T, T2, E> FromResidual<MaybeResult<T, E>> for MaybeResult<T2, E> {
-//     fn from_residual(residual: MaybeResult<T, E>) -> Self {
-//         match residual {
-//             MaybeResult::Ok(_v) => unreachable!(),
-//             MaybeResult::None => Self::None,
-//             MaybeResult::Err(e) => Self::Err(e),
-//         }
-//     }
-// }
-
-// impl<T, T2, E> FromResidual<Result<T, E>> for MaybeResult<T2, E> {
-//     fn from_residual(residual: Result<T, E>) -> Self {
-//         match residual {
-//             Result::Ok(_v) => unreachable!(),
-//             Result::Err(e) => Self::Err(e),
-//         }
-//     }
-// }
-
-// impl<T, T2, E> FromResidual<Option<T>> for MaybeResult<T2, E> {
-//     fn from_residual(residual: Option<T>) -> Self {
-//         debug_assert!(residual.is_none());
-//         Self::None
-//     }
-// }
-
-// impl<T, E> Try for MaybeResult<T, E> {
-//     type Output = T;
-//     type Residual = Self;
-
-//     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
-//         match self {
-//             Self::Ok(val) => ControlFlow::Continue(val),
-//             other => ControlFlow::Break(other),
-//         }
-//     }
-
-//     fn from_output(output: Self::Output) -> Self {
-//         Self::Ok(output)
-//     }
-// }
+impl<OriginalKey: Eq + Hash, IsomorphicKey: Isomorphism<OriginalKey>, Result>
+    IsomorphicKeyIndexable<OriginalKey, IsomorphicKey, Result> for HashMap<OriginalKey, Result>
+{
+    fn iso_get(&self, key: &IsomorphicKey) -> Option<(&OriginalKey, &Result)> {
+        if cfg!(debug_assertions) {
+            key.assertions();
+        }
+        let hash = {
+            let mut hasher = self.hasher().build_hasher();
+            key.hash(&mut hasher);
+            hasher.finish()
+        };
+        self.raw_entry().from_hash(hash, |other| key.equals(other))
+    }
+}

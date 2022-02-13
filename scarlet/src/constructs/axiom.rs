@@ -1,21 +1,17 @@
 use itertools::Itertools;
 use maplit::hashset;
 
-use super::{
-    base::Construct,
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    BoxedConstruct, ConstructDefinition, ConstructId, GenInvResult,
-};
+use super::{base::Construct, ConstructId, GenInvResult};
 use crate::{
     constructs::Invariant,
     environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
-        DefEqualResult, Environment, UnresolvedConstructError,
+        def_equal::DefEqualResult,
+        dependencies::DepResult,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
-    scope::Scope,
-    shared::{Id, Pool, TripleBool},
+    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

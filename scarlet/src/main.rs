@@ -5,6 +5,7 @@
 #![feature(trait_upcasting)]
 #![feature(generic_associated_types)]
 #![feature(associated_type_defaults)]
+#![feature(hash_raw_entry)]
 
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 
@@ -17,24 +18,27 @@ pub mod scope;
 mod shared;
 mod util;
 
-// use crate::{environment::Environment, scope::SRoot};
-
-fn main() {
+fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
     let root = file_tree::read_root(&path).unwrap();
 
     let parse_context = ParseContext::new();
-    let root = parser::parse(&root.self_content, &parse_context);
+    let root = parser::parse_tree(&root, &parse_context);
     println!("Parsed");
 
     let mut env = Environment::new();
     root.as_construct(&parse_context, &mut env, SRoot);
     env.resolve_all();
-    // println!("{:#?}", env);
     println!("Resolved");
     env.check_all().unwrap();
     println!("Checked");
     env.show_all_requested();
+}
+
+fn main() {
+    for _ in 0..1 {
+        entry();
+    }
 }

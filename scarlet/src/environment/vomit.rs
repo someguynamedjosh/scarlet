@@ -7,13 +7,12 @@ use crate::{
     constructs::{
         downcast_construct,
         shown::CShown,
-        substitution::SubExpr,
         variable::{CVariable, SVariableInvariants, VariableId},
         Construct, ConstructDefinition,
     },
     parser::{Node, ParseContext},
     scope::{SWithParent, Scope},
-    shared::{indented, TripleBool},
+    shared::indented,
 };
 
 impl<'x> Environment<'x> {
@@ -28,18 +27,27 @@ impl<'x> Environment<'x> {
             }
         }
         for (con_id, from) in to_vomit {
-            println!("{}", self.show(con_id, from).unwrap_or(format!("Unresolved")));
+            println!(
+                "{}",
+                self.show(con_id, from).unwrap_or(format!("Unresolved"))
+            );
         }
     }
 
-    pub fn show(&mut self, con_id: ConstructId, from_con: ConstructId) -> Result<String, UnresolvedConstructError> {
+    pub fn show(
+        &mut self,
+        con_id: ConstructId,
+        from_con: ConstructId,
+    ) -> Result<String, UnresolvedConstructError> {
         let mut result = String::new();
 
         let from = self.constructs[from_con].scope.dyn_clone();
         let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
         let code_arena = Arena::new();
         let pc = ParseContext::new();
-        let original_vomit = self.vomit(255, &pc, &code_arena, con_id, &*from)?.vomit(&pc);
+        let original_vomit = self
+            .vomit(255, &pc, &code_arena, con_id, &*from)?
+            .vomit(&pc);
         result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
         result.push_str(&format!("proves:\n"));
         for invariant in self.generated_invariants(con_id) {
@@ -56,16 +64,17 @@ impl<'x> Environment<'x> {
             for dep in invariant.dependencies {
                 result.push_str(&format!(
                     "        {} ({:?})\n",
-                    indented(&self.vomit(255, &pc, &code_arena, dep, &inv_from)?.vomit(&pc)),
+                    indented(
+                        &self
+                            .vomit(255, &pc, &code_arena, dep, &inv_from)?
+                            .vomit(&pc)
+                    ),
                     dep,
                 ));
             }
         }
         result.push_str(&format!("depends on:\n"));
-        for dep in self
-            .get_dependencies(con_id)
-            .into_variables()
-        {
+        for dep in self.get_dependencies(con_id).into_variables() {
             result.push_str(&format!(
                 "    {}\n",
                 indented(&format!(
@@ -78,7 +87,11 @@ impl<'x> Environment<'x> {
         Ok(result)
     }
 
-    pub fn show_var(&mut self, var: VariableId, from: ConstructId) -> Result<String, UnresolvedConstructError> {
+    pub fn show_var(
+        &mut self,
+        var: VariableId,
+        from: ConstructId,
+    ) -> Result<String, UnresolvedConstructError> {
         self.for_each_construct(|env, id| {
             if let Ok(Some(other_var)) = env.get_and_downcast_construct_definition::<CVariable>(id)
             {

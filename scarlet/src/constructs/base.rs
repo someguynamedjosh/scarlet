@@ -1,13 +1,10 @@
 use std::{any::Any, collections::HashSet, fmt::Debug};
 
-use super::{
-    structt::CPopulatedStruct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    variable::CVariable,
-};
+use super::{structt::CPopulatedStruct, variable::CVariable};
 use crate::{
     environment::{
-        dependencies::{DepResult, Dependencies, DependencyError},
+        dependencies::DepResult,
+        sub_expr::{NestedSubstitutions, SubExpr},
         CheckResult, Environment, UnresolvedConstructError,
     },
     resolvable::BoxedResolvable,
@@ -57,6 +54,13 @@ impl<'x> ConstructDefinition<'x> {
             Self::Resolved(con) => Some(con),
             _ => None,
         }
+    }
+
+    /// Returns `true` if the construct definition is [`Unresolved`].
+    ///
+    /// [`Unresolved`]: ConstructDefinition::Unresolved
+    pub fn is_unresolved(&self) -> bool {
+        matches!(self, Self::Unresolved(..))
     }
 }
 

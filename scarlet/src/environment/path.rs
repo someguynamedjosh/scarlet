@@ -1,13 +1,11 @@
 use typed_arena::Arena;
 
-use super::{overlay::Overlay, Environment};
 use crate::{
-    constructs::{as_struct, ConstructDefinition, ConstructId},
+    constructs::ConstructId,
     parser::{
         Node,
         NodeChild::{self, *},
     },
-    scope::Scope,
 };
 
 #[derive(Clone, Debug)]

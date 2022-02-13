@@ -1,16 +1,15 @@
 use super::{
     base::{Construct, ConstructId},
-    downcast_construct,
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
-    ConstructDefinition, GenInvResult, Invariant,
+    GenInvResult,
 };
 use crate::{
     environment::{
-        dependencies::{DepResult, Dependencies},
-        DefEqualResult, Environment,
+        def_equal::DefEqualResult,
+        dependencies::DepResult,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
