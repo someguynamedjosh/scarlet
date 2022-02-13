@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use maplit::hashset;
 
 use crate::{
-    constructs::{substitution::SubExpr, ConstructId, Invariant},
-    environment::{Environment, UnresolvedConstructError},
+    constructs::{ConstructId, Invariant},
+    environment::{sub_expr::SubExpr, Environment, UnresolvedConstructError},
     shared::TripleBool,
 };
 

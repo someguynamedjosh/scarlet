@@ -1,12 +1,12 @@
 use std::{any::Any, collections::HashSet, fmt::Debug};
 
-use super::{
-    structt::CPopulatedStruct,
-    substitution::{NestedSubstitutions, SubExpr},
-    variable::CVariable,
-};
+use super::{structt::CPopulatedStruct, variable::CVariable};
 use crate::{
-    environment::{dependencies::DepResult, CheckResult, Environment, UnresolvedConstructError},
+    environment::{
+        dependencies::DepResult,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        CheckResult, Environment, UnresolvedConstructError,
+    },
     resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool, TripleBool},

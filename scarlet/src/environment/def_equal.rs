@@ -1,8 +1,5 @@
 use super::{Environment, UnresolvedConstructError};
-use crate::{
-    constructs::{substitution::SubExpr, ConstructId},
-    shared::TripleBool,
-};
+use crate::{constructs::ConstructId, environment::sub_expr::SubExpr, shared::TripleBool};
 
 pub type DefEqualResult = Result<TripleBool, UnresolvedConstructError>;
 

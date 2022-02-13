@@ -1,3 +1,4 @@
+pub mod def_equal;
 #[cfg(test)]
 mod def_equal_tests;
 pub mod dependencies;
@@ -5,9 +6,9 @@ pub mod overlay;
 pub mod path;
 mod reduce;
 pub mod resolve;
+pub mod sub_expr;
 pub mod util;
 mod vomit;
-pub mod def_equal;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
@@ -15,7 +16,7 @@ use self::{dependencies::DepResStack, resolve::ResolveStack};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
-        substitution::{CSubstitution, SubExpr, Substitutions},
+        substitution::{CSubstitution, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
         variable::{Variable, VariableId, VariablePool},
         Construct,

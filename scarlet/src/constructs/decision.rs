@@ -1,9 +1,11 @@
-use super::{
-    substitution::{NestedSubstitutions, SubExpr},
-    Construct, ConstructId, GenInvResult, Invariant,
-};
+use super::{Construct, ConstructId, GenInvResult, Invariant};
 use crate::{
-    environment::{dependencies::DepResult, def_equal::DefEqualResult, Environment},
+    environment::{
+        def_equal::DefEqualResult,
+        dependencies::DepResult,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
+    },
     impl_any_eq_for_construct,
     scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
     shared::TripleBool,

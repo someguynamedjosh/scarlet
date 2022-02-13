@@ -1,11 +1,10 @@
-use super::{
-    base::Construct,
-    substitution::{NestedSubstitutions, SubExpr},
-};
+use super::base::Construct;
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        def_equal::DefEqualResult, Environment,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
     shared::{Id, Pool, TripleBool},

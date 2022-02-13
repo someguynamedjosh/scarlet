@@ -2,13 +2,15 @@ use maplit::hashset;
 
 use super::{
     base::{Construct, ConstructId},
-    substitution::{NestedSubstitutions, SubExpr, Substitutions},
+    substitution::Substitutions,
     GenInvResult, Invariant,
 };
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        def_equal::DefEqualResult, Environment, UnresolvedConstructError,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment, UnresolvedConstructError,
     },
     impl_any_eq_for_construct,
     scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},

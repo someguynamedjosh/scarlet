@@ -1,10 +1,14 @@
 use super::{
     base::{Construct, ConstructId},
-    substitution::{NestedSubstitutions, SubExpr},
     GenInvResult,
 };
 use crate::{
-    environment::{dependencies::DepResult, def_equal::DefEqualResult, Environment},
+    environment::{
+        def_equal::DefEqualResult,
+        dependencies::DepResult,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
+    },
     impl_any_eq_for_construct,
 };
 

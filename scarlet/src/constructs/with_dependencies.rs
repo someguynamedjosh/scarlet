@@ -2,13 +2,14 @@ use itertools::Itertools;
 
 use super::{
     base::{Construct, ConstructId},
-    substitution::{NestedSubstitutions, SubExpr},
     GenInvResult,
 };
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        def_equal::DefEqualResult, Environment,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
 };

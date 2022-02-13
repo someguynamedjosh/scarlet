@@ -1,13 +1,10 @@
-use super::{
-    as_struct,
-    base::ConstructId,
-    substitution::{NestedSubstitutions, SubExpr},
-    Construct, GenInvResult,
-};
+use super::{as_struct, base::ConstructId, Construct, GenInvResult};
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        def_equal::DefEqualResult, Environment,
+        sub_expr::{NestedSubstitutions, SubExpr},
+        Environment,
     },
     impl_any_eq_for_construct,
     scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},

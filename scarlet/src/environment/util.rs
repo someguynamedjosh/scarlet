@@ -1,9 +1,10 @@
 use super::{dependencies::DepResStackFrame, ConstructId, Environment, UnresolvedConstructError};
 use crate::{
     constructs::{
-        base::BoxedConstruct, downcast_construct, substitution::SubExpr, AnnotatedConstruct,
-        Construct, ConstructDefinition, GenInvResult, Invariant,
+        base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
+        ConstructDefinition, GenInvResult, Invariant,
     },
+    environment::sub_expr::SubExpr,
     scope::Scope,
     shared::TripleBool,
 };

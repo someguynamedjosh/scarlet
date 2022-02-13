@@ -5,6 +5,7 @@
 #![feature(trait_upcasting)]
 #![feature(generic_associated_types)]
 #![feature(associated_type_defaults)]
+#![feature(hash_raw_entry)]
 
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 

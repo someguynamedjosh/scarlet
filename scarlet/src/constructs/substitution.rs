@@ -7,30 +7,13 @@ use crate::{
         dependencies::{DepResult, Dependencies},
         CheckResult, def_equal::DefEqualResult, Environment,
     },
+    environment::sub_expr::{SubExpr, NestedSubstitutions},
     impl_any_eq_for_construct,
     scope::Scope,
     shared::OrderedMap,
 };
 
 pub type Substitutions = OrderedMap<VariableId, ConstructId>;
-pub type NestedSubstitutions<'a> = OrderedMap<VariableId, SubExpr<'a>>;
-type Justifications = Result<Vec<Invariant>, String>;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SubExpr<'a>(pub ConstructId, pub &'a NestedSubstitutions<'a>);
-
-impl<'a> SubExpr<'a> {
-    pub fn deps(&self, env: &mut Environment) -> DepResult {
-        let mut result = Dependencies::new();
-        let base = env.get_dependencies(self.0);
-        for (target, value) in self.1.iter() {
-            if base.contains_var(*target) {
-                result.append(value.deps(env));
-            }
-        }
-        result
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CSubstitution {
