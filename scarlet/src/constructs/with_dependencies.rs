@@ -8,7 +8,7 @@ use super::{
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
-        DefEqualResult, Environment,
+        def_equal::DefEqualResult, Environment,
     },
     impl_any_eq_for_construct,
 };

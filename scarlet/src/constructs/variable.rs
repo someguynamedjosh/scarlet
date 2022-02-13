@@ -8,7 +8,7 @@ use super::{
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
-        DefEqualResult, Environment, UnresolvedConstructError,
+        def_equal::DefEqualResult, Environment, UnresolvedConstructError,
     },
     impl_any_eq_for_construct,
     scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},

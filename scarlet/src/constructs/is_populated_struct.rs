@@ -3,7 +3,7 @@ use super::{
     Construct, ConstructId, GenInvResult,
 };
 use crate::{
-    environment::{dependencies::DepResult, DefEqualResult, Environment},
+    environment::{dependencies::DepResult, def_equal::DefEqualResult, Environment},
     impl_any_eq_for_construct,
     shared::TripleBool,
 };
