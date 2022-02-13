@@ -96,7 +96,7 @@ impl Construct for CDecision {
         deps
     }
 
-    fn is_def_equal<'x>(
+    fn symm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
@@ -104,7 +104,7 @@ impl Construct for CDecision {
         recursion_limit: u32,
     ) -> DefEqualResult {
         assert_ne!(recursion_limit, 0);
-        let base = if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
+        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
             let other = other.clone();
             let parts = vec![
                 env.is_def_equal(
@@ -128,35 +128,41 @@ impl Construct for CDecision {
                     recursion_limit - 1,
                 )?,
             ];
-            println!("{:?}", parts);
-            IsDefEqual::and(parts)
+            Ok(IsDefEqual::and(parts))
         } else {
-            IsDefEqual::Unknowable
-        };
-        println!("{:?}", base);
+            Ok(IsDefEqual::NeedsHigherLimit)
+        }
+    }
+
+    fn asymm_is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        SubExpr(other, other_subs): SubExpr,
+        recursion_limit: u32,
+    ) -> DefEqualResult {
         let other = env.get_construct_definition(other)?.dyn_clone();
-        Ok(IsDefEqual::or(vec![
-            base,
+        Ok(
             match env.is_def_equal(
                 SubExpr(self.left, subs),
                 SubExpr(self.right, other_subs),
                 recursion_limit - 1,
             )? {
-                IsDefEqual::Yes => other.is_def_equal(
+                IsDefEqual::Yes => other.symm_is_def_equal(
                     env,
                     other_subs,
                     SubExpr(self.equal, subs),
                     recursion_limit - 1,
                 )?,
-                IsDefEqual::No => other.is_def_equal(
+                IsDefEqual::No => other.symm_is_def_equal(
                     env,
                     other_subs,
                     SubExpr(self.unequal, subs),
                     recursion_limit - 1,
                 )?,
-                _ => IsDefEqual::No,
+                _ => IsDefEqual::Unknowable,
             },
-        ]))
+        )
     }
 }
 

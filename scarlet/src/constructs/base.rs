@@ -125,7 +125,18 @@ pub trait Construct: Any + Debug + AnyEq {
     }
 
     #[allow(unused_variables)]
-    fn is_def_equal<'x>(
+    fn symm_is_def_equal<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        subs: &NestedSubstitutions,
+        other: SubExpr,
+        recursion_limit: u32,
+    ) -> DefEqualResult {
+        Ok(IsDefEqual::Unknowable)
+    }
+
+    #[allow(unused_variables)]
+    fn asymm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,

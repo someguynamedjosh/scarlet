@@ -77,7 +77,7 @@ impl Construct for CWithDependencies {
         deps
     }
 
-    fn is_def_equal<'x>(
+    fn asymm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,

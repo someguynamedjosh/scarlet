@@ -64,7 +64,7 @@ impl Construct for CPopulatedStruct {
         deps
     }
 
-    fn is_def_equal<'x>(
+    fn symm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
@@ -146,16 +146,6 @@ impl Construct for CAtomicStructMember {
         } else {
             env.get_dependencies(self.0)
         }
-    }
-
-    fn is_def_equal<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _subs: &NestedSubstitutions,
-        _other: SubExpr,
-        _recursion_limit: u32,
-    ) -> DefEqualResult {
-        Ok(IsDefEqual::Unknowable)
     }
 }
 

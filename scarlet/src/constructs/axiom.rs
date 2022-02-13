@@ -67,7 +67,7 @@ impl Construct for CAxiom {
         env.get_dependencies(self.statement)
     }
 
-    fn is_def_equal<'x>(
+    fn symm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,

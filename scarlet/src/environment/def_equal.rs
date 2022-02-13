@@ -91,20 +91,29 @@ impl<'x> Environment<'x> {
         // limit)) {     return result.clone();
         // }
         let result = (|| {
+            let good = |res: DefEqualResult| {
+                res.is_ok()
+                    && res != Ok(IsDefEqual::NeedsHigherLimit)
+                    && res != Ok(IsDefEqual::Unknowable)
+            };
             let result = self
                 .get_construct_definition(left.0)?
                 .dyn_clone()
-                .is_def_equal(self, &left.1, right, limit);
-            if result.is_ok()
-                && result != Ok(IsDefEqual::NeedsHigherLimit)
-                && result != Ok(IsDefEqual::Unknowable)
-            {
+                .symm_is_def_equal(self, &left.1, right, limit);
+            if good(result) {
+                return result;
+            }
+            let result = self
+                .get_construct_definition(left.0)?
+                .dyn_clone()
+                .asymm_is_def_equal(self, &left.1, right, limit);
+            if good(result) {
                 return result;
             }
             let result = self
                 .get_construct_definition(right.0)?
                 .dyn_clone()
-                .is_def_equal(self, &right.1, left, limit);
+                .asymm_is_def_equal(self, &right.1, left, limit);
             result
         })();
         // self.def_equal_memo_table

@@ -44,14 +44,13 @@ impl Construct for CShown {
         env.get_dependencies(self.0)
     }
 
-    fn is_def_equal<'x>(
+    fn asymm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         subs: &NestedSubstitutions,
-        SubExpr(other, other_subs): SubExpr,
+        other: SubExpr,
         recursion_limit: u32,
     ) -> DefEqualResult {
-        let other = env.get_construct_definition(other)?.dyn_clone();
-        other.is_def_equal(env, other_subs, SubExpr(self.0, subs), recursion_limit)
+        env.is_def_equal(SubExpr(self.0, subs), other, recursion_limit)
     }
 }

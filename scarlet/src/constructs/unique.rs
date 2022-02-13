@@ -35,7 +35,7 @@ impl Construct for CUnique {
         Dependencies::new()
     }
 
-    fn is_def_equal<'x>(
+    fn symm_is_def_equal<'x>(
         &self,
         env: &mut Environment<'x>,
         _subs: &NestedSubstitutions,
@@ -51,7 +51,7 @@ impl Construct for CUnique {
                     IsDefEqual::No
                 }
             } else {
-                IsDefEqual::NeedsHigherLimit
+                IsDefEqual::Unknowable
             },
         )
     }

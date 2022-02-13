@@ -37,14 +37,4 @@ impl Construct for CIsPopulatedStruct {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.0)
     }
-
-    fn is_def_equal<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _subs: &NestedSubstitutions,
-        _other: SubExpr,
-        _recursion_limit: u32,
-    ) -> DefEqualResult {
-        Ok(IsDefEqual::Unknowable)
-    }
 }
