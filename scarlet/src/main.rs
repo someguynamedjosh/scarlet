@@ -18,9 +18,7 @@ pub mod scope;
 mod shared;
 mod util;
 
-// use crate::{environment::Environment, scope::SRoot};
-
-fn main() {
+fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
@@ -37,4 +35,10 @@ fn main() {
     env.check_all().unwrap();
     println!("Checked");
     env.show_all_requested();
+}
+
+fn main() {
+    for _ in 0..1 {
+        entry();
+    }
 }
