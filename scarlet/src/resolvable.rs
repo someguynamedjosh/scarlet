@@ -1,9 +1,9 @@
+pub mod from;
 mod identifier;
 mod named_member;
 mod placeholder;
 mod substitution;
 mod variable;
-pub mod from;
 
 use std::fmt::Debug;
 
@@ -16,19 +16,32 @@ pub use variable::RVariable;
 use crate::{
     constructs::ConstructDefinition,
     environment::{Environment, UnresolvedConstructError},
-    scope::Scope,
+    scope::{LookupInvariantError, LookupInvariantResult, Scope},
 };
 
 #[derive(Clone, Debug)]
 pub enum ResolveError {
-    UnresolvedConstruct(UnresolvedConstructError),
-    InsufficientInvariants(String),
+    Unresolved(UnresolvedConstructError),
+    InvariantDeadEnd(String),
+    MaybeInvariantDoesNotExist,
     Placeholder,
 }
 
 impl From<UnresolvedConstructError> for ResolveError {
     fn from(v: UnresolvedConstructError) -> Self {
-        Self::UnresolvedConstruct(v)
+        Self::Unresolved(v)
+    }
+}
+
+impl From<LookupInvariantError> for ResolveError {
+    fn from(err: LookupInvariantError) -> Self {
+        match err {
+            LookupInvariantError::Unresolved(err) => Self::Unresolved(err),
+            LookupInvariantError::MightNotExist => Self::MaybeInvariantDoesNotExist,
+            LookupInvariantError::DefinitelyDoesNotExist => {
+                Self::InvariantDeadEnd(format!("No additional info"))
+            }
+        }
     }
 }
 

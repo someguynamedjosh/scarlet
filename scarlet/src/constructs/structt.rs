@@ -1,13 +1,16 @@
 use super::{as_struct, base::ConstructId, Construct, GenInvResult};
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
+    scope::{
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        Scope,
+    },
     shared::TripleBool,
 };
 
@@ -72,9 +75,9 @@ impl Construct for CPopulatedStruct {
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
             let other = other.clone();
             if self.label != other.label {
-                return Ok(TripleBool::False);
+                return Ok(IsDefEqual::No);
             }
-            Ok(TripleBool::and(vec![
+            Ok(IsDefEqual::and(vec![
                 env.is_def_equal(
                     SubExpr(self.value, subs),
                     SubExpr(other.value, other_subs),
@@ -87,7 +90,7 @@ impl Construct for CPopulatedStruct {
                 )?,
             ]))
         } else {
-            Ok(TripleBool::Unknown)
+            Ok(IsDefEqual::Unknowable)
         }
     }
 }
@@ -152,7 +155,7 @@ impl Construct for CAtomicStructMember {
         _other: SubExpr,
         _recursion_limit: u32,
     ) -> DefEqualResult {
-        Ok(TripleBool::Unknown)
+        Ok(IsDefEqual::Unknowable)
     }
 }
 
@@ -202,17 +205,23 @@ impl Scope for SField {
     ) -> LookupInvariantResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
+            let mut any_unknown = false;
             for maybe_match in env.generated_invariants(structt.value) {
-                if env.is_def_equal(
+                match env.is_def_equal(
                     SubExpr(invariant, &Default::default()),
                     SubExpr(maybe_match.statement, &Default::default()),
                     limit,
-                )? == TripleBool::True
-                {
-                    return Ok(Some(maybe_match));
+                )? {
+                    IsDefEqual::Yes => return Ok(maybe_match),
+                    IsDefEqual::NeedsHigherLimit => any_unknown = true,
+                    IsDefEqual::Unknowable | IsDefEqual::No => (),
                 }
             }
-            Ok(None)
+            Err(if any_unknown {
+                LookupInvariantError::MightNotExist
+            } else {
+                LookupInvariantError::DefinitelyDoesNotExist
+            })
         } else {
             unreachable!()
         }
@@ -262,21 +271,26 @@ fn lookup_invariant_in<'x>(
     inn: &CPopulatedStruct,
     limit: u32,
 ) -> LookupInvariantResult {
+    let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
     for maybe_match in env.generated_invariants(inn.value) {
-        if env.is_def_equal(
+        match env.is_def_equal(
             SubExpr(invariant, &Default::default()),
             SubExpr(maybe_match.statement, &Default::default()),
             limit,
-        )? == TripleBool::True
-        {
-            return Ok(Some(maybe_match));
+        )? {
+            IsDefEqual::Yes => return Ok(maybe_match),
+            IsDefEqual::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
+            IsDefEqual::No | IsDefEqual::Unknowable => (),
         }
     }
     if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)?) {
         let rest = rest.clone();
-        lookup_invariant_in(env, invariant, &rest, limit)
+        match lookup_invariant_in(env, invariant, &rest, limit) {
+            Err(LookupInvariantError::DefinitelyDoesNotExist) => default_err,
+            other => other,
+        }
     } else {
-        Ok(None)
+        default_err
     }
 }
 

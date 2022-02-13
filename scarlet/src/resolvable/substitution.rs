@@ -70,7 +70,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
                     justifications.append(&mut new_invs);
                 }
                 Err(err) => {
-                    return Err(ResolveError::InsufficientInvariants(err));
+                    return Err(ResolveError::InvariantDeadEnd(err));
                 }
             }
         }

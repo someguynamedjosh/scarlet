@@ -5,7 +5,7 @@ use crate::{
     environment::{
         dependencies::DepResult,
         sub_expr::{NestedSubstitutions, SubExpr},
-        CheckResult, Environment, UnresolvedConstructError,
+        CheckResult, Environment, UnresolvedConstructError, def_equal::{DefEqualResult, IsDefEqual},
     },
     resolvable::BoxedResolvable,
     scope::Scope,
@@ -131,8 +131,8 @@ pub trait Construct: Any + Debug + AnyEq {
         subs: &NestedSubstitutions,
         other: SubExpr,
         recursion_limit: u32,
-    ) -> Result<TripleBool, UnresolvedConstructError> {
-        Ok(TripleBool::Unknown)
+    ) -> DefEqualResult {
+        Ok(IsDefEqual::Unknowable)
     }
 
     fn as_def<'x>(&self) -> ConstructDefinition<'x> {

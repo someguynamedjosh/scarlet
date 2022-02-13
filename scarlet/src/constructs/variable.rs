@@ -7,13 +7,16 @@ use super::{
 };
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment, UnresolvedConstructError,
     },
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
+    scope::{
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        Scope,
+    },
     shared::{Id, Pool, TripleBool},
 };
 
@@ -64,20 +67,21 @@ impl Variable {
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
         limit: u32,
-    ) -> Result<Result<Vec<Invariant>, String>, UnresolvedConstructError> {
+    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError> {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
-            if let Some(inv) = env.get_produced_invariant(subbed, value, limit) {
-                invariants.push(inv);
-            } else {
-                // return Ok(Err(format!(
-                //     "Failed to find invariant: {}",
-                //     env.show(subbed, value)?
-                // )));
-                return Ok(Err(format!("Failed to find invariant",)));
+            match env.get_produced_invariant(subbed, value, limit) {
+                Ok(inv) => invariants.push(inv),
+                Err(LookupInvariantError::DefinitelyDoesNotExist) => {
+                    return Ok(Err(format!(
+                        "Failed to find invariant: {}",
+                        env.show(subbed, value)?
+                    )));
+                }
+                Err(err) => return Err(err),
             }
         }
         Ok(Ok(invariants))
@@ -157,13 +161,13 @@ impl Construct for CVariable {
         if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
             let other = other.clone();
             if other_subs.iter().any(|(key, _)| *key == other.get_id()) {
-                return Ok(TripleBool::Unknown);
+                return Ok(IsDefEqual::Unknowable);
             }
             if self.is_same_variable_as(&other) {
-                return Ok(TripleBool::True);
+                return Ok(IsDefEqual::Yes);
             }
         }
-        Ok(TripleBool::Unknown)
+        Ok(IsDefEqual::Unknowable)
     }
 }
 
@@ -197,7 +201,7 @@ impl Scope for SVariableInvariants {
         _invariant: ConstructId,
         _limit: u32,
     ) -> LookupInvariantResult {
-        Ok(None)
+        Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
     fn parent(&self) -> Option<ConstructId> {

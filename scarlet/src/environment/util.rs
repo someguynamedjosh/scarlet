@@ -1,11 +1,11 @@
-use super::{dependencies::DepResStackFrame, ConstructId, Environment, UnresolvedConstructError};
+use super::{dependencies::DepResStackFrame, ConstructId, Environment, UnresolvedConstructError, def_equal::IsDefEqual};
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
         ConstructDefinition, GenInvResult, Invariant,
     },
     environment::sub_expr::SubExpr,
-    scope::Scope,
+    scope::{LookupInvariantResult, Scope},
     shared::TripleBool,
 };
 
@@ -97,20 +97,19 @@ impl<'x> Environment<'x> {
         statement: ConstructId,
         context_id: ConstructId,
         limit: u32,
-    ) -> Option<Invariant> {
+    ) -> LookupInvariantResult {
         let generated_invariants = self.generated_invariants(context_id);
         for inv in generated_invariants {
             if self.is_def_equal(
                 SubExpr(statement, &Default::default()),
                 SubExpr(inv.statement, &Default::default()),
                 limit,
-            ) == Ok(TripleBool::True)
+            ) == Ok(IsDefEqual::Yes)
             {
-                return Some(inv);
+                return Ok(inv);
             }
         }
         let scope = self.get_construct(context_id).scope.dyn_clone();
-        let inv = scope.lookup_invariant_limited(self, statement, limit);
-        inv.unwrap_or_default()
+        scope.lookup_invariant_limited(self, statement, limit)
     }
 }

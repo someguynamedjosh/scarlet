@@ -6,7 +6,51 @@ use crate::{
     util::{IsomorphicKeyIndexable, Isomorphism},
 };
 
-pub type DefEqualResult = Result<TripleBool, UnresolvedConstructError>;
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum IsDefEqual {
+    Yes,
+    NeedsHigherLimit,
+    Unknowable,
+    No,
+}
+
+impl IsDefEqual {
+    pub fn and(over: Vec<Self>) -> Self {
+        let mut default = Self::Yes;
+        for b in over {
+            match b {
+                Self::Yes => (),
+                Self::NeedsHigherLimit => {
+                    if default == Self::Yes {
+                        default = Self::NeedsHigherLimit
+                    }
+                }
+                Self::Unknowable => default = Self::Unknowable,
+                Self::No => return Self::No,
+            }
+        }
+        default
+    }
+
+    pub fn or(over: Vec<Self>) -> Self {
+        let mut default = Self::No;
+        for b in over {
+            match b {
+                Self::Yes => return Self::Yes,
+                Self::Unknowable => {
+                    if default == Self::Yes {
+                        default = Self::Unknowable
+                    }
+                }
+                Self::NeedsHigherLimit => default = Self::NeedsHigherLimit,
+                Self::No => return Self::No,
+            }
+        }
+        default
+    }
+}
+
+pub type DefEqualResult = Result<IsDefEqual, UnresolvedConstructError>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct DefEqualQuery {
@@ -37,21 +81,24 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> DefEqualResult {
         if left == right {
-            return Ok(TripleBool::True);
+            return Ok(IsDefEqual::Yes);
         }
         if limit == 0 {
-            return Ok(TripleBool::Unknown);
+            return Ok(IsDefEqual::NeedsHigherLimit);
         }
         // For now this produces no noticable performance improvements.
-        // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right, limit)) {
-        //     return result.clone();
+        // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
+        // limit)) {     return result.clone();
         // }
         let result = (|| {
             let result = self
                 .get_construct_definition(left.0)?
                 .dyn_clone()
                 .is_def_equal(self, &left.1, right, limit);
-            if result.is_ok() && result != Ok(TripleBool::Unknown) {
+            if result.is_ok()
+                && result != Ok(IsDefEqual::NeedsHigherLimit)
+                && result != Ok(IsDefEqual::Unknowable)
+            {
                 return result;
             }
             let result = self

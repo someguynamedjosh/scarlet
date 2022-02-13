@@ -1,7 +1,7 @@
 use super::{Construct, ConstructId, GenInvResult};
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
@@ -45,6 +45,6 @@ impl Construct for CIsPopulatedStruct {
         _other: SubExpr,
         _recursion_limit: u32,
     ) -> DefEqualResult {
-        Ok(TripleBool::Unknown)
+        Ok(IsDefEqual::Unknowable)
     }
 }

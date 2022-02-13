@@ -5,7 +5,7 @@ use super::{base::Construct, ConstructId, GenInvResult};
 use crate::{
     constructs::Invariant,
     environment::{
-        def_equal::DefEqualResult,
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
@@ -38,7 +38,7 @@ impl CAxiom {
                     SubExpr(self.statement, &Default::default()),
                     SubExpr(lang_item, &Default::default()),
                     limit,
-                ) == Ok(TripleBool::True)
+                ) == Ok(IsDefEqual::Yes)
                 {
                     return lang_item_name;
                 }
@@ -84,7 +84,7 @@ impl Construct for CAxiom {
                 recursion_limit - 1,
             )
         } else {
-            Ok(TripleBool::Unknown)
+            Ok(IsDefEqual::Unknowable)
         }
     }
 }

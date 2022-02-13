@@ -17,6 +17,7 @@ impl<'x> Environment<'x> {
         while limit < 128 {
             let reset_limit = false;
             let mut still_unresolved = Vec::new();
+            let mut all_dead_ends = true;
             for id in unresolved {
                 println!("{:?} {}", id, limit);
                 if reset_limit {
@@ -32,6 +33,10 @@ impl<'x> Environment<'x> {
 
                     // reset_limit = limit != 0;
                 } else {
+                    if let Err(ResolveError::InvariantDeadEnd(..)) = &res {
+                    } else {
+                        all_dead_ends = false;
+                    }
                     still_unresolved.push(id);
                 }
             }
@@ -41,16 +46,22 @@ impl<'x> Environment<'x> {
             } else {
                 limit += 1;
             }
+            if all_dead_ends {
+                break;
+            }
         }
         let mut problem = false;
         self.for_each_construct_returning_nothing(|env, con| {
             if let Err(err) = env.resolve(con, 128) {
                 problem = true;
                 match err {
-                    ResolveError::UnresolvedConstruct(err) => {
+                    ResolveError::Unresolved(err) => {
                         eprintln!("{:?} relies on {:?}", con, err.0)
                     }
-                    ResolveError::InsufficientInvariants(err) => eprintln!("{}", err),
+                    ResolveError::InvariantDeadEnd(err) => eprintln!("{}", err),
+                    ResolveError::MaybeInvariantDoesNotExist => {
+                        eprintln!("Recursion limit exceeded while searching for invariants")
+                    }
                     ResolveError::Placeholder => eprintln!("placeholder"),
                 }
             }

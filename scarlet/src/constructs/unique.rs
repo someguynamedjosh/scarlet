@@ -1,7 +1,7 @@
 use super::base::Construct;
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
@@ -46,12 +46,12 @@ impl Construct for CUnique {
         Ok(
             if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
                 if self.0 == other.0 {
-                    TripleBool::True
+                    IsDefEqual::Yes
                 } else {
-                    TripleBool::False
+                    IsDefEqual::No
                 }
             } else {
-                TripleBool::Unknown
+                IsDefEqual::NeedsHigherLimit
             },
         )
     }

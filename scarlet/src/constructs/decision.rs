@@ -1,13 +1,16 @@
 use super::{Construct, ConstructId, GenInvResult, Invariant};
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, LookupInvariantResult, ReverseLookupIdentResult, Scope},
+    scope::{
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        Scope,
+    },
     shared::TripleBool,
 };
 
@@ -72,7 +75,7 @@ impl Construct for CDecision {
                     SubExpr(true_inv.statement, &Default::default()),
                     SubExpr(false_inv.statement, &Default::default()),
                     4,
-                ) == Ok(TripleBool::True)
+                ) == Ok(IsDefEqual::Yes)
                 {
                     let mut deps = true_inv.dependencies;
                     deps.insert(this);
@@ -103,7 +106,7 @@ impl Construct for CDecision {
         assert_ne!(recursion_limit, 0);
         let base = if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
             let other = other.clone();
-            TripleBool::and(vec![
+            let parts = vec![
                 env.is_def_equal(
                     SubExpr(self.left, subs),
                     SubExpr(other.left, other_subs),
@@ -124,31 +127,34 @@ impl Construct for CDecision {
                     SubExpr(other.unequal, other_subs),
                     recursion_limit - 1,
                 )?,
-            ])
+            ];
+            println!("{:?}", parts);
+            IsDefEqual::and(parts)
         } else {
-            TripleBool::Unknown
+            IsDefEqual::Unknowable
         };
+        println!("{:?}", base);
         let other = env.get_construct_definition(other)?.dyn_clone();
-        Ok(TripleBool::or(vec![
+        Ok(IsDefEqual::or(vec![
             base,
             match env.is_def_equal(
                 SubExpr(self.left, subs),
                 SubExpr(self.right, other_subs),
                 recursion_limit - 1,
             )? {
-                TripleBool::True => other.is_def_equal(
+                IsDefEqual::Yes => other.is_def_equal(
                     env,
                     other_subs,
                     SubExpr(self.equal, subs),
                     recursion_limit - 1,
                 )?,
-                TripleBool::False => other.is_def_equal(
+                IsDefEqual::No => other.is_def_equal(
                     env,
                     other_subs,
                     SubExpr(self.unequal, subs),
                     recursion_limit - 1,
                 )?,
-                TripleBool::Unknown => TripleBool::False,
+                _ => IsDefEqual::No,
             },
         ]))
     }
@@ -186,18 +192,17 @@ impl Scope for SWithInvariant {
     ) -> LookupInvariantResult {
         // No, I don't want
         let no_subs = NestedSubstitutions::new();
-        Ok(
-            if env.is_def_equal(
-                SubExpr(self.0.statement, &no_subs),
-                SubExpr(invariant, &no_subs),
-                limit,
-            )? == TripleBool::True
-            {
-                Some(self.0.clone())
-            } else {
-                None
-            },
-        )
+        match env.is_def_equal(
+            SubExpr(self.0.statement, &no_subs),
+            SubExpr(invariant, &no_subs),
+            limit,
+        )? {
+            IsDefEqual::Yes => Ok(self.0.clone()),
+            IsDefEqual::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
+            IsDefEqual::No | IsDefEqual::Unknowable => {
+                Err(LookupInvariantError::DefinitelyDoesNotExist)
+            }
+        }
     }
 
     fn parent(&self) -> Option<ConstructId> {

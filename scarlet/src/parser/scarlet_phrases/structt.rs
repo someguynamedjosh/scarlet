@@ -5,7 +5,7 @@ use crate::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ConstructId,
     },
-    environment::Environment,
+    environment::{Environment, def_equal::IsDefEqual},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -97,7 +97,7 @@ fn uncreate<'a>(
     }
     Ok(
         if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"), 1024)?
-            == TripleBool::True
+            == IsDefEqual::Yes
         {
             Some(Node {
                 phrase: "struct",

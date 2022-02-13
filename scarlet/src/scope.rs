@@ -4,13 +4,28 @@ use maplit::hashset;
 
 use crate::{
     constructs::{ConstructId, Invariant},
-    environment::{sub_expr::SubExpr, Environment, UnresolvedConstructError},
+    environment::{
+        def_equal::IsDefEqual, sub_expr::SubExpr, Environment, UnresolvedConstructError,
+    },
     shared::TripleBool,
 };
 
 pub type LookupIdentResult = Result<Option<ConstructId>, UnresolvedConstructError>;
 pub type ReverseLookupIdentResult = Result<Option<String>, UnresolvedConstructError>;
-pub type LookupInvariantResult = Result<Option<Invariant>, UnresolvedConstructError>;
+pub type LookupInvariantResult = Result<Invariant, LookupInvariantError>;
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum LookupInvariantError {
+    Unresolved(UnresolvedConstructError),
+    MightNotExist,
+    DefinitelyDoesNotExist,
+}
+
+impl From<UnresolvedConstructError> for LookupInvariantError {
+    fn from(v: UnresolvedConstructError) -> Self {
+        Self::Unresolved(v)
+    }
+}
 
 pub trait Scope: Debug {
     fn dyn_clone(&self) -> Box<dyn Scope>;
@@ -66,36 +81,33 @@ pub trait Scope: Debug {
         }
     }
 
-    fn lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ConstructId,
-    ) -> LookupInvariantResult {
-        for limit in 0..8192 {
-            if let Some(inv) = self.lookup_invariant_limited(env, invariant, limit)? {
-                return Ok(Some(inv));
-            }
-        }
-        Ok(None)
-    }
-
     fn lookup_invariant_limited<'x>(
         &self,
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
     ) -> LookupInvariantResult {
-        if let Some(inv) = self.local_lookup_invariant(env, invariant, limit)? {
-            return Ok(Some(inv));
-        } else if let Some(parent) = self.parent() {
-            let res = env
-                .get_construct(parent)
-                .scope
-                .dyn_clone()
-                .lookup_invariant_limited(env, invariant, limit);
-            res
-        } else {
-            Ok(None)
+        let result = self.local_lookup_invariant(env, invariant, limit);
+        match result {
+            Ok(inv) => Ok(inv),
+            Err(LookupInvariantError::MightNotExist)
+            | Err(LookupInvariantError::DefinitelyDoesNotExist) => {
+                if let Some(parent) = self.parent() {
+                    let parent_result = env
+                        .get_construct(parent)
+                        .scope
+                        .dyn_clone()
+                        .lookup_invariant_limited(env, invariant, limit);
+                    if parent_result == Err(LookupInvariantError::DefinitelyDoesNotExist) {
+                        result
+                    } else {
+                        parent_result
+                    }
+                } else {
+                    result
+                }
+            }
+            Err(other) => Err(other),
         }
     }
 }
@@ -129,8 +141,8 @@ impl Scope for SPlain {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
-        Ok(None)
+    ) -> LookupInvariantResult {
+        Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -167,20 +179,19 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
+    ) -> LookupInvariantResult {
         let truee = env.get_language_item("true");
-        Ok(
-            if env.is_def_equal(
-                SubExpr(invariant, &Default::default()),
-                SubExpr(truee, &Default::default()),
-                limit,
-            )? == TripleBool::True
-            {
-                Some(Invariant::new(truee, hashset![]))
-            } else {
-                None
-            },
-        )
+        match env.is_def_equal(
+            SubExpr(invariant, &Default::default()),
+            SubExpr(truee, &Default::default()),
+            limit,
+        )? {
+            IsDefEqual::Yes => Ok(Invariant::new(truee, hashset![])),
+            IsDefEqual::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
+            IsDefEqual::Unknowable | IsDefEqual::No => {
+                Err(LookupInvariantError::DefinitelyDoesNotExist)
+            }
+        }
     }
 
     fn parent(&self) -> Option<ConstructId> {
@@ -221,7 +232,7 @@ impl Scope for SPlaceholder {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> Result<Option<Invariant>, UnresolvedConstructError> {
+    ) -> LookupInvariantResult {
         unreachable!()
     }
 

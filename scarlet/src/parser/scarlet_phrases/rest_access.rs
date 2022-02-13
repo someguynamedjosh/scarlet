@@ -7,7 +7,7 @@ use crate::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
         ConstructId,
     },
-    environment::Environment,
+    environment::{Environment, def_equal::IsDefEqual},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -52,7 +52,7 @@ fn uncreate<'a>(
             {
                 let cstruct = cstruct.clone();
                 if env.is_def_equal_without_subs(cstruct.get_rest(), uncreate, 1024)
-                    == Ok(TripleBool::True)
+                    == Ok(IsDefEqual::Yes)
                 {
                     return ControlFlow::Break(id);
                 }

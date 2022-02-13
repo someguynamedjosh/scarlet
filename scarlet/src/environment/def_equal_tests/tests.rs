@@ -5,7 +5,7 @@ use crate::{
         variable::{CVariable, Variable, VariableId},
         ConstructId,
     },
-    environment::Environment,
+    environment::{Environment, def_equal::IsDefEqual},
     scope::SRoot,
     shared::TripleBool,
 };
@@ -64,21 +64,21 @@ impl<'a> Environment<'a> {
     fn assert_def_equal(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
             self.is_def_equal_without_subs(left, right, 1024),
-            Ok(TripleBool::True)
+            Ok(IsDefEqual::Yes)
         );
     }
 
     fn assert_def_equal_not(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
             self.is_def_equal_without_subs(left, right, 1024),
-            Ok(TripleBool::False)
+            Ok(IsDefEqual::No)
         );
     }
 
     fn assert_def_equal_unknown(&mut self, left: ConstructId, right: ConstructId) {
         assert_eq!(
             self.is_def_equal_without_subs(left, right, 1024),
-            Ok(TripleBool::Unknown)
+            Ok(IsDefEqual::Unknowable)
         );
     }
 }
