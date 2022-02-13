@@ -2,6 +2,7 @@ pub mod def_equal;
 #[cfg(test)]
 mod def_equal_tests;
 pub mod dependencies;
+pub mod from;
 pub mod overlay;
 pub mod path;
 mod reduce;
@@ -12,7 +13,11 @@ mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, resolve::ResolveStack, def_equal::{DefEqualQuery, DefEqualResult}};
+use self::{
+    def_equal::{DefEqualQuery, DefEqualResult},
+    dependencies::DepResStack,
+    resolve::ResolveStack,
+};
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
@@ -23,7 +28,7 @@ use crate::{
     },
     resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
     scope::{SRoot, Scope},
-    shared::{Pool, TripleBool},
+    shared::Pool,
 };
 
 #[cfg(not(feature = "no_axioms"))]
@@ -31,6 +36,8 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "true",
     "false",
     "void",
+    "x",
+    "and",
     "t_trivial_statement",
     "t_invariant_truth_statement",
     "t_invariant_truth_rev_statement",
@@ -115,6 +122,7 @@ impl<'x> Environment<'x> {
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
+            from_dex: None,
         };
         self.constructs.push(con)
     }
@@ -126,6 +134,7 @@ impl<'x> Environment<'x> {
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
+            from_dex: None,
         })
     }
 
@@ -147,6 +156,7 @@ impl<'x> Environment<'x> {
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
+            from_dex: None,
         };
         self.constructs.push(con)
     }
@@ -157,6 +167,7 @@ impl<'x> Environment<'x> {
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
+            from_dex: None,
         };
         self.constructs.push(con)
     }
@@ -193,6 +204,7 @@ impl<'x> Environment<'x> {
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
+            from_dex: None,
         })
     }
 

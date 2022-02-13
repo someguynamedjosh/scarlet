@@ -50,6 +50,7 @@ impl<'x> Environment<'x> {
                         eprintln!("{:?} relies on {:?}", con, err.0)
                     }
                     ResolveError::InsufficientInvariants(err) => eprintln!("{}", err),
+                    ResolveError::Placeholder => eprintln!("placeholder"),
                 }
             }
         });
@@ -68,6 +69,9 @@ impl<'x> Environment<'x> {
             todo!("Nice error, circular dependency");
         }
         if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
+            if resolvable.is_placeholder() {
+                return Err(ResolveError::Placeholder);
+            }
             self.resolve_stack.push(ResolveStackFrame(con_id));
             let resolvable = resolvable.dyn_clone();
             let scope = con.scope.dyn_clone();

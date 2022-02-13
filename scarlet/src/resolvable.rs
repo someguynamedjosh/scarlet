@@ -3,6 +3,7 @@ mod named_member;
 mod placeholder;
 mod substitution;
 mod variable;
+pub mod from;
 
 use std::fmt::Debug;
 
@@ -22,6 +23,7 @@ use crate::{
 pub enum ResolveError {
     UnresolvedConstruct(UnresolvedConstructError),
     InsufficientInvariants(String),
+    Placeholder,
 }
 
 impl From<UnresolvedConstructError> for ResolveError {

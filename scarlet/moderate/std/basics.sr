@@ -1,5 +1,5 @@
 fx IS VAR[DEP x]
-x IS VAR[]
+x IS VAR[].AS_LANGUAGE_ITEM[x]
 
 true IS UNIQUE.AS_LANGUAGE_ITEM[true]
 false IS UNIQUE.AS_LANGUAGE_ITEM[false]

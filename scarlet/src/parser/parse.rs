@@ -76,7 +76,7 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
     }
 }
 
-fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
+fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Option<Node<'a>> {
     let r_whitespace = Regex::new(r"[ \r\n\t]+|#[^\n]*").unwrap();
 
     let ParseContext {
@@ -104,16 +104,16 @@ fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Node<'a> {
         stack.collapse(phrases);
     }
 
-    let result = stack.0.pop().unwrap();
-
-    result
+    stack.0.pop()
 }
 
 pub fn parse_tree<'x>(tree: &'x FileNode, ctx: &'x ParseContext) -> Node<'x> {
     let mut children = Vec::new();
     if tree.self_content.trim().len() > 0 {
-        for child in util::collect_comma_list(&NodeChild::Node(parse(&tree.self_content, ctx))) {
-            children.push(child.clone());
+        if let Some(content) = parse(&tree.self_content, ctx) {
+            for child in util::collect_comma_list(&NodeChild::Node(content)) {
+                children.push(child.clone());
+            }
         }
     }
     for (name, child) in &tree.children {

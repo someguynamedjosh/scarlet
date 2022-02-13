@@ -18,6 +18,7 @@ mod substitution;
 mod value_access;
 mod variable;
 mod with_dependencies;
+mod from;
 
 use super::phrase::Phrase;
 
@@ -50,6 +51,7 @@ pub fn phrases() -> Vec<Phrase> {
         variable::phrase(),
         populated_struct::phrase(),
         equal::phrase(),
+        from::phrase(),
         decision::phrase(),
         label_access::phrase(),
         value_access::phrase(),
