@@ -1,6 +1,6 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
-    hash::{BuildHasher, Hash, Hasher, SipHasher},
+    hash::{BuildHasher, Hash, Hasher},
 };
 
 pub trait Ignorable {
@@ -48,6 +48,9 @@ impl<OriginalKey: Eq + Hash, IsomorphicKey: Isomorphism<OriginalKey>, Result>
     IsomorphicKeyIndexable<OriginalKey, IsomorphicKey, Result> for HashMap<OriginalKey, Result>
 {
     fn iso_get(&self, key: &IsomorphicKey) -> Option<(&OriginalKey, &Result)> {
+        if cfg!(debug_assertions) {
+            key.assertions();
+        }
         let hash = {
             let mut hasher = self.hasher().build_hasher();
             key.hash(&mut hasher);

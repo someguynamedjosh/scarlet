@@ -27,7 +27,9 @@ impl<'x> Environment<'x> {
                     // Right now this line actually significantly slows things
                     // down. In theory it should accelerate things. Maybe we
                     // need more complicated code for the effect to be
-                    // noticable. reset_limit = limit != 0;
+                    // noticable.
+
+                    // reset_limit = limit != 0;
                 } else {
                     still_unresolved.push(id);
                 }
