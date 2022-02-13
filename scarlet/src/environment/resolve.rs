@@ -18,6 +18,7 @@ impl<'x> Environment<'x> {
             let reset_limit = false;
             let mut still_unresolved = Vec::new();
             for id in unresolved {
+                println!("{:?} {}", id, limit);
                 if reset_limit {
                     still_unresolved.push(id);
                     continue;

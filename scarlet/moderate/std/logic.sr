@@ -5,11 +5,9 @@ DECISION[a true true b]
 
 or IS DECISION[a true true b]
 
-Bool IS VAR[DECISION[
-    SELF  true  true  SELF = false
-]]
-
 a IS VAR[SELF FROM Bool]
 b IS VAR[SELF FROM Bool]
 
-a[void]
+Bool IS VAR[DECISION[
+    SELF  true  true  SELF = false
+]]
