@@ -71,10 +71,11 @@ impl Variable {
             if let Some(inv) = env.get_produced_invariant(subbed, value, limit) {
                 invariants.push(inv);
             } else {
-                return Ok(Err(format!(
-                    "Failed to find invariant: {}",
-                    env.show(subbed, value)?
-                )));
+                // return Ok(Err(format!(
+                //     "Failed to find invariant: {}",
+                //     env.show(subbed, value)?
+                // )));
+                return Ok(Err(format!("Failed to find invariant",)));
             }
         }
         Ok(Ok(invariants))

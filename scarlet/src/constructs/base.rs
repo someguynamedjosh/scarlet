@@ -55,6 +55,13 @@ impl<'x> ConstructDefinition<'x> {
             _ => None,
         }
     }
+
+    /// Returns `true` if the construct definition is [`Unresolved`].
+    ///
+    /// [`Unresolved`]: ConstructDefinition::Unresolved
+    pub fn is_unresolved(&self) -> bool {
+        matches!(self, Self::Unresolved(..))
+    }
 }
 
 impl<'x> From<Box<dyn Construct>> for ConstructDefinition<'x> {
