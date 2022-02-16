@@ -3,7 +3,7 @@ THE STEPS:
 1. Check the priority of the left and right constructs.
     Substitution, variable, decision
 2. Call discover_equality on the higher priority one (original left breaks ties, every time the right is picked something must be flipped to keep track of this)
-3. If that turns up nothing, call discover_equality on the other one (this might not be necessary.)
+<!-- 3. If that turns up nothing, call discover_equality on the other one (this might not be necessary.) -->
 4. If result is gained from the right side, flip the substitution sets (if result is Equal.)
 
 discover_equality for variables:

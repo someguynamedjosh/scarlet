@@ -3,9 +3,11 @@ use std::{any::Any, collections::HashSet, fmt::Debug};
 use super::{structt::CPopulatedStruct, variable::CVariable};
 use crate::{
     environment::{
+        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
+        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
-        CheckResult, Environment, UnresolvedConstructError, def_equal::{DefEqualResult, IsDefEqual},
+        CheckResult, Environment, UnresolvedConstructError,
     },
     resolvable::BoxedResolvable,
     scope::Scope,
@@ -144,6 +146,23 @@ pub trait Construct: Any + Debug + AnyEq {
         recursion_limit: u32,
     ) -> DefEqualResult {
         Ok(IsDefEqual::Unknowable)
+    }
+
+    #[allow(unused_variables)]
+    fn discover_equality<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        other_id: ConstructId,
+        other: &dyn Construct,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        Ok(Equal::Unknowable)
+    }
+
+    #[allow(unused_variables)]
+    fn deq_priority<'x>(&self) -> DeqPriority {
+        0
     }
 
     fn as_def<'x>(&self) -> ConstructDefinition<'x> {

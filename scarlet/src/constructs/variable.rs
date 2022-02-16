@@ -9,6 +9,7 @@ use crate::{
     environment::{
         def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
+        discover_equality::{DeqPriority, DeqResult, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment, UnresolvedConstructError,
     },
@@ -130,44 +131,26 @@ impl Construct for CVariable {
         deps
     }
 
-    fn asymm_is_def_equal<'x>(
+    fn deq_priority<'x>(&self) -> DeqPriority {
+        2
+    }
+
+    fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        SubExpr(other, other_subs): SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        assert_ne!(recursion_limit, 0);
-        for (target, value) in subs {
-            if *target == self.0 {
-                let mut new_subs = value.1.clone();
-                for (target, value) in subs {
-                    if new_subs.contains_key(target) {
-                        if new_subs.get(target).unwrap() != value {
-                            eprintln!("{:#?}", env);
-                            todo!("{:#?}, {:?} -> {:?}", new_subs, target, value);
-                        }
-                    } else {
-                        new_subs.insert_no_replace(target.clone(), *value);
-                    }
-                }
-                return env.is_def_equal(
-                    SubExpr(value.0, &new_subs),
-                    SubExpr(other, other_subs),
-                    recursion_limit,
-                );
-            }
+        other_id: ConstructId,
+        _other: &dyn Construct,
+        _limit: u32,
+        _tiebreaker: crate::environment::discover_equality::DeqSide,
+    ) -> DeqResult {
+        let var = env.get_variable(self.0);
+        let mut subs = Substitutions::new();
+        if var.dependencies.len() == 0 {
+            subs.insert_no_replace(self.0, other_id);
+            Ok(Equal::Yes(subs, Default::default()))
+        } else {
+            todo!()
         }
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
-            let other = other.clone();
-            if other_subs.iter().any(|(key, _)| *key == other.get_id()) {
-                return Ok(IsDefEqual::Unknowable);
-            }
-            if self.is_same_variable_as(&other) {
-                return Ok(IsDefEqual::Yes);
-            }
-        }
-        Ok(IsDefEqual::Unknowable)
     }
 }
 

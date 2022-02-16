@@ -1,0 +1,173 @@
+mod tests;
+
+use super::{sub_expr::OwnedSubExpr, Environment, UnresolvedConstructError};
+use crate::{
+    constructs::{substitution::Substitutions, ConstructId},
+    environment::sub_expr::SubExpr,
+    shared::TripleBool,
+    util::{IsomorphicKeyIndexable, Isomorphism},
+};
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum Equal {
+    Yes(Substitutions, Substitutions),
+    NeedsHigherLimit,
+    Unknowable,
+    No,
+}
+
+fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -> Result<(), ()> {
+    for (target, value) in from {
+        if target_subs.contains_key(&target) {
+            return Err(());
+        } else {
+            target_subs.insert_no_replace(target, value);
+        }
+    }
+    Ok(())
+}
+
+impl Equal {
+    pub fn yes() -> Self {
+        Self::Yes(Default::default(), Default::default())
+    }
+
+    pub fn swapped(self) -> Self {
+        match self {
+            Self::Yes(left, right) => Self::Yes(right, left),
+            other => other,
+        }
+    }
+
+    pub fn and(over: Vec<Self>) -> Self {
+        let mut default = Self::yes();
+        for b in over {
+            match b {
+                Self::Yes(left, right) => {
+                    if let Self::Yes(exleft, exright) = &mut default {
+                        let success = (|| -> Result<(), ()> {
+                            combine_substitutions(left, exleft)?;
+                            combine_substitutions(right, exright)?;
+                            Ok(())
+                        })();
+                        if success.is_err() {
+                            default = Self::Unknowable
+                        }
+                    }
+                }
+                Self::NeedsHigherLimit => {
+                    if let Self::Yes(..) = default {
+                        default = Self::NeedsHigherLimit
+                    }
+                }
+                Self::Unknowable => default = Self::Unknowable,
+                Self::No => return Self::No,
+            }
+        }
+        default
+    }
+
+    pub fn or(over: Vec<Self>) -> Self {
+        let mut default = Self::No;
+        for b in over {
+            match b {
+                Self::Yes(..) => return b,
+                Self::Unknowable => {
+                    if let Self::No = default {
+                        default = Self::Unknowable
+                    }
+                }
+                Self::NeedsHigherLimit => default = Self::NeedsHigherLimit,
+                Self::No => return Self::No,
+            }
+        }
+        default
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DeqSide {
+    Left,
+    Right,
+}
+
+impl Default for DeqSide {
+    fn default() -> Self {
+        Self::Left
+    }
+}
+
+impl DeqSide {
+    fn swapped(self) -> DeqSide {
+        match self {
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
+        }
+    }
+}
+
+pub type DeqPriority = u8;
+
+pub type DeqResult = Result<Equal, UnresolvedConstructError>;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct DiscoverEqualQuery {
+    left: ConstructId,
+    right: ConstructId,
+}
+
+impl<'x> Environment<'x> {
+    pub fn discover_equal(
+        &mut self,
+        left: ConstructId,
+        right: ConstructId,
+        limit: u32,
+    ) -> DeqResult {
+        self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default())
+    }
+
+    pub(crate) fn discover_equal_with_tiebreaker(
+        &mut self,
+        left: ConstructId,
+        right: ConstructId,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        let left = self.dereference(left)?;
+        let right = self.dereference(right)?;
+        if left == right {
+            return Ok(Equal::yes());
+        }
+        if limit == 0 {
+            return Ok(Equal::NeedsHigherLimit);
+        }
+        // For now this produces no noticable performance improvements.
+        // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
+        // limit)) {     return result.clone();
+        // }
+        let result = (|| {
+            let left_def = self.get_construct_definition(left)?.dyn_clone();
+            let right_def = self.get_construct_definition(right)?.dyn_clone();
+            let left_prio = left_def.deq_priority();
+            let right_prio = right_def.deq_priority();
+            let preference = if left_prio > right_prio {
+                DeqSide::Left
+            } else if right_prio > left_prio {
+                DeqSide::Right
+            } else {
+                tiebreaker
+            };
+            let limit = limit - 1;
+            if preference == DeqSide::Left {
+                left_def.discover_equality(self, right, &*right_def, limit, tiebreaker)
+            } else {
+                let tiebreaker = tiebreaker.swapped();
+                let res = right_def.discover_equality(self, left, &*left_def, limit, tiebreaker);
+                Ok(res?.swapped())
+            }
+        })();
+        // self.def_equal_memo_table
+        //     .insert((left, right, limit).convert(), result.clone());
+        result
+    }
+}

@@ -1,6 +1,4 @@
 pub mod def_equal;
-#[cfg(test)]
-mod def_equal_tests;
 pub mod dependencies;
 pub mod from;
 pub mod overlay;
@@ -10,6 +8,7 @@ pub mod resolve;
 pub mod sub_expr;
 pub mod util;
 mod vomit;
+pub mod discover_equality;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
