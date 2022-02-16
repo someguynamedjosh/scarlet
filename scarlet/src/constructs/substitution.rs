@@ -4,10 +4,12 @@ use super::{
 };
 use crate::{
     environment::{
+        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
-        CheckResult, def_equal::DefEqualResult, Environment,
+        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
+        sub_expr::{NestedSubstitutions, SubExpr},
+        CheckResult, Environment,
     },
-    environment::sub_expr::{SubExpr, NestedSubstitutions},
     impl_any_eq_for_construct,
     scope::Scope,
     shared::OrderedMap,
@@ -100,18 +102,43 @@ impl Construct for CSubstitution {
         self.invs.clone()
     }
 
-    fn asymm_is_def_equal<'x>(
+    fn deq_priority<'x>(&self) -> DeqPriority {
+        3
+    }
+
+    fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        assert_ne!(recursion_limit, 0);
-        let mut new_subs = subs.clone();
-        for (target, value) in &self.subs {
-            new_subs.insert_or_replace(target.clone(), SubExpr(*value, subs));
+        other_id: ConstructId,
+        other: &dyn Construct,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        let base = env.discover_equal_with_tiebreaker(self.base, other_id, limit, tiebreaker)?;
+        let mut result = base.clone();
+        if let Equal::Yes(left, right) = base {
+            for (target, proposed_value) in &self.subs {
+                if let Some(existing_value) = left.get(&target) {
+                    let proposed_equals_existing = env.discover_equal_with_tiebreaker(
+                        *proposed_value,
+                        *existing_value,
+                        limit,
+                        tiebreaker,
+                    )?;
+                    result = Equal::and(vec![result, proposed_equals_existing]);
+                } else {
+                    if other.get_dependencies(env).contains_var(*target) {
+                        let extra_sub: Substitutions =
+                            vec![(*target, *proposed_value)].into_iter().collect();
+                        result =
+                            Equal::and(vec![result, Equal::Yes(Default::default(), extra_sub)]);
+                    }
+                    if right.len() > 0 {
+                        todo!()
+                    }
+                }
+            }
         }
-        env.is_def_equal(SubExpr(self.base, &new_subs), other, recursion_limit - 1)
+        Ok(result)
     }
 }
