@@ -25,6 +25,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable {
     pub id: Option<VariableId>,
+    pub construct: Option<ConstructId>,
     pub invariants: Vec<ConstructId>,
     pub dependencies: Vec<ConstructId>,
 }
@@ -61,6 +62,14 @@ impl Variable {
 
     pub(crate) fn get_dependencies(&self) -> &[ConstructId] {
         &self.dependencies
+    }
+
+    pub(crate) fn get_var_dependencies(&self, env: &mut Environment) -> Dependencies {
+        let mut result = Dependencies::new();
+        for &dep in &self.dependencies {
+            result.append(env.get_dependencies(dep));
+        }
+        result
     }
 
     pub fn can_be_assigned<'x>(
@@ -155,7 +164,25 @@ impl Construct for CVariable {
             subs.insert_no_replace(self.0, other_id);
             Ok(Equal::Yes(subs, Default::default()))
         } else {
-            todo!()
+            let var = var.clone();
+            let var_deps = var.get_var_dependencies(env);
+            let other_deps = env.get_dependencies(other_id);
+            if other_deps.num_variables() < var_deps.num_variables() {
+                return Ok(Equal::Unknown);
+            }
+            let mut subs = Substitutions::new();
+            let mut other_subs = Substitutions::new();
+            for (self_requires, other_has) in
+                var_deps.into_variables().zip(other_deps.into_variables())
+            {
+                let self_con = env.get_variable(self_requires.id).construct.unwrap();
+                let other_con = env.get_variable(other_has.id).construct.unwrap();
+                subs.insert_no_replace(self_requires.id, other_con);
+                other_subs.insert_no_replace(other_has.id, self_con);
+            }
+            let subbed_other = env.substitute(other_id, &other_subs);
+            subs.insert_no_replace(self.0, subbed_other);
+            Ok(Equal::Yes(subs, Default::default()))
         }
     }
 }

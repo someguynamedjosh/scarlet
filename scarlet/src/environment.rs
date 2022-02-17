@@ -1,5 +1,6 @@
 pub mod def_equal;
 pub mod dependencies;
+pub mod discover_equality;
 pub mod from;
 pub mod overlay;
 pub mod path;
@@ -8,7 +9,6 @@ pub mod resolve;
 pub mod sub_expr;
 pub mod util;
 mod vomit;
-pub mod discover_equality;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
@@ -20,9 +20,10 @@ use self::{
 use crate::{
     constructs::{
         base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
+        downcast_construct,
         substitution::{CSubstitution, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
-        variable::{Variable, VariableId, VariablePool},
+        variable::{CVariable, Variable, VariableId, VariablePool},
         Construct,
     },
     resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
@@ -96,6 +97,10 @@ impl<'x> Environment<'x> {
     }
 
     pub fn define_dyn_construct(&mut self, construct: ConstructId, definition: Box<dyn Construct>) {
+        let var_id = downcast_construct::<CVariable>(&*definition).map(CVariable::get_id);
+        if let Some(var_id) = var_id {
+            self.variables[var_id].construct = Some(construct);
+        }
         self.constructs[construct].definition = definition.into();
     }
 
@@ -150,6 +155,7 @@ impl<'x> Environment<'x> {
         construct: Box<dyn Construct>,
         scope: Box<dyn Scope>,
     ) -> ConstructId {
+        let var_id = downcast_construct::<CVariable>(&*construct).map(CVariable::get_id);
         let con = AnnotatedConstruct {
             definition: ConstructDefinition::Resolved(construct),
             reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
@@ -157,7 +163,11 @@ impl<'x> Environment<'x> {
             scope,
             from_dex: None,
         };
-        self.constructs.push(con)
+        let id = self.constructs.push(con);
+        if let Some(var_id) = var_id {
+            self.variables[var_id].construct = Some(id);
+        }
+        id
     }
 
     pub fn push_other(&mut self, other: ConstructId, scope: Box<dyn Scope>) -> ConstructId {

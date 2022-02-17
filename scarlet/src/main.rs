@@ -6,6 +6,7 @@
 #![feature(generic_associated_types)]
 #![feature(associated_type_defaults)]
 #![feature(hash_raw_entry)]
+#![feature(assert_matches)]
 
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 
