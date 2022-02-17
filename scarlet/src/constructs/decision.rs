@@ -1,8 +1,9 @@
-use super::{Construct, ConstructId, GenInvResult, Invariant};
+use super::{downcast_construct, Construct, ConstructId, GenInvResult, Invariant};
 use crate::{
     environment::{
         def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
+        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -96,73 +97,28 @@ impl Construct for CDecision {
         deps
     }
 
-    fn symm_is_def_equal<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        SubExpr(other, other_subs): SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        assert_ne!(recursion_limit, 0);
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
-            let other = other.clone();
-            let parts = vec![
-                env.is_def_equal(
-                    SubExpr(self.left, subs),
-                    SubExpr(other.left, other_subs),
-                    recursion_limit - 1,
-                )?,
-                env.is_def_equal(
-                    SubExpr(self.right, subs),
-                    SubExpr(other.right, other_subs),
-                    recursion_limit - 1,
-                )?,
-                env.is_def_equal(
-                    SubExpr(self.equal, subs),
-                    SubExpr(other.equal, other_subs),
-                    recursion_limit - 1,
-                )?,
-                env.is_def_equal(
-                    SubExpr(self.unequal, subs),
-                    SubExpr(other.unequal, other_subs),
-                    recursion_limit - 1,
-                )?,
-            ];
-            Ok(IsDefEqual::and(parts))
-        } else {
-            Ok(IsDefEqual::NeedsHigherLimit)
-        }
+    fn deq_priority<'x>(&self) -> DeqPriority {
+        3
     }
 
-    fn asymm_is_def_equal<'x>(
+    fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        SubExpr(other, other_subs): SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        let other = env.get_construct_definition(other)?.dyn_clone();
-        Ok(
-            match env.is_def_equal(
-                SubExpr(self.left, subs),
-                SubExpr(self.right, other_subs),
-                recursion_limit - 1,
-            )? {
-                IsDefEqual::Yes => other.symm_is_def_equal(
-                    env,
-                    other_subs,
-                    SubExpr(self.equal, subs),
-                    recursion_limit - 1,
-                )?,
-                IsDefEqual::No => other.symm_is_def_equal(
-                    env,
-                    other_subs,
-                    SubExpr(self.unequal, subs),
-                    recursion_limit - 1,
-                )?,
-                _ => IsDefEqual::Unknowable,
-            },
-        )
+        _other_id: ConstructId,
+        other: &dyn Construct,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            Ok(Equal::and(vec![
+                env.discover_equal_with_tiebreaker(self.left, other.left, limit, tiebreaker)?,
+                env.discover_equal_with_tiebreaker(self.right, other.right, limit, tiebreaker)?,
+                env.discover_equal_with_tiebreaker(self.equal, other.equal, limit, tiebreaker)?,
+                env.discover_equal_with_tiebreaker(self.unequal, other.unequal, limit, tiebreaker)?,
+            ]))
+        } else {
+            Ok(Equal::Unknown)
+        }
     }
 }
 

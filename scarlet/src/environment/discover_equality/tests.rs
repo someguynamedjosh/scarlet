@@ -112,3 +112,40 @@ fn var_sub_something_equals_something() {
     assert_eq!(env.discover_equal(var_sub_thing, another, 2), Ok(Equal::No));
     assert_eq!(env.discover_equal(another, var_sub_thing, 2), Ok(Equal::No));
 }
+
+#[test]
+fn decision_equals_similar_decision() {
+    let mut env = env();
+    let a = env.variable();
+    let b = env.variable();
+    let c = env.variable();
+    let d = env.variable();
+    let dec1 = env.decision(a, b, c, d);
+    let dec2 = env.decision(a, b, c, d);
+    assert_eq!(env.discover_equal(dec1, dec2, 2), Ok(Equal::yes()));
+    assert_eq!(env.discover_equal(dec2, dec1, 2), Ok(Equal::yes()));
+}
+
+#[test]
+fn decision_equals_decision_with_subs() {
+    let mut env = env();
+    let a = env.variable_full();
+    let b = env.variable_full();
+    let c = env.variable_full();
+    let d = env.variable_full();
+    let w = env.unique();
+    let x = env.unique();
+    let y = env.unique();
+    let z = env.unique();
+    let dec1 = env.decision(a.0, b.0, c.0, d.0);
+    let dec2 = env.decision(w, x, y, z);
+    let subs = subs(vec![(a.1, w), (b.1, x), (c.1, y), (d.1, z)]);
+    assert_eq!(
+        env.discover_equal(dec1, dec2, 2),
+        Ok(Equal::Yes(subs.clone(), Default::default()))
+    );
+    assert_eq!(
+        env.discover_equal(dec2, dec1, 2),
+        Ok(Equal::Yes(Default::default(), subs.clone()))
+    );
+}

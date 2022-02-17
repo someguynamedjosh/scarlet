@@ -2,6 +2,7 @@ use maplit::hashset;
 
 use super::{
     base::{Construct, ConstructId},
+    downcast_construct,
     substitution::Substitutions,
     GenInvResult, Invariant,
 };
@@ -139,13 +140,18 @@ impl Construct for CVariable {
         &self,
         env: &mut Environment<'x>,
         other_id: ConstructId,
-        _other: &dyn Construct,
+        other: &dyn Construct,
         _limit: u32,
         _tiebreaker: crate::environment::discover_equality::DeqSide,
     ) -> DeqResult {
         let var = env.get_variable(self.0);
-        let mut subs = Substitutions::new();
+        if let Some(other) = downcast_construct::<Self>(other) {
+            if other.0 == self.0 {
+                return Ok(Equal::yes());
+            }
+        }
         if var.dependencies.len() == 0 {
+            let mut subs = Substitutions::new();
             subs.insert_no_replace(self.0, other_id);
             Ok(Equal::Yes(subs, Default::default()))
         } else {
