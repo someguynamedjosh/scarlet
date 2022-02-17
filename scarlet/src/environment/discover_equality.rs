@@ -12,7 +12,7 @@ use crate::{
 pub enum Equal {
     Yes(Substitutions, Substitutions),
     NeedsHigherLimit,
-    Unknowable,
+    Unknown,
     No,
 }
 
@@ -51,7 +51,7 @@ impl Equal {
                             Ok(())
                         })();
                         if success.is_err() {
-                            default = Self::Unknowable
+                            default = Self::Unknown
                         }
                     }
                 }
@@ -60,7 +60,7 @@ impl Equal {
                         default = Self::NeedsHigherLimit
                     }
                 }
-                Self::Unknowable => default = Self::Unknowable,
+                Self::Unknown => default = Self::Unknown,
                 Self::No => return Self::No,
             }
         }
@@ -72,9 +72,9 @@ impl Equal {
         for b in over {
             match b {
                 Self::Yes(..) => return b,
-                Self::Unknowable => {
+                Self::Unknown => {
                     if let Self::No = default {
-                        default = Self::Unknowable
+                        default = Self::Unknown
                     }
                 }
                 Self::NeedsHigherLimit => default = Self::NeedsHigherLimit,
@@ -82,6 +82,13 @@ impl Equal {
             }
         }
         default
+    }
+
+    pub fn without_subs(self) -> Self {
+        match self {
+            Self::Yes(..) => Self::yes(),
+            other => other
+        }
     }
 }
 

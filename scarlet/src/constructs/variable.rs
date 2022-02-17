@@ -132,7 +132,7 @@ impl Construct for CVariable {
     }
 
     fn deq_priority<'x>(&self) -> DeqPriority {
-        2
+        4
     }
 
     fn discover_equality<'x>(

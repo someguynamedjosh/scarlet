@@ -157,7 +157,7 @@ pub trait Construct: Any + Debug + AnyEq {
         limit: u32,
         tiebreaker: DeqSide,
     ) -> DeqResult {
-        Ok(Equal::Unknowable)
+        Ok(Equal::Unknown)
     }
 
     #[allow(unused_variables)]

@@ -1,8 +1,9 @@
-use super::base::Construct;
+use super::{base::Construct, downcast_construct, ConstructId};
 use crate::{
     environment::{
         def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
+        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -35,24 +36,26 @@ impl Construct for CUnique {
         Dependencies::new()
     }
 
-    fn symm_is_def_equal<'x>(
+    fn deq_priority<'x>(&self) -> DeqPriority {
+        2
+    }
+
+    fn discover_equality<'x>(
         &self,
-        env: &mut Environment<'x>,
-        _subs: &NestedSubstitutions,
-        SubExpr(other, _): SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        assert_ne!(recursion_limit, 0);
-        Ok(
-            if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
-                if self.0 == other.0 {
-                    IsDefEqual::Yes
-                } else {
-                    IsDefEqual::No
-                }
+        _env: &mut Environment<'x>,
+        _other_id: ConstructId,
+        other: &dyn Construct,
+        _limit: u32,
+        _tiebreaker: DeqSide,
+    ) -> DeqResult {
+        Ok(if let Some(other) = downcast_construct::<Self>(other) {
+            if self.0 == other.0 {
+                unreachable!("If this is the case, the two construct IDs should have already been identified as the same!");
             } else {
-                IsDefEqual::Unknowable
-            },
-        )
+                Equal::No
+            }
+        } else {
+            Equal::Unknown
+        })
     }
 }

@@ -103,7 +103,7 @@ impl Construct for CSubstitution {
     }
 
     fn deq_priority<'x>(&self) -> DeqPriority {
-        3
+        6
     }
 
     fn discover_equality<'x>(
@@ -115,7 +115,8 @@ impl Construct for CSubstitution {
         tiebreaker: DeqSide,
     ) -> DeqResult {
         let base = env.discover_equal_with_tiebreaker(self.base, other_id, limit, tiebreaker)?;
-        let mut result = base.clone();
+        println!("BASE {:?}", base);
+        let mut result = base.clone().without_subs();
         if let Equal::Yes(left, right) = base {
             for (target, proposed_value) in &self.subs {
                 if let Some(existing_value) = left.get(&target) {
@@ -137,6 +138,9 @@ impl Construct for CSubstitution {
                         todo!()
                     }
                 }
+            }
+            if right.len() > 0 {
+                todo!()
             }
         }
         Ok(result)

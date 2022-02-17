@@ -1,11 +1,12 @@
 use crate::{
     constructs::{
         decision::CDecision,
+        substitution::Substitutions,
         unique::CUnique,
         variable::{CVariable, Variable, VariableId},
-        ConstructId, substitution::Substitutions,
+        ConstructId,
     },
-    environment::{Environment, def_equal::IsDefEqual, discover_equality::Equal},
+    environment::{def_equal::IsDefEqual, discover_equality::Equal, Environment},
     scope::SRoot,
     shared::TripleBool,
 };
@@ -62,6 +63,10 @@ impl<'a> Environment<'a> {
     }
 }
 
+fn subs(from: Vec<(VariableId, ConstructId)>) -> Substitutions {
+    from.into_iter().collect()
+}
+
 #[test]
 fn something_equals_itself() {
     let mut env = env();
@@ -74,11 +79,36 @@ fn something_equals_variable() {
     let mut env = env();
     let thing = env.unique();
     let (var_con, var_id) = env.variable_full();
-    let expected: Substitutions = vec![(var_id, thing)].into_iter().collect();
+    let expected = subs(vec![(var_id, thing)]);
     let left = Equal::Yes(expected.clone(), Default::default());
-    let right= Equal::Yes(Default::default(), expected.clone());
+    let right = Equal::Yes(Default::default(), expected.clone());
     assert_eq!(env.discover_equal(var_con, thing, 1), Ok(left));
     assert_eq!(env.discover_equal(thing, var_con, 1), Ok(right));
-    assert_eq!(env.discover_equal(var_con, thing, 0), Ok(Equal::NeedsHigherLimit));
-    assert_eq!(env.discover_equal(thing, var_con, 0), Ok(Equal::NeedsHigherLimit));
+    assert_eq!(
+        env.discover_equal(var_con, thing, 0),
+        Ok(Equal::NeedsHigherLimit)
+    );
+    assert_eq!(
+        env.discover_equal(thing, var_con, 0),
+        Ok(Equal::NeedsHigherLimit)
+    );
+}
+
+#[test]
+fn var_sub_something_equals_something() {
+    let mut env = env();
+    let thing = env.unique();
+    let another = env.unique();
+    let (var_con, var_id) = env.variable_full();
+    let var_sub_thing = env.substitute(var_con, &subs(vec![(var_id, thing)]));
+    assert_eq!(
+        env.discover_equal(var_sub_thing, thing, 2),
+        Ok(Equal::yes())
+    );
+    assert_eq!(
+        env.discover_equal(thing, var_sub_thing, 2),
+        Ok(Equal::yes())
+    );
+    assert_eq!(env.discover_equal(var_sub_thing, another, 2), Ok(Equal::No));
+    assert_eq!(env.discover_equal(another, var_sub_thing, 2), Ok(Equal::No));
 }
