@@ -149,3 +149,13 @@ fn decision_equals_decision_with_subs() {
         Ok(Equal::Yes(Default::default(), subs.clone()))
     );
 }
+
+#[test]
+fn fx_is_gy() {
+    let mut env = env();
+    let x = env.variable_full();
+    let y = env.variable_full();
+    let f = env.variable_full_with_deps(vec![x.0]);
+    let g = env.variable_full_with_deps(vec![y.0]);
+    assert_eq!(env.discover_equal(f.0, g.0, 2), Ok(Equal::yes()));
+}
