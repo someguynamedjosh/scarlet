@@ -134,13 +134,32 @@ impl Construct for CSubstitution {
                         result =
                             Equal::and(vec![result, Equal::Yes(Default::default(), extra_sub)]);
                     }
-                    if right.len() > 0 {
-                        todo!()
-                    }
                 }
             }
-            if right.len() > 0 {
-                todo!()
+            for (target, value) in right {
+                let mut value_subs = Substitutions::new();
+                for dep in env.get_dependencies(value).into_variables() {
+                    if left.contains_key(&dep.id) {
+                        continue;
+                    }
+                    if let Some(&rep) = self.subs.get(&dep.id) {
+                        value_subs.insert_no_replace(dep.id, rep);
+                    }
+                }
+                let new_value = if value_subs.len() > 0 {
+                    env.substitute(value, &value_subs)
+                } else {
+                    value
+                };
+                let this_sub = vec![(target, new_value)].into_iter().collect();
+                result = Equal::and(vec![result, Equal::Yes(Default::default(), this_sub)])
+            }
+            for (target, value) in left {
+                if self.subs.contains_key(&target) {
+                    continue;
+                }
+                let this_sub = vec![(target, value)].into_iter().collect();
+                result = Equal::and(vec![result, Equal::Yes(this_sub, Default::default())]);
             }
         }
         Ok(result)
