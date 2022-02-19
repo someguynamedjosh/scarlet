@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{decision::CDecision, ConstructId},
-    environment::{Environment, def_equal::IsDefEqual},
+    environment::{discover_equality::Equal, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -42,8 +42,8 @@ fn uncreate<'a>(
             let cite = cite.clone();
             let truee = env.get_language_item("true");
             let falsee = env.get_language_item("false");
-            if env.is_def_equal_without_subs(cite.equal(), truee, 1024)? == IsDefEqual::Yes
-                && env.is_def_equal_without_subs(cite.unequal(), falsee, 1024)? == IsDefEqual::Yes
+            if env.discover_equal(cite.equal(), truee, 1024)? == Equal::yes()
+                && env.discover_equal(cite.unequal(), falsee, 1024)? == Equal::yes()
             {
                 Some(Node {
                     phrase: "equal",

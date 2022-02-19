@@ -9,4 +9,4 @@ x IS std.basics.x
 #     ]
 #     SELF = void
 # ]]
-logic.and[x = void x = void]
+# logic.and[x = void x = void]

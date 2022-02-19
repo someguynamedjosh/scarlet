@@ -4,7 +4,6 @@ use super::{
 };
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
@@ -115,7 +114,6 @@ impl Construct for CSubstitution {
         tiebreaker: DeqSide,
     ) -> DeqResult {
         let base = env.discover_equal_with_tiebreaker(self.base, other_id, limit, tiebreaker)?;
-        println!("BASE {:?}", base);
         let mut result = base.clone().without_subs();
         if let Equal::Yes(left, right) = base {
             for (target, proposed_value) in &self.subs {

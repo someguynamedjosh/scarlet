@@ -1,7 +1,6 @@
 use super::{Construct, ConstructId, GenInvResult};
 use crate::{
     environment::{
-        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,

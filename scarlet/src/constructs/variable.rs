@@ -8,7 +8,6 @@ use super::{
 };
 use crate::{
     environment::{
-        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},

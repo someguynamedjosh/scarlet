@@ -31,3 +31,26 @@ discover_equality for substitutions:
     b. Otherwise
         i. if any existing substitution in $result.other depends on the var being substituted, append the substitution to it
         ii. if OTHER is dependent on the variable, add the substitution to the other subs.
+
+```rs
+fx[x IS a][fx IS gy] =<= gy[a]
+```
+
+```rs
+fx[x IS a][fx IS gy] =<= gy[a]
+    fx[x IS a] =<= gy[a]
+        gy[a] =>= fx
+            fx =<= gy
+                Yes([fx IS gy[y IS x]   x IS y], [])
+            Yes([], [fx IS gy[y IS x]   x IS y])
+            Yes([], [fx IS gy[y IS x]   x IS y[y IS a]])
+        Yes([fx IS gy[y IS x]   x IS y[y IS a]], [])
+        y[y IS a] =>= a
+            y =>= a
+                Yes([y IS a], [])
+            a =>= a
+                Yes([], [])
+            Yes([], [])
+        Yes([fx IS gy[y IS x]], [])
+    Yes([fx IS gy[y IS x]], [])
+```

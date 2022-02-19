@@ -1,1 +1,11 @@
 true IS basics.true
+
+x IS VAR[]
+y IS VAR[]
+
+a IS VAR[DEP x]
+b IS VAR[DEP y]
+
+a[a IS b].SHOWN
+
+# a[a IS b]

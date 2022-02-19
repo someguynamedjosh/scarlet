@@ -1,12 +1,12 @@
 use itertools::Itertools;
 use maplit::hashset;
 
-use super::{base::Construct, ConstructId, GenInvResult};
+use super::{base::Construct, downcast_construct, ConstructId, GenInvResult};
 use crate::{
     constructs::Invariant,
     environment::{
-        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
+        discover_equality::{DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -34,12 +34,7 @@ impl CAxiom {
         for limit in 0..32 {
             for lang_item_name in env.language_item_names().copied().collect_vec() {
                 let lang_item = env.get_language_item(lang_item_name);
-                if env.is_def_equal(
-                    SubExpr(self.statement, &Default::default()),
-                    SubExpr(lang_item, &Default::default()),
-                    limit,
-                ) == Ok(IsDefEqual::Yes)
-                {
+                if env.discover_equal(self.statement, lang_item, limit) == Ok(Equal::yes()) {
                     return lang_item_name;
                 }
             }
@@ -67,24 +62,19 @@ impl Construct for CAxiom {
         env.get_dependencies(self.statement)
     }
 
-    fn symm_is_def_equal<'x>(
+    fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        assert_ne!(recursion_limit, 0);
-        let other_subs = other.1;
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other.0)? {
+        other_id: ConstructId,
+        other: &dyn Construct,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        if let Some(other) = downcast_construct::<Self>(other) {
             let other = other.clone();
-            env.is_def_equal(
-                SubExpr(self.statement, subs),
-                SubExpr(other.statement, other_subs),
-                recursion_limit - 1,
-            )
+            env.discover_equal_with_tiebreaker(self.statement, other.statement, limit, tiebreaker)
         } else {
-            Ok(IsDefEqual::Unknowable)
+            Ok(Equal::Unknown)
         }
     }
 }

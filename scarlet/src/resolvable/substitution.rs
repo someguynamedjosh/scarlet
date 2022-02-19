@@ -60,6 +60,28 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
             subs.insert_no_replace(dep, value);
         }
 
+        for (target, value) in &mut subs {
+            let mut dep_subs = Substitutions::new();
+            let target = env.get_variable(*target).clone();
+            let value_deps = env.get_dependencies(*value);
+            let mut value_deps = value_deps.as_variables();
+            for dep in target.get_dependencies() {
+                for desired_dep in env.get_dependencies(*dep).as_variables() {
+                    // We want to convert a dependency in the value to the
+                    // dependency required by the variable it is assigned to.
+                    if let Some(existing_dep) = value_deps.next() {
+                        if existing_dep.id != desired_dep.id {
+                            let desired_dep = env.get_variable(desired_dep.id).construct.unwrap();
+                            dep_subs.insert_no_replace(existing_dep.id, desired_dep);
+                        }
+                    }
+                }
+            }
+            if dep_subs.len() > 0 {
+                *value = env.substitute(*value, &dep_subs);
+            }
+        }
+
         let mut previous_subs = Substitutions::new();
         let mut justifications = Vec::new();
         for (target_id, value) in &subs {

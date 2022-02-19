@@ -19,7 +19,7 @@ impl<'x> Environment<'x> {
             let mut still_unresolved = Vec::new();
             let mut all_dead_ends = true;
             for id in unresolved {
-                println!("{:?} {}", id, limit);
+                println!("Resolving {:?} limit {}", id, limit);
                 if reset_limit {
                     still_unresolved.push(id);
                     continue;
@@ -90,7 +90,11 @@ impl<'x> Environment<'x> {
             let new_def = resolvable.resolve(self, scope, limit);
             match new_def {
                 Ok(new_def) => {
-                    self.constructs[con_id].definition = new_def;
+                    if let ConstructDefinition::Resolved(boxed) = new_def {
+                        self.define_dyn_construct(con_id, boxed);
+                    } else {
+                        self.constructs[con_id].definition = new_def;
+                    }
                     assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
                     Ok(true)
                 }

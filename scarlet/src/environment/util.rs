@@ -1,4 +1,7 @@
-use super::{dependencies::DepResStackFrame, ConstructId, Environment, UnresolvedConstructError, def_equal::IsDefEqual};
+use super::{
+    dependencies::DepResStackFrame, discover_equality::Equal, ConstructId, Environment,
+    UnresolvedConstructError,
+};
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
@@ -100,12 +103,7 @@ impl<'x> Environment<'x> {
     ) -> LookupInvariantResult {
         let generated_invariants = self.generated_invariants(context_id);
         for inv in generated_invariants {
-            if self.is_def_equal(
-                SubExpr(statement, &Default::default()),
-                SubExpr(inv.statement, &Default::default()),
-                limit,
-            ) == Ok(IsDefEqual::Yes)
-            {
+            if self.discover_equal(statement, inv.statement, limit) == Ok(Equal::yes()) {
                 return Ok(inv);
             }
         }

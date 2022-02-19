@@ -1,11 +1,12 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::SubAssign};
 
 use maplit::hashset;
 
 use crate::{
-    constructs::{ConstructId, Invariant},
+    constructs::{substitution::Substitutions, ConstructId, Invariant},
     environment::{
-        def_equal::IsDefEqual, sub_expr::SubExpr, Environment, UnresolvedConstructError,
+        dependencies::Dependencies, discover_equality::Equal, sub_expr::SubExpr, Environment,
+        UnresolvedConstructError,
     },
     shared::TripleBool,
 };
@@ -181,16 +182,18 @@ impl Scope for SRoot {
         limit: u32,
     ) -> LookupInvariantResult {
         let truee = env.get_language_item("true");
-        match env.is_def_equal(
-            SubExpr(invariant, &Default::default()),
-            SubExpr(truee, &Default::default()),
-            limit,
-        )? {
-            IsDefEqual::Yes => Ok(Invariant::new(truee, hashset![])),
-            IsDefEqual::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
-            IsDefEqual::Unknowable | IsDefEqual::No => {
-                Err(LookupInvariantError::DefinitelyDoesNotExist)
+        match env.discover_equal(invariant, truee, limit)? {
+            Equal::Yes(l, r) => {
+                if l.len() == 0 && r.len() == 0 {
+                    Ok(Invariant::new(truee, hashset![]))
+                } else if l.len() > 0 {
+                    Err(LookupInvariantError::DefinitelyDoesNotExist)
+                } else {
+                    unreachable!()
+                }
             }
+            Equal::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
+            Equal::Unknown | Equal::No => Err(LookupInvariantError::DefinitelyDoesNotExist),
         }
     }
 

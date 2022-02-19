@@ -7,7 +7,7 @@ use crate::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
         ConstructId,
     },
-    environment::{Environment, def_equal::IsDefEqual},
+    environment::{discover_equality::Equal, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -51,8 +51,7 @@ fn uncreate<'a>(
                 env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
             {
                 let cstruct = cstruct.clone();
-                if env.is_def_equal_without_subs(cstruct.get_value(), uncreate, 1024)
-                    == Ok(IsDefEqual::Yes)
+                if env.discover_equal(cstruct.get_value(), uncreate, 1024) == Ok(Equal::yes())
                     && from.parent() != Some(id)
                 {
                     return ControlFlow::Break(id);

@@ -3,7 +3,6 @@ use std::{any::Any, collections::HashSet, fmt::Debug};
 use super::{structt::CPopulatedStruct, variable::CVariable};
 use crate::{
     environment::{
-        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
@@ -124,28 +123,6 @@ pub trait Construct: Any + Debug + AnyEq {
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         vec![]
-    }
-
-    #[allow(unused_variables)]
-    fn symm_is_def_equal<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        Ok(IsDefEqual::Unknowable)
-    }
-
-    #[allow(unused_variables)]
-    fn asymm_is_def_equal<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        Ok(IsDefEqual::Unknowable)
     }
 
     #[allow(unused_variables)]

@@ -6,8 +6,8 @@ use super::{
 };
 use crate::{
     environment::{
-        def_equal::DefEqualResult,
         dependencies::{DepResult, Dependencies},
+        discover_equality::{DeqResult, DeqSide},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -77,13 +77,14 @@ impl Construct for CWithDependencies {
         deps
     }
 
-    fn asymm_is_def_equal<'x>(
+    fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        other: SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        env.is_def_equal(SubExpr(self.base, subs), other, recursion_limit)
+        other_id: ConstructId,
+        _other: &dyn Construct,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        env.discover_equal_with_tiebreaker(self.base, other_id, limit, tiebreaker)
     }
 }

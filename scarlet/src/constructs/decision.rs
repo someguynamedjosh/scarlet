@@ -1,7 +1,6 @@
 use super::{downcast_construct, Construct, ConstructId, GenInvResult, Invariant};
 use crate::{
     environment::{
-        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
@@ -72,11 +71,8 @@ impl Construct for CDecision {
         let mut result = Vec::new();
         for true_inv in true_invs {
             for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
-                if env.is_def_equal(
-                    SubExpr(true_inv.statement, &Default::default()),
-                    SubExpr(false_inv.statement, &Default::default()),
-                    4,
-                ) == Ok(IsDefEqual::Yes)
+                if env.discover_equal(true_inv.statement, false_inv.statement, 4)
+                    == Ok(Equal::yes())
                 {
                     let mut deps = true_inv.dependencies;
                     deps.insert(this);
@@ -154,16 +150,16 @@ impl Scope for SWithInvariant {
     ) -> LookupInvariantResult {
         // No, I don't want
         let no_subs = NestedSubstitutions::new();
-        match env.is_def_equal(
-            SubExpr(self.0.statement, &no_subs),
-            SubExpr(invariant, &no_subs),
-            limit,
-        )? {
-            IsDefEqual::Yes => Ok(self.0.clone()),
-            IsDefEqual::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
-            IsDefEqual::No | IsDefEqual::Unknowable => {
-                Err(LookupInvariantError::DefinitelyDoesNotExist)
+        match env.discover_equal(self.0.statement, invariant, limit)? {
+            Equal::Yes(l, r) => {
+                if l.len() == 0 && r.len() == 0 {
+                    Ok(self.0.clone())
+                } else {
+                    Err(LookupInvariantError::DefinitelyDoesNotExist)
+                }
             }
+            Equal::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
+            Equal::No | Equal::Unknown => Err(LookupInvariantError::DefinitelyDoesNotExist),
         }
     }
 

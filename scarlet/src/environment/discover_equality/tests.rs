@@ -10,7 +10,7 @@ use crate::{
         variable::{CVariable, Variable, VariableId},
         ConstructId,
     },
-    environment::{def_equal::IsDefEqual, discover_equality::Equal, Environment},
+    environment::{discover_equality::Equal, Environment},
     scope::SRoot,
     shared::TripleBool,
 };
@@ -328,4 +328,56 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
     } else {
         unreachable!()
     }
+}
+
+#[test]
+fn fx_sub_sub_gy_sub_a_is_gy_sub_a() {
+    let mut env = env();
+
+    let a = env.unique();
+    let x = env.variable_full();
+    let y = env.variable_full();
+    let g = env.variable_full_with_deps(vec![y.0]);
+    let gx = env.substitute(g.0, &subs(vec![(y.1, x.0)]));
+
+    let f = env.variable_full_with_deps(vec![x.0]);
+    let f_sub_gx = env.substitute(f.0, &subs(vec![(f.1, gx)]));
+    let f_sub_gx_sub_a = env.substitute(f_sub_gx, &subs(vec![(x.1, a)]));
+
+    let gx_sub_a = env.substitute(gx, &subs(vec![(y.1, a)]));
+
+    assert_eq!(
+        env.discover_equal(f_sub_gx_sub_a, gx_sub_a, 5),
+        Ok(Equal::yes())
+    );
+    assert_eq!(
+        env.discover_equal(gx_sub_a, f_sub_gx_sub_a, 5),
+        Ok(Equal::yes())
+    );
+}
+
+#[test]
+fn fx_sub_a_sub_gy_is_gy_sub_a() {
+    let mut env = env();
+
+    let a = env.unique();
+
+    let y = env.variable_full();
+    let g = env.variable_full_with_deps(vec![y.0]);
+
+    let x = env.variable_full();
+    let f = env.variable_full_with_deps(vec![x.0]);
+    let f_sub_a = env.substitute(f.0, &subs(vec![(x.1, a)]));
+    let f_sub_a_sub_gy = env.substitute(f_sub_a, &subs(vec![(f.1, g.0)]));
+
+    let gy_sub_a = env.substitute(g.0, &subs(vec![(y.1, a)]));
+
+    assert_eq!(
+        env.discover_equal(f_sub_a_sub_gy, gy_sub_a, 4),
+        Ok(Equal::yes())
+    );
+    assert_eq!(
+        env.discover_equal(gy_sub_a, f_sub_a_sub_gy, 4),
+        Ok(Equal::yes())
+    );
 }

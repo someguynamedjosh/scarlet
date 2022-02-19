@@ -1,8 +1,8 @@
-use super::{as_struct, base::ConstructId, Construct, GenInvResult};
+use super::{as_struct, base::ConstructId, downcast_construct, Construct, GenInvResult};
 use crate::{
     environment::{
-        def_equal::{DefEqualResult, IsDefEqual},
         dependencies::{DepResult, Dependencies},
+        discover_equality::{DeqResult, DeqSide, Equal},
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -64,33 +64,25 @@ impl Construct for CPopulatedStruct {
         deps
     }
 
-    fn symm_is_def_equal<'x>(
+    fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        subs: &NestedSubstitutions,
-        SubExpr(other, other_subs): SubExpr,
-        recursion_limit: u32,
-    ) -> DefEqualResult {
-        assert_ne!(recursion_limit, 0);
-        if let Some(other) = env.get_and_downcast_construct_definition::<Self>(other)? {
+        other_id: ConstructId,
+        other: &dyn Construct,
+        limit: u32,
+        tiebreaker: DeqSide,
+    ) -> DeqResult {
+        if let Some(other) = downcast_construct::<Self>(other) {
             let other = other.clone();
             if self.label != other.label {
-                return Ok(IsDefEqual::No);
+                return Ok(Equal::No);
             }
-            Ok(IsDefEqual::and(vec![
-                env.is_def_equal(
-                    SubExpr(self.value, subs),
-                    SubExpr(other.value, other_subs),
-                    recursion_limit - 1,
-                )?,
-                env.is_def_equal(
-                    SubExpr(self.rest, subs),
-                    SubExpr(other.rest, other_subs),
-                    recursion_limit - 1,
-                )?,
+            Ok(Equal::and(vec![
+                env.discover_equal_with_tiebreaker(self.value, other.value, limit, tiebreaker)?,
+                env.discover_equal_with_tiebreaker(self.rest, other.rest, limit, tiebreaker)?,
             ]))
         } else {
-            Ok(IsDefEqual::Unknowable)
+            Ok(Equal::Unknown)
         }
     }
 }
@@ -197,14 +189,11 @@ impl Scope for SField {
             let structt = structt.clone();
             let mut any_unknown = false;
             for maybe_match in env.generated_invariants(structt.value) {
-                match env.is_def_equal(
-                    SubExpr(invariant, &Default::default()),
-                    SubExpr(maybe_match.statement, &Default::default()),
-                    limit,
-                )? {
-                    IsDefEqual::Yes => return Ok(maybe_match),
-                    IsDefEqual::NeedsHigherLimit => any_unknown = true,
-                    IsDefEqual::Unknowable | IsDefEqual::No => (),
+                match env.discover_equal(invariant, maybe_match.statement, limit)? {
+                    Equal::Yes(l, r) if l.len() == 0 && r.len() == 0 => return Ok(maybe_match),
+                    Equal::Yes(..) => (),
+                    Equal::NeedsHigherLimit => any_unknown = true,
+                    Equal::Unknown | Equal::No => (),
                 }
             }
             Err(if any_unknown {
@@ -263,14 +252,11 @@ fn lookup_invariant_in<'x>(
 ) -> LookupInvariantResult {
     let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
     for maybe_match in env.generated_invariants(inn.value) {
-        match env.is_def_equal(
-            SubExpr(invariant, &Default::default()),
-            SubExpr(maybe_match.statement, &Default::default()),
-            limit,
-        )? {
-            IsDefEqual::Yes => return Ok(maybe_match),
-            IsDefEqual::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
-            IsDefEqual::No | IsDefEqual::Unknowable => (),
+        match env.discover_equal(invariant, maybe_match.statement, limit)? {
+            Equal::Yes(l, r) if l.len() == 0 && r.len() == 0 => return Ok(maybe_match),
+            Equal::Yes(..) => (),
+            Equal::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
+            Equal::No | Equal::Unknown => (),
         }
     }
     if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)?) {

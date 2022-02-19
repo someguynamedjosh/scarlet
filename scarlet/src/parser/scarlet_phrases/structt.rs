@@ -5,7 +5,7 @@ use crate::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ConstructId,
     },
-    environment::{Environment, def_equal::IsDefEqual},
+    environment::{discover_equality::Equal, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -96,9 +96,7 @@ fn uncreate<'a>(
         }
     }
     Ok(
-        if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"), 1024)?
-            == IsDefEqual::Yes
-        {
+        if env.discover_equal(maybe_structt, env.get_language_item("void"), 1024)? == Equal::yes() {
             Some(Node {
                 phrase: "struct",
                 children: vec![
