@@ -164,10 +164,16 @@ impl Construct for CVariable {
             Ok(Equal::Yes(subs, Default::default()))
         } else {
             let var = var.clone();
-            let var_deps = var.get_var_dependencies(env);
-            let other_deps = env.get_dependencies(other_id);
+            let mut var_deps = var.get_var_dependencies(env);
+            let mut other_deps = env.get_dependencies(other_id);
             if other_deps.num_variables() < var_deps.num_variables() {
                 return Ok(Equal::Unknown);
+            }
+            for var in var_deps.clone().as_variables() {
+                if other_deps.contains(var) {
+                    var_deps.remove(var.id);
+                    other_deps.remove(var.id);
+                }
             }
             let mut subs = Substitutions::new();
             let mut other_subs = Substitutions::new();

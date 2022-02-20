@@ -186,6 +186,22 @@ fn fx_is_gy() {
 }
 
 #[test]
+fn fx_sub_gy_is_gy_sub_x() {
+    let mut env = env();
+    let x = env.variable_full();
+    let y = env.variable_full();
+    let f = env.variable_full_with_deps(vec![x.0]);
+    let g = env.variable_full_with_deps(vec![y.0]);
+
+    let gx = env.substitute(g.0, &subs(vec![(y.1, x.0)]));
+    let fx_sub_gy = env.substitute(f.0, &subs(vec![(f.1, gx)]));
+
+    assert_eq!(env.discover_equal(fx_sub_gy, gx, 6), Ok(Equal::yes()));
+    assert_eq!(env.discover_equal(gx, fx_sub_gy, 6), Ok(Equal::yes()));
+    assert_eq!(env.discover_equal(gx, fx_sub_gy, 1), Ok(Equal::NeedsHigherLimit));
+}
+
+#[test]
 fn fx_sub_nothing_is_gy_sub_nothing() {
     let mut env = env();
     let x = env.variable_full();

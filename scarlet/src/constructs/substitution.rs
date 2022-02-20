@@ -144,11 +144,23 @@ impl Construct for CSubstitution {
                         value_subs.insert_no_replace(dep.id, rep);
                     }
                 }
-                let new_value = if value_subs.len() > 0 {
-                    env.substitute(value, &value_subs)
-                } else {
-                    value
-                };
+                let mut new_value = env.substitute(value, &value_subs);
+                // Special handling of things like x[x IS y] and u[u IS v]
+                if value_subs.len() == 1 {
+                    let &(value_sub_target, value_sub_value) = value_subs.iter().next().unwrap();
+                    let value_sub_target = env.get_variable(value_sub_target);
+                    if value == value_sub_target.construct.unwrap() {
+                        new_value = value_sub_value;
+                    }
+                }
+                
+                // Special handling of substitutions like x IS x and u IS u.
+                let target_con = env.get_variable(target).construct.unwrap();
+                if target_con == new_value {
+                    continue;
+                }
+
+                println!("{:?} is {:?} sub {:?}", new_value, value, &value_subs);
                 let this_sub = vec![(target, new_value)].into_iter().collect();
                 result = Equal::and(vec![result, Equal::Yes(Default::default(), this_sub)])
             }

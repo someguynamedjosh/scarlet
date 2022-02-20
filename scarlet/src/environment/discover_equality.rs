@@ -142,10 +142,14 @@ impl<'x> Environment<'x> {
     ) -> DeqResult {
         let left = self.dereference(left)?;
         let right = self.dereference(right)?;
+        println!();
+        println!("{:?} = {:?}?", left, right);
         if left == right {
+            println!("Ok({:?})", Equal::yes());
             return Ok(Equal::yes());
         }
         if limit == 0 {
+            println!("Ok({:?})", Equal::NeedsHigherLimit);
             return Ok(Equal::NeedsHigherLimit);
         }
         // For now this produces no noticable performance improvements.
@@ -157,6 +161,7 @@ impl<'x> Environment<'x> {
             let right_def = self.get_construct_definition(right)?.dyn_clone();
             let left_prio = left_def.deq_priority();
             let right_prio = right_def.deq_priority();
+            println!("{:#?} = {:#?}", left_def, right_def);
             let preference = if left_prio > right_prio {
                 DeqSide::Left
             } else if right_prio > left_prio {
@@ -173,6 +178,7 @@ impl<'x> Environment<'x> {
                 Ok(res?.swapped())
             }
         })();
+        println!("{:?}", result);
         // self.def_equal_memo_table
         //     .insert((left, right, limit).convert(), result.clone());
         result

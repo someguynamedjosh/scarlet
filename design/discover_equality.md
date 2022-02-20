@@ -54,3 +54,33 @@ fx[x IS a][fx IS gy] =<= gy[a]
         Yes([fx IS gy[y IS x]], [])
     Yes([fx IS gy[y IS x]], [])
 ```
+```rs
+fx[fx IS gy[x]] =<= gy[x]
+    gy[y IS x] =>= fx
+        fx =<= gy
+            Yes([fx IS gy[y IS x]   x IS y], [])
+        Yes([], [fx IS gy[y IS x]   x IS y])
+        Yes([], [fx IS gy[y IS x]])
+    Yes([fx IS gy[y IS x]], [])
+    gy[x] =<= gy[x]
+        gy[x] =>= gy
+            gy =>= gy
+                Yes([], [])
+            Yes([], [])
+            Yes([], [x IS y])
+        Yes([x IS y], [])
+        y =<= y
+            Yes([], [])
+        Yes([], [])
+    Yes([], [])
+```
+```rs
+abc[x IS y][y IS x] =<= abc
+    abc[x IS y] =<= abc
+        abc =<= abc
+            Yes([], [])
+        Yes([], [])
+        Yes([], [x IS y])
+    Yes([], [x IS y])
+    Yes([], [x IS y[y IS x]])
+```

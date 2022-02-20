@@ -9,7 +9,7 @@ use crate::constructs::variable::{Dependency, VariableId};
 pub struct DepResStackFrame(pub(super) ConstructId);
 pub type DepResStack = Vec<DepResStackFrame>;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Dependencies {
     eager: Vec<Dependency>,
     /// Signifies this dependency list was built without considering the full
