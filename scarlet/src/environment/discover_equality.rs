@@ -2,7 +2,7 @@ mod tests;
 
 use super::{sub_expr::OwnedSubExpr, Environment, UnresolvedConstructError};
 use crate::{
-    constructs::{substitution::Substitutions, ConstructId},
+    constructs::{substitution::Substitutions, variable::VariableId, ConstructId},
     environment::sub_expr::SubExpr,
     shared::TripleBool,
     util::{IsomorphicKeyIndexable, Isomorphism},
@@ -87,7 +87,7 @@ impl Equal {
     pub fn without_subs(self) -> Self {
         match self {
             Self::Yes(..) => Self::yes(),
-            other => other
+            other => other,
         }
     }
 }
@@ -124,6 +124,16 @@ pub struct DiscoverEqualQuery {
 }
 
 impl<'x> Environment<'x> {
+    pub fn are_same_construct(
+        &mut self,
+        left: ConstructId,
+        right: ConstructId,
+    ) -> Result<bool, UnresolvedConstructError> {
+        let left = self.dereference(left)?;
+        let right = self.dereference(right)?;
+        Ok(left == right)
+    }
+
     pub fn discover_equal(
         &mut self,
         left: ConstructId,

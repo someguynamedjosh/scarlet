@@ -1,6 +1,10 @@
 use std::{any::Any, collections::HashSet, fmt::Debug};
 
-use super::{structt::CPopulatedStruct, variable::CVariable};
+use super::{
+    structt::CPopulatedStruct,
+    substitution::Substitutions,
+    variable::{CVariable, VariableId},
+};
 use crate::{
     environment::{
         dependencies::DepResult,

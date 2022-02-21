@@ -145,6 +145,7 @@ impl Construct for CSubstitution {
                     }
                 }
                 let mut new_value = env.substitute(value, &value_subs);
+
                 // Special handling of things like x[x IS y] and u[u IS v]
                 if value_subs.len() == 1 {
                     let &(value_sub_target, value_sub_value) = value_subs.iter().next().unwrap();
