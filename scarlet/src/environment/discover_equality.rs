@@ -145,7 +145,7 @@ impl<'x> Environment<'x> {
         let right_first =
             self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default().swapped())?;
         if let (Equal::Yes(ll, lr), Equal::Yes(rl, rr)) = (&left_first, &right_first){
-            if ll.len() + lr.len() < rr.len() + rl.len() {
+            if ll.len() + lr.len() <= rr.len() + rl.len() {
                 Ok(left_first)
             } else {
                 Ok(right_first)

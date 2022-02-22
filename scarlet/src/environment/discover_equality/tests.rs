@@ -198,7 +198,10 @@ fn fx_sub_gy_is_gy_sub_x() {
 
     assert_eq!(env.discover_equal(fx_sub_gy, gx, 6), Ok(Equal::yes()));
     assert_eq!(env.discover_equal(gx, fx_sub_gy, 6), Ok(Equal::yes()));
-    assert_eq!(env.discover_equal(gx, fx_sub_gy, 1), Ok(Equal::NeedsHigherLimit));
+    assert_eq!(
+        env.discover_equal(gx, fx_sub_gy, 1),
+        Ok(Equal::NeedsHigherLimit)
+    );
 }
 
 #[test]
@@ -347,27 +350,36 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
 }
 
 #[test]
-fn fx_sub_sub_gy_sub_a_is_gy_sub_a() {
+fn fx_sub_gy_sub_a_is_gy_sub_a() {
     let mut env = env();
 
+    // 13
     let a = env.unique();
+    // 14
     let x = env.variable_full();
+    // 15
     let y = env.variable_full();
+    // 16
     let g = env.variable_full_with_deps(vec![y.0]);
+    // 17
     let gx = env.substitute(g.0, &subs(vec![(y.1, x.0)]));
 
+    // 18
     let f = env.variable_full_with_deps(vec![x.0]);
+    // 19
     let f_sub_gx = env.substitute(f.0, &subs(vec![(f.1, gx)]));
+    // 20
     let f_sub_gx_sub_a = env.substitute(f_sub_gx, &subs(vec![(x.1, a)]));
 
-    let gx_sub_a = env.substitute(gx, &subs(vec![(y.1, a)]));
+    // 21
+    let gy_sub_a = env.substitute(g.0, &subs(vec![(y.1, a)]));
 
     assert_eq!(
-        env.discover_equal(f_sub_gx_sub_a, gx_sub_a, 5),
+        env.discover_equal(f_sub_gx_sub_a, gy_sub_a, 5),
         Ok(Equal::yes())
     );
     assert_eq!(
-        env.discover_equal(gx_sub_a, f_sub_gx_sub_a, 5),
+        env.discover_equal(gy_sub_a, f_sub_gx_sub_a, 5),
         Ok(Equal::yes())
     );
 }
@@ -378,13 +390,14 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
 
     let a = env.unique();
 
+    let x = env.variable_full();
     let y = env.variable_full();
     let g = env.variable_full_with_deps(vec![y.0]);
+    let gx = env.substitute(g.0, &subs(vec![(y.1, x.0)]));
 
-    let x = env.variable_full();
     let f = env.variable_full_with_deps(vec![x.0]);
     let f_sub_a = env.substitute(f.0, &subs(vec![(x.1, a)]));
-    let f_sub_a_sub_gy = env.substitute(f_sub_a, &subs(vec![(f.1, g.0)]));
+    let f_sub_a_sub_gy = env.substitute(f_sub_a, &subs(vec![(f.1, gx)]));
 
     let gy_sub_a = env.substitute(g.0, &subs(vec![(y.1, a)]));
 
