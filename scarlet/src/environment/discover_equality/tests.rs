@@ -10,69 +10,8 @@ use crate::{
         variable::{CVariable, Variable, VariableId},
         ConstructId,
     },
-    environment::{discover_equality::Equal, Environment},
-    scope::SRoot,
-    shared::TripleBool,
+    environment::{discover_equality::Equal, test_util::*, Environment},
 };
-
-fn env<'a>() -> Environment<'a> {
-    Environment::new()
-}
-
-impl<'a> Environment<'a> {
-    fn decision(
-        &mut self,
-        left: ConstructId,
-        right: ConstructId,
-        equal: ConstructId,
-        unequal: ConstructId,
-    ) -> ConstructId {
-        self.push_construct(CDecision::new(left, right, equal, unequal), Box::new(SRoot))
-    }
-
-    fn unique(&mut self) -> ConstructId {
-        let id = self.push_unique();
-        self.push_construct(CUnique::new(id), Box::new(SRoot))
-    }
-
-    fn variable(&mut self) -> ConstructId {
-        let id = self.push_variable(Variable {
-            id: None,
-            construct: None,
-            invariants: vec![],
-            dependencies: vec![],
-        });
-        self.push_construct(CVariable::new(id), Box::new(SRoot))
-    }
-
-    fn variable_full(&mut self) -> (ConstructId, VariableId) {
-        let id = self.push_variable(Variable {
-            id: None,
-            construct: None,
-            invariants: vec![],
-            dependencies: vec![],
-        });
-        let con = CVariable::new(id);
-        let cid = self.push_construct(con.clone(), Box::new(SRoot));
-        (cid, id)
-    }
-
-    fn variable_full_with_deps(&mut self, deps: Vec<ConstructId>) -> (ConstructId, VariableId) {
-        let id = self.push_variable(Variable {
-            id: None,
-            construct: None,
-            invariants: vec![],
-            dependencies: deps,
-        });
-        let con = CVariable::new(id);
-        let cid = self.push_construct(con.clone(), Box::new(SRoot));
-        (cid, id)
-    }
-}
-
-fn subs(from: Vec<(VariableId, ConstructId)>) -> Substitutions {
-    from.into_iter().collect()
-}
 
 #[test]
 fn something_equals_itself() {

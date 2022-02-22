@@ -1,15 +1,16 @@
-use super::{downcast_construct, Construct, ConstructId, GenInvResult, Invariant};
+use super::{downcast_construct, Construct, ConstructId, GenInvResult};
 use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
+        invariants::Invariant,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
+        Scope, LookupSimilarInvariantResult,
     },
     shared::TripleBool,
 };
@@ -119,7 +120,10 @@ impl Construct for CDecision {
 }
 
 #[derive(Clone, Debug)]
-pub struct SWithInvariant(pub Invariant, pub ConstructId);
+pub struct SWithInvariant(
+    pub crate::environment::invariants::Invariant,
+    pub ConstructId,
+);
 
 impl Scope for SWithInvariant {
     fn dyn_clone(&self) -> Box<dyn Scope> {
@@ -147,13 +151,13 @@ impl Scope for SWithInvariant {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         // No, I don't want
         let no_subs = NestedSubstitutions::new();
         match env.discover_equal(self.0.statement, invariant, limit)? {
             Equal::Yes(l, r) => {
-                if l.len() == 0 && r.len() == 0 {
-                    Ok(self.0.clone())
+                if r.len() == 0 {
+                    Ok((self.0.clone(), Equal::Yes(l, r)))
                 } else {
                     Err(LookupInvariantError::DefinitelyDoesNotExist)
                 }

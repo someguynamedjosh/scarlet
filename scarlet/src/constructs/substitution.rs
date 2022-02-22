@@ -1,11 +1,12 @@
 use super::{
     variable::{CVariable, VariableId},
-    Construct, ConstructId, GenInvResult, Invariant,
+    Construct, ConstructId, GenInvResult,
 };
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
+        invariants::Invariant,
         sub_expr::{NestedSubstitutions, SubExpr},
         CheckResult, Environment,
     },
@@ -20,11 +21,15 @@ pub type Substitutions = OrderedMap<VariableId, ConstructId>;
 pub struct CSubstitution {
     base: ConstructId,
     subs: Substitutions,
-    invs: Vec<Invariant>,
+    invs: Vec<crate::environment::invariants::Invariant>,
 }
 
 impl CSubstitution {
-    pub fn new<'x>(base: ConstructId, subs: Substitutions, invs: Vec<Invariant>) -> Self {
+    pub fn new<'x>(
+        base: ConstructId,
+        subs: Substitutions,
+        invs: Vec<crate::environment::invariants::Invariant>,
+    ) -> Self {
         Self { base, subs, invs }
     }
 
@@ -154,7 +159,7 @@ impl Construct for CSubstitution {
                         new_value = value_sub_value;
                     }
                 }
-                
+
                 // Special handling of substitutions like x IS x and u IS u.
                 let target_con = env.get_variable(target).construct.unwrap();
                 if target_con == new_value {

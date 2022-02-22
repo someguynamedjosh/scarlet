@@ -5,9 +5,9 @@ use crate::{
     constructs::{
         substitution::{CSubstitution, Substitutions},
         variable::CVariable,
-        ConstructDefinition, ConstructId, Invariant,
+        ConstructDefinition, ConstructId,
     },
-    environment::{dependencies::Dependencies, Environment},
+    environment::{dependencies::Dependencies, invariants::Invariant, Environment},
     scope::Scope,
     shared::OrderedMap,
 };
@@ -53,7 +53,7 @@ fn create_invariants(
     base: ConstructId,
     subs: &Substitutions,
     justification_deps: HashSet<ConstructId>,
-) -> Result<Vec<Invariant>, ResolveError> {
+) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
     let mut invs = Vec::new();
     for inv in env.generated_invariants(base) {
         let mut new_inv = inv;
@@ -86,7 +86,9 @@ fn create_invariants(
     Ok(invs)
 }
 
-fn extract_invariant_dependencies(justifications: Vec<Invariant>) -> HashSet<ConstructId> {
+fn extract_invariant_dependencies(
+    justifications: Vec<crate::environment::invariants::Invariant>,
+) -> HashSet<ConstructId> {
     justifications
         .iter()
         .flat_map(|j| j.dependencies.iter().copied())
@@ -100,7 +102,7 @@ fn find_justifications(
     subs: &Substitutions,
     env: &mut Environment,
     limit: u32,
-) -> Result<Vec<Invariant>, ResolveError> {
+) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
     let mut justifications = Vec::new();
     let mut previous_subs = Substitutions::new();
     for (target_id, value) in subs {

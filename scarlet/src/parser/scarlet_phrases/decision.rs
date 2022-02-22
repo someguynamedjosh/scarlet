@@ -3,9 +3,9 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         decision::{CDecision, SWithInvariant},
-        ConstructId, Invariant,
+        ConstructId,
     },
-    environment::Environment,
+    environment::{invariants::Invariant, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},

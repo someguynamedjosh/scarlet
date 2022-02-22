@@ -3,10 +3,10 @@ use std::{fmt::Debug, ops::SubAssign};
 use maplit::hashset;
 
 use crate::{
-    constructs::{substitution::Substitutions, ConstructId, Invariant},
+    constructs::{substitution::Substitutions, ConstructId},
     environment::{
-        dependencies::Dependencies, discover_equality::Equal, sub_expr::SubExpr, Environment,
-        UnresolvedConstructError,
+        dependencies::Dependencies, discover_equality::Equal, invariants::Invariant,
+        sub_expr::SubExpr, Environment, UnresolvedConstructError,
     },
     shared::TripleBool,
 };
@@ -14,8 +14,11 @@ use crate::{
 pub type LookupIdentResult = Result<Option<ConstructId>, UnresolvedConstructError>;
 pub type ReverseLookupIdentResult = Result<Option<String>, UnresolvedConstructError>;
 pub type LookupInvariantResult = Result<Invariant, LookupInvariantError>;
+/// The LHS of the Equal instance describes what needs to be substituted for the
+/// invariant to match the original statement that was queried.
+pub type LookupSimilarInvariantResult = Result<(Invariant, Equal), LookupInvariantError>;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum LookupInvariantError {
     Unresolved(UnresolvedConstructError),
     MightNotExist,
@@ -46,7 +49,7 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupInvariantResult;
+    ) -> LookupSimilarInvariantResult;
     fn parent(&self) -> Option<ConstructId>;
 
     fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
@@ -87,7 +90,7 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         let result = self.local_lookup_invariant(env, invariant, limit);
         match result {
             Ok(inv) => Ok(inv),
@@ -142,7 +145,7 @@ impl Scope for SPlain {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
@@ -180,12 +183,12 @@ impl Scope for SRoot {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         let truee = env.get_language_item("true");
         match env.discover_equal(invariant, truee, limit)? {
             Equal::Yes(l, r) => {
                 if l.len() == 0 && r.len() == 0 {
-                    Ok(Invariant::new(truee, hashset![]))
+                    Ok((Invariant::new(truee, hashset![]), Equal::yes()))
                 } else if l.len() > 0 {
                     Err(LookupInvariantError::DefinitelyDoesNotExist)
                 } else {
@@ -235,7 +238,7 @@ impl Scope for SPlaceholder {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         unreachable!()
     }
 
@@ -273,7 +276,7 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         self.0.local_lookup_invariant(env, invariant, limit)
     }
 

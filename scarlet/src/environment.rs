@@ -8,6 +8,8 @@ pub mod resolve;
 pub mod sub_expr;
 pub mod util;
 mod vomit;
+pub mod invariants;
+mod test_util;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
@@ -267,7 +269,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(crate) fn language_item_names(&self) -> impl Iterator<Item = &&'static str> {
-        self.language_items.keys()
+    pub(crate) fn language_item_names(&self) -> impl Iterator<Item = &'static str> {
+        LANGUAGE_ITEM_NAMES.iter().copied()
     }
 }

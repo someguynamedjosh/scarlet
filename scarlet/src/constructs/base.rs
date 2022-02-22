@@ -17,21 +17,6 @@ use crate::{
     shared::{AnyEq, Id, Pool, TripleBool},
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Invariant {
-    pub statement: ConstructId,
-    pub dependencies: HashSet<ConstructId>,
-}
-
-impl Invariant {
-    pub fn new(statement: ConstructId, dependencies: HashSet<ConstructId>) -> Self {
-        Self {
-            statement,
-            dependencies,
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum ConstructDefinition<'x> {
     Other(ConstructId),
@@ -91,7 +76,7 @@ impl<'x> From<ConstructId> for ConstructDefinition<'x> {
 pub struct AnnotatedConstruct<'x> {
     pub definition: ConstructDefinition<'x>,
     pub reduced: ConstructDefinition<'x>,
-    pub invariants: Option<Vec<Invariant>>,
+    pub invariants: Option<Vec<crate::environment::invariants::Invariant>>,
     pub scope: Box<dyn Scope>,
     /// A dex that, when a value is plugged in for its first dependency, will
     /// evaluate to true if and only if the plugged in value could have been
@@ -102,7 +87,7 @@ pub struct AnnotatedConstruct<'x> {
 pub type ConstructPool<'x> = Pool<AnnotatedConstruct<'x>, 'C'>;
 pub type ConstructId = Id<'C'>;
 
-pub type GenInvResult = Vec<Invariant>;
+pub type GenInvResult = Vec<crate::environment::invariants::Invariant>;
 
 pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {

@@ -5,10 +5,10 @@ use super::{
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
-        ConstructDefinition, GenInvResult, Invariant,
+        ConstructDefinition, GenInvResult,
     },
-    environment::sub_expr::SubExpr,
-    scope::{LookupInvariantResult, Scope},
+    environment::{invariants::Invariant, sub_expr::SubExpr},
+    scope::{LookupIdentResult, LookupInvariantResult, Scope},
     shared::TripleBool,
 };
 
@@ -24,6 +24,13 @@ impl<'x> Environment<'x> {
             ConstructDefinition::Resolved(_) => &*self.get_construct(con_id).scope,
             ConstructDefinition::Unresolved(_) => unreachable!(),
         }
+    }
+
+    pub fn lookup_ident(&mut self, con_id: ConstructId, ident: &str) -> LookupIdentResult {
+        self.constructs[con_id]
+            .scope
+            .dyn_clone()
+            .lookup_ident(self, ident)
     }
 
     pub(super) fn get_construct_definition_no_deref(
@@ -71,43 +78,5 @@ impl<'x> Environment<'x> {
         Ok(downcast_construct(
             &**self.get_construct_definition(con_id)?,
         ))
-    }
-
-    pub fn generated_invariants(&mut self, con_id: ConstructId) -> GenInvResult {
-        for frame in &self.dep_res_stack {
-            if frame.0 == con_id {
-                return Vec::new();
-            }
-        }
-
-        self.dep_res_stack.push(DepResStackFrame(con_id));
-        let context = match self.get_construct_definition(con_id) {
-            Ok(ok) => ok,
-            Err(_err) => {
-                self.dep_res_stack.pop();
-                return Vec::new();
-            }
-        };
-        let context = context.dyn_clone();
-        let invs = context.generated_invariants(con_id, self);
-        self.constructs[con_id].invariants = Some(invs.clone());
-        self.dep_res_stack.pop();
-        invs
-    }
-
-    pub fn get_produced_invariant(
-        &mut self,
-        statement: ConstructId,
-        context_id: ConstructId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        let generated_invariants = self.generated_invariants(context_id);
-        for inv in generated_invariants {
-            if self.discover_equal(statement, inv.statement, limit) == Ok(Equal::yes()) {
-                return Ok(inv);
-            }
-        }
-        let scope = self.get_construct(context_id).scope.dyn_clone();
-        scope.lookup_invariant_limited(self, statement, limit)
     }
 }

@@ -3,10 +3,10 @@ use maplit::hashset;
 
 use super::{base::Construct, downcast_construct, ConstructId, GenInvResult};
 use crate::{
-    constructs::Invariant,
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqResult, DeqSide, Equal},
+        invariants::Invariant,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -32,7 +32,7 @@ impl CAxiom {
 
     pub fn get_statement(&self, env: &mut Environment) -> &'static str {
         for limit in 0..32 {
-            for lang_item_name in env.language_item_names().copied().collect_vec() {
+            for lang_item_name in env.language_item_names() {
                 let lang_item = env.get_language_item(lang_item_name);
                 if env.discover_equal(self.statement, lang_item, limit) == Ok(Equal::yes()) {
                     return lang_item_name;

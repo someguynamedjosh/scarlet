@@ -4,19 +4,20 @@ use super::{
     base::{Construct, ConstructId},
     downcast_construct,
     substitution::Substitutions,
-    GenInvResult, Invariant,
+    GenInvResult,
 };
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, Equal},
+        invariants::Invariant,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment, UnresolvedConstructError,
     },
     impl_any_eq_for_construct,
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
+        Scope, LookupSimilarInvariantResult,
     },
     shared::{Id, Pool, TripleBool},
 };
@@ -77,17 +78,18 @@ impl Variable {
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
         limit: u32,
-    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError> {
+    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError>
+    {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
-            match env.get_produced_invariant(subbed, value, limit) {
+            match env.justify(subbed, value, limit) {
                 Ok(inv) => invariants.push(inv),
                 Err(LookupInvariantError::DefinitelyDoesNotExist) => {
                     return Ok(Err(format!(
-                        "Failed to find invariant: {}",
+                        "Failed to justify: {}",
                         env.show(subbed, value)?
                     )));
                 }
@@ -221,7 +223,7 @@ impl Scope for SVariableInvariants {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> LookupInvariantResult {
+    ) -> LookupSimilarInvariantResult {
         Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
