@@ -90,6 +90,13 @@ impl Equal {
             other => other,
         }
     }
+
+    /// Returns `true` if the equal is [`NeedsHigherLimit`].
+    ///
+    /// [`NeedsHigherLimit`]: Equal::NeedsHigherLimit
+    pub fn is_needs_higher_limit(&self) -> bool {
+        matches!(self, Self::NeedsHigherLimit)
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

@@ -3,6 +3,7 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqResult, DeqSide, Equal},
+        invariants::InvariantMatch,
         sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
@@ -251,9 +252,12 @@ fn lookup_invariant_in<'x>(
     limit: u32,
 ) -> LookupSimilarInvariantResult {
     let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
+    let mut best_match = InvariantMatch::new();
     for maybe_match in env.generated_invariants(inn.value) {
         match env.discover_equal(invariant, maybe_match.statement, limit)? {
-            Equal::Yes(l, r) if r.len() == 0 => return Ok((maybe_match, Equal::Yes(l, r))),
+            Equal::Yes(l, r) if r.len() == 0 => {
+                best_match.switch_if_better((maybe_match, Equal::Yes(l, r)))
+            }
             Equal::Yes(..) => (),
             Equal::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
             Equal::No | Equal::Unknown => (),
