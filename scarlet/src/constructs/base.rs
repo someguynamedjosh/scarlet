@@ -1,20 +1,15 @@
-use std::{any::Any, collections::HashSet, fmt::Debug};
+use std::{any::Any, fmt::Debug};
 
-use super::{
-    structt::CPopulatedStruct,
-    substitution::Substitutions,
-    variable::{CVariable, VariableId},
-};
+use super::{structt::CPopulatedStruct, variable::CVariable};
 use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        sub_expr::{NestedSubstitutions, SubExpr},
-        CheckResult, Environment, UnresolvedConstructError,
+        CheckResult, Environment,
     },
     resolvable::BoxedResolvable,
     scope::Scope,
-    shared::{AnyEq, Id, Pool, TripleBool},
+    shared::{AnyEq, Id, Pool},
 };
 
 #[derive(Debug)]

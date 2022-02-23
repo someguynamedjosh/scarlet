@@ -3,11 +3,10 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
-    shared::{Id, Pool, TripleBool},
+    shared::{Id, Pool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

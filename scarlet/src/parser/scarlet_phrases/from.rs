@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{decision::CDecision, ConstructId},
+    constructs::ConstructId,
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -10,7 +10,6 @@ use crate::{
     phrase,
     resolvable::from::RFrom,
     scope::{SPlain, Scope},
-    shared::TripleBool,
 };
 
 fn create<'x>(
@@ -30,11 +29,11 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
-    env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    _pc: &ParseContext,
+    _env: &mut Environment,
+    _code_arena: &'a Arena<String>,
+    _uncreate: ConstructId,
+    _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

@@ -13,7 +13,6 @@ use crate::{
     },
     phrase,
     scope::Scope,
-    shared::TripleBool,
 };
 
 fn struct_from_fields<'x>(

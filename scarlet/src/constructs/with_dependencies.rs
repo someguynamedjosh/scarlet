@@ -8,7 +8,6 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqResult, DeqSide},
-        sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,

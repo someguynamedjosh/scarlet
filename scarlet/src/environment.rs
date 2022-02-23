@@ -1,15 +1,15 @@
 pub mod dependencies;
 pub mod discover_equality;
 pub mod from;
+pub mod invariants;
 pub mod overlay;
 pub mod path;
 mod reduce;
 pub mod resolve;
 pub mod sub_expr;
+mod test_util;
 pub mod util;
 mod vomit;
-pub mod invariants;
-mod test_util;
 
 use std::{collections::HashMap, ops::ControlFlow};
 

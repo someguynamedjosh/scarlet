@@ -6,7 +6,6 @@ use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqResult, DeqSide},
-        sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
@@ -48,7 +47,7 @@ impl Construct for CShown {
         &self,
         env: &mut Environment<'x>,
         other_id: ConstructId,
-        other: &dyn Construct,
+        _other: &dyn Construct,
         limit: u32,
         tiebreaker: DeqSide,
     ) -> DeqResult {

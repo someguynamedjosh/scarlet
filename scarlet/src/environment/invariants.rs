@@ -2,18 +2,10 @@ mod tests;
 
 use std::collections::HashSet;
 
-use super::{
-    dependencies::DepResStackFrame, discover_equality::Equal, ConstructId, Environment,
-    UnresolvedConstructError,
-};
+use super::{dependencies::DepResStackFrame, discover_equality::Equal, ConstructId, Environment};
 use crate::{
-    constructs::{
-        base::BoxedConstruct, downcast_construct, substitution::Substitutions, AnnotatedConstruct,
-        Construct, ConstructDefinition, GenInvResult,
-    },
-    environment::sub_expr::SubExpr,
+    constructs::{substitution::Substitutions, Construct, GenInvResult},
     scope::{LookupInvariantError, LookupInvariantResult, LookupSimilarInvariantResult, Scope},
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

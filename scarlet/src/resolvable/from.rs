@@ -1,5 +1,11 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
-use crate::{environment::Environment, scope::Scope, constructs::{ConstructId, ConstructDefinition, substitution::CSubstitution, variable::CVariable}};
+use crate::{
+    constructs::{
+        substitution::CSubstitution, variable::CVariable, ConstructDefinition, ConstructId,
+    },
+    environment::Environment,
+    scope::Scope,
+};
 
 #[derive(Clone, Debug)]
 pub struct RFrom {

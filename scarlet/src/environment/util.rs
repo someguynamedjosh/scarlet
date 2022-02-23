@@ -1,15 +1,10 @@
-use super::{
-    dependencies::DepResStackFrame, discover_equality::Equal, ConstructId, Environment,
-    UnresolvedConstructError,
-};
+use super::{ConstructId, Environment, UnresolvedConstructError};
 use crate::{
     constructs::{
         base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
-        ConstructDefinition, GenInvResult,
+        ConstructDefinition,
     },
-    environment::{invariants::Invariant, sub_expr::SubExpr},
-    scope::{LookupIdentResult, LookupInvariantResult, Scope},
-    shared::TripleBool,
+    scope::{LookupIdentResult, Scope},
 };
 
 impl<'x> Environment<'x> {

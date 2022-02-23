@@ -11,15 +11,14 @@ use crate::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, Equal},
         invariants::Invariant,
-        sub_expr::{NestedSubstitutions, SubExpr},
-        Environment, UnresolvedConstructError,
+        Environment,
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope, LookupSimilarInvariantResult,
+        LookupIdentResult, LookupInvariantError, LookupSimilarInvariantResult,
+        ReverseLookupIdentResult, Scope,
     },
-    shared::{Id, Pool, TripleBool},
+    shared::{Id, Pool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -78,8 +77,7 @@ impl Variable {
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
         limit: u32,
-    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError>
-    {
+    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError> {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);

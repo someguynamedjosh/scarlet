@@ -7,7 +7,7 @@ use crate::{
         variable::CVariable,
         ConstructDefinition, ConstructId,
     },
-    environment::{dependencies::Dependencies, invariants::Invariant, Environment},
+    environment::{dependencies::Dependencies, Environment},
     scope::Scope,
     shared::OrderedMap,
 };

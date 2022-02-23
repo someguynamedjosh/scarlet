@@ -2,6 +2,7 @@ mod as_language_item;
 mod axiom;
 mod decision;
 mod equal;
+mod from;
 mod identifier;
 mod is;
 mod is_populated_struct;
@@ -18,7 +19,6 @@ mod substitution;
 mod value_access;
 mod variable;
 mod with_dependencies;
-mod from;
 
 use super::phrase::Phrase;
 

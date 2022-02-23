@@ -4,15 +4,14 @@ use crate::{
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         invariants::Invariant,
-        sub_expr::{NestedSubstitutions, SubExpr},
+        sub_expr::NestedSubstitutions,
         Environment,
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope, LookupSimilarInvariantResult,
+        LookupIdentResult, LookupInvariantError, LookupSimilarInvariantResult,
+        ReverseLookupIdentResult, Scope,
     },
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -153,7 +152,7 @@ impl Scope for SWithInvariant {
         limit: u32,
     ) -> LookupSimilarInvariantResult {
         // No, I don't want
-        let no_subs = NestedSubstitutions::new();
+        let _no_subs = NestedSubstitutions::new();
         match env.discover_equal(self.0.statement, invariant, limit)? {
             Equal::Yes(l, r) => {
                 if r.len() == 0 {

@@ -6,8 +6,6 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        invariants::Invariant,
-        sub_expr::{NestedSubstitutions, SubExpr},
         CheckResult, Environment,
     },
     impl_any_eq_for_construct,

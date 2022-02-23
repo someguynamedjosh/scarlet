@@ -1,5 +1,5 @@
 use super::{ConstructId, Environment};
-use crate::{constructs::ConstructDefinition, resolvable::ResolveError, util::Ignorable};
+use crate::{constructs::ConstructDefinition, resolvable::ResolveError};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ResolveStackFrame(ConstructId);

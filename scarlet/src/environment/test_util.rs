@@ -1,20 +1,18 @@
 #![cfg(test)]
 
-use std::{assert_matches::assert_matches, char::ParseCharError};
-
 use crate::{
     constructs::{
         decision::CDecision,
-        substitution::{CSubstitution, Substitutions},
+        structt::CPopulatedStruct,
+        substitution::Substitutions,
         unique::CUnique,
         variable::{CVariable, Variable, VariableId},
-        ConstructId, structt::CPopulatedStruct,
+        ConstructId,
     },
-    environment::{discover_equality::Equal, Environment},
+    environment::Environment,
     file_tree::FileNode,
     parser::{parse_tree, ParseContext},
     scope::SRoot,
-    shared::TripleBool,
 };
 
 pub(super) fn env<'x>() -> Environment<'x> {

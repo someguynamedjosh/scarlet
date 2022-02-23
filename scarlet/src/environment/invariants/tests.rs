@@ -1,18 +1,6 @@
 #![cfg(test)]
 
-use std::assert_matches::assert_matches;
-
-use crate::{
-    constructs::{
-        decision::CDecision,
-        structt::CPopulatedStruct,
-        substitution::{CSubstitution, Substitutions},
-        unique::CUnique,
-        variable::{CVariable, Variable, VariableId},
-        ConstructId,
-    },
-    environment::{discover_equality::Equal, test_util::*, Environment},
-};
+use crate::environment::test_util::*;
 
 #[test]
 fn basic_invariant() {

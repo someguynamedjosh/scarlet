@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use maplit::hashset;
 
 use super::{base::Construct, downcast_construct, ConstructId, GenInvResult};
@@ -7,11 +6,9 @@ use crate::{
         dependencies::DepResult,
         discover_equality::{DeqResult, DeqSide, Equal},
         invariants::Invariant,
-        sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,7 +62,7 @@ impl Construct for CAxiom {
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        other_id: ConstructId,
+        _other_id: ConstructId,
         other: &dyn Construct,
         limit: u32,
         tiebreaker: DeqSide,

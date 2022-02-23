@@ -7,7 +7,7 @@ use crate::{
         substitution::CSubstitution,
         variable::CVariable,
         with_dependencies::CWithDependencies,
-        ConstructDefinition, ConstructId,
+        ConstructId,
     },
     resolvable::{from::RFrom, RSubstitution},
     scope::{SPlain, Scope},

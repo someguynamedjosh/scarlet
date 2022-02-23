@@ -16,7 +16,7 @@ pub use variable::RVariable;
 use crate::{
     constructs::ConstructDefinition,
     environment::{Environment, UnresolvedConstructError},
-    scope::{LookupInvariantError, LookupInvariantResult, Scope},
+    scope::{LookupInvariantError, Scope},
 };
 
 #[derive(Clone, Debug)]

@@ -1,12 +1,7 @@
 use super::{Construct, ConstructId, GenInvResult};
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        sub_expr::{NestedSubstitutions, SubExpr},
-        Environment,
-    },
+    environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

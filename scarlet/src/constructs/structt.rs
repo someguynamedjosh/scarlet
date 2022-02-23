@@ -4,15 +4,13 @@ use crate::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqResult, DeqSide, Equal},
         invariants::InvariantMatch,
-        sub_expr::{NestedSubstitutions, SubExpr},
         Environment,
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult,
-        LookupSimilarInvariantResult, ReverseLookupIdentResult, Scope,
+        LookupIdentResult, LookupInvariantError, LookupSimilarInvariantResult,
+        ReverseLookupIdentResult, Scope,
     },
-    shared::TripleBool,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -68,7 +66,7 @@ impl Construct for CPopulatedStruct {
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        other_id: ConstructId,
+        _other_id: ConstructId,
         other: &dyn Construct,
         limit: u32,
         tiebreaker: DeqSide,

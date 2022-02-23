@@ -1,14 +1,12 @@
-use std::{fmt::Debug, ops::SubAssign};
+use std::fmt::Debug;
 
 use maplit::hashset;
 
 use crate::{
-    constructs::{substitution::Substitutions, ConstructId},
+    constructs::ConstructId,
     environment::{
-        dependencies::Dependencies, discover_equality::Equal, invariants::Invariant,
-        sub_expr::SubExpr, Environment, UnresolvedConstructError,
+        discover_equality::Equal, invariants::Invariant, Environment, UnresolvedConstructError,
     },
-    shared::TripleBool,
 };
 
 pub type LookupIdentResult = Result<Option<ConstructId>, UnresolvedConstructError>;

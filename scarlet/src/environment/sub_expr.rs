@@ -4,7 +4,8 @@ use super::{
 };
 use crate::{
     constructs::{variable::VariableId, ConstructId},
-    shared::OrderedMap, util::Isomorphism,
+    shared::OrderedMap,
+    util::Isomorphism,
 };
 
 pub type NestedSubstitutions<'a> = OrderedMap<VariableId, SubExpr<'a>>;

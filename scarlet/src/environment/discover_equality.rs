@@ -1,12 +1,7 @@
 mod tests;
 
-use super::{sub_expr::OwnedSubExpr, Environment, UnresolvedConstructError};
-use crate::{
-    constructs::{substitution::Substitutions, variable::VariableId, ConstructId},
-    environment::sub_expr::SubExpr,
-    shared::TripleBool,
-    util::{IsomorphicKeyIndexable, Isomorphism},
-};
+use super::{Environment, UnresolvedConstructError};
+use crate::constructs::{substitution::Substitutions, ConstructId};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
@@ -151,7 +146,7 @@ impl<'x> Environment<'x> {
             self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default())?;
         let right_first =
             self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default().swapped())?;
-        if let (Equal::Yes(ll, lr), Equal::Yes(rl, rr)) = (&left_first, &right_first){
+        if let (Equal::Yes(ll, lr), Equal::Yes(rl, rr)) = (&left_first, &right_first) {
             if ll.len() + lr.len() <= rr.len() + rl.len() {
                 Ok(left_first)
             } else {

@@ -14,7 +14,6 @@ use crate::{
     },
     phrase,
     scope::{SPlain, Scope},
-    shared::TripleBool,
 };
 
 fn create<'x>(
