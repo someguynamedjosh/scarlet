@@ -128,6 +128,16 @@ impl<'x> Environment<'x> {
         context: ConstructId,
         limit: u32,
     ) -> LookupInvariantResult {
-        todo!()
+        let root = self.get_produced_invariant(statement, context, limit)?;
+        if let Equal::Yes(l, r) = root.1 {
+            assert_eq!(r.len(), 0);
+            if l.len() > 0 {
+                todo!()
+            } else {
+                Ok(root.0)
+            }
+        } else {
+            unreachable!()
+        }
     }
 }

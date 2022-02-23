@@ -32,6 +32,9 @@ pub(super) fn with_env_from_code(
     let pc = ParseContext::new();
     let (mut env, root) = env_from_code(&node, &pc);
     for lang_item_name in env.language_item_names() {
+        if code.contains(lang_item_name) {
+            continue;
+        }
         let def = env.push_unique();
         let def = env.push_construct(CUnique::new(def), Box::new(SRoot));
         env.define_language_item(lang_item_name, def);
