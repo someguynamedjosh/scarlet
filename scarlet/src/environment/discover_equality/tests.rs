@@ -112,6 +112,35 @@ fn fx_is_gy() {
 }
 
 #[test]
+fn fx_sub_a_is_gy_sub_a() {
+    let mut env = env();
+    let a = env.unique();
+    let x = env.variable_full();
+    let y = env.variable_full();
+    let f = env.variable_full_with_deps(vec![x.0]);
+    let g = env.variable_full_with_deps(vec![y.0]);
+    let f_sub_a = env.substitute(f.0, &subs(vec![(x.1, a)]));
+    let g_sub_a = env.substitute(g.0, &subs(vec![(y.1, a)]));
+    assert_matches!(env.discover_equal(f_sub_a, g_sub_a, 1), Ok(Equal::Yes(..)));
+    assert_matches!(env.discover_equal(g_sub_a, f_sub_a, 1), Ok(Equal::Yes(..)));
+    assert_matches!(env.discover_equal(g_sub_a, f_sub_a, 0), Ok(Equal::NeedsHigherLimit));
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_sub_a, g_sub_a, 1) {
+        assert_eq!(lsubs.len(), 1);
+        let mut entries = lsubs.iter();
+        let last = entries.next().unwrap();
+        assert_eq!(last.0, f.1);
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+            assert_eq!(sub.base(), g.0);
+            assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
+        } else {
+            panic!("Expected second substitution to be itself another substitution");
+        }
+    } else {
+        unreachable!()
+    }
+}
+
+#[test]
 fn fx_sub_gy_is_gy_sub_x() {
     let mut env = env();
     let x = env.variable_full();

@@ -130,3 +130,22 @@ x, = z[z IS y][y IS x],
     Yes([x IS {b c}])
 Yes([x IS {b c}])
 ```
+
+Okay, we have something tricky.
+```
+fx = gy[1] should say "yes, fx is gy and x is 1"
+vs.
+fx = gy[x + 1] should say "yes, fx is gy[x + 1]"
+```
+```rust
+fx, = gy, [y IS 1]
+    Yes([fx IS gy[y IS x]   x IS 1])
+fx, = gy, [y IS x + 1]
+    Yes(fx IS gy[y IS x + 1])
+fx, = gy, [y IS z + 1]
+    Yes([fx IS gy[y IS z + 1][z IS x]   x IS z])
+fx, = gy, [y IS z + x]
+    Yes([fx IS gy[y IS z + x]])
+fx, = gy, [y IS z + x]
+    Yes([fx IS gy[y IS z + x]])
+```
