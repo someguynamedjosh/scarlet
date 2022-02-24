@@ -84,3 +84,49 @@ abc[x IS y][y IS x] =<= abc
     Yes([], [x IS y])
     Yes([], [x IS y[y IS x]])
 ```
+
+Okay, new plan - we do this the old-fashioned way where we keep track of
+substitutions as we descend BUT we keep them in an array so that we don't have
+to do the whole "apply substitutions to the substitutions to represent nested
+substitutions" thing.
+
+```rs
+x, y, and z are VAR[]
+a, b, and c are UNIQUE
+
+x, = x,
+    Yes([])
+
+x, = x, [x IS y]
+    x, {} = y, {}
+        Yes([x IS y])
+
+x, [x IS y] = x,
+    y, = x,
+        Yes([y IS x])
+
+a, = x,
+    No
+
+x, = a,
+    Yes([x IS a])
+
+x, = z[z IS y][y IS x],
+    x, = z, [z IS y][y IS x]
+        x, = y, [y IS x]
+            x, = x,
+                Yes([])
+
+{x, a}, = {y, z}[y IS {b c}   z IS a]
+    {x, a}, = {y, z}, [y IS {b c}   z IS a]
+        x, = y, [y IS {b c}   z IS a]
+            x, = {b c},
+            Yes([x IS {b c}])
+        Yes([x IS {b c}])
+        a, = z, [y IS {b c}   z IS a]
+            a, = a,
+            Yes([])
+        Yes([])
+    Yes([x IS {b c}])
+Yes([x IS {b c}])
+```
