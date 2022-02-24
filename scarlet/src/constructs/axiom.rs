@@ -1,6 +1,8 @@
 use maplit::hashset;
 
-use super::{base::Construct, downcast_construct, ConstructId, GenInvResult};
+use super::{
+    base::Construct, downcast_construct, substitution::Substitutions, ConstructId, GenInvResult,
+};
 use crate::{
     environment::{
         dependencies::DepResult,
@@ -62,14 +64,21 @@ impl Construct for CAxiom {
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        _other_id: ConstructId,
+        self_subs: Vec<&Substitutions>,
+        other_id: ConstructId,
         other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
         if let Some(other) = downcast_construct::<Self>(other) {
             let other = other.clone();
-            env.discover_equal_with_tiebreaker(self.statement, other.statement, limit, tiebreaker)
+            env.discover_equal_with_subs(
+                self.statement,
+                self_subs,
+                other.statement,
+                other_subs,
+                limit,
+            )
         } else {
             Ok(Equal::Unknown)
         }

@@ -140,17 +140,14 @@ impl Construct for CVariable {
         deps
     }
 
-    fn deq_priority<'x>(&self) -> DeqPriority {
-        4
-    }
-
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
+        self_subs: Vec<&Substitutions>,
         other_id: ConstructId,
         other: &dyn Construct,
-        _limit: u32,
-        _tiebreaker: crate::environment::discover_equality::DeqSide,
+        other_subs: Vec<&Substitutions>,
+        limit: u32,
     ) -> DeqResult {
         let var = env.get_variable(self.0);
         if let Some(other) = downcast_construct::<Self>(other) {

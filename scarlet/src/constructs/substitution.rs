@@ -104,81 +104,16 @@ impl Construct for CSubstitution {
         self.invs.clone()
     }
 
-    fn deq_priority<'x>(&self) -> DeqPriority {
-        6
-    }
-
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
+        self_subs: Vec<&Substitutions>,
         other_id: ConstructId,
         other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
-        let base = env.discover_equal_with_tiebreaker(self.base, other_id, limit, tiebreaker)?;
-        let mut result = base.clone().without_subs();
-        if let Equal::Yes(left) = base {
-            for (target, proposed_value) in &self.subs {
-                if let Some(existing_value) = left.get(&target) {
-                    let proposed_equals_existing = env.discover_equal_with_tiebreaker(
-                        *proposed_value,
-                        *existing_value,
-                        limit,
-                        tiebreaker,
-                    )?;
-                    result = Equal::and(vec![result, proposed_equals_existing]);
-                } else {
-                    if other.get_dependencies(env).contains_var(*target) {
-                        let extra_sub: Substitutions =
-                            vec![(*target, *proposed_value)].into_iter().collect();
-                        todo!()
-                        // result =
-                        //     Equal::and(vec![result,
-                        // Equal::Yes(Default::default(), extra_sub)]);
-                    }
-                }
-            }
-            todo!();
-            // for (target, value) in todo!() /* right */ {
-            //     let mut value_subs = Substitutions::new();
-            //     for dep in env.get_dependencies(value).into_variables() {
-            //         if left.contains_key(&dep.id) {
-            //             continue;
-            //         }
-            //         if let Some(&rep) = self.subs.get(&dep.id) {
-            //             value_subs.insert_no_replace(dep.id, rep);
-            //         }
-            //     }
-            //     let mut new_value = env.substitute(value, &value_subs);
-
-            //     // Special handling of things like x[x IS y] and u[u IS v]
-            //     if value_subs.len() == 1 {
-            //         let &(value_sub_target, value_sub_value) = value_subs.iter().next().unwrap();
-            //         let value_sub_target = env.get_variable(value_sub_target);
-            //         if value == value_sub_target.construct.unwrap() {
-            //             new_value = value_sub_value;
-            //         }
-            //     }
-
-            //     // Special handling of substitutions like x IS x and u IS u.
-            //     let target_con = env.get_variable(target).construct.unwrap();
-            //     if target_con == new_value {
-            //         continue;
-            //     }
-
-            //     println!("{:?} is {:?} sub {:?}", new_value, value, &value_subs);
-            //     let this_sub = vec![(target, new_value)].into_iter().collect();
-            //     // result = Equal::and(vec![result, Equal::Yes(Default::default(), this_sub)])
-            // }
-            // for (target, value) in left {
-            //     if self.subs.contains_key(&target) {
-            //         continue;
-            //     }
-            //     let this_sub = vec![(target, value)].into_iter().collect();
-            //     // result = Equal::and(vec![result, Equal::Yes(this_sub, Default::default())]);
-            // }
-        }
-        Ok(result)
+        // Special behavior is hard-coded into Environment::discover_equality_with_subs.
+        unreachable!()
     }
 }

@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{structt::CPopulatedStruct, variable::CVariable};
+use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
 use crate::{
     environment::{
         dependencies::DepResult,
@@ -113,17 +113,13 @@ pub trait Construct: Any + Debug + AnyEq {
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
+        self_subs: Vec<&Substitutions>,
         other_id: ConstructId,
         other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
         Ok(Equal::Unknown)
-    }
-
-    #[allow(unused_variables)]
-    fn deq_priority<'x>(&self) -> DeqPriority {
-        0
     }
 
     fn as_def<'x>(&self) -> ConstructDefinition<'x> {

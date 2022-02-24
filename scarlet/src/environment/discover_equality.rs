@@ -1,90 +1,16 @@
+mod equal;
 mod tests;
 
+pub use equal::Equal;
+use itertools::Itertools;
+use typed_arena::Arena;
+
 use super::{Environment, UnresolvedConstructError};
-use crate::constructs::{substitution::Substitutions, ConstructId};
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum Equal {
-    Yes(Substitutions),
-    NeedsHigherLimit,
-    Unknown,
-    No,
-}
-
-fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -> Result<(), ()> {
-    for (target, value) in from {
-        if target_subs.contains_key(&target) {
-            return Err(());
-        } else {
-            target_subs.insert_no_replace(target, value);
-        }
-    }
-    Ok(())
-}
-
-impl Equal {
-    pub fn yes() -> Self {
-        Self::Yes(Default::default())
-    }
-
-    pub fn and(over: Vec<Self>) -> Self {
-        let mut default = Self::yes();
-        for b in over {
-            match b {
-                Self::Yes(left) => {
-                    if let Self::Yes(exleft) = &mut default {
-                        let success = (|| -> Result<(), ()> {
-                            combine_substitutions(left, exleft)?;
-                            Ok(())
-                        })();
-                        if success.is_err() {
-                            default = Self::Unknown
-                        }
-                    }
-                }
-                Self::NeedsHigherLimit => {
-                    if let Self::Yes(..) = default {
-                        default = Self::NeedsHigherLimit
-                    }
-                }
-                Self::Unknown => default = Self::Unknown,
-                Self::No => return Self::No,
-            }
-        }
-        default
-    }
-
-    pub fn or(over: Vec<Self>) -> Self {
-        let mut default = Self::No;
-        for b in over {
-            match b {
-                Self::Yes(..) => return b,
-                Self::Unknown => {
-                    if let Self::No = default {
-                        default = Self::Unknown
-                    }
-                }
-                Self::NeedsHigherLimit => default = Self::NeedsHigherLimit,
-                Self::No => return Self::No,
-            }
-        }
-        default
-    }
-
-    pub fn without_subs(self) -> Self {
-        match self {
-            Self::Yes(..) => Self::yes(),
-            other => other,
-        }
-    }
-
-    /// Returns `true` if the equal is [`NeedsHigherLimit`].
-    ///
-    /// [`NeedsHigherLimit`]: Equal::NeedsHigherLimit
-    pub fn is_needs_higher_limit(&self) -> bool {
-        matches!(self, Self::NeedsHigherLimit)
-    }
-}
+use crate::constructs::{
+    substitution::{CSubstitution, Substitutions},
+    variable::CVariable,
+    ConstructId,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DeqSide {
@@ -134,65 +60,80 @@ impl<'x> Environment<'x> {
         right: ConstructId,
         limit: u32,
     ) -> DeqResult {
-        let left_first =
-            self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default())?;
-        let right_first =
-            self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default().swapped())?;
-        if let (Equal::Yes(ll), Equal::Yes(rl)) = (&left_first, &right_first) {
-            if ll.len() <= rl.len() {
-                Ok(left_first)
-            } else {
-                Ok(right_first)
-            }
-        } else {
-            Ok(left_first)
-        }
+        self.discover_equal_with_subs(left, vec![], right, vec![], limit)
     }
 
-    pub(crate) fn discover_equal_with_tiebreaker(
+    pub(crate) fn discover_equal_with_subs(
         &mut self,
         left: ConstructId,
+        left_subs: Vec<&Substitutions>,
         right: ConstructId,
+        right_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
-        let left = self.dereference(left)?;
-        let right = self.dereference(right)?;
-        println!();
-        println!("{:?} = {:?}?", left, right);
+        let extra_sub_holder = Arena::new();
+        let mut left = self.dereference(left)?;
+        let mut right = self.dereference(right)?;
+        let mut left_subs = left_subs.into_iter().map(|r| &*r).collect_vec();
+        let mut right_subs = right_subs.into_iter().map(|r| &*r).collect_vec();
+        let trace = false;
+        if trace {
+            println!();
+            println!("{:?} = {:?}?", left, right);
+        };
         if left == right {
-            println!("Ok({:?})", Equal::yes());
+            if trace {
+                println!("Ok({:?})", Equal::yes());
+            }
             return Ok(Equal::yes());
         }
         if limit == 0 {
-            println!("Ok({:?})", Equal::NeedsHigherLimit);
+            if trace {
+                println!("Ok({:?})", Equal::NeedsHigherLimit);
+            }
             return Ok(Equal::NeedsHigherLimit);
+        }
+        while let Some(lsub) = self.get_and_downcast_construct_definition::<CSubstitution>(left)? {
+            left = lsub.base();
+            let subs = extra_sub_holder.alloc(lsub.substitutions().clone());
+            left_subs.insert(0, subs);
+        }
+        while let Some(rsub) = self.get_and_downcast_construct_definition::<CSubstitution>(right)? {
+            right = rsub.base();
+            let subs = extra_sub_holder.alloc(rsub.substitutions().clone());
+            right_subs.insert(0, subs);
+        }
+        if let Some(lvar) = self.get_and_downcast_construct_definition::<CVariable>(left)? {
+            while left_subs.len() > 0 {
+                let subs = left_subs.remove(0);
+                if let Some(sub) = subs.get(&lvar.get_id()) {
+                    return self.discover_equal_with_subs(*sub, left_subs, right, right_subs, limit);
+                }
+            }
+        }
+        if let Some(rvar) = self.get_and_downcast_construct_definition::<CVariable>(right)? {
+            while right_subs.len() > 0 {
+                let subs = right_subs.remove(0);
+                if let Some(sub) = subs.get(&rvar.get_id()) {
+                    return self.discover_equal_with_subs(left, left_subs, *sub, right_subs, limit);
+                }
+            }
         }
         // For now this produces no noticable performance improvements.
         // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
         // limit)) {     return result.clone();
         // }
-        let result = (|| {
-            let left_def = self.get_construct_definition(left)?.dyn_clone();
-            let right_def = self.get_construct_definition(right)?.dyn_clone();
-            let left_prio = left_def.deq_priority();
-            let right_prio = right_def.deq_priority();
+        let left_def = self.get_construct_definition(left)?.dyn_clone();
+        let right_def = self.get_construct_definition(right)?.dyn_clone();
+        if trace {
             println!("{:#?} = {:#?}", left_def, right_def);
-            let preference = if left_prio > right_prio {
-                DeqSide::Left
-            } else if right_prio > left_prio {
-                DeqSide::Right
-            } else {
-                tiebreaker
-            };
-            let limit = limit - 1;
-            if preference == DeqSide::Left {
-                left_def.discover_equality(self, right, &*right_def, limit, tiebreaker)
-            } else {
-                todo!()
-            }
-        })();
-        println!("{:?}", result);
+        }
+        let limit = limit - 1;
+        let result =
+            left_def.discover_equality(self, left_subs, right, &*right_def, right_subs, limit);
+        if trace {
+            println!("{:?}", result);
+        }
         // self.def_equal_memo_table
         //     .insert((left, right, limit).convert(), result.clone());
         result

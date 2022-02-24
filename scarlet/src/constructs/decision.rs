@@ -1,4 +1,6 @@
-use super::{downcast_construct, Construct, ConstructId, GenInvResult};
+use super::{
+    downcast_construct, substitution::Substitutions, Construct, ConstructId, GenInvResult,
+};
 use crate::{
     environment::{
         dependencies::DepResult,
@@ -93,24 +95,45 @@ impl Construct for CDecision {
         deps
     }
 
-    fn deq_priority<'x>(&self) -> DeqPriority {
-        3
-    }
-
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        _other_id: ConstructId,
+        self_subs: Vec<&Substitutions>,
+        other_id: ConstructId,
         other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
         if let Some(other) = downcast_construct::<Self>(other) {
             Ok(Equal::and(vec![
-                env.discover_equal_with_tiebreaker(self.left, other.left, limit, tiebreaker)?,
-                env.discover_equal_with_tiebreaker(self.right, other.right, limit, tiebreaker)?,
-                env.discover_equal_with_tiebreaker(self.equal, other.equal, limit, tiebreaker)?,
-                env.discover_equal_with_tiebreaker(self.unequal, other.unequal, limit, tiebreaker)?,
+                env.discover_equal_with_subs(
+                    self.left,
+                    self_subs.clone(),
+                    other.left,
+                    other_subs.clone(),
+                    limit,
+                )?,
+                env.discover_equal_with_subs(
+                    self.right,
+                    self_subs.clone(),
+                    other.right,
+                    other_subs.clone(),
+                    limit,
+                )?,
+                env.discover_equal_with_subs(
+                    self.equal,
+                    self_subs.clone(),
+                    other.equal,
+                    other_subs.clone(),
+                    limit,
+                )?,
+                env.discover_equal_with_subs(
+                    self.unequal,
+                    self_subs.clone(),
+                    other.unequal,
+                    other_subs.clone(),
+                    limit,
+                )?,
             ]))
         } else {
             Ok(Equal::Unknown)

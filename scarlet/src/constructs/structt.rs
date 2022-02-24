@@ -1,4 +1,7 @@
-use super::{as_struct, base::ConstructId, downcast_construct, Construct, GenInvResult};
+use super::{
+    as_struct, base::ConstructId, downcast_construct, substitution::Substitutions, Construct,
+    GenInvResult,
+};
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
@@ -66,10 +69,11 @@ impl Construct for CPopulatedStruct {
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
-        _other_id: ConstructId,
+        self_subs: Vec<&Substitutions>,
+        other_id: ConstructId,
         other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
         if let Some(other) = downcast_construct::<Self>(other) {
             let other = other.clone();
@@ -77,8 +81,14 @@ impl Construct for CPopulatedStruct {
                 return Ok(Equal::No);
             }
             Ok(Equal::and(vec![
-                env.discover_equal_with_tiebreaker(self.value, other.value, limit, tiebreaker)?,
-                env.discover_equal_with_tiebreaker(self.rest, other.rest, limit, tiebreaker)?,
+                env.discover_equal_with_subs(
+                    self.value,
+                    self_subs.clone(),
+                    other.value,
+                    other_subs.clone(),
+                    limit,
+                )?,
+                env.discover_equal_with_subs(self.rest, self_subs, other.rest, other_subs, limit)?,
             ]))
         } else {
             Ok(Equal::Unknown)

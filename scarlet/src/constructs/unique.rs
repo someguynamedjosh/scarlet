@@ -1,4 +1,4 @@
-use super::{base::Construct, downcast_construct, ConstructId};
+use super::{base::Construct, downcast_construct, substitution::Substitutions, ConstructId};
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
@@ -34,17 +34,14 @@ impl Construct for CUnique {
         Dependencies::new()
     }
 
-    fn deq_priority<'x>(&self) -> DeqPriority {
-        2
-    }
-
     fn discover_equality<'x>(
         &self,
-        _env: &mut Environment<'x>,
-        _other_id: ConstructId,
+        env: &mut Environment<'x>,
+        self_subs: Vec<&Substitutions>,
+        other_id: ConstructId,
         other: &dyn Construct,
-        _limit: u32,
-        _tiebreaker: DeqSide,
+        other_subs: Vec<&Substitutions>,
+        limit: u32,
     ) -> DeqResult {
         Ok(if let Some(other) = downcast_construct::<Self>(other) {
             if self.0 == other.0 {

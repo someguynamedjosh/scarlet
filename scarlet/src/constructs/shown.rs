@@ -1,5 +1,6 @@
 use super::{
     base::{Construct, ConstructId},
+    substitution::Substitutions,
     GenInvResult,
 };
 use crate::{
@@ -46,11 +47,12 @@ impl Construct for CShown {
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
+        self_subs: Vec<&Substitutions>,
         other_id: ConstructId,
-        _other: &dyn Construct,
+        other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
         limit: u32,
-        tiebreaker: DeqSide,
     ) -> DeqResult {
-        env.discover_equal_with_tiebreaker(self.0, other_id, limit, tiebreaker)
+        env.discover_equal_with_subs(self.0, self_subs, other_id, other_subs, limit)
     }
 }
