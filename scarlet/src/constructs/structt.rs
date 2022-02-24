@@ -189,7 +189,7 @@ impl Scope for SField {
             let mut any_unknown = false;
             for maybe_match in env.generated_invariants(structt.value) {
                 match env.discover_equal(invariant, maybe_match.statement, limit)? {
-                    Equal::Yes(l, r) if r.len() == 0 => return Ok((maybe_match, Equal::Yes(l, r))),
+                    Equal::Yes(l) => return Ok((maybe_match, Equal::Yes(l))),
                     Equal::Yes(..) => (),
                     Equal::NeedsHigherLimit => any_unknown = true,
                     Equal::Unknown | Equal::No => (),
@@ -253,10 +253,7 @@ fn lookup_invariant_in<'x>(
     let mut best_match = InvariantMatch::new();
     for maybe_match in env.generated_invariants(inn.value) {
         match env.discover_equal(invariant, maybe_match.statement, limit)? {
-            Equal::Yes(l, r) if r.len() == 0 => {
-                best_match.switch_if_better((maybe_match, Equal::Yes(l, r)))
-            }
-            Equal::Yes(..) => (),
+            Equal::Yes(l) => best_match.switch_if_better((maybe_match, Equal::Yes(l))),
             Equal::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
             Equal::No | Equal::Unknown => (),
         }

@@ -161,7 +161,7 @@ impl Construct for CVariable {
         if var.dependencies.len() == 0 {
             let mut subs = Substitutions::new();
             subs.insert_no_replace(self.0, other_id);
-            Ok(Equal::Yes(subs, Default::default()))
+            Ok(Equal::Yes(subs))
         } else {
             let var = var.clone();
             let mut var_deps = var.get_var_dependencies(env);
@@ -187,7 +187,7 @@ impl Construct for CVariable {
             }
             let subbed_other = env.substitute(other_id, &other_subs);
             subs.insert_no_replace(self.0, subbed_other);
-            Ok(Equal::Yes(subs, Default::default()))
+            Ok(Equal::Yes(subs))
         }
     }
 }

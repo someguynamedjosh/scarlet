@@ -154,13 +154,7 @@ impl Scope for SWithInvariant {
         // No, I don't want
         let _no_subs = NestedSubstitutions::new();
         match env.discover_equal(self.0.statement, invariant, limit)? {
-            Equal::Yes(l, r) => {
-                if r.len() == 0 {
-                    Ok((self.0.clone(), Equal::Yes(l, r)))
-                } else {
-                    Err(LookupInvariantError::DefinitelyDoesNotExist)
-                }
-            }
+            Equal::Yes(l) => Ok((self.0.clone(), Equal::Yes(l))),
             Equal::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
             Equal::No | Equal::Unknown => Err(LookupInvariantError::DefinitelyDoesNotExist),
         }

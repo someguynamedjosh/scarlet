@@ -5,7 +5,7 @@ use crate::constructs::{substitution::Substitutions, ConstructId};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
-    Yes(Substitutions, Substitutions),
+    Yes(Substitutions),
     NeedsHigherLimit,
     Unknown,
     No,
@@ -24,25 +24,17 @@ fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -
 
 impl Equal {
     pub fn yes() -> Self {
-        Self::Yes(Default::default(), Default::default())
-    }
-
-    pub fn swapped(self) -> Self {
-        match self {
-            Self::Yes(left, right) => Self::Yes(right, left),
-            other => other,
-        }
+        Self::Yes(Default::default())
     }
 
     pub fn and(over: Vec<Self>) -> Self {
         let mut default = Self::yes();
         for b in over {
             match b {
-                Self::Yes(left, right) => {
-                    if let Self::Yes(exleft, exright) = &mut default {
+                Self::Yes(left) => {
+                    if let Self::Yes(exleft) = &mut default {
                         let success = (|| -> Result<(), ()> {
                             combine_substitutions(left, exleft)?;
-                            combine_substitutions(right, exright)?;
                             Ok(())
                         })();
                         if success.is_err() {
@@ -146,8 +138,8 @@ impl<'x> Environment<'x> {
             self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default())?;
         let right_first =
             self.discover_equal_with_tiebreaker(left, right, limit, DeqSide::default().swapped())?;
-        if let (Equal::Yes(ll, lr), Equal::Yes(rl, rr)) = (&left_first, &right_first) {
-            if ll.len() + lr.len() <= rr.len() + rl.len() {
+        if let (Equal::Yes(ll), Equal::Yes(rl)) = (&left_first, &right_first) {
+            if ll.len() <= rl.len() {
                 Ok(left_first)
             } else {
                 Ok(right_first)
@@ -197,9 +189,7 @@ impl<'x> Environment<'x> {
             if preference == DeqSide::Left {
                 left_def.discover_equality(self, right, &*right_def, limit, tiebreaker)
             } else {
-                let tiebreaker = tiebreaker.swapped();
-                let res = right_def.discover_equality(self, left, &*left_def, limit, tiebreaker);
-                Ok(res?.swapped())
+                todo!()
             }
         })();
         println!("{:?}", result);

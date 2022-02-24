@@ -20,10 +20,8 @@ fn something_equals_variable() {
     let thing = env.unique();
     let (var_con, var_id) = env.variable_full();
     let expected = subs(vec![(var_id, thing)]);
-    let left = Equal::Yes(expected.clone(), Default::default());
-    let right = Equal::Yes(Default::default(), expected.clone());
+    let left = Equal::Yes(expected.clone());
     assert_eq!(env.discover_equal(var_con, thing, 1), Ok(left));
-    assert_eq!(env.discover_equal(thing, var_con, 1), Ok(right));
     assert_eq!(
         env.discover_equal(var_con, thing, 0),
         Ok(Equal::NeedsHigherLimit)
@@ -82,11 +80,7 @@ fn decision_equals_decision_with_subs() {
     let subs = subs(vec![(a.1, w), (b.1, x), (c.1, y), (d.1, z)]);
     assert_eq!(
         env.discover_equal(dec1, dec2, 2),
-        Ok(Equal::Yes(subs.clone(), Default::default()))
-    );
-    assert_eq!(
-        env.discover_equal(dec2, dec1, 2),
-        Ok(Equal::Yes(Default::default(), subs.clone()))
+        Ok(Equal::Yes(subs.clone()))
     );
 }
 
@@ -100,9 +94,8 @@ fn fx_is_gy() {
     assert_matches!(env.discover_equal(f.0, g.0, 1), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g.0, f.0, 1), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g.0, f.0, 0), Ok(Equal::NeedsHigherLimit));
-    if let Ok(Equal::Yes(lsubs, rsubs)) = env.discover_equal(f.0, g.0, 1) {
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f.0, g.0, 1) {
         assert_eq!(lsubs.len(), 2);
-        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next(), Some(&(x.1, y.0)));
         let last = entries.next().unwrap();
@@ -152,9 +145,8 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
         env.discover_equal(g_sub, f_sub, 0),
         Ok(Equal::NeedsHigherLimit)
     );
-    if let Ok(Equal::Yes(lsubs, rsubs)) = env.discover_equal(f_sub, g_sub, 3) {
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_sub, g_sub, 3) {
         assert_eq!(lsubs.len(), 2);
-        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next(), Some(&(x.1, y.0)));
         let last = entries.next().unwrap();
@@ -186,9 +178,8 @@ fn fx_sub_z_is_gy_sub_nothing() {
         env.discover_equal(g_sub, f_sub, 0),
         Ok(Equal::NeedsHigherLimit)
     );
-    if let Ok(Equal::Yes(lsubs, rsubs)) = env.discover_equal(f_sub, g_sub, 3) {
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_sub, g_sub, 3) {
         assert_eq!(lsubs.len(), 2);
-        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next(), Some(&(z.1, y.0)));
         let last = entries.next().unwrap();
@@ -224,9 +215,8 @@ fn fx_sub_decision_is_gy_sub_decision() {
 
     assert_matches!(env.discover_equal(f_dec, g_dec, 3), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g_dec, f_dec, 3), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(lsubs, rsubs)) = env.discover_equal(f_dec, g_dec, 3) {
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_dec, g_dec, 3) {
         assert_eq!(lsubs.len(), 1);
-        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
@@ -264,9 +254,8 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
 
     assert_matches!(env.discover_equal(f_dec, g_dec, 4), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g_dec, f_dec, 4), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(lsubs, rsubs)) = env.discover_equal(f_dec, g_dec, 4) {
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_dec, g_dec, 4) {
         assert_eq!(lsubs.len(), 2);
-        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         assert_eq!(Some(&(aa.1, a)), entries.next());
         let last = entries.next().unwrap();

@@ -23,7 +23,7 @@ impl Invariant {
     }
 }
 
-pub struct InvariantMatch(Option<(Invariant, Substitutions, Substitutions)>);
+pub struct InvariantMatch(Option<(Invariant, Substitutions)>);
 
 impl InvariantMatch {
     pub fn new() -> Self {
@@ -31,17 +31,17 @@ impl InvariantMatch {
     }
 
     pub fn switch_if_better(&mut self, incoming: (Invariant, Equal)) {
-        if let Equal::Yes(l, r) = incoming.1 {
-            let better_than_best_match = self.0.as_ref().map(|(_, bl, _)| bl.len() > l.len());
-            if r.len() == 0 && better_than_best_match.unwrap_or(true) {
-                self.0 = Some((incoming.0, l, r));
+        if let Equal::Yes(l) = incoming.1 {
+            let better_than_best_match = self.0.as_ref().map(|(_, bl)| bl.len() > l.len());
+            if better_than_best_match.unwrap_or(true) {
+                self.0 = Some((incoming.0, l));
             }
         }
     }
 
     pub fn pack(self) -> Result<(Invariant, Equal), ()> {
-        if let Some((inv, l, r)) = self.0 {
-            Ok((inv, Equal::Yes(l, r)))
+        if let Some((inv, l)) = self.0 {
+            Ok((inv, Equal::Yes(l)))
         } else {
             Err(())
         }
@@ -121,8 +121,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> LookupInvariantResult {
         let root = self.get_produced_invariant(statement, context, limit)?;
-        if let Equal::Yes(l, r) = root.1 {
-            assert_eq!(r.len(), 0);
+        if let Equal::Yes(l) = root.1 {
             if l.len() > 0 {
                 todo!()
             } else {

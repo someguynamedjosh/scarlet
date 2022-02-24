@@ -184,8 +184,8 @@ impl Scope for SRoot {
     ) -> LookupSimilarInvariantResult {
         let truee = env.get_language_item("true");
         match env.discover_equal(invariant, truee, limit)? {
-            Equal::Yes(l, r) => {
-                if l.len() == 0 && r.len() == 0 {
+            Equal::Yes(l) => {
+                if l.len() == 0 {
                     Ok((Invariant::new(truee, hashset![]), Equal::yes()))
                 } else if l.len() > 0 {
                     Err(LookupInvariantError::DefinitelyDoesNotExist)
