@@ -136,6 +136,15 @@ Okay, we have something tricky.
 fx = gy[1] should say "yes, fx is gy and x is 1"
 vs.
 fx = gy[x + 1] should say "yes, fx is gy[x + 1]"
+What should say "yes, fx is (something inside)?"
+Maybe we just don't need to worry about that right now.
+But what if we have:
+fx, [x IS a] = gy[a]
+Right now the only place this comes up is with:
+fx[SOMETHING] = gy[SOMETHING]
+So I could have a special case that goes like "if the argument is substituted,
+then gradually destructure the RHS substitutions and always compare SOMETHING to
+the other argument if the RHS substitutes only one argument."
 ```
 ```rust
 fx, = gy, [y IS 1]

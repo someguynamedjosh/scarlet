@@ -85,7 +85,11 @@ impl<'x> Environment<'x> {
             if trace {
                 println!("Ok({:?})", Equal::yes());
             }
-            return Ok(Equal::yes());
+            if left_subs.len() > 0 || right_subs.len() > 0 {
+                // todo!();
+            } else {
+                return Ok(Equal::yes());
+            }
         }
         if limit == 0 {
             if trace {
