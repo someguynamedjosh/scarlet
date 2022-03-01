@@ -149,3 +149,14 @@ fx, = gy, [y IS z + x]
 fx, = gy, [y IS z + x]
     Yes([fx IS gy[y IS z + x]])
 ```
+```
+b[a IS 1   b IS a + 1][a IS 2]
+b[a IS 1   b IS (a + 1)[a IS 2]]
+```
+What if we restrict substitutions to only substitute things that the base
+depends on?
+```
+b[b IS a + 1][a IS 2]
+b[b IS (a + 1)[a IS 2]]
+fx[x IS 123][fx IS x + 1]
+```

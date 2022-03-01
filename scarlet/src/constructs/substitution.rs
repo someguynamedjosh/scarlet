@@ -6,6 +6,7 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
+        invariants::Invariant,
         CheckResult, Environment,
     },
     impl_any_eq_for_construct,
@@ -42,6 +43,46 @@ impl CSubstitution {
     pub fn substitutions(&self) -> &Substitutions {
         &self.subs
     }
+
+    pub fn sub_deps(
+        base: Dependencies,
+        subs: &Substitutions,
+        invs: &[Invariant],
+        env: &mut Environment,
+    ) -> DepResult {
+        let mut deps = Dependencies::new();
+        let base_error = base.error();
+        for dep in base.as_variables() {
+            if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.id) {
+                let replaced_deps = env.get_dependencies(*rep);
+                let replaced_err = replaced_deps.error();
+                for rdep in replaced_deps.into_variables() {
+                    if !dep.swallow.contains(&rdep.id) {
+                        deps.push_eager(rdep);
+                    }
+                }
+                if let Some(err) = replaced_err {
+                    deps.append(Dependencies::new_error(err));
+                }
+            } else {
+                deps.push_eager(dep.clone());
+            }
+        }
+        if let Some(err) = base_error {
+            deps.append(Dependencies::new_error(err));
+        }
+        for inv in invs.iter() {
+            for &dep in &inv.dependencies {
+                if let Ok(Some(var)) = env.get_and_downcast_construct_definition::<CVariable>(dep) {
+                    let id = var.get_id();
+                    deps.push_eager(env.get_variable(id).clone().as_dependency(env));
+                } else {
+                    deps.append(env.get_dependencies(dep));
+                }
+            }
+        }
+        deps
+    }
 }
 
 impl_any_eq_for_construct!(CSubstitution);
@@ -61,39 +102,8 @@ impl Construct for CSubstitution {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
-        let mut deps = Dependencies::new();
         let base = env.get_dependencies(self.base);
-        let base_error = base.error();
-        for dep in base.as_variables() {
-            if let Some((_, rep)) = self.subs.iter().find(|(var, _)| *var == dep.id) {
-                let replaced_deps = env.get_dependencies(*rep);
-                let replaced_err = replaced_deps.error();
-                for rdep in replaced_deps.into_variables() {
-                    if !dep.swallow.contains(&rdep.id) {
-                        deps.push_eager(rdep);
-                    }
-                }
-                if let Some(err) = replaced_err {
-                    deps.append(Dependencies::new_error(err));
-                }
-            } else {
-                deps.push_eager(dep.clone());
-            }
-        }
-        if let Some(err) = base_error {
-            deps.append(Dependencies::new_error(err));
-        }
-        for inv in self.invs.iter() {
-            for &dep in &inv.dependencies {
-                if let Ok(Some(var)) = env.get_and_downcast_construct_definition::<CVariable>(dep) {
-                    let id = var.get_id();
-                    deps.push_eager(env.get_variable(id).clone().as_dependency(env));
-                } else {
-                    deps.append(env.get_dependencies(dep));
-                }
-            }
-        }
-        deps
+        Self::sub_deps(base, &self.subs, &self.invs[..], env)
     }
 
     fn generated_invariants<'x>(
