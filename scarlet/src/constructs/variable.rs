@@ -149,43 +149,7 @@ impl Construct for CVariable {
         other_subs: Vec<&Substitutions>,
         limit: u32,
     ) -> DeqResult {
-        let var = env.get_variable(self.0);
-        if let Some(other) = downcast_construct::<Self>(other) {
-            if other.0 == self.0 {
-                return Ok(Equal::yes());
-            }
-        }
-        if var.dependencies.len() == 0 {
-            let mut subs = Substitutions::new();
-            subs.insert_no_replace(self.0, other_id);
-            Ok(Equal::Yes(subs))
-        } else {
-            let var = var.clone();
-            let mut var_deps = var.get_var_dependencies(env);
-            let mut other_deps = env.get_dependencies(other_id);
-            if other_deps.num_variables() < var_deps.num_variables() {
-                return Ok(Equal::Unknown);
-            }
-            for var in var_deps.clone().as_variables() {
-                if other_deps.contains(var) {
-                    var_deps.remove(var.id);
-                    other_deps.remove(var.id);
-                }
-            }
-            let mut subs = Substitutions::new();
-            let mut other_subs = Substitutions::new();
-            for (self_requires, other_has) in
-                var_deps.into_variables().zip(other_deps.into_variables())
-            {
-                let self_con = env.get_variable(self_requires.id).construct.unwrap();
-                let other_con = env.get_variable(other_has.id).construct.unwrap();
-                subs.insert_no_replace(self_requires.id, other_con);
-                other_subs.insert_no_replace(other_has.id, self_con);
-            }
-            let subbed_other = env.substitute(other_id, &other_subs);
-            subs.insert_no_replace(self.0, subbed_other);
-            Ok(Equal::Yes(subs))
-        }
+        unreachable!()
     }
 }
 

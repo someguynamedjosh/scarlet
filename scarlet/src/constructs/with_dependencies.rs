@@ -77,15 +77,7 @@ impl Construct for CWithDependencies {
         deps
     }
 
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        env.discover_equal_with_subs(self.base, self_subs, other_id, other_subs, limit)
+    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+        Some((self.base, None))
     }
 }

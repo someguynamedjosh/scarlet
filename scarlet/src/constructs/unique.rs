@@ -45,7 +45,7 @@ impl Construct for CUnique {
     ) -> DeqResult {
         Ok(if let Some(other) = downcast_construct::<Self>(other) {
             if self.0 == other.0 {
-                unreachable!("If this is the case, the two construct IDs should have already been identified as the same!");
+                Equal::Yes(Substitutions::new())
             } else {
                 Equal::No
             }

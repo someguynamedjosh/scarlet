@@ -5,11 +5,14 @@ pub use equal::Equal;
 use itertools::Itertools;
 use typed_arena::Arena;
 
-use super::{Environment, UnresolvedConstructError};
+use super::{
+    dependencies::{DepResult, Dependencies},
+    Environment, UnresolvedConstructError,
+};
 use crate::constructs::{
     substitution::{CSubstitution, Substitutions},
     variable::CVariable,
-    ConstructId,
+    Construct, ConstructId,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -63,6 +66,18 @@ impl<'x> Environment<'x> {
         self.discover_equal_with_subs(left, vec![], right, vec![], limit)
     }
 
+    fn compute_dependencies_with_subs(
+        &mut self,
+        base: ConstructId,
+        subs: &[&Substitutions],
+    ) -> DepResult {
+        let mut deps = self.get_dependencies(base);
+        for subs in subs {
+            deps = CSubstitution::sub_deps(deps, subs, &[], self);
+        }
+        deps
+    }
+
     pub(crate) fn discover_equal_with_subs(
         &mut self,
         left: ConstructId,
@@ -76,7 +91,7 @@ impl<'x> Environment<'x> {
         let mut right = self.dereference(right)?;
         let mut left_subs = left_subs.into_iter().map(|r| &*r).collect_vec();
         let mut right_subs = right_subs.into_iter().map(|r| &*r).collect_vec();
-        let trace = false;
+        let trace = true;
         if trace {
             println!();
             println!("{:?} = {:?}?", left, right);
@@ -97,31 +112,122 @@ impl<'x> Environment<'x> {
             }
             return Ok(Equal::NeedsHigherLimit);
         }
-        while let Some(lsub) = self.get_and_downcast_construct_definition::<CSubstitution>(left)? {
-            left = lsub.base();
-            let subs = extra_sub_holder.alloc(lsub.substitutions().clone());
-            left_subs.insert(0, subs);
-        }
-        while let Some(rsub) = self.get_and_downcast_construct_definition::<CSubstitution>(right)? {
-            right = rsub.base();
-            let subs = extra_sub_holder.alloc(rsub.substitutions().clone());
-            right_subs.insert(0, subs);
-        }
-        if let Some(lvar) = self.get_and_downcast_construct_definition::<CVariable>(left)? {
-            while left_subs.len() > 0 {
-                let subs = left_subs.remove(0);
-                if let Some(sub) = subs.get(&lvar.get_id()) {
-                    return self.discover_equal_with_subs(*sub, left_subs, right, right_subs, limit);
-                }
+        while let Some((base, extra_subs)) = self.get_construct_definition(left)?.dereference() {
+            left = base;
+            if let Some(extra_subs) = extra_subs {
+                let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
+                left_subs.insert(0, extra_subs);
             }
         }
-        if let Some(rvar) = self.get_and_downcast_construct_definition::<CVariable>(right)? {
-            while right_subs.len() > 0 {
-                let subs = right_subs.remove(0);
+        while let Some((base, extra_subs)) = self.get_construct_definition(right)?.dereference() {
+            right = base;
+            if let Some(extra_subs) = extra_subs {
+                let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
+                right_subs.insert(0, extra_subs);
+            }
+        }
+        let rvar_id = if let Some(rvar) =
+            self.get_and_downcast_construct_definition::<CVariable>(right)?
+        {
+            for (index, subs) in right_subs.iter().enumerate() {
                 if let Some(sub) = subs.get(&rvar.get_id()) {
+                    let mut without_this_sub = right_subs[index].clone();
+                    without_this_sub.remove(&rvar.get_id());
+                    right_subs[index] = extra_sub_holder.alloc(without_this_sub);
                     return self.discover_equal_with_subs(left, left_subs, *sub, right_subs, limit);
                 }
             }
+            Some(rvar.get_id())
+        } else {
+            None
+        };
+        if let Some(lvar) = self.get_and_downcast_construct_definition::<CVariable>(left)? {
+            for (index, subs) in left_subs.iter().enumerate() {
+                if let Some(sub) = subs.get(&lvar.get_id()) {
+                    let mut without_this_sub = left_subs[index].clone();
+                    without_this_sub.remove(&lvar.get_id());
+                    left_subs[index] = extra_sub_holder.alloc(without_this_sub);
+                    return self.discover_equal_with_subs(
+                        *sub,
+                        left_subs.clone(),
+                        right,
+                        right_subs,
+                        limit,
+                    );
+                }
+            }
+            if limit == 0 {
+                return Ok(Equal::NeedsHigherLimit);
+            }
+            // We get here if the variable appearing on the left is not substituted.
+            let lvar = lvar.clone();
+            let lvar = self.get_variable(lvar.get_id()).clone();
+            let ldeps = lvar.get_dependencies();
+            let ldeps = ldeps
+                .iter()
+                .flat_map(|&dep| self.get_dependencies(dep).into_variables())
+                .collect_vec();
+            if Some(lvar.id.unwrap()) == rvar_id {
+                // We can only get here if the right variable isn't substituted.
+                let parts = lvar
+                    .get_dependencies()
+                    .iter()
+                    .map(|&dep| {
+                        self.discover_equal_with_subs(
+                            dep,
+                            left_subs.clone(),
+                            dep,
+                            right_subs.clone(),
+                            limit - 1,
+                        )
+                    })
+                    .collect::<Result<_, _>>()?;
+                return Ok(Equal::and(parts));
+            }
+            let mut limit_reached = false;
+            for base_index in (0..=right_subs.len()).rev() {
+                let rdeps = self.compute_dependencies_with_subs(right, &right_subs[..base_index]);
+                if ldeps.len() > rdeps.num_variables() {
+                    continue;
+                }
+                let mut equal = Equal::yes();
+                for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {
+                    let ldep = self.get_variable(ldep.id).construct.unwrap();
+                    let rdep = self.get_variable(rdep.id).construct.unwrap();
+                    let deps_equal = self.discover_equal_with_subs(
+                        ldep,
+                        left_subs.clone(),
+                        rdep,
+                        Vec::from(&right_subs[base_index..]),
+                        limit - 1,
+                    )?;
+                    equal = Equal::and(vec![equal, deps_equal]);
+                }
+                if let Equal::Yes(mut subs) = equal {
+                    let mut right = right;
+                    for sub in &right_subs[..base_index] {
+                        right = self.substitute(right, sub);
+                    }
+                    let mut dep_subs = Substitutions::new();
+                    for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {
+                        if ldep.id == rdep.id {
+                            continue;
+                        }
+                        let ldep = self.get_variable(ldep.id).construct.unwrap();
+                        dep_subs.insert_no_replace(rdep.id, ldep);
+                    }
+                    let right = self.substitute(right, &dep_subs);
+                    subs.insert_no_replace(lvar.id.unwrap(), right);
+                    return Ok(Equal::Yes(subs));
+                } else if let Equal::NeedsHigherLimit = equal {
+                    limit_reached = true;
+                }
+            }
+            return Ok(if limit_reached {
+                Equal::NeedsHigherLimit
+            } else {
+                Equal::Unknown
+            });
         }
         // For now this produces no noticable performance improvements.
         // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
