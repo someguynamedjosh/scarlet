@@ -91,7 +91,7 @@ impl<'x> Environment<'x> {
         let mut right = self.dereference(right)?;
         let mut left_subs = left_subs.into_iter().map(|r| &*r).collect_vec();
         let mut right_subs = right_subs.into_iter().map(|r| &*r).collect_vec();
-        let trace = false;
+        let trace = true;
         if trace {
             println!();
             println!("{:?} = {:?}?", left, right);
@@ -112,15 +112,19 @@ impl<'x> Environment<'x> {
             }
             return Ok(Equal::NeedsHigherLimit);
         }
-        while let Some(lsub) = self.get_and_downcast_construct_definition::<CSubstitution>(left)? {
-            left = lsub.base();
-            let subs = extra_sub_holder.alloc(lsub.substitutions().clone());
-            left_subs.insert(0, subs);
+        while let Some((base, extra_subs)) = self.get_construct_definition(left)?.dereference() {
+            left = base;
+            if let Some(extra_subs) = extra_subs {
+                let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
+                left_subs.insert(0, extra_subs);
+            }
         }
-        while let Some(rsub) = self.get_and_downcast_construct_definition::<CSubstitution>(right)? {
-            right = rsub.base();
-            let subs = extra_sub_holder.alloc(rsub.substitutions().clone());
-            right_subs.insert(0, subs);
+        while let Some((base, extra_subs)) = self.get_construct_definition(right)?.dereference() {
+            right = base;
+            if let Some(extra_subs) = extra_subs {
+                let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
+                right_subs.insert(0, extra_subs);
+            }
         }
         let rvar_id = if let Some(rvar) =
             self.get_and_downcast_construct_definition::<CVariable>(right)?

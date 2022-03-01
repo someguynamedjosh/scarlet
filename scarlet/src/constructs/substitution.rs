@@ -114,6 +114,10 @@ impl Construct for CSubstitution {
         self.invs.clone()
     }
 
+    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+        Some((self.base, Some(&self.subs)))
+    }
+
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,

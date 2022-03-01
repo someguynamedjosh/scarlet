@@ -67,6 +67,7 @@ impl<'x> Environment<'x> {
             }
         });
         if problem {
+            println!("{:#?}", self);
             panic!("Failed to resolve construct(s)");
         }
     }

@@ -32,6 +32,10 @@ impl Construct for CShown {
         Box::new(self.clone())
     }
 
+    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
+        env.get_dependencies(self.0)
+    }
+
     fn generated_invariants<'x>(
         &self,
         _this: ConstructId,
@@ -40,19 +44,7 @@ impl Construct for CShown {
         env.generated_invariants(self.0)
     }
 
-    fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
-        env.get_dependencies(self.0)
-    }
-
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        env.discover_equal_with_subs(self.0, self_subs, other_id, other_subs, limit)
+    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+        Some((self.0, None))
     }
 }

@@ -110,6 +110,11 @@ pub trait Construct: Any + Debug + AnyEq {
     }
 
     #[allow(unused_variables)]
+    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+        None
+    }
+
+    #[allow(unused_variables)]
     fn discover_equality<'x>(
         &self,
         env: &mut Environment<'x>,
