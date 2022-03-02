@@ -97,12 +97,12 @@ impl<'x> Environment<'x> {
             println!("{:?} = {:?}?", left, right);
         };
         if left == right {
-            if trace {
-                println!("Ok({:?})", Equal::yes());
-            }
             if left_subs.len() > 0 || right_subs.len() > 0 {
                 // todo!();
             } else {
+                if trace {
+                    println!("Ok({:?})", Equal::yes());
+                }
                 return Ok(Equal::yes());
             }
         }
@@ -157,6 +157,9 @@ impl<'x> Environment<'x> {
                 }
             }
             if limit == 0 {
+                if trace {
+                    println!("Ok({:?})", Equal::NeedsHigherLimit);
+                }
                 return Ok(Equal::NeedsHigherLimit);
             }
             // We get here if the variable appearing on the left is not substituted.
@@ -182,7 +185,11 @@ impl<'x> Environment<'x> {
                         )
                     })
                     .collect::<Result<_, _>>()?;
-                return Ok(Equal::and(parts));
+                let result = Ok(Equal::and(parts));
+                if trace {
+                    println!("{:?}", result);
+                }
+                return result;
             }
             let mut limit_reached = false;
             for base_index in (0..=right_subs.len()).rev() {
@@ -218,16 +225,23 @@ impl<'x> Environment<'x> {
                     }
                     let right = self.substitute(right, &dep_subs);
                     subs.insert_no_replace(lvar.id.unwrap(), right);
+                    if trace {
+                        println!("Ok(Equal::Yes({:?}))", subs);
+                    }
                     return Ok(Equal::Yes(subs));
                 } else if let Equal::NeedsHigherLimit = equal {
                     limit_reached = true;
                 }
             }
-            return Ok(if limit_reached {
+            let result = Ok(if limit_reached {
                 Equal::NeedsHigherLimit
             } else {
                 Equal::Unknown
             });
+            if trace {
+                println!("{:?}", result);
+            }
+            return result;
         }
         // For now this produces no noticable performance improvements.
         // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,

@@ -93,8 +93,49 @@ impl<'x> Environment<'x> {
     ) -> LookupInvariantResult {
         match self.get_produced_invariant(statement, context, limit) {
             Ok(inv) => Ok(inv),
-            Err(err) => {
-                // todo!();
+            Err(mut err) => {
+                if limit > 0 {
+                    let mut candidates = Vec::new();
+                    for at in self.auto_theorems.clone() {
+                        for inv in self.generated_invariants(at) {
+                            println!("{}", self.show(inv.statement, context).unwrap());
+                            if let Equal::Yes(subs) =
+                                self.discover_equal(statement, inv.statement, limit - 1)?
+                            {
+                                candidates.push((inv, subs));
+                            }
+                        }
+                    }
+                    'check_next_candidate: for (inv, subs) in candidates {
+                        if subs.len() == 0 {
+                            return Ok(inv);
+                        }
+                        let mut adjusted_inv = inv;
+                        for (target, value) in subs {
+                            let sub: Substitutions = vec![(target, value)].into_iter().collect();
+                            for inv in self.get_variable(target).clone().invariants {
+                                let statement = self.substitute(inv, &sub);
+                                let result = self.justify(statement, context, limit - 1);
+                                match result {
+                                    Ok(inv) => {
+                                        for dep in inv.dependencies {
+                                            adjusted_inv.dependencies.insert(dep);
+                                        }
+                                    }
+                                    Err(LookupInvariantError::Unresolved(..))
+                                    | Err(LookupInvariantError::MightNotExist) => {
+                                        err = result.unwrap_err();
+                                        continue 'check_next_candidate;
+                                    }
+                                    Err(LookupInvariantError::DefinitelyDoesNotExist) => {
+                                        continue 'check_next_candidate;
+                                    }
+                                }
+                            }
+                        }
+                        return Ok(adjusted_inv);
+                    }
+                }
                 Err(err)
             }
         }

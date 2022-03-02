@@ -9,13 +9,12 @@ pub enum Equal {
     No,
 }
 
-fn combine_substitutions(
-    from: Substitutions,
-    target_subs: &mut Substitutions,
-) -> Result<(), ()> {
+fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -> Result<(), ()> {
     for (target, value) in from {
         if target_subs.contains_key(&target) {
-            return Err(());
+            if target_subs.get(&target) != Some(&value) {
+                return Err(());
+            }
         } else {
             target_subs.insert_no_replace(target, value);
         }
