@@ -53,6 +53,75 @@ t_extract_eq_from_decision IS
 }
 .VALUE
 
+# From a = b   u
+# Proves DECISION[a b u v]
+t_decision_eq_inv IS
+{
+   t_just[DECISION[a b u v]]
+   .WITH_DEPENDENCIES[a b u v]
+
+   # Proves DECISION[a b u v]
+   t_inv_eq[u   DECISION[a b u v]]
+   # Proves u = DECISION[a b u v]
+   t_eq_symm[DECISION[a b u v]   u]
+   # Proves DECISION[a b u v] = u
+   t_decision_eq[a b u v]
+
+   a IS VAR[]
+   b IS VAR[a = SELF]
+   u IS VAR[SELF]
+   v IS VAR[]
+}
+.VALUE
+# .AS_AUTO_THEOREM
+
+t_decision_by_parts IS
+{
+   t_just[conclusion]
+   .WITH_DEPENDENCIES[a b c d fx]
+   .SHOWN
+
+   DECISION[
+      a b
+
+      {
+         t_just[conclusion]
+         # Proves conclusion
+         t_inv_eq[fx[c] conclusion]
+         # Proves fx[c] = conclusion
+         t_eq_ext[c inner fx]
+         # Proves c = inner
+         t_eq_symm[inner c]
+         # Proves inner = c
+         t_decision_eq[a b c d]
+      }
+      .VALUE
+
+      {
+         t_just[conclusion]
+         # Proves conclusion
+         t_inv_eq[fx[d] conclusion]
+         # Proves fx[d] = conclusion
+         t_eq_ext[d inner fx]
+         # Proves d = inner
+         t_eq_symm[inner d]
+         # Proves inner = d
+         t_decision_neq[a b c d]
+      }
+      .VALUE
+   ]
+
+   conclusion IS fx[inner]
+   inner IS DECISION[a b c d]
+
+   a IS VAR[]
+   b IS VAR[]
+   c IS VAR[fx[c]]
+   d IS VAR[fx[d]]
+}
+.VALUE
+# .AS_AUTO_THEOREM
+
 t_just IS 
 {
    VAR[SELF]

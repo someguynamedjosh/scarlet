@@ -3,6 +3,7 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ConstructId},
     substitution::Substitutions,
+    variable::{CVariable, Dependency},
     GenInvResult,
 };
 use crate::{
@@ -53,25 +54,26 @@ impl Construct for CWithDependencies {
         let mut deps = Dependencies::new();
         let base_deps = env.get_dependencies(self.base);
         for &priority_dep in &self.dependencies {
-            let priority_dep_deps = env.get_dependencies(priority_dep);
-            let priority_dep_error = priority_dep_deps.error();
-            for dep in priority_dep_deps.into_variables() {
-                if base_deps.contains(&dep) {
-                    deps.push_eager(dep);
-                } else if let Some(err) = priority_dep_error {
-                    deps.append(Dependencies::new_error(err));
-                } else if let Some(err) = base_deps.error() {
-                    // If the base had an error, we might not be accounting for
-                    // all the dependencies it has. We might be throwing out a
-                    // priority dep that it actually has, so we need to
-                    // terminate the dependency list now before anything else
-                    // gets added out of order.
-                    deps.append(Dependencies::new_error(err));
-                }
-            }
-            if let Some(err) = priority_dep_error {
+            let dep = env
+                .get_and_downcast_construct_definition::<CVariable>(priority_dep)
+                .unwrap()
+                .unwrap();
+            let dep = dep.get_id();
+            if let Some(dep) = base_deps.get_var(dep) {
+                deps.push_eager(dep.clone());
+            // } else if let Some(err) = priority_dep_error {
+            //     deps.append(Dependencies::new_error(err));
+            } else if let Some(err) = base_deps.error() {
+                // If the base had an error, we might not be accounting for
+                // all the dependencies it has. We might be throwing out a
+                // priority dep that it actually has, so we need to
+                // terminate the dependency list now before anything else
+                // gets added out of order.
                 deps.append(Dependencies::new_error(err));
             }
+            // if let Some(err) = priority_dep_error {
+            //     deps.append(Dependencies::new_error(err));
+            // }
         }
         deps.append(base_deps);
         deps

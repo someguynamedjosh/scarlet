@@ -112,6 +112,15 @@ impl Dependencies {
         false
     }
 
+    pub fn get_var(&self, dep: VariableId) -> Option<&Dependency> {
+        for target in &self.eager {
+            if target.id == dep {
+                return Some(target);
+            }
+        }
+        None
+    }
+
     pub fn missing(&self) -> &HashSet<ConstructId> {
         &self.missing
     }

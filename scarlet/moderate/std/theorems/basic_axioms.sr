@@ -46,6 +46,8 @@ t_eq_ext_rev IS
 }
 .VALUE
 
+# From a = b   a
+# Proves b
 t_inv_eq IS 
 {
    AXIOM[t_inv_eq]
@@ -69,3 +71,4 @@ t_refl IS
    a IS VAR[]
 }
 .VALUE
+.AS_AUTO_THEOREM

@@ -1,4 +1,6 @@
 logic IS std.logic
+true IS std.true
+false IS std.false
 void IS std.void
 x IS std.basics.x
 
@@ -9,4 +11,9 @@ x IS std.basics.x
 #     ]
 #     SELF = void
 # ]]
+# std.theorems.t_just[false FROM logic.Bool]
+# std.theorems.t_refl[true]
+std.theorems.t_decision_eq_inv[true true true false].SHOWN
+# std.theorems.t_just[DECISION[true true true false]]
+# std.theorems.t_decision_by_parts[x void true false   x FROM logic.Bool]
 # logic.and[x = void x = void]
