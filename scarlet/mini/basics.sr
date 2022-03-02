@@ -1,3 +1,17 @@
-true IS UNIQUE.AS_LANGUAGE_ITEM[ true ] 
-false IS UNIQUE.AS_LANGUAGE_ITEM[ false ]
-void IS UNIQUE.AS_LANGUAGE_ITEM[ void ]
+true IS UNIQUE.AS_LANGUAGE_ITEM[true] 
+false IS UNIQUE.AS_LANGUAGE_ITEM[false]
+void IS UNIQUE.AS_LANGUAGE_ITEM[void]
+
+x IS VAR[].AS_LANGUAGE_ITEM[x]
+fx IS VAR[DEP x]
+and IS UNIQUE.AS_LANGUAGE_ITEM[and]
+
+a IS 
+VAR[DECISION[SELF true true SELF = false]]
+
+b IS 
+VAR[DECISION[SELF true true SELF = false]]
+
+and IS
+(DECISION[a true b false])
+.AS_LANGUAGE_ITEM[and]
