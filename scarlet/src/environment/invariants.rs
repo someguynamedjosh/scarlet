@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use super::{dependencies::DepResStackFrame, discover_equality::Equal, ConstructId, Environment};
 use crate::{
     constructs::{substitution::Substitutions, Construct, GenInvResult},
-    scope::{LookupInvariantError, LookupInvariantResult, LookupSimilarInvariantResult, Scope},
+    scope::{LookupInvariantError, LookupInvariantResult, Scope},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -47,19 +47,19 @@ impl InvariantMatch {
         }
     }
 
-    pub fn switch_if_better_then_pack(
-        mut self,
-        incoming: LookupSimilarInvariantResult,
-    ) -> LookupSimilarInvariantResult {
-        match incoming {
-            Ok(incoming) => {
-                self.switch_if_better(incoming);
-                self.pack()
-                    .map_err(|_| LookupInvariantError::DefinitelyDoesNotExist)
-            }
-            Err(err) => self.pack().map_err(|_| err),
-        }
-    }
+    // pub fn switch_if_better_then_pack(
+    //     mut self,
+    //     incoming: LookupSimilarInvariantResult,
+    // ) -> LookupSimilarInvariantResult {
+    //     match incoming {
+    //         Ok(incoming) => {
+    //             self.switch_if_better(incoming);
+    //             self.pack()
+    //                 .map_err(|_| LookupInvariantError::DefinitelyDoesNotExist)
+    //         }
+    //         Err(err) => self.pack().map_err(|_| err),
+    //     }
+    // }
 }
 
 impl<'x> Environment<'x> {
@@ -90,7 +90,7 @@ impl<'x> Environment<'x> {
         statement: ConstructId,
         context_id: ConstructId,
         limit: u32,
-    ) -> LookupSimilarInvariantResult {
+    ) -> LookupInvariantResult {
         let generated_invariants = self.generated_invariants(context_id);
         let mut best_match = InvariantMatch::new();
         let mut default_error = LookupInvariantError::DefinitelyDoesNotExist;
@@ -98,20 +98,13 @@ impl<'x> Environment<'x> {
             if let Ok(equal) = self.discover_equal(inv.statement, statement, limit) {
                 if equal.is_needs_higher_limit() {
                     default_error = LookupInvariantError::MightNotExist;
+                } else if equal == Equal::yes() {
+                    return Ok(inv);
                 }
-                best_match.switch_if_better((inv, equal));
             }
         }
         let scope = self.get_construct(context_id).scope.dyn_clone();
-        let other_contender = scope.lookup_invariant_limited(self, statement, limit);
-        match best_match.switch_if_better_then_pack(other_contender) {
-            Ok(ok) => Ok(ok),
-            Err(err) => Err(if err == LookupInvariantError::DefinitelyDoesNotExist {
-                default_error
-            } else {
-                err
-            }),
-        }
+        scope.lookup_invariant_limited(self, statement, limit)
     }
 
     pub fn justify(
@@ -120,15 +113,12 @@ impl<'x> Environment<'x> {
         context: ConstructId,
         limit: u32,
     ) -> LookupInvariantResult {
-        let root = self.get_produced_invariant(statement, context, limit)?;
-        if let Equal::Yes(l) = root.1 {
-            if l.len() > 0 {
-                todo!()
-            } else {
-                Ok(root.0)
+        match self.get_produced_invariant(statement, context, limit) {
+            Ok(inv) => Ok(inv),
+            Err(err) => {
+                Err(err)
+                // todo!()
             }
-        } else {
-            unreachable!()
         }
     }
 }

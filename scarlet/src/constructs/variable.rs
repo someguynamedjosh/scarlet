@@ -15,7 +15,7 @@ use crate::{
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupSimilarInvariantResult,
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult,
         ReverseLookupIdentResult, Scope,
     },
     shared::{Id, Pool},
@@ -182,7 +182,7 @@ impl Scope for SVariableInvariants {
         _env: &mut Environment<'x>,
         _invariant: ConstructId,
         _limit: u32,
-    ) -> LookupSimilarInvariantResult {
+    ) -> LookupInvariantResult {
         Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 

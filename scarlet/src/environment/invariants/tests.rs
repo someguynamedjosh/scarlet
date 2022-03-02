@@ -96,7 +96,7 @@ fn theorem_invariant() {
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
     c IS VAR[]
-    d IS VAR[SELF = c]
+    d IS VAR[c = SELF]
     identity IS VAR[]
 
     t_eq_ext_rev[c d identity]
@@ -106,6 +106,6 @@ fn theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 5).unwrap_err();
+        env.justify(justify_this, justify_this, 5).unwrap();
     });
 }

@@ -11,8 +11,8 @@ use crate::{
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupSimilarInvariantResult,
-        ReverseLookupIdentResult, Scope,
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        Scope,
     },
 };
 
@@ -193,13 +193,13 @@ impl Scope for SField {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupSimilarInvariantResult {
+    ) -> LookupInvariantResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
             let mut any_unknown = false;
             for maybe_match in env.generated_invariants(structt.value) {
                 match env.discover_equal(invariant, maybe_match.statement, limit)? {
-                    Equal::Yes(l) => return Ok((maybe_match, Equal::Yes(l))),
+                    Equal::Yes(l) if l.len() == 0 => return Ok(maybe_match),
                     Equal::Yes(..) => (),
                     Equal::NeedsHigherLimit => any_unknown = true,
                     Equal::Unknown | Equal::No => (),
@@ -258,7 +258,7 @@ fn lookup_invariant_in<'x>(
     invariant: ConstructId,
     inn: &CPopulatedStruct,
     limit: u32,
-) -> LookupSimilarInvariantResult {
+) -> LookupInvariantResult {
     let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
     let mut best_match = InvariantMatch::new();
     for maybe_match in env.generated_invariants(inn.value) {
@@ -311,7 +311,7 @@ impl Scope for SFieldAndRest {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupSimilarInvariantResult {
+    ) -> LookupInvariantResult {
         if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
             let structt = structt.clone();
             lookup_invariant_in(env, invariant, &structt, limit)

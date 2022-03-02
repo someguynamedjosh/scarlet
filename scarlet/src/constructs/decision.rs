@@ -11,8 +11,8 @@ use crate::{
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupSimilarInvariantResult,
-        ReverseLookupIdentResult, Scope,
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        Scope,
     },
 };
 
@@ -173,13 +173,15 @@ impl Scope for SWithInvariant {
         env: &mut Environment<'x>,
         invariant: ConstructId,
         limit: u32,
-    ) -> LookupSimilarInvariantResult {
+    ) -> LookupInvariantResult {
         // No, I don't want
         let _no_subs = NestedSubstitutions::new();
         match env.discover_equal(self.0.statement, invariant, limit)? {
-            Equal::Yes(l) => Ok((self.0.clone(), Equal::Yes(l))),
+            Equal::Yes(l) if l.len() == 0 => Ok(self.0.clone()),
             Equal::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
-            Equal::No | Equal::Unknown => Err(LookupInvariantError::DefinitelyDoesNotExist),
+            Equal::Yes(..) | Equal::No | Equal::Unknown => {
+                Err(LookupInvariantError::DefinitelyDoesNotExist)
+            }
         }
     }
 

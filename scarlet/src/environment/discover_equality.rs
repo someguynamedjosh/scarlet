@@ -91,7 +91,7 @@ impl<'x> Environment<'x> {
         let mut right = self.dereference(right)?;
         let mut left_subs = left_subs.into_iter().map(|r| &*r).collect_vec();
         let mut right_subs = right_subs.into_iter().map(|r| &*r).collect_vec();
-        let trace = true;
+        let trace = false;
         if trace {
             println!();
             println!("{:?} = {:?}?", left, right);
