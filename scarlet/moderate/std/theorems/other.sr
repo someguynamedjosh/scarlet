@@ -79,7 +79,6 @@ t_decision_by_parts IS
 {
    t_just[conclusion]
    .WITH_DEPENDENCIES[a b c d fx]
-   .SHOWN
 
    DECISION[
       a b

@@ -1,0 +1,11 @@
+t_refl IS
+{
+   AXIOM[t_refl]
+
+   (a = a)
+   .AS_LANGUAGE_ITEM[t_refl_statement]
+
+   a IS VAR[]
+}
+.VALUE
+.AS_AUTO_THEOREM
