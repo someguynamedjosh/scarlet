@@ -141,3 +141,39 @@ fn auto_theorem_invariant() {
         env.justify(justify_this, justify_this, 5).unwrap();
     });
 }
+
+#[test]
+fn t_just_after_theorem() {
+    let code = r"
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
+    t_eq_ext_rev IS 
+    {
+        AXIOM[t_eq_ext_rev]
+
+        statement IS 
+        (fx[b] = fx[a])
+        .WITH_DEPENDENCIES[a b fx]
+        .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+        a IS VAR[]
+        b IS VAR[a = SELF]
+    }
+    .VALUE
+
+    t_just IS VAR[SELF]
+
+    justify_this IS b = a
+
+    t_eq_ext_rev[a b x]
+
+    a IS VAR[]
+    b IS VAR[a = SELF]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
+        println!("Justifying...");
+        env.justify(justify_this, justify_this, 5).unwrap();
+    });
+}
