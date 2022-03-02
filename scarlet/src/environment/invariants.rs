@@ -31,35 +31,17 @@ impl InvariantMatch {
     }
 
     pub fn switch_if_better(&mut self, incoming: (Invariant, Equal)) {
-        if let Equal::Yes(l) = incoming.1 {
-            let better_than_best_match = self.0.as_ref().map(|(_, bl)| bl.len() > l.len());
+        if let Equal::Yes(subs) = incoming.1 {
+            let better_than_best_match = self.0.as_ref().map(|(_, bsubs)| bsubs.len() > subs.len());
             if better_than_best_match.unwrap_or(true) {
-                self.0 = Some((incoming.0, l));
+                self.0 = Some((incoming.0, subs));
             }
         }
     }
 
-    pub fn pack(self) -> Result<(Invariant, Equal), ()> {
-        if let Some((inv, l)) = self.0 {
-            Ok((inv, Equal::Yes(l)))
-        } else {
-            Err(())
-        }
+    pub fn pack(self) -> Result<(Invariant, Substitutions), ()> {
+        self.0.ok_or(())
     }
-
-    // pub fn switch_if_better_then_pack(
-    //     mut self,
-    //     incoming: LookupSimilarInvariantResult,
-    // ) -> LookupSimilarInvariantResult {
-    //     match incoming {
-    //         Ok(incoming) => {
-    //             self.switch_if_better(incoming);
-    //             self.pack()
-    //                 .map_err(|_| LookupInvariantError::DefinitelyDoesNotExist)
-    //         }
-    //         Err(err) => self.pack().map_err(|_| err),
-    //     }
-    // }
 }
 
 impl<'x> Environment<'x> {
@@ -92,13 +74,9 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> LookupInvariantResult {
         let generated_invariants = self.generated_invariants(context_id);
-        let mut best_match = InvariantMatch::new();
-        let mut default_error = LookupInvariantError::DefinitelyDoesNotExist;
         for inv in generated_invariants {
             if let Ok(equal) = self.discover_equal(inv.statement, statement, limit) {
-                if equal.is_needs_higher_limit() {
-                    default_error = LookupInvariantError::MightNotExist;
-                } else if equal == Equal::yes() {
+                if equal == Equal::yes() {
                     return Ok(inv);
                 }
             }
@@ -116,9 +94,13 @@ impl<'x> Environment<'x> {
         match self.get_produced_invariant(statement, context, limit) {
             Ok(inv) => Ok(inv),
             Err(err) => {
+                // todo!();
                 Err(err)
-                // todo!()
             }
         }
+    }
+
+    pub fn add_auto_theorem(&mut self, auto_theorem: ConstructId) {
+        self.auto_theorems.push(auto_theorem);
     }
 }

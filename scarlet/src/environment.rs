@@ -46,7 +46,7 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
 ];
 
 #[cfg(feature = "no_axioms")]
-pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void"];
+pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "x", "and"];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct UnresolvedConstructError(pub ConstructId);
@@ -61,8 +61,8 @@ pub struct Environment<'x> {
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
     pub(super) resolve_stack: ResolveStack,
+    pub(super) auto_theorems: Vec<ConstructId>,
     // pub(super) def_equal_memo_table: HashMap<DefEqualQuery, DefEqualResult>,
-    use_reduced_definitions_while_vomiting: bool,
 }
 
 impl<'x> Environment<'x> {
@@ -74,7 +74,7 @@ impl<'x> Environment<'x> {
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
             resolve_stack: ResolveStack::new(),
-            use_reduced_definitions_while_vomiting: true,
+            auto_theorems: Vec::new(),
         };
         for &name in LANGUAGE_ITEM_NAMES {
             let id = this.push_placeholder(Box::new(SRoot));

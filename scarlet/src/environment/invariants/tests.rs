@@ -109,3 +109,35 @@ fn theorem_invariant() {
         env.justify(justify_this, justify_this, 5).unwrap();
     });
 }
+
+#[test]
+fn auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    t_decision_eq IS
+    { 
+        AXIOM[t_decision_eq]
+
+        (DECISION[a a b c] = b)
+        .AS_LANGUAGE_ITEM[t_decision_eq_statement]
+
+        a IS VAR[]
+        b IS VAR[]
+        c IS VAR[]
+    }
+    .VALUE
+    .AS_AUTO_THEOREM
+
+    d IS VAR[]
+    e IS VAR[]
+    f IS VAR[]
+
+    justify_this IS
+    DECISION[d d e f] = e
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
+        env.justify(justify_this, justify_this, 5).unwrap();
+    });
+}
