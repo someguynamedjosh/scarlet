@@ -85,6 +85,19 @@ fn aabc_is_ddef() {
 }
 
 #[test]
+fn xxbc_is_aabc() {
+    let mut env = env();
+    let a = env.unique();
+    let b = env.unique();
+    let c = env.unique();
+    let x = env.variable_full();
+    let dec1 = env.decision(x.0, x.0, b, c);
+    let dec2 = env.decision(a, a, b, c);
+    let left_subs = subs(vec![(x.1, a)]);
+    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs)));
+}
+
+#[test]
 fn aabc_eq_b_is_ddef_eq_e() {
     let mut env = env();
     let truee = env.unique();

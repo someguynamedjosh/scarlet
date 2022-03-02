@@ -1,11 +1,26 @@
-true IS basics.true
+UNIQUE.AS_LANGUAGE_ITEM[t_trivial_statement]
+UNIQUE.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
+UNIQUE.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
+UNIQUE.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+UNIQUE.AS_LANGUAGE_ITEM[t_inv_eq_statement]
+# UNIQUE.AS_LANGUAGE_ITEM[t_refl_statement]
+UNIQUE.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+UNIQUE.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 
-x IS VAR[]
-y IS VAR[]
+t_refl IS
+{
+   AXIOM[t_refl]
 
-a IS VAR[DEP x]
-b IS VAR[DEP y]
+   (a = a)
+   .AS_LANGUAGE_ITEM[t_refl_statement]
 
-a[a IS b].SHOWN
+   a IS VAR[]
+}
+.VALUE
+.AS_AUTO_THEOREM
 
-# a[a IS b]
+t_just IS VAR[SELF]
+
+asdf IS UNIQUE
+
+t_just[asdf = asdf]

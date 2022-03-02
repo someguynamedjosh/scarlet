@@ -173,7 +173,33 @@ fn t_just_after_theorem() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        println!("Justifying...");
+        env.justify(justify_this, justify_this, 5).unwrap();
+    });
+}
+
+#[test]
+fn justify_auto_refl() {
+    let code = r"
+    t_refl IS
+    {
+        AXIOM[t_refl]
+
+        (a = a)
+        .AS_LANGUAGE_ITEM[t_refl_statement]
+
+        a IS VAR[]
+    }
+    .VALUE
+    .AS_AUTO_THEOREM
+
+    t_just IS VAR[SELF]
+
+    asdf IS UNIQUE
+
+    justify_this IS asdf = asdf
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify(justify_this, justify_this, 5).unwrap();
     });
 }
