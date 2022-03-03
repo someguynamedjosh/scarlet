@@ -98,7 +98,6 @@ impl<'x> Environment<'x> {
                     let mut candidates = Vec::new();
                     for at in self.auto_theorems.clone() {
                         for inv in self.generated_invariants(at) {
-                            // println!("{}", self.show(inv.statement, context).unwrap());
                             if let Equal::Yes(subs) =
                                 self.discover_equal(inv.statement, statement, limit - 1)?
                             {

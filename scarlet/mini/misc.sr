@@ -7,8 +7,25 @@ UNIQUE.AS_LANGUAGE_ITEM[t_inv_eq_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_decision_eq_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 
+true IS basics.true
+
+t_refl IS
+{
+   AXIOM[t_refl]
+
+   (a = a)
+   .AS_LANGUAGE_ITEM[t_refl_statement]
+
+   a IS VAR[]
+}
+.VALUE
+.AS_AUTO_THEOREM
+
 t_just IS VAR[SELF]
 
 asdf IS UNIQUE
 
-t_just[asdf = asdf]
+a IS VAR[]
+b IS VAR[a = SELF]
+
+{a b}[a IS true   b IS true]
