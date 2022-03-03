@@ -66,16 +66,16 @@ t_decision_by_parts IS
    AXIOM[t_invariant_truth_rev]
 
    conclusion
-   .WITH_DEPENDENCIES[a b c d fx]
+   .WITH_DEPENDENCIES[a b c d]
    .AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
 
-   conclusion IS fx[inner]
+   conclusion IS inner
    inner IS DECISION[a b c d]
 
    a IS VAR[]
    b IS VAR[]
-   c IS VAR[fx[c]]
-   d IS VAR[fx[d]]
+   c IS VAR[c]
+   d IS VAR[d]
 }
 .VALUE
 .AS_AUTO_THEOREM

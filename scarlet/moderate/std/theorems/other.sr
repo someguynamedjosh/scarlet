@@ -97,6 +97,52 @@ t_decision_neq_inv IS
 .VALUE
 .AS_AUTO_THEOREM
 
+# t_decision_by_parts IS
+# {
+#    t_just[conclusion]
+#    .WITH_DEPENDENCIES[a b c d fx]
+
+#    DECISION[
+#       a b
+
+#       {
+#          t_just[conclusion]
+#          # Proves conclusion
+#          t_inv_eq[fx[c] conclusion]
+#          # Proves fx[c] = conclusion
+#          t_eq_ext[c inner fx]
+#          # Proves c = inner
+#          t_eq_symm[inner c]
+#          # Proves inner = c
+#          t_decision_eq[a b c d]
+#       }
+#       .VALUE
+
+#       {
+#          t_just[conclusion]
+#          # Proves conclusion
+#          t_inv_eq[fx[d] conclusion]
+#          # Proves fx[d] = conclusion
+#          t_eq_ext[d inner fx]
+#          # Proves d = inner
+#          t_eq_symm[inner d]
+#          # Proves inner = d
+#          t_decision_neq[a b c d]
+#       }
+#       .VALUE
+#    ]
+
+#    conclusion IS fx[inner]
+#    inner IS DECISION[a b c d]
+
+#    a IS VAR[]
+#    b IS VAR[]
+#    c IS VAR[fx[c]]
+#    d IS VAR[fx[d]]
+# }
+# .VALUE
+# .AS_AUTO_THEOREM
+
 t_decision_by_parts IS
 {
    t_just[conclusion]
@@ -108,12 +154,10 @@ t_decision_by_parts IS
       {
          t_just[conclusion]
          # Proves conclusion
-         t_inv_eq[fx[c] conclusion]
-         # Proves fx[c] = conclusion
-         t_eq_ext[c inner fx]
-         # Proves c = inner
-         t_eq_symm[inner c]
-         # Proves inner = c
+         t_inv_eq[c conclusion]
+         # Proves c = conclusion
+         t_eq_symm[conclusion c]
+         # Proves conclusion = c
          t_decision_eq[a b c d]
       }
       .VALUE
@@ -121,24 +165,21 @@ t_decision_by_parts IS
       {
          t_just[conclusion]
          # Proves conclusion
-         t_inv_eq[fx[d] conclusion]
-         # Proves fx[d] = conclusion
-         t_eq_ext[d inner fx]
-         # Proves d = inner
-         t_eq_symm[inner d]
-         # Proves inner = d
+         t_inv_eq[d conclusion]
+         # Proves d = conclusion
+         t_eq_symm[conclusion d]
+         # Proves conclusion = d
          t_decision_neq[a b c d]
       }
       .VALUE
    ]
 
-   conclusion IS fx[inner]
-   inner IS DECISION[a b c d]
+   conclusion IS DECISION[a b c d]
 
    a IS VAR[]
    b IS VAR[]
-   c IS VAR[fx[c]]
-   d IS VAR[fx[d]]
+   c IS VAR[c]
+   d IS VAR[d]
 }
 .VALUE
 .AS_AUTO_THEOREM
