@@ -104,6 +104,7 @@ impl Construct for CDecision {
         other_subs: Vec<&Substitutions>,
         limit: u32,
     ) -> DeqResult {
+        // println!("{:?} = {:?}", self, other);
         if let Some(other) = downcast_construct::<Self>(other) {
             Ok(Equal::and(vec![
                 env.discover_equal_with_subs(

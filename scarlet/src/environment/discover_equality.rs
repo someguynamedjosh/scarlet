@@ -213,7 +213,14 @@ impl<'x> Environment<'x> {
                 if let Equal::Yes(mut subs) = equal {
                     let mut right = right;
                     for sub in &right_subs[..base_index] {
-                        right = self.substitute(right, sub);
+                        let rdeps = self.get_dependencies(right);
+                        let mut filtered_sub = Substitutions::new();
+                        for dep in rdeps.into_variables() {
+                            if let Some(&value) = sub.get(&dep.id) {
+                                filtered_sub.insert_or_replace(dep.id, value);
+                            }
+                        }
+                        right = self.substitute(right, &filtered_sub);
                     }
                     let mut dep_subs = Substitutions::new();
                     for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {

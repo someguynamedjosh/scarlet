@@ -420,3 +420,28 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
         Ok(Equal::yes())
     );
 }
+
+#[test]
+fn x_eq_y_sub_true_true_is_a_equal_a() {
+    let mut env = env();
+    let truee = env.unique();
+    let falsee = env.unique();
+
+    let a = env.variable_full();
+    let x = env.variable_full();
+    let y = env.variable_full();
+
+    let x_eq_y = env.decision(x.0, y.0, truee, falsee);
+    let true_eq_true = env.substitute(x_eq_y, &subs(vec![(x.1, truee), (y.1, truee)]));
+    let a_eq_a = env.decision(a.0, a.0, truee, falsee);
+
+    assert_matches!(env.discover_equal(a_eq_a, true_eq_true, 3), Ok(Equal::Yes(..)));
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(a_eq_a, true_eq_true, 3) {
+        assert_eq!(lsubs.len(), 1);
+        let mut entries = lsubs.iter();
+        let last = entries.next().unwrap();
+        assert_eq!(last, &(a.1, truee));
+    } else {
+        unreachable!()
+    }
+}
