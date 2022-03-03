@@ -8,6 +8,9 @@ asdf IS UNIQUE
 
 a IS VAR[]
 
-theorems.t_decision_eq_inv[true true true true = false]
+# theorems.t_decision_eq_inv[true true true true = false]
 
-and[true true]
+# and[true true]
+x IS VAR[]
+# y IS VAR[]
+t_just[DECISION[x true true true][true]]

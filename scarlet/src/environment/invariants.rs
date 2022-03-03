@@ -91,9 +91,6 @@ impl<'x> Environment<'x> {
         context: ConstructId,
         limit: u32,
     ) -> LookupInvariantResult {
-        if statement.index > 500 {
-            panic!();
-        }
         match self.get_produced_invariant(statement, context, limit) {
             Ok(inv) => Ok(inv),
             Err(mut err) => {
@@ -103,10 +100,10 @@ impl<'x> Environment<'x> {
                 let mut candidates = Vec::new();
                 for at in self.auto_theorems.clone() {
                     for inv in self.generated_invariants(at) {
-                        if let Equal::Yes(subs) =
-                            self.discover_equal(inv.statement, statement, limit - 1)?
-                        {
-                            candidates.push((inv, subs));
+                        match self.discover_equal(inv.statement, statement, limit - 1)? {
+                            Equal::Yes(subs) => candidates.push((inv, subs)),
+                            Equal::NeedsHigherLimit => err = LookupInvariantError::MightNotExist,
+                            _ => (),
                         }
                     }
                 }
@@ -115,10 +112,11 @@ impl<'x> Environment<'x> {
                         return Ok(inv);
                     }
                     let mut adjusted_inv = inv;
+                    let mut inv_subs = Substitutions::new();
                     for (target, value) in subs {
-                        let sub: Substitutions = vec![(target, value)].into_iter().collect();
-                        for inv in self.get_variable(target).clone().invariants {
-                            let statement = self.substitute(inv, &sub);
+                        inv_subs.insert_no_replace(target, value);
+                        for invv in self.get_variable(target).clone().invariants {
+                            let statement = self.substitute(invv, &inv_subs);
                             let result = self.justify(statement, context, limit - 1);
                             match result {
                                 Ok(inv) => {

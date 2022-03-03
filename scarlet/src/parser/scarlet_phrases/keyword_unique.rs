@@ -25,15 +25,16 @@ fn create<'x>(
 fn uncreate<'a>(
     _pc: &ParseContext,
     env: &mut Environment,
-    _code_arena: &'a Arena<String>,
+    code_arena: &'a Arena<String>,
     uncreate: ConstructId,
     _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(
-        if let Some(_unique) = env.get_and_downcast_construct_definition::<CUnique>(uncreate)? {
+        if let Some(unique) = env.get_and_downcast_construct_definition::<CUnique>(uncreate)? {
+            let text = code_arena.alloc(format!("UNIQUE {:?}", unique));
             Some(Node {
                 phrase: "keyword UNIQUE",
-                children: vec![NodeChild::Text("UNIQUE")],
+                children: vec![NodeChild::Text(text)],
             })
         } else {
             None
@@ -41,8 +42,8 @@ fn uncreate<'a>(
     )
 }
 
-fn vomit(_pc: &ParseContext, _src: &Node) -> String {
-    format!("UNIQUE")
+fn vomit(_pc: &ParseContext, src: &Node) -> String {
+    src.children[0].as_text().to_owned()
 }
 
 pub fn phrase() -> Phrase {
