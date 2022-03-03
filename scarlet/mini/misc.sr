@@ -12,6 +12,12 @@ a IS VAR[]
 
 # and[true true]
 x IS VAR[]
+
+is_bool IS DECISION[x true true x = false]
+t_just[is_bool[true]]
+t_just[is_bool[false]]
+theorems.t_decision_by_parts_ext[is_bool x asdf true false]
+# t_just[is_bool[x = asdf]]
 # y IS VAR[]
-t_just[DECISION[x true true x = false][false]]
+# t_just[DECISION[x true true x = false][false]]
 # t_just[DECISION[false false true false]]

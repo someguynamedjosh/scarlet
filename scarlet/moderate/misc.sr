@@ -11,6 +11,6 @@ x IS std.basics.x
 #     ]
 #     SELF = void
 # ]]
-std.theorems.t_just[false FROM logic.Bool]
-# logic.a[x = void]
+# std.theorems.t_just[false FROM logic.Bool]
+logic.a[x = void]
 # logic.and[x = void x = void]

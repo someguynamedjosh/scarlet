@@ -1,7 +1,7 @@
 # UNIQUE.AS_LANGUAGE_ITEM[t_trivial_statement]
 # UNIQUE.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
 # UNIQUE.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
-UNIQUE.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+# UNIQUE.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_inv_eq_statement]
 # UNIQUE.AS_LANGUAGE_ITEM[t_refl_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_decision_eq_statement]
@@ -57,6 +57,25 @@ t_decision_neq_inv IS
    b IS VAR[DECISION[a SELF false true]]
    u IS VAR[]
    v IS VAR[SELF]
+}
+.VALUE
+.AS_AUTO_THEOREM
+
+t_decision_by_parts_ext IS
+{
+   AXIOM[t_eq_ext_rev]
+
+   conclusion
+   .WITH_DEPENDENCIES[a b c d fx]
+   .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+   conclusion IS fx[inner]
+   inner IS DECISION[a b c d]
+
+   a IS VAR[]
+   b IS VAR[]
+   c IS VAR[fx[c]]
+   d IS VAR[fx[d]]
 }
 .VALUE
 .AS_AUTO_THEOREM
