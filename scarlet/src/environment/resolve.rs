@@ -52,7 +52,7 @@ impl<'x> Environment<'x> {
         }
         let mut problem = false;
         self.for_each_construct_returning_nothing(|env, con| {
-            if let Err(err) = env.resolve(con, 128) {
+            if let Err(err) = env.resolve(con, limit) {
                 problem = true;
                 match err {
                     ResolveError::Unresolved(err) => {

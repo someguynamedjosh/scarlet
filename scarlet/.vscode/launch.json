@@ -7,24 +7,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "root scarlet debug",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=scarlet",
-                    "--package=scarlet"
-                ],
-                "filter": {
-                    "name": "scarlet",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "moderate scarlet debug",
             "cargo": {
                 "args": [
@@ -49,7 +31,6 @@
                     "build",
                     "--bin=scarlet",
                     "--package=scarlet",
-                    "--features=no_axioms"
                 ],
                 "filter": {
                     "name": "scarlet",

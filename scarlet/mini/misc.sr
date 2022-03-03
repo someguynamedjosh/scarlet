@@ -1,4 +1,5 @@
 true IS basics.true
+false IS basics.false
 and IS basics.and
 
 t_just IS VAR[SELF]
@@ -7,4 +8,6 @@ asdf IS UNIQUE
 
 a IS VAR[]
 
-and[true true].SHOWN
+theorems.t_decision_eq_inv[true true true true = false]
+
+and[true true]

@@ -3,7 +3,7 @@
 # UNIQUE.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_inv_eq_statement]
-UNIQUE.AS_LANGUAGE_ITEM[t_refl_statement]
+# UNIQUE.AS_LANGUAGE_ITEM[t_refl_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_decision_eq_statement]
 UNIQUE.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 
@@ -13,6 +13,19 @@ x IS basics.x
 fx IS basics.fx
 
 # Abuse of various axioms to import theorems I want to be automatically applied.
+
+# This one actually isn't abusive!
+t_refl IS
+{
+   AXIOM[t_refl]
+
+   (a = a)
+   .AS_LANGUAGE_ITEM[t_refl_statement]
+
+   a IS VAR[]
+}
+.VALUE
+.AS_AUTO_THEOREM
 
 # From a = b   u
 # Proves DECISION[a b u v]
