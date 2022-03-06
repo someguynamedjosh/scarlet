@@ -5,7 +5,7 @@ use crate::{
     constructs::{
         substitution::{CSubstitution, Substitutions},
         variable::CVariable,
-        ConstructDefinition, ConstructId,
+        ItemDefinition, ItemId,
     },
     environment::{dependencies::Dependencies, Environment},
     scope::Scope,
@@ -14,9 +14,9 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct RSubstitution<'x> {
-    pub base: ConstructId,
-    pub named_subs: Vec<(&'x str, ConstructId)>,
-    pub anonymous_subs: Vec<ConstructId>,
+    pub base: ItemId,
+    pub named_subs: Vec<(&'x str, ItemId)>,
+    pub anonymous_subs: Vec<ItemId>,
 }
 
 impl<'x> Resolvable<'x> for RSubstitution<'x> {
@@ -31,7 +31,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         limit: u32,
     ) -> ResolveResult<'x> {
         let base = env.dereference(self.base)?;
-        let base_scope = env.get_construct_scope(base).dyn_clone();
+        let base_scope = env.get_item_scope(base).dyn_clone();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = env.get_dependencies(self.base);
 
@@ -44,15 +44,15 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         let invs = create_invariants(env, base, &subs, justification_deps)?;
 
         let csub = CSubstitution::new(self.base, subs, invs);
-        Ok(ConstructDefinition::Resolved(Box::new(csub)))
+        Ok(ItemDefinition::Resolved(Box::new(csub)))
     }
 }
 
 fn create_invariants(
     env: &mut Environment,
-    base: ConstructId,
+    base: ItemId,
     subs: &Substitutions,
-    justification_deps: HashSet<ConstructId>,
+    justification_deps: HashSet<ItemId>,
 ) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
     let mut invs = Vec::new();
     for inv in env.generated_invariants(base) {
@@ -88,7 +88,7 @@ fn create_invariants(
 
 fn extract_invariant_dependencies(
     justifications: Vec<crate::environment::invariants::Invariant>,
-) -> HashSet<ConstructId> {
+) -> HashSet<ItemId> {
     justifications
         .iter()
         .flat_map(|j| j.dependencies.iter().copied())

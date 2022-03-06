@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
+    constructs::ItemId,
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -16,7 +16,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".AS_AUTO_THEOREM"));
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
@@ -28,7 +28,7 @@ fn uncreate<'a>(
     _pc: &ParseContext,
     _env: &mut Environment,
     _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
+    _uncreate: ItemId,
     _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(None)

@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{with_dependencies::CWithDependencies, ConstructId},
+    constructs::{with_dependencies::CWithDependencies, ItemId},
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -17,7 +17,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children[2], NodeChild::Text("["));
     assert_eq!(node.children[4], NodeChild::Text("]"));
     assert!(node.children.len() == 5);
@@ -27,7 +27,7 @@ fn create<'x>(
         .iter()
         .map(|c| c.as_construct(pc, env, SPlain(this)))
         .collect();
-    env.define_construct(this, CWithDependencies::new(base, deps));
+    env.define_item(this, CWithDependencies::new(base, deps));
     this
 }
 
@@ -35,7 +35,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Ok(Some(cwd)) = env.get_and_downcast_construct_definition::<CWithDependencies>(uncreate)

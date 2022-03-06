@@ -1,4 +1,4 @@
-use super::{Environment, UnresolvedConstructError};
+use super::{Environment, UnresolvedItemError};
 use crate::{
     constructs::{
         decision::CDecision,
@@ -7,7 +7,7 @@ use crate::{
         substitution::CSubstitution,
         variable::CVariable,
         with_dependencies::CWithDependencies,
-        ConstructId,
+        ItemId,
     },
     resolvable::{from::RFrom, RSubstitution},
     scope::{SPlain, Scope},
@@ -16,10 +16,10 @@ use crate::{
 impl<'x> Environment<'x> {
     fn push_and(
         &mut self,
-        left: ConstructId,
-        right: ConstructId,
+        left: ItemId,
+        right: ItemId,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemId {
         let and = self.get_language_item("and");
         self.push_unresolved(
             RSubstitution {
@@ -31,7 +31,7 @@ impl<'x> Environment<'x> {
         )
     }
 
-    fn define_and(&mut self, original: ConstructId, left: ConstructId, right: ConstructId) {
+    fn define_and(&mut self, original: ItemId, left: ItemId, right: ItemId) {
         let and = self.get_language_item("and");
         self.define_unresolved(
             original,
@@ -45,16 +45,16 @@ impl<'x> Environment<'x> {
 
     pub fn create_from_dex(
         &mut self,
-        from: ConstructId,
-    ) -> Result<ConstructId, UnresolvedConstructError> {
+        from: ItemId,
+    ) -> Result<ItemId, UnresolvedItemError> {
         let scope = || Box::new(SPlain(from));
-        let into = if let Some(from_dex) = self.constructs[from].from_dex {
+        let into = if let Some(from_dex) = self.items[from].from_dex {
             from_dex
         } else {
             self.push_placeholder(scope())
         };
-        if self.constructs[into].definition.is_placeholder() {
-            self.constructs[from].from_dex = Some(into);
+        if self.items[into].definition.is_placeholder() {
+            self.items[from].from_dex = Some(into);
             let x = self.get_language_item("x");
 
             if let Some(structt) =
@@ -92,7 +92,7 @@ impl<'x> Environment<'x> {
                 if deps.len() > 0 {
                     todo!();
                 }
-                let reorder_inv_deps = |inv: ConstructId| CWithDependencies::new(inv, vec![from]);
+                let reorder_inv_deps = |inv: ItemId| CWithDependencies::new(inv, vec![from]);
                 let truee = self.get_language_item("true");
 
                 let statement = if invs.len() == 0 {
@@ -110,12 +110,12 @@ impl<'x> Environment<'x> {
 
                 let subs = vec![(id, x)].into_iter().collect();
                 let con = CSubstitution::new_unchecked(statement, subs);
-                self.define_construct(into, con);
+                self.define_item(into, con);
             } else {
                 let truee = self.get_language_item("truee");
                 let falsee = self.get_language_item("falsee");
                 let equal = CDecision::new(x, from, truee, falsee);
-                self.define_construct(into, equal);
+                self.define_item(into, equal);
             }
         }
         Ok(into)

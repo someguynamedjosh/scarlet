@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 
 use super::{phrase::PhraseTable, ParseContext};
-use crate::{constructs::ConstructId, environment::Environment, scope::Scope, shared::indented};
+use crate::{constructs::ItemId, environment::Environment, scope::Scope, shared::indented};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum NodeChild<'a> {
@@ -32,7 +32,7 @@ impl<'a> NodeChild<'a> {
         pc: &ParseContext,
         env: &mut Environment<'a>,
         scope: impl Scope + 'static,
-    ) -> ConstructId {
+    ) -> ItemId {
         self.as_node().as_construct(pc, env, scope)
     }
 
@@ -41,7 +41,7 @@ impl<'a> NodeChild<'a> {
         pc: &ParseContext,
         env: &mut Environment<'a>,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemId {
         self.as_node().as_construct_dyn_scope(pc, env, scope)
     }
 
@@ -113,7 +113,7 @@ impl<'x> Node<'x> {
         pc: &ParseContext,
         env: &mut Environment<'x>,
         scope: impl Scope + 'static,
-    ) -> ConstructId {
+    ) -> ItemId {
         self.as_construct_dyn_scope(pc, env, Box::new(scope))
     }
 
@@ -122,7 +122,7 @@ impl<'x> Node<'x> {
         pc: &ParseContext,
         env: &mut Environment<'x>,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemId {
         pc.phrases_sorted_by_priority
             .get(self.phrase)
             .unwrap()

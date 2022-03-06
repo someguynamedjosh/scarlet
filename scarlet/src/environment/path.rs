@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
+    constructs::ItemId,
     parser::{
         Node,
         NodeChild::{self, *},
@@ -17,7 +17,7 @@ pub enum PathParentType {
 #[derive(Clone, Debug)]
 pub struct PathParent {
     typee: PathParentType,
-    parent: ConstructId,
+    parent: ItemId,
 }
 
 #[derive(Clone, Debug)]

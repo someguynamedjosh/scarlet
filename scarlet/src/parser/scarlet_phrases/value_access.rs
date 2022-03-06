@@ -5,7 +5,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
-        ConstructId,
+        ItemId,
     },
     environment::{discover_equality::Equal, Environment},
     parser::{
@@ -21,11 +21,11 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 2);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_construct(this, CAtomicStructMember(base, AtomicStructMember::Value));
+    env.define_item(this, CAtomicStructMember(base, AtomicStructMember::Value));
     this
 }
 
@@ -33,7 +33,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     let source = if let Some(asm) =
@@ -45,7 +45,7 @@ fn uncreate<'a>(
             None
         }
     } else {
-        env.for_each_construct(|env, id| {
+        env.for_each_item(|env, id| {
             if let Ok(Some(cstruct)) =
                 env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
             {

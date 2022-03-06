@@ -1,7 +1,7 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     constructs::{
-        substitution::CSubstitution, variable::CVariable, ConstructDefinition, ConstructId,
+        substitution::CSubstitution, variable::CVariable, ItemDefinition, ItemId,
     },
     environment::Environment,
     scope::Scope,
@@ -9,8 +9,8 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct RFrom {
-    pub left: ConstructId,
-    pub right: ConstructId,
+    pub left: ItemId,
+    pub right: ItemId,
 }
 
 impl<'x> Resolvable<'x> for RFrom {
@@ -30,6 +30,6 @@ impl<'x> Resolvable<'x> for RFrom {
         let x_id = x.unwrap().get_id();
         let subs = vec![(x_id, self.left)].into_iter().collect();
         let subbed = CSubstitution::new_unchecked(base, subs);
-        Ok(ConstructDefinition::Resolved(Box::new(subbed)))
+        Ok(ItemDefinition::Resolved(Box::new(subbed)))
     }
 }

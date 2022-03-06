@@ -7,12 +7,12 @@ use typed_arena::Arena;
 
 use super::{
     dependencies::{DepResult, Dependencies},
-    Environment, UnresolvedConstructError,
+    Environment, UnresolvedItemError,
 };
 use crate::constructs::{
     substitution::{CSubstitution, Substitutions},
     variable::CVariable,
-    Construct, ConstructId,
+    Construct, ItemId,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -38,20 +38,20 @@ impl DeqSide {
 
 pub type DeqPriority = u8;
 
-pub type DeqResult = Result<Equal, UnresolvedConstructError>;
+pub type DeqResult = Result<Equal, UnresolvedItemError>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct DiscoverEqualQuery {
-    left: ConstructId,
-    right: ConstructId,
+    left: ItemId,
+    right: ItemId,
 }
 
 impl<'x> Environment<'x> {
-    pub fn are_same_construct(
+    pub fn are_same_item(
         &mut self,
-        left: ConstructId,
-        right: ConstructId,
-    ) -> Result<bool, UnresolvedConstructError> {
+        left: ItemId,
+        right: ItemId,
+    ) -> Result<bool, UnresolvedItemError> {
         let left = self.dereference(left)?;
         let right = self.dereference(right)?;
         Ok(left == right)
@@ -59,8 +59,8 @@ impl<'x> Environment<'x> {
 
     pub fn discover_equal(
         &mut self,
-        left: ConstructId,
-        right: ConstructId,
+        left: ItemId,
+        right: ItemId,
         limit: u32,
     ) -> DeqResult {
         self.discover_equal_with_subs(left, vec![], right, vec![], limit)
@@ -68,7 +68,7 @@ impl<'x> Environment<'x> {
 
     fn compute_dependencies_with_subs(
         &mut self,
-        base: ConstructId,
+        base: ItemId,
         subs: &[&Substitutions],
     ) -> DepResult {
         let mut deps = self.get_dependencies(base);
@@ -80,9 +80,9 @@ impl<'x> Environment<'x> {
 
     pub(crate) fn discover_equal_with_subs(
         &mut self,
-        left: ConstructId,
+        left: ItemId,
         left_subs: Vec<&Substitutions>,
-        right: ConstructId,
+        right: ItemId,
         right_subs: Vec<&Substitutions>,
         limit: u32,
     ) -> DeqResult {
@@ -112,14 +112,14 @@ impl<'x> Environment<'x> {
             }
             return Ok(Equal::NeedsHigherLimit);
         }
-        while let Some((base, extra_subs)) = self.get_construct_definition(left)?.dereference() {
+        while let Some((base, extra_subs)) = self.get_item_as_construct(left)?.dereference() {
             left = base;
             if let Some(extra_subs) = extra_subs {
                 let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
                 left_subs.insert(0, extra_subs);
             }
         }
-        while let Some((base, extra_subs)) = self.get_construct_definition(right)?.dereference() {
+        while let Some((base, extra_subs)) = self.get_item_as_construct(right)?.dereference() {
             right = base;
             if let Some(extra_subs) = extra_subs {
                 let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
@@ -254,8 +254,8 @@ impl<'x> Environment<'x> {
         // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
         // limit)) {     return result.clone();
         // }
-        let left_def = self.get_construct_definition(left)?.dyn_clone();
-        let right_def = self.get_construct_definition(right)?.dyn_clone();
+        let left_def = self.get_item_as_construct(left)?.dyn_clone();
+        let right_def = self.get_item_as_construct(right)?.dyn_clone();
         if trace {
             println!("{:#?} = {:#?}", left_def, right_def);
         }

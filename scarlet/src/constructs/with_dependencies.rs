@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
 use super::{
-    base::{Construct, ConstructId},
+    base::{Construct, ItemId},
     substitution::Substitutions,
     variable::{CVariable, Dependency},
     GenInvResult,
@@ -17,20 +17,20 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CWithDependencies {
-    base: ConstructId,
-    dependencies: Vec<ConstructId>,
+    base: ItemId,
+    dependencies: Vec<ItemId>,
 }
 
 impl CWithDependencies {
-    pub fn new<'x>(base: ConstructId, dependencies: Vec<ConstructId>) -> Self {
+    pub fn new<'x>(base: ItemId, dependencies: Vec<ItemId>) -> Self {
         Self { base, dependencies }
     }
 
-    pub fn base(&self) -> ConstructId {
+    pub fn base(&self) -> ItemId {
         self.base
     }
 
-    pub(crate) fn dependencies(&self) -> &[ConstructId] {
+    pub(crate) fn dependencies(&self) -> &[ItemId] {
         &self.dependencies
     }
 }
@@ -44,7 +44,7 @@ impl Construct for CWithDependencies {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         env.generated_invariants(self.base)
@@ -79,7 +79,7 @@ impl Construct for CWithDependencies {
         deps
     }
 
-    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
         Some((self.base, None))
     }
 }

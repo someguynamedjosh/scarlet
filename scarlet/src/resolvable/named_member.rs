@@ -2,23 +2,23 @@ use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     constructs::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
-        Construct, ConstructDefinition, ConstructId,
+        Construct, ItemDefinition, ItemId,
     },
-    environment::{Environment, UnresolvedConstructError},
+    environment::{Environment, UnresolvedItemError},
     scope::Scope,
 };
 
 #[derive(Clone, Debug)]
 pub struct RNamedMember<'x> {
-    pub base: ConstructId,
+    pub base: ItemId,
     pub member_name: &'x str,
 }
 
 fn find_member(
     env: &mut Environment,
-    inn: ConstructId,
+    inn: ItemId,
     name: &str,
-) -> Result<Option<u32>, UnresolvedConstructError> {
+) -> Result<Option<u32>, UnresolvedItemError> {
     if let Some(cstruct) = env.get_and_downcast_construct_definition::<CPopulatedStruct>(inn)? {
         if cstruct.get_label() == name {
             Ok(Some(0))
@@ -59,6 +59,6 @@ impl<'x> Resolvable<'x> for RNamedMember<'x> {
             );
         }
         let def = CAtomicStructMember(base, AtomicStructMember::Value);
-        Ok(ConstructDefinition::Resolved(def.dyn_clone()))
+        Ok(ItemDefinition::Resolved(def.dyn_clone()))
     }
 }

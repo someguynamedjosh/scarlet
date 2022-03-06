@@ -1,7 +1,7 @@
 use maplit::hashset;
 
 use super::{
-    base::Construct, downcast_construct, substitution::Substitutions, ConstructId, GenInvResult,
+    base::Construct, downcast_construct, substitution::Substitutions, ItemId, GenInvResult,
 };
 use crate::{
     environment::{
@@ -15,7 +15,7 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CAxiom {
-    statement: ConstructId,
+    statement: ItemId,
 }
 
 impl CAxiom {
@@ -51,7 +51,7 @@ impl Construct for CAxiom {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         _env: &mut Environment<'x>,
     ) -> GenInvResult {
         vec![Invariant::new(self.statement, hashset![])]
@@ -65,7 +65,7 @@ impl Construct for CAxiom {
         &self,
         env: &mut Environment<'x>,
         self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
+        other_id: ItemId,
         other: &dyn Construct,
         other_subs: Vec<&Substitutions>,
         limit: u32,

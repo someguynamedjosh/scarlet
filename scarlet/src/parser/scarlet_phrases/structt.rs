@@ -3,7 +3,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
-        ConstructId,
+        ItemId,
     },
     environment::{discover_equality::Equal, Environment},
     parser::{
@@ -20,7 +20,7 @@ fn struct_from_fields<'x>(
     env: &mut Environment<'x>,
     mut fields: Vec<(Option<&str>, &Node<'x>)>,
     scope: Box<dyn Scope>,
-) -> ConstructId {
+) -> ItemId {
     if fields.is_empty() {
         env.get_language_item("void")
     } else {
@@ -30,7 +30,7 @@ fn struct_from_fields<'x>(
         let field = field.as_construct(pc, env, SFieldAndRest(this));
         let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
         let this_def = CPopulatedStruct::new(label, field, rest);
-        env.define_construct(this, this_def);
+        env.define_item(this, this_def);
         this
     }
 }
@@ -40,7 +40,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("{"));
     assert_eq!(node.children[2], NodeChild::Text("}"));
@@ -65,7 +65,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;

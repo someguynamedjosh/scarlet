@@ -1,4 +1,4 @@
-use super::{base::Construct, downcast_construct, substitution::Substitutions, ConstructId};
+use super::{base::Construct, downcast_construct, substitution::Substitutions, ItemId};
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
@@ -38,7 +38,7 @@ impl Construct for CUnique {
         &self,
         env: &mut Environment<'x>,
         self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
+        other_id: ItemId,
         other: &dyn Construct,
         other_subs: Vec<&Substitutions>,
         limit: u32,

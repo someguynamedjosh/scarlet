@@ -1,6 +1,6 @@
 use super::{
     variable::{CVariable, VariableId},
-    Construct, ConstructId, GenInvResult,
+    Construct, ItemId, GenInvResult,
 };
 use crate::{
     environment::{
@@ -14,29 +14,29 @@ use crate::{
     shared::OrderedMap,
 };
 
-pub type Substitutions = OrderedMap<VariableId, ConstructId>;
+pub type Substitutions = OrderedMap<VariableId, ItemId>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CSubstitution {
-    base: ConstructId,
+    base: ItemId,
     subs: Substitutions,
     invs: Vec<crate::environment::invariants::Invariant>,
 }
 
 impl CSubstitution {
     pub fn new<'x>(
-        base: ConstructId,
+        base: ItemId,
         subs: Substitutions,
         invs: Vec<crate::environment::invariants::Invariant>,
     ) -> Self {
         Self { base, subs, invs }
     }
 
-    pub fn new_unchecked(base: ConstructId, subs: Substitutions) -> Self {
+    pub fn new_unchecked(base: ItemId, subs: Substitutions) -> Self {
         Self::new(base, subs, Vec::new())
     }
 
-    pub fn base(&self) -> ConstructId {
+    pub fn base(&self) -> ItemId {
         self.base
     }
 
@@ -95,7 +95,7 @@ impl Construct for CSubstitution {
     fn check<'x>(
         &self,
         _env: &mut Environment<'x>,
-        _this: ConstructId,
+        _this: ItemId,
         _scope: Box<dyn Scope>,
     ) -> CheckResult {
         Ok(())
@@ -108,13 +108,13 @@ impl Construct for CSubstitution {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         _env: &mut Environment<'x>,
     ) -> GenInvResult {
         self.invs.clone()
     }
 
-    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
         Some((self.base, Some(&self.subs)))
     }
 
@@ -122,7 +122,7 @@ impl Construct for CSubstitution {
         &self,
         env: &mut Environment<'x>,
         self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
+        other_id: ItemId,
         other: &dyn Construct,
         other_subs: Vec<&Substitutions>,
         limit: u32,

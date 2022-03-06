@@ -14,21 +14,21 @@ pub use substitution::RSubstitution;
 pub use variable::RVariable;
 
 use crate::{
-    constructs::ConstructDefinition,
-    environment::{Environment, UnresolvedConstructError},
+    constructs::ItemDefinition,
+    environment::{Environment, UnresolvedItemError},
     scope::{LookupInvariantError, Scope},
 };
 
 #[derive(Clone, Debug)]
 pub enum ResolveError {
-    Unresolved(UnresolvedConstructError),
+    Unresolved(UnresolvedItemError),
     InvariantDeadEnd(String),
     MaybeInvariantDoesNotExist,
     Placeholder,
 }
 
-impl From<UnresolvedConstructError> for ResolveError {
-    fn from(v: UnresolvedConstructError) -> Self {
+impl From<UnresolvedItemError> for ResolveError {
+    fn from(v: UnresolvedItemError) -> Self {
         Self::Unresolved(v)
     }
 }
@@ -45,7 +45,7 @@ impl From<LookupInvariantError> for ResolveError {
     }
 }
 
-pub type ResolveResult<'x> = Result<ConstructDefinition<'x>, ResolveError>;
+pub type ResolveResult<'x> = Result<ItemDefinition<'x>, ResolveError>;
 
 pub trait Resolvable<'x>: Debug {
     fn is_placeholder(&self) -> bool {

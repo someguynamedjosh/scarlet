@@ -7,7 +7,7 @@ use crate::{
         substitution::Substitutions,
         unique::CUnique,
         variable::{CVariable, Variable, VariableId},
-        ConstructId,
+        ItemId,
     },
     environment::Environment,
     file_tree::FileNode,
@@ -21,7 +21,7 @@ pub(super) fn env<'x>() -> Environment<'x> {
 
 pub(super) fn with_env_from_code(
     code: &str,
-    callback: impl for<'x> FnOnce(Environment<'x>, ConstructId),
+    callback: impl for<'x> FnOnce(Environment<'x>, ItemId),
 ) {
     let node = FileNode {
         self_content: code.to_owned(),
@@ -49,7 +49,7 @@ pub(super) fn with_env_from_code(
     callback(env, root)
 }
 
-fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment<'x>, ConstructId) {
+fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment<'x>, ItemId) {
     let parsed = parse_tree(code, &pc);
 
     let mut env = env();
@@ -58,27 +58,27 @@ fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment<'
     (env, root)
 }
 
-pub(super) fn subs(from: Vec<(VariableId, ConstructId)>) -> Substitutions {
+pub(super) fn subs(from: Vec<(VariableId, ItemId)>) -> Substitutions {
     from.into_iter().collect()
 }
 
 impl<'a> Environment<'a> {
     pub(super) fn decision(
         &mut self,
-        left: ConstructId,
-        right: ConstructId,
-        equal: ConstructId,
-        unequal: ConstructId,
-    ) -> ConstructId {
+        left: ItemId,
+        right: ItemId,
+        equal: ItemId,
+        unequal: ItemId,
+    ) -> ItemId {
         self.push_construct(CDecision::new(left, right, equal, unequal), Box::new(SRoot))
     }
 
-    pub(super) fn unique(&mut self) -> ConstructId {
+    pub(super) fn unique(&mut self) -> ItemId {
         let id = self.push_unique();
         self.push_construct(CUnique::new(id), Box::new(SRoot))
     }
 
-    pub(super) fn variable(&mut self) -> ConstructId {
+    pub(super) fn variable(&mut self) -> ItemId {
         let id = self.push_variable(Variable {
             id: None,
             construct: None,
@@ -88,7 +88,7 @@ impl<'a> Environment<'a> {
         self.push_construct(CVariable::new(id), Box::new(SRoot))
     }
 
-    pub(super) fn variable_full(&mut self) -> (ConstructId, VariableId) {
+    pub(super) fn variable_full(&mut self) -> (ItemId, VariableId) {
         let id = self.push_variable(Variable {
             id: None,
             construct: None,
@@ -102,8 +102,8 @@ impl<'a> Environment<'a> {
 
     pub(super) fn variable_full_with_deps(
         &mut self,
-        deps: Vec<ConstructId>,
-    ) -> (ConstructId, VariableId) {
+        deps: Vec<ItemId>,
+    ) -> (ItemId, VariableId) {
         let id = self.push_variable(Variable {
             id: None,
             construct: None,

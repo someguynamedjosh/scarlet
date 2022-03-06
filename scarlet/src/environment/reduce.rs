@@ -1,18 +1,18 @@
-use super::{ConstructId, Environment, UnresolvedConstructError};
+use super::{ItemId, Environment, UnresolvedItemError};
 use crate::constructs::{
     structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
-    ConstructDefinition,
+    ItemDefinition,
 };
 
 impl<'x> Environment<'x> {
     pub fn dereference(
         &mut self,
-        con_id: ConstructId,
-    ) -> Result<ConstructId, UnresolvedConstructError> {
-        if let &ConstructDefinition::Other(con_id) = &self.constructs[con_id].definition {
-            return self.dereference(con_id);
+        item_id: ItemId,
+    ) -> Result<ItemId, UnresolvedItemError> {
+        if let &ItemDefinition::Other(item_id) = &self.items[item_id].definition {
+            return self.dereference(item_id);
         } else if let Some(mem) =
-            self.get_and_downcast_construct_definition_no_deref::<CAtomicStructMember>(con_id)?
+            self.get_and_downcast_construct_definition_no_deref::<CAtomicStructMember>(item_id)?
         {
             let mem = mem.clone();
             if let Some(structt) =
@@ -26,6 +26,6 @@ impl<'x> Environment<'x> {
                 return self.dereference(id);
             }
         }
-        Ok(con_id)
+        Ok(item_id)
     }
 }

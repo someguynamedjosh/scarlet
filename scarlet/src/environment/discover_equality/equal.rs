@@ -1,5 +1,5 @@
-use super::super::{Environment, UnresolvedConstructError};
-use crate::constructs::{substitution::Substitutions, ConstructId};
+use super::super::{Environment, UnresolvedItemError};
+use crate::constructs::{substitution::Substitutions, ItemId};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {

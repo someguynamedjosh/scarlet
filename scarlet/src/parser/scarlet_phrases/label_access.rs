@@ -3,7 +3,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         structt::{AtomicStructMember, CAtomicStructMember},
-        ConstructId,
+        ItemId,
     },
     environment::Environment,
     parser::{
@@ -19,11 +19,11 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 2);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_construct(this, CAtomicStructMember(base, AtomicStructMember::Label));
+    env.define_item(this, CAtomicStructMember(base, AtomicStructMember::Label));
     this
 }
 
@@ -31,7 +31,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(

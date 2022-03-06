@@ -16,7 +16,7 @@ use std::{collections::HashMap, ops::ControlFlow};
 use self::{dependencies::DepResStack, resolve::ResolveStack};
 use crate::{
     constructs::{
-        base::{AnnotatedConstruct, ConstructDefinition, ConstructId, ConstructPool},
+        base::{Item, ItemDefinition, ItemId, ItemPool},
         downcast_construct,
         substitution::{CSubstitution, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
@@ -49,19 +49,19 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "x", "and"];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct UnresolvedConstructError(pub ConstructId);
+pub struct UnresolvedItemError(pub ItemId);
 
-pub type CheckResult = Result<(), UnresolvedConstructError>;
+pub type CheckResult = Result<(), UnresolvedItemError>;
 
 #[derive(Debug)]
 pub struct Environment<'x> {
-    language_items: HashMap<&'static str, ConstructId>,
-    pub(crate) constructs: ConstructPool<'x>,
+    language_items: HashMap<&'static str, ItemId>,
+    pub(crate) items: ItemPool<'x>,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
     pub(super) resolve_stack: ResolveStack,
-    pub(super) auto_theorems: Vec<ConstructId>,
+    pub(super) auto_theorems: Vec<ItemId>,
     // pub(super) def_equal_memo_table: HashMap<DefEqualQuery, DefEqualResult>,
 }
 
@@ -69,7 +69,7 @@ impl<'x> Environment<'x> {
     pub fn new() -> Self {
         let mut this = Self {
             language_items: HashMap::new(),
-            constructs: Pool::new(),
+            items: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
@@ -83,66 +83,57 @@ impl<'x> Environment<'x> {
         this
     }
 
-    pub fn define_language_item(&mut self, name: &str, definition: ConstructId) {
+    pub fn define_language_item(&mut self, name: &str, definition: ItemId) {
         let id = self.get_language_item(name);
-        self.constructs[id].definition = definition.into();
+        self.items[id].definition = definition.into();
     }
 
-    pub fn define_construct(&mut self, construct: ConstructId, definition: impl Construct) {
-        self.define_dyn_construct(construct, Box::new(definition))
+    pub fn define_item(&mut self, item: ItemId, definition: impl Construct) {
+        self.define_dyn_item(item, Box::new(definition))
     }
 
-    pub fn define_dyn_construct(&mut self, construct: ConstructId, definition: Box<dyn Construct>) {
+    pub fn define_dyn_item(&mut self, item: ItemId, definition: Box<dyn Construct>) {
         let var_id = downcast_construct::<CVariable>(&*definition).map(CVariable::get_id);
         if let Some(var_id) = var_id {
-            self.variables[var_id].construct = Some(construct);
+            self.variables[var_id].construct = Some(item);
         }
-        self.constructs[construct].definition = definition.into();
+        self.items[item].definition = definition.into();
     }
 
-    pub fn define_unresolved(
-        &mut self,
-        construct: ConstructId,
-        definition: impl Resolvable<'x> + 'x,
-    ) {
-        self.constructs[construct].definition =
-            ConstructDefinition::Unresolved(Box::new(definition));
+    pub fn define_unresolved(&mut self, item: ItemId, definition: impl Resolvable<'x> + 'x) {
+        self.items[item].definition = ItemDefinition::Unresolved(Box::new(definition));
     }
 
-    pub fn get_language_item(&self, name: &str) -> ConstructId {
+    pub fn get_language_item(&self, name: &str) -> ItemId {
         *self
             .language_items
             .get(name)
             .unwrap_or_else(|| todo!("nice error, no language item named {}", name))
     }
 
-    pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ConstructId {
-        let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
-            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+    pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ItemId {
+        let item = Item {
+            definition: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
+            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
             from_dex: None,
         };
-        self.constructs.push(con)
+        self.items.push(item)
     }
 
-    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ConstructId {
+    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ItemId {
         let void = self.get_language_item("void");
-        self.constructs.push(AnnotatedConstruct {
-            definition: ConstructDefinition::Other(void),
-            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+        self.items.push(Item {
+            definition: ItemDefinition::Other(void),
+            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
             from_dex: None,
         })
     }
 
-    pub fn push_construct(
-        &mut self,
-        construct: impl Construct,
-        scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    pub fn push_construct(&mut self, construct: impl Construct, scope: Box<dyn Scope>) -> ItemId {
         self.push_dyn_construct(Box::new(construct), scope)
     }
 
@@ -150,31 +141,31 @@ impl<'x> Environment<'x> {
         &mut self,
         construct: Box<dyn Construct>,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemId {
         let var_id = downcast_construct::<CVariable>(&*construct).map(CVariable::get_id);
-        let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Resolved(construct),
-            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+        let item = Item {
+            definition: ItemDefinition::Resolved(construct),
+            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
             from_dex: None,
         };
-        let id = self.constructs.push(con);
+        let id = self.items.push(item);
         if let Some(var_id) = var_id {
             self.variables[var_id].construct = Some(id);
         }
         id
     }
 
-    pub fn push_other(&mut self, other: ConstructId, scope: Box<dyn Scope>) -> ConstructId {
-        let con = AnnotatedConstruct {
-            definition: ConstructDefinition::Other(other),
-            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+    pub fn push_other(&mut self, other: ItemId, scope: Box<dyn Scope>) -> ItemId {
+        let item = Item {
+            definition: ItemDefinition::Other(other),
+            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
             from_dex: None,
         };
-        self.constructs.push(con)
+        self.items.push(item)
     }
 
     pub fn push_unique(&mut self) -> UniqueId {
@@ -195,7 +186,7 @@ impl<'x> Environment<'x> {
         &mut self,
         definition: impl Resolvable<'x> + 'x,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemId {
         self.push_dyn_unresolved(Box::new(definition), scope)
     }
 
@@ -203,50 +194,50 @@ impl<'x> Environment<'x> {
         &mut self,
         definition: BoxedResolvable<'x>,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
-        self.constructs.push(AnnotatedConstruct {
-            definition: ConstructDefinition::Unresolved(definition),
-            reduced: ConstructDefinition::Unresolved(Box::new(RPlaceholder)),
+    ) -> ItemId {
+        self.items.push(Item {
+            definition: ItemDefinition::Unresolved(definition),
+            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
             invariants: None,
             scope,
             from_dex: None,
         })
     }
 
-    pub fn for_each_construct_returning_nothing(
+    pub fn for_each_item_returning_nothing(
         &mut self,
-        mut visitor: impl FnMut(&mut Self, ConstructId) -> (),
+        mut visitor: impl FnMut(&mut Self, ItemId) -> (),
     ) {
-        let mut next_id = self.constructs.first();
+        let mut next_id = self.items.first();
         while let Some(id) = next_id {
             visitor(self, id);
-            next_id = self.constructs.next(id);
+            next_id = self.items.next(id);
         }
     }
 
-    pub fn for_each_construct<T>(
+    pub fn for_each_item<T>(
         &mut self,
-        mut visitor: impl FnMut(&mut Self, ConstructId) -> ControlFlow<T>,
+        mut visitor: impl FnMut(&mut Self, ItemId) -> ControlFlow<T>,
     ) -> Option<T> {
-        let mut next_id = self.constructs.first();
+        let mut next_id = self.items.first();
         while let Some(id) = next_id {
             match visitor(self, id) {
                 ControlFlow::Continue(()) => (),
                 ControlFlow::Break(value) => return Some(value),
             }
-            next_id = self.constructs.next(id);
+            next_id = self.items.next(id);
         }
         None
     }
 
-    pub(crate) fn check(&mut self, con_id: ConstructId) -> CheckResult {
-        let con = self.get_construct_definition(con_id)?.dyn_clone();
-        let scope = self.get_construct_scope(con_id).dyn_clone();
-        con.check(self, con_id, scope)
+    pub(crate) fn check(&mut self, item_id: ItemId) -> CheckResult {
+        let item = self.get_item_as_construct(item_id)?.dyn_clone();
+        let scope = self.get_item_scope(item_id).dyn_clone();
+        item.check(self, item_id, scope)
     }
 
     pub(crate) fn check_all(&mut self) -> CheckResult {
-        match self.for_each_construct(|env, id| match env.check(id) {
+        match self.for_each_item(|env, id| match env.check(id) {
             Ok(ok) => ControlFlow::Continue(ok),
             Err(err) => ControlFlow::Break(err),
         }) {
@@ -255,16 +246,12 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(crate) fn substitute(
-        &mut self,
-        base: ConstructId,
-        substitutions: &Substitutions,
-    ) -> ConstructId {
+    pub(crate) fn substitute(&mut self, base: ItemId, substitutions: &Substitutions) -> ItemId {
         if substitutions.len() == 0 {
             base
         } else {
             let con = CSubstitution::new_unchecked(base, substitutions.clone());
-            let scope = self.constructs[base].scope.dyn_clone();
+            let scope = self.items[base].scope.dyn_clone();
             self.push_construct(con, scope)
         }
     }

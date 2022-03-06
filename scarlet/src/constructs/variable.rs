@@ -1,7 +1,7 @@
 use maplit::hashset;
 
 use super::{
-    base::{Construct, ConstructId},
+    base::{Construct, ItemId},
     downcast_construct,
     substitution::Substitutions,
     GenInvResult,
@@ -24,9 +24,9 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable {
     pub id: Option<VariableId>,
-    pub construct: Option<ConstructId>,
-    pub invariants: Vec<ConstructId>,
-    pub dependencies: Vec<ConstructId>,
+    pub construct: Option<ItemId>,
+    pub invariants: Vec<ItemId>,
+    pub dependencies: Vec<ItemId>,
 }
 pub type VariablePool = Pool<Variable, 'V'>;
 pub type VariableId = Id<'V'>;
@@ -55,11 +55,11 @@ impl CVariable {
 }
 
 impl Variable {
-    pub(crate) fn get_invariants(&self) -> &[ConstructId] {
+    pub(crate) fn get_invariants(&self) -> &[ItemId] {
         &self.invariants[..]
     }
 
-    pub(crate) fn get_dependencies(&self) -> &[ConstructId] {
+    pub(crate) fn get_dependencies(&self) -> &[ItemId] {
         &self.dependencies
     }
 
@@ -73,7 +73,7 @@ impl Variable {
 
     pub fn can_be_assigned<'x>(
         &self,
-        value: ConstructId,
+        value: ItemId,
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
         limit: u32,
@@ -118,7 +118,7 @@ impl Construct for CVariable {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         env.get_variable(self.0)
@@ -144,7 +144,7 @@ impl Construct for CVariable {
         &self,
         env: &mut Environment<'x>,
         self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
+        other_id: ItemId,
         other: &dyn Construct,
         other_subs: Vec<&Substitutions>,
         limit: u32,
@@ -154,7 +154,7 @@ impl Construct for CVariable {
 }
 
 #[derive(Debug, Clone)]
-pub struct SVariableInvariants(pub ConstructId);
+pub struct SVariableInvariants(pub ItemId);
 
 impl Scope for SVariableInvariants {
     fn dyn_clone(&self) -> Box<dyn Scope> {
@@ -168,7 +168,7 @@ impl Scope for SVariableInvariants {
     fn local_reverse_lookup_ident<'a, 'x>(
         &self,
         _env: &'a mut Environment<'x>,
-        value: ConstructId,
+        value: ItemId,
     ) -> ReverseLookupIdentResult {
         Ok(if value == self.0 {
             Some("SELF".to_owned())
@@ -180,13 +180,13 @@ impl Scope for SVariableInvariants {
     fn local_lookup_invariant<'x>(
         &self,
         _env: &mut Environment<'x>,
-        _invariant: ConstructId,
+        _invariant: ItemId,
         _limit: u32,
     ) -> LookupInvariantResult {
         Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
-    fn parent(&self) -> Option<ConstructId> {
+    fn parent(&self) -> Option<ItemId> {
         Some(self.0)
     }
 }

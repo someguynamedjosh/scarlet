@@ -1,5 +1,5 @@
 use super::{
-    as_struct, base::ConstructId, downcast_construct, substitution::Substitutions, Construct,
+    as_struct, base::ItemId, downcast_construct, substitution::Substitutions, Construct,
     GenInvResult,
 };
 use crate::{
@@ -19,12 +19,12 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CPopulatedStruct {
     label: String,
-    value: ConstructId,
-    rest: ConstructId,
+    value: ItemId,
+    rest: ItemId,
 }
 
 impl CPopulatedStruct {
-    pub fn new<'x>(label: String, value: ConstructId, rest: ConstructId) -> Self {
+    pub fn new<'x>(label: String, value: ItemId, rest: ItemId) -> Self {
         Self { label, value, rest }
     }
 
@@ -32,11 +32,11 @@ impl CPopulatedStruct {
         &self.label[..]
     }
 
-    pub fn get_value(&self) -> ConstructId {
+    pub fn get_value(&self) -> ItemId {
         self.value
     }
 
-    pub fn get_rest(&self) -> ConstructId {
+    pub fn get_rest(&self) -> ItemId {
         self.rest
     }
 }
@@ -50,7 +50,7 @@ impl Construct for CPopulatedStruct {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         [
@@ -70,7 +70,7 @@ impl Construct for CPopulatedStruct {
         &self,
         env: &mut Environment<'x>,
         self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
+        other_id: ItemId,
         other: &dyn Construct,
         other_subs: Vec<&Substitutions>,
         limit: u32,
@@ -104,7 +104,7 @@ pub enum AtomicStructMember {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CAtomicStructMember(pub ConstructId, pub AtomicStructMember);
+pub struct CAtomicStructMember(pub ItemId, pub AtomicStructMember);
 
 impl_any_eq_for_construct!(CAtomicStructMember);
 
@@ -115,7 +115,7 @@ impl Construct for CAtomicStructMember {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         if let Ok(Some(structt)) =
@@ -133,7 +133,7 @@ impl Construct for CAtomicStructMember {
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
-        let base_def = match env.get_construct_definition(self.0) {
+        let base_def = match env.get_item_as_construct(self.0) {
             Ok(def) => &**def,
             Err(err) => return Dependencies::new_error(err),
         };
@@ -151,7 +151,7 @@ impl Construct for CAtomicStructMember {
 }
 
 #[derive(Debug, Clone)]
-pub struct SField(pub ConstructId);
+pub struct SField(pub ItemId);
 
 impl Scope for SField {
     fn dyn_clone(&self) -> Box<dyn Scope> {
@@ -159,7 +159,7 @@ impl Scope for SField {
     }
 
     fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             Ok(if structt.label == ident {
                 Some(structt.value)
@@ -174,9 +174,9 @@ impl Scope for SField {
     fn local_reverse_lookup_ident<'x>(
         &self,
         env: &mut Environment<'x>,
-        value: ConstructId,
+        value: ItemId,
     ) -> ReverseLookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             Ok(if structt.value == value {
                 Some(structt.label.clone())
@@ -191,10 +191,10 @@ impl Scope for SField {
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
-        invariant: ConstructId,
+        invariant: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             let mut any_unknown = false;
             for maybe_match in env.generated_invariants(structt.value) {
@@ -215,13 +215,13 @@ impl Scope for SField {
         }
     }
 
-    fn parent(&self) -> Option<ConstructId> {
+    fn parent(&self) -> Option<ItemId> {
         Some(self.0)
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct SFieldAndRest(pub ConstructId);
+pub struct SFieldAndRest(pub ItemId);
 
 fn lookup_ident_in<'x>(
     env: &mut Environment<'x>,
@@ -230,7 +230,7 @@ fn lookup_ident_in<'x>(
 ) -> LookupIdentResult {
     Ok(if inn.label == ident {
         Some(inn.value)
-    } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)?) {
+    } else if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
         let rest = rest.clone();
         lookup_ident_in(env, ident, &rest)?
     } else {
@@ -240,12 +240,12 @@ fn lookup_ident_in<'x>(
 
 fn reverse_lookup_ident_in<'x>(
     env: &mut Environment<'x>,
-    value: ConstructId,
+    value: ItemId,
     inn: &CPopulatedStruct,
 ) -> ReverseLookupIdentResult {
     Ok(if inn.value == value {
         Some(inn.label.clone())
-    } else if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)?) {
+    } else if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
         let rest = rest.clone();
         reverse_lookup_ident_in(env, value, &rest)?
     } else {
@@ -255,7 +255,7 @@ fn reverse_lookup_ident_in<'x>(
 
 fn lookup_invariant_in<'x>(
     env: &mut Environment<'x>,
-    invariant: ConstructId,
+    invariant: ItemId,
     inn: &CPopulatedStruct,
     limit: u32,
 ) -> LookupInvariantResult {
@@ -268,7 +268,7 @@ fn lookup_invariant_in<'x>(
             Equal::No | Equal::Unknown => (),
         }
     }
-    if let Some(rest) = as_struct(&**env.get_construct_definition(inn.rest)?) {
+    if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
         let rest = rest.clone();
         match lookup_invariant_in(env, invariant, &rest, limit) {
             Err(LookupInvariantError::DefinitelyDoesNotExist) => default_err,
@@ -285,7 +285,7 @@ impl Scope for SFieldAndRest {
     }
 
     fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)
         } else {
@@ -296,9 +296,9 @@ impl Scope for SFieldAndRest {
     fn local_reverse_lookup_ident<'a, 'x>(
         &self,
         env: &'a mut Environment<'x>,
-        value: ConstructId,
+        value: ItemId,
     ) -> ReverseLookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             reverse_lookup_ident_in(env, value, &structt)
         } else {
@@ -309,10 +309,10 @@ impl Scope for SFieldAndRest {
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
-        invariant: ConstructId,
+        invariant: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
-        if let Some(structt) = as_struct(&**env.get_construct_definition(self.0)?) {
+        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             lookup_invariant_in(env, invariant, &structt, limit)
         } else {
@@ -320,7 +320,7 @@ impl Scope for SFieldAndRest {
         }
     }
 
-    fn parent(&self) -> Option<ConstructId> {
+    fn parent(&self) -> Option<ItemId> {
         Some(self.0)
     }
 }

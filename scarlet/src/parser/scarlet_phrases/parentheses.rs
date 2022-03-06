@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
+    constructs::ItemId,
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -16,7 +16,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("("));
     assert_eq!(node.children[2], NodeChild::Text(")"));
@@ -27,7 +27,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(Some(Node {

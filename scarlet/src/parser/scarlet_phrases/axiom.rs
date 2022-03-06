@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{axiom::CAxiom, ConstructId},
+    constructs::{axiom::CAxiom, ItemId},
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -16,7 +16,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("AXIOM"));
     assert_eq!(node.children[1], NodeChild::Text("["));
@@ -30,7 +30,7 @@ fn uncreate<'a>(
     _pc: &ParseContext,
     env: &mut Environment,
     _code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {

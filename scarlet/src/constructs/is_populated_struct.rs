@@ -1,14 +1,14 @@
-use super::{Construct, ConstructId, GenInvResult};
+use super::{Construct, ItemId, GenInvResult};
 use crate::{
     environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CIsPopulatedStruct(ConstructId);
+pub struct CIsPopulatedStruct(ItemId);
 
 impl CIsPopulatedStruct {
-    pub fn new<'x>(base: ConstructId) -> Self {
+    pub fn new<'x>(base: ItemId) -> Self {
         Self(base)
     }
 }
@@ -22,7 +22,7 @@ impl Construct for CIsPopulatedStruct {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         env.generated_invariants(self.0)

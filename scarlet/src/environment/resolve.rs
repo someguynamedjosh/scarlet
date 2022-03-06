@@ -1,15 +1,15 @@
-use super::{ConstructId, Environment};
-use crate::{constructs::ConstructDefinition, resolvable::ResolveError};
+use super::{ItemId, Environment};
+use crate::{constructs::ItemDefinition, resolvable::ResolveError};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ResolveStackFrame(ConstructId);
+pub struct ResolveStackFrame(ItemId);
 pub type ResolveStack = Vec<ResolveStackFrame>;
 
 impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
         let mut unresolved = Vec::new();
-        self.for_each_construct_returning_nothing(|env, id| {
-            if env.constructs[id].definition.is_unresolved() {
+        self.for_each_item_returning_nothing(|env, id| {
+            if env.items[id].definition.is_unresolved() {
                 unresolved.push(id);
             }
         });
@@ -51,7 +51,7 @@ impl<'x> Environment<'x> {
             }
         }
         let mut problem = false;
-        self.for_each_construct_returning_nothing(|env, con| {
+        self.for_each_item_returning_nothing(|env, con| {
             if let Err(err) = env.resolve(con, limit) {
                 problem = true;
                 match err {
@@ -73,33 +73,33 @@ impl<'x> Environment<'x> {
 
     /// Returns Ok(true) if the resolution was successful, or Ok(false) if it
     /// was already resolved.
-    pub fn resolve(&mut self, con_id: ConstructId, limit: u32) -> Result<bool, ResolveError> {
-        let con = &self.constructs[con_id];
-        if self.resolve_stack.contains(&ResolveStackFrame(con_id)) {
+    pub fn resolve(&mut self, item_id: ItemId, limit: u32) -> Result<bool, ResolveError> {
+        let item = &self.items[item_id];
+        if self.resolve_stack.contains(&ResolveStackFrame(item_id)) {
             eprintln!("{:#?}", self);
             eprintln!("{:?}", self.resolve_stack);
             todo!("Nice error, circular dependency");
         }
-        if let ConstructDefinition::Unresolved(resolvable) = &con.definition {
+        if let ItemDefinition::Unresolved(resolvable) = &item.definition {
             if resolvable.is_placeholder() {
                 return Err(ResolveError::Placeholder);
             }
-            self.resolve_stack.push(ResolveStackFrame(con_id));
+            self.resolve_stack.push(ResolveStackFrame(item_id));
             let resolvable = resolvable.dyn_clone();
-            let scope = con.scope.dyn_clone();
+            let scope = item.scope.dyn_clone();
             let new_def = resolvable.resolve(self, scope, limit);
             match new_def {
                 Ok(new_def) => {
-                    if let ConstructDefinition::Resolved(boxed) = new_def {
-                        self.define_dyn_construct(con_id, boxed);
+                    if let ItemDefinition::Resolved(boxed) = new_def {
+                        self.define_dyn_item(item_id, boxed);
                     } else {
-                        self.constructs[con_id].definition = new_def;
+                        self.items[item_id].definition = new_def;
                     }
-                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
+                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(item_id)));
                     Ok(true)
                 }
                 Err(err) => {
-                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(con_id)));
+                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(item_id)));
                     Err(err)
                 }
             }

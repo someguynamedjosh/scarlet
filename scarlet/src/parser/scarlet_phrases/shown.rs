@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{shown::CShown, ConstructId},
+    constructs::{shown::CShown, ItemId},
     environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -16,12 +16,12 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".SHOWN"));
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_construct(this, CShown::new(base));
+    env.define_item(this, CShown::new(base));
     this
 }
 
@@ -29,7 +29,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(

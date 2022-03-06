@@ -1,5 +1,5 @@
 use super::{
-    base::{Construct, ConstructId},
+    base::{Construct, ItemId},
     substitution::Substitutions,
     GenInvResult,
 };
@@ -13,14 +13,14 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CShown(ConstructId);
+pub struct CShown(ItemId);
 
 impl CShown {
-    pub fn new<'x>(base: ConstructId) -> Self {
+    pub fn new<'x>(base: ItemId) -> Self {
         Self(base)
     }
 
-    pub(crate) fn get_base(&self) -> ConstructId {
+    pub(crate) fn get_base(&self) -> ItemId {
         self.0
     }
 }
@@ -38,13 +38,13 @@ impl Construct for CShown {
 
     fn generated_invariants<'x>(
         &self,
-        _this: ConstructId,
+        _this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         env.generated_invariants(self.0)
     }
 
-    fn dereference(&self) -> Option<(ConstructId, Option<&Substitutions>)> {
+    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
         Some((self.0, None))
     }
 }

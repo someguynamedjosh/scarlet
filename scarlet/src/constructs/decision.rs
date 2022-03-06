@@ -1,5 +1,5 @@
 use super::{
-    downcast_construct, substitution::Substitutions, Construct, ConstructId, GenInvResult,
+    downcast_construct, substitution::Substitutions, Construct, ItemId, GenInvResult,
 };
 use crate::{
     environment::{
@@ -18,18 +18,18 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CDecision {
-    left: ConstructId,
-    right: ConstructId,
-    equal: ConstructId,
-    unequal: ConstructId,
+    left: ItemId,
+    right: ItemId,
+    equal: ItemId,
+    unequal: ItemId,
 }
 
 impl CDecision {
     pub fn new<'x>(
-        left: ConstructId,
-        right: ConstructId,
-        equal: ConstructId,
-        unequal: ConstructId,
+        left: ItemId,
+        right: ItemId,
+        equal: ItemId,
+        unequal: ItemId,
     ) -> Self {
         Self {
             left,
@@ -39,19 +39,19 @@ impl CDecision {
         }
     }
 
-    pub fn left(&self) -> ConstructId {
+    pub fn left(&self) -> ItemId {
         self.left
     }
 
-    pub fn right(&self) -> ConstructId {
+    pub fn right(&self) -> ItemId {
         self.right
     }
 
-    pub fn equal(&self) -> ConstructId {
+    pub fn equal(&self) -> ItemId {
         self.equal
     }
 
-    pub fn unequal(&self) -> ConstructId {
+    pub fn unequal(&self) -> ItemId {
         self.unequal
     }
 }
@@ -65,7 +65,7 @@ impl Construct for CDecision {
 
     fn generated_invariants<'x>(
         &self,
-        this: ConstructId,
+        this: ItemId,
         env: &mut Environment<'x>,
     ) -> GenInvResult {
         let true_invs = env.generated_invariants(self.equal);
@@ -99,7 +99,7 @@ impl Construct for CDecision {
         &self,
         env: &mut Environment<'x>,
         self_subs: Vec<&Substitutions>,
-        other_id: ConstructId,
+        other_id: ItemId,
         other: &dyn Construct,
         other_subs: Vec<&Substitutions>,
         limit: u32,
@@ -145,7 +145,7 @@ impl Construct for CDecision {
 #[derive(Clone, Debug)]
 pub struct SWithInvariant(
     pub crate::environment::invariants::Invariant,
-    pub ConstructId,
+    pub ItemId,
 );
 
 impl Scope for SWithInvariant {
@@ -164,7 +164,7 @@ impl Scope for SWithInvariant {
     fn local_reverse_lookup_ident<'x>(
         &self,
         _env: &mut Environment<'x>,
-        _value: ConstructId,
+        _value: ItemId,
     ) -> ReverseLookupIdentResult {
         Ok(None)
     }
@@ -172,7 +172,7 @@ impl Scope for SWithInvariant {
     fn local_lookup_invariant<'x>(
         &self,
         env: &mut Environment<'x>,
-        invariant: ConstructId,
+        invariant: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
         // No, I don't want
@@ -186,7 +186,7 @@ impl Scope for SWithInvariant {
         }
     }
 
-    fn parent(&self) -> Option<ConstructId> {
+    fn parent(&self) -> Option<ItemId> {
         Some(self.1)
     }
 }

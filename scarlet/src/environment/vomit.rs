@@ -2,13 +2,13 @@ use std::ops::ControlFlow;
 
 use typed_arena::Arena;
 
-use super::{ConstructId, Environment, UnresolvedConstructError};
+use super::{Environment, ItemId, UnresolvedItemError};
 use crate::{
     constructs::{
         downcast_construct,
         shown::CShown,
         variable::{CVariable, SVariableInvariants, VariableId},
-        Construct, ConstructDefinition,
+        Construct, ItemDefinition,
     },
     parser::{Node, ParseContext},
     scope::{SWithParent, Scope},
@@ -18,39 +18,39 @@ use crate::{
 impl<'x> Environment<'x> {
     pub fn show_all_requested(&mut self) {
         let mut to_vomit = Vec::new();
-        for (from, acon) in &self.constructs {
-            if let ConstructDefinition::Resolved(con) = &acon.definition {
+        for (from, aitem) in &self.items {
+            if let ItemDefinition::Resolved(con) = &aitem.definition {
                 if let Some(shown) = downcast_construct::<CShown>(&**con) {
                     let base = shown.get_base();
                     to_vomit.push((base, from));
                 }
             }
         }
-        for (con_id, from) in to_vomit {
+        for (item_id, from) in to_vomit {
             println!(
                 "{}",
-                self.show(con_id, from).unwrap_or(format!("Unresolved"))
+                self.show(item_id, from).unwrap_or(format!("Unresolved"))
             );
         }
     }
 
     pub fn show(
         &mut self,
-        con_id: ConstructId,
-        from_con: ConstructId,
-    ) -> Result<String, UnresolvedConstructError> {
+        item_id: ItemId,
+        from_item: ItemId,
+    ) -> Result<String, UnresolvedItemError> {
         let mut result = String::new();
 
-        let from = self.constructs[from_con].scope.dyn_clone();
-        let inv_from = SWithParent(SVariableInvariants(con_id), from_con);
+        let from = self.items[from_item].scope.dyn_clone();
+        let inv_from = SWithParent(SVariableInvariants(item_id), from_item);
         let code_arena = Arena::new();
         let pc = ParseContext::new();
         let original_vomit = self
-            .vomit(255, &pc, &code_arena, con_id, &*from)?
+            .vomit(255, &pc, &code_arena, item_id, &*from)?
             .vomit(&pc);
-        result.push_str(&format!("{} ({:?})\n", original_vomit, con_id));
+        result.push_str(&format!("{} ({:?})\n", original_vomit, item_id));
         result.push_str(&format!("proves:\n"));
-        for invariant in self.generated_invariants(con_id) {
+        for invariant in self.generated_invariants(item_id) {
             result.push_str(&format!(
                 "    {} ({:?})\n",
                 indented(
@@ -74,7 +74,7 @@ impl<'x> Environment<'x> {
             }
         }
         result.push_str(&format!("depends on:\n"));
-        for dep in self.get_dependencies(con_id).into_variables() {
+        for dep in self.get_dependencies(item_id).into_variables() {
             result.push_str(&format!(
                 "    {}\n",
                 indented(&format!(
@@ -90,9 +90,9 @@ impl<'x> Environment<'x> {
     pub fn show_var(
         &mut self,
         var: VariableId,
-        from: ConstructId,
-    ) -> Result<String, UnresolvedConstructError> {
-        self.for_each_construct(|env, id| {
+        from: ItemId,
+    ) -> Result<String, UnresolvedItemError> {
+        self.for_each_item(|env, id| {
             if let Ok(Some(other_var)) = env.get_and_downcast_construct_definition::<CVariable>(id)
             {
                 if var == other_var.get_id() {
@@ -110,9 +110,9 @@ impl<'x> Environment<'x> {
         code_arena: &'a Arena<String>,
         var: VariableId,
         from: &dyn Scope,
-    ) -> Result<Node<'a>, UnresolvedConstructError> {
+    ) -> Result<Node<'a>, UnresolvedItemError> {
         let base = self
-            .for_each_construct(|env, id| {
+            .for_each_item(|env, id| {
                 if let Ok(Some(other_var)) =
                     env.get_and_downcast_construct_definition::<CVariable>(id)
                 {
@@ -132,15 +132,15 @@ impl<'x> Environment<'x> {
         max_precedence: u8,
         pc: &ParseContext,
         code_arena: &'a Arena<String>,
-        con_id: ConstructId,
+        item_id: ItemId,
         from: &dyn Scope,
-    ) -> Result<Node<'a>, UnresolvedConstructError> {
+    ) -> Result<Node<'a>, UnresolvedItemError> {
         for (_, phrase) in &pc.phrases_sorted_by_vomit_priority {
             if phrase.precedence > max_precedence {
                 continue;
             }
             if let Some((_, uncreator)) = phrase.create_and_uncreate {
-                if let Some(uncreated) = uncreator(pc, self, code_arena, con_id, from)? {
+                if let Some(uncreated) = uncreator(pc, self, code_arena, item_id, from)? {
                     return Ok(uncreated);
                 }
             }
@@ -148,7 +148,7 @@ impl<'x> Environment<'x> {
         eprintln!("{:#?}", self);
         todo!(
             "{:?} could not be vomited (at least one parser phrase should apply)",
-            con_id
+            item_id
         );
     }
 }

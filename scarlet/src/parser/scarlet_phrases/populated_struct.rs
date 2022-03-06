@@ -3,7 +3,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
-        ConstructId,
+        ItemId,
     },
     environment::Environment,
     parser::{
@@ -19,7 +19,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert!(node.children.len() == 4);
     assert_eq!(node.children[0], NodeChild::Text("POPULATED_STRUCT"));
     assert_eq!(node.children[1], NodeChild::Text("["));
@@ -31,7 +31,7 @@ fn create<'x>(
     let label = args[0].as_ident().to_owned();
     let value = args[1].as_construct(pc, env, SFieldAndRest(this));
     let rest = args[2].as_construct(pc, env, SField(this));
-    env.define_construct(this, CPopulatedStruct::new(label, value, rest));
+    env.define_item(this, CPopulatedStruct::new(label, value, rest));
     this
 }
 
@@ -39,7 +39,7 @@ fn uncreate<'a>(
     _pc: &ParseContext,
     _env: &mut Environment,
     _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
+    _uncreate: ItemId,
     _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(None)

@@ -5,9 +5,9 @@ use crate::{
     constructs::{
         substitution::CSubstitution,
         variable::{Dependency, VariableId},
-        ConstructId,
+        ItemId,
     },
-    environment::{Environment, UnresolvedConstructError},
+    environment::{Environment, UnresolvedItemError},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -23,7 +23,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     assert!(node.children.len() == 4);
@@ -57,10 +57,10 @@ fn uncreate_substitution<'a>(
     env: &mut Environment,
     code_arena: &'a Arena<String>,
     target: VariableId,
-    value: ConstructId,
+    value: ItemId,
     deps: &mut Vec<Dependency>,
     from: &dyn Scope,
-) -> Result<Node<'a>, UnresolvedConstructError> {
+) -> Result<Node<'a>, UnresolvedItemError> {
     let value = env.vomit(254, pc, code_arena, value, from)?;
     Ok(if deps.get(0).map(|v| v.id == target) == Some(true) {
         deps.remove(0);
@@ -81,7 +81,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate)? {

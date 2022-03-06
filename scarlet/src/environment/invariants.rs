@@ -2,7 +2,7 @@ mod tests;
 
 use std::collections::HashSet;
 
-use super::{dependencies::DepResStackFrame, discover_equality::Equal, ConstructId, Environment};
+use super::{dependencies::DepResStackFrame, discover_equality::Equal, ItemId, Environment};
 use crate::{
     constructs::{substitution::Substitutions, Construct, GenInvResult},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
@@ -10,12 +10,12 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Invariant {
-    pub statement: ConstructId,
-    pub dependencies: HashSet<ConstructId>,
+    pub statement: ItemId,
+    pub dependencies: HashSet<ItemId>,
 }
 
 impl Invariant {
-    pub fn new(statement: ConstructId, dependencies: HashSet<ConstructId>) -> Self {
+    pub fn new(statement: ItemId, dependencies: HashSet<ItemId>) -> Self {
         Self {
             statement,
             dependencies,
@@ -45,15 +45,15 @@ impl InvariantMatch {
 }
 
 impl<'x> Environment<'x> {
-    pub fn generated_invariants(&mut self, con_id: ConstructId) -> GenInvResult {
+    pub fn generated_invariants(&mut self, item_id: ItemId) -> GenInvResult {
         for frame in &self.dep_res_stack {
-            if frame.0 == con_id {
+            if frame.0 == item_id {
                 return Vec::new();
             }
         }
 
-        self.dep_res_stack.push(DepResStackFrame(con_id));
-        let context = match self.get_construct_definition(con_id) {
+        self.dep_res_stack.push(DepResStackFrame(item_id));
+        let context = match self.get_item_as_construct(item_id) {
             Ok(ok) => ok,
             Err(_err) => {
                 self.dep_res_stack.pop();
@@ -61,16 +61,16 @@ impl<'x> Environment<'x> {
             }
         };
         let context = context.dyn_clone();
-        let invs = context.generated_invariants(con_id, self);
-        self.constructs[con_id].invariants = Some(invs.clone());
+        let invs = context.generated_invariants(item_id, self);
+        self.items[item_id].invariants = Some(invs.clone());
         self.dep_res_stack.pop();
         invs
     }
 
     pub fn get_produced_invariant(
         &mut self,
-        statement: ConstructId,
-        context_id: ConstructId,
+        statement: ItemId,
+        context_id: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
         let generated_invariants = self.generated_invariants(context_id);
@@ -81,14 +81,14 @@ impl<'x> Environment<'x> {
                 }
             }
         }
-        let scope = self.get_construct(context_id).scope.dyn_clone();
+        let scope = self.get_item(context_id).scope.dyn_clone();
         scope.lookup_invariant_limited(self, statement, limit)
     }
 
     pub fn justify(
         &mut self,
-        statement: ConstructId,
-        context: ConstructId,
+        statement: ItemId,
+        context: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
         match self.get_produced_invariant(statement, context, limit) {
@@ -142,7 +142,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn add_auto_theorem(&mut self, auto_theorem: ConstructId) {
+    pub fn add_auto_theorem(&mut self, auto_theorem: ItemId) {
         self.auto_theorems.push(auto_theorem);
     }
 }

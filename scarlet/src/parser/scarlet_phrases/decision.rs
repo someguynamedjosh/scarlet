@@ -3,7 +3,7 @@ use typed_arena::Arena;
 use crate::{
     constructs::{
         decision::{CDecision, SWithInvariant},
-        ConstructId,
+        ItemId,
     },
     environment::{invariants::Invariant, Environment},
     parser::{
@@ -20,7 +20,7 @@ fn create<'x>(
     env: &mut Environment<'x>,
     scope: Box<dyn Scope>,
     node: &Node<'x>,
-) -> ConstructId {
+) -> ItemId {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("DECISION"));
     assert_eq!(node.children[1], NodeChild::Text("["));
@@ -48,7 +48,7 @@ fn create<'x>(
     let neq_inv = Invariant::new(neq_inv, Default::default());
     let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
 
-    env.define_construct(this, CDecision::new(left, right, equal, unequal));
+    env.define_item(this, CDecision::new(left, right, equal, unequal));
     this
 }
 
@@ -56,7 +56,7 @@ fn uncreate<'a>(
     pc: &ParseContext,
     env: &mut Environment,
     code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
+    uncreate: ItemId,
     from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {

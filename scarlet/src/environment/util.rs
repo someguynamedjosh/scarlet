@@ -1,28 +1,25 @@
-use super::{ConstructId, Environment, UnresolvedConstructError};
+use super::{Environment, ItemId, UnresolvedItemError};
 use crate::{
-    constructs::{
-        base::BoxedConstruct, downcast_construct, AnnotatedConstruct, Construct,
-        ConstructDefinition,
-    },
+    constructs::{base::BoxedConstruct, downcast_construct, Construct, Item, ItemDefinition},
     scope::{LookupIdentResult, Scope},
 };
 
 impl<'x> Environment<'x> {
-    pub fn get_construct(&self, con_id: ConstructId) -> &AnnotatedConstruct<'x> {
-        &self.constructs[con_id]
+    pub fn get_item(&self, item_id: ItemId) -> &Item<'x> {
+        &self.items[item_id]
     }
 
-    pub fn get_construct_scope(&mut self, con_id: ConstructId) -> &dyn Scope {
-        let con = self.get_construct(con_id);
-        match &con.definition {
-            &ConstructDefinition::Other(other) => self.get_construct_scope(other),
-            ConstructDefinition::Resolved(_) => &*self.get_construct(con_id).scope,
-            ConstructDefinition::Unresolved(_) => unreachable!(),
+    pub fn get_item_scope(&mut self, item_id: ItemId) -> &dyn Scope {
+        let item = self.get_item(item_id);
+        match &item.definition {
+            &ItemDefinition::Other(other) => self.get_item_scope(other),
+            ItemDefinition::Resolved(_) => &*self.get_item(item_id).scope,
+            ItemDefinition::Unresolved(_) => unreachable!(),
         }
     }
 
-    pub fn lookup_ident(&mut self, con_id: ConstructId, ident: &str) -> LookupIdentResult {
-        self.constructs[con_id]
+    pub fn lookup_ident(&mut self, item_id: ItemId, ident: &str) -> LookupIdentResult {
+        self.items[item_id]
             .scope
             .dyn_clone()
             .lookup_ident(self, ident)
@@ -30,48 +27,45 @@ impl<'x> Environment<'x> {
 
     pub(super) fn get_construct_definition_no_deref(
         &mut self,
-        con_id: ConstructId,
-    ) -> Result<&BoxedConstruct, UnresolvedConstructError> {
-        let old_con_id = con_id;
-        if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
+        item_id: ItemId,
+    ) -> Result<&BoxedConstruct, UnresolvedItemError> {
+        let old_item_id = item_id;
+        if let ItemDefinition::Resolved(def) = &self.items[item_id].definition {
             Ok(def)
-        } else if let ConstructDefinition::Unresolved(..) = &self.constructs[con_id].definition {
-            Err(UnresolvedConstructError(con_id))
+        } else if let ItemDefinition::Unresolved(..) = &self.items[item_id].definition {
+            Err(UnresolvedItemError(item_id))
         } else {
             eprintln!("{:#?}", self);
-            eprintln!("{:?} -> {:?}", old_con_id, con_id);
+            eprintln!("{:?} -> {:?}", old_item_id, item_id);
             unreachable!()
         }
     }
 
     pub(super) fn get_and_downcast_construct_definition_no_deref<C: Construct>(
         &mut self,
-        con_id: ConstructId,
-    ) -> Result<Option<&C>, UnresolvedConstructError> {
+        item_id: ItemId,
+    ) -> Result<Option<&C>, UnresolvedItemError> {
         Ok(downcast_construct(
-            &**self.get_construct_definition_no_deref(con_id)?,
+            &**self.get_construct_definition_no_deref(item_id)?,
         ))
     }
 
-    pub fn get_construct_definition(
+    pub fn get_item_as_construct(
         &mut self,
-        con_id: ConstructId,
-    ) -> Result<&BoxedConstruct, UnresolvedConstructError> {
-        let _old_con_id = con_id;
-        let con_id = self.dereference(con_id)?;
-        if let ConstructDefinition::Resolved(def) = &self.constructs[con_id].definition {
+        item_id: ItemId,
+    ) -> Result<&BoxedConstruct, UnresolvedItemError> {
+        let item_id = self.dereference(item_id)?;
+        if let ItemDefinition::Resolved(def) = &self.items[item_id].definition {
             Ok(def)
         } else {
-            Err(UnresolvedConstructError(con_id))
+            Err(UnresolvedItemError(item_id))
         }
     }
 
     pub fn get_and_downcast_construct_definition<C: Construct>(
         &mut self,
-        con_id: ConstructId,
-    ) -> Result<Option<&C>, UnresolvedConstructError> {
-        Ok(downcast_construct(
-            &**self.get_construct_definition(con_id)?,
-        ))
+        item_id: ItemId,
+    ) -> Result<Option<&C>, UnresolvedItemError> {
+        Ok(downcast_construct(&**self.get_item_as_construct(item_id)?))
     }
 }

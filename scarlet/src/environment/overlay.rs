@@ -1,5 +1,5 @@
 use super::Environment;
-use crate::{constructs::ConstructId, shared::OwnedOrBorrowed};
+use crate::{constructs::ItemId, shared::OwnedOrBorrowed};
 
 #[derive(Debug)]
 pub struct Overlay<'e, 'x, T: Default> {
@@ -23,7 +23,7 @@ impl<'e, 'x, T: Default> Overlay<'e, 'x, T> {
         self.env
     }
 
-    pub fn get(&self, id: ConstructId) -> OwnedOrBorrowed<T> {
+    pub fn get(&self, id: ItemId) -> OwnedOrBorrowed<T> {
         if id.index < self.data.len() {
             OwnedOrBorrowed::Borrowed(&self.data[id.index])
         } else {
@@ -31,14 +31,14 @@ impl<'e, 'x, T: Default> Overlay<'e, 'x, T> {
         }
     }
 
-    pub fn get_mut(&mut self, id: ConstructId) -> &mut T {
+    pub fn get_mut(&mut self, id: ItemId) -> &mut T {
         while id.index >= self.data.len() {
             self.data.push(Default::default());
         }
         &mut self.data[id.index]
     }
 
-    pub fn set(&mut self, id: ConstructId, value: T) {
+    pub fn set(&mut self, id: ItemId, value: T) {
         *self.get_mut(id) = value;
     }
 }
