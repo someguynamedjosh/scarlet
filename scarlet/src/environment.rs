@@ -118,6 +118,7 @@ impl<'x> Environment<'x> {
             invariants: None,
             scope,
             from_dex: None,
+            name: None,
         };
         self.items.push(item)
     }
@@ -130,6 +131,7 @@ impl<'x> Environment<'x> {
             invariants: None,
             scope,
             from_dex: None,
+            name: None,
         })
     }
 
@@ -149,6 +151,7 @@ impl<'x> Environment<'x> {
             invariants: None,
             scope,
             from_dex: None,
+            name: None,
         };
         let id = self.items.push(item);
         if let Some(var_id) = var_id {
@@ -164,6 +167,7 @@ impl<'x> Environment<'x> {
             invariants: None,
             scope,
             from_dex: None,
+            name: None,
         };
         self.items.push(item)
     }
@@ -201,6 +205,7 @@ impl<'x> Environment<'x> {
             invariants: None,
             scope,
             from_dex: None,
+            name: None,
         })
     }
 

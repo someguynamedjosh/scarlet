@@ -20,10 +20,22 @@ pub struct VomitContext<'x, 'y> {
     pub code_arena: &'x Arena<String>,
     pub scope: &'y dyn Scope,
     pub temp_names: &'y mut OrderedMap<ItemId, (&'x str, Node<'x>)>,
-    pub anon_name_counter: usize,
+    pub anon_name_counter: &'y mut usize,
 }
 
 impl<'x, 'y> VomitContext<'x, 'y> {
+    pub fn with_scope<'yy>(&'yy mut self, scope: &'yy dyn Scope) -> VomitContext<'x, 'yy>
+    where
+        'y: 'yy,
+    {
+        VomitContext {
+            scope,
+            temp_names: &mut *self.temp_names,
+            anon_name_counter: &mut *self.anon_name_counter,
+            ..*self
+        }
+    }
+
     pub fn get_name(
         &mut self,
         env: &mut Environment,
@@ -33,13 +45,16 @@ impl<'x, 'y> VomitContext<'x, 'y> {
         if let Some(name) = self.temp_names.get(&of) {
             name.0
         } else {
-            let anon_name = self
-                .code_arena
-                .alloc(format!("anon_{}", self.anon_name_counter));
-            self.temp_names
-                .insert_no_replace(of, (&*anon_name, make_node()));
-            self.anon_name_counter += 1;
-            &*anon_name
+            let of = env.dereference(of).unwrap_or(of);
+            let name = if let Some(name) = &env.items[of].name {
+                name.clone()
+            } else {
+                format!("anon_{}", self.anon_name_counter)
+            };
+            let name = self.code_arena.alloc(name);
+            self.temp_names.insert_no_replace(of, (&*name, make_node()));
+            *self.anon_name_counter += 1;
+            &*name
         }
     }
 }
@@ -79,7 +94,7 @@ impl<'x> Environment<'x> {
             code_arena: &code_arena,
             scope: &*from,
             temp_names: &mut temp_names,
-            anon_name_counter: 0,
+            anon_name_counter: &mut 0,
         };
         let original_vomit = self.vomit(255, &mut ctx, item_id)?;
         let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
@@ -92,7 +107,7 @@ impl<'x> Environment<'x> {
             code_arena: &code_arena,
             scope: &inv_from,
             temp_names: &mut temp_names,
-            anon_name_counter: 0,
+            anon_name_counter: &mut 0,
         };
         for invariant in self.generated_invariants(item_id) {
             let vomited = self.vomit(255, &mut inv_ctx, invariant.statement)?;

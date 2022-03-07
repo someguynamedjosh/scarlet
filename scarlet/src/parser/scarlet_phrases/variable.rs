@@ -58,12 +58,7 @@ fn uncreate<'a>(
         let scope_item = env.push_scope(ctx.scope.dyn_clone());
         let scope_parent = env.dereference(uncreate)?;
         let from = &SWithParent(SVariableInvariants(scope_parent), scope_item);
-        let mut ctx = VomitContext {
-            scope: from,
-            temp_names: &mut *ctx.temp_names,
-            ..*ctx
-        };
-        let ctx = &mut ctx;
+        let ctx = &mut ctx.with_scope(from);
 
         let cvar = cvar.clone();
         let var = env.get_variable(cvar.get_id()).clone();

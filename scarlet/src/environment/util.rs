@@ -68,4 +68,8 @@ impl<'x> Environment<'x> {
     ) -> Result<Option<&C>, UnresolvedItemError> {
         Ok(downcast_construct(&**self.get_item_as_construct(item_id)?))
     }
+
+    pub fn set_name(&mut self, item_id: ItemId, name: String) {
+        self.items[item_id].name = Some(name);
+    }
 }

@@ -28,6 +28,9 @@ fn struct_from_fields<'x>(
         let label = label.unwrap_or("").to_owned();
         let this = env.push_placeholder(scope);
         let field = field.as_construct(pc, env, SFieldAndRest(this));
+        if label.len() > 0 {
+            env.set_name(field, label.clone());
+        }
         let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
         let this_def = CPopulatedStruct::new(label, field, rest);
         env.define_item(this, this_def);
@@ -74,6 +77,7 @@ fn uncreate<'a>(
         let label = ctx.code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
         let scope = SFieldAndRest(maybe_structt);
+        let ctx = &mut ctx.with_scope(&scope);
         maybe_structt = structt.get_rest();
         let value = env.vomit(255, ctx, value)?;
         if label.len() > 0 {
