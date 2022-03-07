@@ -24,7 +24,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable {
     pub id: Option<VariableId>,
-    pub construct: Option<ItemId>,
+    pub item: Option<ItemId>,
     pub invariants: Vec<ItemId>,
     pub dependencies: Vec<ItemId>,
 }

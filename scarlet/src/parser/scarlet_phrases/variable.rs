@@ -5,7 +5,7 @@ use crate::{
         variable::{CVariable, SVariableInvariants},
         ItemId,
     },
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -49,27 +49,32 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
-    let from_con = env.push_scope(from.dyn_clone());
-    let scope_parent = env.dereference(uncreate)?;
-    let from = &SWithParent(SVariableInvariants(scope_parent), from_con);
     if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
+        let cvar = cvar.clone();
+        let scope_item = env.push_scope(ctx.scope.dyn_clone());
+        let scope_parent = env.dereference(uncreate)?;
+        let from = &SWithParent(SVariableInvariants(scope_parent), scope_item);
+        let ctx = VomitContext {
+            scope: from,
+            ..*ctx
+        };
+        let ctx = &ctx;
+
         let cvar = cvar.clone();
         let var = env.get_variable(cvar.get_id()).clone();
         let invariants = var
             .get_invariants()
             .into_iter()
-            .map(|&inv| env.vomit(255, pc, code_arena, inv, from))
+            .map(|&inv| env.vomit(255, ctx, inv))
             .collect::<Result<Vec<_>, _>>()?;
         let dependencies = var
             .get_dependencies()
             .into_iter()
-            .map(|&dep| env.vomit(255, pc, code_arena, dep, from))
+            .map(|&dep| env.vomit(255, ctx, dep))
             .collect::<Result<Vec<_>, _>>()?;
         let mut body = invariants;
         if dependencies.len() > 0 {

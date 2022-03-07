@@ -81,7 +81,7 @@ impl<'a> Environment<'a> {
     pub(super) fn variable(&mut self) -> ItemId {
         let id = self.push_variable(Variable {
             id: None,
-            construct: None,
+            item: None,
             invariants: vec![],
             dependencies: vec![],
         });
@@ -91,7 +91,7 @@ impl<'a> Environment<'a> {
     pub(super) fn variable_full(&mut self) -> (ItemId, VariableId) {
         let id = self.push_variable(Variable {
             id: None,
-            construct: None,
+            item: None,
             invariants: vec![],
             dependencies: vec![],
         });
@@ -106,7 +106,7 @@ impl<'a> Environment<'a> {
     ) -> (ItemId, VariableId) {
         let id = self.push_variable(Variable {
             id: None,
-            construct: None,
+            item: None,
             invariants: vec![],
             dependencies: deps,
         });

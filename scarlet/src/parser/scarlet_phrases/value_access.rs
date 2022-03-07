@@ -7,7 +7,7 @@ use crate::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
         ItemId,
     },
-    environment::{discover_equality::Equal, Environment},
+    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -30,11 +30,9 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
     let source = if let Some(asm) =
         env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)?
@@ -51,7 +49,7 @@ fn uncreate<'a>(
             {
                 let cstruct = cstruct.clone();
                 if env.discover_equal(cstruct.get_value(), uncreate, 1024) == Ok(Equal::yes())
-                    && from.parent() != Some(id)
+                    && ctx.scope.parent() != Some(id)
                 {
                     return ControlFlow::Break(id);
                 }
@@ -63,7 +61,7 @@ fn uncreate<'a>(
         Some(Node {
             phrase: "value access",
             children: vec![
-                NodeChild::Node(env.vomit(4, pc, code_arena, id, from)?),
+                NodeChild::Node(env.vomit(4, ctx, id)?),
                 NodeChild::Text(".VALUE"),
             ],
         })

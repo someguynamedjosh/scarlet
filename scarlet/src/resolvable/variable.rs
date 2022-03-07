@@ -27,7 +27,7 @@ impl<'x> Resolvable<'x> for RVariable {
     ) -> ResolveResult<'x> {
         let id = env.push_variable(Variable {
             id: None,
-            construct: None,
+            item: None,
             invariants: self.invariants.clone(),
             dependencies: self.dependencies.clone(),
         });

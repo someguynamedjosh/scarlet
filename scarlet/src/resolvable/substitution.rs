@@ -134,7 +134,7 @@ fn resolve_dep_subs(subs: &mut Substitutions, env: &mut Environment) {
                 // dependency required by the variable it is assigned to.
                 if let Some(existing_dep) = value_deps.next() {
                     if existing_dep.id != desired_dep.id {
-                        let desired_dep = env.get_variable(desired_dep.id).construct.unwrap();
+                        let desired_dep = env.get_variable(desired_dep.id).item.unwrap();
                         dep_subs.insert_no_replace(existing_dep.id, desired_dep);
                     }
                 }

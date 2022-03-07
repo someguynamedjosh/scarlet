@@ -7,7 +7,7 @@ use crate::{
         variable::{Dependency, VariableId},
         ItemId,
     },
-    environment::{Environment, UnresolvedItemError},
+    environment::{vomit::VomitContext, Environment, UnresolvedItemError},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -53,15 +53,13 @@ fn create<'x>(
 }
 
 fn uncreate_substitution<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     target: VariableId,
     value: ItemId,
     deps: &mut Vec<Dependency>,
-    from: &dyn Scope,
 ) -> Result<Node<'a>, UnresolvedItemError> {
-    let value = env.vomit(254, pc, code_arena, value, from)?;
+    let value = env.vomit(254, ctx, value)?;
     Ok(if deps.get(0).map(|v| v.id == target) == Some(true) {
         deps.remove(0);
         value
@@ -69,7 +67,7 @@ fn uncreate_substitution<'a>(
         Node {
             phrase: "is",
             children: vec![
-                NodeChild::Node(env.vomit_var(pc, code_arena, target, from)?),
+                NodeChild::Node(env.vomit_var(ctx, target)?),
                 NodeChild::Text("IS"),
                 NodeChild::Node(value),
             ],
@@ -78,11 +76,9 @@ fn uncreate_substitution<'a>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate)? {
         let csub = csub.clone();
@@ -93,15 +89,13 @@ fn uncreate<'a>(
         let subs = create_comma_list(
             csub.substitutions()
                 .into_iter()
-                .map(|(target, value)| {
-                    uncreate_substitution(pc, env, code_arena, *target, *value, &mut deps, from)
-                })
+                .map(|(target, value)| uncreate_substitution(env, ctx, *target, *value, &mut deps))
                 .collect::<Result<Vec<_>, _>>()?,
         );
         Ok(Some(Node {
             phrase: "substitution",
             children: vec![
-                NodeChild::Node(env.vomit(4, pc, code_arena, csub.base(), from)?),
+                NodeChild::Node(env.vomit(4, ctx, csub.base())?),
                 NodeChild::Text("["),
                 subs,
                 NodeChild::Text("]"),

@@ -5,7 +5,7 @@ use crate::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ItemId,
     },
-    environment::Environment,
+    environment::{Environment, vomit::VomitContext},
     parser::{
         phrase::{Phrase, UncreateResult},
         util, Node, NodeChild, ParseContext,
@@ -36,11 +36,9 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ItemId,
-    _from: &dyn Scope,
+    env: &mut Environment,
+    ctx: &VomitContext<'a, '_>,
+    uncreate: ItemId,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

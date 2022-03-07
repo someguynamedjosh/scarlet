@@ -4,12 +4,12 @@ pub mod from;
 pub mod invariants;
 pub mod overlay;
 pub mod path;
-mod reduce;
+pub mod reduce;
 pub mod resolve;
 pub mod sub_expr;
-mod test_util;
+pub mod test_util;
 pub mod util;
-mod vomit;
+pub mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
@@ -95,7 +95,7 @@ impl<'x> Environment<'x> {
     pub fn define_dyn_item(&mut self, item: ItemId, definition: Box<dyn Construct>) {
         let var_id = downcast_construct::<CVariable>(&*definition).map(CVariable::get_id);
         if let Some(var_id) = var_id {
-            self.variables[var_id].construct = Some(item);
+            self.variables[var_id].item = Some(item);
         }
         self.items[item].definition = definition.into();
     }
@@ -152,7 +152,7 @@ impl<'x> Environment<'x> {
         };
         let id = self.items.push(item);
         if let Some(var_id) = var_id {
-            self.variables[var_id].construct = Some(id);
+            self.variables[var_id].item = Some(id);
         }
         id
     }

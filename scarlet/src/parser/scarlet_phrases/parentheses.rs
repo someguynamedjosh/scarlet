@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::ItemId,
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -24,17 +24,15 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(Some(Node {
         phrase: "parentheses",
         children: vec![
             NodeChild::Text("("),
-            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)?),
+            NodeChild::Node(env.vomit(255, ctx, uncreate)?),
             NodeChild::Text(")"),
         ],
     }))

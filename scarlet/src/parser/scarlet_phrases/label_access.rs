@@ -5,7 +5,7 @@ use crate::{
         structt::{AtomicStructMember, CAtomicStructMember},
         ItemId,
     },
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -28,11 +28,9 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(
         if let Some(asm) =
@@ -43,7 +41,7 @@ fn uncreate<'a>(
                 Some(Node {
                     phrase: "label access",
                     children: vec![
-                        NodeChild::Node(env.vomit(4, pc, code_arena, id, from)?),
+                        NodeChild::Node(env.vomit(4, ctx, id)?),
                         NodeChild::Text(".LABEL"),
                     ],
                 })

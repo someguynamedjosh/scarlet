@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::ItemId,
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -24,19 +24,17 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
     let dereffed = env.dereference(uncreate)?;
     Ok(if dereffed == uncreate {
         None
-    } else if let Ok(Some(ident)) = from.reverse_lookup_ident(env, dereffed) {
+    } else if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(env, dereffed) {
         Some(Node {
             phrase: "identifier",
-            children: vec![NodeChild::Text(code_arena.alloc(ident))],
+            children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],
         })
     } else {
         None

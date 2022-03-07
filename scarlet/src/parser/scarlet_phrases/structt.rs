@@ -5,7 +5,7 @@ use crate::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ItemId,
     },
-    environment::{discover_equality::Equal, Environment},
+    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -62,22 +62,20 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
     while let Some(structt) =
         env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)?
     {
-        let label = code_arena.alloc(structt.get_label().to_owned());
+        let label = ctx.code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
         let scope = SFieldAndRest(maybe_structt);
         maybe_structt = structt.get_rest();
-        let value = env.vomit(255, pc, code_arena, value, &scope)?;
+        let value = env.vomit(255, ctx, value)?;
         if label.len() > 0 {
             fields.push(Node {
                 phrase: "is",

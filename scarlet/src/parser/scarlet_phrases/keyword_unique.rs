@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{unique::CUnique, ItemId},
-    environment::Environment,
+    environment::{Environment, vomit::VomitContext},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -23,18 +23,15 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(
         if let Some(unique) = env.get_and_downcast_construct_definition::<CUnique>(uncreate)? {
-            let text = code_arena.alloc(format!("UNIQUE {:?}", unique));
             Some(Node {
-                phrase: "keyword UNIQUE",
-                children: vec![NodeChild::Text(text)],
+                phrase: "UNIQUE",
+                children: vec![NodeChild::Text("UNIQUE")],
             })
         } else {
             None
@@ -48,7 +45,7 @@ fn vomit(_pc: &ParseContext, src: &Node) -> String {
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "keyword UNIQUE",
+        "UNIQUE",
         128, 128,
         Some((create, uncreate)),
         vomit,

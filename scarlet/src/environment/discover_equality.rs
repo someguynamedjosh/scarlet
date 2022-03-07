@@ -199,8 +199,8 @@ impl<'x> Environment<'x> {
                 }
                 let mut equal = Equal::yes();
                 for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {
-                    let ldep = self.get_variable(ldep.id).construct.unwrap();
-                    let rdep = self.get_variable(rdep.id).construct.unwrap();
+                    let ldep = self.get_variable(ldep.id).item.unwrap();
+                    let rdep = self.get_variable(rdep.id).item.unwrap();
                     let deps_equal = self.discover_equal_with_subs(
                         ldep,
                         left_subs.clone(),
@@ -227,7 +227,7 @@ impl<'x> Environment<'x> {
                         if ldep.id == rdep.id {
                             continue;
                         }
-                        let ldep = self.get_variable(ldep.id).construct.unwrap();
+                        let ldep = self.get_variable(ldep.id).item.unwrap();
                         dep_subs.insert_no_replace(rdep.id, ldep);
                     }
                     let right = self.substitute(right, &dep_subs);

@@ -5,7 +5,7 @@ use typed_arena::Arena;
 use super::{Node, ParseContext};
 use crate::{
     constructs::ItemId,
-    environment::{Environment, UnresolvedItemError},
+    environment::{Environment, UnresolvedItemError, vomit::VomitContext},
     scope::Scope,
 };
 
@@ -60,11 +60,9 @@ pub type CreateFn =
     for<'x> fn(&ParseContext, &mut Environment<'x>, Box<dyn Scope>, &Node<'x>) -> ItemId;
 
 pub type UncreateFn = for<'a, 'x> fn(
-    &ParseContext,
     &mut Environment<'x>,
-    &'a Arena<String>,
+    &VomitContext<'a, '_>,
     ItemId,
-    &dyn Scope,
 ) -> UncreateResult<'a>;
 pub type UncreateResult<'a> = Result<Option<Node<'a>>, UnresolvedItemError>;
 

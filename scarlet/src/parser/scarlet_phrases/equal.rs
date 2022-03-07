@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{decision::CDecision, ItemId},
-    environment::{discover_equality::Equal, Environment},
+    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -30,11 +30,9 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    from: &dyn Scope,
 ) -> UncreateResult<'a> {
     Ok(
         if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {
@@ -47,9 +45,9 @@ fn uncreate<'a>(
                 Some(Node {
                     phrase: "equal",
                     children: vec![
-                        NodeChild::Node(env.vomit(127, pc, code_arena, cite.left(), from)?),
+                        NodeChild::Node(env.vomit(127, ctx, cite.left())?),
                         NodeChild::Text("="),
-                        NodeChild::Node(env.vomit(127, pc, code_arena, cite.right(), from)?),
+                        NodeChild::Node(env.vomit(127, ctx, cite.right())?),
                     ],
                 })
             } else {

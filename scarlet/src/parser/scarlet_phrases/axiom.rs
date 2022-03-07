@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{axiom::CAxiom, ItemId},
-    environment::Environment,
+    environment::{Environment, vomit::VomitContext},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -27,11 +27,9 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
     env: &mut Environment,
-    _code_arena: &'a Arena<String>,
+    ctx: &VomitContext<'a, '_>,
     uncreate: ItemId,
-    _from: &dyn Scope,
 ) -> UncreateResult<'a> {
     if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
         let cax = cax.clone();
