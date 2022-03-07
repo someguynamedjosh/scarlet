@@ -42,10 +42,10 @@ impl<'x, 'y> VomitContext<'x, 'y> {
         of: ItemId,
         make_node: impl FnOnce() -> Node<'x>,
     ) -> &'x str {
+        let of = env.dereference(of).unwrap_or(of);
         if let Some(name) = self.temp_names.get(&of) {
             name.0
         } else {
-            let of = env.dereference(of).unwrap_or(of);
             let name = if let Some(name) = &env.items[of].name {
                 name.clone()
             } else {
@@ -102,6 +102,7 @@ impl<'x> Environment<'x> {
         result.push_str(&format!("proves:\n"));
 
         let inv_from = SWithParent(SVariableInvariants(item_id), from_item);
+        temp_names.clear();
         let mut inv_ctx = VomitContext {
             pc: &pc,
             code_arena: &code_arena,
@@ -117,11 +118,13 @@ impl<'x> Environment<'x> {
                 indented(&vomited,),
                 invariant.statement,
             ));
+            inv_ctx.temp_names.clear();
             result.push_str("    depending on:\n");
             for dep in invariant.dependencies {
                 let vomited = self.vomit(255, &mut inv_ctx, dep)?;
                 let vomited = Self::format_vomit_output(&inv_ctx, vomited);
                 result.push_str(&format!("        {} ({:?})\n", indented(&vomited), dep,));
+                inv_ctx.temp_names.clear();
             }
         }
         result.push_str(&format!("depends on:\n"));
@@ -129,6 +132,7 @@ impl<'x> Environment<'x> {
             let vomited = self.vomit_var(&mut inv_ctx, dep.id)?;
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("    {}\n", indented(&vomited)));
+            inv_ctx.temp_names.clear();
         }
         Ok(result)
     }

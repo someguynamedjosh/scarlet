@@ -20,6 +20,10 @@ impl<K, V> OrderedMap<K, V> {
             entries: Vec::new(),
         }
     }
+
+    pub fn clear(&mut self) {
+        self.entries.clear()
+    }
 }
 
 impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
