@@ -14,7 +14,7 @@ impl<'x> Environment<'x> {
             }
         });
         let mut limit = 0;
-        while limit < 128 {
+        while limit < 16 {
             let reset_limit = false;
             let mut still_unresolved = Vec::new();
             let mut all_dead_ends = true;
