@@ -48,11 +48,7 @@ impl Construct for CPopulatedStruct {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         [
             env.generated_invariants(self.value),
             env.generated_invariants(self.rest),
@@ -113,11 +109,7 @@ impl Construct for CAtomicStructMember {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         if let Ok(Some(structt)) =
             env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
         {
@@ -178,7 +170,7 @@ impl Scope for SField {
     ) -> ReverseLookupIdentResult {
         if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
-            Ok(if structt.value == value {
+            Ok(if structt.value == value && structt.label.len() > 0 {
                 Some(structt.label.clone())
             } else {
                 None
@@ -243,7 +235,7 @@ fn reverse_lookup_ident_in<'x>(
     value: ItemId,
     inn: &CPopulatedStruct,
 ) -> ReverseLookupIdentResult {
-    Ok(if inn.value == value {
+    Ok(if inn.value == value && inn.label.len() > 0 {
         Some(inn.label.clone())
     } else if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
         let rest = rest.clone();
@@ -263,7 +255,7 @@ fn lookup_invariant_in<'x>(
     for maybe_match in env.generated_invariants(inn.value) {
         match env.discover_equal(invariant, maybe_match.statement, limit)? {
             Equal::Yes(l) if l.len() == 0 => return Ok(maybe_match),
-            Equal::Yes(l) => (),
+            Equal::Yes(_) => (),
             Equal::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
             Equal::No | Equal::Unknown => (),
         }
