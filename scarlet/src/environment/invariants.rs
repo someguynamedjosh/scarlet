@@ -1,4 +1,4 @@
-mod justify;
+pub mod justify;
 mod tests;
 
 use std::collections::HashSet;

@@ -13,7 +13,7 @@ pub mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, resolve::ResolveStack};
+use self::{dependencies::DepResStack, invariants::justify::JustifyStack, resolve::ResolveStack};
 use crate::{
     constructs::{
         base::{Item, ItemDefinition, ItemId, ItemPool},
@@ -61,6 +61,7 @@ pub struct Environment<'x> {
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
     pub(super) resolve_stack: ResolveStack,
+    pub(super) justify_stack: JustifyStack,
     pub(super) auto_theorems: Vec<ItemId>,
     // pub(super) def_equal_memo_table: HashMap<DefEqualQuery, DefEqualResult>,
 }
@@ -74,6 +75,7 @@ impl<'x> Environment<'x> {
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
             resolve_stack: ResolveStack::new(),
+            justify_stack: JustifyStack::new(),
             auto_theorems: Vec::new(),
         };
         for &name in LANGUAGE_ITEM_NAMES {

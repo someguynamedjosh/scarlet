@@ -17,6 +17,10 @@ pub fn indented(source: &str) -> String {
     source.replace("\n", "\n    ")
 }
 
+pub fn indented_with(source: &str, newline_then_indentation: &str) -> String {
+    source.replace("\n", newline_then_indentation)
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TripleBool {
     True,

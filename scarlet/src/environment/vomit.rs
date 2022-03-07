@@ -98,8 +98,8 @@ impl<'x> Environment<'x> {
         };
         let original_vomit = self.vomit(255, &mut ctx, item_id)?;
         let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
-        result.push_str(&format!("{} ({:?})\n", original_vomit, item_id));
-        result.push_str(&format!("proves:\n"));
+        result.push_str(&format!("{}\n", original_vomit));
+        result.push_str(&format!("proves:"));
 
         let inv_from = SWithParent(SVariableInvariants(item_id), from_item);
         temp_names.clear();
@@ -112,27 +112,22 @@ impl<'x> Environment<'x> {
         };
         for invariant in self.generated_invariants(item_id) {
             let vomited = self.vomit(255, &mut inv_ctx, invariant.statement)?;
-            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            result.push_str(&format!(
-                "    {} ({:?})\n",
-                indented(&vomited,),
-                invariant.statement,
-            ));
             inv_ctx.temp_names.clear();
-            result.push_str("    depending on:\n");
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("\n    {} dep: ", indented(&vomited,),));
             for dep in invariant.dependencies {
                 let vomited = self.vomit(255, &mut inv_ctx, dep)?;
-                let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-                result.push_str(&format!("        {} ({:?})\n", indented(&vomited), dep,));
                 inv_ctx.temp_names.clear();
+                let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+                result.push_str(&format!("{}   ", indented(&vomited)));
             }
         }
-        result.push_str(&format!("depends on:\n"));
+        result.push_str(&format!("\ndepends on: "));
         for dep in self.get_dependencies(item_id).into_variables() {
             let vomited = self.vomit_var(&mut inv_ctx, dep.id)?;
-            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            result.push_str(&format!("    {}\n", indented(&vomited)));
             inv_ctx.temp_names.clear();
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("{}   ", indented(&vomited)));
         }
         Ok(result)
     }
