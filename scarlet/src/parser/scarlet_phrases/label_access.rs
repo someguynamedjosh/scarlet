@@ -41,7 +41,7 @@ fn uncreate<'a>(
                 Some(Node {
                     phrase: "label access",
                     children: vec![
-                        NodeChild::Node(env.vomit(4, ctx, id)?),
+                        NodeChild::Node(env.vomit(4, ctx, id)),
                         NodeChild::Text(".LABEL"),
                     ],
                 })

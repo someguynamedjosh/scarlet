@@ -3,8 +3,9 @@
 use std::assert_matches::assert_matches;
 
 use crate::{
-    constructs::substitution::CSubstitution,
+    constructs::{substitution::CSubstitution, with_dependencies::CWithDependencies},
     environment::{discover_equality::Equal, test_util::*},
+    scope::SRoot,
 };
 
 #[test]
@@ -321,6 +322,52 @@ fn fx_sub_decision_is_gy_sub_decision() {
 }
 
 #[test]
+fn dex_sub_decision_is_gy_sub_decision_with_reordered_deps() {
+    let mut env = env();
+    let a = env.unique();
+    let b = env.unique();
+    let c = env.unique();
+    let d = env.unique();
+
+    let s = env.variable_full();
+    let t = env.variable_full();
+    let u = env.variable_full();
+    let v = env.variable_full();
+
+    let dec_for_dex = env.decision(a, b, c, d);
+    let x = env.variable_full();
+    let dex = env.decision(x.0, d, c, b);
+    let dex_dec = env.substitute(dex, &subs(vec![(x.1, dec_for_dex)]));
+
+    let dec_for_g = env.decision(s.0, t.0, u.0, v.0);
+    let y = env.variable_full();
+    let g = env.variable_full_with_deps(vec![y.0]);
+    let g_dec = env.substitute(g.0, &subs(vec![(y.1, dec_for_g)]));
+    let con = CWithDependencies::new(g_dec, vec![g.0, s.0, t.0, u.0, v.0]);
+    let g_dec = env.push_construct(con, Box::new(SRoot));
+
+    assert_matches!(env.discover_equal(g_dec, dex_dec, 3), Ok(Equal::Yes(..)));
+    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(g_dec, dex_dec, 3) {
+        assert_eq!(lsubs.len(), 5);
+        let mut entries = lsubs.iter();
+        let first = entries.next().unwrap();
+        assert_eq!(first.0, g.1);
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(first.1) {
+            assert_eq!(sub.base(), dex);
+            assert_eq!(sub.substitutions(), &subs(vec![(x.1, y.0)]))
+        } else {
+            panic!("Expected second substitution to be itself another substitution");
+        }
+        assert_eq!(entries.next().unwrap(), &(s.1, a));
+        assert_eq!(entries.next().unwrap(), &(t.1, b));
+        assert_eq!(entries.next().unwrap(), &(u.1, c));
+        assert_eq!(entries.next().unwrap(), &(v.1, d));
+    } else {
+        unreachable!()
+    }
+}
+
+#[test]
 fn fx_sub_decision_with_var_is_gy_sub_decision() {
     let mut env = env();
 
@@ -435,7 +482,10 @@ fn x_eq_y_sub_true_true_is_a_equal_a() {
     let true_eq_true = env.substitute(x_eq_y, &subs(vec![(x.1, truee), (y.1, truee)]));
     let a_eq_a = env.decision(a.0, a.0, truee, falsee);
 
-    assert_matches!(env.discover_equal(a_eq_a, true_eq_true, 3), Ok(Equal::Yes(..)));
+    assert_matches!(
+        env.discover_equal(a_eq_a, true_eq_true, 3),
+        Ok(Equal::Yes(..))
+    );
     if let Ok(Equal::Yes(lsubs)) = env.discover_equal(a_eq_a, true_eq_true, 3) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();

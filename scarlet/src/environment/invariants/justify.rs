@@ -38,7 +38,7 @@ impl<'x> Environment<'x> {
         limit: u32,
         mut err: LookupInvariantError,
     ) -> LookupInvariantResult {
-        let trace = true;
+        let trace = false;
         if limit == 0 {
             return Err(err);
         }
@@ -63,17 +63,15 @@ impl<'x> Environment<'x> {
             }
             if trace {
                 let mut message = format!(
-                    "\nAttempting to justify:\n{}\nWith subs:\n{:#?}",
-                    self.show(inv.statement, context)
-                        .unwrap_or("unresolved".to_owned()),
-                    subs
+                    "\nAttempting to justify:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
+                    indented(&self.show(statement, context)),
+                    indented(&self.show(inv.statement, context)),
                 );
                 for (target, value) in &subs {
                     message.push_str(&format!(
-                        "\n{:?} ->\n{}",
+                        "\n{:?} ->\n    {}",
                         target,
-                        self.show(*value, context)
-                            .unwrap_or("unresolved".to_owned())
+                        indented(&self.show(*value, context)),
                     ));
                 }
                 let bt = Backtrace::new();

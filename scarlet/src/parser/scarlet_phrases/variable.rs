@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
@@ -66,12 +67,12 @@ fn uncreate<'a>(
             .get_invariants()
             .into_iter()
             .map(|&inv| env.vomit(255, ctx, inv))
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect_vec();
         let dependencies = var
             .get_dependencies()
             .into_iter()
             .map(|&dep| env.vomit(255, ctx, dep))
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect_vec();
         let mut body = invariants;
         if dependencies.len() > 0 {
             body.push(Node {

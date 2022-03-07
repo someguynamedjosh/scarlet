@@ -59,7 +59,7 @@ fn uncreate<'a>(
         Some(id) => Ok(Some(Node {
             phrase: "rest access",
             children: vec![
-                NodeChild::Node(env.vomit(4, ctx, id)?),
+                NodeChild::Node(env.vomit(4, ctx, id)),
                 NodeChild::Text(".REST"),
             ],
         })),

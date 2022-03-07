@@ -1,6 +1,10 @@
 use std::{any::Any, fmt::Debug};
 
-use super::{structt::CPopulatedStruct, substitution::Substitutions, variable::CVariable};
+use super::{
+    structt::CPopulatedStruct,
+    substitution::Substitutions,
+    variable::{CVariable, VariableId},
+};
 use crate::{
     environment::{
         dependencies::DepResult,
@@ -102,16 +106,15 @@ pub trait Construct: Any + Debug + AnyEq {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult;
 
     #[allow(unused_variables)]
-    fn generated_invariants<'x>(
-        &self,
-        this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         vec![]
     }
 
     #[allow(unused_variables)]
-    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
+    fn dereference(
+        &self,
+        env: &mut Environment,
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
         None
     }
 

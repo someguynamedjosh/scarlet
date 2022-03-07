@@ -1,5 +1,5 @@
 use super::super::{Environment, UnresolvedItemError};
-use crate::constructs::{substitution::Substitutions, ItemId};
+use crate::constructs::{substitution::Substitutions, variable::VariableId, ItemId};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
@@ -74,6 +74,13 @@ impl Equal {
     pub fn without_subs(self) -> Self {
         match self {
             Self::Yes(..) => Self::yes(),
+            other => other,
+        }
+    }
+
+    pub fn reorder(self, order: &[&VariableId]) -> Self {
+        match self {
+            Self::Yes(subs) => Self::Yes(subs.reorder(order)),
             other => other,
         }
     }

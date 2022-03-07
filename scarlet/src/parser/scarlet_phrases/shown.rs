@@ -35,7 +35,7 @@ fn uncreate<'a>(
             let cshown = cshown.clone();
             Some(Node {
                 phrase: "shown",
-                children: vec![NodeChild::Node(env.vomit(4, ctx, cshown.get_base())?)],
+                children: vec![NodeChild::Node(env.vomit(4, ctx, cshown.get_base()))],
             })
         } else {
             None

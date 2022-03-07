@@ -15,8 +15,8 @@ use crate::{
     },
     impl_any_eq_for_construct,
     scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult,
-        ReverseLookupIdentResult, Scope,
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        Scope,
     },
     shared::{Id, Pool},
 };
@@ -88,7 +88,7 @@ impl Variable {
                 Err(LookupInvariantError::DefinitelyDoesNotExist) => {
                     return Ok(Err(format!(
                         "Failed to justify: {}",
-                        env.show(subbed, value)?
+                        env.show(subbed, value)
                     )));
                 }
                 Err(err) => return Err(err),
@@ -116,11 +116,7 @@ impl Construct for CVariable {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         env.get_variable(self.0)
             .invariants
             .iter()

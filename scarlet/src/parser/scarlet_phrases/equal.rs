@@ -45,9 +45,9 @@ fn uncreate<'a>(
                 Some(Node {
                     phrase: "equal",
                     children: vec![
-                        NodeChild::Node(env.vomit(127, ctx, cite.left())?),
+                        NodeChild::Node(env.vomit(127, ctx, cite.left())),
                         NodeChild::Text("="),
-                        NodeChild::Node(env.vomit(127, ctx, cite.right())?),
+                        NodeChild::Node(env.vomit(127, ctx, cite.right())),
                     ],
                 })
             } else {

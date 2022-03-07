@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::{
     base::{Construct, ItemId},
     substitution::Substitutions,
-    variable::{CVariable, Dependency},
+    variable::{CVariable, Dependency, VariableId},
     GenInvResult,
 };
 use crate::{
@@ -42,11 +42,7 @@ impl Construct for CWithDependencies {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         env.generated_invariants(self.base)
     }
 
@@ -79,7 +75,19 @@ impl Construct for CWithDependencies {
         deps
     }
 
-    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
-        Some((self.base, None))
+    fn dereference(
+        &self,
+        env: &mut Environment,
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
+        let mut reordering = Vec::new();
+        for &dep in &self.dependencies {
+            let dep = env
+                .get_and_downcast_construct_definition::<CVariable>(dep)
+                .unwrap()
+                .unwrap();
+            let dep = dep.get_id();
+            reordering.push(dep);
+        }
+        Some((self.base, None, Some(reordering)))
     }
 }

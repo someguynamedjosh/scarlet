@@ -87,12 +87,13 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         std::mem::take(self)
     }
 
-    pub fn remove(&mut self, key_to_remove: &K) {
+    pub fn remove(&mut self, key_to_remove: &K) -> Option<(K, V)> {
         for idx in (0..self.entries.len()).rev() {
             if &self.entries[idx].0 == key_to_remove {
-                self.entries.remove(idx);
+                return Some(self.entries.remove(idx));
             }
         }
+        None
     }
 
     pub fn union(mut self, other: Self) -> Self {
@@ -110,6 +111,17 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
             }
         }
         result
+    }
+
+    pub fn reorder(mut self, order: &[&K]) -> Self {
+        let mut reordered = Vec::new();
+        for key in order {
+            if let Some((key, value)) = self.remove(key) {
+                reordered.push((key, value));
+            }
+        }
+        reordered.append(&mut self.entries);
+        Self { entries: reordered }
     }
 }
 

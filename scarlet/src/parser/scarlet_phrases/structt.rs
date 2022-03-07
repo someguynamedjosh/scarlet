@@ -79,7 +79,7 @@ fn uncreate<'a>(
         let scope = SFieldAndRest(maybe_structt);
         let ctx = &mut ctx.with_scope(&scope);
         maybe_structt = structt.get_rest();
-        let value = env.vomit(255, ctx, value)?;
+        let value = env.vomit(255, ctx, value);
         if label.len() > 0 {
             fields.push(Node {
                 phrase: "is",

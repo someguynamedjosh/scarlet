@@ -59,7 +59,7 @@ fn uncreate_substitution<'a>(
     value: ItemId,
     deps: &mut Vec<Dependency>,
 ) -> Result<Node<'a>, UnresolvedItemError> {
-    let value = env.vomit(254, ctx, value)?;
+    let value = env.vomit(254, ctx, value);
     Ok(if deps.get(0).map(|v| v.id == target) == Some(true) {
         deps.remove(0);
         value
@@ -67,7 +67,7 @@ fn uncreate_substitution<'a>(
         Node {
             phrase: "is",
             children: vec![
-                NodeChild::Node(env.vomit_var(ctx, target)?),
+                NodeChild::Node(env.vomit_var(ctx, target)),
                 NodeChild::Text("IS"),
                 NodeChild::Node(value),
             ],
@@ -95,7 +95,7 @@ fn uncreate<'a>(
         Ok(Some(Node {
             phrase: "substitution",
             children: vec![
-                NodeChild::Node(env.vomit(4, ctx, csub.base())?),
+                NodeChild::Node(env.vomit(4, ctx, csub.base())),
                 NodeChild::Text("["),
                 subs,
                 NodeChild::Text("]"),

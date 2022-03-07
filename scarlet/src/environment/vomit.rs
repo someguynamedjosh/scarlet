@@ -10,7 +10,7 @@ use crate::{
         variable::{CVariable, SVariableInvariants, VariableId},
         Construct, ItemDefinition,
     },
-    parser::{Node, ParseContext},
+    parser::{Node, NodeChild, ParseContext},
     scope::{SWithParent, Scope},
     shared::{indented, OrderedMap},
 };
@@ -71,18 +71,11 @@ impl<'x> Environment<'x> {
             }
         }
         for (item_id, from) in to_vomit {
-            println!(
-                "{}",
-                self.show(item_id, from).unwrap_or(format!("Unresolved"))
-            );
+            println!("{}", self.show(item_id, from));
         }
     }
 
-    pub fn show(
-        &mut self,
-        item_id: ItemId,
-        from_item: ItemId,
-    ) -> Result<String, UnresolvedItemError> {
+    pub fn show(&mut self, item_id: ItemId, from_item: ItemId) -> String {
         let mut result = String::new();
 
         let from = self.items[from_item].scope.dyn_clone();
@@ -96,7 +89,7 @@ impl<'x> Environment<'x> {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        let original_vomit = self.vomit(255, &mut ctx, item_id)?;
+        let original_vomit = self.vomit(255, &mut ctx, item_id);
         let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
         result.push_str(&format!("{}\n", original_vomit));
         result.push_str(&format!("proves:"));
@@ -111,12 +104,12 @@ impl<'x> Environment<'x> {
             anon_name_counter: &mut 0,
         };
         for invariant in self.generated_invariants(item_id) {
-            let vomited = self.vomit(255, &mut inv_ctx, invariant.statement)?;
+            let vomited = self.vomit(255, &mut inv_ctx, invariant.statement);
             inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("\n    {} dep: ", indented(&vomited,),));
             for dep in invariant.dependencies {
-                let vomited = self.vomit(255, &mut inv_ctx, dep)?;
+                let vomited = self.vomit(255, &mut inv_ctx, dep);
                 inv_ctx.temp_names.clear();
                 let vomited = Self::format_vomit_output(&inv_ctx, vomited);
                 result.push_str(&format!("{}   ", indented(&vomited)));
@@ -124,12 +117,12 @@ impl<'x> Environment<'x> {
         }
         result.push_str(&format!("\ndepends on: "));
         for dep in self.get_dependencies(item_id).into_variables() {
-            let vomited = self.vomit_var(&mut inv_ctx, dep.id)?;
+            let vomited = self.vomit_var(&mut inv_ctx, dep.id);
             inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("{}   ", indented(&vomited)));
         }
-        Ok(result)
+        result
     }
 
     fn format_vomit_output(ctx: &VomitContext, output: Node) -> String {
@@ -150,28 +143,12 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn show_var(
-        &mut self,
-        var: VariableId,
-        from: ItemId,
-    ) -> Result<String, UnresolvedItemError> {
-        self.for_each_item(|env, id| {
-            if let Ok(Some(other_var)) = env.get_and_downcast_construct_definition::<CVariable>(id)
-            {
-                if var == other_var.get_id() {
-                    return ControlFlow::Break(env.show(id, from));
-                }
-            }
-            ControlFlow::Continue(())
-        })
-        .unwrap_or_else(|| panic!("Variable does not exist!"))
+    pub fn show_var(&mut self, var: VariableId, from: ItemId) -> String {
+        let id = self.variables[var].item.unwrap();
+        self.show(id, from)
     }
 
-    pub fn vomit_var<'a>(
-        &mut self,
-        ctx: &mut VomitContext<'a, '_>,
-        var: VariableId,
-    ) -> Result<Node<'a>, UnresolvedItemError> {
+    pub fn vomit_var<'a>(&mut self, ctx: &mut VomitContext<'a, '_>, var: VariableId) -> Node<'a> {
         let id = self.variables[var].item.unwrap();
         self.vomit(255, ctx, id)
     }
@@ -181,16 +158,25 @@ impl<'x> Environment<'x> {
         max_precedence: u8,
         ctx: &mut VomitContext<'a, '_>,
         item_id: ItemId,
-    ) -> Result<Node<'a>, UnresolvedItemError> {
+    ) -> Node<'a> {
+        let mut err = None;
         for (_, phrase) in &ctx.pc.phrases_sorted_by_vomit_priority {
             if phrase.precedence > max_precedence {
                 continue;
             }
             if let Some((_, uncreator)) = phrase.create_and_uncreate {
-                if let Some(uncreated) = uncreator(self, ctx, item_id)? {
-                    return Ok(uncreated);
+                match uncreator(self, ctx, item_id) {
+                    Err(new_err) => err = Some(new_err),
+                    Ok(Some(uncreated)) => return uncreated,
+                    _ => (),
                 }
             }
+        }
+        if let Some(err) = err {
+            return Node {
+                phrase: "identifier",
+                children: vec![NodeChild::Text("UNRESOLVED")],
+            };
         }
         eprintln!("{:#?}", self);
         todo!(

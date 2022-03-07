@@ -1,6 +1,6 @@
 use super::{
     variable::{CVariable, VariableId},
-    Construct, ItemId, GenInvResult,
+    Construct, GenInvResult, ItemId,
 };
 use crate::{
     environment::{
@@ -106,16 +106,15 @@ impl Construct for CSubstitution {
         Self::sub_deps(base, &self.subs, &self.invs[..], env)
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        _env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, _env: &mut Environment<'x>) -> GenInvResult {
         self.invs.clone()
     }
 
-    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
-        Some((self.base, Some(&self.subs)))
+    fn dereference(
+        &self,
+        env: &mut Environment,
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
+        Some((self.base, Some(&self.subs), None))
     }
 
     fn discover_equality<'x>(

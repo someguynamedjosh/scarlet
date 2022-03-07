@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
@@ -43,12 +44,12 @@ fn uncreate<'a>(
             cwd.dependencies()
                 .into_iter()
                 .map(|dep| env.vomit(254, ctx, *dep))
-                .collect::<Result<Vec<_>, _>>()?,
+                .collect_vec(),
         );
         Ok(Some(Node {
             phrase: "with dependencies",
             children: vec![
-                NodeChild::Node(env.vomit(4, ctx, cwd.base())?),
+                NodeChild::Node(env.vomit(4, ctx, cwd.base())),
                 NodeChild::Text("."),
                 NodeChild::Text("WITH_DEPENDENCIES"),
                 NodeChild::Text("["),

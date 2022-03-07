@@ -158,11 +158,7 @@ impl<'x> RSubstitution<'x> {
                 if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error.into());
                 } else {
-                    eprintln!(
-                        "BASE:\n{}\n",
-                        env.show(self.base, self.base)
-                            .unwrap_or(format!("Unresolved"))
-                    );
+                    eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
                     panic!("No more dependencies left to substitute!");
                 }
             }

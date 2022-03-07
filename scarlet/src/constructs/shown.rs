@@ -1,6 +1,7 @@
 use super::{
     base::{Construct, ItemId},
     substitution::Substitutions,
+    variable::VariableId,
     GenInvResult,
 };
 use crate::{
@@ -36,15 +37,14 @@ impl Construct for CShown {
         env.get_dependencies(self.0)
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         env.generated_invariants(self.0)
     }
 
-    fn dereference(&self) -> Option<(ItemId, Option<&Substitutions>)> {
-        Some((self.0, None))
+    fn dereference(
+        &self,
+        env: &mut Environment,
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
+        Some((self.0, None, None))
     }
 }
