@@ -8,6 +8,5 @@ or IS DECISION[a true true b]
 a IS VAR[SELF FROM Bool]
 b IS VAR[SELF FROM Bool]
 
-Bool IS VAR[DECISION[
-    SELF  true  true  SELF = false
-]]
+Bool IS 
+VAR[DECISION[SELF  true  true  SELF = false]]
