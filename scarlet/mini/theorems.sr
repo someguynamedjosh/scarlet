@@ -66,7 +66,7 @@ t_decision_by_parts_ext IS
    AXIOM[t_eq_ext_rev]
 
    conclusion
-   .WITH_DEPENDENCIES[a b c d fx]
+   .WITH_DEPENDENCIES[fx a b c d]
    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
    conclusion IS fx[inner]
