@@ -61,7 +61,7 @@ pub type CreateFn =
 
 pub type UncreateFn = for<'a, 'x> fn(
     &mut Environment<'x>,
-    &VomitContext<'a, '_>,
+    &mut VomitContext<'a, '_>,
     ItemId,
 ) -> UncreateResult<'a>;
 pub type UncreateResult<'a> = Result<Option<Node<'a>>, UnresolvedItemError>;

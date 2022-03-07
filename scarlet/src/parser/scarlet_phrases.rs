@@ -6,7 +6,7 @@ mod from;
 mod identifier;
 mod is;
 mod is_populated_struct;
-mod keyword_unique;
+mod unique;
 mod label_access;
 mod member_access;
 mod multiple_constructs;
@@ -47,7 +47,7 @@ macro_rules! phrase {
 
 pub fn phrases() -> Vec<Phrase> {
     vec![
-        keyword_unique::phrase(),
+        unique::phrase(),
         axiom::phrase(),
         variable::phrase(),
         populated_struct::phrase(),

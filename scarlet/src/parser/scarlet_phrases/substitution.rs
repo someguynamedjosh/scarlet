@@ -54,7 +54,7 @@ fn create<'x>(
 
 fn uncreate_substitution<'a>(
     env: &mut Environment,
-    ctx: &VomitContext<'a, '_>,
+    ctx: &mut VomitContext<'a, '_>,
     target: VariableId,
     value: ItemId,
     deps: &mut Vec<Dependency>,
@@ -77,7 +77,7 @@ fn uncreate_substitution<'a>(
 
 fn uncreate<'a>(
     env: &mut Environment,
-    ctx: &VomitContext<'a, '_>,
+    ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemId,
 ) -> UncreateResult<'a> {
     if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate)? {

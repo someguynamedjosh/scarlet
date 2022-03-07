@@ -50,7 +50,7 @@ fn create<'x>(
 
 fn uncreate<'a>(
     env: &mut Environment,
-    ctx: &VomitContext<'a, '_>,
+    ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemId,
 ) -> UncreateResult<'a> {
     if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
@@ -58,11 +58,12 @@ fn uncreate<'a>(
         let scope_item = env.push_scope(ctx.scope.dyn_clone());
         let scope_parent = env.dereference(uncreate)?;
         let from = &SWithParent(SVariableInvariants(scope_parent), scope_item);
-        let ctx = VomitContext {
+        let mut ctx = VomitContext {
             scope: from,
+            temp_names: &mut *ctx.temp_names,
             ..*ctx
         };
-        let ctx = &ctx;
+        let ctx = &mut ctx;
 
         let cvar = cvar.clone();
         let var = env.get_variable(cvar.get_id()).clone();
@@ -85,7 +86,7 @@ fn uncreate<'a>(
             let mut depends_on = dependencies;
             body.append(&mut depends_on);
         }
-        Ok(Some(Node {
+        let node = Node {
             phrase: "variable",
             children: vec![
                 NodeChild::Text("VAR"),
@@ -93,6 +94,11 @@ fn uncreate<'a>(
                 create_comma_list(body),
                 NodeChild::Text("]"),
             ],
+        };
+        let name = ctx.get_name(env, uncreate, || node);
+        Ok(Some(Node {
+            phrase: "identifier",
+            children: vec![NodeChild::Text(name)],
         }))
     } else {
         Ok(None)

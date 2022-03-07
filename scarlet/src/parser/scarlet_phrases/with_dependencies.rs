@@ -33,7 +33,7 @@ fn create<'x>(
 
 fn uncreate<'a>(
     env: &mut Environment,
-    ctx: &VomitContext<'a, '_>,
+    ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemId,
 ) -> UncreateResult<'a> {
     if let Ok(Some(cwd)) = env.get_and_downcast_construct_definition::<CWithDependencies>(uncreate)

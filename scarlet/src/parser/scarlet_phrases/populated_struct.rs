@@ -37,7 +37,7 @@ fn create<'x>(
 
 fn uncreate<'a>(
     env: &mut Environment,
-    ctx: &VomitContext<'a, '_>,
+    ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemId,
 ) -> UncreateResult<'a> {
     Ok(None)
