@@ -18,7 +18,6 @@ mod structt;
 mod substitution;
 mod value_access;
 mod variable;
-mod with_dependencies;
 mod as_auto_theorem;
 
 use super::phrase::Phrase;
@@ -61,7 +60,6 @@ pub fn phrases() -> Vec<Phrase> {
         shown::phrase(),
         as_language_item::phrase(),
         as_auto_theorem::phrase(),
-        with_dependencies::phrase(),
         member_access::phrase(),
         substitution::phrase(),
         structt::phrase(),

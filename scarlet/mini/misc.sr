@@ -8,10 +8,6 @@ t_just IS VAR[SELF]
 asdf IS UNIQUE
 
 a IS VAR[]
-b IS VAR[]
-c IS VAR[ORD 0]
-
-{ c b a }.SHOWN
 
 # theorems.t_decision_eq_inv[true true true true = false]
 
@@ -22,7 +18,9 @@ Bool IS
 VAR[DECISION[SELF   true   true   SELF = false]]
 
 is_bool IS x FROM Bool
+
 # t_just[is_bool[true]]
 # t_just[is_bool[false]].SHOWN
-# theorems.t_decision_by_parts_ext[is_bool x asdf true false]
-t_just[((x = void) FROM Bool).SHOWN]
+# theorems.t_decision_by_parts_ext[is_bool x void true false]
+t_just[is_bool[x = void]]
+# theorems.t_decision_by_parts_ext.SHOWN

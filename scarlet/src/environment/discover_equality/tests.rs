@@ -3,7 +3,7 @@
 use std::assert_matches::assert_matches;
 
 use crate::{
-    constructs::{substitution::CSubstitution, with_dependencies::CWithDependencies},
+    constructs::substitution::CSubstitution,
     environment::{discover_equality::Equal, test_util::*},
     scope::SRoot,
 };
@@ -322,7 +322,7 @@ fn fx_sub_decision_is_gy_sub_decision() {
 }
 
 #[test]
-fn dex_sub_decision_is_gy_sub_decision_with_reordered_deps() {
+fn dex_sub_decision_is_gy_sub_decision() {
     let mut env = env();
     let a = env.unique();
     let b = env.unique();
@@ -343,8 +343,6 @@ fn dex_sub_decision_is_gy_sub_decision_with_reordered_deps() {
     let y = env.variable_full();
     let g = env.variable_full_with_deps(vec![y.0]);
     let g_dec = env.substitute(g.0, &subs(vec![(y.1, dec_for_g)]));
-    let con = CWithDependencies::new(g_dec, vec![g.0, s.0, t.0, u.0, v.0]);
-    let g_dec = env.push_construct(con, Box::new(SRoot));
 
     assert_matches!(env.discover_equal(g_dec, dex_dec, 3), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs)) = env.discover_equal(g_dec, dex_dec, 3) {

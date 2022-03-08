@@ -6,7 +6,6 @@ use crate::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
         substitution::CSubstitution,
         variable::CVariable,
-        with_dependencies::CWithDependencies,
         ItemId,
     },
     resolvable::{from::RFrom, RSubstitution},
@@ -92,17 +91,13 @@ impl<'x> Environment<'x> {
                 if deps.len() > 0 {
                     todo!();
                 }
-                let reorder_inv_deps = |inv: ItemId| CWithDependencies::new(inv, vec![from]);
                 let truee = self.get_language_item("true");
 
                 let statement = if invs.len() == 0 {
                     truee
                 } else {
-                    let con = reorder_inv_deps(invs[0]);
-                    let mut statement = self.push_construct(con, scope());
-                    for &inv in &invs[1..] {
-                        let con = reorder_inv_deps(inv);
-                        let part = self.push_construct(con, scope());
+                    let mut statement = invs[0];
+                    for &part in &invs[1..] {
                         statement = self.push_and(statement, part, scope());
                     }
                     statement

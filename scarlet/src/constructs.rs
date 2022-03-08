@@ -7,6 +7,5 @@ pub mod structt;
 pub mod substitution;
 pub mod unique;
 pub mod variable;
-pub mod with_dependencies;
 
 pub use base::*;
