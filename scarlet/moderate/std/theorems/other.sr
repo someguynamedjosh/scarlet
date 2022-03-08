@@ -107,7 +107,7 @@ t_decision_by_parts_ext IS
          # Proves conclusion
          t_inv_eq[fx[c] conclusion]
          # Proves fx[c] = conclusion
-         t_eq_ext[c inner fx]
+         t_eq_ext[fx c inner]
          # Proves c = inner
          t_eq_symm[inner c]
          # Proves inner = c
@@ -120,7 +120,7 @@ t_decision_by_parts_ext IS
          # Proves conclusion
          t_inv_eq[fx[d] conclusion]
          # Proves fx[d] = conclusion
-         t_eq_ext[d inner fx]
+         t_eq_ext[fx d inner]
          # Proves d = inner
          t_eq_symm[inner d]
          # Proves inner = d
