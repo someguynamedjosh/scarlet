@@ -15,7 +15,7 @@ impl<'x> Environment<'x> {
         });
         let mut limit = 0;
         while limit < 16 {
-            let reset_limit = false;
+            let mut reset_limit = false;
             let mut still_unresolved = Vec::new();
             let mut all_dead_ends = true;
             for id in unresolved {
@@ -31,7 +31,9 @@ impl<'x> Environment<'x> {
                     // need more complicated code for the effect to be
                     // noticable.
 
-                    // reset_limit = limit != 0;
+                    // I'm leaving this on because it fixes a bug I can't be
+                    // fucked fixing properly right now.
+                    reset_limit = limit != 0;
                 } else {
                     if let Err(ResolveError::InvariantDeadEnd(..)) = &res {
                     } else {
@@ -53,6 +55,7 @@ impl<'x> Environment<'x> {
         let mut problem = false;
         self.for_each_item_returning_nothing(|env, con| {
             if let Err(err) = env.resolve(con, limit) {
+                println!("Failed to resolve {:?} because", con);
                 problem = true;
                 match err {
                     ResolveError::Unresolved(err) => {

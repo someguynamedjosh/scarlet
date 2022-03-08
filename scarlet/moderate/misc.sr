@@ -2,9 +2,9 @@ logic IS std.logic
 true IS std.true
 false IS std.false
 void IS std.void
-# x IS std.basics.x
+x IS std.basics.x
 
-x IS VAR[]
+# x IS VAR[]
 
 # Struct IS VAR[logic.or[
 #     logic.and[
@@ -13,7 +13,7 @@ x IS VAR[]
 #     ]
 #     SELF = void
 # ]]
-std.theorems.t_decision_by_parts_ext[x FROM logic.Bool   x    void   true   false]
+# std.theorems.t_decision_by_parts_ext[x FROM logic.Bool   x    void   true   false]
 std.theorems.t_just[(x = void) FROM logic.Bool]
 # logic.a[x = void]
 # logic.and[x = void x = void]
