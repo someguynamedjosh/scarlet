@@ -1,7 +1,6 @@
 t_eq_symm IS 
 {
    t_just[b = a]
-   .WITH_DEPENDENCIES[a b]
 
    t_eq_ext_rev[a b x]
 
@@ -15,7 +14,6 @@ t_eq_symm IS
 t_eq_ext IS 
 {
    t_just[fx[a] = fx[b]]
-   .WITH_DEPENDENCIES[a b fx]
 
    t_eq_ext_rev[b a]
 
@@ -32,7 +30,6 @@ t_eq_ext IS
 t_inv_eq_ext IS 
 {
    t_just[fx[b]]
-   .WITH_DEPENDENCIES[a b fx]
 
    t_inv_eq[fx[a] fx[b]]
 
@@ -50,13 +47,11 @@ t_inv_eq_ext IS
 t_eq_trans IS 
 {
    t_just[a = c]
-   .WITH_DEPENDENCIES[a b c]
 
    t_inv_eq[a = b  a = c]
    t_eq_ext[b c a_equals_x]
 
-   a_equals_x IS
-   (a = x).WITH_DEPENDENCIES[x]
+   a_equals_x IS a = x
 
    a IS VAR[]
    b IS VAR[a = SELF]

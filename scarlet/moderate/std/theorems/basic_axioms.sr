@@ -38,7 +38,6 @@ t_eq_ext_rev IS
    AXIOM[t_eq_ext_rev]
 
    (fx[b] = fx[a])
-   .WITH_DEPENDENCIES[a b fx]
    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
    a IS VAR[]
@@ -53,7 +52,6 @@ t_inv_eq IS
    AXIOM[t_inv_eq]
 
    b
-   .WITH_DEPENDENCIES[a b]
    .AS_LANGUAGE_ITEM[t_inv_eq_statement]
 
    a IS VAR[SELF]

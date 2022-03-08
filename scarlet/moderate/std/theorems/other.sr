@@ -58,7 +58,6 @@ t_extract_eq_from_decision IS
 t_decision_eq_inv IS
 {
    t_just[DECISION[a b u v]]
-   .WITH_DEPENDENCIES[a b u v]
 
    # Proves DECISION[a b u v]
    t_inv_eq[u   DECISION[a b u v]]
@@ -80,7 +79,6 @@ t_decision_eq_inv IS
 t_decision_neq_inv IS
 {
    t_just[DECISION[a b u v]]
-   .WITH_DEPENDENCIES[a b u v]
 
    # Proves DECISION[a b u v]
    t_inv_eq[v   DECISION[a b u v]]
@@ -100,7 +98,6 @@ t_decision_neq_inv IS
 t_decision_by_parts_ext IS
 {
    t_just[conclusion]
-   .WITH_DEPENDENCIES[fx a b c d]
 
    DECISION[
       a b
@@ -146,7 +143,6 @@ t_decision_by_parts_ext IS
 t_decision_by_parts IS
 {
    t_just[conclusion]
-   .WITH_DEPENDENCIES[a b c d fx]
 
    DECISION[
       a b
