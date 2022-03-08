@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::super::{Environment, UnresolvedItemError};
 use crate::constructs::{substitution::Substitutions, variable::VariableId, ItemId};
 
@@ -90,5 +92,16 @@ impl Equal {
     /// [`NeedsHigherLimit`]: Equal::NeedsHigherLimit
     pub fn is_needs_higher_limit(&self) -> bool {
         matches!(self, Self::NeedsHigherLimit)
+    }
+
+    pub(crate) fn sort(self, env: &mut Environment) -> Equal {
+        match self {
+            Self::Yes(subs) => {
+                let mut order = subs.iter().map(|(k, _)| *k).collect_vec();
+                order.sort_by_key(|x| &env.get_variable(*x).order);
+                Self::Yes(subs.reorder(&order.iter().collect_vec()))
+            }
+            other => other,
+        }
     }
 }

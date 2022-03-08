@@ -84,7 +84,7 @@ impl<'x> Environment<'x> {
                 subs: subs.clone(),
             });
             let mut adjusted_inv = inv;
-            let ok = self.check_subs(subs, context, limit, &mut adjusted_inv, &mut err);
+            let ok = self.check_subs(subs, context, limit, &mut adjusted_inv, &mut err, trace);
             self.justify_stack.pop();
             if !ok {
                 continue 'check_next_candidate;
@@ -101,6 +101,7 @@ impl<'x> Environment<'x> {
         limit: u32,
         adjusted_inv: &mut Invariant,
         err: &mut LookupInvariantError,
+        trace: bool,
     ) -> bool {
         let mut inv_subs = Substitutions::new();
         for (target, value) in subs {
@@ -116,10 +117,17 @@ impl<'x> Environment<'x> {
                     }
                     Err(LookupInvariantError::Unresolved(..))
                     | Err(LookupInvariantError::MightNotExist) => {
+                        if trace {
+                            println!("{:?}", result);
+                        }
                         *err = result.unwrap_err();
                         return false;
                     }
                     Err(LookupInvariantError::DefinitelyDoesNotExist) => {
+                        if trace {
+                            println!("{}", self.show(statement, context));
+                            println!("Definitely unjustified");
+                        }
                         return false;
                     }
                 }

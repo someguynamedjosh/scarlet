@@ -112,18 +112,12 @@ impl<'x> Environment<'x> {
             }
             return Ok(Equal::NeedsHigherLimit);
         }
-        let mut lhs_reordering = None;
-        while let Some((base, extra_subs, reordering)) = self
+        while let Some((base, extra_subs, _)) = self
             .get_item_as_construct(left)?
             .dyn_clone()
             .dereference(self)
         {
             left = base;
-            if let Some(reordering) = reordering {
-                if lhs_reordering.is_none() {
-                    lhs_reordering = Some(reordering);
-                }
-            }
             if let Some(extra_subs) = extra_subs {
                 let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
                 left_subs.insert(0, extra_subs);
@@ -140,13 +134,6 @@ impl<'x> Environment<'x> {
                 right_subs.insert(0, extra_subs);
             }
         }
-        let do_reordering = |x: Equal| {
-            if let Some(reordering) = lhs_reordering {
-                x.reorder(&reordering.iter().collect_vec())
-            } else {
-                x
-            }
-        };
         let rvar_id =
             if let Some(rvar) = self.get_and_downcast_construct_definition::<CVariable>(right)? {
                 for (index, subs) in right_subs.iter().enumerate() {
@@ -156,7 +143,7 @@ impl<'x> Environment<'x> {
                         right_subs[index] = extra_sub_holder.alloc(without_this_sub);
                         return self
                             .discover_equal_with_subs(left, left_subs, *sub, right_subs, limit)
-                            .map(do_reordering);
+                            .map(|x| x.sort(self));
                     }
                 }
                 Some(rvar.get_id())
@@ -176,7 +163,7 @@ impl<'x> Environment<'x> {
                     trace,
                     rvar_id,
                 )
-                .map(do_reordering);
+                .map(|x| x.sort(self));
         }
         // For now this produces no noticable performance improvements.
         // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
@@ -195,7 +182,7 @@ impl<'x> Environment<'x> {
         }
         // self.def_equal_memo_table
         //     .insert((left, right, limit).convert(), result.clone());
-        result.map(do_reordering)
+        result.map(|x| x.sort(self))
     }
 
     fn handle_lhs_variable<'a>(
