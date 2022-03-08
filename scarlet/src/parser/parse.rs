@@ -2,7 +2,7 @@ use regex::Regex;
 
 use super::{
     matchh::{MatchSuccess, StackAction},
-    node::{Node, NodeChild},
+    node::{FilePosition, Node, NodeChild},
     phrase::PhraseTable,
     util,
 };
@@ -39,7 +39,12 @@ impl ParseContext {
     }
 }
 
-fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>) {
+fn push_match<'a>(
+    pt: &PhraseTable,
+    matchh: MatchSuccess<'a>,
+    to: &mut Stack<'a>,
+    position: FilePosition,
+) {
     let mut append = Vec::new();
     if let StackAction::PopNode(prec) = matchh.action {
         to.collapse_to_precedence(pt, prec);
@@ -61,7 +66,7 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
                 text: ",",
                 continuation_of: None,
             };
-            push_match(pt, matchh, to);
+            push_match(pt, matchh, to, Default::default());
         }
     }
     append.push(NodeChild::Text(matchh.text));
@@ -72,11 +77,12 @@ fn push_match<'a>(pt: &PhraseTable, matchh: MatchSuccess<'a>, to: &mut Stack<'a>
         to.0.push(Node {
             phrase: matchh.phrase,
             children: append,
+            position,
         });
     }
 }
 
-fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Option<Node<'a>> {
+fn parse<'a>(input: &'a str, ctx: &'a ParseContext, file_index: u32) -> Option<Node<'a>> {
     let r_whitespace = Regex::new(r"[ \r\n\t]+|#[^\n]*").unwrap();
 
     let ParseContext {
@@ -92,7 +98,13 @@ fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Option<Node<'a>> {
         let longest_match = matchh::longest_match(match_against, &stack, phrases);
         if let Some(matchh) = longest_match {
             input_position += matchh.text.len();
-            push_match(phrases, matchh, &mut stack);
+            let start_char = input.len() - match_against.len();
+            let file_position = FilePosition {
+                start_char,
+                end_char: start_char + matchh.text.len(),
+                file_index,
+            };
+            push_match(phrases, matchh, &mut stack, file_position);
         } else if let Some(matchh) = matchh::anchored_find(&r_whitespace, match_against) {
             input_position += matchh.len();
         } else {
@@ -107,10 +119,15 @@ fn parse<'a>(input: &'a str, ctx: &'a ParseContext) -> Option<Node<'a>> {
     stack.0.pop()
 }
 
-pub fn parse_tree<'x>(tree: &'x FileNode, ctx: &'x ParseContext) -> Node<'x> {
+pub fn parse_tree<'x>(
+    tree: &'x FileNode,
+    ctx: &'x ParseContext,
+    file_counter: &mut u32,
+) -> Node<'x> {
+    *file_counter += 1;
     let mut children = Vec::new();
     if tree.self_content.trim().len() > 0 {
-        if let Some(content) = parse(&tree.self_content, ctx) {
+        if let Some(content) = parse(&tree.self_content, ctx, *file_counter) {
             for child in util::collect_comma_list(&NodeChild::Node(content)) {
                 children.push(child.clone());
             }
@@ -123,10 +140,12 @@ pub fn parse_tree<'x>(tree: &'x FileNode, ctx: &'x ParseContext) -> Node<'x> {
                 NodeChild::Node(Node {
                     phrase: "identifier",
                     children: vec![NodeChild::Text(name)],
+                    ..Default::default()
                 }),
                 NodeChild::Text("IS"),
-                NodeChild::Node(parse_tree(child, ctx)),
+                NodeChild::Node(parse_tree(child, ctx, file_counter)),
             ],
+            ..Default::default()
         })
     }
     Node {
@@ -136,5 +155,6 @@ pub fn parse_tree<'x>(tree: &'x FileNode, ctx: &'x ParseContext) -> Node<'x> {
             util::create_comma_list(children),
             NodeChild::Text("}"),
         ],
+        ..Default::default()
     }
 }

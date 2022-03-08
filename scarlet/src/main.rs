@@ -7,6 +7,7 @@
 #![feature(associated_type_defaults)]
 #![feature(hash_raw_entry)]
 #![feature(assert_matches)]
+#![feature(map_first_last)]
 
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 
@@ -26,7 +27,8 @@ fn entry() {
     let root = file_tree::read_root(&path).unwrap();
 
     let parse_context = ParseContext::new();
-    let root = parser::parse_tree(&root, &parse_context);
+    let mut file_counter = 0;
+    let root = parser::parse_tree(&root, &parse_context, &mut file_counter);
     println!("Parsed");
 
     let mut env = Environment::new();

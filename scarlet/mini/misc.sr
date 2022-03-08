@@ -8,6 +8,10 @@ t_just IS VAR[SELF]
 asdf IS UNIQUE
 
 a IS VAR[]
+b IS VAR[]
+c IS VAR[ORD 0]
+
+{ c b a }.SHOWN
 
 # theorems.t_decision_eq_inv[true true true true = false]
 

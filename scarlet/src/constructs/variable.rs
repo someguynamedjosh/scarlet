@@ -21,12 +21,33 @@ use crate::{
     shared::{Id, Pool},
 };
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct VariableOrder {
+    /// Explicitly defined order, 0-255.
+    pub major_order: u8,
+    /// Implicit order by which file it's in.
+    file_order: u32,
+    /// Implicit order by position in file.
+    minor_order: u32,
+}
+
+impl VariableOrder {
+    pub fn new(major_order: u8, file_order: u32, minor_order: u32) -> Self {
+        Self {
+            major_order,
+            file_order,
+            minor_order,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable {
     pub id: Option<VariableId>,
     pub item: Option<ItemId>,
     pub invariants: Vec<ItemId>,
     pub dependencies: Vec<ItemId>,
+    pub order: VariableOrder,
 }
 pub type VariablePool = Pool<Variable, 'V'>;
 pub type VariableId = Id<'V'>;
@@ -35,6 +56,19 @@ pub type VariableId = Id<'V'>;
 pub struct Dependency {
     pub id: VariableId,
     pub swallow: Vec<VariableId>,
+    pub order: VariableOrder,
+}
+
+impl PartialOrd for Dependency {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.order.partial_cmp(&other.order)
+    }
+}
+
+impl Ord for Dependency {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.order.cmp(&other.order)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -105,6 +139,7 @@ impl Variable {
         Dependency {
             id: self.id.unwrap(),
             swallow: deps.as_variables().map(|x| x.id).collect(),
+            order: self.order.clone(),
         }
     }
 }

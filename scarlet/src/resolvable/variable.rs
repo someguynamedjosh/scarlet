@@ -1,7 +1,7 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     constructs::{
-        variable::{CVariable, Variable},
+        variable::{CVariable, Variable, VariableOrder},
         ItemDefinition, ItemId,
     },
     environment::Environment,
@@ -12,6 +12,7 @@ use crate::{
 pub struct RVariable {
     pub invariants: Vec<ItemId>,
     pub dependencies: Vec<ItemId>,
+    pub order: VariableOrder,
 }
 
 impl<'x> Resolvable<'x> for RVariable {
@@ -30,6 +31,7 @@ impl<'x> Resolvable<'x> for RVariable {
             item: None,
             invariants: self.invariants.clone(),
             dependencies: self.dependencies.clone(),
+            order: self.order.clone(),
         });
         let con = CVariable::new(id);
         Ok(ItemDefinition::Resolved(Box::new(con)))

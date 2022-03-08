@@ -35,6 +35,7 @@ fn uncreate<'a>(
             NodeChild::Node(env.vomit(255, ctx, uncreate)),
             NodeChild::Text(")"),
         ],
+        ..Default::default()
     }))
 }
 

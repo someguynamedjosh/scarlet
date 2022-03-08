@@ -72,6 +72,7 @@ fn uncreate<'a>(
                 ]),
                 NodeChild::Text("]"),
             ],
+            ..Default::default()
         }))
     } else {
         Ok(None)

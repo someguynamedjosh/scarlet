@@ -3,7 +3,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{
-        variable::{CVariable, SVariableInvariants},
+        variable::{CVariable, SVariableInvariants, VariableOrder},
         ItemId,
     },
     environment::{vomit::VomitContext, Environment},
@@ -28,22 +28,31 @@ fn create<'x>(
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let mut invariants = Vec::new();
     let mut dependencies = Vec::new();
+    let mut order =
+        VariableOrder::new(128, node.position.file_index, node.position.start_char as _);
     let mut mode = 0;
     let this = env.push_placeholder(scope);
     for arg in util::collect_comma_list(&node.children[2]) {
         if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEP")] {
             mode = 1;
+        } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
+            mode = 2;
         } else if mode == 0 {
             let con = arg.as_construct(pc, env, SVariableInvariants(this));
             invariants.push(con);
-        } else {
+        } else if mode == 1 {
             let con = arg.as_construct(pc, env, SPlain(this));
             dependencies.push(con);
+        } else if mode == 2 {
+            let text = arg.as_ident();
+            order.major_order = text.parse().expect("TODO: Nice error, expected order to be a number between 0 and 255");
+            mode = 0
         }
     }
     let def = RVariable {
         invariants,
         dependencies,
+        order,
     };
     env.define_unresolved(this, def);
     this
@@ -78,6 +87,7 @@ fn uncreate<'a>(
             body.push(Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text("DEP")],
+                ..Default::default()
             });
             let mut depends_on = dependencies;
             body.append(&mut depends_on);
@@ -90,11 +100,13 @@ fn uncreate<'a>(
                 create_comma_list(body),
                 NodeChild::Text("]"),
             ],
+            ..Default::default()
         };
         let name = ctx.get_name(env, uncreate, || node);
         Ok(Some(Node {
             phrase: "identifier",
             children: vec![NodeChild::Text(name)],
+            ..Default::default()
         }))
     } else {
         Ok(None)

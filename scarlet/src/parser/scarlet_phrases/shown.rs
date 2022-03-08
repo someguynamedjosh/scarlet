@@ -36,6 +36,7 @@ fn uncreate<'a>(
             Some(Node {
                 phrase: "shown",
                 children: vec![NodeChild::Node(env.vomit(4, ctx, cshown.get_base()))],
+                ..Default::default()
             })
         } else {
             None

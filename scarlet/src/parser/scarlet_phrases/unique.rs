@@ -32,11 +32,13 @@ fn uncreate<'a>(
             let node = Node {
                 phrase: "UNIQUE",
                 children: vec![NodeChild::Text("UNIQUE")],
+                ..Default::default()
             };
             let name = ctx.get_name(env, uncreate, || node);
             Some(Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text(name)],
+                ..Default::default()
             })
         } else {
             None

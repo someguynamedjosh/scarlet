@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, BTreeSet};
 
 use maplit::hashset;
 
@@ -11,7 +11,7 @@ pub type DepResStack = Vec<DepResStackFrame>;
 
 #[derive(Clone, Debug, Default)]
 pub struct Dependencies {
-    eager: Vec<Dependency>,
+    dependencies: BTreeSet<Dependency>,
     /// Signifies this dependency list was built without considering the full
     /// list of dependencies for each contained construct, due to that item
     /// recursively depending on itself.
@@ -24,7 +24,7 @@ pub struct Dependencies {
 impl Dependencies {
     pub fn new() -> Self {
         Self {
-            eager: Vec::new(),
+            dependencies: BTreeSet::new(),
             missing: HashSet::new(),
             error: None,
         }
@@ -32,7 +32,7 @@ impl Dependencies {
 
     pub fn new_missing(item: ItemId) -> Self {
         Self {
-            eager: Vec::new(),
+            dependencies: BTreeSet::new(),
             missing: hashset![item],
             error: None,
         }
@@ -40,7 +40,7 @@ impl Dependencies {
 
     pub fn new_error(error: UnresolvedItemError) -> Self {
         Self {
-            eager: Vec::new(),
+            dependencies: BTreeSet::new(),
             missing: HashSet::new(),
             error: Some(error),
         }
@@ -50,20 +50,20 @@ impl Dependencies {
         if self.error.is_some() {
             return;
         }
-        for var in &self.eager {
+        for var in &self.dependencies {
             if &dep == var {
                 return;
             }
         }
-        self.eager.push(dep);
+        self.dependencies.insert(dep);
     }
 
     pub fn as_variables(&self) -> impl Iterator<Item = &Dependency> {
-        self.eager.iter()
+        self.dependencies.iter()
     }
 
     pub fn into_variables(self) -> impl Iterator<Item = Dependency> {
-        self.eager.into_iter()
+        self.dependencies.into_iter()
     }
 
     pub fn append(&mut self, other: Dependencies) {
@@ -84,18 +84,18 @@ impl Dependencies {
     }
 
     pub fn remove(&mut self, var: VariableId) {
-        self.eager = std::mem::take(&mut self.eager)
+        self.dependencies = std::mem::take(&mut self.dependencies)
             .into_iter()
             .filter(|x| x.id != var)
             .collect();
     }
 
     pub fn pop_front(&mut self) -> Dependency {
-        self.eager.remove(0)
+        self.dependencies.pop_first().unwrap()
     }
 
     pub fn contains(&self, dep: &Dependency) -> bool {
-        for target in &self.eager {
+        for target in &self.dependencies {
             if target == dep {
                 return true;
             }
@@ -104,7 +104,7 @@ impl Dependencies {
     }
 
     pub fn contains_var(&self, dep: VariableId) -> bool {
-        for target in &self.eager {
+        for target in &self.dependencies {
             if target.id == dep {
                 return true;
             }
@@ -113,7 +113,7 @@ impl Dependencies {
     }
 
     pub fn get_var(&self, dep: VariableId) -> Option<&Dependency> {
-        for target in &self.eager {
+        for target in &self.dependencies {
             if target.id == dep {
                 return Some(target);
             }

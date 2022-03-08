@@ -35,6 +35,7 @@ fn uncreate<'a>(
         Some(Node {
             phrase: "identifier",
             children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],
+            ..Default::default()
         })
     } else {
         None

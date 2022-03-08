@@ -87,10 +87,12 @@ fn uncreate<'a>(
                     NodeChild::Node(Node {
                         phrase: "identifier",
                         children: vec![NodeChild::Text(label)],
+                        ..Default::default()
                     }),
                     NodeChild::Text("IS"),
                     NodeChild::Node(value),
                 ],
+                ..Default::default()
             });
         } else {
             fields.push(value);
@@ -105,6 +107,7 @@ fn uncreate<'a>(
                     create_comma_list(fields),
                     NodeChild::Text("}"),
                 ],
+                ..Default::default()
             })
         } else {
             None

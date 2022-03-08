@@ -56,6 +56,7 @@ fn uncreate<'a>(
                 deps,
                 NodeChild::Text("]"),
             ],
+            ..Default::default()
         }))
     } else {
         Ok(None)

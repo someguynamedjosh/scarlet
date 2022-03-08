@@ -43,6 +43,7 @@ fn uncreate<'a>(
                 NodeChild::Text(statement),
                 NodeChild::Text("]"),
             ],
+            ..Default::default()
         }))
     } else {
         Ok(None)

@@ -3,7 +3,6 @@ pub mod discover_equality;
 pub mod from;
 pub mod invariants;
 pub mod overlay;
-pub mod path;
 pub mod reduce;
 pub mod resolve;
 pub mod sub_expr;

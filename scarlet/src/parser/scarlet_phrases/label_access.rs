@@ -44,6 +44,7 @@ fn uncreate<'a>(
                         NodeChild::Node(env.vomit(4, ctx, id)),
                         NodeChild::Text(".LABEL"),
                     ],
+                    ..Default::default()
                 })
             } else {
                 None

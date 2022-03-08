@@ -62,6 +62,7 @@ fn uncreate<'a>(
                 NodeChild::Node(env.vomit(4, ctx, id)),
                 NodeChild::Text(".REST"),
             ],
+            ..Default::default()
         })),
         None => Ok(None),
     }

@@ -176,6 +176,7 @@ impl<'x> Environment<'x> {
             return Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text("UNRESOLVED")],
+                ..Default::default()
             };
         }
         eprintln!("{:#?}", self);

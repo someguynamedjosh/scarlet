@@ -6,7 +6,7 @@ use crate::{
         structt::CPopulatedStruct,
         substitution::Substitutions,
         unique::CUnique,
-        variable::{CVariable, Variable, VariableId},
+        variable::{CVariable, Variable, VariableId, VariableOrder},
         ItemId,
     },
     environment::Environment,
@@ -50,7 +50,8 @@ pub(super) fn with_env_from_code(
 }
 
 fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment<'x>, ItemId) {
-    let parsed = parse_tree(code, &pc);
+    let mut file_counter = 0;
+    let parsed = parse_tree(code, &pc, &mut file_counter);
 
     let mut env = env();
     let root = parsed.as_construct(&pc, &mut env, SRoot);
@@ -84,6 +85,7 @@ impl<'a> Environment<'a> {
             item: None,
             invariants: vec![],
             dependencies: vec![],
+            order: VariableOrder::new(0, 0, self.variables.len() as _),
         });
         self.push_construct(CVariable::new(id), Box::new(SRoot))
     }
@@ -94,21 +96,20 @@ impl<'a> Environment<'a> {
             item: None,
             invariants: vec![],
             dependencies: vec![],
+            order: VariableOrder::new(0, 0, self.variables.len() as _),
         });
         let con = CVariable::new(id);
         let cid = self.push_construct(con.clone(), Box::new(SRoot));
         (cid, id)
     }
 
-    pub(super) fn variable_full_with_deps(
-        &mut self,
-        deps: Vec<ItemId>,
-    ) -> (ItemId, VariableId) {
+    pub(super) fn variable_full_with_deps(&mut self, deps: Vec<ItemId>) -> (ItemId, VariableId) {
         let id = self.push_variable(Variable {
             id: None,
             item: None,
             invariants: vec![],
             dependencies: deps,
+            order: VariableOrder::new(0, 0, self.variables.len() as _),
         });
         let con = CVariable::new(id);
         let cid = self.push_construct(con.clone(), Box::new(SRoot));

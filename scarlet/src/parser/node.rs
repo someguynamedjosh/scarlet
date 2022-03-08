@@ -64,10 +64,19 @@ impl<'a> Debug for NodeChild<'a> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Default)]
+pub struct FilePosition {
+    pub file_index: u32,
+    pub start_char: usize,
+    /// Exclusive, I.E. the selection ends before end_char.
+    pub end_char: usize,
+}
+
+#[derive(Clone, PartialEq, Eq, Default)]
 pub struct Node<'a> {
     pub phrase: &'static str,
     pub children: Vec<NodeChild<'a>>,
+    pub position: FilePosition,
 }
 
 impl<'a> Debug for Node<'a> {

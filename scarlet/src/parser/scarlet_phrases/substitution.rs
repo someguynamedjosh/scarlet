@@ -71,6 +71,7 @@ fn uncreate_substitution<'a>(
                 NodeChild::Text("IS"),
                 NodeChild::Node(value),
             ],
+            ..Default::default()
         }
     })
 }
@@ -100,6 +101,7 @@ fn uncreate<'a>(
                 subs,
                 NodeChild::Text("]"),
             ],
+            ..Default::default()
         }))
     } else {
         Ok(None)

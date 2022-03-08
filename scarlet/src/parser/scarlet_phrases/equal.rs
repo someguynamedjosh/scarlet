@@ -49,6 +49,7 @@ fn uncreate<'a>(
                         NodeChild::Text("="),
                         NodeChild::Node(env.vomit(127, ctx, cite.right())),
                     ],
+                    ..Default::default()
                 })
             } else {
                 None
