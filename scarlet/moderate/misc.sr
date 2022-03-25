@@ -6,12 +6,13 @@ x IS std.basics.x
 
 # x IS VAR[]
 
-# Struct IS VAR[logic.or[
-#     logic.and[
-#         SELF.IS_POPULATED_STRUCT
-#         SELF.REST FROM SELF
-#     ]
-#     SELF = void
+# Struct IS 
+# VAR[logic.or[
+#    logic.and[
+#       SELF.IS_POPULATED_STRUCT
+#       SELF.REST FROM SELF
+#    ]
+#    SELF = void
 # ]]
 # std.theorems.t_decision_by_parts_ext[x FROM logic.Bool   x    void   true   false]
 std.theorems.t_just[(x = void) FROM logic.Bool]

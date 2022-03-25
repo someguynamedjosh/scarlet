@@ -93,8 +93,22 @@ fn parse<'a>(input: &'a str, ctx: &'a ParseContext, file_index: u32) -> Option<N
     let mut stack = Stack(Vec::new());
 
     let mut input_position = 0;
+    let mut comment_depth = 0;
     while input_position < input.len() {
         let match_against = &input[input_position..];
+        if match_against.len() < 2 {
+        } else if &match_against[0..2] == "#=" {
+            comment_depth += 1;
+            input_position += 2;
+            continue;
+        } else if &match_against[0..2] == "=#" {
+            comment_depth -= 1;
+            input_position += 2;
+            continue;
+        } else if comment_depth > 0 {
+            input_position += 1;
+            continue;
+        }
         let longest_match = matchh::longest_match(match_against, &stack, phrases);
         if let Some(matchh) = longest_match {
             input_position += matchh.text.len();
