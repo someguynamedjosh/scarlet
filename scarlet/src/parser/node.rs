@@ -3,7 +3,7 @@ use std::fmt::{self, Debug, Formatter};
 use super::{phrase::PhraseTable, ParseContext};
 use crate::{constructs::ItemId, environment::Environment, scope::Scope, shared::indented};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum NodeChild<'a> {
     Node(Node<'a>),
     Text(&'a str),
@@ -64,7 +64,7 @@ impl<'a> Debug for NodeChild<'a> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Clone, PartialEq, Eq, Default, Hash)]
 pub struct FilePosition {
     pub file_index: u32,
     pub start_char: usize,
@@ -72,7 +72,7 @@ pub struct FilePosition {
     pub end_char: usize,
 }
 
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Clone, PartialEq, Eq, Default, Hash)]
 pub struct Node<'a> {
     pub phrase: &'static str,
     pub children: Vec<NodeChild<'a>>,
