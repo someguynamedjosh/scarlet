@@ -31,11 +31,6 @@ fn entry() {
     let parse_context = ParseContext::new();
     let mut file_counter = 0;
     let root = parser::parse_tree(&root, &parse_context, &mut file_counter);
-    let mut hasher = DefaultHasher::new();
-    root.hash(&mut hasher);
-    println!("{}", hasher.finish());
-    println!("{:?}", root);
-    return;
     println!("Parsed");
 
     let mut env = Environment::new();
