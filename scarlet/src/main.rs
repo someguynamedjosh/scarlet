@@ -34,6 +34,8 @@ fn entry() {
     let mut hasher = DefaultHasher::new();
     root.hash(&mut hasher);
     println!("{}", hasher.finish());
+    println!("{:?}", root);
+    return;
     println!("Parsed");
 
     let mut env = Environment::new();
