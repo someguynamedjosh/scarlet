@@ -1,6 +1,4 @@
-use super::{
-    downcast_construct, substitution::Substitutions, Construct, ItemId, GenInvResult,
-};
+use super::{downcast_construct, substitution::Substitutions, Construct, GenInvResult, ItemId};
 use crate::{
     environment::{
         dependencies::DepResult,
@@ -25,12 +23,7 @@ pub struct CDecision {
 }
 
 impl CDecision {
-    pub fn new<'x>(
-        left: ItemId,
-        right: ItemId,
-        equal: ItemId,
-        unequal: ItemId,
-    ) -> Self {
+    pub fn new<'x>(left: ItemId, right: ItemId, equal: ItemId, unequal: ItemId) -> Self {
         Self {
             left,
             right,
@@ -63,11 +56,11 @@ impl Construct for CDecision {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn contents<'x>(&self) -> Vec<ItemId> {
+        vec![self.left, self.right, self.equal, self.unequal]
+    }
+
+    fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         let true_invs = env.generated_invariants(self.equal);
         let mut false_invs = env.generated_invariants(self.equal);
         let mut result = Vec::new();
@@ -143,10 +136,7 @@ impl Construct for CDecision {
 }
 
 #[derive(Clone, Debug)]
-pub struct SWithInvariant(
-    pub crate::environment::invariants::Invariant,
-    pub ItemId,
-);
+pub struct SWithInvariant(pub crate::environment::invariants::Invariant, pub ItemId);
 
 impl Scope for SWithInvariant {
     fn dyn_clone(&self) -> Box<dyn Scope> {

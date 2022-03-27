@@ -9,6 +9,7 @@ pub mod sub_expr;
 pub mod test_util;
 pub mod util;
 pub mod vomit;
+pub mod recursion;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
@@ -170,7 +171,8 @@ impl<'x> Environment<'x> {
             from_dex: None,
             name: None,
         };
-        self.items.push(item)
+        let id = self.items.push(item);
+        id
     }
 
     pub fn push_unique(&mut self) -> UniqueId {

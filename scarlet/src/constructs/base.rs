@@ -103,6 +103,10 @@ pub trait Construct: Any + Debug + AnyEq {
         Ok(())
     }
 
+    fn contents<'x>(&self) -> Vec<ItemId> {
+        vec![]
+    }
+
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult;
 
     #[allow(unused_variables)]

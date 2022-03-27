@@ -48,6 +48,10 @@ impl Construct for CPopulatedStruct {
         Box::new(self.clone())
     }
 
+    fn contents<'x>(&self) -> Vec<ItemId> {
+        vec![self.value, self.rest]
+    }
+
     fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         [
             env.generated_invariants(self.value),

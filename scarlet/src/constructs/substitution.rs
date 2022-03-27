@@ -92,6 +92,10 @@ impl Construct for CSubstitution {
         Box::new(self.clone())
     }
 
+    fn contents<'x>(&self) -> Vec<ItemId> {
+        vec![self.base]
+    }
+
     fn check<'x>(
         &self,
         _env: &mut Environment<'x>,
