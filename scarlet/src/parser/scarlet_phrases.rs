@@ -19,6 +19,7 @@ mod substitution;
 mod value_access;
 mod variable;
 mod as_auto_theorem;
+mod recursion;
 
 use super::phrase::Phrase;
 
@@ -76,6 +77,7 @@ pub fn phrases() -> Vec<Phrase> {
         // ),
         multiple_constructs::phrase(),
         parentheses::phrase(),
+        recursion::phrase(),
         identifier::phrase(),
     ]
 }

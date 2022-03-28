@@ -30,5 +30,7 @@ impl<'x> Environment<'x> {
         assert_eq!(stack.pop(), Some(of));
     }
 
-    pub fn arrest_recursion(&mut self, of: ItemId) {}
+    pub(crate) fn arrest_recursion(&mut self, of: ItemId) {
+        self.arrest_recursion_impl(of, &mut Vec::new())
+    }
 }

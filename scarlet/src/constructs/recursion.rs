@@ -39,11 +39,4 @@ impl Construct for CRecursion {
     fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         env.generated_invariants(self.0)
     }
-
-    fn dereference(
-        &self,
-        _env: &mut Environment,
-    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
-        Some((self.0, None, None))
-    }
 }

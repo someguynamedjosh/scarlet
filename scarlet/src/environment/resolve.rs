@@ -94,6 +94,7 @@ impl<'x> Environment<'x> {
                     } else {
                         self.items[item_id].definition = new_def;
                     }
+                    self.arrest_recursion(item_id);
                     assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(item_id)));
                     Ok(true)
                 }

@@ -172,6 +172,7 @@ impl<'x> Environment<'x> {
             name: None,
         };
         let id = self.items.push(item);
+        self.arrest_recursion(id);
         id
     }
 

@@ -24,3 +24,7 @@ is_bool IS x FROM Bool
 # theorems.t_decision_by_parts_ext[is_bool x void true false]
 t_just[is_bool[x = void]]
 # theorems.t_decision_by_parts_ext.SHOWN
+
+something IS recursive
+recursive IS something.SHOWN
+
