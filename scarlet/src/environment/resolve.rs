@@ -20,10 +20,6 @@ impl<'x> Environment<'x> {
             let mut all_dead_ends = true;
             for id in unresolved {
                 println!("Resolving {:?} limit {}", id, limit);
-                if reset_limit {
-                    still_unresolved.push(id);
-                    continue;
-                }
                 let res = self.resolve(id, limit);
                 if let Ok(true) = res {
                     // Right now this line actually significantly slows things
