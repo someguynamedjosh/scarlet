@@ -94,6 +94,9 @@ impl Construct for CSubstitution {
 
     fn contents<'x>(&self) -> Vec<ItemId> {
         vec![self.base]
+            .into_iter()
+            .chain(self.subs.iter().map(|x| x.1))
+            .collect()
     }
 
     fn check<'x>(

@@ -42,6 +42,27 @@ impl<'x> Environment<'x> {
         if limit == 0 {
             return Err(err);
         }
+        for frame in self.justify_stack.clone() {
+            if let Equal::Yes(subs) = self.discover_equal_with_subs(
+                statement,
+                vec![],
+                frame.base,
+                vec![&frame.subs],
+                limit,
+            )? {
+                if subs.len() > 0 {
+                    continue;
+                }
+                let rec = self.evaluation_of_item_recurses_over(statement)?;
+                if rec.len() == 0 {
+                    continue;
+                }
+                return Ok(Invariant {
+                    statement,
+                    dependencies: rec.into_iter().collect(),
+                });
+            }
+        }
         let mut candidates = Vec::new();
         for at in self.auto_theorems.clone() {
             for inv in self.generated_invariants(at) {
