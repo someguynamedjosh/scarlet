@@ -15,7 +15,7 @@ pub use variable::RVariable;
 
 use crate::{
     constructs::ItemDefinition,
-    environment::{Environment, UnresolvedItemError},
+    environment::{dependencies::Dependencies, Environment, UnresolvedItemError},
     scope::{LookupInvariantError, Scope},
 };
 
@@ -58,6 +58,10 @@ pub trait Resolvable<'x>: Debug {
         scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult<'x>;
+    #[allow(unused_variables)]
+    fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {
+        Dependencies::new()
+    }
 }
 
 pub type BoxedResolvable<'x> = Box<dyn Resolvable<'x> + 'x>;

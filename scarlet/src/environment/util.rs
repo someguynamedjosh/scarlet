@@ -13,8 +13,7 @@ impl<'x> Environment<'x> {
         let item = self.get_item(item_id);
         match &item.definition {
             &ItemDefinition::Other(other) => self.get_item_scope(other),
-            ItemDefinition::Resolved(_) => &*self.get_item(item_id).scope,
-            ItemDefinition::Unresolved(_) => unreachable!(),
+            _ => &*self.get_item(item_id).scope,
         }
     }
 

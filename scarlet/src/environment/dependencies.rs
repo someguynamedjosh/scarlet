@@ -3,7 +3,10 @@ use std::collections::{BTreeSet, HashSet};
 use maplit::hashset;
 
 use super::{Environment, ItemId, UnresolvedItemError};
-use crate::constructs::variable::{Dependency, VariableId};
+use crate::constructs::{
+    variable::{Dependency, VariableId},
+    ItemDefinition,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DepResStackFrame(pub(super) ItemId);
@@ -148,12 +151,19 @@ pub type DepResult = Dependencies;
 
 impl<'x> Environment<'x> {
     pub fn get_dependencies(&mut self, item_id: ItemId) -> DepResult {
+        let item_id = self.dereference_no_unresolved_error(item_id);
         if self.dep_res_stack.iter().any(|i| i.0 == item_id) {
             Dependencies::new_missing(item_id)
         } else {
-            let con = match self.get_item_as_construct(item_id) {
-                Ok(ok) => ok.dyn_clone(),
-                Err(err) => return Dependencies::new_error(err),
+            let con = match &self.get_item(item_id).definition {
+                ItemDefinition::Resolved(con) => con.dyn_clone(),
+                ItemDefinition::Unresolved(unr) => {
+                    let mut err = Dependencies::new_error(UnresolvedItemError(item_id));
+                    let extra = unr.dyn_clone().estimate_dependencies(self);
+                    err.append(extra);
+                    return err;
+                }
+                ItemDefinition::Other(..) => unreachable!(),
             };
             self.dep_res_stack.push(DepResStackFrame(item_id));
             let mut deps = con.get_dependencies(self);

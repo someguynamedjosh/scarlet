@@ -30,7 +30,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult<'x> {
-        let base = env.dereference(self.base)?;
+        let base = env.dereference_no_unresolved_error(self.base);
         let base_scope = env.get_item_scope(base).dyn_clone();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = env.get_dependencies(self.base);
@@ -45,6 +45,17 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
 
         let csub = CSubstitution::new(self.base, subs, invs);
         Ok(ItemDefinition::Resolved(Box::new(csub)))
+    }
+
+    fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {
+        let mut result = Dependencies::new();
+        for &(_, arg) in &self.named_subs {
+            result.append(env.get_dependencies(arg));
+        }
+        for &arg in &self.anonymous_subs {
+            result.append(env.get_dependencies(arg));
+        }
+        result
     }
 }
 
@@ -107,13 +118,17 @@ fn find_justifications(
     let mut previous_subs = Substitutions::new();
     for (target_id, value) in subs {
         let target = env.get_variable(*target_id).clone();
-        match target.can_be_assigned(*value, env, &previous_subs, limit)? {
-            Ok(mut new_invs) => {
+        match target.can_be_assigned(*value, env, &previous_subs, limit) {
+            Ok(Ok(mut new_invs)) => {
                 previous_subs.insert_no_replace(*target_id, *value);
                 justifications.append(&mut new_invs);
             }
-            Err(err) => {
+            Ok(Err(err)) => {
                 return Err(ResolveError::InvariantDeadEnd(err));
+            }
+            Err(resolve_err) => {
+                println!("Resolve error {:?} while finding justifications", resolve_err);
+                return Err(resolve_err.into());
             }
         }
     }
