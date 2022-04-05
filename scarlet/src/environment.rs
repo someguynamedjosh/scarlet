@@ -106,11 +106,12 @@ impl<'x> Environment<'x> {
         self.items[item].definition = ItemDefinition::Unresolved(Box::new(definition));
     }
 
+    #[track_caller]
     pub fn get_language_item(&self, name: &str) -> ItemId {
         *self
             .language_items
             .get(name)
-            .unwrap_or_else(|| todo!("nice error, no language item named {}", name))
+            .expect(&format!("nice error, no language item named {}", name))
     }
 
     pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ItemId {

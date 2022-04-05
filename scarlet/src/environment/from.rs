@@ -99,8 +99,8 @@ impl<'x> Environment<'x> {
                 let con = CSubstitution::new_unchecked(statement, subs);
                 self.define_item(into, con);
             } else {
-                let truee = self.get_language_item("truee");
-                let falsee = self.get_language_item("falsee");
+                let truee = self.get_language_item("true");
+                let falsee = self.get_language_item("false");
                 let equal = CDecision::new(x, from, truee, falsee);
                 self.define_item(into, equal);
             }

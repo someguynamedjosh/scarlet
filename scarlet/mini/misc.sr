@@ -1,29 +1,4 @@
-true IS basics.true
 false IS basics.false
-void IS basics.void
-and IS basics.and
-
 t_just IS VAR[SELF]
 
-asdf IS UNIQUE
-
-a IS VAR[]
-
-# theorems.t_decision_eq_inv[true true true true = false]
-
-# and[true true]
-x IS VAR[]
-
-Bool IS 
-VAR[DECISION[SELF   true   true   SELF = false]]
-
-is_bool IS x FROM Bool
-
-# t_just[is_bool[true]]
-# t_just[is_bool[false]].SHOWN
-# theorems.t_decision_by_parts_ext[is_bool x void true false]
-# t_just[is_bool[x = void]]
-# theorems.t_decision_by_parts_ext.SHOWN
-
-
-
+t_just[DECISION[false false false false]]
