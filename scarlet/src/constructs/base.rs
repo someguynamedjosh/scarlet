@@ -9,7 +9,7 @@ use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        CheckResult, Environment,
+        CheckResult, Environment, invariants::Invariant,
     },
     resolvable::BoxedResolvable,
     scope::Scope,
@@ -75,7 +75,7 @@ impl<'x> From<ItemId> for ItemDefinition<'x> {
 pub struct Item<'x> {
     pub definition: ItemDefinition<'x>,
     pub reduced: ItemDefinition<'x>,
-    pub invariants: Option<Vec<crate::environment::invariants::Invariant>>,
+    pub invariants: Option<Vec<Invariant>>,
     pub scope: Box<dyn Scope>,
     /// A dex that, when a value is plugged in for its first dependency, will
     /// evaluate to true if and only if the plugged in value could have been
@@ -87,7 +87,7 @@ pub struct Item<'x> {
 pub type ItemPool<'x> = Pool<Item<'x>, 'I'>;
 pub type ItemId = Id<'I'>;
 
-pub type GenInvResult = Vec<crate::environment::invariants::Invariant>;
+pub type GenInvResult = Vec<Invariant>;
 
 pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {

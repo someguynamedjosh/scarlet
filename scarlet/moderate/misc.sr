@@ -7,12 +7,12 @@ x IS std.basics.x
 # x IS VAR[]
 
 # is_struct IS 
-# logic.or[
+# # logic.or[
 #    logic.and[
 #       x.IS_POPULATED_STRUCT
 #       is_struct[x.REST]
 #    ]
-#    x = void
+   # x = void
 # ]
 
 # c_struct IS VAR[is_struct[SELF]]
@@ -20,6 +20,6 @@ x IS std.basics.x
 # std.theorems.t_decision_by_parts_ext[x FROM logic.Bool   x    void   true   false]
 # std.theorems.t_just[(x = void) FROM logic.Bool]
 # std.theorems.t_just[is_struct = false][void].SHOWN
-std.theorems.t_just[false].SHOWN
+# std.theorems.t_just[false].SHOWN
 # logic.a[x = void]
 # logic.and[x = void x = void]

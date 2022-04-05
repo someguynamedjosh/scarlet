@@ -11,6 +11,10 @@ impl CIsPopulatedStruct {
     pub fn new<'x>(base: ItemId) -> Self {
         Self(base)
     }
+
+    pub fn get_base(&self) -> ItemId {
+        self.0
+    }
 }
 
 impl_any_eq_for_construct!(CIsPopulatedStruct);

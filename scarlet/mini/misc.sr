@@ -1,4 +1,3 @@
 false IS basics.false
 t_just IS VAR[SELF]
 
-t_just[DECISION[false false false false]]

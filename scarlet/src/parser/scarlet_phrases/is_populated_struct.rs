@@ -30,11 +30,24 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemId,
 ) -> UncreateResult<'a> {
-    Ok(None)
+    Ok(
+        if let Some(cips) =
+            env.get_and_downcast_construct_definition::<CIsPopulatedStruct>(uncreate)?
+        {
+            let cips = cips.clone();
+            Some(Node {
+                phrase: "is populated struct",
+                children: vec![NodeChild::Node(env.vomit(4, ctx, cips.get_base()))],
+                ..Default::default()
+            })
+        } else {
+            None
+        },
+    )
 }
 
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+fn vomit(pc: &ParseContext, src: &Node) -> String {
+    format!("{}.IS_POPULATED_STRUCT", src.children[0].vomit(pc))
 }
 
 pub fn phrase() -> Phrase {

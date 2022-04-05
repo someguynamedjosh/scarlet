@@ -115,12 +115,13 @@ impl Variable {
         let mut substitutions = other_subs.clone();
         let mut invariants = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);
+        let mut default_err = Ok(Ok(()));
         for &inv in &self.invariants {
             let subbed = env.substitute(inv, &substitutions);
             match env.justify(subbed, value, limit) {
                 Ok(inv) => invariants.push(inv),
                 Err(LookupInvariantError::DefinitelyDoesNotExist) => {
-                    return Ok(Err(format!(
+                    default_err = Ok(Err(format!(
                         "Failed to justify: {}",
                         env.show(subbed, value)
                     )));
@@ -128,7 +129,7 @@ impl Variable {
                 Err(err) => return Err(err),
             }
         }
-        Ok(Ok(invariants))
+        default_err.map(|res| res.map(|_| invariants))
     }
 
     pub fn as_dependency(&self, env: &mut Environment) -> Dependency {
