@@ -18,7 +18,7 @@ impl<'x> Resolvable<'x> for RPlaceholder {
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
         _limit: u32,
-    ) -> ResolveResult<'x> {
+    ) -> ResolveResult {
         eprintln!("{:#?}", env);
         unreachable!()
     }

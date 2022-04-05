@@ -21,13 +21,13 @@ impl<'x> Resolvable<'x> for RFrom {
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
         _limit: u32,
-    ) -> ResolveResult<'x> {
+    ) -> ResolveResult {
         let base = env.create_from_dex(self.right)?;
         let x = env.get_language_item("x");
         let x = env.get_and_downcast_construct_definition::<CVariable>(x)?;
         let x_id = x.unwrap().get_id();
         let subs = vec![(x_id, self.left)].into_iter().collect();
         let subbed = CSubstitution::new_unchecked(base, subs);
-        Ok(ItemDefinition::Resolved(Box::new(subbed)))
+        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(subbed)))
     }
 }

@@ -103,7 +103,7 @@ impl<'x> Environment<'x> {
     }
 
     pub fn define_unresolved(&mut self, item: ItemId, definition: impl Resolvable<'x> + 'x) {
-        self.items[item].definition = ItemDefinition::Unresolved(Box::new(definition));
+        self.items[item].unresolved = Some(Box::new(definition));
     }
 
     #[track_caller]
@@ -116,8 +116,9 @@ impl<'x> Environment<'x> {
 
     pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ItemId {
         let item = Item {
-            definition: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
-            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
+            definition: ItemDefinition::Placeholder,
+            reduced: ItemDefinition::Placeholder,
+            unresolved: None,
             invariants: None,
             scope,
             from_dex: None,
@@ -130,7 +131,8 @@ impl<'x> Environment<'x> {
         let void = self.get_language_item("void");
         self.items.push(Item {
             definition: ItemDefinition::Other(void),
-            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
+            reduced: ItemDefinition::Placeholder,
+            unresolved: None,
             invariants: None,
             scope,
             from_dex: None,
@@ -150,7 +152,8 @@ impl<'x> Environment<'x> {
         let var_id = downcast_construct::<CVariable>(&*construct).map(CVariable::get_id);
         let item = Item {
             definition: ItemDefinition::Resolved(construct),
-            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
+            reduced: ItemDefinition::Placeholder,
+            unresolved: None,
             invariants: None,
             scope,
             from_dex: None,
@@ -166,7 +169,8 @@ impl<'x> Environment<'x> {
     pub fn push_other(&mut self, other: ItemId, scope: Box<dyn Scope>) -> ItemId {
         let item = Item {
             definition: ItemDefinition::Other(other),
-            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
+            reduced: ItemDefinition::Placeholder,
+            unresolved: None,
             invariants: None,
             scope,
             from_dex: None,
@@ -205,8 +209,9 @@ impl<'x> Environment<'x> {
         scope: Box<dyn Scope>,
     ) -> ItemId {
         self.items.push(Item {
-            definition: ItemDefinition::Unresolved(definition),
-            reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
+            definition: ItemDefinition::Placeholder,
+            reduced: ItemDefinition::Placeholder,
+            unresolved: Some(definition),
             invariants: None,
             scope,
             from_dex: None,

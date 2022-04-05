@@ -1,5 +1,8 @@
 use super::{Environment, ItemId};
-use crate::{constructs::ItemDefinition, resolvable::ResolveError};
+use crate::{
+    constructs::ItemDefinition,
+    resolvable::{ResolveError, ResolveResult},
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ResolveStackFrame(ItemId);
@@ -9,7 +12,7 @@ impl<'x> Environment<'x> {
     pub fn resolve_all(&mut self) {
         let mut unresolved = Vec::new();
         self.for_each_item_returning_nothing(|env, id| {
-            if env.items[id].definition.is_unresolved() {
+            if env.items[id].is_unresolved() {
                 unresolved.push(id);
             }
         });
@@ -81,7 +84,7 @@ impl<'x> Environment<'x> {
             eprintln!("{:?}", self.resolve_stack);
             todo!("Nice error, circular dependency");
         }
-        if let ItemDefinition::Unresolved(resolvable) = &item.definition {
+        if let Some(resolvable) = &item.unresolved {
             if resolvable.is_placeholder() {
                 return Err(ResolveError::Placeholder);
             }
@@ -90,7 +93,7 @@ impl<'x> Environment<'x> {
             let scope = item.scope.dyn_clone();
             let new_def = resolvable.resolve(self, scope, limit);
             match new_def {
-                Ok(new_def) => {
+                ResolveResult::Ok(new_def) => {
                     if let ItemDefinition::Resolved(boxed) = new_def {
                         self.define_dyn_item(item_id, boxed);
                     } else {
@@ -98,9 +101,20 @@ impl<'x> Environment<'x> {
                     }
                     self.arrest_recursion(item_id);
                     assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(item_id)));
+                    self.items[item_id].unresolved = None;
                     Ok(true)
                 }
-                Err(err) => {
+                ResolveResult::Partial(new_def) => {
+                    if let ItemDefinition::Resolved(boxed) = new_def {
+                        self.define_dyn_item(item_id, boxed);
+                    } else {
+                        self.items[item_id].definition = new_def;
+                    }
+                    self.arrest_recursion(item_id);
+                    assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(item_id)));
+                    Err(ResolveError::Placeholder)
+                }
+                ResolveResult::Err(err) => {
                     assert_eq!(self.resolve_stack.pop(), Some(ResolveStackFrame(item_id)));
                     Err(err)
                 }

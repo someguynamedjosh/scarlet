@@ -8,8 +8,6 @@ x IS std.basics.x
 
 x.IS_POPULATED_STRUCT.SHOWN
 
-ASSERT[is_struct[x IS x.REST] FROM logic.Bool]
-
 is_struct IS 
 # logic.or[
    logic.and[
@@ -18,7 +16,5 @@ is_struct IS
    ]
 #    x = void
 # ]
-# std.theorems.t_just[is_struct = false][void].SHOWN
-# std.theorems.t_just[false].SHOWN
-# logic.a[x = void]
-# logic.and[x = void x = void]
+
+ASSERT[is_struct[x IS x.REST] FROM logic.Bool]

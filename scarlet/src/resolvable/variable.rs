@@ -25,7 +25,7 @@ impl<'x> Resolvable<'x> for RVariable {
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
         _limit: u32,
-    ) -> ResolveResult<'x> {
+    ) -> ResolveResult {
         let id = env.push_variable(Variable {
             id: None,
             item: None,
@@ -34,6 +34,6 @@ impl<'x> Resolvable<'x> for RVariable {
             order: self.order.clone(),
         });
         let con = CVariable::new(id);
-        Ok(ItemDefinition::Resolved(Box::new(con)))
+        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(con)))
     }
 }

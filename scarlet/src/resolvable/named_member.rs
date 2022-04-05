@@ -41,7 +41,7 @@ impl<'x> Resolvable<'x> for RNamedMember<'x> {
         env: &mut Environment<'x>,
         scope: Box<dyn Scope>,
         _limit: u32,
-    ) -> ResolveResult<'x> {
+    ) -> ResolveResult {
         let access_depth = find_member(env, self.base, self.member_name)?;
         let access_depth = if let Some(ad) = access_depth {
             ad
@@ -59,6 +59,6 @@ impl<'x> Resolvable<'x> for RNamedMember<'x> {
             );
         }
         let def = CAtomicStructMember(base, AtomicStructMember::Value);
-        Ok(ItemDefinition::Resolved(def.dyn_clone()))
+        ResolveResult::Ok(ItemDefinition::Resolved(def.dyn_clone()))
     }
 }

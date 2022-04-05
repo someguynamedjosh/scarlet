@@ -157,10 +157,8 @@ impl<'x> Environment<'x> {
         } else {
             let con = match &self.get_item(item_id).definition {
                 ItemDefinition::Resolved(con) => con.dyn_clone(),
-                ItemDefinition::Unresolved(unr) => {
+                ItemDefinition::Placeholder => {
                     let mut err = Dependencies::new_error(UnresolvedItemError(item_id));
-                    let extra = unr.dyn_clone().estimate_dependencies(self);
-                    err.append(extra);
                     return err;
                 }
                 ItemDefinition::Other(..) => unreachable!(),

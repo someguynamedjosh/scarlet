@@ -31,7 +31,7 @@ impl<'x> Environment<'x> {
         let old_item_id = item_id;
         if let ItemDefinition::Resolved(def) = &self.items[item_id].definition {
             Ok(def)
-        } else if let ItemDefinition::Unresolved(..) = &self.items[item_id].definition {
+        } else if let ItemDefinition::Placeholder = &self.items[item_id].definition {
             Err(UnresolvedItemError(item_id))
         } else {
             eprintln!("{:#?}", self);

@@ -5,7 +5,11 @@ mod placeholder;
 mod substitution;
 mod variable;
 
-use std::fmt::Debug;
+use std::{
+    convert::Infallible,
+    fmt::Debug,
+    ops::{FromResidual, Try},
+};
 
 pub use identifier::RIdentifier;
 pub use named_member::RNamedMember;
@@ -45,7 +49,38 @@ impl From<LookupInvariantError> for ResolveError {
     }
 }
 
-pub type ResolveResult<'x> = Result<ItemDefinition<'x>, ResolveError>;
+pub enum ResolveResult {
+    Ok(ItemDefinition),
+    Partial(ItemDefinition),
+    Err(ResolveError),
+}
+
+impl FromResidual<Result<Infallible, UnresolvedItemError>> for ResolveResult {
+    fn from_residual(residual: Result<Infallible, UnresolvedItemError>) -> Self {
+        match residual {
+            Ok(ok) => match ok {},
+            Err(err) => Self::Err(err.into()),
+        }
+    }
+}
+
+impl FromResidual<Result<Infallible, LookupInvariantError>> for ResolveResult {
+    fn from_residual(residual: Result<Infallible, LookupInvariantError>) -> Self {
+        match residual {
+            Ok(ok) => match ok {},
+            Err(err) => Self::Err(err.into()),
+        }
+    }
+}
+
+impl FromResidual<Result<Infallible, ResolveError>> for ResolveResult {
+    fn from_residual(residual: Result<Infallible, ResolveError>) -> Self {
+        match residual {
+            Ok(ok) => match ok {},
+            Err(err) => Self::Err(err),
+        }
+    }
+}
 
 pub trait Resolvable<'x>: Debug {
     fn is_placeholder(&self) -> bool {
@@ -57,7 +92,7 @@ pub trait Resolvable<'x>: Debug {
         env: &mut Environment<'x>,
         scope: Box<dyn Scope>,
         limit: u32,
-    ) -> ResolveResult<'x>;
+    ) -> ResolveResult;
     #[allow(unused_variables)]
     fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {
         Dependencies::new()

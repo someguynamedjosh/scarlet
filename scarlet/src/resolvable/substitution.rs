@@ -29,7 +29,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
         limit: u32,
-    ) -> ResolveResult<'x> {
+    ) -> ResolveResult {
         println!("1");
         let base = env.dereference_no_unresolved_error(self.base);
         let base_scope = env.get_item_scope(base).dyn_clone();
@@ -50,7 +50,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
 
         println!("6");
         let csub = CSubstitution::new(self.base, subs, invs);
-        Ok(ItemDefinition::Resolved(Box::new(csub)))
+        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
     }
 
     fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {

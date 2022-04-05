@@ -28,7 +28,7 @@ impl<'x> Environment<'x> {
                     self.arrest_recursion_impl(contained, stack);
                 }
             }
-            ItemDefinition::Unresolved(..) => (),
+            ItemDefinition::Placeholder => (),
         }
         assert_eq!(stack.pop(), Some(of));
     }
