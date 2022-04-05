@@ -25,7 +25,6 @@ fn sub_invariant() {
 
     statement IS 
     (fx = a)
-    .WITH_DEPENDENCIES[x fx]
     .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t IS VAR[statement[x IS SELF]]
@@ -42,15 +41,14 @@ fn sub_invariant() {
 #[test]
 fn moderate_invariant() {
     let code = r"
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
-    fx IS VAR[DEP x]
-
     a IS VAR[]
     b IS VAR[a = SELF]
 
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
     statement IS 
     (fx[b] = fx[a])
-    .WITH_DEPENDENCIES[a b fx]
     .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t IS VAR[]
@@ -82,15 +80,14 @@ fn nonexistant_invariant() {
 #[test]
 fn theorem_invariant() {
     let code = r"
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
-    fx IS VAR[DEP x]
-
     a IS VAR[]
     b IS VAR[a = SELF]
 
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
     statement IS 
     (fx[b] = fx[a])
-    .WITH_DEPENDENCIES[a b fx]
     .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
@@ -145,22 +142,21 @@ fn auto_theorem_invariant() {
 #[test]
 fn t_just_after_theorem() {
     let code = r"
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
-    fx IS VAR[DEP x]
-
     t_eq_ext_rev IS 
     {
         AXIOM[t_eq_ext_rev]
 
-        statement IS 
-        (fx[b] = fx[a])
-        .WITH_DEPENDENCIES[a b fx]
-        .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
-
         a IS VAR[]
         b IS VAR[a = SELF]
+
+        statement IS 
+        (fx[b] = fx[a])
+        .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
     }
     .VALUE
+
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
 
     t_just IS VAR[SELF]
 

@@ -3,7 +3,7 @@
 use std::assert_matches::assert_matches;
 
 use crate::{
-    constructs::substitution::CSubstitution,
+    constructs::substitution::{CSubstitution, Substitutions},
     environment::{discover_equality::Equal, test_util::*},
     scope::SRoot,
 };
@@ -348,18 +348,18 @@ fn dex_sub_decision_is_gy_sub_decision() {
     if let Ok(Equal::Yes(lsubs)) = env.discover_equal(g_dec, dex_dec, 3) {
         assert_eq!(lsubs.len(), 5);
         let mut entries = lsubs.iter();
+        assert_eq!(entries.next().unwrap(), &(s.1, a));
+        assert_eq!(entries.next().unwrap(), &(t.1, b));
+        assert_eq!(entries.next().unwrap(), &(u.1, c));
+        assert_eq!(entries.next().unwrap(), &(v.1, d));
         let first = entries.next().unwrap();
         assert_eq!(first.0, g.1);
         if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(first.1) {
             assert_eq!(sub.base(), dex);
             assert_eq!(sub.substitutions(), &subs(vec![(x.1, y.0)]))
         } else {
-            panic!("Expected second substitution to be itself another substitution");
+            panic!("Expected last substitution to be itself another substitution");
         }
-        assert_eq!(entries.next().unwrap(), &(s.1, a));
-        assert_eq!(entries.next().unwrap(), &(t.1, b));
-        assert_eq!(entries.next().unwrap(), &(u.1, c));
-        assert_eq!(entries.next().unwrap(), &(v.1, d));
     } else {
         unreachable!()
     }
@@ -492,4 +492,27 @@ fn x_eq_y_sub_true_true_is_a_equal_a() {
     } else {
         unreachable!()
     }
+}
+
+#[test]
+fn is_bool_sub_y_is_y_is_bool() {
+    let mut env = env();
+
+    let x = env.variable_full();
+    let y = env.variable_full();
+    let t = env.unique();
+    let f = env.unique();
+
+    let x_is_false = env.decision(x.0, f, t, f);
+    let x_is_bool = env.decision(x.0, t, t, x_is_false);
+
+    let y_is_false = env.decision(y.0, f, t, f);
+    let y_is_bool = env.decision(y.0, t, t, y_is_false);
+
+    let x_sub_y_is_bool = env.substitute(x_is_bool, &subs(vec![(x.1, y.0)]));
+
+    assert_eq!(
+        env.discover_equal(y_is_bool, x_sub_y_is_bool, 4),
+        Ok(Equal::Yes(Substitutions::new()))
+    );
 }
