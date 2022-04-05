@@ -1,7 +1,5 @@
 use std::fmt::Debug;
 
-use maplit::hashset;
-
 use crate::{
     constructs::ItemId,
     environment::{Environment, UnresolvedItemError},

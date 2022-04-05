@@ -1,5 +1,3 @@
-use typed_arena::Arena;
-
 use crate::{
     constructs::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},

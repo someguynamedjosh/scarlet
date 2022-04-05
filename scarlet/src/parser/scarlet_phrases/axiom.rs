@@ -1,8 +1,6 @@
-use typed_arena::Arena;
-
 use crate::{
     constructs::{axiom::CAxiom, ItemId},
-    environment::{Environment, vomit::VomitContext},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -28,11 +26,11 @@ fn create<'x>(
 
 fn uncreate<'a>(
     env: &mut Environment,
-    ctx: &mut VomitContext<'a, '_>,
+    _ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemId,
 ) -> UncreateResult<'a> {
     if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
-        let cax = cax.clone();
+        let _cax = cax.clone();
         let statement = "unknown_statement";
         Ok(Some(Node {
             phrase: "axiom",

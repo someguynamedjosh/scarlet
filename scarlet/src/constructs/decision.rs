@@ -1,8 +1,7 @@
-use super::{downcast_construct, substitution::Substitutions, Construct, ItemId};
+use super::{Construct, ItemId};
 use crate::{
-    environment::{dependencies::DepResult, sub_expr::NestedSubstitutions, Environment},
+    environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, LookupInvariantError, ReverseLookupIdentResult, Scope},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

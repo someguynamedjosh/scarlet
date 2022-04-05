@@ -42,7 +42,6 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
     }
 }
 
-
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the
 /// dependencies match.
 fn resolve_dep_subs(subs: &mut Substitutions, env: &mut Environment) {

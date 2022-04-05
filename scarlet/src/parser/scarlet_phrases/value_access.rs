@@ -1,7 +1,5 @@
 use std::ops::ControlFlow;
 
-use typed_arena::Arena;
-
 use crate::{
     constructs::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},

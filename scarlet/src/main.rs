@@ -9,8 +9,6 @@
 #![feature(assert_matches)]
 #![feature(map_first_last)]
 
-use std::{collections::hash_map::DefaultHasher, hash::{Hasher, Hash}};
-
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 
 mod constructs;

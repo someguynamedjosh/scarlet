@@ -1,5 +1,3 @@
-use typed_arena::Arena;
-
 use crate::{
     constructs::{shown::CShown, ItemId},
     environment::{vomit::VomitContext, Environment},

@@ -1,17 +1,11 @@
-use maplit::hashset;
-
-use super::{
-    base::{Construct, ItemId},
-    downcast_construct,
-    substitution::Substitutions,
-};
+use super::base::{Construct, ItemId};
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         Environment,
     },
     impl_any_eq_for_construct,
-    scope::{LookupIdentResult, LookupInvariantError, ReverseLookupIdentResult, Scope},
+    scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
     shared::{Id, Pool},
 };
 

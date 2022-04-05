@@ -1,5 +1,3 @@
-use typed_arena::Arena;
-
 use crate::{
     constructs::{recursion::CRecursion, ItemId},
     environment::{vomit::VomitContext, Environment},

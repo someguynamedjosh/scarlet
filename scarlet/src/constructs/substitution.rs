@@ -1,7 +1,4 @@
-use super::{
-    variable::{CVariable, VariableId},
-    Construct, ItemId,
-};
+use super::{variable::VariableId, Construct, ItemId};
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
@@ -93,7 +90,7 @@ impl Construct for CSubstitution {
 
     fn dereference(
         &self,
-        env: &mut Environment,
+        _env: &mut Environment,
     ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
         Some((self.base, Some(&self.subs), None))
     }

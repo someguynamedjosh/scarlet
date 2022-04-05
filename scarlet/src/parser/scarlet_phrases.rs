@@ -1,3 +1,4 @@
+mod as_auto_theorem;
 mod as_language_item;
 mod axiom;
 mod decision;
@@ -6,20 +7,19 @@ mod from;
 mod identifier;
 mod is;
 mod is_populated_struct;
-mod unique;
 mod label_access;
 mod member_access;
 mod multiple_constructs;
 mod parentheses;
 mod populated_struct;
+mod recursion;
 mod rest_access;
 mod shown;
 mod structt;
 mod substitution;
+mod unique;
 mod value_access;
 mod variable;
-mod as_auto_theorem;
-mod recursion;
 
 use super::phrase::Phrase;
 

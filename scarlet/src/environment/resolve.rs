@@ -1,4 +1,4 @@
-use super::{ItemId, Environment};
+use super::{Environment, ItemId};
 use crate::{constructs::ItemDefinition, resolvable::ResolveError};
 
 #[derive(Debug, PartialEq, Eq)]

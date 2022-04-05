@@ -13,12 +13,7 @@ use crate::{
 };
 
 impl<'x> Environment<'x> {
-    fn push_and(
-        &mut self,
-        left: ItemId,
-        right: ItemId,
-        scope: Box<dyn Scope>,
-    ) -> ItemId {
+    fn push_and(&mut self, left: ItemId, right: ItemId, scope: Box<dyn Scope>) -> ItemId {
         let and = self.get_language_item("and");
         self.push_unresolved(
             RSubstitution {
@@ -42,10 +37,7 @@ impl<'x> Environment<'x> {
         )
     }
 
-    pub fn create_from_dex(
-        &mut self,
-        from: ItemId,
-    ) -> Result<ItemId, UnresolvedItemError> {
+    pub fn create_from_dex(&mut self, from: ItemId) -> Result<ItemId, UnresolvedItemError> {
         let scope = || Box::new(SPlain(from));
         let into = if let Some(from_dex) = self.items[from].from_dex {
             from_dex

@@ -1,5 +1,3 @@
-use typed_arena::Arena;
-
 use crate::{
     constructs::{decision::CDecision, ItemId},
     environment::{vomit::VomitContext, Environment},
@@ -33,7 +31,7 @@ fn create<'x>(
 
     let equal = args[2].as_construct(pc, env, SPlain(this));
 
-    let neq_inv = env.push_construct(
+    let _neq_inv = env.push_construct(
         CDecision::new(left, right, falsee, truee),
         SPlain(this).dyn_clone(),
     );

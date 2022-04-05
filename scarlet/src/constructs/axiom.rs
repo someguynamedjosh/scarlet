@@ -1,6 +1,4 @@
-use maplit::hashset;
-
-use super::{base::Construct, downcast_construct, substitution::Substitutions, ItemId};
+use super::{base::Construct, ItemId};
 use crate::{
     environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,

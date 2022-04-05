@@ -1,7 +1,5 @@
 use std::ops::ControlFlow;
 
-use typed_arena::Arena;
-
 use crate::{
     constructs::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
@@ -47,10 +45,10 @@ fn uncreate<'a>(
             if let Ok(Some(cstruct)) =
                 env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
             {
-                let cstruct = cstruct.clone();
-                // if env.discover_equal(cstruct.get_rest(), uncreate, 1024) == Ok(Equal::yes()) {
-                //     return ControlFlow::Break(id);
-                // }
+                let _cstruct = cstruct.clone();
+                // if env.discover_equal(cstruct.get_rest(), uncreate, 1024) ==
+                // Ok(Equal::yes()) {     return
+                // ControlFlow::Break(id); }
             }
             ControlFlow::Continue(())
         })

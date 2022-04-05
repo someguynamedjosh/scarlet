@@ -1,13 +1,11 @@
-use std::ops::ControlFlow;
-
 use typed_arena::Arena;
 
-use super::{Environment, ItemId, UnresolvedItemError};
+use super::{Environment, ItemId};
 use crate::{
     constructs::{
         downcast_construct,
         shown::CShown,
-        variable::{CVariable, SVariableInvariants, VariableId},
+        variable::{SVariableInvariants, VariableId},
         Construct, ItemDefinition,
     },
     parser::{Node, NodeChild, ParseContext},
@@ -160,7 +158,7 @@ impl<'x> Environment<'x> {
                 }
             }
         }
-        if let Some(err) = err {
+        if let Some(_err) = err {
             return Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text("UNRESOLVED")],

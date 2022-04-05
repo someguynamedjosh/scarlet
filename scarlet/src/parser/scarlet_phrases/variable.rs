@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use typed_arena::Arena;
 
 use crate::{
     constructs::{
@@ -45,7 +44,9 @@ fn create<'x>(
             dependencies.push(con);
         } else if mode == 2 {
             let text = arg.as_ident();
-            order.major_order = text.parse().expect("TODO: Nice error, expected order to be a number between 0 and 255");
+            order.major_order = text
+                .parse()
+                .expect("TODO: Nice error, expected order to be a number between 0 and 255");
             mode = 0
         }
     }

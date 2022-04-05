@@ -1,8 +1,4 @@
-use super::{
-    base::{Construct, ItemId},
-    substitution::Substitutions,
-    variable::VariableId,
-};
+use super::base::{Construct, ItemId};
 use crate::{
     environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,

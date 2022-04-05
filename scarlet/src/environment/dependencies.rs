@@ -1,8 +1,8 @@
-use std::collections::{HashSet, BTreeSet};
+use std::collections::{BTreeSet, HashSet};
 
 use maplit::hashset;
 
-use super::{ItemId, Environment, UnresolvedItemError};
+use super::{Environment, ItemId, UnresolvedItemError};
 use crate::constructs::variable::{Dependency, VariableId};
 
 #[derive(Clone, Debug, PartialEq, Eq)]

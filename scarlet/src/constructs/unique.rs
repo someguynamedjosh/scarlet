@@ -1,4 +1,4 @@
-use super::{base::Construct, downcast_construct, substitution::Substitutions, ItemId};
+use super::base::Construct;
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},

@@ -1,11 +1,9 @@
-use typed_arena::Arena;
-
 use crate::{
     constructs::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ItemId,
     },
-    environment::{Environment, vomit::VomitContext},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util, Node, NodeChild, ParseContext,
@@ -36,9 +34,9 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    env: &mut Environment,
-    ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    _env: &mut Environment,
+    _ctx: &mut VomitContext<'a, '_>,
+    _uncreate: ItemId,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

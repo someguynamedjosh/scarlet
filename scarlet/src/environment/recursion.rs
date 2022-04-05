@@ -1,10 +1,5 @@
-use std::collections::HashSet;
-
-use super::{dependencies::DepResStackFrame, Environment, ItemId, UnresolvedItemError};
-use crate::{
-    constructs::{recursion::CRecursion, substitution::Substitutions, Construct, ItemDefinition},
-    scope::{LookupInvariantError, Scope},
-};
+use super::{Environment, ItemId, UnresolvedItemError};
+use crate::constructs::{recursion::CRecursion, Construct, ItemDefinition};
 
 impl<'x> Environment<'x> {
     fn arrest_recursion_impl(&mut self, of: ItemId, stack: &mut Vec<ItemId>) {
