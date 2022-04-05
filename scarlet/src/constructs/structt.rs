@@ -257,11 +257,11 @@ fn lookup_invariant_in<'x>(
 ) -> LookupInvariantResult {
     let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
     for maybe_match in env.generated_invariants(inn.value) {
-        match env.discover_equal(invariant, maybe_match.statement, limit)? {
-            Equal::Yes(l) if l.len() == 0 => return Ok(maybe_match),
-            Equal::Yes(_) => (),
-            Equal::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
-            Equal::No | Equal::Unknown => (),
+        match env.discover_equal(invariant, maybe_match.statement, limit) {
+            Ok(Equal::Yes(l)) if l.len() == 0 => return Ok(maybe_match),
+            Ok(Equal::Yes(_)) => (),
+            Ok(Equal::NeedsHigherLimit) => default_err = Err(LookupInvariantError::MightNotExist),
+            _ => (),
         }
     }
     if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {

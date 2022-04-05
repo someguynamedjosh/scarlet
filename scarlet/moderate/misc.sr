@@ -8,6 +8,8 @@ x IS std.basics.x
 
 x.IS_POPULATED_STRUCT.SHOWN
 
+ASSERT[is_struct[x IS x.REST] FROM logic.Bool]
+
 is_struct IS 
 # logic.or[
    logic.and[

@@ -90,7 +90,8 @@ pub trait Scope: Debug {
         match result {
             Ok(inv) => Ok(inv),
             Err(LookupInvariantError::MightNotExist)
-            | Err(LookupInvariantError::DefinitelyDoesNotExist) => {
+            | Err(LookupInvariantError::DefinitelyDoesNotExist)
+            | Err(LookupInvariantError::Unresolved(..)) => {
                 if let Some(parent) = self.parent() {
                     let parent_result = env
                         .get_item(parent)

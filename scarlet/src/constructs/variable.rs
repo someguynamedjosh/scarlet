@@ -126,7 +126,10 @@ impl Variable {
                         env.show(subbed, value)
                     )));
                 }
-                Err(err) => return Err(err),
+                Err(err) => {
+                    println!("While justifying {}", env.show(inv, value));
+                    return Err(err);
+                }
             }
         }
         default_err.map(|res| res.map(|_| invariants))
