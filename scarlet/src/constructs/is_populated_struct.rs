@@ -1,8 +1,16 @@
 use std::collections::HashSet;
 
-use super::{decision::CDecision, Construct, GenInvResult, ItemId};
+use super::{
+    decision::CDecision, downcast_construct, substitution::Substitutions, Construct, GenInvResult,
+    ItemId,
+};
 use crate::{
-    environment::{dependencies::DepResult, invariants::Invariant, Environment},
+    environment::{
+        dependencies::DepResult,
+        discover_equality::{DeqResult, Equal},
+        invariants::Invariant,
+        Environment,
+    },
     impl_any_eq_for_construct,
     scope::SPlain,
 };
@@ -50,5 +58,22 @@ impl Construct for CIsPopulatedStruct {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.base)
+    }
+
+    fn discover_equality<'x>(
+        &self,
+        env: &mut Environment<'x>,
+        self_subs: Vec<&Substitutions>,
+        other_id: ItemId,
+        other: &dyn Construct,
+        other_subs: Vec<&Substitutions>,
+        limit: u32,
+    ) -> DeqResult {
+        if let Some(other) = downcast_construct::<Self>(other) {
+            let other = other.clone();
+            env.discover_equal_with_subs(self.base, self_subs, other.base, other_subs, limit)
+        } else {
+            Ok(Equal::Unknown)
+        }
     }
 }

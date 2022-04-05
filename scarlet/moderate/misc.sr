@@ -6,6 +6,8 @@ x IS std.basics.x
 
 # x IS VAR[]
 
+x.IS_POPULATED_STRUCT.SHOWN
+
 is_struct IS 
 # logic.or[
    logic.and[
