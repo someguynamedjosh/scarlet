@@ -112,26 +112,36 @@ impl<'x> Environment<'x> {
             }
             return Ok(Equal::NeedsHigherLimit);
         }
-        while let Some((base, extra_subs, _)) = self
-            .get_item_as_construct(left)?
-            .dyn_clone()
-            .dereference(self)
-        {
-            left = base;
-            if let Some(extra_subs) = extra_subs {
-                let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
-                left_subs.insert(0, extra_subs);
+        while let Ok(con) = self.get_item_as_construct(left) {
+            if let Some((base, extra_subs, _)) = con.dyn_clone().dereference(self) {
+                left = base;
+                if let Some(extra_subs) = extra_subs {
+                    let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
+                    left_subs.insert(0, extra_subs);
+                }
+            } else {
+                break;
             }
         }
-        while let Some((base, extra_subs, _)) = self
-            .get_item_as_construct(right)?
-            .dyn_clone()
-            .dereference(self)
-        {
-            right = base;
-            if let Some(extra_subs) = extra_subs {
-                let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
-                right_subs.insert(0, extra_subs);
+        while let Ok(con) = self.get_item_as_construct(right) {
+            if let Some((base, extra_subs, _)) = con.dyn_clone().dereference(self) {
+                right = base;
+                if let Some(extra_subs) = extra_subs {
+                    let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
+                    right_subs.insert(0, extra_subs);
+                }
+            } else {
+                break;
+            }
+        }
+        if left == right {
+            if left_subs.len() > 0 || right_subs.len() > 0 {
+                // todo!();
+            } else {
+                if trace {
+                    println!("Ok({:?})", Equal::yes());
+                }
+                return Ok(Equal::yes());
             }
         }
         let rvar_id =

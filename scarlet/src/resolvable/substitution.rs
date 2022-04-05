@@ -30,19 +30,25 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult<'x> {
+        println!("1");
         let base = env.dereference_no_unresolved_error(self.base);
         let base_scope = env.get_item_scope(base).dyn_clone();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = env.get_dependencies(self.base);
 
+        println!("2");
         self.resolve_named_subs(base_scope, env, &mut subs, &mut remaining_deps)?;
+        println!("3");
         self.resolve_anonymous_subs(remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs, env);
 
+        println!("4");
         let justifications = find_justifications(&subs, env, limit)?;
         let justification_deps = extract_invariant_dependencies(justifications);
+        println!("5");
         let invs = create_invariants(env, base, &subs, justification_deps)?;
 
+        println!("6");
         let csub = CSubstitution::new(self.base, subs, invs);
         Ok(ItemDefinition::Resolved(Box::new(csub)))
     }

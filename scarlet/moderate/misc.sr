@@ -12,7 +12,7 @@ is_struct IS
 # logic.or[
    logic.and[
       x.IS_POPULATED_STRUCT
-      is_struct[x.REST]
+      is_struct[x IS x.REST]
    ]
 #    x = void
 # ]
