@@ -5,8 +5,7 @@ void IS UNIQUE.AS_LANGUAGE_ITEM[void]
 x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
 # fx IS VAR[DEP x ORD 32]
 
-a IS 
-VAR[DECISION[SELF true true SELF = false]]
+a IS VAR[DECISION[SELF true true false]]
 
 # b IS 
 # VAR[DECISION[SELF true true SELF = false]]
