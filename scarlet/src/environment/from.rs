@@ -105,6 +105,6 @@ impl<'x> Environment<'x> {
                 self.define_item(into, equal);
             }
         }
-        Ok(into)
+        Ok(self.push_other(into, scope()))
     }
 }
