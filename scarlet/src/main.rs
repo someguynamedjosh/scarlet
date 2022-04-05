@@ -9,7 +9,10 @@
 #![feature(assert_matches)]
 #![feature(map_first_last)]
 
-use std::{collections::hash_map::DefaultHasher, hash::{Hasher, Hash}};
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
 
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 

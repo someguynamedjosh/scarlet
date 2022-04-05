@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::{is_populated_struct::CIsPopulatedStruct, ItemId},
-    environment::{Environment, vomit::VomitContext},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,

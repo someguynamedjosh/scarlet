@@ -1,4 +1,4 @@
-use super::{Construct, ItemId, GenInvResult};
+use super::{Construct, GenInvResult, ItemId};
 use crate::{
     environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,
@@ -20,11 +20,7 @@ impl Construct for CIsPopulatedStruct {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         env.generated_invariants(self.0)
     }
 

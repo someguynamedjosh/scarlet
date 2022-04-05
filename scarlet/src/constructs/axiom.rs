@@ -1,7 +1,7 @@
 use maplit::hashset;
 
 use super::{
-    base::Construct, downcast_construct, substitution::Substitutions, ItemId, GenInvResult,
+    base::Construct, downcast_construct, substitution::Substitutions, GenInvResult, ItemId,
 };
 use crate::{
     environment::{
@@ -49,11 +49,7 @@ impl Construct for CAxiom {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(
-        &self,
-        _this: ItemId,
-        _env: &mut Environment<'x>,
-    ) -> GenInvResult {
+    fn generated_invariants<'x>(&self, _this: ItemId, _env: &mut Environment<'x>) -> GenInvResult {
         vec![Invariant::new(self.statement, hashset![])]
     }
 

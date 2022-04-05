@@ -3,13 +3,13 @@ pub mod discover_equality;
 pub mod from;
 pub mod invariants;
 pub mod overlay;
+pub mod recursion;
 pub mod reduce;
 pub mod resolve;
 pub mod sub_expr;
 pub mod test_util;
 pub mod util;
 pub mod vomit;
-pub mod recursion;
 
 use std::{collections::HashMap, ops::ControlFlow};
 

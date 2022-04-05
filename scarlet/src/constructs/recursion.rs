@@ -5,10 +5,7 @@ use super::{
     GenInvResult,
 };
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        Environment,
-    },
+    environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,
 };
 

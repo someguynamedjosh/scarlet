@@ -107,14 +107,15 @@ fn find_justifications(
     let mut previous_subs = Substitutions::new();
     for (target_id, value) in subs {
         let target = env.get_variable(*target_id).clone();
-        match target.can_be_assigned(*value, env, &previous_subs, limit)? {
-            Ok(mut new_invs) => {
+        match target.can_be_assigned(*value, env, &previous_subs, limit) {
+            Ok(Ok(mut new_invs) )=> {
                 previous_subs.insert_no_replace(*target_id, *value);
                 justifications.append(&mut new_invs);
             }
-            Err(err) => {
+            Ok(Err(err)) => {
                 return Err(ResolveError::InvariantDeadEnd(err));
             }
+            Err(..) => (),
         }
     }
     Ok(justifications)

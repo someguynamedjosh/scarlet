@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     constructs::ItemId,
-    environment::{Environment, vomit::VomitContext},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, ParseContext,

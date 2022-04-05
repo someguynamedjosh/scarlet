@@ -5,7 +5,7 @@ use crate::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ItemId,
     },
-    environment::{Environment, vomit::VomitContext},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util, Node, NodeChild, ParseContext,

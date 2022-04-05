@@ -22,11 +22,8 @@ is_bool IS x FROM Bool
 # t_just[is_bool[true]]
 # t_just[is_bool[false]].SHOWN
 # theorems.t_decision_by_parts_ext[is_bool x void true false]
-t_just[is_bool[x = void]]
+# t_just[is_bool[x = void]]
 # theorems.t_decision_by_parts_ext.SHOWN
 
 
-rec IS rec
-
-t_just[is_bool[rec]]
 

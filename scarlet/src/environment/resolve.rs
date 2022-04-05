@@ -1,4 +1,4 @@
-use super::{ItemId, Environment};
+use super::{Environment, ItemId};
 use crate::{constructs::ItemDefinition, resolvable::ResolveError};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -55,7 +55,9 @@ impl<'x> Environment<'x> {
                 problem = true;
                 match err {
                     ResolveError::Unresolved(err) => {
-                        eprintln!("{:?} relies on {:?}", con, err.0)
+                        // eprintln!("{}", &format!("{:#?}", env)[0..30_000]);
+                        eprintln!("{:?} relies on {:?}", con, err.0);
+                        eprintln!("{:?} is {:#?}", con, env.get_item(err.0))
                     }
                     ResolveError::InvariantDeadEnd(err) => eprintln!("{}", err),
                     ResolveError::MaybeInvariantDoesNotExist => {

@@ -1,8 +1,6 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
-    constructs::{
-        substitution::CSubstitution, variable::CVariable, ItemDefinition, ItemId,
-    },
+    constructs::{substitution::CSubstitution, variable::CVariable, ItemDefinition, ItemId},
     environment::Environment,
     scope::Scope,
 };
