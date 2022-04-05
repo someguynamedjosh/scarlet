@@ -43,14 +43,19 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         resolve_dep_subs(&mut subs, env);
 
         println!("4");
-        let justifications = find_justifications(&subs, env, limit)?;
-        let justification_deps = extract_invariant_dependencies(justifications);
-        println!("5");
-        let invs = create_invariants(env, base, &subs, justification_deps)?;
-
-        println!("6");
-        let csub = CSubstitution::new(self.base, subs, invs);
-        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
+        if let Ok(invs) = (|| -> Result<_, ResolveError> {
+            let justifications = find_justifications(&subs, env, limit)?;
+            let justification_deps = extract_invariant_dependencies(justifications);
+            println!("5");
+            let invs = create_invariants(env, base, &subs, justification_deps)?;
+            Ok(invs)
+        })() {
+            let csub = CSubstitution::new(self.base, subs, invs);
+            ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
+        } else {
+            let csub = CSubstitution::new_unchecked(self.base, subs);
+            ResolveResult::Partial(ItemDefinition::Resolved(Box::new(csub)))
+        }
     }
 
     fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {
@@ -133,7 +138,10 @@ fn find_justifications(
                 return Err(ResolveError::InvariantDeadEnd(err));
             }
             Err(resolve_err) => {
-                println!("Resolve error {:?} while finding justifications", resolve_err);
+                println!(
+                    "Resolve error {:?} while finding justifications",
+                    resolve_err
+                );
                 return Err(resolve_err.into());
             }
         }
