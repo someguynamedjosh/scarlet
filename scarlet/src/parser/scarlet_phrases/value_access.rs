@@ -7,7 +7,7 @@ use crate::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
         ItemId,
     },
-    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -48,9 +48,7 @@ fn uncreate<'a>(
                 env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
             {
                 let cstruct = cstruct.clone();
-                if env.discover_equal(cstruct.get_value(), uncreate, 1024) == Ok(Equal::yes())
-                    && ctx.scope.parent() != Some(id)
-                {
+                if cstruct.get_value() == uncreate && ctx.scope.parent() != Some(id) {
                     return ControlFlow::Break(id);
                 }
             }

@@ -1,12 +1,10 @@
 use super::{
     variable::{CVariable, VariableId},
-    Construct, GenInvResult, ItemId,
+    Construct, ItemId,
 };
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
-        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        invariants::Invariant,
         CheckResult, Environment,
     },
     impl_any_eq_for_construct,
@@ -20,20 +18,15 @@ pub type Substitutions = OrderedMap<VariableId, ItemId>;
 pub struct CSubstitution {
     base: ItemId,
     subs: Substitutions,
-    invs: Vec<crate::environment::invariants::Invariant>,
 }
 
 impl CSubstitution {
-    pub fn new<'x>(
-        base: ItemId,
-        subs: Substitutions,
-        invs: Vec<crate::environment::invariants::Invariant>,
-    ) -> Self {
-        Self { base, subs, invs }
+    pub fn new<'x>(base: ItemId, subs: Substitutions) -> Self {
+        Self { base, subs }
     }
 
     pub fn new_unchecked(base: ItemId, subs: Substitutions) -> Self {
-        Self::new(base, subs, Vec::new())
+        Self::new(base, subs)
     }
 
     pub fn base(&self) -> ItemId {
@@ -44,12 +37,7 @@ impl CSubstitution {
         &self.subs
     }
 
-    pub fn sub_deps(
-        base: Dependencies,
-        subs: &Substitutions,
-        invs: &[Invariant],
-        env: &mut Environment,
-    ) -> DepResult {
+    pub fn sub_deps(base: Dependencies, subs: &Substitutions, env: &mut Environment) -> DepResult {
         let mut deps = Dependencies::new();
         let base_error = base.error();
         for dep in base.as_variables() {
@@ -70,16 +58,6 @@ impl CSubstitution {
         }
         if let Some(err) = base_error {
             deps.append(Dependencies::new_error(err));
-        }
-        for inv in invs.iter() {
-            for &dep in &inv.dependencies {
-                if let Ok(Some(var)) = env.get_and_downcast_construct_definition::<CVariable>(dep) {
-                    let id = var.get_id();
-                    deps.push_eager(env.get_variable(id).clone().as_dependency(env));
-                } else {
-                    deps.append(env.get_dependencies(dep));
-                }
-            }
         }
         deps
     }
@@ -110,11 +88,7 @@ impl Construct for CSubstitution {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let base = env.get_dependencies(self.base);
-        Self::sub_deps(base, &self.subs, &self.invs[..], env)
-    }
-
-    fn generated_invariants<'x>(&self, _this: ItemId, _env: &mut Environment<'x>) -> GenInvResult {
-        self.invs.clone()
+        Self::sub_deps(base, &self.subs, env)
     }
 
     fn dereference(
@@ -122,18 +96,5 @@ impl Construct for CSubstitution {
         env: &mut Environment,
     ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
         Some((self.base, Some(&self.subs), None))
-    }
-
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        // Special behavior is hard-coded into Environment::discover_equality_with_subs.
-        unreachable!()
     }
 }

@@ -4,20 +4,14 @@ use super::{
     base::{Construct, ItemId},
     downcast_construct,
     substitution::Substitutions,
-    GenInvResult,
 };
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
-        discover_equality::{DeqPriority, DeqResult, Equal},
-        invariants::Invariant,
         Environment,
     },
     impl_any_eq_for_construct,
-    scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
-    },
+    scope::{LookupIdentResult, LookupInvariantError, ReverseLookupIdentResult, Scope},
     shared::{Id, Pool},
 };
 
@@ -105,32 +99,6 @@ impl Variable {
         result
     }
 
-    pub fn can_be_assigned<'x>(
-        &self,
-        value: ItemId,
-        env: &mut Environment<'x>,
-        other_subs: &Substitutions,
-        limit: u32,
-    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError> {
-        let mut substitutions = other_subs.clone();
-        let mut invariants = Vec::new();
-        substitutions.insert_no_replace(self.id.unwrap(), value);
-        for &inv in &self.invariants {
-            let subbed = env.substitute(inv, &substitutions);
-            match env.justify(subbed, value, limit) {
-                Ok(inv) => invariants.push(inv),
-                Err(LookupInvariantError::DefinitelyDoesNotExist) => {
-                    return Ok(Err(format!(
-                        "Failed to justify: {}",
-                        env.show(subbed, value)
-                    )));
-                }
-                Err(err) => return Err(err),
-            }
-        }
-        Ok(Ok(invariants))
-    }
-
     pub fn as_dependency(&self, env: &mut Environment) -> Dependency {
         let mut deps = Dependencies::new();
         for &dep in &self.dependencies {
@@ -151,14 +119,6 @@ impl Construct for CVariable {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        env.get_variable(self.0)
-            .invariants
-            .iter()
-            .map(|&i| Invariant::new(i, hashset![this]))
-            .collect()
-    }
-
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = Dependencies::new();
         for dep in env.get_variable(self.0).dependencies.clone() {
@@ -169,18 +129,6 @@ impl Construct for CVariable {
             deps.append(env.get_dependencies(inv));
         }
         deps
-    }
-
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        unreachable!()
     }
 }
 
@@ -206,15 +154,6 @@ impl Scope for SVariableInvariants {
         } else {
             None
         })
-    }
-
-    fn local_lookup_invariant<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _invariant: ItemId,
-        _limit: u32,
-    ) -> LookupInvariantResult {
-        Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
     fn parent(&self) -> Option<ItemId> {

@@ -20,7 +20,6 @@ fn create<'x>(
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".AS_AUTO_THEOREM"));
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
-    env.add_auto_theorem(base);
     base
 }
 

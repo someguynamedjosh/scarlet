@@ -1,11 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
-        decision::{CDecision, SWithInvariant},
-        ItemId,
-    },
-    environment::{invariants::Invariant, vomit::VomitContext, Environment},
+    constructs::{decision::CDecision, ItemId},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -34,19 +31,13 @@ fn create<'x>(
     let left = args[0].as_construct(pc, env, SPlain(this));
     let right = args[1].as_construct(pc, env, SPlain(this));
 
-    let eq_inv = env.push_construct(
-        CDecision::new(left, right, truee, falsee),
-        SPlain(this).dyn_clone(),
-    );
-    let eq_inv = Invariant::new(eq_inv, Default::default());
-    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
+    let equal = args[2].as_construct(pc, env, SPlain(this));
 
     let neq_inv = env.push_construct(
         CDecision::new(left, right, falsee, truee),
         SPlain(this).dyn_clone(),
     );
-    let neq_inv = Invariant::new(neq_inv, Default::default());
-    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
+    let unequal = args[3].as_construct(pc, env, SPlain(this));
 
     env.define_item(this, CDecision::new(left, right, equal, unequal));
     this

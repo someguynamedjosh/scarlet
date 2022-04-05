@@ -5,7 +5,7 @@ use crate::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
         ItemId,
     },
-    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -98,21 +98,19 @@ fn uncreate<'a>(
             fields.push(value);
         }
     }
-    Ok(
-        if env.discover_equal(maybe_structt, env.get_language_item("void"), 2)? == Equal::yes() {
-            Some(Node {
-                phrase: "struct",
-                children: vec![
-                    NodeChild::Text("{"),
-                    create_comma_list(fields),
-                    NodeChild::Text("}"),
-                ],
-                ..Default::default()
-            })
-        } else {
-            None
-        },
-    )
+    Ok(if maybe_structt == env.get_language_item("void") {
+        Some(Node {
+            phrase: "struct",
+            children: vec![
+                NodeChild::Text("{"),
+                create_comma_list(fields),
+                NodeChild::Text("}"),
+            ],
+            ..Default::default()
+        })
+    } else {
+        None
+    })
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

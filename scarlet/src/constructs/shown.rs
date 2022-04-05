@@ -2,14 +2,9 @@ use super::{
     base::{Construct, ItemId},
     substitution::Substitutions,
     variable::VariableId,
-    GenInvResult,
 };
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        discover_equality::{DeqResult, DeqSide},
-        Environment,
-    },
+    environment::{dependencies::DepResult, Environment},
     impl_any_eq_for_construct,
 };
 
@@ -39,10 +34,6 @@ impl Construct for CShown {
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.0)
-    }
-
-    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        env.generated_invariants(self.0)
     }
 
     fn dereference(

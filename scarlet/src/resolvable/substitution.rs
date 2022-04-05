@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
 use crate::{
     constructs::{
@@ -28,7 +26,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         &self,
         env: &mut Environment<'x>,
         _scope: Box<dyn Scope>,
-        limit: u32,
+        _limit: u32,
     ) -> ResolveResult<'x> {
         let base = env.dereference(self.base)?;
         let base_scope = env.get_item_scope(base).dyn_clone();
@@ -39,86 +37,11 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         self.resolve_anonymous_subs(remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs, env);
 
-        let justifications = find_justifications(&subs, env, limit)?;
-        let justification_deps = extract_invariant_dependencies(justifications);
-        let invs = create_invariants(env, base, &subs, justification_deps)?;
-
-        let csub = CSubstitution::new(self.base, subs, invs);
+        let csub = CSubstitution::new(self.base, subs);
         Ok(ItemDefinition::Resolved(Box::new(csub)))
     }
 }
 
-fn create_invariants(
-    env: &mut Environment,
-    base: ItemId,
-    subs: &Substitutions,
-    justification_deps: HashSet<ItemId>,
-) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
-    let mut invs = Vec::new();
-    for inv in env.generated_invariants(base) {
-        let mut new_inv = inv;
-        for dep in std::mem::take(&mut new_inv.dependencies) {
-            if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(dep)? {
-                if subs.contains_key(&var.get_id()) {
-                    // Don't include any dependencies that are substituted with new values,
-                    // because those are replaced by the dependencies in
-                    // justification_deps. When we substitute something, we want to use the
-                    // substituted thing as justification, not the thing that was substituted for
-                    // and is now gone.
-                    continue;
-                }
-            }
-            // However, if we don't substitute it, then we need to rely on the original
-            // justification.
-            new_inv.dependencies.insert(dep);
-        }
-        // Apply the substitutions to the statement the invariant is making.
-        new_inv.statement = env.substitute(new_inv.statement, subs);
-        // The substituted invariant is also justified by all the justifications for the
-        // original substitution. E.G. if we substitute a with b, then any invariant
-        // about a is now an invariant about b, justified by the fact that we can
-        // replace a with b.
-        for &dep in &justification_deps {
-            new_inv.dependencies.insert(dep);
-        }
-        invs.push(new_inv);
-    }
-    Ok(invs)
-}
-
-fn extract_invariant_dependencies(
-    justifications: Vec<crate::environment::invariants::Invariant>,
-) -> HashSet<ItemId> {
-    justifications
-        .iter()
-        .flat_map(|j| j.dependencies.iter().copied())
-        .collect()
-}
-
-/// Finds invariants that confirm the substitutions we're performing are legal.
-/// For example, an_int[an_int IS something] would need an invariant of the form
-/// `(an_int FROM I32)[an_int IS something]`.
-fn find_justifications(
-    subs: &Substitutions,
-    env: &mut Environment,
-    limit: u32,
-) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
-    let mut justifications = Vec::new();
-    let mut previous_subs = Substitutions::new();
-    for (target_id, value) in subs {
-        let target = env.get_variable(*target_id).clone();
-        match target.can_be_assigned(*value, env, &previous_subs, limit)? {
-            Ok(mut new_invs) => {
-                previous_subs.insert_no_replace(*target_id, *value);
-                justifications.append(&mut new_invs);
-            }
-            Err(err) => {
-                return Err(ResolveError::InvariantDeadEnd(err));
-            }
-        }
-    }
-    Ok(justifications)
-}
 
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the
 /// dependencies match.

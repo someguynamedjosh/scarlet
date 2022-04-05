@@ -6,11 +6,7 @@ use super::{
     variable::{CVariable, VariableId},
 };
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        CheckResult, Environment,
-    },
+    environment::{dependencies::DepResult, CheckResult, Environment},
     resolvable::BoxedResolvable,
     scope::Scope,
     shared::{AnyEq, Id, Pool},
@@ -75,7 +71,6 @@ impl<'x> From<ItemId> for ItemDefinition<'x> {
 pub struct Item<'x> {
     pub definition: ItemDefinition<'x>,
     pub reduced: ItemDefinition<'x>,
-    pub invariants: Option<Vec<crate::environment::invariants::Invariant>>,
     pub scope: Box<dyn Scope>,
     /// A dex that, when a value is plugged in for its first dependency, will
     /// evaluate to true if and only if the plugged in value could have been
@@ -86,8 +81,6 @@ pub struct Item<'x> {
 
 pub type ItemPool<'x> = Pool<Item<'x>, 'I'>;
 pub type ItemId = Id<'I'>;
-
-pub type GenInvResult = Vec<crate::environment::invariants::Invariant>;
 
 pub type BoxedConstruct = Box<dyn Construct>;
 pub trait Construct: Any + Debug + AnyEq {
@@ -110,29 +103,11 @@ pub trait Construct: Any + Debug + AnyEq {
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult;
 
     #[allow(unused_variables)]
-    fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        vec![]
-    }
-
-    #[allow(unused_variables)]
     fn dereference(
         &self,
         env: &mut Environment,
     ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
         None
-    }
-
-    #[allow(unused_variables)]
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        Ok(Equal::Unknown)
     }
 
     fn as_def<'x>(&self) -> ItemDefinition<'x> {

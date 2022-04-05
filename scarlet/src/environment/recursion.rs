@@ -1,14 +1,9 @@
 use std::collections::HashSet;
 
-use super::{
-    dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId,
-    UnresolvedItemError,
-};
+use super::{dependencies::DepResStackFrame, Environment, ItemId, UnresolvedItemError};
 use crate::{
-    constructs::{
-        recursion::CRecursion, substitution::Substitutions, Construct, GenInvResult, ItemDefinition,
-    },
-    scope::{LookupInvariantError, LookupInvariantResult, Scope},
+    constructs::{recursion::CRecursion, substitution::Substitutions, Construct, ItemDefinition},
+    scope::{LookupInvariantError, Scope},
 };
 
 impl<'x> Environment<'x> {

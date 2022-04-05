@@ -1,19 +1,11 @@
-use super::{
-    as_struct, base::ItemId, downcast_construct, substitution::Substitutions, Construct,
-    GenInvResult,
-};
+use super::{as_struct, base::ItemId, downcast_construct, substitution::Substitutions, Construct};
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
-        discover_equality::{DeqResult, DeqSide, Equal},
-        invariants::InvariantMatch,
         Environment,
     },
     impl_any_eq_for_construct,
-    scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
-    },
+    scope::{LookupIdentResult, LookupInvariantError, ReverseLookupIdentResult, Scope},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -52,47 +44,10 @@ impl Construct for CPopulatedStruct {
         vec![self.value, self.rest]
     }
 
-    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        [
-            env.generated_invariants(self.value),
-            env.generated_invariants(self.rest),
-        ]
-        .concat()
-    }
-
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let mut deps = env.get_dependencies(self.value);
         deps.append(env.get_dependencies(self.rest));
         deps
-    }
-
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        if let Some(other) = downcast_construct::<Self>(other) {
-            let other = other.clone();
-            if self.label != other.label {
-                return Ok(Equal::No);
-            }
-            Ok(Equal::and(vec![
-                env.discover_equal_with_subs(
-                    self.value,
-                    self_subs.clone(),
-                    other.value,
-                    other_subs.clone(),
-                    limit,
-                )?,
-                env.discover_equal_with_subs(self.rest, self_subs, other.rest, other_subs, limit)?,
-            ]))
-        } else {
-            Ok(Equal::Unknown)
-        }
     }
 }
 
@@ -111,21 +66,6 @@ impl_any_eq_for_construct!(CAtomicStructMember);
 impl Construct for CAtomicStructMember {
     fn dyn_clone(&self) -> Box<dyn Construct> {
         Box::new(self.clone())
-    }
-
-    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        if let Ok(Some(structt)) =
-            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
-        {
-            let structt = structt.clone();
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => env.generated_invariants(structt.value),
-                AtomicStructMember::Rest => env.generated_invariants(structt.rest),
-            }
-        } else {
-            env.generated_invariants(self.0)
-        }
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
@@ -184,33 +124,6 @@ impl Scope for SField {
         }
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
-            let structt = structt.clone();
-            let mut any_unknown = false;
-            for maybe_match in env.generated_invariants(structt.value) {
-                match env.discover_equal(invariant, maybe_match.statement, limit)? {
-                    Equal::Yes(l) if l.len() == 0 => return Ok(maybe_match),
-                    Equal::Yes(..) => (),
-                    Equal::NeedsHigherLimit => any_unknown = true,
-                    Equal::Unknown | Equal::No => (),
-                }
-            }
-            Err(if any_unknown {
-                LookupInvariantError::MightNotExist
-            } else {
-                LookupInvariantError::DefinitelyDoesNotExist
-            })
-        } else {
-            unreachable!()
-        }
-    }
-
     fn parent(&self) -> Option<ItemId> {
         Some(self.0)
     }
@@ -249,32 +162,6 @@ fn reverse_lookup_ident_in<'x>(
     })
 }
 
-fn lookup_invariant_in<'x>(
-    env: &mut Environment<'x>,
-    invariant: ItemId,
-    inn: &CPopulatedStruct,
-    limit: u32,
-) -> LookupInvariantResult {
-    let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
-    for maybe_match in env.generated_invariants(inn.value) {
-        match env.discover_equal(invariant, maybe_match.statement, limit)? {
-            Equal::Yes(l) if l.len() == 0 => return Ok(maybe_match),
-            Equal::Yes(_) => (),
-            Equal::NeedsHigherLimit => default_err = Err(LookupInvariantError::MightNotExist),
-            Equal::No | Equal::Unknown => (),
-        }
-    }
-    if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
-        let rest = rest.clone();
-        match lookup_invariant_in(env, invariant, &rest, limit) {
-            Err(LookupInvariantError::DefinitelyDoesNotExist) => default_err,
-            other => other,
-        }
-    } else {
-        default_err
-    }
-}
-
 impl Scope for SFieldAndRest {
     fn dyn_clone(&self) -> Box<dyn Scope> {
         Box::new(self.clone())
@@ -297,20 +184,6 @@ impl Scope for SFieldAndRest {
         if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             reverse_lookup_ident_in(env, value, &structt)
-        } else {
-            unreachable!()
-        }
-    }
-
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
-            let structt = structt.clone();
-            lookup_invariant_in(env, invariant, &structt, limit)
         } else {
             unreachable!()
         }

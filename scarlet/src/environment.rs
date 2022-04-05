@@ -1,19 +1,17 @@
 pub mod dependencies;
-pub mod discover_equality;
 pub mod from;
-pub mod invariants;
 pub mod overlay;
+pub mod recursion;
 pub mod reduce;
 pub mod resolve;
 pub mod sub_expr;
 pub mod test_util;
 pub mod util;
 pub mod vomit;
-pub mod recursion;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, invariants::justify::JustifyStack, resolve::ResolveStack};
+use self::{dependencies::DepResStack, resolve::ResolveStack};
 use crate::{
     constructs::{
         base::{Item, ItemDefinition, ItemId, ItemPool},
@@ -61,8 +59,6 @@ pub struct Environment<'x> {
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
     pub(super) resolve_stack: ResolveStack,
-    pub(super) justify_stack: JustifyStack,
-    pub(super) auto_theorems: Vec<ItemId>,
     // pub(super) def_equal_memo_table: HashMap<DefEqualQuery, DefEqualResult>,
 }
 
@@ -75,8 +71,6 @@ impl<'x> Environment<'x> {
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
             resolve_stack: ResolveStack::new(),
-            justify_stack: JustifyStack::new(),
-            auto_theorems: Vec::new(),
         };
         for &name in LANGUAGE_ITEM_NAMES {
             let id = this.push_placeholder(Box::new(SRoot));
@@ -117,7 +111,6 @@ impl<'x> Environment<'x> {
         let item = Item {
             definition: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
             reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
-            invariants: None,
             scope,
             from_dex: None,
             name: None,
@@ -130,7 +123,6 @@ impl<'x> Environment<'x> {
         self.items.push(Item {
             definition: ItemDefinition::Other(void),
             reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
-            invariants: None,
             scope,
             from_dex: None,
             name: None,
@@ -150,7 +142,6 @@ impl<'x> Environment<'x> {
         let item = Item {
             definition: ItemDefinition::Resolved(construct),
             reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
-            invariants: None,
             scope,
             from_dex: None,
             name: None,
@@ -166,7 +157,6 @@ impl<'x> Environment<'x> {
         let item = Item {
             definition: ItemDefinition::Other(other),
             reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
-            invariants: None,
             scope,
             from_dex: None,
             name: None,
@@ -206,7 +196,6 @@ impl<'x> Environment<'x> {
         self.items.push(Item {
             definition: ItemDefinition::Unresolved(definition),
             reduced: ItemDefinition::Unresolved(Box::new(RPlaceholder)),
-            invariants: None,
             scope,
             from_dex: None,
             name: None,

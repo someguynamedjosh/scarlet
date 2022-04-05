@@ -2,7 +2,6 @@ use super::{base::Construct, downcast_construct, substitution::Substitutions, It
 use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
-        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
         Environment,
     },
     impl_any_eq_for_construct,
@@ -32,25 +31,5 @@ impl Construct for CUnique {
 
     fn get_dependencies<'x>(&self, _env: &mut Environment<'x>) -> DepResult {
         Dependencies::new()
-    }
-
-    fn discover_equality<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemId,
-        other: &dyn Construct,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
-        Ok(if let Some(other) = downcast_construct::<Self>(other) {
-            if self.0 == other.0 {
-                Equal::Yes(Substitutions::new())
-            } else {
-                Equal::No
-            }
-        } else {
-            Equal::Unknown
-        })
     }
 }
