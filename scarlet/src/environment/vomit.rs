@@ -103,18 +103,21 @@ impl<'x> Environment<'x> {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        // for invariant in self.generated_invariants(item_id) {
-        //     let vomited = self.vomit(255, &mut inv_ctx, invariant.statement);
-        //     inv_ctx.temp_names.clear();
-        //     let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-        //     result.push_str(&format!("\n    {} dep: ", indented(&vomited,),));
-        //     for dep in invariant.dependencies {
-        //         let vomited = self.vomit(255, &mut inv_ctx, dep);
-        //         inv_ctx.temp_names.clear();
-        //         let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-        //         result.push_str(&format!("{}   ", indented(&vomited)));
-        //     }
-        // }
+        let set_id = self.generated_invariants(item_id);
+        let set = self.get_invariant_set(set_id).clone();
+        println!("{:#?}", set);
+        for &invariant in set.statements() {
+            let vomited = self.vomit(255, &mut inv_ctx, invariant);
+            inv_ctx.temp_names.clear();
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("\n    {} ", indented(&vomited,),));
+        }
+        for &dep in set.dependencies() {
+            let vomited = self.vomit(255, &mut inv_ctx, dep);
+            inv_ctx.temp_names.clear();
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("{}   ", indented(&vomited)));
+        }
         result.push_str(&format!("\ndepends on: "));
         for dep in self.get_dependencies(item_id).into_variables() {
             let vomited = self.vomit_var(&mut inv_ctx, dep.id);

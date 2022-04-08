@@ -15,5 +15,8 @@ x IS std.basics.x
 #    x = void
 # ]
 
-std.theorems.t_just[false]
+# std.theorems.t_just[false].SHOWN
+
+t_just IS VAR[SELF]
+t_just[false].SHOWN
 

@@ -3,7 +3,7 @@ false IS basics.false
 t_just IS VAR[SELF]
 x IS basics.x
 
-# t_just[false]
+t_just[false]
 
 # is_bool IS DECISION[x true true x=false]
 
