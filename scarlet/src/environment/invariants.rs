@@ -3,6 +3,7 @@ mod tests;
 
 use std::collections::HashSet;
 
+use self::justify::{SetJustification, StatementJustification, StatementJustifications};
 use super::{dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId};
 use crate::{
     constructs::{substitution::Substitutions, Construct, GenInvResult},
@@ -10,8 +11,8 @@ use crate::{
     shared::{Id, Pool},
 };
 
-pub type InvariantSetId = Id<'N'>;
-pub type InvariantSetPool = Pool<InvariantSet, 'N'>;
+pub type InvariantSetId = Id<'V'>;
+pub type InvariantSetPool = Pool<InvariantSet, 'V'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InvariantSet {
@@ -19,7 +20,8 @@ pub struct InvariantSet {
     /// For the original statements to hold, all the statements in this list
     /// must also hold.
     pub(super) justification_requirements: Vec<ItemId>,
-    pub(super) justified_by: Option<Vec<InvariantSetId>>,
+    pub(super) statement_justifications: Option<SetJustification>,
+    pub(super) connected_to_root: bool,
     pub(super) dependencies: HashSet<ItemId>,
 }
 
@@ -32,7 +34,21 @@ impl InvariantSet {
         Self {
             statements,
             justification_requirements,
-            justified_by: None,
+            statement_justifications: None,
+            connected_to_root: false,
+            dependencies: HashSet::new(),
+        }
+    }
+
+    pub(super) fn new_justified_by(
+        statements: Vec<ItemId>,
+        justified_by: SetJustification,
+    ) -> InvariantSet {
+        Self {
+            statements,
+            justification_requirements: Vec::new(),
+            statement_justifications: Some(justified_by),
+            connected_to_root: false,
             dependencies: HashSet::new(),
         }
     }
@@ -41,7 +57,8 @@ impl InvariantSet {
         Self {
             statements: Vec::new(),
             justification_requirements: Vec::new(),
-            justified_by: None,
+            statement_justifications: None,
+            connected_to_root: false,
             dependencies,
         }
     }
@@ -60,8 +77,8 @@ impl InvariantSet {
 
     /// Get a reference to the invariant set's justified by.
     #[must_use]
-    pub fn justified_by(&self) -> Option<&Vec<InvariantSetId>> {
-        self.justified_by.as_ref()
+    pub fn justified_by(&self) -> Option<&SetJustification> {
+        self.statement_justifications.as_ref()
     }
 
     /// Get a reference to the invariant set's dependencies.
