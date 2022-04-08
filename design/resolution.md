@@ -23,3 +23,10 @@ Resolving identifiers is way different because we can do it as soon as we have
 structs. Same thing for named members, except not really because we'll need to
 know invariants to do named members on variables. We can ignore that for now.
 Variable resolution is a noop at the moment.
+
+A from B
+B from A
+B from C
+C from A
+B from D
+D

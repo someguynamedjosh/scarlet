@@ -99,15 +99,6 @@ impl Construct for CSubstitution {
             .collect()
     }
 
-    fn check<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _this: ItemId,
-        _scope: Box<dyn Scope>,
-    ) -> CheckResult {
-        Ok(())
-    }
-
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         let base = env.get_dependencies(self.base);
         let invs = env

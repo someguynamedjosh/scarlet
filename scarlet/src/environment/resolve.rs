@@ -88,9 +88,6 @@ impl<'x> Environment<'x> {
             todo!("Nice error, circular dependency");
         }
         if let Some(resolvable) = &item.unresolved {
-            if resolvable.is_placeholder() {
-                return Err(ResolveError::Placeholder);
-            }
             self.resolve_stack.push(ResolveStackFrame(item_id));
             let resolvable = resolvable.dyn_clone();
             let scope = item.scope.dyn_clone();
@@ -122,6 +119,8 @@ impl<'x> Environment<'x> {
                     Err(err)
                 }
             }
+        } else if let ItemDefinition::Placeholder = &item.definition {
+            return Err(ResolveError::Placeholder);
         } else {
             Ok(false)
         }

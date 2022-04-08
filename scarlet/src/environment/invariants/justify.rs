@@ -23,7 +23,7 @@ pub struct JustifyStackFrame {
 pub type JustifyStack = Vec<JustifyStackFrame>;
 
 impl<'x> Environment<'x> {
-    pub(super) fn justify(
+    pub(crate) fn justify(
         &mut self,
         set_id: InvariantSetId,
         limit: u32,

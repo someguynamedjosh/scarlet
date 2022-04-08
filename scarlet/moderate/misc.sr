@@ -6,15 +6,14 @@ x IS std.basics.x
 
 # x IS VAR[]
 
-x.IS_POPULATED_STRUCT.SHOWN
-
 is_struct IS 
-# logic.or[
+logic.or[
    logic.and[
       x.IS_POPULATED_STRUCT
       is_struct[x IS x.REST]
    ]
-#    x = void
-# ]
+   x = void
+]
 
-ASSERT[is_struct[x IS x.REST] FROM logic.Bool]
+std.theorems.t_just[false]
+

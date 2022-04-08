@@ -258,9 +258,27 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn check_all(&mut self) -> CheckResult {
+        let mut encountered_err = false;
+        for limit in 0..16 {
+            let mut maybe_id = self.invariant_sets.first();
+            while let Some(id) = maybe_id {
+                let res = self.justify(id, limit);
+                if limit == 15 {
+                    if let Err(err) = res {
+                        eprintln!("Error while justifying invariant set:");
+                        eprintln!("{:?}", err);
+                        encountered_err = true;
+                    }
+                }
+                maybe_id = self.invariant_sets.next(id);
+            }
+        }
+        if encountered_err {
+            todo!("nice error: Invariants are not justified.");
+        }
         match self.for_each_item(|env, id| match env.check(id) {
             Ok(ok) => ControlFlow::Continue(ok),
-            Err(err) => ControlFlow::Break(err),
+            Err(err) => panic!("{:?}", err),
         }) {
             None => Ok(()),
             Some(err) => Err(err),
