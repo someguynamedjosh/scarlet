@@ -7,7 +7,7 @@ use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqResult, DeqSide, Equal},
-        invariants::Invariant,
+        invariants::InvariantSet,
         Environment,
     },
     impl_any_eq_for_construct,
@@ -49,8 +49,8 @@ impl Construct for CAxiom {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(&self, _this: ItemId, _env: &mut Environment<'x>) -> GenInvResult {
-        vec![Invariant::new(self.statement, hashset![])]
+    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
+        env.push_invariant_set(InvariantSet::new(vec![self.statement], vec![]))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

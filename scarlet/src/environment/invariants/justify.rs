@@ -1,14 +1,17 @@
 use std::collections::HashSet;
 
 use backtrace::Backtrace;
+use maplit::hashset;
 
-use super::Invariant;
+use super::{InvariantSet, InvariantSetId};
 use crate::{
     constructs::{substitution::Substitutions, Construct, GenInvResult},
     environment::{dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
     shared::{indented, indented_with},
 };
+
+pub type JustifyInvariantResult = Result<Vec<InvariantSetId>, LookupInvariantError>;
 
 #[derive(Clone, Debug)]
 pub struct JustifyStackFrame {
@@ -19,16 +22,19 @@ pub struct JustifyStackFrame {
 pub type JustifyStack = Vec<JustifyStackFrame>;
 
 impl<'x> Environment<'x> {
-    pub fn justify(
-        &mut self,
-        statement: ItemId,
-        context: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        match self.get_produced_invariant(statement, context, limit) {
-            Ok(inv) => Ok(inv),
-            Err(err) => self.create_justification(statement, context, limit, err),
+    pub(super) fn justify(&mut self, set: InvariantSetId, limit: u32) {
+        let set = self.invariant_sets[set].clone();
+        for (other_id, other_set) in &self.invariant_sets {
+            todo!()
         }
+        todo!()
+    }
+
+    pub(super) fn justify_once(&mut self, statement: ItemId, limit: u32) -> JustifyInvariantResult {
+        for (other_id, other_set) in &self.invariant_sets {
+            todo!()
+        }
+        todo!()
     }
 
     fn create_justification(
@@ -37,7 +43,7 @@ impl<'x> Environment<'x> {
         context: ItemId,
         limit: u32,
         mut err: LookupInvariantError,
-    ) -> LookupInvariantResult {
+    ) -> JustifyInvariantResult {
         let trace = false;
         if limit == 0 {
             return Err(err);
@@ -57,28 +63,29 @@ impl<'x> Environment<'x> {
                 if rec.len() == 0 {
                     continue;
                 }
-                return Ok(Invariant {
-                    statement,
-                    dependencies: rec.into_iter().collect(),
-                });
+                let inv = self
+                    .push_invariant_set(InvariantSet::new_depending_on(rec.into_iter().collect()));
+                return Ok(vec![inv]);
             }
         }
         let mut candidates = Vec::new();
         for at in self.auto_theorems.clone() {
-            for inv in self.generated_invariants(at) {
-                match self.discover_equal(inv.statement, statement, limit - 1)? {
-                    Equal::Yes(subs) => candidates.push((inv, subs)),
+            let invs_id = self.generated_invariants(at);
+            let invs = self.get_invariant_set(invs_id).clone();
+            for &inv in invs.statements() {
+                match self.discover_equal(inv, statement, limit - 1)? {
+                    Equal::Yes(subs) => candidates.push((invs_id, inv, subs)),
                     Equal::NeedsHigherLimit => err = LookupInvariantError::MightNotExist,
                     _ => (),
                 }
             }
         }
-        'check_next_candidate: for (inv, subs) in candidates {
+        'check_next_candidate: for (inv_id, inv, subs) in candidates {
             if subs.len() == 0 {
-                return Ok(inv);
+                return Ok(vec![inv_id]);
             }
             for frame in &self.justify_stack {
-                if frame.base == inv.statement && frame.subs == subs {
+                if frame.base == inv && frame.subs == subs {
                     return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
             }
@@ -86,7 +93,7 @@ impl<'x> Environment<'x> {
                 let mut message = format!(
                     "\nAttempting to justify:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
                     indented(&self.show(statement, context)),
-                    indented(&self.show(inv.statement, context)),
+                    indented(&self.show(inv, context)),
                 );
                 for (target, value) in &subs {
                     message.push_str(&format!(
@@ -101,16 +108,16 @@ impl<'x> Environment<'x> {
                 println!("{}", indented_with(&message, &indentation))
             }
             self.justify_stack.push(JustifyStackFrame {
-                base: inv.statement,
+                base: inv,
                 subs: subs.clone(),
             });
-            let mut adjusted_inv = inv;
-            let ok = self.check_subs(subs, context, limit, &mut adjusted_inv, &mut err, trace);
+            let mut justifications = Vec::new();
+            let ok = self.check_subs(subs, context, limit, &mut justifications, &mut err, trace);
             self.justify_stack.pop();
             if !ok {
                 continue 'check_next_candidate;
             }
-            return Ok(adjusted_inv);
+            return Ok(justifications);
         }
         Err(err)
     }
@@ -120,7 +127,7 @@ impl<'x> Environment<'x> {
         subs: Substitutions,
         context: ItemId,
         limit: u32,
-        adjusted_inv: &mut Invariant,
+        justifications: &mut Vec<InvariantSetId>,
         err: &mut LookupInvariantError,
         trace: bool,
     ) -> bool {
@@ -128,13 +135,11 @@ impl<'x> Environment<'x> {
         for (target, value) in subs {
             inv_subs.insert_no_replace(target, value);
             for invv in self.get_variable(target).clone().invariants {
-                let statement = self.substitute(invv, &inv_subs);
-                let result = self.justify(statement, context, limit - 1);
+                let statement = self.substitute_unchecked(invv, &inv_subs);
+                let result = self.justify_once(statement, limit - 1);
                 match result {
-                    Ok(inv) => {
-                        for dep in inv.dependencies {
-                            adjusted_inv.dependencies.insert(dep);
-                        }
+                    Ok(mut new_justifications) => {
+                        justifications.append(&mut new_justifications);
                     }
                     Err(LookupInvariantError::Unresolved(..))
                     | Err(LookupInvariantError::MightNotExist) => {

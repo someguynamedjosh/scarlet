@@ -8,7 +8,6 @@ use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqResult, Equal},
-        invariants::Invariant,
         Environment,
     },
     impl_any_eq_for_construct,
@@ -38,7 +37,7 @@ impl Construct for CIsPopulatedStruct {
     }
 
     fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        let mut invs = env.generated_invariants(self.base);
+        let invs = env.generated_invariants(self.base);
         let truee = env.get_language_item("true");
         let falsee = env.get_language_item("false");
         let this_is_false = env.push_construct(
@@ -49,11 +48,9 @@ impl Construct for CIsPopulatedStruct {
             CDecision::new(this, truee, truee, this_is_false),
             Box::new(SPlain(this)),
         );
-        invs.push(Invariant {
-            statement: is_bool,
-            dependencies: HashSet::new(),
-        });
-        invs
+        let mut set = env.get_invariant_set(invs).clone();
+        set.push(is_bool);
+        env.push_invariant_set(set)
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

@@ -1,9 +1,11 @@
+use itertools::Itertools;
+
 use super::{downcast_construct, substitution::Substitutions, Construct, GenInvResult, ItemId};
 use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        invariants::Invariant,
+        invariants::{InvariantSet, InvariantSetId},
         sub_expr::NestedSubstitutions,
         Environment,
     },
@@ -62,22 +64,26 @@ impl Construct for CDecision {
 
     fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         let true_invs = env.generated_invariants(self.equal);
-        let mut false_invs = env.generated_invariants(self.equal);
-        let mut result = Vec::new();
-        for true_inv in true_invs {
-            for (index, false_inv) in false_invs.clone().into_iter().enumerate() {
-                if env.discover_equal(true_inv.statement, false_inv.statement, 4)
-                    == Ok(Equal::yes())
-                {
-                    let mut deps = true_inv.dependencies;
-                    deps.insert(this);
-                    result.push(Invariant::new(true_inv.statement, deps));
-                    false_invs.remove(index);
+        let true_invs = env.get_invariant_set(true_invs).clone();
+        let false_invs = env.generated_invariants(self.equal);
+        let false_invs = env.get_invariant_set(false_invs).clone();
+        let mut result_statements = Vec::new();
+        let result_justifications = true_invs
+            .justification_requirements()
+            .iter()
+            .chain(false_invs.justification_requirements())
+            .cloned()
+            .chain(std::iter::once(this))
+            .collect_vec();
+        for &true_inv in true_invs.statements() {
+            for (index, &false_inv) in false_invs.statements().iter().enumerate() {
+                if env.discover_equal(true_inv, false_inv, 4) == Ok(Equal::yes()) {
+                    result_statements.push(true_inv);
                     break;
                 }
             }
         }
-        result
+        env.push_invariant_set(InvariantSet::new(result_statements, result_justifications))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
@@ -136,7 +142,7 @@ impl Construct for CDecision {
 }
 
 #[derive(Clone, Debug)]
-pub struct SWithInvariant(pub crate::environment::invariants::Invariant, pub ItemId);
+pub struct SWithInvariant(pub InvariantSetId, pub ItemId);
 
 impl Scope for SWithInvariant {
     fn dyn_clone(&self) -> Box<dyn Scope> {
@@ -165,15 +171,15 @@ impl Scope for SWithInvariant {
         invariant: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
-        // No, I don't want
-        let _no_subs = NestedSubstitutions::new();
-        match env.discover_equal(self.0.statement, invariant, limit)? {
-            Equal::Yes(l) if l.len() == 0 => Ok(self.0.clone()),
-            Equal::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
-            Equal::Yes(..) | Equal::No | Equal::Unknown => {
-                Err(LookupInvariantError::DefinitelyDoesNotExist)
+        let mut err = Err(LookupInvariantError::DefinitelyDoesNotExist);
+        for &statement in env.get_invariant_set(self.0).clone().statements() {
+            match env.discover_equal(statement, invariant, limit)? {
+                Equal::Yes(l) if l.len() == 0 => return Ok(self.0.clone()),
+                Equal::NeedsHigherLimit => err = Err(LookupInvariantError::MightNotExist),
+                Equal::Yes(..) | Equal::No | Equal::Unknown => (),
             }
         }
+        err
     }
 
     fn parent(&self) -> Option<ItemId> {

@@ -11,7 +11,7 @@ fn basic_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let y_statement = env.lookup_ident(root, "y_statement").unwrap().unwrap();
-        env.justify(y_statement, y_statement, 1).unwrap();
+        env.justify_once(y_statement, 1).unwrap();
     });
 }
 
@@ -34,7 +34,7 @@ fn sub_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 10).unwrap();
+        env.justify_once(justify_this, 10).unwrap();
     });
 }
 
@@ -59,7 +59,7 @@ fn moderate_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 10).unwrap();
+        env.justify_once(justify_this, 10).unwrap();
     });
 }
 
@@ -73,7 +73,7 @@ fn nonexistant_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let z_statement = env.lookup_ident(root, "z_statement").unwrap().unwrap();
-        env.justify(z_statement, z_statement, 1).unwrap_err();
+        env.justify_once(z_statement, 1).unwrap_err();
     });
 }
 
@@ -103,7 +103,7 @@ fn theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 5).unwrap();
+        env.justify_once(justify_this, 5).unwrap();
     });
 }
 
@@ -135,7 +135,7 @@ fn auto_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 5).unwrap();
+        env.justify_once(justify_this, 5).unwrap();
     });
 }
 
@@ -169,7 +169,7 @@ fn t_just_after_theorem() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 5).unwrap();
+        env.justify_once(justify_this, 5).unwrap();
     });
 }
 
@@ -196,6 +196,6 @@ fn justify_auto_refl() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify(justify_this, justify_this, 5).unwrap();
+        env.justify_once(justify_this, 5).unwrap();
     });
 }

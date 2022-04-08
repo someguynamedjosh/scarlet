@@ -10,7 +10,7 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, Equal},
-        invariants::Invariant,
+        invariants::InvariantSet,
         Environment,
     },
     impl_any_eq_for_construct,
@@ -105,34 +105,21 @@ impl Variable {
         result
     }
 
-    pub fn can_be_assigned<'x>(
+    pub fn assignment_justifications<'x>(
         &self,
         value: ItemId,
         env: &mut Environment<'x>,
         other_subs: &Substitutions,
         limit: u32,
-    ) -> Result<Result<Vec<Invariant>, String>, LookupInvariantError> {
+    ) -> Vec<ItemId> {
         let mut substitutions = other_subs.clone();
-        let mut invariants = Vec::new();
+        let mut justifications = Vec::new();
         substitutions.insert_no_replace(self.id.unwrap(), value);
-        let mut default_err = Ok(Ok(()));
         for &inv in &self.invariants {
-            let subbed = env.substitute(inv, &substitutions);
-            match env.justify(subbed, value, limit) {
-                Ok(inv) => invariants.push(inv),
-                Err(LookupInvariantError::DefinitelyDoesNotExist) => {
-                    default_err = Ok(Err(format!(
-                        "Failed to justify: {}",
-                        env.show(subbed, value)
-                    )));
-                }
-                Err(err) => {
-                    println!("While justifying {}", env.show(inv, value));
-                    return Err(err);
-                }
-            }
+            let subbed = env.substitute_unchecked(inv, &substitutions);
+            justifications.push(subbed);
         }
-        default_err.map(|res| res.map(|_| invariants))
+        justifications
     }
 
     pub fn as_dependency(&self, env: &mut Environment) -> Dependency {
@@ -156,11 +143,9 @@ impl Construct for CVariable {
     }
 
     fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        env.get_variable(self.0)
-            .invariants
-            .iter()
-            .map(|&i| Invariant::new(i, hashset![this]))
-            .collect()
+        let statements = env.get_variable(self.0).invariants.clone();
+        let justification = vec![this];
+        env.push_invariant_set(InvariantSet::new(statements, justification))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

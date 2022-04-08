@@ -5,13 +5,13 @@ use maplit::hashset;
 use crate::{
     constructs::ItemId,
     environment::{
-        discover_equality::Equal, invariants::Invariant, Environment, UnresolvedItemError,
+        discover_equality::Equal, invariants::InvariantSetId, Environment, UnresolvedItemError,
     },
 };
 
 pub type LookupIdentResult = Result<Option<ItemId>, UnresolvedItemError>;
 pub type ReverseLookupIdentResult = Result<Option<String>, UnresolvedItemError>;
-pub type LookupInvariantResult = Result<Invariant, LookupInvariantError>;
+pub type LookupInvariantResult = Result<InvariantSetId, LookupInvariantError>;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum LookupInvariantError {
@@ -180,20 +180,7 @@ impl Scope for SRoot {
         invariant: ItemId,
         limit: u32,
     ) -> LookupInvariantResult {
-        let truee = env.get_language_item("true");
-        match env.discover_equal(invariant, truee, limit)? {
-            Equal::Yes(l) => {
-                if l.len() == 0 {
-                    Ok(Invariant::new(truee, hashset![]))
-                } else if l.len() > 0 {
-                    Err(LookupInvariantError::DefinitelyDoesNotExist)
-                } else {
-                    unreachable!()
-                }
-            }
-            Equal::NeedsHigherLimit => Err(LookupInvariantError::MightNotExist),
-            Equal::Unknown | Equal::No => Err(LookupInvariantError::DefinitelyDoesNotExist),
-        }
+        Err(LookupInvariantError::DefinitelyDoesNotExist)
     }
 
     fn parent(&self) -> Option<ItemId> {

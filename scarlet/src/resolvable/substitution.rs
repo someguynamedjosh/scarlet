@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use itertools::Itertools;
+
 use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
 use crate::{
     constructs::{
@@ -7,7 +9,7 @@ use crate::{
         variable::CVariable,
         ItemDefinition, ItemId,
     },
-    environment::{dependencies::Dependencies, Environment},
+    environment::{dependencies::Dependencies, invariants::InvariantSet, Environment},
     scope::Scope,
     shared::OrderedMap,
 };
@@ -43,19 +45,12 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         resolve_dep_subs(&mut subs, env);
 
         println!("4");
-        if let Ok(invs) = (|| -> Result<_, ResolveError> {
-            let justifications = find_justifications(&subs, env, limit)?;
-            let justification_deps = extract_invariant_dependencies(justifications);
-            println!("5");
-            let invs = create_invariants(env, base, &subs, justification_deps)?;
-            Ok(invs)
-        })() {
-            let csub = CSubstitution::new(self.base, subs, invs);
-            ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
-        } else {
-            let csub = CSubstitution::new_unchecked(self.base, subs);
-            ResolveResult::Partial(ItemDefinition::Resolved(Box::new(csub)))
-        }
+        let justifications = make_justification_statements(&subs, env, limit)?;
+        println!("5");
+        let invs = create_invariants(env, base, &subs, justifications);
+        let invs = env.push_invariant_set(invs);
+        let csub = CSubstitution::new(self.base, subs, invs);
+        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
     }
 
     fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {
@@ -74,77 +69,42 @@ fn create_invariants(
     env: &mut Environment,
     base: ItemId,
     subs: &Substitutions,
-    justification_deps: HashSet<ItemId>,
-) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
+    justifications: Vec<ItemId>,
+) -> InvariantSet {
     let mut invs = Vec::new();
-    for inv in env.generated_invariants(base) {
-        let mut new_inv = inv;
-        for dep in std::mem::take(&mut new_inv.dependencies) {
-            if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(dep)? {
-                if subs.contains_key(&var.get_id()) {
-                    // Don't include any dependencies that are substituted with new values,
-                    // because those are replaced by the dependencies in
-                    // justification_deps. When we substitute something, we want to use the
-                    // substituted thing as justification, not the thing that was substituted for
-                    // and is now gone.
-                    continue;
-                }
-            }
-            // However, if we don't substitute it, then we need to rely on the original
-            // justification.
-            new_inv.dependencies.insert(dep);
-        }
+    let set_id = env.generated_invariants(base);
+    for inv in env
+        .get_invariant_set(set_id)
+        .statements()
+        .into_iter()
+        .cloned()
+        .collect_vec()
+    {
         // Apply the substitutions to the statement the invariant is making.
-        new_inv.statement = env.substitute(new_inv.statement, subs);
-        // The substituted invariant is also justified by all the justifications for the
-        // original substitution. E.G. if we substitute a with b, then any invariant
-        // about a is now an invariant about b, justified by the fact that we can
-        // replace a with b.
-        for &dep in &justification_deps {
-            new_inv.dependencies.insert(dep);
-        }
+        let new_inv = env.substitute_unchecked(inv, subs);
         invs.push(new_inv);
     }
-    Ok(invs)
-}
-
-fn extract_invariant_dependencies(
-    justifications: Vec<crate::environment::invariants::Invariant>,
-) -> HashSet<ItemId> {
-    justifications
-        .iter()
-        .flat_map(|j| j.dependencies.iter().copied())
-        .collect()
+    InvariantSet::new(invs, justifications)
 }
 
 /// Finds invariants that confirm the substitutions we're performing are legal.
 /// For example, an_int[an_int IS something] would need an invariant of the form
 /// `(an_int FROM I32)[an_int IS something]`.
-fn find_justifications(
+fn make_justification_statements(
     subs: &Substitutions,
     env: &mut Environment,
     limit: u32,
-) -> Result<Vec<crate::environment::invariants::Invariant>, ResolveError> {
+) -> Result<Vec<ItemId>, ResolveError> {
     let mut justifications = Vec::new();
     let mut previous_subs = Substitutions::new();
     for (target_id, value) in subs {
         let target = env.get_variable(*target_id).clone();
-        match target.can_be_assigned(*value, env, &previous_subs, limit) {
-            Ok(Ok(mut new_invs)) => {
-                previous_subs.insert_no_replace(*target_id, *value);
-                justifications.append(&mut new_invs);
-            }
-            Ok(Err(err)) => {
-                return Err(ResolveError::InvariantDeadEnd(err));
-            }
-            Err(resolve_err) => {
-                println!(
-                    "Resolve error {:?} while finding justifications",
-                    resolve_err
-                );
-                return Err(resolve_err.into());
-            }
-        }
+        justifications.append(&mut target.assignment_justifications(
+            *value,
+            env,
+            &previous_subs,
+            limit,
+        ));
     }
     Ok(justifications)
 }
@@ -170,7 +130,7 @@ fn resolve_dep_subs(subs: &mut Substitutions, env: &mut Environment) {
             }
         }
         if dep_subs.len() > 0 {
-            *value = env.substitute(*value, &dep_subs);
+            *value = env.substitute_unchecked(*value, &dep_subs);
         }
     }
 }

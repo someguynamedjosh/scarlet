@@ -1,7 +1,7 @@
 mod equal;
 mod tests;
 
-use std::ops::ControlFlow;
+use std::{collections::HashSet, ops::ControlFlow};
 
 pub use equal::Equal;
 use itertools::Itertools;
@@ -73,7 +73,7 @@ impl<'x> Environment<'x> {
     ) -> DepResult {
         let mut deps = self.get_dependencies(base);
         for subs in subs {
-            deps = CSubstitution::sub_deps(deps, subs, &[], self);
+            deps = CSubstitution::sub_deps(deps, subs, &HashSet::new(), self);
         }
         deps
     }
@@ -263,7 +263,7 @@ impl<'x> Environment<'x> {
                             filtered_sub.insert_or_replace(dep.id, value);
                         }
                     }
-                    right = self.substitute(right, &filtered_sub);
+                    right = self.substitute_unchecked(right, &filtered_sub);
                 }
                 let mut dep_subs = Substitutions::new();
                 for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {
@@ -273,7 +273,7 @@ impl<'x> Environment<'x> {
                     let ldep = self.get_variable(ldep.id).item.unwrap();
                     dep_subs.insert_no_replace(rdep.id, ldep);
                 }
-                let right = self.substitute(right, &dep_subs);
+                let right = self.substitute_unchecked(right, &dep_subs);
                 subs.insert_no_replace(lvar.id.unwrap(), right);
                 if trace {
                     println!("Ok(Equal::Yes({:?}))", subs);

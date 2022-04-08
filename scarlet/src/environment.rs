@@ -13,7 +13,11 @@ pub mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{dependencies::DepResStack, invariants::justify::JustifyStack, resolve::ResolveStack};
+use self::{
+    dependencies::DepResStack,
+    invariants::{justify::JustifyStack, InvariantSetPool},
+    resolve::ResolveStack,
+};
 use crate::{
     constructs::{
         base::{Item, ItemDefinition, ItemId, ItemPool},
@@ -57,6 +61,7 @@ pub type CheckResult = Result<(), UnresolvedItemError>;
 pub struct Environment<'x> {
     language_items: HashMap<&'static str, ItemId>,
     pub(crate) items: ItemPool<'x>,
+    pub(crate) invariant_sets: InvariantSetPool,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
@@ -71,6 +76,7 @@ impl<'x> Environment<'x> {
         let mut this = Self {
             language_items: HashMap::new(),
             items: Pool::new(),
+            invariant_sets: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
@@ -261,11 +267,15 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(crate) fn substitute(&mut self, base: ItemId, substitutions: &Substitutions) -> ItemId {
+    pub(crate) fn substitute_unchecked(
+        &mut self,
+        base: ItemId,
+        substitutions: &Substitutions,
+    ) -> ItemId {
         if substitutions.len() == 0 {
             base
         } else {
-            let con = CSubstitution::new_unchecked(base, substitutions.clone());
+            let con = CSubstitution::new_unchecked(self, base, substitutions.clone());
             let scope = self.items[base].scope.dyn_clone();
             self.push_construct(con, scope)
         }

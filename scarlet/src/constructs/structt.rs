@@ -6,7 +6,6 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqResult, DeqSide, Equal},
-        invariants::InvariantMatch,
         Environment,
     },
     impl_any_eq_for_construct,
@@ -50,14 +49,6 @@ impl Construct for CPopulatedStruct {
 
     fn contents<'x>(&self) -> Vec<ItemId> {
         vec![self.value, self.rest]
-    }
-
-    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        [
-            env.generated_invariants(self.value),
-            env.generated_invariants(self.rest),
-        ]
-        .concat()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
@@ -193,9 +184,11 @@ impl Scope for SField {
         if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
             let structt = structt.clone();
             let mut any_unknown = false;
-            for maybe_match in env.generated_invariants(structt.value) {
-                match env.discover_equal(invariant, maybe_match.statement, limit)? {
-                    Equal::Yes(l) if l.len() == 0 => return Ok(maybe_match),
+            let invs_id = env.generated_invariants(structt.value);
+            let invs = env.get_invariant_set(invs_id).clone();
+            for &maybe_match in invs.statements() {
+                match env.discover_equal(invariant, maybe_match, limit)? {
+                    Equal::Yes(l) if l.len() == 0 => return Ok(invs_id),
                     Equal::Yes(..) => (),
                     Equal::NeedsHigherLimit => any_unknown = true,
                     Equal::Unknown | Equal::No => (),
@@ -256,9 +249,11 @@ fn lookup_invariant_in<'x>(
     limit: u32,
 ) -> LookupInvariantResult {
     let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
-    for maybe_match in env.generated_invariants(inn.value) {
-        match env.discover_equal(invariant, maybe_match.statement, limit) {
-            Ok(Equal::Yes(l)) if l.len() == 0 => return Ok(maybe_match),
+    let invs_id = env.generated_invariants(inn.value);
+    let invs = env.get_invariant_set(invs_id).clone();
+    for &maybe_match in invs.statements() {
+        match env.discover_equal(invariant, maybe_match, limit) {
+            Ok(Equal::Yes(l)) if l.len() == 0 => return Ok(invs_id),
             Ok(Equal::Yes(_)) => (),
             Ok(Equal::NeedsHigherLimit) => default_err = Err(LookupInvariantError::MightNotExist),
             _ => (),

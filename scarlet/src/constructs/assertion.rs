@@ -7,7 +7,6 @@ use crate::{
     environment::{
         dependencies::DepResult,
         discover_equality::{DeqResult, DeqSide, Equal},
-        invariants::Invariant,
         CheckResult, Environment, UnresolvedItemError,
     },
     impl_any_eq_for_construct,
@@ -37,13 +36,11 @@ impl Construct for CAssertion {
         this: ItemId,
         scope: Box<dyn crate::scope::Scope>,
     ) -> CheckResult {
-        env.justify(self.statement, this, 16)
-            .map(|_| ())
-            .map_err(|_| UnresolvedItemError(this))
+        todo!()
     }
 
     fn generated_invariants<'x>(&self, _this: ItemId, _env: &mut Environment<'x>) -> GenInvResult {
-        vec![Invariant::new(self.statement, hashset![])]
+        todo!()
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
