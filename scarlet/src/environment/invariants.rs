@@ -11,8 +11,8 @@ use crate::{
     shared::{Id, Pool},
 };
 
-pub type InvariantSetId = Id<'V'>;
-pub type InvariantSetPool = Pool<InvariantSet, 'V'>;
+pub type InvariantSetId = Id<'N'>;
+pub type InvariantSetPool = Pool<InvariantSet, 'N'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InvariantSet {
@@ -27,16 +27,16 @@ pub struct InvariantSet {
 
 impl InvariantSet {
     pub fn new_empty() -> Self {
-        Self::new(vec![], vec![])
+        Self::new(vec![], vec![], HashSet::new())
     }
 
-    pub fn new(statements: Vec<ItemId>, justification_requirements: Vec<ItemId>) -> Self {
+    pub fn new(statements: Vec<ItemId>, justification_requirements: Vec<ItemId>, dependencies: HashSet<ItemId>) -> Self {
         Self {
             statements,
             justification_requirements,
             statement_justifications: None,
             connected_to_root: false,
-            dependencies: HashSet::new(),
+            dependencies,
         }
     }
 
@@ -56,6 +56,19 @@ impl InvariantSet {
     pub(super) fn new_depending_on(dependencies: HashSet<ItemId>) -> InvariantSet {
         Self {
             statements: Vec::new(),
+            justification_requirements: Vec::new(),
+            statement_justifications: None,
+            connected_to_root: false,
+            dependencies,
+        }
+    }
+
+    pub fn new_statements_depending_on(
+        statements: Vec<ItemId>,
+        dependencies: HashSet<ItemId>,
+    ) -> Self {
+        Self {
+            statements,
             justification_requirements: Vec::new(),
             statement_justifications: None,
             connected_to_root: false,
@@ -94,7 +107,7 @@ impl InvariantSet {
 
 impl<'x> Environment<'x> {
     pub fn push_invariant_set(&mut self, invariant_set: InvariantSet) -> InvariantSetId {
-        self.invariant_sets.push(invariant_set)
+        self.invariant_sets.get_or_push(invariant_set)
     }
 
     pub fn get_invariant_set(&self, invariant_set: InvariantSetId) -> &InvariantSet {

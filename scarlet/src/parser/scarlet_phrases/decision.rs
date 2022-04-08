@@ -1,3 +1,5 @@
+use maplit::hashset;
+
 use crate::{
     constructs::{
         decision::{CDecision, SWithInvariant},
@@ -27,24 +29,26 @@ fn create<'x>(
     assert_eq!(args.len(), 4);
     let this = env.push_placeholder(scope);
 
-    let truee = env.get_language_item("true");
-    let falsee = env.get_language_item("false");
+    // let truee = env.get_language_item("true");
+    // let falsee = env.get_language_item("false");
     let left = args[0].as_construct(pc, env, SPlain(this));
     let right = args[1].as_construct(pc, env, SPlain(this));
 
-    let eq_inv = env.push_construct(
-        CDecision::new(left, right, truee, falsee),
-        SPlain(this).dyn_clone(),
-    );
-    let eq_inv = InvariantSet::new(vec![eq_inv], vec![this]);
+    // let eq_inv = env.push_construct(
+    //     CDecision::new(left, right, truee, falsee),
+    //     SPlain(this).dyn_clone(),
+    // );
+    // let eq_inv = InvariantSet::new_statements_depending_on(vec![eq_inv], hashset![this]);
+    let eq_inv = InvariantSet::new_empty();
     let eq_inv = env.push_invariant_set(eq_inv);
     let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
 
-    let neq_inv = env.push_construct(
-        CDecision::new(left, right, falsee, truee),
-        SPlain(this).dyn_clone(),
-    );
-    let neq_inv = InvariantSet::new(vec![neq_inv], vec![this]);
+    // let neq_inv = env.push_construct(
+    //     CDecision::new(left, right, falsee, truee),
+    //     SPlain(this).dyn_clone(),
+    // );
+    // let neq_inv = InvariantSet::new_statements_depending_on(vec![neq_inv], hashset![this]);
+    let neq_inv = InvariantSet::new_empty();
     let neq_inv = env.push_invariant_set(neq_inv);
     let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
 

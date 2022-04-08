@@ -35,10 +35,10 @@ pub(super) fn with_env_from_code(
         }
         let def = env.push_unique();
         let def = env.push_construct(CUnique::new(def), Box::new(SRoot));
+        env.set_name(def, lang_item_name.to_owned());
         env.define_language_item(lang_item_name, def);
     }
     env.resolve_all();
-    env.check_all().unwrap();
 
     let root = env
         .get_and_downcast_construct_definition::<CPopulatedStruct>(root)

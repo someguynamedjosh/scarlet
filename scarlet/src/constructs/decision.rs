@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use maplit::hashset;
 
 use super::{downcast_construct, substitution::Substitutions, Construct, GenInvResult, ItemId};
 use crate::{
@@ -73,7 +74,6 @@ impl Construct for CDecision {
             .iter()
             .chain(false_invs.justification_requirements())
             .cloned()
-            .chain(std::iter::once(this))
             .collect_vec();
         for &true_inv in true_invs.statements() {
             for (index, &false_inv) in false_invs.statements().iter().enumerate() {
@@ -83,7 +83,11 @@ impl Construct for CDecision {
                 }
             }
         }
-        env.push_invariant_set(InvariantSet::new(result_statements, result_justifications))
+        env.push_invariant_set(InvariantSet::new(
+            result_statements,
+            result_justifications,
+            hashset![this],
+        ))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

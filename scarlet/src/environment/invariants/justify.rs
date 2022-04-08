@@ -95,7 +95,7 @@ impl<'x> Environment<'x> {
             }
         });
         let mut encountered_err = false;
-        for limit in 0..16 {
+        for limit in 15..16 {
             self.for_each_invariant_set(|env, id| {
                 let res = env.justify(id, limit);
                 if limit == 15 {
@@ -116,6 +116,22 @@ impl<'x> Environment<'x> {
             if all_connected {
                 break;
             } else if limit == 15 {
+                for (id, set) in self.invariant_sets.clone() {
+                    if !set.connected_to_root {
+                        println!("UNJUSTIFIED:")
+                    }
+                    println!("{:#?}", id);
+                    for &statement in &set.statements {
+                        println!("  statement:");
+                        println!("  {}", self.show(statement, statement));
+                    }
+                    for &just in &set.justification_requirements {
+                        println!("  requirement:");
+                        println!("  {}", self.show(just, just));
+                    }
+                    println!("{:#?}", set.justified_by());
+                }
+                eprintln!("Some invariants can only be justified circularly.");
                 encountered_err = true;
             }
         }
@@ -131,11 +147,10 @@ impl<'x> Environment<'x> {
     ) -> Result<SetJustification, LookupInvariantError> {
         let set = self.invariant_sets[set_id].clone();
         let mut justifications = Vec::new();
-        for &statement in set.statements() {
-            let justified_by = self.justify_statement(statement, limit)?;
+        for &required in set.justification_requirements() {
+            let justified_by = self.justify_statement(required, limit)?;
             justifications.push(justified_by);
         }
-        println!("{:?}", justifications);
         self.invariant_sets[set_id].statement_justifications = Some(justifications.clone());
         Ok(justifications)
     }
@@ -146,7 +161,12 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut result = Vec::new();
-        for (other_id, other_set) in self.invariant_sets.clone() {
+        let iterate_over = self
+            .invariant_sets
+            .iter()
+            .map(|(x, y)| (x, y.clone()))
+            .collect_vec();
+        for (other_id, other_set) in iterate_over {
             for &this_statement in other_set.clone().statements() {
                 if let Ok(Equal::Yes(subs)) = self.discover_equal(statement, this_statement, limit)
                 {

@@ -144,8 +144,11 @@ impl Construct for CVariable {
 
     fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
         let statements = env.get_variable(self.0).invariants.clone();
-        let justification = vec![this];
-        env.push_invariant_set(InvariantSet::new(statements, justification))
+        let dependencies = hashset![this];
+        env.push_invariant_set(InvariantSet::new_statements_depending_on(
+            statements,
+            dependencies,
+        ))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

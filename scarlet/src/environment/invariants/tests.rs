@@ -11,8 +11,8 @@ fn basic_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let y_statement = env.lookup_ident(root, "y_statement").unwrap().unwrap();
-        println!("{:#?}", env.invariant_sets);
         env.justify_statement(y_statement, 1).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -36,6 +36,7 @@ fn sub_invariant() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify_statement(justify_this, 10).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -61,6 +62,7 @@ fn moderate_invariant() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify_statement(justify_this, 10).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -75,6 +77,92 @@ fn nonexistant_invariant() {
     with_env_from_code(code, |mut env, root| {
         let z_statement = env.lookup_ident(root, "z_statement").unwrap().unwrap();
         env.justify_statement(z_statement, 1).unwrap_err();
+    });
+}
+
+#[test]
+fn basic_theorem_invariant() {
+    let code = r"
+    statement IS 
+    UNIQUE
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    justify_this IS statement
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
+        env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
+    });
+}
+
+#[test]
+fn subbed_theorem_invariant() {
+    let code = r"
+    x IS VAR[]
+
+    statement IS 
+    x.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    a IS UNIQUE
+    t_eq_ext_rev[a]
+    justify_this IS a
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
+        env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
+    });
+}
+
+#[test]
+fn function_invariant() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    statement IS 
+    fx.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    identity IS VAR[]
+
+    a IS VAR[]
+    t_eq_ext_rev[identity a]
+    justify_this IS statement[identity a]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
+        env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
+    });
+}
+
+#[test]
+fn equality_theorem_invariant() {
+    let code = r"
+    x IS VAR[]
+    y IS VAR[]
+
+    statement IS 
+    (x = y).AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    a IS UNIQUE
+    b IS UNIQUE
+    t_eq_ext_rev[a b]
+    justify_this IS statement[a b]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
+        env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -105,6 +193,7 @@ fn theorem_invariant() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -137,6 +226,7 @@ fn auto_theorem_invariant() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -171,6 +261,7 @@ fn t_just_after_theorem() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
     });
 }
 
@@ -198,5 +289,6 @@ fn justify_auto_refl() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
         env.justify_statement(justify_this, 5).unwrap();
+        env.check_all().unwrap();
     });
 }

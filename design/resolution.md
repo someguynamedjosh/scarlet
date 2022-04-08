@@ -30,3 +30,9 @@ B from C
 C from A
 B from D
 D
+
+Okay, we have a bug. Where are each of the 6 invariant sets coming from?
+0: Default empty set for a variety of constructs.
+1: Variable body for <>
+
+
