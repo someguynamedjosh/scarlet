@@ -3,9 +3,10 @@ false IS basics.false
 t_just IS VAR[SELF]
 x IS basics.x
 
+# t_just[false]
+
 # is_bool IS DECISION[x true true x=false]
 
 # x.IS_POPULATED_STRUCT.SHOWN
 # is_bool[x.IS_POPULATED_STRUCT].SHOWN
 
-# t_just[is_bool[x.IS_POPULATED_STRUCT]]

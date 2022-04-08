@@ -95,7 +95,7 @@ impl<'x> Environment<'x> {
             }
         });
         let mut encountered_err = false;
-        for limit in 15..16 {
+        for limit in 0..16 {
             self.for_each_invariant_set(|env, id| {
                 let res = env.justify(id, limit);
                 if limit == 15 {
@@ -116,21 +116,21 @@ impl<'x> Environment<'x> {
             if all_connected {
                 break;
             } else if limit == 15 {
-                for (id, set) in self.invariant_sets.clone() {
-                    if !set.connected_to_root {
-                        println!("UNJUSTIFIED:")
-                    }
-                    println!("{:#?}", id);
-                    for &statement in &set.statements {
-                        println!("  statement:");
-                        println!("  {}", self.show(statement, statement));
-                    }
-                    for &just in &set.justification_requirements {
-                        println!("  requirement:");
-                        println!("  {}", self.show(just, just));
-                    }
-                    println!("{:#?}", set.justified_by());
-                }
+                // for (id, set) in self.invariant_sets.clone() {
+                //     if !set.connected_to_root {
+                //         println!("UNJUSTIFIED:")
+                //     }
+                //     println!("{:#?}", id);
+                //     for &statement in &set.statements {
+                //         println!("  statement:");
+                //         println!("  {}", self.show(statement, statement));
+                //     }
+                //     for &just in &set.justification_requirements {
+                //         println!("  requirement:");
+                //         println!("  {}", self.show(just, just));
+                //     }
+                //     println!("{:#?}", set.justified_by());
+                // }
                 eprintln!("Some invariants can only be justified circularly.");
                 encountered_err = true;
             }
