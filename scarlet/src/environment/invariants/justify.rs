@@ -9,7 +9,7 @@ use crate::{
     constructs::{substitution::Substitutions, Construct, GenInvResult},
     environment::{dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
-    shared::{indented, indented_with, TripleBool},
+    shared::{indented, indented_with, TripleBool, Id},
 };
 
 pub type JustifyInvariantResult = Result<Vec<InvariantSetId>, LookupInvariantError>;
@@ -147,6 +147,9 @@ impl<'x> Environment<'x> {
     ) -> Result<SetJustification, LookupInvariantError> {
         let set = self.invariant_sets[set_id].clone();
         let mut justifications = Vec::new();
+            if set.statements().contains(&Id { pool_id: 0, index: 1409 }){
+                println!("{:?}", set);
+            }
         for &required in set.justification_requirements() {
             let justified_by = self.justify_statement(required, limit)?;
             justifications.push(justified_by);
@@ -167,11 +170,19 @@ impl<'x> Environment<'x> {
             .map(|(x, y)| (x, y.clone()))
             .collect_vec();
         for (other_id, other_set) in iterate_over {
-            for &this_statement in other_set.clone().statements() {
-                if let Ok(Equal::Yes(subs)) = self.discover_equal(statement, this_statement, limit)
+            for &other_statement in other_set.clone().statements() {
+                if let Ok(Equal::Yes(subs)) = self.discover_equal(statement, other_statement, limit)
                 {
                     if subs.len() > 0 {
                         continue;
+                    }
+                    let first = self.items.first().unwrap();
+                    if statement.index == 507 {
+                        println!(
+                            "Justifying with {:?} {}",
+                            other_statement,
+                            self.show(other_statement, first)
+                        );
                     }
                     result.push(vec![other_id]);
                 }

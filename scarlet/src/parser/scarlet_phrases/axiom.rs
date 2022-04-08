@@ -34,7 +34,7 @@ fn uncreate<'a>(
     if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
         let cax = cax.clone();
         let statement = cax.get_statement(env);
-        let statement = &statement[..statement.len() - "_statement".len()];
+        let statement = &statement[..statement.len()];// - "_statement".len()];
         Ok(Some(Node {
             phrase: "axiom",
             children: vec![
