@@ -70,6 +70,9 @@ impl<'x> Environment<'x> {
                 }
             }
         });
+        self.for_each_item_returning_nothing(|env, item| {
+            env.generated_invariants(item);
+        });
         if problem {
             panic!("Failed to resolve construct(s)");
         }

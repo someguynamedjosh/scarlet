@@ -11,6 +11,7 @@ fn basic_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let y_statement = env.lookup_ident(root, "y_statement").unwrap().unwrap();
+        println!("{:#?}", env.invariant_sets);
         env.justify_once(y_statement, 1).unwrap();
     });
 }
