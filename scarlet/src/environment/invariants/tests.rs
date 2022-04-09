@@ -11,7 +11,7 @@ fn basic_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let y_statement = env.lookup_ident(root, "y_statement").unwrap().unwrap();
-        env.justify_statement(y_statement, 1).unwrap();
+        env.justify_statement(y_statement, y_statement, 1).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -35,7 +35,7 @@ fn sub_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 10).unwrap();
+        env.justify_statement(justify_this, justify_this, 10).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -61,7 +61,7 @@ fn moderate_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 10).unwrap();
+        env.justify_statement(justify_this, justify_this, 10).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -76,7 +76,7 @@ fn nonexistant_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let z_statement = env.lookup_ident(root, "z_statement").unwrap().unwrap();
-        env.justify_statement(z_statement, 1).unwrap_err();
+        env.justify_statement(z_statement, z_statement, 1).unwrap_err();
     });
 }
 
@@ -93,7 +93,7 @@ fn basic_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -114,7 +114,7 @@ fn subbed_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -138,7 +138,7 @@ fn function_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -161,7 +161,7 @@ fn equality_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -192,7 +192,7 @@ fn theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -225,7 +225,7 @@ fn auto_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -260,7 +260,7 @@ fn t_just_after_theorem() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }
@@ -288,7 +288,7 @@ fn justify_auto_refl() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = env.lookup_ident(root, "justify_this").unwrap().unwrap();
-        env.justify_statement(justify_this, 5).unwrap();
+        env.justify_statement(justify_this, justify_this, 5).unwrap();
         env.check_all().unwrap();
     });
 }

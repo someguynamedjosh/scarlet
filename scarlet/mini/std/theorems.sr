@@ -1,11 +1,16 @@
 x IS basics.x
 fx IS basics.fx
 
+t_trivial IS {
+   AXIOM[t_trivial]
+
+   true.AS_LANGUAGE_ITEM[t_trivial_statement]
+}
+.VALUE
+
 t_eq_ext_rev IS 
 {
-   ax IS AXIOM[t_eq_ext_rev]
-
-   ax[x a b]
+   AXIOM[t_eq_ext_rev]
 
    (fx[b] = fx[a])
    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
@@ -19,7 +24,6 @@ AXIOM[t_trivial]
 
 true.AS_LANGUAGE_ITEM[t_refl_statement]
 true.AS_LANGUAGE_ITEM[t_inv_eq_statement]
-true.AS_LANGUAGE_ITEM[t_trivial_statement]
 true.AS_LANGUAGE_ITEM[t_decision_eq_statement]
 true.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 true.AS_LANGUAGE_ITEM[t_invariant_truth_statement]

@@ -112,7 +112,7 @@ pub trait Construct: Any + Debug + AnyEq {
 
     #[allow(unused_variables)]
     fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        env.push_invariant_set(InvariantSet::new_empty())
+        env.push_invariant_set(InvariantSet::new_empty(this))
     }
 
     #[allow(unused_variables)]

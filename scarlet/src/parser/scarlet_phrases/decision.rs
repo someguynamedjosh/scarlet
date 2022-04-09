@@ -12,7 +12,7 @@ use crate::{
         Node, NodeChild, ParseContext,
     },
     phrase,
-    scope::{SPlain, Scope},
+    scope::{SPlain, SRoot, Scope},
 };
 
 fn create<'x>(
@@ -29,28 +29,28 @@ fn create<'x>(
     assert_eq!(args.len(), 4);
     let this = env.push_placeholder(scope);
 
-    // let truee = env.get_language_item("true");
-    // let falsee = env.get_language_item("false");
+    let truee = env.get_language_item("true");
+    let falsee = env.get_language_item("false");
     let left = args[0].as_construct(pc, env, SPlain(this));
     let right = args[1].as_construct(pc, env, SPlain(this));
 
-    // let eq_inv = env.push_construct(
-    //     CDecision::new(left, right, truee, falsee),
-    //     SPlain(this).dyn_clone(),
-    // );
-    // let eq_inv = InvariantSet::new_statements_depending_on(vec![eq_inv], hashset![this]);
-    let eq_inv = InvariantSet::new_empty();
+    let equal = args[2].as_construct(pc, env, SRoot);
+    let eq_inv = env.push_construct(
+        CDecision::new(left, right, truee, falsee),
+        SPlain(this).dyn_clone(),
+    );
+    let eq_inv = InvariantSet::new_statements_depending_on(equal, vec![eq_inv], hashset![this]);
     let eq_inv = env.push_invariant_set(eq_inv);
-    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
+    env.set_scope(equal, Box::new(SWithInvariant(eq_inv, this)));
 
-    // let neq_inv = env.push_construct(
-    //     CDecision::new(left, right, falsee, truee),
-    //     SPlain(this).dyn_clone(),
-    // );
-    // let neq_inv = InvariantSet::new_statements_depending_on(vec![neq_inv], hashset![this]);
-    let neq_inv = InvariantSet::new_empty();
+    let unequal = args[3].as_construct(pc, env, SRoot);
+    let neq_inv = env.push_construct(
+        CDecision::new(left, right, falsee, truee),
+        SPlain(this).dyn_clone(),
+    );
+    let neq_inv = InvariantSet::new_statements_depending_on(unequal, vec![neq_inv], hashset![this]);
     let neq_inv = env.push_invariant_set(neq_inv);
-    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
+    env.set_scope(unequal, Box::new(SWithInvariant(neq_inv, this)));
 
     env.define_item(this, CDecision::new(left, right, equal, unequal));
     this

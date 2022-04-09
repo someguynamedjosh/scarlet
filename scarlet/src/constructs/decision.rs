@@ -84,6 +84,7 @@ impl Construct for CDecision {
             }
         }
         env.push_invariant_set(InvariantSet::new(
+            this,
             result_statements,
             result_justifications,
             hashset![this],
@@ -169,21 +170,8 @@ impl Scope for SWithInvariant {
         Ok(None)
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        let mut err = Err(LookupInvariantError::DefinitelyDoesNotExist);
-        for &statement in env.get_invariant_set(self.0).clone().statements() {
-            match env.discover_equal(statement, invariant, limit)? {
-                Equal::Yes(l) if l.len() == 0 => return Ok(self.0.clone()),
-                Equal::NeedsHigherLimit => err = Err(LookupInvariantError::MightNotExist),
-                Equal::Yes(..) | Equal::No | Equal::Unknown => (),
-            }
-        }
-        err
+    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        vec![self.0]
     }
 
     fn parent(&self) -> Option<ItemId> {

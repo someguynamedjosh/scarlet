@@ -10,7 +10,7 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqPriority, DeqResult, Equal},
-        invariants::InvariantSet,
+        invariants::{InvariantSet, InvariantSetId},
         Environment,
     },
     impl_any_eq_for_construct,
@@ -146,6 +146,7 @@ impl Construct for CVariable {
         let statements = env.get_variable(self.0).invariants.clone();
         let dependencies = hashset![this];
         env.push_invariant_set(InvariantSet::new_statements_depending_on(
+            this,
             statements,
             dependencies,
         ))
@@ -200,13 +201,8 @@ impl Scope for SVariableInvariants {
         })
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _invariant: ItemId,
-        _limit: u32,
-    ) -> LookupInvariantResult {
-        Err(LookupInvariantError::DefinitelyDoesNotExist)
+    fn local_get_invariant_sets<'x>(&self, _env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        vec![]
     }
 
     fn parent(&self) -> Option<ItemId> {

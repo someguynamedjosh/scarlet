@@ -49,8 +49,13 @@ impl Construct for CAxiom {
         Box::new(self.clone())
     }
 
-    fn generated_invariants<'x>(&self, _this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        env.push_invariant_set(InvariantSet::new(vec![self.statement], vec![], hashset![]))
+    fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
+        env.push_invariant_set(InvariantSet::new(
+            this,
+            vec![self.statement],
+            vec![],
+            hashset![],
+        ))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

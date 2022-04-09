@@ -276,7 +276,7 @@ impl<'x> Environment<'x> {
         if substitutions.len() == 0 {
             base
         } else {
-            let con = CSubstitution::new_unchecked(self, base, substitutions.clone());
+            let con = CSubstitution::new_unchecked(self, base, base, substitutions.clone());
             let scope = self.items[base].scope.dyn_clone();
             self.push_construct(con, scope)
         }

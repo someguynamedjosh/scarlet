@@ -80,7 +80,7 @@ fn create_invariants(
         let new_inv = env.substitute_unchecked(inv, subs);
         invs.push(new_inv);
     }
-    InvariantSet::new(invs, justifications, hashset![])
+    InvariantSet::new(base, invs, justifications, hashset![])
 }
 
 /// Finds invariants that confirm the substitutions we're performing are legal.

@@ -159,7 +159,7 @@ impl<'x> Environment<'x> {
         // }
         let mut justifications = Vec::new();
         for &required in set.justification_requirements() {
-            let justified_by = self.justify_statement(required, limit)?;
+            let justified_by = self.justify_statement(set.context, required, limit)?;
             justifications.push(justified_by);
         }
         self.invariant_sets[set_id].statement_justifications = Some(justifications.clone());
@@ -168,14 +168,16 @@ impl<'x> Environment<'x> {
 
     pub(super) fn justify_statement(
         &mut self,
+        context: ItemId,
         statement: ItemId,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut result = Vec::new();
-        let iterate_over = self
-            .invariant_sets
-            .iter()
-            .map(|(x, y)| (x, y.clone()))
+        let ctx_scope = self.items[context].scope.dyn_clone();
+        let available_invariant_sets = ctx_scope.get_invariant_sets(self);
+        let iterate_over = available_invariant_sets
+            .into_iter()
+            .map(|x| (x, self.invariant_sets[x].clone()))
             .collect_vec();
         for (other_id, other_set) in iterate_over {
             for &other_statement in other_set.clone().statements() {
@@ -189,7 +191,7 @@ impl<'x> Environment<'x> {
                 }
             }
         }
-        match self.create_justification(statement, limit) {
+        match self.create_justification(context, statement, limit) {
             Ok(mut extra_invs) => result.append(&mut extra_invs),
             Err(err) => {
                 if result.len() == 0 {
@@ -202,6 +204,7 @@ impl<'x> Environment<'x> {
 
     fn create_justification(
         &mut self,
+        context: ItemId,
         statement: ItemId,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
@@ -225,8 +228,10 @@ impl<'x> Environment<'x> {
                 if rec.len() == 0 {
                     continue;
                 }
-                let inv = self
-                    .push_invariant_set(InvariantSet::new_depending_on(rec.into_iter().collect()));
+                let inv = self.push_invariant_set(InvariantSet::new_depending_on(
+                    statement,
+                    rec.into_iter().collect(),
+                ));
                 return Ok(vec![vec![inv]]);
             }
         }
@@ -276,7 +281,15 @@ impl<'x> Environment<'x> {
                 subs: subs.clone(),
             });
             let mut justifications = Vec::new();
-            let ok = self.check_subs(subs, limit, &mut justifications, &mut err, trace);
+            let ok = self.check_subs(
+                context,
+                statement,
+                subs,
+                limit,
+                &mut justifications,
+                &mut err,
+                trace,
+            );
             self.justify_stack.pop();
             if !ok {
                 continue 'check_next_candidate;
@@ -292,6 +305,8 @@ impl<'x> Environment<'x> {
 
     fn check_subs(
         &mut self,
+        context: ItemId,
+        statement: ItemId,
         subs: Substitutions,
         limit: u32,
         justifications: &mut Vec<InvariantSetId>,
@@ -303,10 +318,11 @@ impl<'x> Environment<'x> {
             inv_subs.insert_no_replace(target, value);
             for invv in self.get_variable(target).clone().invariants {
                 let statement = self.substitute_unchecked(invv, &inv_subs);
-                let result = self.justify_statement(statement, limit - 1);
+                let result = self.justify_statement(context, statement, limit - 1);
                 match result {
                     Ok(new_justifications) => {
                         let set = self.push_invariant_set(InvariantSet::new_not_required(
+                            statement,
                             vec![statement],
                             vec![statement],
                             hashset![],

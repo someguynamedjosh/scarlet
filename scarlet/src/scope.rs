@@ -5,7 +5,9 @@ use maplit::hashset;
 use crate::{
     constructs::ItemId,
     environment::{
-        discover_equality::Equal, invariants::InvariantSetId, Environment, UnresolvedItemError,
+        discover_equality::Equal,
+        invariants::{InvariantSet, InvariantSetId},
+        Environment, UnresolvedItemError,
     },
 };
 
@@ -39,12 +41,7 @@ pub trait Scope: Debug {
         env: &mut Environment<'x>,
         value: ItemId,
     ) -> ReverseLookupIdentResult;
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult;
+    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId>;
     fn parent(&self) -> Option<ItemId>;
 
     fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
@@ -80,35 +77,13 @@ pub trait Scope: Debug {
         }
     }
 
-    fn lookup_invariant_limited<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        let result = self.local_lookup_invariant(env, invariant, limit);
-        match result {
-            Ok(inv) => Ok(inv),
-            Err(LookupInvariantError::MightNotExist)
-            | Err(LookupInvariantError::DefinitelyDoesNotExist)
-            | Err(LookupInvariantError::Unresolved(..)) => {
-                if let Some(parent) = self.parent() {
-                    let parent_result = env
-                        .get_item(parent)
-                        .scope
-                        .dyn_clone()
-                        .lookup_invariant_limited(env, invariant, limit);
-                    if parent_result == Err(LookupInvariantError::DefinitelyDoesNotExist) {
-                        result
-                    } else {
-                        parent_result
-                    }
-                } else {
-                    result
-                }
-            }
-            Err(other) => Err(other),
+    fn get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        let mut result = self.local_get_invariant_sets(env);
+        if let Some(parent) = self.parent() {
+            let parent_scope = env.get_item(parent).scope.dyn_clone();
+            result.append(&mut parent_scope.get_invariant_sets(env));
         }
+        result
     }
 }
 
@@ -136,13 +111,8 @@ impl Scope for SPlain {
         Ok(None)
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _invariant: ItemId,
-        _limit: u32,
-    ) -> LookupInvariantResult {
-        Err(LookupInvariantError::DefinitelyDoesNotExist)
+    fn local_get_invariant_sets<'x>(&self, _env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        vec![]
     }
 
     fn parent(&self) -> Option<ItemId> {
@@ -174,13 +144,8 @@ impl Scope for SRoot {
         Ok(None)
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        Err(LookupInvariantError::DefinitelyDoesNotExist)
+    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        vec![]
     }
 
     fn parent(&self) -> Option<ItemId> {
@@ -216,12 +181,7 @@ impl Scope for SPlaceholder {
         unreachable!()
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        _env: &mut Environment<'x>,
-        _invariant: ItemId,
-        _limit: u32,
-    ) -> LookupInvariantResult {
+    fn local_get_invariant_sets<'x>(&self, _env: &mut Environment<'x>) -> Vec<InvariantSetId> {
         unreachable!()
     }
 
@@ -254,13 +214,8 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         self.0.local_reverse_lookup_ident(env, value)
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        self.0.local_lookup_invariant(env, invariant, limit)
+    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        self.0.local_get_invariant_sets(env)
     }
 
     fn parent(&self) -> Option<ItemId> {

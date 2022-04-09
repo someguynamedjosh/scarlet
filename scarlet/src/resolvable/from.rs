@@ -27,7 +27,7 @@ impl<'x> Resolvable<'x> for RFrom {
         let x = env.get_and_downcast_construct_definition::<CVariable>(x)?;
         let x_id = x.unwrap().get_id();
         let subs = vec![(x_id, self.left)].into_iter().collect();
-        let subbed = CSubstitution::new_unchecked(env, base, subs);
+        let subbed = CSubstitution::new_unchecked(env, base, base, subs);
         ResolveResult::Ok(ItemDefinition::Resolved(Box::new(subbed)))
     }
 }

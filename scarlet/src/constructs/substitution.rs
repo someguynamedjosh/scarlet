@@ -30,11 +30,16 @@ impl CSubstitution {
         Self { base, subs, invs }
     }
 
-    pub fn new_unchecked(env: &mut Environment, base: ItemId, subs: Substitutions) -> Self {
+    pub fn new_unchecked(
+        env: &mut Environment,
+        this: ItemId,
+        base: ItemId,
+        subs: Substitutions,
+    ) -> Self {
         Self::new(
             base,
             subs,
-            env.push_invariant_set(InvariantSet::new_empty()),
+            env.push_invariant_set(InvariantSet::new_empty(this)),
         )
     }
 

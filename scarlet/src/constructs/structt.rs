@@ -6,6 +6,7 @@ use crate::{
     environment::{
         dependencies::{DepResult, Dependencies},
         discover_equality::{DeqResult, DeqSide, Equal},
+        invariants::InvariantSetId,
         Environment,
     },
     impl_any_eq_for_construct,
@@ -175,30 +176,12 @@ impl Scope for SField {
         }
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
+    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        if let Ok(Some(structt)) =
+            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
+        {
             let structt = structt.clone();
-            let mut any_unknown = false;
-            let invs_id = env.generated_invariants(structt.value);
-            let invs = env.get_invariant_set(invs_id).clone();
-            for &maybe_match in invs.statements() {
-                match env.discover_equal(invariant, maybe_match, limit)? {
-                    Equal::Yes(l) if l.len() == 0 => return Ok(invs_id),
-                    Equal::Yes(..) => (),
-                    Equal::NeedsHigherLimit => any_unknown = true,
-                    Equal::Unknown | Equal::No => (),
-                }
-            }
-            Err(if any_unknown {
-                LookupInvariantError::MightNotExist
-            } else {
-                LookupInvariantError::DefinitelyDoesNotExist
-            })
+            vec![env.generated_invariants(structt.value)]
         } else {
             unreachable!()
         }
@@ -242,32 +225,17 @@ fn reverse_lookup_ident_in<'x>(
     })
 }
 
-fn lookup_invariant_in<'x>(
+fn get_invariant_sets_in<'x>(
     env: &mut Environment<'x>,
-    invariant: ItemId,
     inn: &CPopulatedStruct,
-    limit: u32,
-) -> LookupInvariantResult {
-    let mut default_err = Err(LookupInvariantError::DefinitelyDoesNotExist);
-    let invs_id = env.generated_invariants(inn.value);
-    let invs = env.get_invariant_set(invs_id).clone();
-    for &maybe_match in invs.statements() {
-        match env.discover_equal(invariant, maybe_match, limit) {
-            Ok(Equal::Yes(l)) if l.len() == 0 => return Ok(invs_id),
-            Ok(Equal::Yes(_)) => (),
-            Ok(Equal::NeedsHigherLimit) => default_err = Err(LookupInvariantError::MightNotExist),
-            _ => (),
-        }
-    }
-    if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
+) -> Vec<InvariantSetId> {
+    let mut result = vec![env.generated_invariants(inn.value)];
+    if let Ok(Some(rest)) = env.get_and_downcast_construct_definition::<CPopulatedStruct>(inn.rest)
+    {
         let rest = rest.clone();
-        match lookup_invariant_in(env, invariant, &rest, limit) {
-            Err(LookupInvariantError::DefinitelyDoesNotExist) => default_err,
-            other => other,
-        }
-    } else {
-        default_err
+        result.append(&mut get_invariant_sets_in(env, &rest));
     }
+    result
 }
 
 impl Scope for SFieldAndRest {
@@ -297,15 +265,12 @@ impl Scope for SFieldAndRest {
         }
     }
 
-    fn local_lookup_invariant<'x>(
-        &self,
-        env: &mut Environment<'x>,
-        invariant: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
+    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+        if let Ok(Some(structt)) =
+            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
+        {
             let structt = structt.clone();
-            lookup_invariant_in(env, invariant, &structt, limit)
+            get_invariant_sets_in(env, &structt)
         } else {
             unreachable!()
         }

@@ -96,7 +96,7 @@ impl<'x> Environment<'x> {
                 };
 
                 let subs = vec![(id, x)].into_iter().collect();
-                let con = CSubstitution::new_unchecked(self, statement, subs);
+                let con = CSubstitution::new_unchecked(self, into, statement, subs);
                 self.define_item(into, con);
             } else {
                 let truee = self.get_language_item("true");

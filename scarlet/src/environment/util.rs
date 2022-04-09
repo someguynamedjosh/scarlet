@@ -71,4 +71,8 @@ impl<'x> Environment<'x> {
     pub fn set_name(&mut self, item_id: ItemId, name: String) {
         self.items[item_id].name = Some(name);
     }
+
+    pub fn set_scope(&mut self, item_id: ItemId, scope: Box<dyn Scope>) {
+        self.items[item_id].scope = scope;
+    }
 }

@@ -16,6 +16,7 @@ pub type InvariantSetPool = Pool<InvariantSet, 'N'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InvariantSet {
+    context: ItemId,
     statements: Vec<ItemId>,
     /// For the original statements to hold, all the statements in this list
     /// must also hold.
@@ -27,16 +28,18 @@ pub struct InvariantSet {
 }
 
 impl InvariantSet {
-    pub fn new_empty() -> Self {
-        Self::new(vec![], vec![], HashSet::new())
+    pub fn new_empty(context: ItemId) -> Self {
+        Self::new(context, vec![], vec![], HashSet::new())
     }
 
     pub fn new(
+        context: ItemId,
         statements: Vec<ItemId>,
         justification_requirements: Vec<ItemId>,
         dependencies: HashSet<ItemId>,
     ) -> Self {
         Self {
+            context,
             statements,
             justification_requirements,
             statement_justifications: None,
@@ -47,11 +50,13 @@ impl InvariantSet {
     }
 
     pub fn new_not_required(
+        context: ItemId,
         statements: Vec<ItemId>,
         justification_requirements: Vec<ItemId>,
         dependencies: HashSet<ItemId>,
     ) -> Self {
         Self {
+            context,
             statements,
             justification_requirements,
             statement_justifications: None,
@@ -62,10 +67,12 @@ impl InvariantSet {
     }
 
     pub(super) fn new_justified_by(
+        context: ItemId,
         statements: Vec<ItemId>,
         justified_by: SetJustification,
     ) -> InvariantSet {
         Self {
+            context,
             statements,
             justification_requirements: Vec::new(),
             statement_justifications: Some(justified_by),
@@ -75,8 +82,9 @@ impl InvariantSet {
         }
     }
 
-    pub(super) fn new_depending_on(dependencies: HashSet<ItemId>) -> InvariantSet {
+    pub(super) fn new_depending_on(context: ItemId, dependencies: HashSet<ItemId>) -> InvariantSet {
         Self {
+            context,
             statements: Vec::new(),
             justification_requirements: Vec::new(),
             statement_justifications: None,
@@ -87,10 +95,12 @@ impl InvariantSet {
     }
 
     pub fn new_statements_depending_on(
+        context: ItemId,
         statements: Vec<ItemId>,
         dependencies: HashSet<ItemId>,
     ) -> Self {
         Self {
+            context,
             statements,
             justification_requirements: Vec::new(),
             statement_justifications: None,
@@ -146,7 +156,7 @@ impl<'x> Environment<'x> {
     pub fn generated_invariants(&mut self, item_id: ItemId) -> InvariantSetId {
         for frame in &self.dep_res_stack {
             if frame.0 == item_id {
-                return self.push_invariant_set(InvariantSet::new_empty());
+                return self.push_invariant_set(InvariantSet::new_empty(item_id));
             }
         }
 
@@ -158,7 +168,7 @@ impl<'x> Environment<'x> {
                 Ok(ok) => ok,
                 Err(_err) => {
                     self.dep_res_stack.pop();
-                    return self.push_invariant_set(InvariantSet::new_empty());
+                    return self.push_invariant_set(InvariantSet::new_empty(item_id));
                 }
             };
             let context = context.dyn_clone();
@@ -168,24 +178,6 @@ impl<'x> Environment<'x> {
         };
         self.dep_res_stack.pop();
         result
-    }
-
-    pub fn get_produced_invariant(
-        &mut self,
-        statement: ItemId,
-        context_id: ItemId,
-        limit: u32,
-    ) -> LookupInvariantResult {
-        let generated_invariants = self.generated_invariants(context_id);
-        for inv in self.invariant_sets[generated_invariants].clone().statements {
-            if let Ok(equal) = self.discover_equal(inv, statement, limit) {
-                if equal == Equal::yes() {
-                    return Ok(generated_invariants);
-                }
-            }
-        }
-        let scope = self.get_item(context_id).scope.dyn_clone();
-        scope.lookup_invariant_limited(self, statement, limit)
     }
 
     pub fn add_auto_theorem(&mut self, auto_theorem: ItemId) {
