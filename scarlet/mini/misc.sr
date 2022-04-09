@@ -3,5 +3,5 @@ false IS std.false
 void IS std.void
 
 t_just IS VAR[SELF]
-t_just[false].SHOWN
+# t_just[false].SHOWN
 

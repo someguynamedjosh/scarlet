@@ -83,7 +83,6 @@ impl<'x> Environment<'x> {
                             panic!();
                         }
                         let first = env.items.first().unwrap();
-                        println!("CONNECTED {:?} {}", s, env.show(s, first));
                     }
                     progress = true;
                 }
@@ -178,13 +177,6 @@ impl<'x> Environment<'x> {
                         continue;
                     }
                     let first = self.items.first().unwrap();
-                    if statement.index == 507 {
-                        println!(
-                            "Justifying with {:?} {}",
-                            other_statement,
-                            self.show(other_statement, first)
-                        );
-                    }
                     result.push(vec![other_id]);
                 }
             }
@@ -206,7 +198,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = true;
+        let trace = false;
         if limit == 0 {
             return Err(err);
         }
