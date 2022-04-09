@@ -97,11 +97,19 @@ impl<'x> Environment<'x> {
         let mut encountered_err = false;
         for limit in 0..16 {
             self.for_each_invariant_set(|env, id| {
+                if !env.invariant_sets[id].required {
+                    return;
+                }
                 let res = env.justify(id, limit);
-                if limit == 15 && env.invariant_sets[id].required {
+                if limit == 15 {
                     if let Err(err) = res {
                         eprintln!("Error while justifying invariant set:");
                         eprintln!("{:?}", err);
+                        println!("Statements:");
+                        let first = env.items.first().unwrap();
+                        for &statement in env.invariant_sets[id].clone().statements() {
+                            println!("{}", env.show(statement, first));
+                        }
                         encountered_err = true;
                     }
                 }

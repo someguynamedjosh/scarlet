@@ -105,7 +105,6 @@ impl<'x> Environment<'x> {
         };
         let set_id = self.generated_invariants(item_id);
         let set = self.get_invariant_set(set_id).clone();
-        println!("{:#?}", set);
         for &invariant in set.statements() {
             let vomited = self.vomit(255, &mut inv_ctx, invariant);
             inv_ctx.temp_names.clear();
