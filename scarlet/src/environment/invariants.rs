@@ -22,6 +22,7 @@ pub struct InvariantSet {
     pub(super) justification_requirements: Vec<ItemId>,
     pub(super) statement_justifications: Option<SetJustification>,
     pub(super) connected_to_root: bool,
+    pub(super) required: bool,
     pub(super) dependencies: HashSet<ItemId>,
 }
 
@@ -30,12 +31,32 @@ impl InvariantSet {
         Self::new(vec![], vec![], HashSet::new())
     }
 
-    pub fn new(statements: Vec<ItemId>, justification_requirements: Vec<ItemId>, dependencies: HashSet<ItemId>) -> Self {
+    pub fn new(
+        statements: Vec<ItemId>,
+        justification_requirements: Vec<ItemId>,
+        dependencies: HashSet<ItemId>,
+    ) -> Self {
         Self {
             statements,
             justification_requirements,
             statement_justifications: None,
             connected_to_root: false,
+            required: true,
+            dependencies,
+        }
+    }
+
+    pub fn new_not_required(
+        statements: Vec<ItemId>,
+        justification_requirements: Vec<ItemId>,
+        dependencies: HashSet<ItemId>,
+    ) -> Self {
+        Self {
+            statements,
+            justification_requirements,
+            statement_justifications: None,
+            connected_to_root: false,
+            required: false,
             dependencies,
         }
     }
@@ -49,6 +70,7 @@ impl InvariantSet {
             justification_requirements: Vec::new(),
             statement_justifications: Some(justified_by),
             connected_to_root: false,
+            required: false,
             dependencies: HashSet::new(),
         }
     }
@@ -59,6 +81,7 @@ impl InvariantSet {
             justification_requirements: Vec::new(),
             statement_justifications: None,
             connected_to_root: false,
+            required: false,
             dependencies,
         }
     }
@@ -72,6 +95,7 @@ impl InvariantSet {
             justification_requirements: Vec::new(),
             statement_justifications: None,
             connected_to_root: false,
+            required: true,
             dependencies,
         }
     }
@@ -107,6 +131,11 @@ impl InvariantSet {
 
 impl<'x> Environment<'x> {
     pub fn push_invariant_set(&mut self, invariant_set: InvariantSet) -> InvariantSetId {
+        for &s in invariant_set.statements() {
+            if s.index == 323 {
+                // panic!();
+            }
+        }
         self.invariant_sets.get_or_push(invariant_set)
     }
 

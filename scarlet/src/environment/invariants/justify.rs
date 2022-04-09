@@ -9,7 +9,7 @@ use crate::{
     constructs::{substitution::Substitutions, Construct, GenInvResult},
     environment::{dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
-    shared::{indented, indented_with, TripleBool, Id},
+    shared::{indented, indented_with, Id, TripleBool},
 };
 
 pub type JustifyInvariantResult = Result<Vec<InvariantSetId>, LookupInvariantError>;
@@ -78,6 +78,13 @@ impl<'x> Environment<'x> {
                 if all_statements_connected {
                     let set = &mut env.invariant_sets[id];
                     set.connected_to_root = true;
+                    for &s in set.clone().statements() {
+                        if s.index == 323 {
+                            panic!();
+                        }
+                        let first = env.items.first().unwrap();
+                        println!("CONNECTED {:?} {}", s, env.show(s, first));
+                    }
                     progress = true;
                 }
             });
@@ -88,17 +95,11 @@ impl<'x> Environment<'x> {
     }
 
     pub(crate) fn justify_all(&mut self) {
-        self.for_each_invariant_set(|env, id| {
-            let set = &mut env.invariant_sets[id];
-            if set.justification_requirements.len() == 0 {
-                set.connected_to_root = true;
-            }
-        });
         let mut encountered_err = false;
         for limit in 0..16 {
             self.for_each_invariant_set(|env, id| {
                 let res = env.justify(id, limit);
-                if limit == 15 {
+                if limit == 15 && env.invariant_sets[id].required {
                     if let Err(err) = res {
                         eprintln!("Error while justifying invariant set:");
                         eprintln!("{:?}", err);
@@ -109,7 +110,7 @@ impl<'x> Environment<'x> {
             self.propogate_root_connectedness();
             let mut all_connected = true;
             self.for_each_invariant_set(|env, id| {
-                if !env.invariant_sets[id].connected_to_root {
+                if !env.invariant_sets[id].connected_to_root && env.invariant_sets[id].required {
                     all_connected = false;
                 }
             });
@@ -146,10 +147,10 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<SetJustification, LookupInvariantError> {
         let set = self.invariant_sets[set_id].clone();
+        // if let Some(just) = set.statement_justifications {
+        //     return Ok(just);
+        // }
         let mut justifications = Vec::new();
-            if set.statements().contains(&Id { pool_id: 0, index: 1409 }){
-                println!("{:?}", set);
-            }
         for &required in set.justification_requirements() {
             let justified_by = self.justify_statement(required, limit)?;
             justifications.push(justified_by);
@@ -205,7 +206,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = false;
+        let trace = true;
         if limit == 0 {
             return Err(err);
         }
@@ -252,10 +253,11 @@ impl<'x> Environment<'x> {
                 }
             }
             if trace {
+                let first = self.items.first().unwrap();
                 let mut message = format!(
                     "\nAttempting to justify:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
-                    indented(&self.show(statement, statement)),
-                    indented(&self.show(inv, statement)),
+                    indented(&self.show(statement, first)),
+                    indented(&self.show(inv, first)),
                 );
                 for (target, value) in &subs {
                     message.push_str(&format!(
@@ -304,9 +306,10 @@ impl<'x> Environment<'x> {
                 let result = self.justify_statement(statement, limit - 1);
                 match result {
                     Ok(new_justifications) => {
-                        let set = self.push_invariant_set(InvariantSet::new_justified_by(
+                        let set = self.push_invariant_set(InvariantSet::new_not_required(
                             vec![statement],
-                            vec![new_justifications],
+                            vec![statement],
+                            hashset![],
                         ));
                         justifications.push(set);
                     }
