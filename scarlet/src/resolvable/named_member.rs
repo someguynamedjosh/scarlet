@@ -39,6 +39,7 @@ impl<'x> Resolvable<'x> for RNamedMember<'x> {
     fn resolve(
         &self,
         env: &mut Environment<'x>,
+        this: ItemId,
         scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {

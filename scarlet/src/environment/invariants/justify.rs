@@ -101,17 +101,43 @@ impl<'x> Environment<'x> {
                     return;
                 }
                 let res = env.justify(id, limit);
-                if limit == 15 {
+                if limit == 15
+                    && !env.invariant_sets[id].connected_to_root
+                    && env.invariant_sets[id].statements().len() > 0
+                {
                     if let Err(err) = res {
                         eprintln!("Error while justifying invariant set:");
                         eprintln!("{:?}", err);
-                        println!("Statements:");
-                        let first = env.items.first().unwrap();
-                        for &statement in env.invariant_sets[id].clone().statements() {
-                            println!("{}", env.show(statement, first));
-                        }
-                        encountered_err = true;
+                    } else {
+                        eprintln!("The following can only be justified recursively:");
                     }
+                    println!("Statements:");
+                    let first = env.items.first().unwrap();
+                    for &statement in env.invariant_sets[id].clone().statements() {
+                        println!("{}", env.show(statement, first));
+                    }
+                    // println!("Requires:");
+                    // for &justification_requirement in
+                    //     env.invariant_sets[id].clone().justification_requirements()
+                    // {
+                    //     println!("{}", env.show(justification_requirement, first));
+                    // }
+                    // println!("Available:");
+                    // let ctx_scope = env.items[env.invariant_sets[id].context].scope.dyn_clone();
+                    // let available_invariant_sets = ctx_scope.get_invariant_sets(env);
+                    // let iterate_over = available_invariant_sets
+                    //     .into_iter()
+                    //     .map(|x| (x, env.invariant_sets[x].clone()))
+                    //     .collect_vec();
+                    // for (other_id, other_set) in iterate_over {
+                    //     for &other_statement in other_set.clone().statements() {
+                    //         println!("{}", env.show(other_statement, first));
+                    //     }
+                    // }
+                    // eprintln!("Context:");
+                    // let c = env.invariant_sets[id].context;
+                    // eprintln!("{}", env.show(c, first));
+                    encountered_err = true;
                 }
             });
             self.propogate_root_connectedness();
@@ -195,7 +221,7 @@ impl<'x> Environment<'x> {
             Ok(mut extra_invs) => result.append(&mut extra_invs),
             Err(err) => {
                 if result.len() == 0 {
-                    return Err(err);
+                    return Err(LookupInvariantError::MightNotExist);
                 }
             }
         }

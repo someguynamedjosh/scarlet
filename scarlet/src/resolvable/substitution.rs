@@ -30,6 +30,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
     fn resolve(
         &self,
         env: &mut Environment<'x>,
+        this: ItemId,
         _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult {
@@ -43,7 +44,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
         resolve_dep_subs(&mut subs, env);
 
         let justifications = make_justification_statements(&subs, env, limit)?;
-        let invs = create_invariants(env, base, &subs, justifications);
+        let invs = create_invariants(env, this, base, &subs, justifications);
         let invs = env.push_invariant_set(invs);
         let csub = CSubstitution::new(self.base, subs, invs);
         ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
@@ -63,6 +64,7 @@ impl<'x> Resolvable<'x> for RSubstitution<'x> {
 
 fn create_invariants(
     env: &mut Environment,
+    this: ItemId,
     base: ItemId,
     subs: &Substitutions,
     justifications: Vec<ItemId>,
@@ -80,7 +82,7 @@ fn create_invariants(
         let new_inv = env.substitute_unchecked(inv, subs);
         invs.push(new_inv);
     }
-    InvariantSet::new(base, invs, justifications, hashset![])
+    InvariantSet::new(this, invs, justifications, hashset![])
 }
 
 /// Finds invariants that confirm the substitutions we're performing are legal.

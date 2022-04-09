@@ -1,5 +1,5 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
-use crate::{environment::Environment, scope::Scope};
+use crate::{environment::Environment, scope::Scope, constructs::ItemId};
 
 #[derive(Clone, Debug)]
 pub struct RIdentifier<'x>(pub &'x str);
@@ -12,6 +12,7 @@ impl<'x> Resolvable<'x> for RIdentifier<'x> {
     fn resolve(
         &self,
         env: &mut Environment<'x>,
+        this: ItemId,
         scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {

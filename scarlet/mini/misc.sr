@@ -1,6 +1,7 @@
 true IS std.true
 false IS std.false
 void IS std.void
+fx IS std.basics.fx
 x IS std.basics.x
 
 t_trivial IS std.theorems.t_trivial
@@ -8,11 +9,15 @@ t_eq_ext_rev IS std.theorems.t_eq_ext_rev
 
 
 t_just IS VAR[SELF]
-t_just[true]
 
-# t_just[b = a]
-t_eq_ext_rev[x a b]
-a IS VAR[]
-b IS VAR[a = SELF]
+c IS VAR[]
+d IS VAR[c = SELF]
+
+t_just[d = c]
+t_eq_ext_rev[x c d]
+# t_just[d = c]
+# t_just[(x = y)[fx IS x[x]   a   b]]
+x IS VAR[]
+y IS VAR[]
 # t_just[false].SHOWN
 

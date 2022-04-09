@@ -19,6 +19,7 @@ impl<'x> Resolvable<'x> for RFrom {
     fn resolve(
         &self,
         env: &mut Environment<'x>,
+        this: ItemId,
         _scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {

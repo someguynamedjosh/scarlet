@@ -91,7 +91,7 @@ impl<'x> Environment<'x> {
             self.resolve_stack.push(ResolveStackFrame(item_id));
             let resolvable = resolvable.dyn_clone();
             let scope = item.scope.dyn_clone();
-            let new_def = resolvable.resolve(self, scope, limit);
+            let new_def = resolvable.resolve(self, item_id, scope, limit);
             match new_def {
                 ResolveResult::Ok(new_def) => {
                     if let ItemDefinition::Resolved(boxed) = new_def {

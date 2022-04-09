@@ -18,7 +18,7 @@ pub use substitution::RSubstitution;
 pub use variable::RVariable;
 
 use crate::{
-    constructs::ItemDefinition,
+    constructs::{ItemDefinition, ItemId},
     environment::{dependencies::Dependencies, Environment, UnresolvedItemError},
     scope::{LookupInvariantError, Scope},
 };
@@ -90,6 +90,7 @@ pub trait Resolvable<'x>: Debug {
     fn resolve(
         &self,
         env: &mut Environment<'x>,
+        this: ItemId,
         scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult;
