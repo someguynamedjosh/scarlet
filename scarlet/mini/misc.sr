@@ -4,20 +4,15 @@ void IS std.void
 fx IS std.basics.fx
 x IS std.basics.x
 
-t_trivial IS std.theorems.t_trivial
-t_eq_ext_rev IS std.theorems.t_eq_ext_rev
-
+# t_trivial IS std.theorems.t_trivial
+# t_eq_ext_rev IS std.theorems.t_eq_ext_rev
+# t_refl IS std.theorems.t_refl
+# t_decision_eq IS std.theorems.t_decision_eq
+t_decision_ext IS std.theorems.t_decision_ext
 
 t_just IS VAR[SELF]
 
-c IS VAR[]
-d IS VAR[c = SELF]
+recursive IS DECISION[void void recursive recursive]
 
-t_just[d = c]
-t_eq_ext_rev[x c d]
-# t_just[d = c]
-# t_just[(x = y)[fx IS x[x]   a   b]]
-x IS VAR[]
-y IS VAR[]
-# t_just[false].SHOWN
-
+t_decision_ext[void void recursive=true recursive=true]
+# t_just[recursive = true]
