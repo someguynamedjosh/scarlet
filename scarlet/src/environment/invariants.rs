@@ -66,7 +66,7 @@ impl InvariantSet {
         }
     }
 
-    pub(super) fn new_justified_by(
+    pub(crate) fn new_justified_by(
         context: ItemId,
         statements: Vec<ItemId>,
         justified_by: SetJustification,
@@ -141,11 +141,6 @@ impl InvariantSet {
 
 impl<'x> Environment<'x> {
     pub fn push_invariant_set(&mut self, invariant_set: InvariantSet) -> InvariantSetId {
-        for &s in invariant_set.statements() {
-            if s.index == 323 {
-                // panic!();
-            }
-        }
         self.invariant_sets.get_or_push(invariant_set)
     }
 

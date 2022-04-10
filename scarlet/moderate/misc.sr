@@ -6,17 +6,16 @@ x IS std.basics.x
 
 # x IS VAR[]
 
+x.IS_POPULATED_STRUCT
+
 is_struct IS 
-# logic.or[
+logic.or[
    logic.and[
       x.IS_POPULATED_STRUCT
-      is_struct[x IS x.REST]
+      is_struct
    ]
-#    x = void
-# ]
+   x = void
+]
 
-# std.theorems.t_just[false].SHOWN
-
-# t_just IS VAR[SELF]
+t_just IS VAR[SELF]
 # t_just[false].SHOWN
-

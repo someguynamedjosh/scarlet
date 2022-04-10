@@ -64,17 +64,11 @@ impl Construct for CDecision {
     }
 
     fn generated_invariants<'x>(&self, this: ItemId, env: &mut Environment<'x>) -> GenInvResult {
-        let true_invs = env.generated_invariants(self.equal);
-        let true_invs = env.get_invariant_set(true_invs).clone();
-        let false_invs = env.generated_invariants(self.equal);
-        let false_invs = env.get_invariant_set(false_invs).clone();
+        let true_invs_id = env.generated_invariants(self.equal);
+        let true_invs = env.get_invariant_set(true_invs_id).clone();
+        let false_invs_id = env.generated_invariants(self.equal);
+        let false_invs = env.get_invariant_set(false_invs_id).clone();
         let mut result_statements = Vec::new();
-        let result_justifications = true_invs
-            .justification_requirements()
-            .iter()
-            .chain(false_invs.justification_requirements())
-            .cloned()
-            .collect_vec();
         for &true_inv in true_invs.statements() {
             for (index, &false_inv) in false_invs.statements().iter().enumerate() {
                 if env.discover_equal(true_inv, false_inv, 4) == Ok(Equal::yes()) {
@@ -83,11 +77,11 @@ impl Construct for CDecision {
                 }
             }
         }
-        env.push_invariant_set(InvariantSet::new(
+        let len = result_statements.len();
+        env.push_invariant_set(InvariantSet::new_justified_by(
             this,
             result_statements,
-            result_justifications,
-            hashset![this],
+            vec![vec![vec![true_invs_id, false_invs_id]]; len],
         ))
     }
 

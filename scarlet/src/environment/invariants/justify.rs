@@ -79,9 +79,6 @@ impl<'x> Environment<'x> {
                     let set = &mut env.invariant_sets[id];
                     set.connected_to_root = true;
                     for &s in set.clone().statements() {
-                        if s.index == 323 {
-                            panic!();
-                        }
                         let first = env.items.first().unwrap();
                     }
                     progress = true;
@@ -95,13 +92,15 @@ impl<'x> Environment<'x> {
 
     pub(crate) fn justify_all(&mut self) {
         let mut encountered_err = false;
-        for limit in 0..16 {
+        const MAX_LIMIT: u32 = 10;
+        for limit in 0..MAX_LIMIT {
+            println!("{}/{}", limit, MAX_LIMIT);
             self.for_each_invariant_set(|env, id| {
                 if !env.invariant_sets[id].required {
                     return;
                 }
                 let res = env.justify(id, limit);
-                if limit == 15
+                if limit == MAX_LIMIT - 1
                     && !env.invariant_sets[id].connected_to_root
                     && env.invariant_sets[id].statements().len() > 0
                 {
@@ -111,6 +110,7 @@ impl<'x> Environment<'x> {
                     } else {
                         eprintln!("The following can only be justified circularly:");
                     }
+                    println!("{:?}", env.items[env.invariant_sets[id].context].scope);
                     println!("Statements:");
                     let first = env.items.first().unwrap();
                     for &statement in env.invariant_sets[id].clone().statements() {
@@ -149,7 +149,7 @@ impl<'x> Environment<'x> {
             });
             if all_connected {
                 break;
-            } else if limit == 15 {
+            } else if limit == MAX_LIMIT - 1 {
                 // for (id, set) in self.invariant_sets.clone() {
                 //     if !set.connected_to_root {
                 //         println!("UNJUSTIFIED:")
@@ -234,7 +234,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = true;
+        let trace = false;
         if limit == 0 {
             if trace {
                 println!("Limit reached.");
@@ -249,7 +249,6 @@ impl<'x> Environment<'x> {
                 vec![&frame.subs],
                 limit,
             )? {
-                println!("LAKJFS");
                 if subs.len() > 0 {
                     return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
@@ -280,7 +279,7 @@ impl<'x> Environment<'x> {
                         continue;
                     }
                     let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
-                        statement,
+                        context,
                         rec.into_iter().collect(),
                     ));
                     if trace {
