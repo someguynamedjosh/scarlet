@@ -96,7 +96,8 @@ impl<'x> Environment<'x> {
         for limit in 0..MAX_LIMIT {
             println!("{}/{}", limit, MAX_LIMIT);
             self.for_each_invariant_set(|env, id| {
-                if !env.invariant_sets[id].required {
+                let set = &env.invariant_sets[id];
+                if !set.required || set.connected_to_root {
                     return;
                 }
                 let res = env.justify(id, limit);

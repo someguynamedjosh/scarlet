@@ -9,13 +9,19 @@ x IS std.basics.x
 x.IS_POPULATED_STRUCT
 
 is_struct IS 
-logic.or[
+# logic.or[
    logic.and[
       x.IS_POPULATED_STRUCT
-      is_struct
+      is_struct[x.REST]
    ]
-   x = void
-]
+#    x = void
+# ]
+
+struct_c IS VAR[is_struct[SELF]]
+struct_c[false]
+
+# ps_c IS VAR[logic.or[SELF.IS_POPULATED_STRUCT false]]
+# ps_c[{thing IS true}]
 
 t_just IS VAR[SELF]
 # t_just[false].SHOWN
