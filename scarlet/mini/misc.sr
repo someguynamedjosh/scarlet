@@ -4,40 +4,13 @@ void IS std.void
 fx IS std.basics.fx
 x IS std.basics.x
 
-t_trivial IS std.theorems.t_trivial
-t_eq_ext_rev IS std.theorems.t_eq_ext_rev
-t_refl IS std.theorems.t_refl.AS_AUTO_THEOREM
-t_decision_eq IS std.theorems.t_decision_eq.AS_AUTO_THEOREM
-t_decision_by_parts IS std.theorems.t_decision_by_parts.AS_AUTO_THEOREM
-t_decision_by_parts_ext IS std.theorems.t_decision_by_parts_ext.AS_AUTO_THEOREM
-
 t_just IS VAR[SELF]
 
-b IS VAR[DECISION[SELF true true SELF=false]]
-not IS b = false
+is_struct IS DECISION[
+   is_struct
+   true
+   false
+   false
+]
 
-# recursive IS not[recursive]
-# bv IS DECISION[x false true false]
-b[true]
-
-# is_true IS x = true
-# is_bool IS DECISION[x true true x=false]
-# t_just[is_bool[x.IS_POPULATED_STRUCT]]
-# x.IS_POPULATED_STRUCT
-
-# recursive IS DECISION[void true recursive recursive]
-# t_decision_by_parts[void void true false]
-# t_just[recursive]
-
-# t_decision_ext[void void recursive=true recursive=true]
-# something IS DECISION[c d true true]
-# t_just[is_true[something]]
-
-# DECISION[
-#     c d
-#     t_just[c = d]
-#     t_just[DECISION[c d false true]]
-# ]
-
-c IS VAR[]
-d IS VAR[]
+t_just[is_struct = true]

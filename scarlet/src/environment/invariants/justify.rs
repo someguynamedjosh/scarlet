@@ -173,6 +173,22 @@ impl<'x> Environment<'x> {
         if encountered_err {
             todo!("nice error: Invariants are not justified.");
         }
+        let first = self.items.first().unwrap();
+        for (id, iset) in self.invariant_sets.clone() {
+            if iset.statements().len() == 0 {
+                continue;
+            }
+            if ![4483, 4357, 4482, 4414, 4413, 4350, 4349].contains(&id.index) {
+                continue;
+            }
+            println!("{:?}", id);
+            for &statement in iset.statements() {
+                println!("{:?}", statement);
+                println!("{}", self.show(statement, first));
+            }
+            println!("Justified by {:?}", iset.justified_by());
+            println!();
+        }
     }
 
     fn justify(
@@ -235,7 +251,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = false;
+        let trace = statement.index == 15680;
         if limit == 0 {
             if trace {
                 println!("Limit reached.");

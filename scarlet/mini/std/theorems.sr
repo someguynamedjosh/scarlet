@@ -20,8 +20,6 @@ t_eq_ext_rev IS
 }
 .VALUE
 
-AXIOM[t_trivial]
-
 t_refl IS {
    AXIOM[t_refl]
 
@@ -44,6 +42,7 @@ t_decision_eq IS {
    v IS VAR[]
 }
 .VALUE
+.AS_AUTO_THEOREM
 
 t_decision_by_parts IS {
    AXIOM[t_inv_eq]
@@ -57,6 +56,7 @@ t_decision_by_parts IS {
    v IS VAR[SELF]
 }
 .VALUE
+# .AS_AUTO_THEOREM
 
 t_decision_by_parts_ext IS {
    AXIOM[t_decision_neq]
@@ -70,6 +70,16 @@ t_decision_by_parts_ext IS {
    v IS VAR[fx[SELF]]
 }
 .VALUE
+# .AS_AUTO_THEOREM
 
 true.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
-true.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
+
+t_invariant_truth_rev IS {
+   AXIOM[t_invariant_truth_rev]
+
+   i.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
+
+   i IS VAR[SELF = true]
+}
+.VALUE
+.AS_AUTO_THEOREM

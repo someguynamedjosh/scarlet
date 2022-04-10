@@ -1,6 +1,6 @@
 
 and IS 
-DECISION[a true true b]
+DECISION[a true b false]
 .AS_LANGUAGE_ITEM[and]
 
 or IS DECISION[a true true b]

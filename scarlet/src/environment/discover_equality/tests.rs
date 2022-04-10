@@ -517,6 +517,87 @@ fn is_bool_sub_y_is_y_is_bool() {
     );
 }
 
+/// f[z] <=> DECISION[x y a b]
+#[test]
+fn multi_variable_dex_is_single_variable_dex() {
+    let mut env = env();
+
+    let a = env.unique();
+    let b = env.unique();
+    let x = env.variable_full();
+    env.set_name(x.0, "x".to_owned());
+    let y = env.variable_full();
+    env.set_name(y.0, "y".to_owned());
+    let z = env.variable_full();
+    env.set_name(z.0, "z".to_owned());
+
+    let fz = env.variable_full_with_deps(vec![z.0]);
+    env.set_name(fz.0, "fz".to_owned());
+
+    let multi_variable_dex = env.decision(x.0, y.0, a, b);
+
+    if let Equal::Yes(subs) = env.discover_equal(fz.0, multi_variable_dex, 15).unwrap() {
+        assert_eq!(subs.len(), 2);
+        let sub = *subs.get(&z.1).unwrap();
+        assert_eq!(sub, x.0);
+        let sub = *subs.get(&fz.1).unwrap();
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+            let mut expected = Substitutions::new();
+            expected.insert_no_replace(x.1, z.0);
+            assert_eq!(def.substitutions(), &expected);
+            assert_eq!(def.base(), multi_variable_dex);
+        } else {
+            panic!("Substituted value is not itself a substitution!");
+        }
+    } else {
+        panic!("Not equal!");
+    }
+}
+
+/// f[z] <=> DECISION[x y a b]
+#[test]
+fn multi_variable_dex_sub_something_is_single_variable_dex() {
+    let mut env = env();
+
+    let a = env.unique();
+    let b = env.unique();
+    let x = env.variable_full();
+    env.set_name(x.0, "x".to_owned());
+    let y = env.variable_full();
+    env.set_name(y.0, "y".to_owned());
+    let z = env.variable_full();
+    env.set_name(z.0, "z".to_owned());
+
+    let fz = env.variable_full_with_deps(vec![z.0]);
+    env.set_name(fz.0, "fz".to_owned());
+
+    let multi_variable_dex = env.decision(x.0, y.0, a, b);
+    let subbed_multi_variable_dex =
+        env.substitute_unchecked(multi_variable_dex, &subs(vec![(x.1, a)]));
+
+    if let Equal::Yes(subs) = env
+        .discover_equal(fz.0, subbed_multi_variable_dex, 15)
+        .unwrap()
+    {
+        assert_eq!(subs.len(), 2);
+        let sub = *subs.get(&z.1).unwrap();
+        assert_eq!(sub, y.0);
+        let sub = *subs.get(&fz.1).unwrap();
+        println!("{}", env.show(sub, a));
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+            let def = def.clone();
+            let mut expected = Substitutions::new();
+            expected.insert_no_replace(y.1, z.0);
+            assert_eq!(def.substitutions(), &expected);
+            // Look, it works correctly, and I really don't want to write
+            // another test for it. I'm tired of it not working.
+        } else {
+            panic!("Substituted value is not itself a substitution!");
+        }
+    } else {
+        panic!("Not equal!");
+    }
+}
 
 // t_just[is_bool[DECISION[a b u v]]] <=> fx[DECISION[a b u v]]
 // #[test]
