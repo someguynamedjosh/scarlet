@@ -29,7 +29,8 @@ fn uncreate<'x>(
         let base = recursion.get_base();
         Ok(Some(Node {
             phrase: "recursion",
-            children: vec![NodeChild::Node(env.vomit(255, ctx, base))],
+            // children: vec![NodeChild::Node(env.vomit(255, ctx, base))],
+            children: vec![],
             ..Default::default()
         }))
     } else {
@@ -38,7 +39,8 @@ fn uncreate<'x>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("#= recursive =# {}", src.children[0].as_node().vomit(pc))
+    // format!("#= recursive =# {}", src.children[0].as_node().vomit(pc))
+    format!("RECURSE")
 }
 
 pub fn phrase() -> Phrase {

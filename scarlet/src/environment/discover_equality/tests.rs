@@ -516,3 +516,8 @@ fn is_bool_sub_y_is_y_is_bool() {
         Ok(Equal::Yes(Substitutions::new()))
     );
 }
+
+
+// t_just[is_bool[DECISION[a b u v]]] <=> fx[DECISION[a b u v]]
+// #[test]
+// fn tjust_isbool_something_is_

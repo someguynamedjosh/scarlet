@@ -45,7 +45,7 @@ t_decision_eq IS {
 }
 .VALUE
 
-t_decision_ext IS {
+t_decision_by_parts IS {
    AXIOM[t_inv_eq]
 
    (DECISION[a b u v])
@@ -56,8 +56,20 @@ t_decision_ext IS {
    u IS VAR[SELF]
    v IS VAR[SELF]
 }
+.VALUE
 
-true.AS_LANGUAGE_ITEM[t_inv_eq_statement]
-true.AS_LANGUAGE_ITEM[t_decision_neq_statement]
+t_decision_by_parts_ext IS {
+   AXIOM[t_decision_neq]
+
+   (fx[DECISION[a b u v]])
+   .AS_LANGUAGE_ITEM[t_decision_neq_statement]
+
+   a IS VAR[]
+   b IS VAR[]
+   u IS VAR[fx[SELF]]
+   v IS VAR[fx[SELF]]
+}
+.VALUE
+
 true.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
 true.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]

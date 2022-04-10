@@ -82,13 +82,13 @@ impl InvariantSet {
         }
     }
 
-    pub(super) fn new_depending_on(context: ItemId, dependencies: HashSet<ItemId>) -> InvariantSet {
+    pub(super) fn new_recursive_justification(context: ItemId, dependencies: HashSet<ItemId>) -> InvariantSet {
         Self {
             context,
             statements: Vec::new(),
             justification_requirements: Vec::new(),
             statement_justifications: None,
-            connected_to_root: false,
+            connected_to_root: true,
             required: false,
             dependencies,
         }

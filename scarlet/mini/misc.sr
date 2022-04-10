@@ -4,15 +4,24 @@ void IS std.void
 fx IS std.basics.fx
 x IS std.basics.x
 
-# t_trivial IS std.theorems.t_trivial
-# t_eq_ext_rev IS std.theorems.t_eq_ext_rev
-# t_refl IS std.theorems.t_refl
-# t_decision_eq IS std.theorems.t_decision_eq
-t_decision_ext IS std.theorems.t_decision_ext
+t_trivial IS std.theorems.t_trivial
+t_eq_ext_rev IS std.theorems.t_eq_ext_rev
+t_refl IS std.theorems.t_refl.AS_AUTO_THEOREM
+t_decision_eq IS std.theorems.t_decision_eq.AS_AUTO_THEOREM
+t_decision_by_parts IS std.theorems.t_decision_by_parts.AS_AUTO_THEOREM
+t_decision_by_parts_ext IS std.theorems.t_decision_by_parts_ext.AS_AUTO_THEOREM
 
 t_just IS VAR[SELF]
 
-recursive IS DECISION[void void recursive recursive]
+is_true IS x = true
 
-t_decision_ext[void void recursive=true recursive=true]
-# t_just[recursive = true]
+recursive IS DECISION[void true recursive recursive]
+# t_decision_by_parts[void void true false]
+t_just[recursive]
+
+# t_decision_ext[void void recursive=true recursive=true]
+# something IS DECISION[c d true true]
+# t_just[is_true[something]]
+
+c IS VAR[]
+d IS VAR[]

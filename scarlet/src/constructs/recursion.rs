@@ -29,6 +29,13 @@ impl Construct for CRecursion {
         Box::new(self.clone())
     }
 
+    fn dereference(
+        &self,
+        env: &mut Environment,
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
+        Some((self.0, None, None))
+    }
+
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {
         env.get_dependencies(self.0)
     }

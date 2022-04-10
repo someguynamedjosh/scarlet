@@ -140,45 +140,45 @@
 # .VALUE
 # .AS_AUTO_THEOREM
 
-t_decision_by_parts IS
-{
-   t_just[conclusion]
+# t_decision_by_parts IS
+# {
+#    t_just[conclusion]
 
-   DECISION[
-      a b
+#    DECISION[
+#       a b
 
-      {
-         t_just[conclusion]
-         # Proves conclusion
-         t_inv_eq[c conclusion]
-         # Proves c = conclusion
-         t_eq_symm[conclusion c]
-         # Proves conclusion = c
-         t_decision_eq[a b c d]
-      }
-      .VALUE
+#       {
+#          t_just[conclusion]
+#          # Proves conclusion
+#          t_inv_eq[c conclusion]
+#          # Proves c = conclusion
+#          t_eq_symm[conclusion c]
+#          # Proves conclusion = c
+#          t_decision_eq[a b c d]
+#       }
+#       .VALUE
 
-      {
-         t_just[conclusion]
-         # Proves conclusion
-         t_inv_eq[d conclusion]
-         # Proves d = conclusion
-         t_eq_symm[conclusion d]
-         # Proves conclusion = d
-         t_decision_neq[a b c d]
-      }
-      .VALUE
-   ]
+#       {
+#          t_just[conclusion]
+#          # Proves conclusion
+#          t_inv_eq[d conclusion]
+#          # Proves d = conclusion
+#          t_eq_symm[conclusion d]
+#          # Proves conclusion = d
+#          t_decision_neq[a b c d]
+#       }
+#       .VALUE
+#    ]
 
-   conclusion IS DECISION[a b c d]
+#    conclusion IS DECISION[a b c d]
 
-   a IS VAR[]
-   b IS VAR[]
-   c IS VAR[c]
-   d IS VAR[d]
-}
-.VALUE
-.AS_AUTO_THEOREM
+#    a IS VAR[]
+#    b IS VAR[]
+#    c IS VAR[c]
+#    d IS VAR[d]
+# }
+# .VALUE
+# .AS_AUTO_THEOREM
 
 t_just IS 
 {

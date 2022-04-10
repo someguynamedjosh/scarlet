@@ -109,7 +109,7 @@ impl<'x> Environment<'x> {
                         eprintln!("Error while justifying invariant set:");
                         eprintln!("{:?}", err);
                     } else {
-                        eprintln!("The following can only be justified recursively:");
+                        eprintln!("The following can only be justified circularly:");
                     }
                     println!("Statements:");
                     let first = env.items.first().unwrap();
@@ -212,7 +212,6 @@ impl<'x> Environment<'x> {
                     if subs.len() > 0 {
                         continue;
                     }
-                    let first = self.items.first().unwrap();
                     result.push(vec![other_id]);
                 }
             }
@@ -235,8 +234,11 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = false;
+        let trace = true;
         if limit == 0 {
+            if trace {
+                println!("Limit reached.");
+            }
             return Err(err);
         }
         for frame in self.justify_stack.clone() {
@@ -247,18 +249,14 @@ impl<'x> Environment<'x> {
                 vec![&frame.subs],
                 limit,
             )? {
+                println!("LAKJFS");
                 if subs.len() > 0 {
-                    continue;
+                    return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
                 let rec = self.evaluation_of_item_recurses_over(statement)?;
                 if rec.len() == 0 {
-                    continue;
+                    return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
-                let inv = self.push_invariant_set(InvariantSet::new_depending_on(
-                    statement,
-                    rec.into_iter().collect(),
-                ));
-                return Ok(vec![vec![inv]]);
             }
         }
         let mut candidates = Vec::new();
@@ -275,18 +273,46 @@ impl<'x> Environment<'x> {
         }
         let mut successful_candidates = Vec::new();
         'check_next_candidate: for (inv_id, inv, subs) in candidates {
-            if subs.len() == 0 {
-                successful_candidates.push(vec![inv_id]);
-            }
-            for frame in &self.justify_stack {
+            for frame in self.justify_stack.clone() {
                 if frame.base == inv && frame.subs == subs {
-                    return Err(LookupInvariantError::DefinitelyDoesNotExist);
+                    let rec = self.evaluation_of_item_recurses_over(statement)?;
+                    if rec.len() == 0 {
+                        continue;
+                    }
+                    let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
+                        statement,
+                        rec.into_iter().collect(),
+                    ));
+                    if trace {
+                        println!("Justified recursively.");
+                    }
+                    successful_candidates.push(vec![inv]);
                 }
             }
+            if subs.len() == 0 {
+                successful_candidates.push(vec![inv_id]);
+                continue;
+            }
+            self.justify_stack.push(JustifyStackFrame {
+                base: inv,
+                subs: subs.clone(),
+            });
+            let mut justifications = Vec::new();
+            let ok = self.check_subs(
+                context,
+                statement,
+                subs.clone(),
+                limit,
+                &mut justifications,
+                &mut err,
+                trace,
+            );
+            self.justify_stack.pop();
             if trace {
                 let first = self.items.first().unwrap();
                 let mut message = format!(
-                    "\nAttempting to justify:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
+                    "\nAttempted to justify with{} success:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
+                    if ok { "" } else { "out" },
                     indented(&self.show(statement, first)),
                     indented(&self.show(inv, first)),
                 );
@@ -302,21 +328,6 @@ impl<'x> Environment<'x> {
                 let indentation = format!("\n{}", vec![" "; depth].join(""));
                 println!("{}", indented_with(&message, &indentation))
             }
-            self.justify_stack.push(JustifyStackFrame {
-                base: inv,
-                subs: subs.clone(),
-            });
-            let mut justifications = Vec::new();
-            let ok = self.check_subs(
-                context,
-                statement,
-                subs,
-                limit,
-                &mut justifications,
-                &mut err,
-                trace,
-            );
-            self.justify_stack.pop();
             if !ok {
                 continue 'check_next_candidate;
             }
@@ -347,12 +358,15 @@ impl<'x> Environment<'x> {
                 let result = self.justify_statement(context, statement, limit - 1);
                 match result {
                     Ok(new_justifications) => {
-                        let set = self.push_invariant_set(InvariantSet::new_not_required(
-                            statement,
-                            vec![statement],
-                            vec![statement],
-                            hashset![],
-                        ));
+                        let set = self.push_invariant_set(InvariantSet {
+                            context,
+                            statements: vec![statement],
+                            statement_justifications: Some(vec![new_justifications]),
+                            justification_requirements: vec![statement],
+                            dependencies: hashset![],
+                            required: false,
+                            connected_to_root: false,
+                        });
                         justifications.push(set);
                     }
                     Err(LookupInvariantError::Unresolved(..))
