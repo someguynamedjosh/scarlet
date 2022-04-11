@@ -42,7 +42,7 @@ t_decision_eq IS {
    v IS VAR[]
 }
 .VALUE
-.AS_AUTO_THEOREM
+# .AS_AUTO_THEOREM
 
 t_decision_by_parts IS {
    AXIOM[t_inv_eq]
@@ -72,7 +72,15 @@ t_decision_by_parts_ext IS {
 .VALUE
 # .AS_AUTO_THEOREM
 
-true.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
+t_invariant_truth IS {
+   AXIOM[t_invariant_truth]
+
+   (i = true).AS_LANGUAGE_ITEM[t_invariant_truth_statement]
+
+   i IS VAR[SELF]
+}
+.VALUE
+.AS_AUTO_THEOREM
 
 t_invariant_truth_rev IS {
    AXIOM[t_invariant_truth_rev]

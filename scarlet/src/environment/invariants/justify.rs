@@ -251,7 +251,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = statement.index == 15680;
+        let trace = true;
         if limit == 0 {
             if trace {
                 println!("Limit reached.");
@@ -300,6 +300,7 @@ impl<'x> Environment<'x> {
                         rec.into_iter().collect(),
                     ));
                     if trace {
+                        println!("{}", self.show(frame.base, frame.base));
                         println!("Justified recursively.");
                     }
                     successful_candidates.push(vec![inv]);
@@ -324,7 +325,7 @@ impl<'x> Environment<'x> {
                 trace,
             );
             self.justify_stack.pop();
-            if trace {
+            if trace && ok {
                 let first = self.items.first().unwrap();
                 let mut message = format!(
                     "\nAttempted to justify with{} success:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
