@@ -3,11 +3,13 @@ false IS std.false
 void IS std.void
 fx IS std.basics.fx
 x IS std.basics.x
-t_just IS VAR[SELF]
+t_refl IS std.theorems.t_refl
+t_just IS std.theorems.t_just
 
 b IS VAR[]
 c IS VAR[]
 
+t_refl[true]
 t_just[
    fx[c][x = b   true   b IS true]
 ]
