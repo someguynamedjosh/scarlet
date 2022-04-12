@@ -173,22 +173,6 @@ impl<'x> Environment<'x> {
         if encountered_err {
             todo!("nice error: Invariants are not justified.");
         }
-        let first = self.items.first().unwrap();
-        for (id, iset) in self.invariant_sets.clone() {
-            if iset.statements().len() == 0 {
-                continue;
-            }
-            if ![4483, 4357, 4482, 4414, 4413, 4350, 4349].contains(&id.index) {
-                continue;
-            }
-            println!("{:?}", id);
-            for &statement in iset.statements() {
-                println!("{:?}", statement);
-                println!("{}", self.show(statement, first));
-            }
-            println!("Justified by {:?}", iset.justified_by());
-            println!();
-        }
     }
 
     fn justify(
@@ -251,7 +235,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace = true;
+        let trace = false;
         if limit == 0 {
             if trace {
                 println!("Limit reached.");
@@ -290,14 +274,30 @@ impl<'x> Environment<'x> {
         let mut successful_candidates = Vec::new();
         'check_next_candidate: for (inv_id, inv, subs) in candidates {
             for frame in self.justify_stack.clone() {
-                if frame.base == inv && frame.subs == subs {
+                if let Equal::Yes(subs) = self.discover_equal_with_subs(
+                    statement,
+                    vec![],
+                    frame.base,
+                    vec![&frame.subs],
+                    limit,
+                )? {
+                    if subs.len() > 0 {
+                        continue;
+                    }
                     let rec = self.evaluation_of_item_recurses_over(statement)?;
-                    if rec.len() == 0 {
+                    if rec.len() != 1 {
+                        continue;
+                    }
+                    let rec = rec[0];
+                    if !self.item_is_or_contains_item(frame.base, rec)? {
+                        continue;
+                    }
+                    if self.item_is_or_contains_item(statement, rec)? {
                         continue;
                     }
                     let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
                         context,
-                        rec.into_iter().collect(),
+                        vec![rec].into_iter().collect(),
                     ));
                     if trace {
                         println!("{}", self.show(frame.base, frame.base));

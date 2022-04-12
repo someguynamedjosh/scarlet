@@ -75,4 +75,21 @@ impl<'x> Environment<'x> {
     pub fn set_scope(&mut self, item_id: ItemId, scope: Box<dyn Scope>) {
         self.items[item_id].scope = scope;
     }
+
+    pub fn item_is_or_contains_item(
+        &mut self,
+        original: ItemId,
+        is_or_contains: ItemId,
+    ) -> Result<bool, UnresolvedItemError> {
+        Ok(if original == is_or_contains {
+            true
+        } else {
+            for content in self.get_item_as_construct(original)?.contents().clone() {
+                if self.item_is_or_contains_item(content, is_or_contains)? {
+                    return Ok(true);
+                }
+            }
+            false
+        })
+    }
 }
