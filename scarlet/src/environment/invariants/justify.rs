@@ -88,6 +88,30 @@ impl<'x> Environment<'x> {
                 break;
             }
         }
+        // So here's the story:
+        // You can justify DECISION[RECURSE true false false] = true
+        //    by justifying (a = b)[DECISION[RECURSE true false false]   true]
+        //        by  justifying fx[c](x = b   false)
+        //            which is somehow justifiable by u[true]?!?!
+        //        and justifying fx[d](x = b   false)
+        //    and justifying true
+        let first = self.items.first().unwrap();
+        for (id, iset) in self.invariant_sets.clone() {
+            if iset.statements().len() == 0 {
+                continue;
+            }
+            if ![].contains(&id.index) {
+                // if ![44, 1695, 1656, 1649].contains(&id.index) {
+                continue;
+            }
+            println!("{:?}", id);
+            for &statement in iset.statements() {
+                println!("{:?}", statement);
+                println!("{}", self.show(statement, first));
+            }
+            println!("Justified by {:?}", iset.justified_by());
+            println!();
+        }
     }
 
     pub(crate) fn justify_all(&mut self) {
@@ -173,6 +197,22 @@ impl<'x> Environment<'x> {
         if encountered_err {
             todo!("nice error: Invariants are not justified.");
         }
+        // let first = self.items.first().unwrap();
+        // for (id, iset) in self.invariant_sets.clone() {
+        //     if iset.statements().len() == 0 {
+        //         continue;
+        //     }
+        //     if ![44].contains(&id.index) {
+        //         continue;
+        //     }
+        //     println!("{:?}", id);
+        //     for &statement in iset.statements() {
+        //         println!("{:?}", statement);
+        //         println!("{}", self.show(statement, first));
+        //     }
+        //     println!("Justified by {:?}", iset.justified_by());
+        //     println!();
+        // }
     }
 
     fn justify(
@@ -235,6 +275,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
+        // let trace = statement.index == 6085;
         let trace = false;
         if limit == 0 {
             if trace {

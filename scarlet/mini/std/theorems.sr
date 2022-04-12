@@ -1,93 +1,39 @@
+t_trivial IS basic_axioms.t_trivial
+t_eq_ext_rev IS basic_axioms.t_eq_ext_rev
+t_inv_eq IS basic_axioms.t_inv_eq
+t_refl IS basic_axioms.t_refl
+
+t_invariant_truth IS 
+basic_axioms.t_invariant_truth
+
+t_invariant_truth_rev IS 
+basic_axioms.t_invariant_truth_rev
+
+
+t_decision_eq IS 
+computation_axioms.t_decision_eq
+
+t_decision_neq IS
+computation_axioms.t_decision_neq
+
+
+t_eq_symm IS equality.t_eq_symm
+t_eq_ext IS equality.t_eq_ext
+t_inv_eq_ext IS equality.t_inv_eq_ext
+t_eq_trans IS equality.t_eq_trans
+
+
+# t_extract_eq_from_decision IS 
+# other.t_extract_eq_from_decision
+
+# t_decision_by_parts IS 
+# other.t_decision_by_parts
+
+# t_decision_by_parts_ext IS 
+# other.t_decision_by_parts_ext
+
+# t_decision_eq_inv IS other.t_decision_eq_inv
+t_just IS other.t_just
+
 x IS basics.x
 fx IS basics.fx
-
-t_trivial IS {
-   AXIOM[t_trivial]
-
-   true.AS_LANGUAGE_ITEM[t_trivial_statement]
-}
-.VALUE
-
-t_eq_ext_rev IS 
-{
-   AXIOM[t_eq_ext_rev]
-
-   (fx[b] = fx[a])
-   .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
-
-   a IS VAR[]
-   b IS VAR[a = SELF]
-}
-.VALUE
-
-t_refl IS {
-   AXIOM[t_refl]
-
-   (a = a)
-   .AS_LANGUAGE_ITEM[t_refl_statement]
-
-   a IS VAR[]
-}
-.VALUE
-
-t_decision_eq IS {
-   AXIOM[t_decision_eq]
-
-   (DECISION[a b u v] = u)
-   .AS_LANGUAGE_ITEM[t_decision_eq_statement]
-
-   a IS VAR[]
-   b IS VAR[a = SELF]
-   u IS VAR[]
-   v IS VAR[]
-}
-.VALUE
-# .AS_AUTO_THEOREM
-
-t_decision_by_parts IS {
-   AXIOM[t_inv_eq]
-
-   (DECISION[a b u v])
-   .AS_LANGUAGE_ITEM[t_inv_eq_statement]
-
-   a IS VAR[]
-   b IS VAR[]
-   u IS VAR[SELF]
-   v IS VAR[SELF]
-}
-.VALUE
-# .AS_AUTO_THEOREM
-
-t_decision_by_parts_ext IS {
-   AXIOM[t_decision_neq]
-
-   (fx[DECISION[a b u v]])
-   .AS_LANGUAGE_ITEM[t_decision_neq_statement]
-
-   a IS VAR[]
-   b IS VAR[]
-   u IS VAR[fx[SELF]]
-   v IS VAR[fx[SELF]]
-}
-.VALUE
-# .AS_AUTO_THEOREM
-
-t_invariant_truth IS {
-   AXIOM[t_invariant_truth]
-
-   (i = true).AS_LANGUAGE_ITEM[t_invariant_truth_statement]
-
-   i IS VAR[SELF]
-}
-.VALUE
-.AS_AUTO_THEOREM
-
-t_invariant_truth_rev IS {
-   AXIOM[t_invariant_truth_rev]
-
-   i.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
-
-   i IS VAR[SELF = true]
-}
-.VALUE
-.AS_AUTO_THEOREM

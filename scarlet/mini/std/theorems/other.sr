@@ -1,0 +1,187 @@
+# From DECISION[a   b   t = u   t = v]
+# Proves t = DECISION[a b u v]
+t_extract_eq_from_decision IS 
+{
+   t_just[t = conclusion_right]
+
+   DECISION[
+      a b
+
+      {
+         # Proves t = conclusion_right
+         t_eq_trans[t u conclusion_right]
+         # Proves u = conclusion_right
+         t_eq_symm[conclusion_right u]
+         # Proves conclusion_right = u
+         t_decision_eq[a b u v]
+         # Proves t = u
+         t_inv_eq[hypothesis   t = u]
+         # Proves hypothesis = (t = u)
+         t_decision_eq[a   b   t = u   t = v]
+      }
+      .VALUE
+
+      {
+         # Proves t = conclusion_right
+         t_eq_trans[t v conclusion_right]
+         # Proves v = conclusion_right
+         t_eq_symm[conclusion_right v]
+         # Proves conclusion_right = v
+         t_decision_neq[a b u v]
+         # Proves t = v
+         t_inv_eq[hypothesis   t = v]
+         # Proves hypothesis = (t = v)
+         t_decision_neq[
+            a   b   t = u   t = v
+         ]
+      }
+      .VALUE
+   ]
+
+   hypothesis IS DECISION[
+      a   b   t = u   t = v
+   ]
+
+   conclusion IS t = conclusion_right
+   conclusion_right IS DECISION[a b u v]
+
+   a IS VAR[]
+   b IS VAR[]
+   t IS VAR[]
+   u IS VAR[]
+   v IS VAR[hypothesis]
+}
+.VALUE
+
+# From a = b   u
+# Proves DECISION[a b u v]
+t_decision_eq_inv IS
+{
+   t_just[DECISION[a b u v]]
+
+   # Proves DECISION[a b u v]
+   t_inv_eq[u   DECISION[a b u v]]
+   # Proves u = DECISION[a b u v]
+   t_eq_symm[DECISION[a b u v]   u]
+   # Proves DECISION[a b u v] = u
+   t_decision_eq[a b u v]
+
+   a IS VAR[]
+   b IS VAR[a = SELF]
+   u IS VAR[SELF]
+   v IS VAR[]
+}
+.VALUE
+.AS_AUTO_THEOREM
+
+# From a =NOT b   v
+# Proves DECISION[a b u v]
+t_decision_neq_inv IS
+{
+   t_just[DECISION[a b u v]]
+
+   # Proves DECISION[a b u v]
+   t_inv_eq[v   DECISION[a b u v]]
+   # Proves v = DECISION[a b u v]
+   t_eq_symm[DECISION[a b u v]   v]
+   # Proves DECISION[a b u v] = v
+   t_decision_neq[a b u v]
+
+   a IS VAR[]
+   b IS VAR[DECISION[a SELF false true]]
+   u IS VAR[]
+   v IS VAR[SELF]
+}
+.VALUE
+.AS_AUTO_THEOREM
+
+t_decision_by_parts_ext IS
+{
+   t_just[conclusion]
+
+   DECISION[
+      a b
+
+      {
+         t_just[conclusion]
+         # Proves conclusion
+         t_inv_eq[fx[c] conclusion]
+         # Proves fx[c] = conclusion
+         t_eq_ext[fx c inner]
+         # Proves c = inner
+         t_eq_symm[inner c]
+         # Proves inner = c
+         t_decision_eq[a b c d]
+      }
+      .VALUE
+
+      {
+         t_just[conclusion]
+         # Proves conclusion
+         t_inv_eq[fx[d] conclusion]
+         # Proves fx[d] = conclusion
+         t_eq_ext[fx d inner]
+         # Proves d = inner
+         t_eq_symm[inner d]
+         # Proves inner = d
+         t_decision_neq[a b c d]
+      }
+      .VALUE
+   ]
+
+   conclusion IS fx[inner]
+   inner IS DECISION[a b c d]
+
+   a IS VAR[]
+   b IS VAR[]
+   c IS VAR[fx[c]]
+   d IS VAR[fx[d]]
+}
+.VALUE
+.AS_AUTO_THEOREM
+
+t_decision_by_parts IS
+{
+   # t_just[conclusion]
+
+   DECISION[
+      a b
+
+      {
+         # t_just[conclusion]
+         # Proves conclusion
+         # t_inv_eq[c conclusion]
+         # Proves c = conclusion
+         # t_eq_symm[conclusion c]
+         # Proves conclusion = c
+         t_decision_eq[a b c d]
+      }
+      .VALUE
+
+      {
+         # t_just[conclusion]
+         # Proves conclusion
+         # t_inv_eq[d conclusion]
+         # Proves d = conclusion
+         # t_eq_symm[conclusion d]
+         # Proves conclusion = d
+         t_decision_neq[a b c d]
+      }
+      .VALUE
+   ]
+
+   conclusion IS DECISION[a b c d]
+
+   a IS VAR[]
+   b IS VAR[]
+   c IS VAR[c]
+   d IS VAR[d]
+}
+.VALUE
+.AS_AUTO_THEOREM
+
+t_just IS 
+{
+   VAR[SELF]
+}
+.VALUE

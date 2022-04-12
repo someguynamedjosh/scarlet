@@ -3,14 +3,20 @@ false IS std.false
 void IS std.void
 fx IS std.basics.fx
 x IS std.basics.x
-
 t_just IS VAR[SELF]
 
-is_struct IS DECISION[
-   is_struct
-   true
-   false
-   false
+b IS VAR[]
+c IS VAR[]
+
+t_just[
+   fx[c][x = b   true   b IS true]
 ]
 
-t_just[is_struct = true]
+# is_struct IS DECISION[
+#    is_struct
+#    true
+#    false
+#    false
+# ]
+
+# t_just[is_struct = true]
