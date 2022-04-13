@@ -36,6 +36,7 @@ impl CSubstitution {
         base: ItemId,
         subs: Substitutions,
     ) -> Self {
+        let base_deps = env.get_dependencies(base);
         Self::new(
             base,
             subs,

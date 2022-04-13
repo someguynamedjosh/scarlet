@@ -599,6 +599,41 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
     }
 }
 
+/// fx[fx IS x = y   x IS a   y IS b] <=/=> a = b
+#[test]
+fn sneaky_substitution() {
+    let mut env = env();
+
+    // I13
+    let a = env.unique();
+    // I14
+    let b = env.unique();
+    // I15
+    let t = env.unique();
+    // I16
+    let f = env.unique();
+    // I17 V0
+    let x = env.variable_full();
+    env.set_name(x.0, "x".to_owned());
+    // I18 V1
+    let y = env.variable_full();
+    env.set_name(y.0, "y".to_owned());
+
+    // I19 V2
+    let fx = env.variable_full_with_deps(vec![x.0]);
+    env.set_name(fx.0, "fx".to_owned());
+    let x_eq_y = env.decision(x.0, y.0, t, f);
+    let a_eq_b = env.decision(a, b, t, f);
+
+    let this_subs = subs(vec![(fx.1, x_eq_y), (x.1, a), (y.1, b)]);
+    let tricky_sub = env.substitute_unchecked(fx.0, &this_subs);
+
+    assert_eq!(
+        env.discover_equal(tricky_sub, a_eq_b, 5),
+        Ok(Equal::Yes(subs(vec![(y.1, b)])))
+    );
+}
+
 // t_just[is_bool[DECISION[a b u v]]] <=> fx[DECISION[a b u v]]
 // #[test]
 // fn tjust_isbool_something_is_

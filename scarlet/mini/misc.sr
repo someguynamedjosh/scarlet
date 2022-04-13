@@ -1,17 +1,17 @@
 true IS std.true
 false IS std.false
 void IS std.void
-fx IS std.basics.fx
-x IS std.basics.x
 t_refl IS std.theorems.t_refl
 t_just IS std.theorems.t_just
 
+fx IS VAR[DEP x]
+x IS VAR[]
 b IS VAR[]
 c IS VAR[]
 
 t_refl[true]
 t_just[
-   fx[c][x = b   true   b IS true]
+   fx[x = b   true   b IS true]
 ]
 
 # is_struct IS DECISION[

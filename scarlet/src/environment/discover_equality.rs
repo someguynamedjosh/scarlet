@@ -78,6 +78,38 @@ impl<'x> Environment<'x> {
         deps
     }
 
+    fn filter_subs(
+        &mut self,
+        base: ItemId,
+        subs: &Substitutions,
+    ) -> Result<Substitutions, UnresolvedItemError> {
+        let deps = self.get_dependencies(base);
+        if let Some(err) = deps.error() {
+            return Err(err);
+        }
+        let subs = subs
+            .into_iter()
+            .filter(|(var, _)| deps.contains_var(*var))
+            .copied()
+            .collect::<Substitutions>();
+        Ok(subs)
+    }
+
+    fn filter_subs_list(
+        &mut self,
+        base: ItemId,
+        subs: Vec<&Substitutions>,
+    ) -> Result<Vec<Substitutions>, UnresolvedItemError> {
+        let mut result = Vec::new();
+        let mut base = base;
+        for subs in subs {
+            let subs = self.filter_subs(base, subs)?;
+            base = self.substitute_unchecked(base, &subs);
+            result.push(subs);
+        }
+        Ok(result)
+    }
+
     pub(crate) fn discover_equal_with_subs(
         &mut self,
         left: ItemId,
@@ -89,12 +121,12 @@ impl<'x> Environment<'x> {
         let extra_sub_holder = Arena::new();
         let mut left = self.dereference(left)?;
         let mut right = self.dereference(right)?;
-        let mut left_subs = left_subs.into_iter().map(|r| &*r).collect_vec();
-        let mut right_subs = right_subs.into_iter().map(|r| &*r).collect_vec();
+        let mut left_subs = left_subs.into_iter().map(|x| &*x).collect_vec();
+        let mut right_subs = right_subs.into_iter().map(|x| &*x).collect_vec();
         let trace = false;
         if trace {
             println!();
-            println!("{:?} = {:?}?", left, right);
+            println!("{:?} {:?} = {:?} {:?}?", left, left_subs, right, right_subs);
         };
         if left == right {
             if left_subs.len() > 0 || right_subs.len() > 0 {
@@ -134,6 +166,10 @@ impl<'x> Environment<'x> {
                 break;
             }
         }
+        let left_subs_src = self.filter_subs_list(left, left_subs)?;
+        let right_subs_src = self.filter_subs_list(right, right_subs)?;
+        let left_subs = left_subs_src.iter().collect_vec();
+        let mut right_subs = right_subs_src.iter().collect_vec();
         if left == right {
             if left_subs.len() > 0 || right_subs.len() > 0 {
                 // todo!();
