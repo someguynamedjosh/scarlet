@@ -124,6 +124,9 @@ impl<'x> Environment<'x> {
                 if !set.required || set.connected_to_root {
                     return;
                 }
+                // if set.statements.len() > 0 {
+                //     println!("{:?}", id);
+                // }
                 let res = env.justify(id, limit);
                 if limit == MAX_LIMIT - 1
                     && !env.invariant_sets[id].connected_to_root
@@ -135,18 +138,21 @@ impl<'x> Environment<'x> {
                     } else {
                         eprintln!("The following can only be justified circularly:");
                     }
+                    println!("{:?}", id);
                     println!("{:?}", env.items[env.invariant_sets[id].context].scope);
                     println!("Statements:");
                     let first = env.items.first().unwrap();
                     for &statement in env.invariant_sets[id].clone().statements() {
+                        println!("{:?}", statement);
                         println!("{}", env.show(statement, first));
                     }
-                    // println!("Requires:");
-                    // for &justification_requirement in
-                    //     env.invariant_sets[id].clone().justification_requirements()
-                    // {
-                    //     println!("{}", env.show(justification_requirement, first));
-                    // }
+                    println!("Requires:");
+                    for &justification_requirement in
+                        env.invariant_sets[id].clone().justification_requirements()
+                    {
+                        println!("{:?}", justification_requirement);
+                        println!("{}", env.show(justification_requirement, first));
+                    }
                     // println!("Available:");
                     // let ctx_scope = env.items[env.invariant_sets[id].context].scope.dyn_clone();
                     // let available_invariant_sets = ctx_scope.get_invariant_sets(env);
@@ -202,7 +208,7 @@ impl<'x> Environment<'x> {
             if iset.statements().len() == 0 {
                 continue;
             }
-            if ![44, 43107, 43106, 42655].contains(&id.index) {
+            if ![8, 12897, 11478, 11477].contains(&id.index) {
                 continue;
             }
             println!("{:?}", id);
@@ -275,8 +281,9 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        // let trace = statement.index == 260631;
-        let trace = false;
+        // let trace = statement.index == 40344;
+        let trace = statement.index == 192;
+        // let trace = false;
         if limit == 0 {
             if trace {
                 println!("Limit reached.");
@@ -344,7 +351,7 @@ impl<'x> Environment<'x> {
                         println!("{}", self.show(frame.base, frame.base));
                         println!("Justified recursively.");
                     }
-                    // successful_candidates.push(vec![inv]);
+                    successful_candidates.push(vec![inv]);
                 }
             }
             if subs.len() == 0 {
@@ -366,7 +373,7 @@ impl<'x> Environment<'x> {
                 trace,
             );
             self.justify_stack.pop();
-            if trace && ok {
+            if trace {
                 let first = self.items.first().unwrap();
                 let mut message = format!(
                     "\nAttempted to justify with{} success:\n    {}\nVia a theorem proving:\n    {}\nWith subs:",
