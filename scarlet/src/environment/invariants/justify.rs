@@ -100,8 +100,8 @@ impl<'x> Environment<'x> {
             if iset.statements().len() == 0 {
                 continue;
             }
+            // if ![44, 1695, 1656, 1649].contains(&id.index) {
             if ![].contains(&id.index) {
-                // if ![44, 1695, 1656, 1649].contains(&id.index) {
                 continue;
             }
             println!("{:?}", id);
@@ -197,22 +197,22 @@ impl<'x> Environment<'x> {
         if encountered_err {
             todo!("nice error: Invariants are not justified.");
         }
-        // let first = self.items.first().unwrap();
-        // for (id, iset) in self.invariant_sets.clone() {
-        //     if iset.statements().len() == 0 {
-        //         continue;
-        //     }
-        //     if ![44].contains(&id.index) {
-        //         continue;
-        //     }
-        //     println!("{:?}", id);
-        //     for &statement in iset.statements() {
-        //         println!("{:?}", statement);
-        //         println!("{}", self.show(statement, first));
-        //     }
-        //     println!("Justified by {:?}", iset.justified_by());
-        //     println!();
-        // }
+        let first = self.items.first().unwrap();
+        for (id, iset) in self.invariant_sets.clone() {
+            if iset.statements().len() == 0 {
+                continue;
+            }
+            if ![44, 43107, 43106, 42655].contains(&id.index) {
+                continue;
+            }
+            println!("{:?}", id);
+            for &statement in iset.statements() {
+                println!("{:?}", statement);
+                println!("{}", self.show(statement, first));
+            }
+            println!("Justified by {:?}", iset.justified_by());
+            println!();
+        }
     }
 
     fn justify(
@@ -275,7 +275,7 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        // let trace = statement.index == 6085;
+        // let trace = statement.index == 260631;
         let trace = false;
         if limit == 0 {
             if trace {
@@ -344,7 +344,7 @@ impl<'x> Environment<'x> {
                         println!("{}", self.show(frame.base, frame.base));
                         println!("Justified recursively.");
                     }
-                    successful_candidates.push(vec![inv]);
+                    // successful_candidates.push(vec![inv]);
                 }
             }
             if subs.len() == 0 {

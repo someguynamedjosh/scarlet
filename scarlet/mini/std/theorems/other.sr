@@ -74,27 +74,6 @@ t_decision_eq_inv IS
 .VALUE
 .AS_AUTO_THEOREM
 
-# From a =NOT b   v
-# Proves DECISION[a b u v]
-t_decision_neq_inv IS
-{
-   t_just[DECISION[a b u v]]
-
-   # Proves DECISION[a b u v]
-   t_inv_eq[v   DECISION[a b u v]]
-   # Proves v = DECISION[a b u v]
-   t_eq_symm[DECISION[a b u v]   v]
-   # Proves DECISION[a b u v] = v
-   t_decision_neq[a b u v]
-
-   a IS VAR[]
-   b IS VAR[DECISION[a SELF false true]]
-   u IS VAR[]
-   v IS VAR[SELF]
-}
-.VALUE
-.AS_AUTO_THEOREM
-
 t_decision_by_parts_ext IS
 {
    t_just[conclusion]
@@ -136,46 +115,6 @@ t_decision_by_parts_ext IS
    b IS VAR[]
    c IS VAR[fx[c]]
    d IS VAR[fx[d]]
-}
-.VALUE
-.AS_AUTO_THEOREM
-
-t_decision_by_parts IS
-{
-   # t_just[conclusion]
-
-   DECISION[
-      a b
-
-      {
-         # t_just[conclusion]
-         # Proves conclusion
-         # t_inv_eq[c conclusion]
-         # Proves c = conclusion
-         # t_eq_symm[conclusion c]
-         # Proves conclusion = c
-         t_decision_eq[a b c d]
-      }
-      .VALUE
-
-      {
-         # t_just[conclusion]
-         # Proves conclusion
-         # t_inv_eq[d conclusion]
-         # Proves d = conclusion
-         # t_eq_symm[conclusion d]
-         # Proves conclusion = d
-         t_decision_neq[a b c d]
-      }
-      .VALUE
-   ]
-
-   conclusion IS DECISION[a b c d]
-
-   a IS VAR[]
-   b IS VAR[]
-   c IS VAR[c]
-   d IS VAR[d]
 }
 .VALUE
 .AS_AUTO_THEOREM
