@@ -2,6 +2,7 @@ import z3
 
 Z = z3.IntSort()
 S = z3.StringSort()
+B = z3.BoolSort()
 
 Any = z3.Datatype('Any')
 Any.declare('Unique', ('id', Z))
@@ -57,6 +58,25 @@ def struct_from_fields(*fields):
     for (label, value) in fields:
         base = Any.Struct(z3.StringVal(label), value, base)
     return base
+
+
+f = z3.Function('f', Z, Z)
+p = z3.Function('p', Z, B)
+
+
+unbounded = z3.RecFunction('unbounded', Z)
+z3.RecAddDefinition(unbounded, (), unbounded())
+
+ub_or_0 = z3.RecFunction('ub_or_0', Z, Z)
+n = z3.Int('n')
+z3.RecAddDefinition(ub_or_0, (n,), z3.If(n == 1, z3.IntVal(0), z3.If(n < 0, ub_or_0(n + 1), ub_or_0(n - 1))))
+
+solver = z3.Solver()
+solver.set("proof", True)
+x = z3.Int('x')
+solver.add(z3.ForAll([x], ub_or_0(x) == z3.IntVal(0)))
+print(solver.check())
+print(solver.model())
 
 
 val = struct_from_fields(("hello", true), ("world", false))
