@@ -34,6 +34,22 @@ fn something_equals_variable() {
 }
 
 #[test]
+fn variable_equals_variable() {
+    let mut env = env();
+    let x = env.variable_full();
+    let y = env.variable_full();
+    let expected = subs(vec![(x.1, y.0)]);
+    let left = Equal::Yes(expected.clone());
+    if let Ok(Equal::Yes(subs)) = env.discover_equal(x.0, y.0, 1) {
+        let (target, value) = subs.into_iter().next().unwrap();
+        println!("{}", env.show(value, value));
+    }
+    assert_eq!(env.discover_equal(x.0, y.0, 1), Ok(left));
+    assert_eq!(env.discover_equal(x.0, y.0, 0), Ok(Equal::NeedsHigherLimit));
+    assert_eq!(env.discover_equal(y.0, x.0, 0), Ok(Equal::NeedsHigherLimit));
+}
+
+#[test]
 fn var_sub_something_equals_something() {
     let mut env = env();
     let thing = env.unique();
@@ -155,7 +171,9 @@ fn fx_is_gy() {
     if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f.0, g.0, 2) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
-        assert_eq!(entries.next(), Some(&(x.1, y.0)));
+        let next = entries.next().unwrap();
+        println!("{}", env.show(next.1, next.1));
+        assert_eq!(next, &(x.1, y.0));
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
         if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
@@ -541,6 +559,7 @@ fn multi_variable_dex_is_single_variable_dex() {
         let sub = *subs.get(&z.1).unwrap();
         assert_eq!(sub, x.0);
         let sub = *subs.get(&fz.1).unwrap();
+        println!("{}", env.show(sub, sub));
         if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
             let mut expected = Substitutions::new();
             expected.insert_no_replace(x.1, z.0);
@@ -602,7 +621,7 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
 
 /// f[z] <=> DECISION[x y a b][x2 y2]
 #[test]
-fn multi_variable_dex_sub_both_is_single_variable_dex() {
+fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
     let mut env = env();
 
     let a = env.unique();
@@ -631,6 +650,7 @@ fn multi_variable_dex_sub_both_is_single_variable_dex() {
     {
         assert_eq!(subs.len(), 2);
         let sub = *subs.get(&z.1).unwrap();
+        println!("{}", env.show(sub, sub));
         assert_eq!(sub, x2.0);
         let sub = *subs.get(&fz.1).unwrap();
         if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
@@ -642,6 +662,65 @@ fn multi_variable_dex_sub_both_is_single_variable_dex() {
                 env.discover_equal(def.base(), subbed_multi_variable_dex, 4),
                 Ok(Equal::yes())
             );
+        } else {
+            panic!("Substituted value is not itself a substitution!");
+        }
+    } else {
+        panic!("Not equal!");
+    }
+}
+
+/// f[z] <=> DECISION[x y a b][a b]
+#[test]
+fn multi_variable_dex_sub_two_uniques_is_single_variable_dex() {
+    let mut env = env();
+
+    let a = env.unique();
+    let b = env.unique();
+    let x = env.variable_full();
+    env.set_name(x.0, "x".to_owned());
+    let y = env.variable_full();
+    env.set_name(y.0, "y".to_owned());
+    let z = env.variable_full();
+    env.set_name(z.0, "z".to_owned());
+
+    let fz = env.variable_full_with_deps(vec![z.0]);
+    env.set_name(fz.0, "fz".to_owned());
+
+    let multi_variable_dex = env.decision(x.0, y.0, a, b);
+    let subbed_multi_variable_dex =
+        env.substitute_unchecked(multi_variable_dex, &subs(vec![(x.1, a), (y.1, b)]));
+
+    if let Equal::Yes(subs) = env
+        .discover_equal(fz.0, subbed_multi_variable_dex, 15)
+        .unwrap()
+    {
+        assert_eq!(subs.len(), 2);
+        let sub = *subs.get(&z.1).unwrap();
+        assert_eq!(sub, a);
+        let sub = *subs.get(&fz.1).unwrap();
+        println!("{}", env.show(sub, sub));
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+            let def = def.clone();
+            let mut expected = Substitutions::new();
+            expected.insert_no_replace(x.1, z.0);
+            assert_eq!(def.substitutions(), &expected);
+            if let Ok(Some(def)) =
+                env.get_and_downcast_construct_definition::<CSubstitution>(def.base())
+            {
+                let def = def.clone();
+                assert_eq!(def.substitutions().len(), 1);
+                assert_eq!(
+                    env.discover_equal(*def.substitutions().get(&y.1).unwrap(), b, 4),
+                    Ok(Equal::yes())
+                );
+                assert_eq!(
+                    env.discover_equal(def.base(), multi_variable_dex, 4),
+                    Ok(Equal::yes())
+                );
+            } else {
+                panic!("Expected another substitution!");
+            }
         } else {
             panic!("Substituted value is not itself a substitution!");
         }

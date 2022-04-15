@@ -133,7 +133,7 @@ impl<'x> Environment<'x> {
                 // todo!();
             } else {
                 if trace {
-                    println!("Ok({:?})", Equal::yes());
+                    println!("left == right, Ok({:?})", Equal::yes());
                 }
                 return Ok(Equal::yes());
             }
@@ -175,7 +175,7 @@ impl<'x> Environment<'x> {
                 // todo!();
             } else {
                 if trace {
-                    println!("Ok({:?})", Equal::yes());
+                    println!("left == right after subs, Ok({:?})", Equal::yes());
                 }
                 return Ok(Equal::yes());
             }
@@ -255,7 +255,7 @@ impl<'x> Environment<'x> {
         };
         if limit == 0 {
             if trace {
-                println!("Ok({:?})", Equal::NeedsHigherLimit);
+                println!("in handling lhs var, Ok({:?})", Equal::NeedsHigherLimit);
             }
             return Ok(Equal::NeedsHigherLimit);
         }
@@ -268,15 +268,22 @@ impl<'x> Environment<'x> {
             .collect_vec();
         if Some(lvar.id.unwrap()) == rvar_id {
             // We can only get here if the right variable isn't substituted.
+            // The function that calls us calls itself if the right variable is
+            // substituted, and immediately returns that result.
             return self.check_var_is_same(&lvar, trace, left_subs, right_subs, limit);
         }
         let mut limit_reached = false;
+        // Try gradually stripping away the substitutions on the right...
         for base_index in (0..=right_subs.len()).rev() {
             let rdeps = self.compute_dependencies_with_subs(right, &right_subs[..base_index]);
+            // If there are more dependencies on the left than the right can
+            // provide, try stripping away more substitutions.
             if ldeps.len() > rdeps.num_variables() {
                 continue;
             }
             let mut equal = Equal::yes();
+            // Try checking if each of the rhs' dependencies can be assigned to a dependency
+            // in the lhs.
             for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {
                 let ldep = self.get_variable(ldep.id).item.unwrap();
                 let rdep = self.get_variable(rdep.id).item.unwrap();
@@ -289,8 +296,11 @@ impl<'x> Environment<'x> {
                 )?;
                 equal = Equal::and(vec![equal, deps_equal]);
             }
+            // If that was successful...
             if let Equal::Yes(mut subs) = equal {
+                // Build up what we should assing to the left variable.
                 let mut right = right;
+                // Include all substitutions that brought us to this point.
                 for sub in &right_subs[..base_index] {
                     let rdeps = self.get_dependencies(right);
                     let mut filtered_sub = Substitutions::new();
@@ -301,6 +311,34 @@ impl<'x> Environment<'x> {
                     }
                     right = self.substitute_unchecked(right, &filtered_sub);
                 }
+                // Put remaining substitutions for any variables that aren't
+                // going to get substituted in the Equal result, I.E. those that
+                // are not turned into lhs variables.
+                let remaining_rdeps = rdeps
+                    .clone()
+                    .into_variables()
+                    .skip(ldeps.len())
+                    .filter(|x| self.get_variable(x.id).item.unwrap() != right)
+                    .collect_vec();
+                let mut remaining_rdep_subs = Substitutions::new();
+                for dep in remaining_rdeps {
+                    let mut subbed = self.get_variable(dep.id).item.unwrap();
+                    for &sub in &right_subs[base_index..] {
+                        let sdeps = self.get_dependencies(subbed);
+                        let mut filtered_subs = Substitutions::new();
+                        for dep in sdeps.into_variables() {
+                            if let Some(&value) = sub.get(&dep.id) {
+                                filtered_subs.insert_or_replace(dep.id, value);
+                            }
+                        }
+                        subbed = self.substitute_unchecked(subbed, &filtered_subs);
+                    }
+                    if subbed != self.get_variable(dep.id).item.unwrap() {
+                        remaining_rdep_subs.insert_no_replace(dep.id, subbed);
+                    }
+                }
+                right = self.substitute_unchecked(right, &remaining_rdep_subs);
+                // Substitute all the rhs variables for the corresponding lhs variables.
                 let mut dep_subs = Substitutions::new();
                 for (ldep, rdep) in ldeps.iter().zip(rdeps.as_variables()) {
                     if ldep.id == rdep.id {

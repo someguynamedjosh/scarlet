@@ -4,56 +4,16 @@ false IS std.false
 void IS std.void
 x IS std.basics.x
 
-# fx[ d ][ 
-#     DECISION[ a b true false ][ x ]
-#     a IS DECISION[ RECURSE true false false ]
-#     b IS true
-#     c IS false
-#     false
-#  ]
+# x.IS_POPULATED_STRUCT
 
-# x IS VAR[]
-# fx IS VAR[DEP x]
-# a IS VAR[]
-# b IS VAR[]
-# c IS VAR[]
-# d IS VAR[]
-
-# t_just[
-#    fx[d][
-#       fx IS (a = b)[a IS x]
-#       a IS true = true
-#       b IS true
-#       c IS false
-#       x IS false
-#    ]
+# is_struct IS 
+# logic.and[
+#    x.IS_POPULATED_STRUCT
+#    is_struct[x.REST]
 # ]
 
-# DECISION[ a bbbb true false ][ DECISION[ RECURSE true false false ]  true ]
-# USING {
-#     true IS UNIQUE
-#     false IS UNIQUE
-#     a IS VAR[  ]
-#     bbbb IS VAR[ a = SELF ]
-# }
+thing IS thing
 
-# ap IS VAR[]
-# bp IS VAR[ap = SELF]
-
-# {ap bp}[false true]
-
-is_struct IS DECISION[
-   true
-   is_struct
-   false
-   false
-]
-
-t_just[is_struct = true]
-# t_just[DECISION[void true false false] = true]
-
-# ps_c IS VAR[logic.or[SELF.IS_POPULATED_STRUCT false]]
-# ps_c[{thing IS true}]
+t_just[thing]
 
 t_just IS VAR[SELF]
-# t_just[false].SHOWN
