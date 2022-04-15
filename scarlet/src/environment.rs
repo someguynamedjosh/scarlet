@@ -48,7 +48,6 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "t_decision_eq_statement",
     "t_decision_neq_statement",
     "t_decision_eq_inv_statement",
-    "t_decision_by_parts_ext_statement",
 ];
 
 #[cfg(feature = "no_axioms")]
