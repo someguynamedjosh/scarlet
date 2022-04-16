@@ -3,17 +3,17 @@ use std::fmt::Debug;
 use maplit::hashset;
 
 use crate::{
-    constructs::ItemId,
+    item::ItemPtr,
     environment::{
         discover_equality::Equal,
-        invariants::{InvariantSet, InvariantSetId},
+        invariants::{InvariantSet, InvariantSetPtr},
         Environment, UnresolvedItemError,
     },
 };
 
-pub type LookupIdentResult = Result<Option<ItemId>, UnresolvedItemError>;
+pub type LookupIdentResult = Result<Option<ItemPtr>, UnresolvedItemError>;
 pub type ReverseLookupIdentResult = Result<Option<String>, UnresolvedItemError>;
-pub type LookupInvariantResult = Result<InvariantSetId, LookupInvariantError>;
+pub type LookupInvariantResult = Result<InvariantSetPtr, LookupInvariantError>;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum LookupInvariantError {
@@ -35,16 +35,16 @@ pub trait Scope: Debug {
         false
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult;
-    fn local_reverse_lookup_ident<'x>(
+    fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult;
+    fn local_reverse_lookup_ident(
         &self,
-        env: &mut Environment<'x>,
-        value: ItemId,
+        env: &mut Environment,
+        value: ItemPtr,
     ) -> ReverseLookupIdentResult;
-    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId>;
-    fn parent(&self) -> Option<ItemId>;
+    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr>;
+    fn parent(&self) -> Option<ItemPtr>;
 
-    fn lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
+    fn lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
         if let Some(result) = self.local_lookup_ident(env, ident)? {
             Ok(Some(result))
         } else if let Some(parent) = self.parent() {
@@ -57,10 +57,10 @@ pub trait Scope: Debug {
         }
     }
 
-    fn reverse_lookup_ident<'x>(
+    fn reverse_lookup_ident(
         &self,
-        env: &mut Environment<'x>,
-        value: ItemId,
+        env: &mut Environment,
+        value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         if let Some(result) = self.local_reverse_lookup_ident(env, value)? {
             if result.len() > 0 {
@@ -77,7 +77,7 @@ pub trait Scope: Debug {
         }
     }
 
-    fn get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+    fn get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
         let mut result = self.local_get_invariant_sets(env);
         if let Some(parent) = self.parent() {
             let parent_scope = env.get_item(parent).scope.dyn_clone();
@@ -88,34 +88,34 @@ pub trait Scope: Debug {
 }
 
 #[derive(Debug, Clone)]
-pub struct SPlain(pub ItemId);
+pub struct SPlain(pub ItemPtr);
 
 impl Scope for SPlain {
     fn dyn_clone(&self) -> Box<dyn Scope> {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(
+    fn local_lookup_ident(
         &self,
-        _env: &mut Environment<'x>,
+        _env: &mut Environment,
         _ident: &str,
     ) -> LookupIdentResult {
         Ok(None)
     }
 
-    fn local_reverse_lookup_ident<'x>(
+    fn local_reverse_lookup_ident(
         &self,
-        _env: &mut Environment<'x>,
-        _value: ItemId,
+        _env: &mut Environment,
+        _value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         Ok(None)
     }
 
-    fn local_get_invariant_sets<'x>(&self, _env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+    fn local_get_invariant_sets(&self, _env: &mut Environment) -> Vec<InvariantSetPtr> {
         vec![]
     }
 
-    fn parent(&self) -> Option<ItemId> {
+    fn parent(&self) -> Option<ItemPtr> {
         Some(self.0)
     }
 }
@@ -128,27 +128,27 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident<'x>(
+    fn local_lookup_ident(
         &self,
-        _env: &mut Environment<'x>,
+        _env: &mut Environment,
         _ident: &str,
     ) -> LookupIdentResult {
         Ok(None)
     }
 
-    fn local_reverse_lookup_ident<'x>(
+    fn local_reverse_lookup_ident(
         &self,
-        _env: &mut Environment<'x>,
-        _value: ItemId,
+        _env: &mut Environment,
+        _value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         Ok(None)
     }
 
-    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
         vec![]
     }
 
-    fn parent(&self) -> Option<ItemId> {
+    fn parent(&self) -> Option<ItemPtr> {
         None
     }
 }
@@ -165,33 +165,33 @@ impl Scope for SPlaceholder {
         true
     }
 
-    fn local_lookup_ident<'x>(
+    fn local_lookup_ident(
         &self,
-        _env: &mut Environment<'x>,
+        _env: &mut Environment,
         _ident: &str,
     ) -> LookupIdentResult {
         unreachable!()
     }
 
-    fn local_reverse_lookup_ident<'x>(
+    fn local_reverse_lookup_ident(
         &self,
-        _env: &mut Environment<'x>,
-        _value: ItemId,
+        _env: &mut Environment,
+        _value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         unreachable!()
     }
 
-    fn local_get_invariant_sets<'x>(&self, _env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+    fn local_get_invariant_sets(&self, _env: &mut Environment) -> Vec<InvariantSetPtr> {
         unreachable!()
     }
 
-    fn parent(&self) -> Option<ItemId> {
+    fn parent(&self) -> Option<ItemPtr> {
         unreachable!()
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct SWithParent<Base: Scope + Clone>(pub Base, pub ItemId);
+pub struct SWithParent<Base: Scope + Clone>(pub Base, pub ItemPtr);
 
 impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
     fn dyn_clone(&self) -> Box<dyn Scope> {
@@ -202,23 +202,23 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         false
     }
 
-    fn local_lookup_ident<'x>(&self, env: &mut Environment<'x>, ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
         self.0.local_lookup_ident(env, ident)
     }
 
-    fn local_reverse_lookup_ident<'x>(
+    fn local_reverse_lookup_ident(
         &self,
-        env: &mut Environment<'x>,
-        value: ItemId,
+        env: &mut Environment,
+        value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         self.0.local_reverse_lookup_ident(env, value)
     }
 
-    fn local_get_invariant_sets<'x>(&self, env: &mut Environment<'x>) -> Vec<InvariantSetId> {
+    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
         self.0.local_get_invariant_sets(env)
     }
 
-    fn parent(&self) -> Option<ItemId> {
+    fn parent(&self) -> Option<ItemPtr> {
         Some(self.1)
     }
 }

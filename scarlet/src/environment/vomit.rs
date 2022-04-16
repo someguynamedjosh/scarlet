@@ -2,13 +2,13 @@ use std::ops::ControlFlow;
 
 use typed_arena::Arena;
 
-use super::{Environment, ItemId, UnresolvedItemError};
+use super::{Environment, ItemPtr, UnresolvedItemError};
 use crate::{
-    constructs::{
+    item::{
         downcast_construct,
         shown::CShown,
         variable::{CVariable, SVariableInvariants, VariableId},
-        Construct, ItemDefinition,
+        ItemDefinition,
     },
     parser::{Node, NodeChild, ParseContext},
     scope::{SWithParent, Scope},
@@ -19,7 +19,7 @@ pub struct VomitContext<'x, 'y> {
     pub pc: &'x ParseContext,
     pub code_arena: &'x Arena<String>,
     pub scope: &'y dyn Scope,
-    pub temp_names: &'y mut OrderedMap<ItemId, (&'x str, Node<'x>)>,
+    pub temp_names: &'y mut OrderedMap<ItemPtr, (&'x str, Node)>,
     pub anon_name_counter: &'y mut usize,
 }
 
@@ -39,8 +39,8 @@ impl<'x, 'y> VomitContext<'x, 'y> {
     pub fn get_name(
         &mut self,
         env: &mut Environment,
-        of: ItemId,
-        make_node: impl FnOnce() -> Node<'x>,
+        of: ItemPtr,
+        make_node: impl FnOnce() -> Node,
     ) -> &'x str {
         let of = env.dereference(of).unwrap_or(of);
         if let Some(name) = self.temp_names.get(&of) {
@@ -59,7 +59,7 @@ impl<'x, 'y> VomitContext<'x, 'y> {
     }
 }
 
-impl<'x> Environment<'x> {
+impl Environment {
     pub fn show_all_requested(&mut self) {
         let mut to_vomit = Vec::new();
         for (from, aitem) in &self.items {
@@ -75,7 +75,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn show(&mut self, item_id: ItemId, from_item: ItemId) -> String {
+    pub fn show(&mut self, item_id: ItemPtr, from_item: ItemPtr) -> String {
         let mut result = String::new();
 
         let from = self.items[from_item].scope.dyn_clone();
@@ -145,7 +145,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn show_var(&mut self, var: VariableId, from: ItemId) -> String {
+    pub fn show_var(&mut self, var: VariableId, from: ItemPtr) -> String {
         let id = self.variables[var].item.unwrap();
         self.show(id, from)
     }
@@ -159,7 +159,7 @@ impl<'x> Environment<'x> {
         &mut self,
         max_precedence: u8,
         ctx: &mut VomitContext<'a, '_>,
-        item_id: ItemId,
+        item_id: ItemPtr,
     ) -> Node<'a> {
         let mut err = None;
         for (_, phrase) in &ctx.pc.phrases_sorted_by_vomit_priority {

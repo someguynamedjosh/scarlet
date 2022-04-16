@@ -12,10 +12,10 @@ use super::{
     Environment, UnresolvedItemError,
 };
 use crate::{
-    constructs::{
+    item::{
         substitution::{CSubstitution, Substitutions},
         variable::{CVariable, Variable, VariableId},
-        Construct, ItemId,
+        ItemDefinition, ItemPtr,
     },
     scope::LookupInvariantResult,
 };
@@ -47,28 +47,28 @@ pub type DeqResult = Result<Equal, UnresolvedItemError>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct DiscoverEqualQuery {
-    left: ItemId,
-    right: ItemId,
+    left: ItemPtr,
+    right: ItemPtr,
 }
 
-impl<'x> Environment<'x> {
+impl Environment {
     pub fn are_same_item(
         &mut self,
-        left: ItemId,
-        right: ItemId,
+        left: ItemPtr,
+        right: ItemPtr,
     ) -> Result<bool, UnresolvedItemError> {
         let left = self.dereference(left)?;
         let right = self.dereference(right)?;
         Ok(left == right)
     }
 
-    pub fn discover_equal(&mut self, left: ItemId, right: ItemId, limit: u32) -> DeqResult {
+    pub fn discover_equal(&mut self, left: ItemPtr, right: ItemPtr, limit: u32) -> DeqResult {
         self.discover_equal_with_subs(left, vec![], right, vec![], limit)
     }
 
     fn compute_dependencies_with_subs(
         &mut self,
-        base: ItemId,
+        base: ItemPtr,
         subs: &[&Substitutions],
     ) -> DepResult {
         let mut deps = self.get_dependencies(base);
@@ -80,7 +80,7 @@ impl<'x> Environment<'x> {
 
     fn filter_subs(
         &mut self,
-        base: ItemId,
+        base: ItemPtr,
         subs: &Substitutions,
     ) -> Result<Substitutions, UnresolvedItemError> {
         let deps = self.get_dependencies(base);
@@ -97,7 +97,7 @@ impl<'x> Environment<'x> {
 
     fn filter_subs_list(
         &mut self,
-        base: ItemId,
+        base: ItemPtr,
         subs: Vec<&Substitutions>,
     ) -> Result<Vec<Substitutions>, UnresolvedItemError> {
         let mut result = Vec::new();
@@ -112,9 +112,9 @@ impl<'x> Environment<'x> {
 
     pub(crate) fn discover_equal_with_subs(
         &mut self,
-        left: ItemId,
+        left: ItemPtr,
         left_subs: Vec<&Substitutions>,
-        right: ItemId,
+        right: ItemPtr,
         right_subs: Vec<&Substitutions>,
         limit: u32,
     ) -> DeqResult {
@@ -243,7 +243,7 @@ impl<'x> Environment<'x> {
         left_subs: Vec<&'a Substitutions>,
         lvar: CVariable,
         extra_sub_holder: &'a Arena<Substitutions>,
-        right: ItemId,
+        right: ItemPtr,
         right_subs: Vec<&'a Substitutions>,
         limit: u32,
         trace: bool,
@@ -380,7 +380,7 @@ impl<'x> Environment<'x> {
         mut left_subs: Vec<&'a Substitutions>,
         lvar: &CVariable,
         extra_sub_holder: &'a Arena<Substitutions>,
-        right: ItemId,
+        right: ItemPtr,
         right_subs: Vec<&'a Substitutions>,
         limit: u32,
     ) -> ControlFlow<

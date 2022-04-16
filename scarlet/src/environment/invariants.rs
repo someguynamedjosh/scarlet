@@ -1,44 +1,44 @@
 pub mod justify;
 mod tests;
 
-use std::collections::HashSet;
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use self::justify::{SetJustification, StatementJustification, StatementJustifications};
-use super::{dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId};
+use super::{discover_equality::Equal, Environment};
 use crate::{
-    constructs::{substitution::Substitutions, Construct, GenInvResult},
+    item::{substitution::Substitutions, ItemDefinition, ItemPtr},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
     shared::{Id, Pool},
+    util::rcrc,
 };
-
-pub type InvariantSetId = Id<'N'>;
-pub type InvariantSetPool = Pool<InvariantSet, 'N'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InvariantSet {
-    context: ItemId,
-    statements: Vec<ItemId>,
+    context: ItemPtr,
+    statements: Vec<ItemPtr>,
     /// For the original statements to hold, all the statements in this list
     /// must also hold.
-    pub(super) justification_requirements: Vec<ItemId>,
+    pub(super) justification_requirements: Vec<ItemPtr>,
     pub(super) statement_justifications: Option<SetJustification>,
     pub(super) connected_to_root: bool,
     pub(super) required: bool,
-    pub(super) dependencies: HashSet<ItemId>,
+    pub(super) dependencies: HashSet<ItemPtr>,
 }
 
+pub type InvariantSetPtr = Rc<RefCell<InvariantSet>>;
+
 impl InvariantSet {
-    pub fn new_empty(context: ItemId) -> Self {
+    pub fn new_empty(context: ItemPtr) -> Self {
         Self::new(context, vec![], vec![], HashSet::new())
     }
 
     pub fn new(
-        context: ItemId,
-        statements: Vec<ItemId>,
-        justification_requirements: Vec<ItemId>,
-        dependencies: HashSet<ItemId>,
-    ) -> Self {
-        Self {
+        context: ItemPtr,
+        statements: Vec<ItemPtr>,
+        justification_requirements: Vec<ItemPtr>,
+        dependencies: HashSet<ItemPtr>,
+    ) -> InvariantSetPtr {
+        rcrc(Self {
             context,
             statements,
             justification_requirements,
@@ -46,14 +46,14 @@ impl InvariantSet {
             connected_to_root: false,
             required: true,
             dependencies,
-        }
+        })
     }
 
     pub fn new_not_required(
-        context: ItemId,
-        statements: Vec<ItemId>,
-        justification_requirements: Vec<ItemId>,
-        dependencies: HashSet<ItemId>,
+        context: ItemPtr,
+        statements: Vec<ItemPtr>,
+        justification_requirements: Vec<ItemPtr>,
+        dependencies: HashSet<ItemPtr>,
     ) -> Self {
         Self {
             context,
@@ -67,8 +67,8 @@ impl InvariantSet {
     }
 
     pub(crate) fn new_justified_by(
-        context: ItemId,
-        statements: Vec<ItemId>,
+        context: ItemPtr,
+        statements: Vec<ItemPtr>,
         justified_by: SetJustification,
     ) -> InvariantSet {
         Self {
@@ -82,7 +82,10 @@ impl InvariantSet {
         }
     }
 
-    pub(super) fn new_recursive_justification(context: ItemId, dependencies: HashSet<ItemId>) -> InvariantSet {
+    pub(super) fn new_recursive_justification(
+        context: ItemPtr,
+        dependencies: HashSet<ItemPtr>,
+    ) -> InvariantSet {
         Self {
             context,
             statements: Vec::new(),
@@ -95,9 +98,9 @@ impl InvariantSet {
     }
 
     pub fn new_statements_depending_on(
-        context: ItemId,
-        statements: Vec<ItemId>,
-        dependencies: HashSet<ItemId>,
+        context: ItemPtr,
+        statements: Vec<ItemPtr>,
+        dependencies: HashSet<ItemPtr>,
     ) -> Self {
         Self {
             context,
@@ -112,13 +115,13 @@ impl InvariantSet {
 
     /// Get a reference to the invariant set's statements.
     #[must_use]
-    pub fn statements(&self) -> &[ItemId] {
+    pub fn statements(&self) -> &[ItemPtr] {
         self.statements.as_ref()
     }
 
     /// Get a reference to the invariant set's justification requirements.
     #[must_use]
-    pub fn justification_requirements(&self) -> &[ItemId] {
+    pub fn justification_requirements(&self) -> &[ItemPtr] {
         self.justification_requirements.as_ref()
     }
 
@@ -130,25 +133,17 @@ impl InvariantSet {
 
     /// Get a reference to the invariant set's dependencies.
     #[must_use]
-    pub fn dependencies(&self) -> &HashSet<ItemId> {
+    pub fn dependencies(&self) -> &HashSet<ItemPtr> {
         &self.dependencies
     }
 
-    pub fn push(&mut self, statement: ItemId) {
+    pub fn push(&mut self, statement: ItemPtr) {
         self.statements.push(statement);
     }
 }
 
-impl<'x> Environment<'x> {
-    pub fn push_invariant_set(&mut self, invariant_set: InvariantSet) -> InvariantSetId {
-        self.invariant_sets.get_or_push(invariant_set)
-    }
-
-    pub fn get_invariant_set(&self, invariant_set: InvariantSetId) -> &InvariantSet {
-        &self.invariant_sets[invariant_set]
-    }
-
-    pub fn generated_invariants(&mut self, item_id: ItemId) -> InvariantSetId {
+impl Environment {
+    pub fn generated_invariants(&mut self, item_id: ItemPtr) -> InvariantSetPtr {
         for frame in &self.dep_res_stack {
             if frame.0 == item_id {
                 return self.push_invariant_set(InvariantSet::new_empty(item_id));
@@ -175,7 +170,7 @@ impl<'x> Environment<'x> {
         result
     }
 
-    pub fn add_auto_theorem(&mut self, auto_theorem: ItemId) {
+    pub fn add_auto_theorem(&mut self, auto_theorem: ItemPtr) {
         self.auto_theorems.push(auto_theorem);
     }
 }

@@ -1,9 +1,9 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
+    item::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
-        ItemId,
+        ItemPtr,
     },
     environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
@@ -15,12 +15,12 @@ use crate::{
     scope::Scope,
 };
 
-fn struct_from_fields<'x>(
+fn struct_from_fields(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
-    mut fields: Vec<(Option<&str>, &Node<'x>)>,
+    env: &mut Environment,
+    mut fields: Vec<(Option<&str>, &Node)>,
     scope: Box<dyn Scope>,
-) -> ItemId {
+) -> ItemPtr {
     if fields.is_empty() {
         env.get_language_item("void")
     } else {
@@ -38,12 +38,12 @@ fn struct_from_fields<'x>(
     }
 }
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("{"));
     assert_eq!(node.children[2], NodeChild::Text("}"));
@@ -67,7 +67,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();

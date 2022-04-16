@@ -4,19 +4,19 @@ use backtrace::Backtrace;
 use itertools::Itertools;
 use maplit::hashset;
 
-use super::{InvariantSet, InvariantSetId};
+use super::{InvariantSet, InvariantSetPtr};
 use crate::{
-    constructs::{substitution::Substitutions, Construct, GenInvResult},
-    environment::{dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId},
+    environment::{discover_equality::Equal, Environment, ItemPtr},
+    item::{substitution::Substitutions, ItemDefinition},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
     shared::{indented, indented_with, Id, TripleBool},
 };
 
-pub type JustifyInvariantResult = Result<Vec<InvariantSetId>, LookupInvariantError>;
+pub type JustifyInvariantResult = Result<Vec<InvariantSetPtr>, LookupInvariantError>;
 
 #[derive(Clone, Debug)]
 pub struct JustifyStackFrame {
-    base: ItemId,
+    base: ItemPtr,
     subs: Substitutions,
 }
 
@@ -24,10 +24,10 @@ pub type JustifyStack = Vec<JustifyStackFrame>;
 
 pub type SetJustification = Vec<StatementJustifications>;
 pub type StatementJustifications = Vec<StatementJustification>;
-pub type StatementJustification = Vec<InvariantSetId>;
+pub type StatementJustification = Vec<InvariantSetPtr>;
 
-impl<'x> Environment<'x> {
-    fn for_each_invariant_set(&mut self, mut operator: impl FnMut(&mut Self, InvariantSetId)) {
+impl Environment {
+    fn for_each_invariant_set(&mut self, mut operator: impl FnMut(&mut Self, InvariantSetPtr)) {
         let mut maybe_id = self.invariant_sets.first();
         while let Some(id) = maybe_id {
             operator(self, id);
@@ -224,7 +224,7 @@ impl<'x> Environment<'x> {
 
     fn justify(
         &mut self,
-        set_id: InvariantSetId,
+        set_id: InvariantSetPtr,
         limit: u32,
     ) -> Result<SetJustification, LookupInvariantError> {
         let set = self.invariant_sets[set_id].clone();
@@ -242,8 +242,8 @@ impl<'x> Environment<'x> {
 
     pub(super) fn justify_statement(
         &mut self,
-        context: ItemId,
-        statement: ItemId,
+        context: ItemPtr,
+        statement: ItemPtr,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut result = Vec::new();
@@ -278,8 +278,8 @@ impl<'x> Environment<'x> {
 
     fn create_justification(
         &mut self,
-        context: ItemId,
-        statement: ItemId,
+        context: ItemPtr,
+        statement: ItemPtr,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
@@ -394,11 +394,11 @@ impl<'x> Environment<'x> {
 
     fn check_subs(
         &mut self,
-        context: ItemId,
-        statement: ItemId,
+        context: ItemPtr,
+        statement: ItemPtr,
         subs: Substitutions,
         limit: u32,
-        justifications: &mut Vec<InvariantSetId>,
+        justifications: &mut Vec<InvariantSetPtr>,
         err: &mut LookupInvariantError,
         trace: bool,
     ) -> bool {

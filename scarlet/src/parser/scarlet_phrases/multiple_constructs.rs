@@ -26,7 +26,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "multiple constructs",
+        "multiple items",
         128, 128,
         None,
         vomit,

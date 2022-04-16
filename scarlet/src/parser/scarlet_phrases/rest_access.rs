@@ -3,9 +3,9 @@ use std::ops::ControlFlow;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
+    item::{
         structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
-        ItemId,
+        ItemPtr,
     },
     environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
@@ -16,12 +16,12 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
@@ -32,7 +32,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     let source = if let Ok(Some(asm)) =
         env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)

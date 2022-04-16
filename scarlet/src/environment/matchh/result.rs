@@ -1,4 +1,4 @@
-use crate::constructs::{substitution::Substitutions, variable::CVariable, ConstructId};
+use crate::item::{substitution::Substitutions, variable::CVariable, ConstructId};
 
 #[derive(Clone, Debug)]
 pub enum MatchResult {

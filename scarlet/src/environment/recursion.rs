@@ -1,18 +1,18 @@
 use std::collections::HashSet;
 
 use super::{
-    dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemId,
+    dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemPtr,
     UnresolvedItemError,
 };
 use crate::{
-    constructs::{
-        recursion::CRecursion, substitution::Substitutions, Construct, GenInvResult, ItemDefinition,
+    item::{
+        recursion::CRecursion, substitution::Substitutions, ItemDefinition, GenInvResult,
     },
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
 };
 
-impl<'x> Environment<'x> {
-    fn arrest_recursion_impl(&mut self, of: ItemId, stack: &mut Vec<ItemId>) {
+impl Environment {
+    fn arrest_recursion_impl(&mut self, of: ItemPtr, stack: &mut Vec<ItemPtr>) {
         stack.push(of);
         match &self.get_item(of).definition {
             &ItemDefinition::Other(other) => {
@@ -33,14 +33,14 @@ impl<'x> Environment<'x> {
         assert_eq!(stack.pop(), Some(of));
     }
 
-    pub(crate) fn arrest_recursion(&mut self, of: ItemId) {
+    pub(crate) fn arrest_recursion(&mut self, of: ItemPtr) {
         self.arrest_recursion_impl(of, &mut Vec::new())
     }
 
     pub(crate) fn evaluation_of_item_recurses_over(
         &mut self,
-        of: ItemId,
-    ) -> Result<Vec<ItemId>, UnresolvedItemError> {
+        of: ItemPtr,
+    ) -> Result<Vec<ItemPtr>, UnresolvedItemError> {
         if let Some(rec) = self.get_and_downcast_construct_definition::<CRecursion>(of)? {
             Ok(vec![rec.get_base()])
         } else {

@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{recursion::CRecursion, ItemId},
+    item::{recursion::CRecursion, ItemPtr},
     environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -11,20 +11,20 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
+fn create(
     _pc: &ParseContext,
-    _env: &mut Environment<'x>,
+    _env: &mut Environment,
     _scope: Box<dyn Scope>,
-    _node: &Node<'x>,
-) -> ItemId {
+    _node: &Node,
+) -> ItemPtr {
     unreachable!()
 }
 
-fn uncreate<'x>(
+fn uncreate(
     env: &mut Environment,
     ctx: &mut VomitContext<'x, '_>,
-    uncreate: ItemId,
-) -> UncreateResult<'x> {
+    uncreate: ItemPtr,
+) -> UncreateResult {
     if let Some(recursion) = env.get_and_downcast_construct_definition::<CRecursion>(uncreate)? {
         let base = recursion.get_base();
         Ok(Some(Node {

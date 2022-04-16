@@ -13,21 +13,16 @@ pub mod vomit;
 
 use std::{collections::HashMap, ops::ControlFlow};
 
-use self::{
-    dependencies::DepResStack,
-    invariants::{justify::JustifyStack, InvariantSetPool},
-    resolve::ResolveStack,
-};
+use self::{dependencies::DepResStack, invariants::justify::JustifyStack, resolve::ResolveStack};
 use crate::{
-    constructs::{
-        base::{Item, ItemDefinition, ItemId, ItemPool},
+    item::{
+        base::{Item, ItemDefinition, ItemPtr},
         downcast_construct,
+        resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
         substitution::{CSubstitution, Substitutions},
         unique::{Unique, UniqueId, UniquePool},
         variable::{CVariable, Variable, VariableId, VariablePool},
-        Construct,
     },
-    resolvable::{BoxedResolvable, RPlaceholder, Resolvable},
     scope::{SRoot, Scope},
     shared::Pool,
 };
@@ -52,31 +47,21 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
 #[cfg(feature = "no_axioms")]
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "x", "and"];
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct UnresolvedItemError(pub ItemId);
-
-pub type CheckResult = Result<(), UnresolvedItemError>;
-
 #[derive(Debug)]
-pub struct Environment<'x> {
-    language_items: HashMap<&'static str, ItemId>,
-    pub(crate) items: ItemPool<'x>,
-    pub(crate) invariant_sets: InvariantSetPool,
+pub struct Environment {
+    language_items: HashMap<&'static str, ItemPtr>,
     pub(crate) uniques: UniquePool,
     pub(crate) variables: VariablePool,
     pub(super) dep_res_stack: DepResStack,
     pub(super) resolve_stack: ResolveStack,
     pub(super) justify_stack: JustifyStack,
-    pub(super) auto_theorems: Vec<ItemId>,
-    // pub(super) def_equal_memo_table: HashMap<DefEqualQuery, DefEqualResult>,
+    pub(super) auto_theorems: Vec<ItemPtr>,
 }
 
-impl<'x> Environment<'x> {
+impl Environment {
     pub fn new() -> Self {
         let mut this = Self {
             language_items: HashMap::new(),
-            items: Pool::new(),
-            invariant_sets: Pool::new(),
             uniques: Pool::new(),
             variables: Pool::new(),
             dep_res_stack: DepResStack::new(),
@@ -91,16 +76,16 @@ impl<'x> Environment<'x> {
         this
     }
 
-    pub fn define_language_item(&mut self, name: &str, definition: ItemId) {
+    pub fn define_language_item(&mut self, name: &str, definition: ItemPtr) {
         let id = self.get_language_item(name);
         self.items[id].definition = definition.into();
     }
 
-    pub fn define_item(&mut self, item: ItemId, definition: impl Construct) {
+    pub fn define_item(&mut self, item: ItemPtr, definition: impl ItemDefinition) {
         self.define_dyn_item(item, Box::new(definition))
     }
 
-    pub fn define_dyn_item(&mut self, item: ItemId, definition: Box<dyn Construct>) {
+    pub fn define_dyn_item(&mut self, item: ItemPtr, definition: Box<dyn ItemDefinition>) {
         let var_id = downcast_construct::<CVariable>(&*definition).map(CVariable::get_id);
         if let Some(var_id) = var_id {
             self.variables[var_id].item = Some(item);
@@ -108,19 +93,19 @@ impl<'x> Environment<'x> {
         self.items[item].definition = definition.into();
     }
 
-    pub fn define_unresolved(&mut self, item: ItemId, definition: impl Resolvable<'x> + 'x) {
+    pub fn define_unresolved(&mut self, item: ItemPtr, definition: impl Resolvable) {
         self.items[item].unresolved = Some(Box::new(definition));
     }
 
     #[track_caller]
-    pub fn get_language_item(&self, name: &str) -> ItemId {
+    pub fn get_language_item(&self, name: &str) -> ItemPtr {
         *self
             .language_items
             .get(name)
             .expect(&format!("nice error, no language item named {}", name))
     }
 
-    pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ItemId {
+    pub fn push_placeholder(&mut self, scope: Box<dyn Scope>) -> ItemPtr {
         let item = Item {
             definition: ItemDefinition::Placeholder,
             reduced: ItemDefinition::Placeholder,
@@ -133,7 +118,7 @@ impl<'x> Environment<'x> {
         self.items.push(item)
     }
 
-    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ItemId {
+    pub fn push_scope(&mut self, scope: Box<dyn Scope>) -> ItemPtr {
         let void = self.get_language_item("void");
         self.items.push(Item {
             definition: ItemDefinition::Other(void),
@@ -146,15 +131,19 @@ impl<'x> Environment<'x> {
         })
     }
 
-    pub fn push_construct(&mut self, construct: impl Construct, scope: Box<dyn Scope>) -> ItemId {
+    pub fn push_construct(
+        &mut self,
+        construct: impl ItemDefinition,
+        scope: Box<dyn Scope>,
+    ) -> ItemPtr {
         self.push_dyn_construct(Box::new(construct), scope)
     }
 
     pub fn push_dyn_construct(
         &mut self,
-        construct: Box<dyn Construct>,
+        construct: Box<dyn ItemDefinition>,
         scope: Box<dyn Scope>,
-    ) -> ItemId {
+    ) -> ItemPtr {
         let var_id = downcast_construct::<CVariable>(&*construct).map(CVariable::get_id);
         let item = Item {
             definition: ItemDefinition::Resolved(construct),
@@ -172,7 +161,7 @@ impl<'x> Environment<'x> {
         id
     }
 
-    pub fn push_other(&mut self, other: ItemId, scope: Box<dyn Scope>) -> ItemId {
+    pub fn push_other(&mut self, other: ItemPtr, scope: Box<dyn Scope>) -> ItemPtr {
         let item = Item {
             definition: ItemDefinition::Other(other),
             reduced: ItemDefinition::Placeholder,
@@ -203,17 +192,17 @@ impl<'x> Environment<'x> {
 
     pub fn push_unresolved(
         &mut self,
-        definition: impl Resolvable<'x> + 'x,
+        definition: impl Resolvable + 'x,
         scope: Box<dyn Scope>,
-    ) -> ItemId {
+    ) -> ItemPtr {
         self.push_dyn_unresolved(Box::new(definition), scope)
     }
 
     pub fn push_dyn_unresolved(
         &mut self,
-        definition: BoxedResolvable<'x>,
+        definition: BoxedResolvable,
         scope: Box<dyn Scope>,
-    ) -> ItemId {
+    ) -> ItemPtr {
         self.items.push(Item {
             definition: ItemDefinition::Placeholder,
             reduced: ItemDefinition::Placeholder,
@@ -227,7 +216,7 @@ impl<'x> Environment<'x> {
 
     pub fn for_each_item_returning_nothing(
         &mut self,
-        mut visitor: impl FnMut(&mut Self, ItemId) -> (),
+        mut visitor: impl FnMut(&mut Self, ItemPtr) -> (),
     ) {
         let mut next_id = self.items.first();
         while let Some(id) = next_id {
@@ -238,7 +227,7 @@ impl<'x> Environment<'x> {
 
     pub fn for_each_item<T>(
         &mut self,
-        mut visitor: impl FnMut(&mut Self, ItemId) -> ControlFlow<T>,
+        mut visitor: impl FnMut(&mut Self, ItemPtr) -> ControlFlow<T>,
     ) -> Option<T> {
         let mut next_id = self.items.first();
         while let Some(id) = next_id {
@@ -251,7 +240,7 @@ impl<'x> Environment<'x> {
         None
     }
 
-    pub(crate) fn check(&mut self, item_id: ItemId) -> CheckResult {
+    pub(crate) fn check(&mut self, item_id: ItemPtr) -> CheckResult {
         let item = self.get_item_as_construct(item_id)?.dyn_clone();
         let scope = self.get_item_scope(item_id).dyn_clone();
         item.check(self, item_id, scope)
@@ -270,9 +259,9 @@ impl<'x> Environment<'x> {
 
     pub(crate) fn substitute_unchecked(
         &mut self,
-        base: ItemId,
+        base: ItemPtr,
         substitutions: &Substitutions,
-    ) -> ItemId {
+    ) -> ItemPtr {
         if substitutions.len() == 0 {
             base
         } else {

@@ -2,10 +2,10 @@ use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
+    item::{
         substitution::CSubstitution,
         variable::{Dependency, VariableId},
-        ItemId,
+        ItemPtr,
     },
     environment::{vomit::VomitContext, Environment, UnresolvedItemError},
     parser::{
@@ -18,12 +18,12 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     assert!(node.children.len() == 4);
@@ -56,7 +56,7 @@ fn uncreate_substitution<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
     target: VariableId,
-    value: ItemId,
+    value: ItemPtr,
     deps: &mut Vec<Dependency>,
 ) -> Result<Node<'a>, UnresolvedItemError> {
     let value = env.vomit(254, ctx, value);
@@ -79,7 +79,7 @@ fn uncreate_substitution<'a>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate)? {
         let csub = csub.clone();

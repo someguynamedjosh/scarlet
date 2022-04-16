@@ -1,14 +1,14 @@
-use super::{Environment, ItemId};
+use super::{Environment, ItemPtr};
 use crate::{
-    constructs::ItemDefinition,
+    item::ItemDefinition,
     resolvable::{ResolveError, ResolveResult},
 };
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ResolveStackFrame(ItemId);
+pub struct ResolveStackFrame(ItemPtr);
 pub type ResolveStack = Vec<ResolveStackFrame>;
 
-impl<'x> Environment<'x> {
+impl Environment {
     pub fn resolve_all(&mut self) {
         let mut unresolved = Vec::new();
         self.for_each_item_returning_nothing(|env, id| {
@@ -80,7 +80,7 @@ impl<'x> Environment<'x> {
 
     /// Returns Ok(true) if the resolution was successful, or Ok(false) if it
     /// was already resolved.
-    pub fn resolve(&mut self, item_id: ItemId, limit: u32) -> Result<bool, ResolveError> {
+    pub fn resolve(&mut self, item_id: ItemPtr, limit: u32) -> Result<bool, ResolveError> {
         let item = &self.items[item_id];
         if self.resolve_stack.contains(&ResolveStackFrame(item_id)) {
             eprintln!("{:#?}", self);

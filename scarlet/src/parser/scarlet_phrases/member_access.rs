@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ItemId,
+    item::ItemPtr,
     environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -12,12 +12,12 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope.dyn_clone());
     let member_name = node.children[2].as_node();
     if member_name.phrase != "identifier" {
@@ -30,7 +30,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

@@ -1,6 +1,6 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
-    hash::{BuildHasher, Hash, Hasher},
+    hash::{BuildHasher, Hash, Hasher}, rc::Rc, cell::RefCell,
 };
 
 pub trait Ignorable {
@@ -58,4 +58,8 @@ impl<OriginalKey: Eq + Hash, IsomorphicKey: Isomorphism<OriginalKey>, Result>
         };
         self.raw_entry().from_hash(hash, |other| key.equals(other))
     }
+}
+
+pub fn rcrc<T>(value: T) -> Rc<RefCell<T>> {
+    Rc::new(RefCell::new(value))
 }

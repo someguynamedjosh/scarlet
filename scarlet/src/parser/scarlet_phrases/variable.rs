@@ -2,9 +2,9 @@ use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
+    item::{
         variable::{CVariable, SVariableInvariants, VariableOrder},
-        ItemId,
+        ItemPtr,
     },
     environment::{vomit::VomitContext, Environment},
     parser::{
@@ -17,12 +17,12 @@ use crate::{
     scope::{SPlain, SWithParent, Scope},
 };
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
@@ -63,7 +63,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
         let cvar = cvar.clone();

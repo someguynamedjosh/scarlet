@@ -1,7 +1,7 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ItemId,
+    item::ItemPtr,
     environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -12,12 +12,12 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
+fn create(
     _pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.phrase, "identifier");
     assert_eq!(node.children.len(), 1);
     env.push_unresolved(RIdentifier(node.children[0].as_text()), scope)
@@ -26,7 +26,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     let dereffed = env.dereference(uncreate)?;
     Ok(if dereffed == uncreate {

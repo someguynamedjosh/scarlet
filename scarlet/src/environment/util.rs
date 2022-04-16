@@ -1,15 +1,15 @@
-use super::{Environment, ItemId, UnresolvedItemError};
+use super::{Environment, ItemPtr, UnresolvedItemError};
 use crate::{
-    constructs::{base::BoxedConstruct, downcast_construct, Construct, Item, ItemDefinition},
+    item::{downcast_construct, ItemDefinition, Item, },
     scope::{LookupIdentResult, Scope},
 };
 
-impl<'x> Environment<'x> {
-    pub fn get_item(&self, item_id: ItemId) -> &Item<'x> {
+impl Environment {
+    pub fn get_item(&self, item_id: ItemPtr) -> &Item {
         &self.items[item_id]
     }
 
-    pub fn get_item_scope(&mut self, item_id: ItemId) -> &dyn Scope {
+    pub fn get_item_scope(&mut self, item_id: ItemPtr) -> &dyn Scope {
         let item = self.get_item(item_id);
         match &item.definition {
             &ItemDefinition::Other(other) => self.get_item_scope(other),
@@ -17,7 +17,7 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn lookup_ident(&mut self, item_id: ItemId, ident: &str) -> LookupIdentResult {
+    pub fn lookup_ident(&mut self, item_id: ItemPtr, ident: &str) -> LookupIdentResult {
         self.items[item_id]
             .scope
             .dyn_clone()
@@ -26,7 +26,7 @@ impl<'x> Environment<'x> {
 
     pub(super) fn get_construct_definition_no_deref(
         &mut self,
-        item_id: ItemId,
+        item_id: ItemPtr,
     ) -> Result<&BoxedConstruct, UnresolvedItemError> {
         let old_item_id = item_id;
         if let ItemDefinition::Resolved(def) = &self.items[item_id].definition {
@@ -40,9 +40,9 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub(super) fn get_and_downcast_construct_definition_no_deref<C: Construct>(
+    pub(super) fn get_and_downcast_construct_definition_no_deref<C: ItemDefinition>(
         &mut self,
-        item_id: ItemId,
+        item_id: ItemPtr,
     ) -> Result<Option<&C>, UnresolvedItemError> {
         Ok(downcast_construct(
             &**self.get_construct_definition_no_deref(item_id)?,
@@ -51,7 +51,7 @@ impl<'x> Environment<'x> {
 
     pub fn get_item_as_construct(
         &mut self,
-        item_id: ItemId,
+        item_id: ItemPtr,
     ) -> Result<&BoxedConstruct, UnresolvedItemError> {
         let item_id = self.dereference(item_id)?;
         if let ItemDefinition::Resolved(def) = &self.items[item_id].definition {
@@ -61,25 +61,25 @@ impl<'x> Environment<'x> {
         }
     }
 
-    pub fn get_and_downcast_construct_definition<C: Construct>(
+    pub fn get_and_downcast_construct_definition<C: ItemDefinition>(
         &mut self,
-        item_id: ItemId,
+        item_id: ItemPtr,
     ) -> Result<Option<&C>, UnresolvedItemError> {
         Ok(downcast_construct(&**self.get_item_as_construct(item_id)?))
     }
 
-    pub fn set_name(&mut self, item_id: ItemId, name: String) {
+    pub fn set_name(&mut self, item_id: ItemPtr, name: String) {
         self.items[item_id].name = Some(name);
     }
 
-    pub fn set_scope(&mut self, item_id: ItemId, scope: Box<dyn Scope>) {
+    pub fn set_scope(&mut self, item_id: ItemPtr, scope: Box<dyn Scope>) {
         self.items[item_id].scope = scope;
     }
 
     pub fn item_is_or_contains_item(
         &mut self,
-        original: ItemId,
-        is_or_contains: ItemId,
+        original: ItemPtr,
+        is_or_contains: ItemPtr,
     ) -> Result<bool, UnresolvedItemError> {
         Ok(if original == is_or_contains {
             true

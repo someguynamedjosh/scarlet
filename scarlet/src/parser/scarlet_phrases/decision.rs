@@ -1,9 +1,9 @@
 use maplit::hashset;
 
 use crate::{
-    constructs::{
+    item::{
         decision::{CDecision, SWithInvariant},
-        ItemId,
+        ItemPtr,
     },
     environment::{invariants::InvariantSet, vomit::VomitContext, Environment},
     parser::{
@@ -15,12 +15,12 @@ use crate::{
     scope::{SPlain, SRoot, Scope},
 };
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("DECISION"));
     assert_eq!(node.children[1], NodeChild::Text("["));
@@ -57,7 +57,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {
         let cite = cite.clone();

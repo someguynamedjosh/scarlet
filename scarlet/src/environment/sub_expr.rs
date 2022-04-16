@@ -3,7 +3,7 @@ use super::{
     Environment,
 };
 use crate::{
-    constructs::{variable::VariableId, ItemId},
+    item::{variable::VariableId, ItemPtr},
     shared::OrderedMap,
     util::Isomorphism,
 };
@@ -11,7 +11,7 @@ use crate::{
 pub type NestedSubstitutions<'a> = OrderedMap<VariableId, SubExpr<'a>>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct SubExpr<'a>(pub ItemId, pub &'a NestedSubstitutions<'a>);
+pub struct SubExpr<'a>(pub ItemPtr, pub &'a NestedSubstitutions<'a>);
 
 impl<'a> SubExpr<'a> {
     pub fn deps(&self, env: &mut Environment) -> DepResult {
@@ -54,4 +54,4 @@ impl<'a> Isomorphism<OwnedSubExpr> for SubExpr<'a> {
 pub type OwnedNestedSubstitutions = OrderedMap<VariableId, OwnedSubExpr>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct OwnedSubExpr(pub ItemId, pub OwnedNestedSubstitutions);
+pub struct OwnedSubExpr(pub ItemPtr, pub OwnedNestedSubstitutions);

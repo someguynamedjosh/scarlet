@@ -1,9 +1,9 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
+    item::{
         structt::{CPopulatedStruct, SField, SFieldAndRest},
-        ItemId,
+        ItemPtr,
     },
     environment::{vomit::VomitContext, Environment},
     parser::{
@@ -14,12 +14,12 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
+fn create(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ItemId {
+    node: &Node,
+) -> ItemPtr {
     assert!(node.children.len() == 4);
     assert_eq!(node.children[0], NodeChild::Text("POPULATED_STRUCT"));
     assert_eq!(node.children[1], NodeChild::Text("["));
@@ -38,7 +38,7 @@ fn create<'x>(
 fn uncreate<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemId,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

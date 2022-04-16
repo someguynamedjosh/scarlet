@@ -1,11 +1,11 @@
-use super::{Environment, ItemId, UnresolvedItemError};
-use crate::constructs::{
+use super::{Environment, ItemPtr, UnresolvedItemError};
+use crate::item::{
     structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
     ItemDefinition,
 };
 
-impl<'x> Environment<'x> {
-    pub fn dereference(&mut self, item_id: ItemId) -> Result<ItemId, UnresolvedItemError> {
+impl Environment {
+    pub fn dereference(&mut self, item_id: ItemPtr) -> Result<ItemPtr, UnresolvedItemError> {
         if let &ItemDefinition::Other(item_id) = &self.items[item_id].definition {
             return self.dereference(item_id);
         } else if let Some(mem) =
@@ -26,7 +26,7 @@ impl<'x> Environment<'x> {
         Ok(item_id)
     }
     
-    pub fn dereference_no_unresolved_error(&mut self, item_id: ItemId) -> ItemId {
+    pub fn dereference_no_unresolved_error(&mut self, item_id: ItemPtr) -> ItemPtr {
         if let &ItemDefinition::Other(item_id) = &self.items[item_id].definition {
             return self.dereference_no_unresolved_error(item_id);
         } else if let Ok(Some(mem)) =
