@@ -12,7 +12,7 @@ x IS std.basics.x
 #    is_struct[x.REST]
 # ]
 
-thing IS thing
+thing IS DECISION[x x thing false]
 
 t_just[thing]
 

@@ -116,7 +116,7 @@ impl<'x> Environment<'x> {
 
     pub(crate) fn justify_all(&mut self) {
         let mut encountered_err = false;
-        const MAX_LIMIT: u32 = 10;
+        const MAX_LIMIT: u32 = 8;
         for limit in 0..MAX_LIMIT {
             println!("{}/{}", limit, MAX_LIMIT);
             self.for_each_invariant_set(|env, id| {
@@ -208,7 +208,8 @@ impl<'x> Environment<'x> {
             if iset.statements().len() == 0 {
                 continue;
             }
-            if ![6, 554].contains(&id.index) {
+            // if ![6, 554].contains(&id.index) {
+            if ![].contains(&id.index) {
                 continue;
             }
             println!("{:?}", id);
@@ -281,13 +282,22 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        // let trace = statement.index == 192;
-        let trace = false;
+        let trace =
+            statement.index == 833 || statement.index == 147123;
+        // let trace = statement.index == 115757;
+        // let trace = false;
+        if trace {
+            println!("Trying to find justification of {:?}", statement);
+        }
         if limit == 0 {
             if trace {
                 println!("Limit reached.");
             }
             return Err(err);
+        }
+        let mut successful_candidates = Vec::new();
+        if trace {
+            println!("{:?}", self.justify_stack);
         }
         for frame in self.justify_stack.clone() {
             if let Equal::Yes(subs) = self.discover_equal_with_subs(
@@ -298,12 +308,31 @@ impl<'x> Environment<'x> {
                 limit,
             )? {
                 if subs.len() > 0 {
-                    return Err(LookupInvariantError::DefinitelyDoesNotExist);
+                    continue;
+                };
+                if trace {
+                    panic!("Equal to a previous thing!");
                 }
                 let rec = self.evaluation_of_item_recurses_over(statement)?;
-                if rec.len() == 0 {
+                if rec.len() != 1 {
                     return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
+                let rec = rec[0];
+                if !self.item_is_or_contains_item(frame.base, rec)? {
+                    continue;
+                }
+                if self.item_is_or_contains_item(statement, rec)? {
+                    continue;
+                }
+                let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
+                    context,
+                    vec![rec].into_iter().collect(),
+                ));
+                if trace {
+                    println!("{}", self.show(frame.base, frame.base));
+                    println!("Justified recursively.");
+                }
+                successful_candidates.push(vec![inv]);
             }
         }
         let mut candidates = Vec::new();
@@ -318,41 +347,7 @@ impl<'x> Environment<'x> {
                 }
             }
         }
-        let mut successful_candidates = Vec::new();
         'check_next_candidate: for (inv_id, inv, subs) in candidates {
-            for frame in self.justify_stack.clone() {
-                if let Equal::Yes(subs) = self.discover_equal_with_subs(
-                    statement,
-                    vec![],
-                    frame.base,
-                    vec![&frame.subs],
-                    limit,
-                )? {
-                    if subs.len() > 0 {
-                        continue;
-                    }
-                    let rec = self.evaluation_of_item_recurses_over(statement)?;
-                    if rec.len() != 1 {
-                        continue;
-                    }
-                    let rec = rec[0];
-                    if !self.item_is_or_contains_item(frame.base, rec)? {
-                        continue;
-                    }
-                    if self.item_is_or_contains_item(statement, rec)? {
-                        continue;
-                    }
-                    let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
-                        context,
-                        vec![rec].into_iter().collect(),
-                    ));
-                    if trace {
-                        println!("{}", self.show(frame.base, frame.base));
-                        println!("Justified recursively.");
-                    }
-                    successful_candidates.push(vec![inv]);
-                }
-            }
             if subs.len() == 0 {
                 successful_candidates.push(vec![inv_id]);
                 continue;
@@ -419,9 +414,15 @@ impl<'x> Environment<'x> {
             inv_subs.insert_no_replace(target, value);
             for invv in self.get_variable(target).clone().invariants {
                 let statement = self.substitute_unchecked(invv, &inv_subs);
+                if trace {
+                    println!("Need to justify {:?}", statement);
+                }
                 let result = self.justify_statement(context, statement, limit - 1);
                 match result {
                     Ok(new_justifications) => {
+                        if trace {
+                            println!("Success!");
+                        }
                         let set = self.push_invariant_set(InvariantSet {
                             context,
                             statements: vec![statement],
