@@ -48,7 +48,7 @@ impl Construct for CShown {
     fn dereference(
         &self,
         env: &mut Environment,
-    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<ItemId>>)> {
         Some((self.0, None, None))
     }
 }

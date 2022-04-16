@@ -45,7 +45,7 @@ impl Construct for CUnique {
     ) -> DeqResult {
         Ok(if let Some(other) = downcast_construct::<Self>(other) {
             if self.0 == other.0 {
-                Equal::Yes(Substitutions::new())
+                Equal::yes()
             } else {
                 Equal::No
             }

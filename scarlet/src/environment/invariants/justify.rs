@@ -255,7 +255,7 @@ impl<'x> Environment<'x> {
             .collect_vec();
         for (other_id, other_set) in iterate_over {
             for &other_statement in other_set.clone().statements() {
-                if let Ok(Equal::Yes(subs)) = self.discover_equal(statement, other_statement, limit)
+                if let Ok(Equal::Yes(subs, _)) = self.discover_equal(statement, other_statement, limit)
                 {
                     if subs.len() > 0 {
                         continue;
@@ -300,7 +300,7 @@ impl<'x> Environment<'x> {
             println!("{:?}", self.justify_stack);
         }
         for frame in self.justify_stack.clone() {
-            if let Equal::Yes(subs) = self.discover_equal_with_subs(
+            if let Equal::Yes(subs, rec) = self.discover_equal_with_subs(
                 statement,
                 vec![],
                 frame.base,
@@ -313,15 +313,15 @@ impl<'x> Environment<'x> {
                 if trace {
                     panic!("Equal to a previous thing!");
                 }
-                let rec = self.evaluation_of_item_recurses_over(statement)?;
+                // Deduplicate
+                let rec: HashSet<_> = rec.into_iter().collect();
+                let rec: Vec<_> = rec.into_iter().collect();
                 if rec.len() != 1 {
                     return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
                 let rec = rec[0];
+                // The original frame must contain the recursion.
                 if !self.item_is_or_contains_item(frame.base, rec)? {
-                    continue;
-                }
-                if self.item_is_or_contains_item(statement, rec)? {
                     continue;
                 }
                 let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
@@ -341,7 +341,7 @@ impl<'x> Environment<'x> {
             let invs = self.get_invariant_set(invs_id).clone();
             for &inv in invs.statements() {
                 match self.discover_equal(inv, statement, limit - 1)? {
-                    Equal::Yes(subs) => candidates.push((invs_id, inv, subs)),
+                    Equal::Yes(subs, _) => candidates.push((invs_id, inv, subs)),
                     Equal::NeedsHigherLimit => err = LookupInvariantError::MightNotExist,
                     _ => (),
                 }

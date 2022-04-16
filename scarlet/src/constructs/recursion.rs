@@ -32,8 +32,8 @@ impl Construct for CRecursion {
     fn dereference(
         &self,
         env: &mut Environment,
-    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<VariableId>>)> {
-        Some((self.0, None, None))
+    ) -> Option<(ItemId, Option<&Substitutions>, Option<Vec<ItemId>>)> {
+        Some((self.0, None, Some(vec![self.0])))
     }
 
     fn get_dependencies<'x>(&self, env: &mut Environment<'x>) -> DepResult {

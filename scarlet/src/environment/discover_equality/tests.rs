@@ -21,7 +21,7 @@ fn something_equals_variable() {
     let thing = env.unique();
     let (var_con, var_id) = env.variable_full();
     let expected = subs(vec![(var_id, thing)]);
-    let left = Equal::Yes(expected.clone());
+    let left = Equal::Yes(expected.clone(), Default::default());
     assert_eq!(env.discover_equal(var_con, thing, 1), Ok(left));
     assert_eq!(
         env.discover_equal(var_con, thing, 0),
@@ -39,8 +39,8 @@ fn variable_equals_variable() {
     let x = env.variable_full();
     let y = env.variable_full();
     let expected = subs(vec![(x.1, y.0)]);
-    let left = Equal::Yes(expected.clone());
-    if let Ok(Equal::Yes(subs)) = env.discover_equal(x.0, y.0, 1) {
+    let left = Equal::Yes(expected.clone(), Default::default());
+    if let Ok(Equal::Yes(subs, _)) = env.discover_equal(x.0, y.0, 1) {
         let (target, value) = subs.into_iter().next().unwrap();
         println!("{}", env.show(value, value));
     }
@@ -93,11 +93,14 @@ fn aabc_is_ddef() {
     let dec1 = env.decision(a.0, a.0, b.0, c.0);
     let dec2 = env.decision(d.0, d.0, e.0, f.0);
     let left_subs = subs(vec![(a.1, d.0), (b.1, e.0), (c.1, f.0)]);
-    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs)));
+    assert_eq!(
+        env.discover_equal(dec1, dec2, 3),
+        Ok(Equal::Yes(left_subs, Default::default()))
+    );
     let right_subs = subs(vec![(d.1, a.0), (e.1, b.0), (f.1, c.0)]);
     assert_eq!(
         env.discover_equal(dec2, dec1, 3),
-        Ok(Equal::Yes(right_subs))
+        Ok(Equal::Yes(right_subs, Default::default()))
     );
 }
 
@@ -111,7 +114,7 @@ fn xxbc_is_aabc() {
     let dec1 = env.decision(x.0, x.0, b, c);
     let dec2 = env.decision(a, a, b, c);
     let left_subs = subs(vec![(x.1, a)]);
-    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs)));
+    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs, Default::default())));
 }
 
 #[test]
@@ -130,11 +133,11 @@ fn aabc_eq_b_is_ddef_eq_e() {
     let dec2 = env.decision(d.0, d.0, e.0, f.0);
     let dec2 = env.decision(dec2, e.0, truee, falsee);
     let left_subs = subs(vec![(a.1, d.0), (b.1, e.0), (c.1, f.0)]);
-    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs)));
+    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs, Default::default())));
     let right_subs = subs(vec![(d.1, a.0), (e.1, b.0), (f.1, c.0)]);
     assert_eq!(
         env.discover_equal(dec2, dec1, 3),
-        Ok(Equal::Yes(right_subs))
+        Ok(Equal::Yes(right_subs, Default::default()))
     );
 }
 
@@ -154,7 +157,7 @@ fn decision_equals_decision_with_subs() {
     let subs = subs(vec![(a.1, w), (b.1, x), (c.1, y), (d.1, z)]);
     assert_eq!(
         env.discover_equal(dec1, dec2, 2),
-        Ok(Equal::Yes(subs.clone()))
+        Ok(Equal::Yes(subs.clone(), Default::default()))
     );
 }
 
@@ -168,7 +171,7 @@ fn fx_is_gy() {
     assert_matches!(env.discover_equal(f.0, g.0, 2), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g.0, f.0, 2), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g.0, f.0, 1), Ok(Equal::NeedsHigherLimit));
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f.0, g.0, 2) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(f.0, g.0, 2) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         let next = entries.next().unwrap();
@@ -203,7 +206,7 @@ fn fx_sub_a_is_gy_sub_a() {
         env.discover_equal(g_sub_a, f_sub_a, 1),
         Ok(Equal::NeedsHigherLimit)
     );
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_sub_a, g_sub_a, 2) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(f_sub_a, g_sub_a, 2) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -253,7 +256,7 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
         env.discover_equal(g_sub, f_sub, 0),
         Ok(Equal::NeedsHigherLimit)
     );
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_sub, g_sub, 3) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(f_sub, g_sub, 3) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next(), Some(&(x.1, y.0)));
@@ -286,7 +289,7 @@ fn fx_sub_z_is_gy_sub_nothing() {
         env.discover_equal(g_sub, f_sub, 0),
         Ok(Equal::NeedsHigherLimit)
     );
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_sub, g_sub, 3) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(f_sub, g_sub, 3) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next(), Some(&(z.1, y.0)));
@@ -323,7 +326,7 @@ fn fx_sub_decision_is_gy_sub_decision() {
 
     assert_matches!(env.discover_equal(f_dec, g_dec, 3), Ok(Equal::Yes(..)));
     assert_matches!(env.discover_equal(g_dec, f_dec, 3), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_dec, g_dec, 3) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(f_dec, g_dec, 3) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -363,7 +366,7 @@ fn dex_sub_decision_is_gy_sub_decision() {
     let g_dec = env.substitute_unchecked(g.0, &subs(vec![(y.1, dec_for_g)]));
 
     assert_matches!(env.discover_equal(g_dec, dex_dec, 3), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(g_dec, dex_dec, 3) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(g_dec, dex_dec, 3) {
         assert_eq!(lsubs.len(), 5);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next().unwrap(), &(s.1, a));
@@ -405,7 +408,7 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
     let g_dec = env.substitute_unchecked(g.0, &subs(vec![(y.1, dec)]));
 
     assert_matches!(env.discover_equal(f_dec, g_dec, 4), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(f_dec, g_dec, 4) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(f_dec, g_dec, 4) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         assert_eq!(Some(&(aa.1, a)), entries.next());
@@ -502,7 +505,7 @@ fn x_eq_y_sub_true_true_is_a_equal_a() {
         env.discover_equal(a_eq_a, true_eq_true, 3),
         Ok(Equal::Yes(..))
     );
-    if let Ok(Equal::Yes(lsubs)) = env.discover_equal(a_eq_a, true_eq_true, 3) {
+    if let Ok(Equal::Yes(lsubs, _)) = env.discover_equal(a_eq_a, true_eq_true, 3) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -531,7 +534,7 @@ fn is_bool_sub_y_is_y_is_bool() {
 
     assert_eq!(
         env.discover_equal(y_is_bool, x_sub_y_is_bool, 4),
-        Ok(Equal::Yes(Substitutions::new()))
+        Ok(Equal::yes())
     );
 }
 
@@ -554,7 +557,7 @@ fn multi_variable_dex_is_single_variable_dex() {
 
     let multi_variable_dex = env.decision(x.0, y.0, a, b);
 
-    if let Equal::Yes(subs) = env.discover_equal(fz.0, multi_variable_dex, 15).unwrap() {
+    if let Equal::Yes(subs, _) = env.discover_equal(fz.0, multi_variable_dex, 15).unwrap() {
         assert_eq!(subs.len(), 2);
         let sub = *subs.get(&z.1).unwrap();
         assert_eq!(sub, x.0);
@@ -594,7 +597,7 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
     let subbed_multi_variable_dex =
         env.substitute_unchecked(multi_variable_dex, &subs(vec![(x.1, a)]));
 
-    if let Equal::Yes(subs) = env
+    if let Equal::Yes(subs, _) = env
         .discover_equal(fz.0, subbed_multi_variable_dex, 15)
         .unwrap()
     {
@@ -644,7 +647,7 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
     let subbed_multi_variable_dex =
         env.substitute_unchecked(multi_variable_dex, &subs(vec![(x.1, x2.0), (y.1, y2.0)]));
 
-    if let Equal::Yes(subs) = env
+    if let Equal::Yes(subs, _) = env
         .discover_equal(fz.0, subbed_multi_variable_dex, 15)
         .unwrap()
     {
@@ -691,7 +694,7 @@ fn multi_variable_dex_sub_two_uniques_is_single_variable_dex() {
     let subbed_multi_variable_dex =
         env.substitute_unchecked(multi_variable_dex, &subs(vec![(x.1, a), (y.1, b)]));
 
-    if let Equal::Yes(subs) = env
+    if let Equal::Yes(subs, _) = env
         .discover_equal(fz.0, subbed_multi_variable_dex, 15)
         .unwrap()
     {
@@ -760,7 +763,7 @@ fn sneaky_substitution() {
 
     assert_eq!(
         env.discover_equal(tricky_sub, a_eq_b, 5),
-        Ok(Equal::Yes(subs(vec![(y.1, b)])))
+        Ok(Equal::Yes(subs(vec![(y.1, b)]), Default::default()))
     );
 }
 

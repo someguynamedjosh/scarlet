@@ -5,7 +5,7 @@ use crate::constructs::{substitution::Substitutions, variable::VariableId, ItemI
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
-    Yes(Substitutions),
+    Yes(Substitutions, Vec<ItemId>),
     NeedsHigherLimit,
     Unknown,
     No,
@@ -26,19 +26,21 @@ fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -
 
 impl Equal {
     pub fn yes() -> Self {
-        Self::Yes(Default::default())
+        Self::Yes(Default::default(), Default::default())
+    }
+
+    pub fn yes_recursing_over(recursing_over: Vec<ItemId>) -> Self {
+        Self::Yes(Default::default(), recursing_over)
     }
 
     pub fn and(over: Vec<Self>) -> Self {
         let mut default = Self::yes();
         for b in over {
             match b {
-                Self::Yes(left) => {
-                    if let Self::Yes(exleft) = &mut default {
-                        let success = (|| -> Result<(), ()> {
-                            combine_substitutions(left, exleft)?;
-                            Ok(())
-                        })();
+                Self::Yes(left, mut lrecursion) => {
+                    if let Self::Yes(exleft, exrecursion) = &mut default {
+                        let success = combine_substitutions(left, exleft);
+                        exrecursion.append(&mut lrecursion);
                         if success.is_err() {
                             default = Self::Unknown
                         }
@@ -82,7 +84,7 @@ impl Equal {
 
     pub fn reorder(self, order: &[&VariableId]) -> Self {
         match self {
-            Self::Yes(subs) => Self::Yes(subs.reorder(order)),
+            Self::Yes(subs, recursion) => Self::Yes(subs.reorder(order), recursion),
             other => other,
         }
     }
@@ -96,12 +98,25 @@ impl Equal {
 
     pub(crate) fn sort(self, env: &mut Environment) -> Equal {
         match self {
-            Self::Yes(subs) => {
+            Self::Yes(subs, recursion) => {
                 let mut order = subs.iter().map(|(k, _)| *k).collect_vec();
                 order.sort_by_key(|x| &env.get_variable(*x).order);
-                Self::Yes(subs.reorder(&order.iter().collect_vec()))
+                Self::Yes(subs.reorder(&order.iter().collect_vec()), recursion)
             }
             other => other,
+        }
+    }
+
+    pub(crate) fn recursing_over(self, recurses_over: Vec<ItemId>) -> Self {
+        match self {
+            Equal::Yes(subs, previous_recurses_over) => Self::Yes(
+                subs,
+                recurses_over
+                    .into_iter()
+                    .chain(previous_recurses_over)
+                    .collect(),
+            ),
+            _ => self,
         }
     }
 }

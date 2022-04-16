@@ -144,23 +144,30 @@ impl<'x> Environment<'x> {
             }
             return Ok(Equal::NeedsHigherLimit);
         }
+        let mut recurses_over = Vec::new();
         while let Ok(con) = self.get_item_as_construct(left) {
-            if let Some((base, extra_subs, _)) = con.dyn_clone().dereference(self) {
+            if let Some((base, extra_subs, this_recurses)) = con.dyn_clone().dereference(self) {
                 left = base;
                 if let Some(extra_subs) = extra_subs {
                     let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
                     left_subs.insert(0, extra_subs);
+                }
+                if let Some(mut this_recurses) = this_recurses {
+                    recurses_over.append(&mut this_recurses);
                 }
             } else {
                 break;
             }
         }
         while let Ok(con) = self.get_item_as_construct(right) {
-            if let Some((base, extra_subs, _)) = con.dyn_clone().dereference(self) {
+            if let Some((base, extra_subs, this_recurses)) = con.dyn_clone().dereference(self) {
                 right = base;
                 if let Some(extra_subs) = extra_subs {
                     let extra_subs = extra_sub_holder.alloc(extra_subs.clone());
                     right_subs.insert(0, extra_subs);
+                }
+                if let Some(mut this_recurses) = this_recurses {
+                    recurses_over.append(&mut this_recurses);
                 }
             } else {
                 break;
@@ -177,7 +184,7 @@ impl<'x> Environment<'x> {
                 if trace {
                     println!("left == right after subs, Ok({:?})", Equal::yes());
                 }
-                return Ok(Equal::yes());
+                return Ok(Equal::yes_recursing_over(recurses_over));
             }
         }
         let rvar_id =
@@ -189,7 +196,7 @@ impl<'x> Environment<'x> {
                         right_subs[index] = extra_sub_holder.alloc(without_this_sub);
                         return self
                             .discover_equal_with_subs(left, left_subs, *sub, right_subs, limit)
-                            .map(|x| x.sort(self));
+                            .map(|x| x.sort(self).recursing_over(recurses_over));
                     }
                 }
                 Some(rvar.get_id())
@@ -209,7 +216,7 @@ impl<'x> Environment<'x> {
                     trace,
                     rvar_id,
                 )
-                .map(|x| x.sort(self));
+                .map(|x| x.sort(self).recursing_over(recurses_over));
         }
         // For now this produces no noticable performance improvements.
         // if let Some((_, result)) = self.def_equal_memo_table.iso_get(&(left, right,
@@ -228,7 +235,7 @@ impl<'x> Environment<'x> {
         }
         // self.def_equal_memo_table
         //     .insert((left, right, limit).convert(), result.clone());
-        result.map(|x| x.sort(self))
+        result.map(|x| x.sort(self).recursing_over(recurses_over))
     }
 
     fn handle_lhs_variable<'a>(
@@ -297,7 +304,7 @@ impl<'x> Environment<'x> {
                 equal = Equal::and(vec![equal, deps_equal]);
             }
             // If that was successful...
-            if let Equal::Yes(mut subs) = equal {
+            if let Equal::Yes(mut subs, rec_over) = equal {
                 // Build up what we should assing to the left variable.
                 let mut right = right;
                 // Include all substitutions that brought us to this point.
@@ -352,7 +359,7 @@ impl<'x> Environment<'x> {
                 if trace {
                     println!("Ok(Equal::Yes({:?}))", subs);
                 }
-                return Ok(Equal::Yes(subs));
+                return Ok(Equal::Yes(subs, rec_over));
             } else if let Equal::NeedsHigherLimit = equal {
                 limit_reached = true;
             }
