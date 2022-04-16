@@ -255,7 +255,8 @@ impl<'x> Environment<'x> {
             .collect_vec();
         for (other_id, other_set) in iterate_over {
             for &other_statement in other_set.clone().statements() {
-                if let Ok(Equal::Yes(subs, _)) = self.discover_equal(statement, other_statement, limit)
+                if let Ok(Equal::Yes(subs, _)) =
+                    self.discover_equal(statement, other_statement, limit)
                 {
                     if subs.len() > 0 {
                         continue;
@@ -282,10 +283,8 @@ impl<'x> Environment<'x> {
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        let trace =
-            statement.index == 833 || statement.index == 147123;
-        // let trace = statement.index == 115757;
-        // let trace = false;
+        // let trace = statement.index == 833;
+        let trace = false;
         if trace {
             println!("Trying to find justification of {:?}", statement);
         }
@@ -311,19 +310,16 @@ impl<'x> Environment<'x> {
                     continue;
                 };
                 if trace {
-                    panic!("Equal to a previous thing!");
+                    println!("Equal to a previous thing!");
                 }
                 // Deduplicate
                 let rec: HashSet<_> = rec.into_iter().collect();
                 let rec: Vec<_> = rec.into_iter().collect();
+                println!("{:?}", rec);
                 if rec.len() != 1 {
                     return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
                 let rec = rec[0];
-                // The original frame must contain the recursion.
-                if !self.item_is_or_contains_item(frame.base, rec)? {
-                    continue;
-                }
                 let inv = self.push_invariant_set(InvariantSet::new_recursive_justification(
                     context,
                     vec![rec].into_iter().collect(),
