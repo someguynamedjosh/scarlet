@@ -3,7 +3,11 @@
 use std::assert_matches::assert_matches;
 
 use crate::{
-    constructs::substitution::{CSubstitution, Substitutions},
+    constructs::{
+        decision::CDecision,
+        recursion::CRecursion,
+        substitution::{CSubstitution, Substitutions},
+    },
     environment::{discover_equality::Equal, test_util::*},
     scope::SRoot,
 };
@@ -114,7 +118,10 @@ fn xxbc_is_aabc() {
     let dec1 = env.decision(x.0, x.0, b, c);
     let dec2 = env.decision(a, a, b, c);
     let left_subs = subs(vec![(x.1, a)]);
-    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs, Default::default())));
+    assert_eq!(
+        env.discover_equal(dec1, dec2, 3),
+        Ok(Equal::Yes(left_subs, Default::default()))
+    );
 }
 
 #[test]
@@ -133,7 +140,10 @@ fn aabc_eq_b_is_ddef_eq_e() {
     let dec2 = env.decision(d.0, d.0, e.0, f.0);
     let dec2 = env.decision(dec2, e.0, truee, falsee);
     let left_subs = subs(vec![(a.1, d.0), (b.1, e.0), (c.1, f.0)]);
-    assert_eq!(env.discover_equal(dec1, dec2, 3), Ok(Equal::Yes(left_subs, Default::default())));
+    assert_eq!(
+        env.discover_equal(dec1, dec2, 3),
+        Ok(Equal::Yes(left_subs, Default::default()))
+    );
     let right_subs = subs(vec![(d.1, a.0), (e.1, b.0), (f.1, c.0)]);
     assert_eq!(
         env.discover_equal(dec2, dec1, 3),
@@ -767,6 +777,21 @@ fn sneaky_substitution() {
     );
 }
 
-// t_just[is_bool[DECISION[a b u v]]] <=> fx[DECISION[a b u v]]
-// #[test]
-// fn tjust_isbool_something_is_
+// DECISION[a b SELF c] = SELF (recursion)
+// u should be
+#[test]
+fn recursion_is_tracked_in_decision() {
+    let mut env = env();
+
+    let a = env.unique();
+    let b = env.unique();
+    let c = env.unique();
+    let dec = env.push_placeholder(Box::new(SRoot));
+    let dec_rec = env.push_construct(CRecursion::new(dec), Box::new(SRoot));
+    env.define_item(dec, CDecision::new(a, b, dec_rec, c));
+
+    assert_eq!(
+        env.discover_equal(dec, dec_rec, 3),
+        Ok(Equal::Yes(subs(vec![]), vec![dec]))
+    );
+}

@@ -116,7 +116,7 @@ impl<'x> Environment<'x> {
 
     pub(crate) fn justify_all(&mut self) {
         let mut encountered_err = false;
-        const MAX_LIMIT: u32 = 8;
+        const MAX_LIMIT: u32 = 6;
         for limit in 0..MAX_LIMIT {
             println!("{}/{}", limit, MAX_LIMIT);
             self.for_each_invariant_set(|env, id| {
@@ -295,9 +295,6 @@ impl<'x> Environment<'x> {
             return Err(err);
         }
         let mut successful_candidates = Vec::new();
-        if trace {
-            println!("{:?}", self.justify_stack);
-        }
         for frame in self.justify_stack.clone() {
             if let Equal::Yes(subs, rec) = self.discover_equal_with_subs(
                 statement,
