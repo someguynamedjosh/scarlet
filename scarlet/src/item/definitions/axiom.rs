@@ -7,7 +7,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Equal, EqualResult, EqualityFeature},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ItemDefinition, ItemPtr,
     },
@@ -21,7 +21,7 @@ pub struct DAxiom {
 impl DAxiom {
     fn new(env: &mut Environment, statement: &str) -> Self {
         Self {
-            statement: env.get_language_item(statement),
+            statement: env.get_language_item(statement).ptr_clone(),
         }
     }
 
@@ -33,7 +33,7 @@ impl DAxiom {
         for limit in 0..32 {
             for lang_item_name in env.language_item_names() {
                 let lang_item = env.get_language_item(lang_item_name);
-                if env.discover_equal(self.statement, lang_item, limit) == Ok(Equal::yes()) {
+                if self.statement.get_equality(&lang_item, limit) == Ok(Equal::yes()) {
                     return lang_item_name;
                 }
             }
@@ -45,7 +45,7 @@ impl DAxiom {
 impl_any_eq_from_regular_eq!(DAxiom);
 
 impl ItemDefinition for DAxiom {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
 }
@@ -61,20 +61,16 @@ impl DependenciesFeature for DAxiom {
 impl EqualityFeature for DAxiom {
     fn get_equality_using_context(
         &self,
-        env: &mut Environment,
-        self_subs: Vec<&Substitutions>,
-        other: ItemPtr,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
+        ctx: &Ecc,
+        can_refine: PermissionToRefine,
+        _: OnlyCalledByEcc,
     ) -> EqualResult {
-        if let Some(other) = other.downcast() {
+        if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
             let other = other.clone();
-            env.discover_equal_with_subs(
-                self.statement,
-                self_subs,
-                other.statement,
-                other_subs,
-                limit,
+            ctx.refine_and_get_equality(
+                self.statement.ptr_clone(),
+                other.statement.ptr_clone(),
+                can_refine,
             )
         } else {
             Ok(Equal::Unknown)
@@ -90,7 +86,7 @@ impl InvariantsFeature for DAxiom {
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         Ok(InvariantSet::new(
-            this,
+            this.ptr_clone(),
             vec![self.statement],
             vec![],
             hashset![],

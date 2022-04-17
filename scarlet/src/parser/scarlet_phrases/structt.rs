@@ -5,7 +5,7 @@ use crate::{
     item::{
         definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
         equality::Equal,
-        ItemPtr,
+        ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -23,18 +23,18 @@ fn struct_from_fields(
     scope: Box<dyn Scope>,
 ) -> ItemPtr {
     if fields.is_empty() {
-        env.get_language_item("void")
+        env.get_language_item("void").ptr_clone()
     } else {
         let (label, field) = fields.remove(0);
         let label = label.unwrap_or("").to_owned();
-        let this = env.push_placeholder(scope);
+        let this = crate::item::Item::placeholder_with_scope(scope);
         let field = field.as_construct(pc, env, SFieldAndRest(this));
         if label.len() > 0 {
-            env.set_name(field, label.clone());
+            field.set_name(label.clone());
         }
         let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
         let this_def = DPopulatedStruct::new(label, field, rest);
-        env.define_item(this, this_def);
+        this.redefine(this_def.clone_into_box());
         this
     }
 }
@@ -67,9 +67,7 @@ fn uncreate<'a>(
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Some(structt) =
-        env.get_and_downcast_construct_definition::<DPopulatedStruct>(maybe_structt)?
-    {
+    while let Some(structt) = maybe_structt.downcast_definition::<DPopulatedStruct>() {
         let label = ctx.code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();
         let scope = SFieldAndRest(maybe_structt);
@@ -95,7 +93,7 @@ fn uncreate<'a>(
         }
     }
     Ok(
-        if env.discover_equal(maybe_structt, env.get_language_item("void"), 2)? == Equal::yes() {
+        if maybe_structt.get_equality(&env.get_language_item("void"), 2)? == Equal::yes() {
             Some(Node {
                 phrase: "struct",
                 children: vec![

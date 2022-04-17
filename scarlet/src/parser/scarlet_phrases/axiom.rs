@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::axiom::DAxiom, ItemPtr},
+    item::{definitions::axiom::DAxiom, Item, ItemDefinition, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -23,7 +23,7 @@ fn create(
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let name = node.children[2].as_node().as_ident();
     let con = DAxiom::from_name(env, name);
-    env.push_construct(con, scope)
+    Item::new_boxed(con.clone_into_box(), scope)
 }
 
 fn uncreate<'a>(
@@ -31,7 +31,7 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(cax) = env.get_and_downcast_construct_definition::<DAxiom>(uncreate)? {
+    if let Some(cax) = uncreate.downcast_definition::<DAxiom>() {
         let cax = cax.clone();
         let statement = cax.get_statement(env);
         let statement = &statement[..statement.len()]; // - "_statement".len()];

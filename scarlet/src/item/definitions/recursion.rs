@@ -5,7 +5,7 @@ use crate::{
         check::CheckFeature,
         definitions::{decision::DDecision, substitution::Substitutions},
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -34,7 +34,7 @@ impl DRecursion {
 impl_any_eq_from_regular_eq!(DRecursion);
 
 impl ItemDefinition for DRecursion {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
 }
@@ -48,7 +48,12 @@ impl DependenciesFeature for DRecursion {
 }
 
 impl EqualityFeature for DRecursion {
-    fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
+    fn get_equality_using_context(
+        &self,
+        ctx: &Ecc,
+        can_refine: PermissionToRefine,
+        _: OnlyCalledByEcc,
+    ) -> EqualResult {
         unreachable!();
     }
 }
@@ -60,6 +65,6 @@ impl InvariantsFeature for DRecursion {
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        ctx.generated_invariants(self.0)
+        self.0.get_invariants()
     }
 }

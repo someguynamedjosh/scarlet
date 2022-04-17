@@ -4,9 +4,12 @@ use typed_arena::Arena;
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
-        definitions::variable::{DVariable, SVariableInvariants, VariableOrder},
-        resolvable::RVariable,
-        ItemPtr,
+        definitions::{
+            unique::DUnique,
+            variable::{DVariable, SVariableInvariants, VariableOrder},
+        },
+        resolvable::{DResolvable, RVariable},
+        Item, ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -26,7 +29,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     let mut order =
         VariableOrder::new(128, node.position.file_index, node.position.start_char as _);
     let mut mode = 0;
-    let this = env.push_placeholder(scope);
+    let this = crate::item::Item::placeholder_with_scope(scope);
     for arg in util::collect_comma_list(&node.children[2]) {
         if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEP")] {
             mode = 1;
@@ -51,7 +54,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         dependencies,
         order,
     };
-    env.define_unresolved(this, def);
+    this.redefine(DResolvable::new(def).clone_into_box());
     this
 }
 
@@ -60,15 +63,15 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<DVariable>(uncreate) {
+    if let Some(cvar) = uncreate.downcast_definition::<DVariable>() {
         let cvar = cvar.clone();
-        let scope_item = env.push_scope(ctx.scope.dyn_clone());
-        let scope_parent = env.dereference(uncreate)?;
+        let scope_item = Item::new_boxed(DUnique::new().clone_into_box(), ctx.scope.dyn_clone());
+        let scope_parent = uncreate.dereference();
         let from = &SWithParent(SVariableInvariants(scope_parent), scope_item);
         let ctx = &mut ctx.with_scope(from);
 
         let cvar = cvar.clone();
-        let var = env.get_variable(cvar.get_id()).clone();
+        let var = cvar.get_variable().borrow();
         let invariants = var
             .get_invariants()
             .into_iter()

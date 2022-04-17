@@ -1,6 +1,6 @@
-use std::{collections::HashSet, rc::Rc, cell::RefCell};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
-use crate::{item::ItemPtr, util::rcrc,};
+use crate::{item::ItemPtr, util::rcrc};
 
 pub type SetJustification = Vec<StatementJustifications>;
 pub type StatementJustifications = Vec<StatementJustification>;
@@ -22,7 +22,7 @@ pub struct InvariantSet {
 pub type InvariantSetPtr = Rc<RefCell<InvariantSet>>;
 
 impl InvariantSet {
-    pub fn new_empty(context: ItemPtr) -> Self {
+    pub fn new_empty(context: ItemPtr) -> InvariantSetPtr {
         Self::new(context, vec![], vec![], HashSet::new())
     }
 
@@ -48,8 +48,8 @@ impl InvariantSet {
         statements: Vec<ItemPtr>,
         justification_requirements: Vec<ItemPtr>,
         dependencies: HashSet<ItemPtr>,
-    ) -> Self {
-        Self {
+    ) -> InvariantSetPtr {
+        rcrc(Self {
             context,
             statements,
             justification_requirements,
@@ -57,15 +57,15 @@ impl InvariantSet {
             connected_to_root: false,
             required: false,
             dependencies,
-        }
+        })
     }
 
     pub(crate) fn new_justified_by(
         context: ItemPtr,
         statements: Vec<ItemPtr>,
         justified_by: SetJustification,
-    ) -> InvariantSet {
-        Self {
+    ) -> InvariantSetPtr {
+        rcrc(Self {
             context,
             statements,
             justification_requirements: Vec::new(),
@@ -73,14 +73,14 @@ impl InvariantSet {
             connected_to_root: false,
             required: false,
             dependencies: HashSet::new(),
-        }
+        })
     }
 
     pub(super) fn new_recursive_justification(
         context: ItemPtr,
         dependencies: HashSet<ItemPtr>,
-    ) -> InvariantSet {
-        Self {
+    ) -> InvariantSetPtr {
+        rcrc(Self {
             context,
             statements: Vec::new(),
             justification_requirements: Vec::new(),
@@ -88,15 +88,15 @@ impl InvariantSet {
             connected_to_root: true,
             required: false,
             dependencies,
-        }
+        })
     }
 
     pub fn new_statements_depending_on(
         context: ItemPtr,
         statements: Vec<ItemPtr>,
         dependencies: HashSet<ItemPtr>,
-    ) -> Self {
-        Self {
+    ) -> InvariantSetPtr {
+        rcrc(Self {
             context,
             statements,
             justification_requirements: Vec::new(),
@@ -104,7 +104,7 @@ impl InvariantSet {
             connected_to_root: false,
             required: true,
             dependencies,
-        }
+        })
     }
 
     /// Get a reference to the invariant set's statements.

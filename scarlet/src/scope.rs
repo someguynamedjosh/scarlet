@@ -42,10 +42,7 @@ pub trait Scope: Debug {
         if let Some(result) = self.local_lookup_ident(env, ident)? {
             Ok(Some(result))
         } else if let Some(parent) = self.parent() {
-            env.get_item(parent)
-                .scope
-                .dyn_clone()
-                .lookup_ident(env, ident)
+            parent.borrow().scope.lookup_ident(env, ident)
         } else {
             Ok(None)
         }
@@ -62,10 +59,7 @@ pub trait Scope: Debug {
             }
         }
         if let Some(parent) = self.parent() {
-            env.get_item(parent)
-                .scope
-                .dyn_clone()
-                .reverse_lookup_ident(env, value)
+            parent.borrow().scope.reverse_lookup_ident(env, value)
         } else {
             Ok(None)
         }
@@ -74,7 +68,7 @@ pub trait Scope: Debug {
     fn get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
         let mut result = self.local_get_invariant_sets(env);
         if let Some(parent) = self.parent() {
-            let parent_scope = env.get_item(parent).scope.dyn_clone();
+            let parent_scope = &parent.borrow().scope;
             result.append(&mut parent_scope.get_invariant_sets(env));
         }
         result

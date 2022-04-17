@@ -4,7 +4,7 @@ use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
-        ItemPtr,
+        ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -21,12 +21,12 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let args = util::collect_comma_list(&node.children[2]);
     assert_eq!(args.len(), 3);
-    let this = env.push_placeholder(scope);
+    let this = crate::item::Item::placeholder_with_scope(scope);
 
     let label = args[0].as_ident().to_owned();
     let value = args[1].as_construct(pc, env, SFieldAndRest(this));
     let rest = args[2].as_construct(pc, env, SField(this));
-    env.define_item(this, DPopulatedStruct::new(label, value, rest));
+    this.redefine(DPopulatedStruct::new(label, value, rest).clone_into_box());
     this
 }
 

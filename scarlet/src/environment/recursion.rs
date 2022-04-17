@@ -36,7 +36,7 @@ impl Environment {
         &mut self,
         of: ItemPtr,
     ) -> Result<Vec<ItemPtr>, UnresolvedItemError> {
-        if let Some(rec) = self.get_and_downcast_construct_definition::<DRecursion>(of)? {
+        if let Some(rec) = of.downcast_definition::<DRecursion>() {
             Ok(vec![rec.get_base()])
         } else {
             let mut result = Vec::new();

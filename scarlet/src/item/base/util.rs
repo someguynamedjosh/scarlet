@@ -1,8 +1,15 @@
-use crate::item::ItemPtr;
+use crate::item::{
+    definitions::substitution::{DSubstitution, Substitutions},
+    Item, ItemPtr,
+};
 
 pub(super) struct RecursionPreventionStack(Vec<ItemPtr>);
 
 impl RecursionPreventionStack {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     /// Executes the given function if the given item is not on the stack.
     /// Pushes the item onto the stack for the duration of the function.
     pub fn skip_recursion_or_execute<T>(

@@ -1,25 +1,30 @@
+use std::{cell::RefCell, rc::Rc};
+
 use maplit::hashset;
 
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
+        check::CheckFeature,
         definitions::{decision::DDecision, substitution::Substitutions},
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            self, Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr, check::CheckFeature,
+        util::unchecked_substitution,
+        Item, ItemDefinition, ItemPtr,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        SPlain, Scope,
+        SPlain, SRoot, Scope,
     },
     shared::{Id, Pool},
+    util::{rcrc, PtrExtension},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -44,29 +49,67 @@ impl VariableOrder {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Variable {
-    pub id: Option<VariableId>,
-    pub item: Option<ItemPtr>,
-    pub invariants: Vec<ItemPtr>,
-    pub dependencies: Vec<ItemPtr>,
-    pub order: VariableOrder,
+    item: ItemPtr,
+    invariants: Vec<ItemPtr>,
+    dependencies: Vec<ItemPtr>,
+    order: VariableOrder,
 }
-pub type VariablePool = Pool<Variable, 'V'>;
-pub type VariableId = Id<'V'>;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DVariable(pub VariableId);
+pub type VariablePtr = Rc<RefCell<Variable>>;
+
+impl Variable {
+    pub fn item(&self) -> &ItemPtr {
+        &self.item
+    }
+
+    pub fn invariants(&self) -> &[ItemPtr] {
+        &self.invariants[..]
+    }
+
+    pub fn dependencies(&self) -> &[ItemPtr] {
+        &self.dependencies[..]
+    }
+
+    pub fn order(&self) -> &VariableOrder {
+        &self.order
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct DVariable(VariablePtr);
+
+impl PartialEq for DVariable {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.is_same_instance_as(&other.0)
+    }
+}
 
 impl DVariable {
-    pub fn new(id: VariableId) -> Self {
-        Self(id)
+    pub fn get_variable(&self) -> &VariablePtr {
+        &self.0
     }
 
-    pub(crate) fn get_id(&self) -> VariableId {
-        self.0
+    pub fn as_dependency(&self) -> Dependency {
+        Variable::as_dependency(&self.0)
     }
 
-    pub fn is_same_variable_as(&self, other: &Self) -> bool {
-        self.0 == other.0
+    pub fn new(
+        invariants: Vec<ItemPtr>,
+        dependencies: Vec<ItemPtr>,
+        order: VariableOrder,
+        scope: Box<dyn Scope>,
+    ) -> ItemPtr {
+        let placeholder = Item::placeholder();
+        let variable = Variable {
+            item: placeholder,
+            invariants,
+            dependencies,
+            order,
+        };
+        let def = DVariable(rcrc(variable));
+        Item::new_self_referencing(def, scope, |ptr, this| {
+            this.0.borrow_mut().item = ptr;
+        })
     }
 }
 
@@ -79,40 +122,39 @@ impl Variable {
         &self.dependencies
     }
 
-    pub(crate) fn get_var_dependencies(&self, env: &mut Environment) -> Dependencies {
+    pub(crate) fn get_var_dependencies(&self) -> Dependencies {
         let mut result = Dependencies::new();
         for &dep in &self.dependencies {
-            result.append(env.get_dependencies(dep));
+            result.append(dep.get_dependencies());
         }
         result
     }
 
     pub fn assignment_justifications(
-        &self,
+        this: &VariablePtr,
         value: ItemPtr,
-        env: &mut Environment,
         other_subs: &Substitutions,
         limit: u32,
     ) -> Vec<ItemPtr> {
         let mut substitutions = other_subs.clone();
         let mut justifications = Vec::new();
-        substitutions.insert_no_replace(self.id.unwrap(), value);
-        for &inv in &self.invariants {
-            let subbed = env.substitute_unchecked(inv, &substitutions);
+        substitutions.insert_no_replace(this.ptr_clone(), value);
+        for &inv in &this.borrow().invariants {
+            let subbed = unchecked_substitution(inv, &substitutions);
             justifications.push(subbed);
         }
         justifications
     }
 
-    pub fn as_dependency(&self, env: &mut Environment) -> Dependency {
+    pub fn as_dependency(this: &VariablePtr) -> Dependency {
         let mut deps = Dependencies::new();
-        for &dep in &self.dependencies {
-            deps.append(env.get_dependencies(dep));
+        for &dep in &this.borrow().dependencies {
+            deps.append(dep.get_dependencies());
         }
         Dependency {
-            id: self.id.unwrap(),
-            swallow: deps.as_variables().map(|x| x.id).collect(),
-            order: self.order.clone(),
+            var: this.ptr_clone(),
+            swallow: deps.as_variables().map(|x| x.var).collect(),
+            order: this.borrow().order.clone(),
         }
     }
 }
@@ -120,7 +162,7 @@ impl Variable {
 impl_any_eq_from_regular_eq!(DVariable);
 
 impl ItemDefinition for DVariable {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
 }
@@ -130,19 +172,24 @@ impl CheckFeature for DVariable {}
 impl DependenciesFeature for DVariable {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
         let mut deps = Dependencies::new();
-        for dep in ctx.get_variable(self.0).dependencies.clone() {
-            deps.append(ctx.get_dependencies(dep));
+        for dep in self.0.borrow().dependencies.clone() {
+            deps.append(dep.get_dependencies());
         }
-        deps.push_eager(ctx.get_variable(self.0).clone().as_dependency());
-        for inv in ctx.get_variable(self.0).invariants.clone() {
-            deps.append(ctx.get_dependencies(inv));
+        deps.push_eager(Variable::as_dependency(&self.0));
+        for inv in self.0.borrow().invariants {
+            deps.append(inv.get_dependencies());
         }
         deps
     }
 }
 
 impl EqualityFeature for DVariable {
-    fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
+    fn get_equality_using_context(
+        &self,
+        ctx: &Ecc,
+        can_refine: PermissionToRefine,
+        _: OnlyCalledByEcc,
+    ) -> EqualResult {
         unreachable!()
     }
 }
@@ -154,14 +201,13 @@ impl InvariantsFeature for DVariable {
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        let statements = self.0.invariants.clone();
-        let dependencies = hashset![this];
-        todo!()
-        // env.push_invariant_set(InvariantSet::new_statements_depending_on(
-        //     this,
-        //     statements,
-        //     dependencies,
-        // ))
+        let statements = self.0.borrow().invariants.clone();
+        let dependencies = hashset![this.ptr_clone()];
+        Ok(InvariantSet::new_statements_depending_on(
+            this.ptr_clone(),
+            statements,
+            dependencies,
+        ))
     }
 }
 

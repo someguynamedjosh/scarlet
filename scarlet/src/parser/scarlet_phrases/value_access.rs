@@ -7,7 +7,7 @@ use crate::{
     item::{
         definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         equality::Equal,
-        ItemPtr,
+        ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -19,9 +19,9 @@ use crate::{
 
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
-    let this = env.push_placeholder(scope);
+    let this = crate::item::Item::placeholder_with_scope(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_item(this, DAtomicStructMember(base, AtomicStructMember::Value));
+    this.redefine(DAtomicStructMember::new(base, AtomicStructMember::Value).clone_into_box());
     this
 }
 
@@ -30,34 +30,31 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    let source = if let Some(asm) =
-        env.get_and_downcast_construct_definition::<DAtomicStructMember>(uncreate)?
-    {
-        if asm.1 == AtomicStructMember::Value {
-            Some(asm.0)
+    let source = if let Some(asm) = uncreate.downcast_definition::<DAtomicStructMember>() {
+        if asm.member() == AtomicStructMember::Value {
+            Some(asm.base())
         } else {
             None
         }
     } else {
-        env.for_each_item(|env, id| {
-            if let Ok(Some(cstruct)) =
-                env.get_and_downcast_construct_definition::<DPopulatedStruct>(id)
-            {
-                let cstruct = cstruct.clone();
-                if env.discover_equal(cstruct.get_value(), uncreate, 1024) == Ok(Equal::yes())
-                    && ctx.scope.parent() != Some(id)
-                {
-                    return ControlFlow::Break(id);
-                }
-            }
-            ControlFlow::Continue(())
-        })
+        todo!()
+        // env.for_each_item(|env, id| {
+        //     if let Ok(Some(cstruct)) = id.downcast::<DPopulatedStruct>() {
+        //         let cstruct = cstruct.clone();
+        //         if cstruct.get_value().get_equality(&uncreate, 4) == Ok(Equal::yes())
+        //             && ctx.scope.parent() != Some(id)
+        //         {
+        //             return ControlFlow::Break(id);
+        //         }
+        //     }
+        //     ControlFlow::Continue(())
+        // })
     };
     Ok(if let Some(id) = source {
         Some(Node {
             phrase: "value access",
             children: vec![
-                NodeChild::Node(env.vomit(4, ctx, id)),
+                NodeChild::Node(env.vomit(4, ctx, id.ptr_clone())),
                 NodeChild::Text(".VALUE"),
             ],
             ..Default::default()

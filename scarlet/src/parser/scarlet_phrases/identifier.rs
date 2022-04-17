@@ -2,7 +2,10 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{resolvable::RIdentifier, ItemPtr},
+    item::{
+        resolvable::{DResolvable, RIdentifier, Resolvable},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -19,7 +22,10 @@ fn create(
 ) -> ItemPtr {
     assert_eq!(node.phrase, "identifier");
     assert_eq!(node.children.len(), 1);
-    env.push_unresolved(RIdentifier(node.children[0].as_text()), scope)
+    Item::new_boxed(
+        DResolvable::new(RIdentifier(node.children[0].as_text().to_owned())).clone_into_box(),
+        scope,
+    )
 }
 
 fn uncreate<'a>(
@@ -27,7 +33,7 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    let dereffed = env.dereference(uncreate)?;
+    let dereffed = uncreate.dereference();
     Ok(if dereffed == uncreate {
         None
     } else if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(env, dereffed) {

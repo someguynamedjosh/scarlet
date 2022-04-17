@@ -1,5 +1,6 @@
 #![cfg(test)]
 
+use super::{definitions::variable::VariablePtr, Item};
 use crate::{
     environment::Environment,
     file_tree::FileNode,
@@ -9,12 +10,13 @@ use crate::{
             structt::DPopulatedStruct,
             substitution::Substitutions,
             unique::DUnique,
-            variable::{DVariable, Variable, VariableId, VariableOrder},
+            variable::{DVariable, Variable, VariableOrder},
         },
         ItemPtr,
     },
     parser::{parse_tree, ParseContext},
     scope::SRoot,
+    util::PtrExtension,
 };
 
 pub(super) fn env() -> Environment {
@@ -32,16 +34,14 @@ pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, 
         if code.contains(&format!("AS_LANGUAGE_ITEM[{}]", lang_item_name)) {
             continue;
         }
-        let def = env.push_unique();
-        let def = env.push_construct(DUnique::new(def), Box::new(SRoot));
-        env.set_name(def, lang_item_name.to_owned());
+        let def = unique();
+        def.set_name(lang_item_name.to_owned());
         env.define_language_item(lang_item_name, def);
     }
     env.resolve_all();
 
-    let root = env
-        .get_and_downcast_construct_definition::<DPopulatedStruct>(root)
-        .unwrap()
+    let root = root
+        .downcast_definition::<DPopulatedStruct>()
         .unwrap()
         .get_value();
 
@@ -58,60 +58,40 @@ fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment, 
     (env, root)
 }
 
-pub(super) fn subs(from: Vec<(VariableId, ItemPtr)>) -> Substitutions {
+pub(super) fn subs(from: Vec<(VariablePtr, ItemPtr)>) -> Substitutions {
     from.into_iter().collect()
 }
 
-impl Environment {
-    pub(super) fn decision(
-        &mut self,
-        left: ItemPtr,
-        right: ItemPtr,
-        equal: ItemPtr,
-        unequal: ItemPtr,
-    ) -> ItemPtr {
-        self.push_construct(DDecision::new(left, right, equal, unequal), Box::new(SRoot))
-    }
+pub(super) fn unique() -> ItemPtr {
+    Item::new(DUnique::new(), SRoot)
+}
 
-    pub(super) fn unique(&mut self) -> ItemPtr {
-        let id = self.push_unique();
-        self.push_construct(DUnique::new(id), Box::new(SRoot))
-    }
+fn next_variable_order() -> u32 {
+    todo!()
+}
 
-    pub(super) fn variable(&mut self) -> ItemPtr {
-        let id = self.push_variable(Variable {
-            id: None,
-            item: None,
-            invariants: vec![],
-            dependencies: vec![],
-            order: VariableOrder::new(0, 0, self.variables.len() as _),
-        });
-        self.push_construct(DVariable::new(id), Box::new(SRoot))
-    }
+pub(super) fn variable() -> ItemPtr {
+    let order = VariableOrder::new(0, 0, next_variable_order());
+    DVariable::new(vec![], vec![], order, Box::new(SRoot))
+}
 
-    pub(super) fn variable_full(&mut self) -> (ItemPtr, VariableId) {
-        let id = self.push_variable(Variable {
-            id: None,
-            item: None,
-            invariants: vec![],
-            dependencies: vec![],
-            order: VariableOrder::new(0, 0, self.variables.len() as _),
-        });
-        let con = DVariable::new(id);
-        let cid = self.push_construct(con.clone(), Box::new(SRoot));
-        (cid, id)
-    }
+fn extract_var_ptr_from_item_ptr(item_ptr: &ItemPtr) -> VariablePtr {
+    item_ptr
+        .downcast_definition::<DVariable>()
+        .unwrap()
+        .get_variable()
+        .ptr_clone()
+}
 
-    pub(super) fn variable_full_with_deps(&mut self, deps: Vec<ItemPtr>) -> (ItemPtr, VariableId) {
-        let id = self.push_variable(Variable {
-            id: None,
-            item: None,
-            invariants: vec![],
-            dependencies: deps,
-            order: VariableOrder::new(0, 0, self.variables.len() as _),
-        });
-        let con = DVariable::new(id);
-        let cid = self.push_construct(con.clone(), Box::new(SRoot));
-        (cid, id)
-    }
+pub(super) fn variable_full() -> (ItemPtr, VariablePtr) {
+    let item = variable();
+    let var = extract_var_ptr_from_item_ptr(&item);
+    (item, var)
+}
+
+pub(super) fn variable_full_with_deps(deps: Vec<ItemPtr>) -> (ItemPtr, VariablePtr) {
+    let order = VariableOrder::new(0, 0, next_variable_order());
+    let item = DVariable::new(vec![], deps, order, Box::new(SRoot));
+    let var = extract_var_ptr_from_item_ptr(&item);
+    (item, var)
 }

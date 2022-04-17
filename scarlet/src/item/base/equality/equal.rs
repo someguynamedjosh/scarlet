@@ -1,9 +1,6 @@
 use itertools::Itertools;
 
-use crate::item::{
-    definitions::{substitution::Substitutions, variable::VariableId},
-    ItemPtr,
-};
+use crate::item::{definitions::{substitution::Substitutions, variable::VariablePtr}, ItemPtr};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
@@ -84,7 +81,7 @@ impl Equal {
         }
     }
 
-    pub fn reorder(self, order: &[&VariableId]) -> Self {
+    pub fn reorder(self, order: &[&VariablePtr]) -> Self {
         match self {
             Self::Yes(subs, recursion) => Self::Yes(subs.reorder(order), recursion),
             other => other,

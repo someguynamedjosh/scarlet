@@ -2,7 +2,10 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::unique::DUnique, ItemPtr},
+    item::{
+        definitions::unique::{DUnique, Unique},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -18,8 +21,7 @@ fn create(
     node: &Node,
 ) -> ItemPtr {
     assert_eq!(node.children, &[NodeChild::Text("UNIQUE")]);
-    let id = env.push_unique();
-    env.push_construct(DUnique::new(id), scope)
+    Item::new_boxed(DUnique::new().clone_into_box(), scope)
 }
 
 fn uncreate<'a>(
@@ -28,7 +30,7 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(
-        if let Some(..) = env.get_and_downcast_construct_definition::<DUnique>(uncreate)? {
+        if let Some(..) = uncreate.downcast_definition::<DUnique>() {
             let node = Node {
                 phrase: "UNIQUE",
                 children: vec![NodeChild::Text("UNIQUE")],

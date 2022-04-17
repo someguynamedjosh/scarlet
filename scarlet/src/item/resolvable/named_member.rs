@@ -4,7 +4,7 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
-        ItemDefinition, ItemPtr,
+        Item, ItemDefinition, ItemPtr,
     },
     scope::Scope,
 };
@@ -15,6 +15,12 @@ pub struct RNamedMember {
     pub member_name: String,
 }
 
+impl PartialEq for RNamedMember {
+    fn eq(&self, other: &Self) -> bool {
+        self.base.is_same_instance_as(&other.base) && self.member_name == other.member_name
+    }
+}
+
 impl_any_eq_from_regular_eq!(RNamedMember);
 
 fn find_member(
@@ -22,7 +28,7 @@ fn find_member(
     inn: ItemPtr,
     name: &str,
 ) -> Result<Option<u32>, UnresolvedItemError> {
-    if let Some(cstruct) = env.get_and_downcast_construct_definition::<DPopulatedStruct>(inn)? {
+    if let Some(cstruct) = inn.downcast_definition::<DPopulatedStruct>() {
         if cstruct.get_label() == name {
             Ok(Some(0))
         } else {
@@ -57,12 +63,12 @@ impl Resolvable for RNamedMember {
         };
         let mut base = self.base;
         for _ in 0..access_depth {
-            base = env.push_construct(
-                DAtomicStructMember(base, AtomicStructMember::Rest),
+            base = Item::new_boxed(
+                Box::new(DAtomicStructMember::new(base, AtomicStructMember::Rest)),
                 scope.dyn_clone(),
             );
         }
-        let def = DAtomicStructMember(base, AtomicStructMember::Value);
-        ResolveResult::Ok(ItemDefinition::Resolved(def.dyn_clone()))
+        let def = DAtomicStructMember::new(base, AtomicStructMember::Value);
+        ResolveResult::Ok(def.clone_into_box())
     }
 }

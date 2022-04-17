@@ -6,9 +6,10 @@ mod substitution;
 mod variable;
 
 use std::{
+    any::Any,
     convert::Infallible,
     fmt::Debug,
-    ops::{FromResidual, Try}, any::Any,
+    ops::{FromResidual, Try},
 };
 
 pub use identifier::RIdentifier;
@@ -17,39 +18,47 @@ pub use placeholder::RPlaceholder;
 pub use substitution::RSubstitution;
 pub use variable::RVariable;
 
+use super::{
+    check::CheckFeature,
+    dependencies::{Dcc, Dependencies, DependenciesFeature},
+    equality::EqualityFeature,
+    invariants::InvariantsFeature,
+};
 use crate::{
     environment::Environment,
     item::{ItemDefinition, ItemPtr},
-    scope::{LookupInvariantError, Scope}, shared::AnyEq,
+    scope::{LookupInvariantError, Scope},
+    shared::AnyEq,
 };
 
-use super::{check::CheckFeature, dependencies::{DependenciesFeature, Dcc, Dependencies}, equality::EqualityFeature, invariants::InvariantsFeature};
-
 #[derive(Debug)]
-pub struct DUnresolved(Box<dyn Resolvable>);
+pub struct DResolvable(Box<dyn Resolvable>);
 
-impl DUnresolved {
+impl DResolvable {
     pub fn new<R: Resolvable>(resolvable: R) -> Self {
         Self(Box::new(resolvable))
     }
 }
 
-impl ItemDefinition for DUnresolved {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
-        Box::new(Self::new(self.0.dyn_clone()))
+impl ItemDefinition for DResolvable {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
+        Box::new(Self(self.0.dyn_clone()))
     }
 }
 
-impl AnyEq for DUnresolved {
+impl AnyEq for DResolvable {
     fn eq(&self, other: &dyn AnyEq) -> bool {
-        (other as &dyn Any).downcast_ref::<Self>().map(|other| self.0.eq(other.0));
+        (other as &dyn Any)
+            .downcast_ref::<Self>()
+            .map(|other| self.0.eq(&*other.0))
+            .unwrap_or(false)
     }
 }
 
-impl CheckFeature for DUnresolved {}
-impl DependenciesFeature for DUnresolved {}
-impl EqualityFeature for DUnresolved {}
-impl InvariantsFeature for DUnresolved {}
+impl CheckFeature for DResolvable {}
+impl DependenciesFeature for DResolvable {}
+impl EqualityFeature for DResolvable {}
+impl InvariantsFeature for DResolvable {}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnresolvedItemError(pub ItemPtr);
@@ -81,8 +90,8 @@ impl From<LookupInvariantError> for ResolveError {
 }
 
 pub enum ResolveResult {
-    Ok(ItemPtr),
-    Partial(ItemPtr),
+    Ok(Box<dyn ItemDefinition>),
+    Partial(Box<dyn ItemDefinition>),
     Err(ResolveError),
 }
 

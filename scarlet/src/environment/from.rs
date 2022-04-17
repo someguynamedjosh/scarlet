@@ -44,14 +44,14 @@ impl Environment {
         let into = if let Some(from_dex) = self.items[from].from_dex {
             from_dex
         } else {
-            self.push_placeholder(scope())
+            crate::item::Item::placeholder_with_scope(scope())
         };
         if self.items[into].definition.is_placeholder() {
             self.items[from].from_dex = Some(into);
             let x = self.get_language_item("x");
 
             if let Some(structt) =
-                self.get_and_downcast_construct_definition::<DPopulatedStruct>(from)?
+                from.downcast_definition::<DPopulatedStruct>()
             {
                 let structt = structt.clone();
 
@@ -76,7 +76,7 @@ impl Environment {
                 let first_two = self.push_and(is_populated_struct, value_from_value, scope());
                 self.define_and(into, first_two, rest_from_rest);
             } else if let Some(var) =
-                self.get_and_downcast_construct_definition::<DVariable>(from)?
+                from.downcast_definition::<DVariable>()
             {
                 let id = var.get_id();
                 let var = self.get_variable(id);
@@ -99,12 +99,12 @@ impl Environment {
 
                 let subs = vec![(id, x)].into_iter().collect();
                 let con = DSubstitution::new_unchecked(into, statement, subs);
-                self.define_item(into, con);
+                into.redefine(con.dyn_clone());
             } else {
                 let truee = self.get_language_item("true");
                 let falsee = self.get_language_item("false");
                 let equal = DDecision::new(x, from, truee, falsee);
-                self.define_item(into, equal);
+                into.redefine(equal.dyn_clone());
             }
         }
         Ok(self.push_other(into, scope()))

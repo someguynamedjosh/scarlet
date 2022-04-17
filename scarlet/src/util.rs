@@ -1,6 +1,8 @@
 use std::{
+    cell::RefCell,
     collections::{hash_map::DefaultHasher, HashMap},
-    hash::{BuildHasher, Hash, Hasher}, rc::Rc, cell::RefCell,
+    hash::{BuildHasher, Hash, Hasher},
+    rc::Rc,
 };
 
 pub trait Ignorable {
@@ -76,4 +78,21 @@ macro_rules! impl_any_eq_from_regular_eq {
             }
         }
     };
+}
+
+/// These are just handy aliases to existing functions.
+pub trait PtrExtension {
+    fn is_same_instance_as(&self, other: &Self) -> bool;
+    /// Returns a new pointer to the same object that self points to.
+    fn ptr_clone(&self) -> Self;
+}
+
+impl<T> PtrExtension for Rc<T> {
+    fn is_same_instance_as(&self, other: &Self) -> bool {
+        Rc::as_ptr(self).to_bits() == Rc::as_ptr(other).to_bits()
+    }
+
+    fn ptr_clone(&self) -> Self {
+        Rc::clone(self)
+    }
 }

@@ -1,41 +1,38 @@
+use std::rc::Rc;
+
 use crate::{
-    environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
-        definitions::{decision::DDecision, substitution::Substitutions},
+        check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Equal, EqualResult, EqualityFeature, Ecc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr, check::CheckFeature,
-    },
-    scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        SPlain, Scope,
+        ItemDefinition, ItemPtr,
     },
     shared::{Id, Pool},
+    util::PtrExtension,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Unique;
-pub type UniquePool = Pool<Unique, 'U'>;
-pub type UniqueId = Id<'U'>;
+pub type UniquePtr = Rc<Unique>;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct DUnique(UniqueId);
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DUnique(UniquePtr);
 
 impl DUnique {
-    pub fn new(id: UniqueId) -> Self {
-        Self(id)
+    pub fn new() -> Self {
+        Self(Rc::new(Unique))
     }
 }
 
 impl_any_eq_from_regular_eq!(DUnique);
 
 impl ItemDefinition for DUnique {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
 }
@@ -45,16 +42,22 @@ impl DependenciesFeature for DUnique {}
 impl InvariantsFeature for DUnique {}
 
 impl EqualityFeature for DUnique {
-    fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
-        // Ok(if let Some(other) = downcast_construct::<Self>(other) {
-        //     if self.0 == other.0 {
-        //         Equal::yes()
-        //     } else {
-        //         Equal::No
-        //     }
-        // } else {
-        //     Equal::Unknown
-        // })
-        todo!()
+    fn get_equality_using_context(
+        &self,
+        ctx: &Ecc,
+        _can_refine: PermissionToRefine,
+        _: OnlyCalledByEcc,
+    ) -> EqualResult {
+        Ok(
+            if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+                if self.0.is_same_instance_as(&other.0) {
+                    Equal::yes()
+                } else {
+                    Equal::No
+                }
+            } else {
+                Equal::Unknown
+            },
+        )
     }
 }

@@ -1,76 +1,215 @@
 use std::{
     any::Any,
     cell::{Ref, RefCell, RefMut},
-    fmt::Debug,
+    fmt::{self, Debug, Formatter},
+    hash::Hash,
     rc::Rc,
 };
 
 use owning_ref::{OwningRef, OwningRefMut};
 
-use super::{dependencies::{DepResult, DependencyCalculationContext}, invariants::InvariantSetPtr};
+use super::{
+    dependencies::{DepResult, DependencyCalculationContext},
+    equality::{Ecc, EqualResult, EqualityCalculationContext},
+    invariants::{InvariantCalculationContext, InvariantSetPtr, InvariantsResult},
+};
 use crate::{
     item::{
-        resolvable::{BoxedResolvable, DUnresolved, Resolvable},
+        definitions::{
+            other::DOther,
+            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct}, placeholder::DPlaceholder,
+        },
+        resolvable::{BoxedResolvable, DResolvable, Resolvable},
         ItemDefinition,
     },
-    scope::Scope,
+    scope::{Scope, SRoot},
+    util::rcrc,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
 
+impl Clone for ItemPtr {
+    fn clone(&self) -> Self {
+        self.ptr_clone()
+    }
+}
+
+impl Debug for ItemPtr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.0.borrow().fmt(f)
+    }
+}
+
+impl PartialEq for ItemPtr {
+    fn eq(&self, other: &Self) -> bool {
+        self.is_same_instance_as(other)
+    }
+}
+
+impl Eq for ItemPtr {}
+
+impl Hash for ItemPtr {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.as_ptr().to_bits().hash(state)
+    }
+}
+
+/// Basic pointer functionality
 impl ItemPtr {
-    fn is_same_instance_as(&self, other: &Self) -> bool {
+    pub fn is_same_instance_as(&self, other: &Self) -> bool {
         self.0.as_ptr() == other.0.as_ptr()
     }
 
-    fn ptr_clone(&self) -> Self {
-        Self(Rc::clone(self))
+    pub fn ptr_clone(&self) -> Self {
+        Self(Rc::clone(&self.0))
     }
 
-    fn get_dependencies(&self) -> DepResult {
+    pub fn borrow(&self) -> Ref<Item> {
+        self.0.borrow()
+    }
+
+    pub fn borrow_mut(&self) -> RefMut<Item> {
+        self.0.borrow_mut()
+    }
+
+    pub(crate) fn redefine(&self, new_definition: Box<dyn ItemDefinition>)  {
+        self.borrow_mut().definition = new_definition;
+    }
+}
+
+/// Wrappers for things that require contexts.
+impl ItemPtr {
+    pub fn get_dependencies(&self) -> DepResult {
         let ctx = DependencyCalculationContext::new();
         ctx.get_dependencies(self)
     }
 
-    fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<Item>, D>> {
+    pub fn get_equality(&self, other: &Self, limit: u32) -> EqualResult {
+        let ctx: Ecc = todo!();
+        todo!()
+    }
+
+    pub fn get_invariants(&self) -> InvariantsResult {
+        let ctx = InvariantCalculationContext::new();
+        ctx.get_invariants(self)
+    }
+}
+
+/// Wrappers for methods that exist on Item.
+impl ItemPtr {
+    pub fn set_name(&self, name: String) {
+        self.0.borrow_mut().name = Some(name);
+    }
+
+    pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<Item>, D>> {
         OwningRef::new(self.borrow())
             .try_map(|this| this.downcast_definition().ok_or(()))
             .ok()
     }
 
-    fn downcast_definition_mut<D: ItemDefinition>(&self) -> Option<OwningRefMut<RefMut<Item>, D>> {
-        OwningRef::new(self.borrow_mut())
-            .try_map(|this| this.downcast_definition_mut().ok_or(()))
+    pub fn downcast_definition_mut<D: ItemDefinition>(
+        &self,
+    ) -> Option<OwningRefMut<RefMut<Item>, D>> {
+        OwningRefMut::new(self.borrow_mut())
+            .try_map_mut(|this| this.downcast_definition_mut().ok_or(()))
             .ok()
     }
 
-    fn is_unresolved(&self) -> bool {
+    pub fn is_unresolved(&self) -> bool {
         self.borrow().is_unresolved()
+    }
+}
+
+/// Extensions.
+impl ItemPtr {
+    pub fn dereference(&self) -> ItemPtr {
+        if let Some(other) = self.downcast_definition::<DOther>() {
+            other.other().dereference()
+        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
+            if let Some(structt) = asm.base().downcast_definition::<DPopulatedStruct>() {
+                match asm.member() {
+                    AtomicStructMember::Label => todo!(),
+                    AtomicStructMember::Value => structt.get_value().dereference(),
+                    AtomicStructMember::Rest => structt.get_rest().dereference(),
+                }
+            } else {
+                self.ptr_clone()
+            }
+        } else {
+            self.ptr_clone()
+        }
+    }
+
+    pub fn clone_scope(&self) -> Box<dyn Scope> {
+        self.borrow().scope.dyn_clone()
     }
 }
 
 #[derive(Debug)]
 pub struct Item {
     pub definition: Box<dyn ItemDefinition>,
-    pub invariants: Option<InvariantSetPtr>,
     pub scope: Box<dyn Scope>,
+    pub invariants: Option<InvariantSetPtr>,
     /// A dex that, when a value is plugged in for its first dependency, will
     /// evaluate to true if and only if the plugged in value could have been
     /// generated by this construct.
     pub from_dex: Option<ItemPtr>,
     pub name: Option<String>,
+    pub show: bool,
 }
 
 impl Item {
+    pub fn placeholder() -> ItemPtr {
+        Self::new_boxed(Box::new(DPlaceholder), Box::new(SRoot))
+    }
+
+    pub fn placeholder_with_scope(scope: Box<dyn Scope>) -> ItemPtr {
+        Self::new_boxed(Box::new(DPlaceholder), scope)
+    }
+
+    pub fn new(definition: impl ItemDefinition, scope: impl Scope + 'static) -> ItemPtr {
+        Self::new_boxed(Box::new(definition), Box::new(scope))
+    }
+
+    pub fn new_boxed(definition: Box<dyn ItemDefinition>, scope: Box<dyn Scope>) -> ItemPtr {
+        ItemPtr(rcrc(Self {
+            definition,
+            scope,
+            invariants: None,
+            from_dex: None,
+            name: None,
+            show: false,
+        }))
+    }
+
+    pub fn new_self_referencing<D: ItemDefinition>(
+        definition: D,
+        scope: Box<dyn Scope>,
+        modify_self: impl FnOnce(ItemPtr, &mut D),
+    ) -> ItemPtr {
+        let this = ItemPtr(rcrc(Self {
+            definition: Box::new(definition),
+            scope,
+            invariants: None,
+            from_dex: None,
+            name: None,
+            show: false,
+        }));
+        let this2 = this.ptr_clone();
+        let inner = this.downcast_definition_mut().unwrap();
+        modify_self(this2, &mut *inner);
+        this
+    }
+
     pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<&D> {
         (&*self.definition as &dyn Any).downcast_ref()
     }
 
-    pub fn downcast_definition_mut<D: ItemDefinition>(&mut self) -> Option<&D> {
+    pub fn downcast_definition_mut<D: ItemDefinition>(&mut self) -> Option<&mut D> {
         (&*self.definition as &dyn Any).downcast_mut()
     }
 
     pub fn is_unresolved(&self) -> bool {
-        self.downcast_definition::<DUnresolved>().is_some()
+        self.downcast_definition::<DResolvable>().is_some()
     }
 }

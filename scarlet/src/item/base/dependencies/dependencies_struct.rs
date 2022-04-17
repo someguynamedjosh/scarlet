@@ -3,13 +3,16 @@ use std::collections::{BTreeSet, HashSet};
 use maplit::hashset;
 
 use super::Dependency;
-use crate::item::{definitions::variable::VariableId, resolvable::UnresolvedItemError, ItemPtr};
+use crate::{
+    item::{definitions::variable::VariablePtr, resolvable::UnresolvedItemError, ItemPtr},
+    util::PtrExtension,
+};
 
 #[derive(Clone, Debug, Default)]
 pub struct Dependencies {
-    dependencies: BTreeSet<Dependency>,
-    skipped_due_to_recursion: HashSet<ItemPtr>,
-    skipped_due_to_unresolved: Option<UnresolvedItemError>,
+    pub(super) dependencies: BTreeSet<Dependency>,
+    pub(super) skipped_due_to_recursion: HashSet<ItemPtr>,
+    pub(super) skipped_due_to_unresolved: Option<UnresolvedItemError>,
 }
 
 impl Dependencies {
@@ -74,10 +77,10 @@ impl Dependencies {
         self.as_variables().count()
     }
 
-    pub fn remove(&mut self, var: VariableId) {
+    pub fn remove(&mut self, var: &VariablePtr) {
         self.dependencies = std::mem::take(&mut self.dependencies)
             .into_iter()
-            .filter(|x| x.id != var)
+            .filter(|x| !x.var.is_same_instance_as(var))
             .collect();
     }
 
@@ -94,18 +97,18 @@ impl Dependencies {
         false
     }
 
-    pub fn contains_var(&self, dep: VariableId) -> bool {
+    pub fn contains_var(&self, dep: &VariablePtr) -> bool {
         for target in &self.dependencies {
-            if target.id == dep {
+            if target.var.is_same_instance_as(dep) {
                 return true;
             }
         }
         false
     }
 
-    pub fn get_var(&self, dep: VariableId) -> Option<&Dependency> {
+    pub fn get_var(&self, dep: &VariablePtr) -> Option<&Dependency> {
         for target in &self.dependencies {
-            if target.id == dep {
+            if target.var.is_same_instance_as(dep) {
                 return Some(target);
             }
         }

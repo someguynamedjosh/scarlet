@@ -13,7 +13,7 @@ use crate::{
 pub trait ItemDefinition:
     Any + Debug + AnyEq + CheckFeature + DependenciesFeature + EqualityFeature + InvariantsFeature
 {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition>;
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition>;
 
     fn contents(&self) -> Vec<&ItemPtr> {
         vec![]

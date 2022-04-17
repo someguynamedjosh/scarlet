@@ -1,41 +1,39 @@
-use itertools::Itertools;
-use maplit::hashset;
-
-use super::substitution::Substitutions;
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Equal, EqualResult, EqualityFeature},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
         ItemDefinition, ItemPtr,
     },
-    scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
-    },
+    scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DDecision {
     left: ItemPtr,
     right: ItemPtr,
-    equal: ItemPtr,
-    unequal: ItemPtr,
+    when_equal: ItemPtr,
+    when_not_equal: ItemPtr,
 }
 
 impl DDecision {
-    pub fn new(left: ItemPtr, right: ItemPtr, equal: ItemPtr, unequal: ItemPtr) -> Self {
+    pub fn new(
+        left: ItemPtr,
+        right: ItemPtr,
+        when_equal: ItemPtr,
+        when_not_equal: ItemPtr,
+    ) -> Self {
         Self {
             left,
             right,
-            equal,
-            unequal,
+            when_equal,
+            when_not_equal,
         }
     }
 
@@ -48,23 +46,28 @@ impl DDecision {
     }
 
     pub fn equal(&self) -> ItemPtr {
-        self.equal
+        self.when_equal
     }
 
     pub fn unequal(&self) -> ItemPtr {
-        self.unequal
+        self.when_not_equal
     }
 }
 
 impl_any_eq_from_regular_eq!(DDecision);
 
 impl ItemDefinition for DDecision {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<ItemPtr> {
-        vec![self.left, self.right, self.equal, self.unequal]
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![
+            &self.left,
+            &self.right,
+            &self.when_equal,
+            &self.when_not_equal,
+        ]
     }
 }
 
@@ -74,8 +77,8 @@ impl DependenciesFeature for DDecision {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
         let mut deps = ctx.get_dependencies(&self.left);
         deps.append(ctx.get_dependencies(&self.right));
-        deps.append(ctx.get_dependencies(&self.equal));
-        deps.append(ctx.get_dependencies(&self.unequal));
+        deps.append(ctx.get_dependencies(&self.when_equal));
+        deps.append(ctx.get_dependencies(&self.when_not_equal));
         deps
     }
 }
@@ -83,41 +86,31 @@ impl DependenciesFeature for DDecision {
 impl EqualityFeature for DDecision {
     fn get_equality_using_context(
         &self,
-        ctx: &mut Environment,
-        self_subs: Vec<&Substitutions>,
-        other: ItemPtr,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
+        ctx: &Ecc,
+        can_refine: PermissionToRefine,
+        _: OnlyCalledByEcc,
     ) -> EqualResult {
-        if let Some(other) = other.downcast() {
+        if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
             Ok(Equal::and(vec![
-                ctx.discover_equal_with_subs(
-                    self.left,
-                    self_subs.clone(),
-                    other.left,
-                    other_subs.clone(),
-                    limit,
+                ctx.refine_and_get_equality(
+                    self.left.ptr_clone(),
+                    other.left.ptr_clone(),
+                    can_refine,
                 )?,
-                ctx.discover_equal_with_subs(
-                    self.right,
-                    self_subs.clone(),
-                    other.right,
-                    other_subs.clone(),
-                    limit,
+                ctx.refine_and_get_equality(
+                    self.right.ptr_clone(),
+                    other.right.ptr_clone(),
+                    can_refine,
                 )?,
-                ctx.discover_equal_with_subs(
-                    self.equal,
-                    self_subs.clone(),
-                    other.equal,
-                    other_subs.clone(),
-                    limit,
+                ctx.refine_and_get_equality(
+                    self.when_equal.ptr_clone(),
+                    other.when_equal.ptr_clone(),
+                    can_refine,
                 )?,
-                ctx.discover_equal_with_subs(
-                    self.unequal,
-                    self_subs.clone(),
-                    other.unequal,
-                    other_subs.clone(),
-                    limit,
+                ctx.refine_and_get_equality(
+                    self.when_not_equal.ptr_clone(),
+                    other.when_not_equal.ptr_clone(),
+                    can_refine,
                 )?,
             ]))
         } else {
@@ -133,24 +126,22 @@ impl InvariantsFeature for DDecision {
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        let true_invs_id = ctx.generated_invariants(self.equal);
-        let true_invs = ctx.get_invariant_set(true_invs_id).clone();
-        let false_invs_id = ctx.generated_invariants(self.equal);
-        let false_invs = ctx.get_invariant_set(false_invs_id).clone();
+        let true_invs = self.when_equal.get_invariants()?;
+        let false_invs = self.when_equal.get_invariants()?;
         let mut result_statements = Vec::new();
-        for &true_inv in true_invs.statements() {
-            for (index, &false_inv) in false_invs.statements().iter().enumerate() {
-                if ctx.discover_equal(true_inv, false_inv, 4) == Ok(Equal::yes()) {
+        for &true_inv in true_invs.borrow().statements() {
+            for (index, &false_inv) in false_invs.borrow().statements().iter().enumerate() {
+                if true_inv.get_equality(&false_inv, 4) == Ok(Equal::yes()) {
                     result_statements.push(true_inv);
                     break;
                 }
             }
         }
         let len = result_statements.len();
-        ctx.push_invariant_set(InvariantSet::new_justified_by(
-            this,
+        Ok(InvariantSet::new_justified_by(
+            this.ptr_clone(),
             result_statements,
-            vec![vec![vec![true_invs_id, false_invs_id]]; len],
+            vec![vec![vec![true_invs, false_invs]]; len],
         ))
     }
 }

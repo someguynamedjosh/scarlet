@@ -7,12 +7,19 @@ use crate::{
         ItemDefinition, ItemPtr,
     },
     scope::Scope,
+    util::PtrExtension,
 };
 
 #[derive(Clone, Debug)]
 pub struct RFrom {
     pub left: ItemPtr,
     pub right: ItemPtr,
+}
+
+impl PartialEq for RFrom {
+    fn eq(&self, other: &Self) -> bool {
+        self.left.is_same_instance_as(&other.left) && self.right.is_same_instance_as(&other.right)
+    }
 }
 
 impl_any_eq_from_regular_eq!(RFrom);
@@ -31,10 +38,10 @@ impl Resolvable for RFrom {
     ) -> ResolveResult {
         let base = env.create_from_dex(self.right)?;
         let x = env.get_language_item("x");
-        let x = env.get_and_downcast_construct_definition::<DVariable>(x)?;
-        let x_id = x.unwrap().get_id();
+        let x = x.downcast_definition::<DVariable>();
+        let x_id = x.unwrap().get_variable().ptr_clone();
         let subs = vec![(x_id, self.left)].into_iter().collect();
         let subbed = DSubstitution::new_unchecked(base, base, subs);
-        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(subbed)))
+        ResolveResult::Ok(Box::new(subbed))
     }
 }

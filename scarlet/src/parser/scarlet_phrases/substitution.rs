@@ -4,10 +4,10 @@ use typed_arena::Arena;
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
-        definitions::{substitution::DSubstitution, variable::VariableId},
+        definitions::{substitution::DSubstitution, variable::VariablePtr},
         dependencies::Dependency,
-        resolvable::{RSubstitution, UnresolvedItemError},
-        ItemPtr,
+        resolvable::{DResolvable, RSubstitution, UnresolvedItemError},
+        ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -22,27 +22,27 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     assert!(node.children.len() == 4);
-    let this = env.push_placeholder(scope);
+    let this = crate::item::Item::placeholder_with_scope(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
     let mut named_subs = Vec::new();
     let mut anonymous_subs = Vec::new();
     for sub in util::collect_comma_list(&node.children[2]) {
         if sub.phrase == "is" {
             named_subs.push((
-                sub.children[0].as_node().as_ident(),
+                sub.children[0].as_node().as_ident().to_owned(),
                 sub.children[2].as_construct(pc, env, SPlain(this)),
             ));
         } else {
             anonymous_subs.push(sub.as_construct(pc, env, SPlain(this)));
         }
     }
-    env.define_unresolved(
-        this,
-        RSubstitution {
+    this.redefine(
+        DResolvable::new(RSubstitution {
             base,
             named_subs,
             anonymous_subs,
-        },
+        })
+        .clone_into_box(),
     );
     this
 }
@@ -50,12 +50,12 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
 fn uncreate_substitution<'a>(
     env: &mut Environment,
     ctx: &mut VomitContext<'a, '_>,
-    target: VariableId,
+    target: VariablePtr,
     value: ItemPtr,
     deps: &mut Vec<Dependency>,
 ) -> Result<Node<'a>, UnresolvedItemError> {
     let value = env.vomit(254, ctx, value);
-    Ok(if deps.get(0).map(|v| v.id == target) == Some(true) {
+    Ok(if deps.get(0).map(|v| v.var == target) == Some(true) {
         deps.remove(0);
         value
     } else {
@@ -76,10 +76,11 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(csub) = env.get_and_downcast_construct_definition::<DSubstitution>(uncreate)? {
+    if let Some(csub) = uncreate.downcast_definition::<DSubstitution>() {
         let csub = csub.clone();
-        let mut deps = env
-            .get_dependencies(csub.base())
+        let mut deps = csub
+            .base()
+            .get_dependencies()
             .into_variables()
             .collect_vec();
         let subs = create_comma_list(

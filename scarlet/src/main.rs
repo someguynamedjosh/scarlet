@@ -8,6 +8,7 @@
 #![feature(hash_raw_entry)]
 #![feature(assert_matches)]
 #![feature(map_first_last)]
+#![feature(ptr_to_from_bits)]
 
 use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
 
@@ -34,8 +35,8 @@ fn entry() {
     root.as_construct(&parse_context, &mut env, SRoot);
     env.resolve_all();
     println!("Resolved");
-    env.check_all().unwrap();
-    println!("Checked");
+    // env.check_all().unwrap();
+    // println!("Checked");
     env.show_all_requested();
 }
 

@@ -2,7 +2,10 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{resolvable::RNamedMember, ItemPtr},
+    item::{
+        resolvable::{DResolvable, RNamedMember},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, ParseContext,
@@ -17,8 +20,11 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     if member_name.phrase != "identifier" {
         todo!("Nice error, member access expected an identifier.");
     }
-    let member_name = member_name.children[0].as_text();
-    env.push_unresolved(RNamedMember { base, member_name }, scope)
+    let member_name = member_name.children[0].as_text().to_owned();
+    Item::new_boxed(
+        DResolvable::new(RNamedMember { base, member_name }).clone_into_box(),
+        scope,
+    )
 }
 
 fn uncreate<'a>(

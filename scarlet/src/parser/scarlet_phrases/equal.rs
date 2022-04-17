@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::decision::DDecision, equality::Equal, ItemPtr},
+    item::{definitions::decision::DDecision, equality::Equal, Item, ItemDefinition, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -14,13 +14,13 @@ use crate::{
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[1], NodeChild::Text("="));
-    let this = env.push_placeholder(scope);
+    let this = Item::placeholder_with_scope(scope);
 
     let left = node.children[0].as_construct(pc, env, SPlain(this));
     let right = node.children[2].as_construct(pc, env, SPlain(this));
-    let truee = env.get_language_item("true");
-    let falsee = env.get_language_item("false");
-    env.define_item(this, DDecision::new(left, right, truee, falsee));
+    let truee = env.get_language_item("true").ptr_clone();
+    let falsee = env.get_language_item("false").ptr_clone();
+    this.redefine(DDecision::new(left, right, truee, falsee).clone_into_box());
     this
 }
 
@@ -29,30 +29,28 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    Ok(
-        if let Some(cite) = env.get_and_downcast_construct_definition::<DDecision>(uncreate)? {
-            let cite = cite.clone();
-            let truee = env.get_language_item("true");
-            let falsee = env.get_language_item("false");
-            if env.discover_equal(cite.equal(), truee, 1024)? == Equal::yes()
-                && env.discover_equal(cite.unequal(), falsee, 1024)? == Equal::yes()
-            {
-                Some(Node {
-                    phrase: "equal",
-                    children: vec![
-                        NodeChild::Node(env.vomit(127, ctx, cite.left())),
-                        NodeChild::Text("="),
-                        NodeChild::Node(env.vomit(127, ctx, cite.right())),
-                    ],
-                    ..Default::default()
-                })
-            } else {
-                None
-            }
+    Ok(if let Some(cite) = uncreate.downcast_definition::<DDecision>() {
+        let cite = cite.clone();
+        let truee = env.get_language_item("true");
+        let falsee = env.get_language_item("false");
+        if cite.equal().get_equality(&truee, 1024)? == Equal::yes()
+            && cite.unequal().get_equality(&falsee, 1024)? == Equal::yes()
+        {
+            Some(Node {
+                phrase: "equal",
+                children: vec![
+                    NodeChild::Node(env.vomit(127, ctx, cite.left())),
+                    NodeChild::Text("="),
+                    NodeChild::Node(env.vomit(127, ctx, cite.right())),
+                ],
+                ..Default::default()
+            })
         } else {
             None
-        },
-    )
+        }
+    } else {
+        None
+    })
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

@@ -1,8 +1,9 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{resolvable::from::RFrom, ItemPtr},
+    item::{
+        resolvable::{from::RFrom, DResolvable},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -14,11 +15,11 @@ use crate::{
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[1], NodeChild::Text("FROM"));
-    let this = env.push_placeholder(scope);
+    let this = Item::placeholder_with_scope(scope);
 
     let left = node.children[0].as_construct(pc, env, SPlain(this));
     let right = node.children[2].as_construct(pc, env, SPlain(this));
-    env.define_unresolved(this, RFrom { left, right });
+    this.redefine(DResolvable::new(RFrom { left, right }).clone_into_box());
     this
 }
 

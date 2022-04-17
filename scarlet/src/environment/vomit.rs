@@ -104,7 +104,7 @@ impl Environment {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        let set_id = self.generated_invariants(item_id);
+        let set_id = item_id.get_invariants();
         let set = self.get_invariant_set(set_id).clone();
         for &invariant in set.statements() {
             let vomited = self.vomit(255, &mut inv_ctx, invariant);

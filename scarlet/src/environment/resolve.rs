@@ -70,7 +70,7 @@ impl Environment {
             }
         });
         self.for_each_item_returning_nothing(|env, item| {
-            env.generated_invariants(item);
+            item.get_invariants();
         });
         if problem {
             panic!("Failed to resolve construct(s)");
@@ -88,7 +88,7 @@ impl Environment {
         }
         if let Some(resolvable) = &item.unresolved {
             self.resolve_stack.push(ResolveStackFrame(item_id));
-            let resolvable = resolvable.dyn_clone();
+            let resolvable = resolvable.clone_into_box();
             let scope = item.scope.dyn_clone();
             let new_def = resolvable.resolve(self, item_id, scope, limit);
             match new_def {

@@ -25,7 +25,7 @@ fn uncreate<'x>(
     ctx: &mut VomitContext<'x, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'x> {
-    if let Some(recursion) = env.get_and_downcast_construct_definition::<DRecursion>(uncreate)? {
+    if let Some(recursion) = uncreate.downcast_definition::<DRecursion>() {
         let base = recursion.get_base();
         Ok(Some(Node {
             phrase: "recursion",

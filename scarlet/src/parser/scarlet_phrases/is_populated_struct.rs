@@ -2,7 +2,10 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::is_populated_struct::DIsPopulatedStruct, ItemPtr},
+    item::{
+        definitions::{is_populated_struct::DIsPopulatedStruct, other::DOther},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -14,9 +17,10 @@ use crate::{
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".IS_POPULATED_STRUCT"));
-    let this = env.push_placeholder(scope);
+    let this = Item::placeholder_with_scope(scope.dyn_clone());
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_item(this, DIsPopulatedStruct::new(base));
+    let ips = DIsPopulatedStruct::new(env, base, scope);
+    this.redefine(DOther::new_plain(ips).clone_into_box());
     this
 }
 
@@ -26,10 +30,7 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(
-        if let Some(cips) =
-            env.get_and_downcast_construct_definition::<DIsPopulatedStruct>(uncreate)?
-        {
-            let cips = cips.clone();
+        if let Some(cips) = uncreate.downcast_definition::<DIsPopulatedStruct>() {
             Some(Node {
                 phrase: "is populated struct",
                 children: vec![NodeChild::Node(env.vomit(4, ctx, cips.get_base()))],

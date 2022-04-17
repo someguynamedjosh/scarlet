@@ -5,9 +5,9 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        definitions::variable::{DVariable, VariableId},
+        definitions::variable::{DVariable, VariablePtr},
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{EqualResult, EqualityFeature},
+        equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -17,7 +17,7 @@ use crate::{
     shared::OrderedMap,
 };
 
-pub type Substitutions = OrderedMap<VariableId, ItemPtr>;
+pub type Substitutions = OrderedMap<VariablePtr, ItemPtr>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DSubstitution {
@@ -51,11 +51,11 @@ impl DSubstitution {
         let mut deps = Dependencies::new();
         let base_error = base.error();
         for dep in base.as_variables() {
-            if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.id) {
-                let replaced_deps = rep.dependencies();
+            if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.var) {
+                let replaced_deps = rep.get_dependencies();
                 let replaced_err = replaced_deps.error();
                 for rdep in replaced_deps.into_variables() {
-                    if !dep.swallow.contains(&rdep.id) {
+                    if !dep.swallow.contains(&rdep.var) {
                         deps.push_eager(rdep);
                     }
                 }
@@ -70,11 +70,10 @@ impl DSubstitution {
             deps.append(Dependencies::new_error(err));
         }
         for &dep in justifications {
-            if let Ok(Some(var)) = dep.downcast::<DVariable>() {
-                let id = var.get_id();
-                deps.push_eager(id.ptr_clone().as_dependency());
+            if let Some(var) = dep.downcast_definition::<DVariable>() {
+                deps.push_eager(var.as_dependency());
             } else {
-                deps.append(dep.dependencies());
+                deps.append(dep.get_dependencies());
             }
         }
         deps
@@ -84,14 +83,14 @@ impl DSubstitution {
 impl_any_eq_from_regular_eq!(DSubstitution);
 
 impl ItemDefinition for DSubstitution {
-    fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
+    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<ItemPtr> {
-        vec![self.base]
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![&self.base]
             .into_iter()
-            .chain(self.subs.iter().map(|x| x.1))
+            .chain(self.subs.iter().map(|x| &x.1))
             .collect()
     }
 }
@@ -101,13 +100,18 @@ impl CheckFeature for DSubstitution {}
 impl DependenciesFeature for DSubstitution {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
         let base = ctx.get_dependencies(&self.base);
-        let invs = self.invs.dependencies().clone();
+        let invs = self.invs.borrow().dependencies().clone();
         Self::sub_deps(base, &self.subs, &invs)
     }
 }
 
 impl EqualityFeature for DSubstitution {
-    fn get_equality_using_context(&self, ctx: &crate::item::equality::Ecc) -> EqualResult {
+    fn get_equality_using_context(
+        &self,
+        ctx: &Ecc,
+        can_refine: PermissionToRefine,
+        _: OnlyCalledByEcc,
+    ) -> EqualResult {
         unreachable!()
     }
 }

@@ -11,6 +11,6 @@ pub trait InvariantsFeature {
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        InvariantSet::new_empty(this)
+        Ok(InvariantSet::new_empty(this.ptr_clone()))
     }
 }

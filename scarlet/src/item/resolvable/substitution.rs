@@ -10,14 +10,16 @@ use crate::{
     item::{
         definitions::{
             substitution::{DSubstitution, Substitutions},
-            variable::DVariable,
+            variable::{DVariable, Variable},
         },
-        dependencies::Dependencies,
-        invariants::InvariantSet,
+        dependencies::{Dcc, Dependencies},
+        invariants::{InvariantSet, InvariantsResult},
+        util::unchecked_substitution,
         ItemDefinition, ItemPtr,
     },
     scope::Scope,
     shared::OrderedMap,
+    util::PtrExtension,
 };
 
 #[derive(Clone, Debug)]
@@ -25,6 +27,37 @@ pub struct RSubstitution {
     pub base: ItemPtr,
     pub named_subs: Vec<(String, ItemPtr)>,
     pub anonymous_subs: Vec<ItemPtr>,
+}
+
+impl PartialEq for RSubstitution {
+    fn eq(&self, other: &Self) -> bool {
+        if !self.base.is_same_instance_as(&other.base)
+            || self.named_subs.len() != other.named_subs.len()
+            || self.anonymous_subs.len() != other.anonymous_subs.len()
+        {
+            return false;
+        }
+        'next_sub: for (key, value) in &self.named_subs {
+            for (other_key, other_value) in &other.named_subs {
+                if key == other_key {
+                    if value.is_same_instance_as(other_value) {
+                        continue 'next_sub;
+                    } else {
+                        // The target is replaced with something else.
+                        return false;
+                    }
+                }
+            }
+            // There is no matching substitution.
+            return false;
+        }
+        for (sub, other_sub) in self.anonymous_subs.iter().zip(other.anonymous_subs.iter()) {
+            if !sub.is_same_instance_as(other_sub) {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl_any_eq_from_regular_eq!(RSubstitution);
@@ -41,29 +74,28 @@ impl Resolvable for RSubstitution {
         _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult {
-        let base = env.dereference_no_unresolved_error(self.base);
-        let base_scope = env.get_item_scope(base).dyn_clone();
+        let base = self.base.dereference();
+        let base_scope = base.clone_scope();
         let mut subs = OrderedMap::new();
-        let mut remaining_deps = env.get_dependencies(self.base);
+        let mut remaining_deps = self.base.get_dependencies();
 
         self.resolve_named_subs(base_scope, env, &mut subs, &mut remaining_deps)?;
         self.resolve_anonymous_subs(remaining_deps, env, &mut subs)?;
-        resolve_dep_subs(&mut subs, env);
+        resolve_dep_subs(&mut subs);
 
-        let justifications = make_justification_statements(&subs, env, limit)?;
-        let invs = create_invariants(env, this, base, &subs, justifications);
-        let invs = env.push_invariant_set(invs);
+        let justifications = make_justification_statements(&subs, limit)?;
+        let invs = create_invariants(env, this, base, &subs, justifications)?;
         let csub = DSubstitution::new(self.base, subs, invs);
-        ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
+        ResolveResult::Ok(csub.clone_into_box())
     }
 
-    fn estimate_dependencies(&self, env: &mut Environment) -> Dependencies {
+    fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {
         let mut result = Dependencies::new();
         for &(_, arg) in &self.named_subs {
-            result.append(env.get_dependencies(arg));
+            result.append(ctx.get_dependencies(&arg));
         }
         for &arg in &self.anonymous_subs {
-            result.append(env.get_dependencies(arg));
+            result.append(ctx.get_dependencies(&arg));
         }
         result
     }
@@ -75,21 +107,15 @@ fn create_invariants(
     base: ItemPtr,
     subs: &Substitutions,
     justifications: Vec<ItemPtr>,
-) -> InvariantSet {
+) -> InvariantsResult {
     let mut invs = Vec::new();
-    let set_id = env.generated_invariants(base);
-    for inv in env
-        .get_invariant_set(set_id)
-        .statements()
-        .into_iter()
-        .cloned()
-        .collect_vec()
-    {
+    let base_set = base.get_invariants()?;
+    for inv in base_set.borrow().statements() {
         // Apply the substitutions to the statement the invariant is making.
-        let new_inv = env.substitute_unchecked(inv, subs);
+        let new_inv = unchecked_substitution(inv.ptr_clone(), subs);
         invs.push(new_inv);
     }
-    InvariantSet::new(this, invs, justifications, hashset![])
+    Ok(InvariantSet::new(this, invs, justifications, hashset![]))
 }
 
 /// Finds invariants that confirm the substitutions we're performing are legal.
@@ -97,46 +123,42 @@ fn create_invariants(
 /// `(an_int FROM I32)[an_int IS something]`.
 fn make_justification_statements(
     subs: &Substitutions,
-    env: &mut Environment,
     limit: u32,
 ) -> Result<Vec<ItemPtr>, ResolveError> {
     let mut justifications = Vec::new();
     let mut previous_subs = Substitutions::new();
-    for (target_id, value) in subs {
-        let target = env.get_variable(*target_id).clone();
-        justifications.append(&mut target.assignment_justifications(
-            *value,
-            env,
+    for (target, value) in subs {
+        justifications.append(&mut Variable::assignment_justifications(
+            target,
+            value.ptr_clone(),
             &previous_subs,
             limit,
         ));
-        previous_subs.insert_no_replace(*target_id, *value);
+        previous_subs.insert_no_replace(*target, *value);
     }
     Ok(justifications)
 }
 
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the
 /// dependencies match.
-fn resolve_dep_subs(subs: &mut Substitutions, env: &mut Environment) {
+fn resolve_dep_subs(subs: &mut Substitutions) {
     for (target, value) in subs {
         let mut dep_subs = Substitutions::new();
-        let target = env.get_variable(*target).clone();
-        let value_deps = env.get_dependencies(*value);
-        let mut value_deps = value_deps.as_variables();
-        for dep in target.get_dependencies() {
-            for desired_dep in env.get_dependencies(*dep).as_variables() {
+        let mut value_deps = value.get_dependencies().as_variables();
+        for dep in target.borrow().get_dependencies() {
+            for desired_dep in dep.get_dependencies().as_variables() {
                 // We want to convert a dependency in the value to the
                 // dependency required by the variable it is assigned to.
                 if let Some(existing_dep) = value_deps.next() {
-                    if existing_dep.id != desired_dep.id {
-                        let desired_dep = env.get_variable(desired_dep.id).item.unwrap();
-                        dep_subs.insert_no_replace(existing_dep.id, desired_dep);
+                    if !existing_dep.is_same_variable_as(&desired_dep) {
+                        let desired_dep = desired_dep.var.borrow().item().ptr_clone();
+                        dep_subs.insert_no_replace(existing_dep.var.ptr_clone(), desired_dep);
                     }
                 }
             }
         }
         if dep_subs.len() > 0 {
-            *value = env.substitute_unchecked(*value, &dep_subs);
+            *value = unchecked_substitution(*value, &dep_subs);
         }
     }
 }
@@ -157,7 +179,7 @@ impl RSubstitution {
                     panic!("No more dependencies left to substitute!");
                 }
             }
-            let dep = remaining_deps.pop_front().id;
+            let dep = remaining_deps.pop_front().var;
             subs.insert_no_replace(dep, value);
         }
         Ok(())
@@ -172,9 +194,9 @@ impl RSubstitution {
     ) -> Result<(), ResolveError> {
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, &name)?.unwrap();
-            if let Some(var) = env.get_and_downcast_construct_definition::<DVariable>(target)? {
-                subs.insert_no_replace(var.get_id(), value);
-                remaining_deps.remove(var.get_id());
+            if let Some(var) = target.downcast_definition::<DVariable>() {
+                subs.insert_no_replace(var.get_variable().ptr_clone(), value);
+                remaining_deps.remove(var.get_variable());
             } else {
                 panic!("{} is a valid name, but it is not a variable", name)
             }
