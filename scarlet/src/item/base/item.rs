@@ -11,7 +11,7 @@ use owning_ref::{OwningRef, OwningRefMut};
 use super::{
     dependencies::{DepResult, DependencyCalculationContext},
     equality::{Ecc, EqualResult, EqualityCalculationContext},
-    invariants::{InvariantCalculationContext, InvariantSetPtr, InvariantsResult},
+    invariants::{InvariantCalculationContext, InvariantSetPtr, InvariantsResult}, from::create_from_dex,
 };
 use crate::{
     item::{
@@ -23,7 +23,7 @@ use crate::{
         ItemDefinition,
     },
     scope::{Scope, SRoot},
-    util::rcrc,
+    util::rcrc, environment::Environment,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -142,6 +142,16 @@ impl ItemPtr {
 
     pub fn clone_scope(&self) -> Box<dyn Scope> {
         self.borrow().scope.dyn_clone()
+    }
+
+    /// Returns a dex that tells you if the language item "x" could have been
+    /// returned by this item.
+    pub fn get_from_dex(&self, env: &Environment) -> ItemPtr {
+        if let Some(from) = self.borrow().from_dex {
+            from.ptr_clone()
+        } else {
+            create_from_dex(env, self.ptr_clone())
+        }
     }
 }
 

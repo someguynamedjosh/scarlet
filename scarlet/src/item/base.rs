@@ -5,3 +5,4 @@ pub mod equality;
 pub mod invariants;
 pub mod item;
 pub mod util;
+mod from;
