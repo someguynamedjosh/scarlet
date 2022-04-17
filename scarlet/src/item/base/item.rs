@@ -7,9 +7,12 @@ use std::{
 
 use owning_ref::{OwningRef, OwningRefMut};
 
-use super::{DepResult, DependencyCalculationContext, ItemDefinition, InvariantSetPtr};
+use super::{dependencies::{DepResult, DependencyCalculationContext}, invariants::InvariantSetPtr};
 use crate::{
-    item::resolvable::{BoxedResolvable, DUnresolved, Resolvable},
+    item::{
+        resolvable::{BoxedResolvable, DUnresolved, Resolvable},
+        ItemDefinition,
+    },
     scope::Scope,
 };
 

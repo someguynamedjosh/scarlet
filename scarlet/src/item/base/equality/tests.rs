@@ -4,11 +4,14 @@ use std::assert_matches::assert_matches;
 
 use crate::{
     item::{
-        decision::DDecision,
-        recursion::DRecursion,
-        substitution::{DSubstitution, Substitutions},
+        definitions::{
+            decision::DDecision,
+            recursion::DRecursion,
+            substitution::{DSubstitution, Substitutions},
+        },
+        equality::Equal,
+        test_util::*,
     },
-    environment::{discover_equality::Equal, test_util::*},
     scope::SRoot,
 };
 

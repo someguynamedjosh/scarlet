@@ -1,4 +1,4 @@
-use super::ItemPtr;
+use crate::item::ItemPtr;
 
 pub type CheckResult = Result<(), ()>;
 

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     environment::Environment,
-    item::{resolvable::UnresolvedItemError, ItemPtr, InvariantSetPtr},
+    item::{invariants::InvariantSetPtr, resolvable::UnresolvedItemError, ItemPtr},
 };
 
 pub type LookupIdentResult = Result<Option<ItemPtr>, UnresolvedItemError>;

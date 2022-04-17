@@ -2,11 +2,8 @@ use std::collections::{BTreeSet, HashSet};
 
 use maplit::hashset;
 
-use super::ItemPtr;
-use crate::item::{
-    definitions::variable::{VariableId},
-    resolvable::UnresolvedItemError,
-};
+use super::Dependency;
+use crate::item::{definitions::variable::VariableId, resolvable::UnresolvedItemError, ItemPtr};
 
 #[derive(Clone, Debug, Default)]
 pub struct Dependencies {

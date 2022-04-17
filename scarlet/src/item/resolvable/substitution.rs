@@ -27,7 +27,7 @@ pub struct RSubstitution {
     pub anonymous_subs: Vec<ItemPtr>,
 }
 
-impl_any_eq_from_regular_eq!(RPlaceholder);
+impl_any_eq_from_regular_eq!(RSubstitution);
 
 impl Resolvable for RSubstitution {
     fn dyn_clone(&self) -> BoxedResolvable {
