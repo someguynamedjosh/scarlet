@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::{decision::CDecision, ItemPtr},
-    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
+    environment::{vomit::VomitContext, Environment},
+    item::{definitions::decision::DDecision, equality::Equal, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,12 +11,7 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[1], NodeChild::Text("="));
     let this = env.push_placeholder(scope);
@@ -25,7 +20,7 @@ fn create(
     let right = node.children[2].as_construct(pc, env, SPlain(this));
     let truee = env.get_language_item("true");
     let falsee = env.get_language_item("false");
-    env.define_item(this, CDecision::new(left, right, truee, falsee));
+    env.define_item(this, DDecision::new(left, right, truee, falsee));
     this
 }
 
@@ -35,7 +30,7 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(
-        if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {
+        if let Some(cite) = env.get_and_downcast_construct_definition::<DDecision>(uncreate)? {
             let cite = cite.clone();
             let truee = env.get_language_item("true");
             let falsee = env.get_language_item("false");

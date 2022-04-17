@@ -1,11 +1,11 @@
 use typed_arena::Arena;
 
 use crate::{
+    environment::{vomit::VomitContext, Environment},
     item::{
-        structt::{AtomicStructMember, CAtomicStructMember},
+        definitions::structt::{AtomicStructMember, DAtomicStructMember},
         ItemPtr,
     },
-    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -14,16 +14,11 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_item(this, CAtomicStructMember(base, AtomicStructMember::Label));
+    env.define_item(this, DAtomicStructMember(base, AtomicStructMember::Label));
     this
 }
 
@@ -34,7 +29,7 @@ fn uncreate<'a>(
 ) -> UncreateResult<'a> {
     Ok(
         if let Some(asm) =
-            env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)?
+            env.get_and_downcast_construct_definition::<DAtomicStructMember>(uncreate)?
         {
             if asm.1 == AtomicStructMember::Label {
                 let id = asm.0;

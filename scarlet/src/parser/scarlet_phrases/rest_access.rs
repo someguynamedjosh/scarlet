@@ -3,11 +3,12 @@ use std::ops::ControlFlow;
 use typed_arena::Arena;
 
 use crate::{
+    environment::{vomit::VomitContext, Environment},
     item::{
-        structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
+        definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
+        equality::Equal,
         ItemPtr,
     },
-    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -16,16 +17,11 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_item(this, CAtomicStructMember(base, AtomicStructMember::Rest));
+    env.define_item(this, DAtomicStructMember(base, AtomicStructMember::Rest));
     this
 }
 
@@ -35,7 +31,7 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     let source = if let Ok(Some(asm)) =
-        env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)
+        env.get_and_downcast_construct_definition::<DAtomicStructMember>(uncreate)
     {
         if asm.1 == AtomicStructMember::Rest {
             Some(asm.0)
@@ -45,7 +41,7 @@ fn uncreate<'a>(
     } else {
         env.for_each_item(|env, id| {
             if let Ok(Some(cstruct)) =
-                env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
+                env.get_and_downcast_construct_definition::<DPopulatedStruct>(id)
             {
                 let cstruct = cstruct.clone();
                 if env.discover_equal(cstruct.get_rest(), uncreate, 1024) == Ok(Equal::yes()) {

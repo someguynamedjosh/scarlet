@@ -1,22 +1,26 @@
-use crate::item::{
-    base::{ItemDefinition, ItemPtr},
-    substitution::Substitutions,
-    variable::VariableId,
-    GenInvResult,
-};
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        discover_equality::{DeqResult, DeqSide},
-        Environment,
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
+    item::{
+        definitions::{decision::DDecision, substitution::Substitutions},
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Equal, EqualResult, EqualityFeature},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
+        ItemDefinition, ItemPtr,
     },
-    impl_any_eq_for_construct,
+    scope::{
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        SPlain, Scope,
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CShown(ItemPtr);
+pub struct DShown(ItemPtr);
 
-impl CShown {
+impl DShown {
     pub fn new(base: ItemPtr) -> Self {
         Self(base)
     }
@@ -26,9 +30,9 @@ impl CShown {
     }
 }
 
-impl_any_eq_for_construct!(CShown);
+impl_any_eq_from_regular_eq!(DShown);
 
-impl ItemDefinition for CShown {
+impl ItemDefinition for DShown {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
@@ -36,19 +40,21 @@ impl ItemDefinition for CShown {
     fn contents(&self) -> Vec<ItemPtr> {
         vec![self.0]
     }
+}
 
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
-        env.get_dependencies(self.0)
+impl DependenciesFeature for DShown {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+        ctx.get_dependencies(&self.0)
     }
+}
 
-    fn generated_invariants(&self, _this: ItemPtr, env: &mut Environment) -> GenInvResult {
-        env.generated_invariants(self.0)
-    }
-
-    fn dereference(
+impl InvariantsFeature for DShown {
+    fn get_invariants_using_context(
         &self,
-        env: &mut Environment,
-    ) -> Option<(ItemPtr, Option<&Substitutions>, Option<Vec<ItemPtr>>)> {
-        Some((self.0, None, None))
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        ctx.generated_invariants(self.0)
     }
 }

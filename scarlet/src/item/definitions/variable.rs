@@ -1,22 +1,23 @@
 use maplit::hashset;
 
-use crate::item::{
-    base::{ItemDefinition, ItemPtr},
-    downcast_construct,
-    substitution::Substitutions,
-    GenInvResult,
-};
 use crate::{
-    environment::{
-        dependencies::{DepResult, Dependencies},
-        discover_equality::{DeqPriority, DeqResult, Equal},
-        invariants::{InvariantSet, InvariantSetPtr},
-        Environment,
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
+    item::{
+        definitions::{decision::DDecision, substitution::Substitutions},
+        dependencies::{
+            Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
+        },
+        equality::{Ecc, Equal, EqualResult, EqualityFeature},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
+        ItemDefinition, ItemPtr,
     },
-    impl_any_eq_for_construct,
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
+        SPlain, Scope,
     },
     shared::{Id, Pool},
 };
@@ -53,28 +54,9 @@ pub type VariablePool = Pool<Variable, 'V'>;
 pub type VariableId = Id<'V'>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Dependency {
-    pub id: VariableId,
-    pub swallow: Vec<VariableId>,
-    pub order: VariableOrder,
-}
+pub struct DVariable(pub VariableId);
 
-impl PartialOrd for Dependency {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.order.partial_cmp(&other.order)
-    }
-}
-
-impl Ord for Dependency {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.order.cmp(&other.order)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CVariable(pub VariableId);
-
-impl CVariable {
+impl DVariable {
     pub fn new(id: VariableId) -> Self {
         Self(id)
     }
@@ -135,44 +117,48 @@ impl Variable {
     }
 }
 
-impl_any_eq_for_construct!(CVariable);
+impl_any_eq_from_regular_eq!(DVariable);
 
-impl ItemDefinition for CVariable {
+impl ItemDefinition for DVariable {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+}
 
-    fn generated_invariants(&self, this: ItemPtr, env: &mut Environment) -> GenInvResult {
-        let statements = env.get_variable(self.0).invariants.clone();
+impl InvariantsFeature for DVariable {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        let statements = self.0.invariants.clone();
         let dependencies = hashset![this];
-        env.push_invariant_set(InvariantSet::new_statements_depending_on(
-            this,
-            statements,
-            dependencies,
-        ))
+        todo!()
+        // env.push_invariant_set(InvariantSet::new_statements_depending_on(
+        //     this,
+        //     statements,
+        //     dependencies,
+        // ))
     }
+}
 
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
+impl DependenciesFeature for DVariable {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
         let mut deps = Dependencies::new();
-        for dep in env.get_variable(self.0).dependencies.clone() {
-            deps.append(env.get_dependencies(dep));
+        for dep in ctx.get_variable(self.0).dependencies.clone() {
+            deps.append(ctx.get_dependencies(dep));
         }
-        deps.push_eager(env.get_variable(self.0).clone().as_dependency(env));
-        for inv in env.get_variable(self.0).invariants.clone() {
-            deps.append(env.get_dependencies(inv));
+        deps.push_eager(ctx.get_variable(self.0).clone().as_dependency());
+        for inv in ctx.get_variable(self.0).invariants.clone() {
+            deps.append(ctx.get_dependencies(inv));
         }
         deps
     }
+}
 
-    fn discover_equality(
-        &self,
-        env: &mut Environment,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemPtr,
-        other: &dyn ItemDefinition,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> DeqResult {
+impl EqualityFeature for DVariable {
+    fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
         unreachable!()
     }
 }

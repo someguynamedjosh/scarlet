@@ -1,14 +1,13 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::ItemPtr,
     environment::{vomit::VomitContext, Environment},
+    item::{resolvable::RIdentifier, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
     },
     phrase,
-    resolvable::RIdentifier,
     scope::Scope,
 };
 

@@ -133,11 +133,11 @@ fn parse<'a>(input: &'a str, ctx: &'a ParseContext, file_index: u32) -> Option<N
     stack.0.pop()
 }
 
-pub fn parse_tree(
+pub fn parse_tree<'x>(
     tree: &'x FileNode,
     ctx: &'x ParseContext,
     file_counter: &mut u32,
-) -> Node {
+) -> Node<'x> {
     *file_counter += 1;
     let mut children = Vec::new();
     if tree.self_content.trim().len() > 0 {

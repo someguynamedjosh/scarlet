@@ -1,7 +1,6 @@
 use super::{Environment, ItemPtr};
-use crate::{
-    item::ItemDefinition,
-    resolvable::{ResolveError, ResolveResult},
+use crate::item::{
+    resolvable::{ResolveError, ResolveResult}, definition::ItemDefinition,
 };
 
 #[derive(Debug, PartialEq, Eq)]

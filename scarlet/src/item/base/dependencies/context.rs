@@ -1,5 +1,5 @@
 use super::{DepResult, Dependencies};
-use crate::item::{base::util::RecursionPreventionStack, ItemPtr, ItemPtrExtensions};
+use crate::item::{base::util::RecursionPreventionStack, ItemPtr};
 
 /// Using this in a function signature guarantees that only
 /// DependencyCalculationContext can call that function.

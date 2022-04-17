@@ -1,20 +1,14 @@
 mod context;
 mod dependencies_struct;
+mod dependency;
 mod feature;
 
 use std::collections::{BTreeSet, HashSet};
 
 use maplit::hashset;
 
-pub use self::{context::*, dependencies_struct::*, feature::*};
-use super::ItemPtr;
-use crate::{
-    environment::{Environment, UnresolvedItemError},
-    item::{
-        variable::{Dependency, VariableId},
-        ItemDefinition,
-    },
-};
+pub use self::{context::*, dependencies_struct::*, dependency::*, feature::*};
+use crate::{environment::Environment, item::resolvable::UnresolvedItemError};
 
 pub type DepResult = Dependencies;
 

@@ -1,16 +1,18 @@
 #![cfg(test)]
 
 use crate::{
-    item::{
-        decision::CDecision,
-        structt::CPopulatedStruct,
-        substitution::Substitutions,
-        unique::CUnique,
-        variable::{CVariable, Variable, VariableId, VariableOrder},
-        ItemPtr,
-    },
     environment::Environment,
     file_tree::FileNode,
+    item::{
+        definitions::{
+            decision::DDecision,
+            structt::DPopulatedStruct,
+            substitution::Substitutions,
+            unique::DUnique,
+            variable::{DVariable, Variable, VariableId, VariableOrder},
+        },
+        ItemPtr,
+    },
     parser::{parse_tree, ParseContext},
     scope::SRoot,
 };
@@ -19,10 +21,7 @@ pub(super) fn env() -> Environment {
     Environment::new()
 }
 
-pub(super) fn with_env_from_code(
-    code: &str,
-    callback: impl FnOnce(Environment, ItemPtr),
-) {
+pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, ItemPtr)) {
     let node = FileNode {
         self_content: code.to_owned(),
         children: Vec::new(),
@@ -34,14 +33,14 @@ pub(super) fn with_env_from_code(
             continue;
         }
         let def = env.push_unique();
-        let def = env.push_construct(CUnique::new(def), Box::new(SRoot));
+        let def = env.push_construct(DUnique::new(def), Box::new(SRoot));
         env.set_name(def, lang_item_name.to_owned());
         env.define_language_item(lang_item_name, def);
     }
     env.resolve_all();
 
     let root = env
-        .get_and_downcast_construct_definition::<CPopulatedStruct>(root)
+        .get_and_downcast_construct_definition::<DPopulatedStruct>(root)
         .unwrap()
         .unwrap()
         .get_value();
@@ -63,7 +62,7 @@ pub(super) fn subs(from: Vec<(VariableId, ItemPtr)>) -> Substitutions {
     from.into_iter().collect()
 }
 
-impl Environment{
+impl Environment {
     pub(super) fn decision(
         &mut self,
         left: ItemPtr,
@@ -71,12 +70,12 @@ impl Environment{
         equal: ItemPtr,
         unequal: ItemPtr,
     ) -> ItemPtr {
-        self.push_construct(CDecision::new(left, right, equal, unequal), Box::new(SRoot))
+        self.push_construct(DDecision::new(left, right, equal, unequal), Box::new(SRoot))
     }
 
     pub(super) fn unique(&mut self) -> ItemPtr {
         let id = self.push_unique();
-        self.push_construct(CUnique::new(id), Box::new(SRoot))
+        self.push_construct(DUnique::new(id), Box::new(SRoot))
     }
 
     pub(super) fn variable(&mut self) -> ItemPtr {
@@ -87,7 +86,7 @@ impl Environment{
             dependencies: vec![],
             order: VariableOrder::new(0, 0, self.variables.len() as _),
         });
-        self.push_construct(CVariable::new(id), Box::new(SRoot))
+        self.push_construct(DVariable::new(id), Box::new(SRoot))
     }
 
     pub(super) fn variable_full(&mut self) -> (ItemPtr, VariableId) {
@@ -98,7 +97,7 @@ impl Environment{
             dependencies: vec![],
             order: VariableOrder::new(0, 0, self.variables.len() as _),
         });
-        let con = CVariable::new(id);
+        let con = DVariable::new(id);
         let cid = self.push_construct(con.clone(), Box::new(SRoot));
         (cid, id)
     }
@@ -111,7 +110,7 @@ impl Environment{
             dependencies: deps,
             order: VariableOrder::new(0, 0, self.variables.len() as _),
         });
-        let con = CVariable::new(id);
+        let con = DVariable::new(id);
         let cid = self.push_construct(con.clone(), Box::new(SRoot));
         (cid, id)
     }

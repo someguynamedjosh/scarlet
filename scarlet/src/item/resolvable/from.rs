@@ -1,7 +1,11 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     environment::Environment,
-    item::{substitution::CSubstitution, variable::CVariable, ItemDefinition, ItemPtr},
+    impl_any_eq_from_regular_eq,
+    item::{
+        definitions::{substitution::DSubstitution, variable::DVariable},
+        ItemDefinition, ItemPtr,
+    },
     scope::Scope,
 };
 
@@ -10,6 +14,8 @@ pub struct RFrom {
     pub left: ItemPtr,
     pub right: ItemPtr,
 }
+
+impl_any_eq_from_regular_eq!(RFrom);
 
 impl Resolvable for RFrom {
     fn dyn_clone(&self) -> BoxedResolvable {
@@ -25,10 +31,10 @@ impl Resolvable for RFrom {
     ) -> ResolveResult {
         let base = env.create_from_dex(self.right)?;
         let x = env.get_language_item("x");
-        let x = env.get_and_downcast_construct_definition::<CVariable>(x)?;
+        let x = env.get_and_downcast_construct_definition::<DVariable>(x)?;
         let x_id = x.unwrap().get_id();
         let subs = vec![(x_id, self.left)].into_iter().collect();
-        let subbed = CSubstitution::new_unchecked(env, base, base, subs);
+        let subbed = DSubstitution::new_unchecked(base, base, subs);
         ResolveResult::Ok(ItemDefinition::Resolved(Box::new(subbed)))
     }
 }

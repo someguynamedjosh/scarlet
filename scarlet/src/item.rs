@@ -1,7 +1,7 @@
 pub mod base;
-mod definitions;
+pub mod definitions;
 pub mod resolvable;
 mod test_util;
 
 pub use base::*;
-pub use definitions::*;
+pub use base::{item::*, definition::*};

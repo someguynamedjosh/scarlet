@@ -1,7 +1,7 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     item::{
-        variable::{CVariable, Variable, VariableOrder},
+        definitions::variable::{DVariable, Variable, VariableOrder},
         ItemDefinition, ItemPtr,
     },
     environment::Environment,
@@ -34,7 +34,7 @@ impl Resolvable for RVariable {
             dependencies: self.dependencies.clone(),
             order: self.order.clone(),
         });
-        let con = CVariable::new(id);
+        let con = DVariable::new(id);
         ResolveResult::Ok(ItemDefinition::Resolved(Box::new(con)))
     }
 }

@@ -4,9 +4,9 @@ use std::assert_matches::assert_matches;
 
 use crate::{
     item::{
-        decision::CDecision,
-        recursion::CRecursion,
-        substitution::{CSubstitution, Substitutions},
+        decision::DDecision,
+        recursion::DRecursion,
+        substitution::{DSubstitution, Substitutions},
     },
     environment::{discover_equality::Equal, test_util::*},
     scope::SRoot,
@@ -189,7 +189,7 @@ fn fx_is_gy() {
         assert_eq!(next, &(x.1, y.0));
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(last.1) {
             assert_eq!(sub.base(), g.0);
             assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
         } else {
@@ -221,7 +221,7 @@ fn fx_sub_a_is_gy_sub_a() {
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(last.1) {
             assert_eq!(sub.base(), g.0);
             assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
         } else {
@@ -272,7 +272,7 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
         assert_eq!(entries.next(), Some(&(x.1, y.0)));
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(last.1) {
             assert_eq!(sub.base(), g.0);
             assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
         } else {
@@ -305,7 +305,7 @@ fn fx_sub_z_is_gy_sub_nothing() {
         assert_eq!(entries.next(), Some(&(z.1, y.0)));
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(last.1) {
             assert_eq!(sub.base(), g.0);
             assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
         } else {
@@ -341,7 +341,7 @@ fn fx_sub_decision_is_gy_sub_decision() {
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(last.1) {
             assert_eq!(sub.base(), g.0);
             assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
         } else {
@@ -385,7 +385,7 @@ fn dex_sub_decision_is_gy_sub_decision() {
         assert_eq!(entries.next().unwrap(), &(v.1, d));
         let first = entries.next().unwrap();
         assert_eq!(first.0, g.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(first.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(first.1) {
             assert_eq!(sub.base(), dex);
             assert_eq!(sub.substitutions(), &subs(vec![(x.1, y.0)]))
         } else {
@@ -424,7 +424,7 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
         assert_eq!(Some(&(aa.1, a)), entries.next());
         let last = entries.next().unwrap();
         assert_eq!(last.0, f.1);
-        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<CSubstitution>(last.1) {
+        if let Ok(Some(sub)) = env.get_and_downcast_construct_definition::<DSubstitution>(last.1) {
             assert_eq!(sub.base(), g.0);
             assert_eq!(sub.substitutions(), &subs(vec![(y.1, x.0)]))
         } else {
@@ -573,7 +573,7 @@ fn multi_variable_dex_is_single_variable_dex() {
         assert_eq!(sub, x.0);
         let sub = *subs.get(&fz.1).unwrap();
         println!("{}", env.show(sub, sub));
-        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<DSubstitution>(sub) {
             let mut expected = Substitutions::new();
             expected.insert_no_replace(x.1, z.0);
             assert_eq!(def.substitutions(), &expected);
@@ -615,7 +615,7 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
         let sub = *subs.get(&z.1).unwrap();
         assert_eq!(sub, y.0);
         let sub = *subs.get(&fz.1).unwrap();
-        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<DSubstitution>(sub) {
             let def = def.clone();
             let mut expected = Substitutions::new();
             expected.insert_no_replace(y.1, z.0);
@@ -666,7 +666,7 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
         println!("{}", env.show(sub, sub));
         assert_eq!(sub, x2.0);
         let sub = *subs.get(&fz.1).unwrap();
-        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<DSubstitution>(sub) {
             let def = def.clone();
             let mut expected = Substitutions::new();
             expected.insert_no_replace(x2.1, z.0);
@@ -713,13 +713,13 @@ fn multi_variable_dex_sub_two_uniques_is_single_variable_dex() {
         assert_eq!(sub, a);
         let sub = *subs.get(&fz.1).unwrap();
         println!("{}", env.show(sub, sub));
-        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<CSubstitution>(sub) {
+        if let Ok(Some(def)) = env.get_and_downcast_construct_definition::<DSubstitution>(sub) {
             let def = def.clone();
             let mut expected = Substitutions::new();
             expected.insert_no_replace(x.1, z.0);
             assert_eq!(def.substitutions(), &expected);
             if let Ok(Some(def)) =
-                env.get_and_downcast_construct_definition::<CSubstitution>(def.base())
+                env.get_and_downcast_construct_definition::<DSubstitution>(def.base())
             {
                 let def = def.clone();
                 assert_eq!(def.substitutions().len(), 1);
@@ -787,8 +787,8 @@ fn recursion_is_tracked_in_decision() {
     let b = env.unique();
     let c = env.unique();
     let dec = env.push_placeholder(Box::new(SRoot));
-    let dec_rec = env.push_construct(CRecursion::new(dec), Box::new(SRoot));
-    env.define_item(dec, CDecision::new(a, b, dec_rec, c));
+    let dec_rec = env.push_construct(DRecursion::new(dec), Box::new(SRoot));
+    env.define_item(dec, DDecision::new(a, b, dec_rec, c));
 
     assert_eq!(
         env.discover_equal(dec, dec_rec, 3),

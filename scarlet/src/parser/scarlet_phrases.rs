@@ -20,7 +20,6 @@ mod substitution;
 mod unique;
 mod value_access;
 mod variable;
-pub mod assertion;
 
 use super::phrase::Phrase;
 
@@ -50,7 +49,6 @@ pub fn phrases() -> Vec<Phrase> {
     vec![
         unique::phrase(),
         axiom::phrase(),
-        assertion::phrase(),
         variable::phrase(),
         populated_struct::phrase(),
         equal::phrase(),
@@ -77,7 +75,7 @@ pub fn phrases() -> Vec<Phrase> {
         //     None,
         //     10 => 9, r"\^", 10
         // ),
-        multiple_item::phrase(),
+        multiple_items::phrase(),
         parentheses::phrase(),
         recursion::phrase(),
         identifier::phrase(),

@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::{recursion::CRecursion, ItemPtr},
     environment::{vomit::VomitContext, Environment},
+    item::{definitions::recursion::DRecursion, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -20,12 +20,12 @@ fn create(
     unreachable!()
 }
 
-fn uncreate(
+fn uncreate<'x>(
     env: &mut Environment,
     ctx: &mut VomitContext<'x, '_>,
     uncreate: ItemPtr,
-) -> UncreateResult {
-    if let Some(recursion) = env.get_and_downcast_construct_definition::<CRecursion>(uncreate)? {
+) -> UncreateResult<'x> {
+    if let Some(recursion) = env.get_and_downcast_construct_definition::<DRecursion>(uncreate)? {
         let base = recursion.get_base();
         Ok(Some(Node {
             phrase: "recursion",

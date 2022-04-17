@@ -1,25 +1,28 @@
-use std::collections::HashSet;
-
-use crate::item::{
-    decision::CDecision, downcast_construct, substitution::Substitutions, ItemDefinition, GenInvResult,
-    ItemPtr,
-};
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        discover_equality::{DeqResult, Equal},
-        Environment,
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
+    item::{
+        definitions::{decision::DDecision, substitution::Substitutions},
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Equal, EqualResult, EqualityFeature},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
+        ItemDefinition, ItemPtr,
     },
-    impl_any_eq_for_construct,
-    scope::SPlain,
+    scope::{
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        SPlain, Scope,
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CIsPopulatedStruct {
+pub struct DIsPopulatedStruct {
     base: ItemPtr,
 }
 
-impl CIsPopulatedStruct {
+impl DIsPopulatedStruct {
     pub fn new(base: ItemPtr) -> Self {
         Self { base }
     }
@@ -29,44 +32,54 @@ impl CIsPopulatedStruct {
     }
 }
 
-impl_any_eq_for_construct!(CIsPopulatedStruct);
+impl_any_eq_from_regular_eq!(DIsPopulatedStruct);
 
-impl ItemDefinition for CIsPopulatedStruct {
+impl ItemDefinition for DIsPopulatedStruct {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+}
 
-    fn generated_invariants(&self, this: ItemPtr, env: &mut Environment) -> GenInvResult {
-        let invs = env.generated_invariants(self.base);
-        let truee = env.get_language_item("true");
-        let falsee = env.get_language_item("false");
-        let this_is_false = env.push_construct(
-            CDecision::new(this, falsee, truee, falsee),
+impl InvariantsFeature for DIsPopulatedStruct {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        let invs = ctx.generated_invariants(self.base);
+        let truee = ctx.get_language_item("true");
+        let falsee = ctx.get_language_item("false");
+        let this_is_false = ctx.push_construct(
+            DDecision::new(this, falsee, truee, falsee),
             Box::new(SPlain(this)),
         );
-        let is_bool = env.push_construct(
-            CDecision::new(this, truee, truee, this_is_false),
+        let is_bool = ctx.push_construct(
+            DDecision::new(this, truee, truee, this_is_false),
             Box::new(SPlain(this)),
         );
-        let mut set = env.get_invariant_set(invs).clone();
+        let mut set = ctx.get_invariant_set(invs).clone();
         set.push(is_bool);
-        env.push_invariant_set(set)
+        ctx.push_invariant_set(set)
     }
+}
 
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
-        env.get_dependencies(self.base)
+impl DependenciesFeature for DIsPopulatedStruct {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+        ctx.get_dependencies(&self.base)
     }
+}
 
-    fn discover_equality(
+impl EqualityFeature for DIsPopulatedStruct {
+    fn get_equality_using_context(
         &self,
         env: &mut Environment,
         self_subs: Vec<&Substitutions>,
-        other_id: ItemPtr,
-        other: &dyn ItemDefinition,
+        other: ItemPtr,
         other_subs: Vec<&Substitutions>,
         limit: u32,
-    ) -> DeqResult {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    ) -> EqualResult {
+        if let Some(other) = other.downcast() {
             let other = other.clone();
             env.discover_equal_with_subs(self.base, self_subs, other.base, other_subs, limit)
         } else {

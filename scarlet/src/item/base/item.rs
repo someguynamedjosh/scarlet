@@ -7,42 +7,21 @@ use std::{
 
 use owning_ref::{OwningRef, OwningRefMut};
 
-use super::{DepResult, DependencyCalculationContext, ItemDefinition};
+use super::{DepResult, DependencyCalculationContext, ItemDefinition, InvariantSetPtr};
 use crate::{
-    environment::{
-        discover_equality::{DeqPriority, DeqResult, DeqSide, Equal},
-        invariants::{InvariantSet, InvariantSetPtr},
-        CheckResult, Environment,
-    },
-    item::{
-        resolvable::{BoxedResolvable, DUnresolved, Resolvable},
-        structt::CPopulatedStruct,
-        substitution::Substitutions,
-        variable::{CVariable, VariableId},
-    },
+    item::resolvable::{BoxedResolvable, DUnresolved, Resolvable},
     scope::Scope,
-    shared::{AnyEq, Id, Pool},
 };
 
-pub type ItemPtr = Rc<RefCell<Item>>;
+pub struct ItemPtr(Rc<RefCell<Item>>);
 
-pub trait ItemPtrExtensions {
-    fn is_same_instance_as(&self, other: &Self) -> bool;
-    /// Returns a new pointer to the same object that self points to.
-    fn ptr_clone(&self) -> Self;
-    fn get_dependencies(&self) -> DepResult;
-    fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<Item>, D>>;
-    fn downcast_definition_mut<D: ItemDefinition>(&self) -> Option<OwningRefMut<RefMut<Item>, D>>;
-    fn is_unresolved(&self) -> bool;
-}
-
-impl ItemPtrExtensions for ItemPtr {
+impl ItemPtr {
     fn is_same_instance_as(&self, other: &Self) -> bool {
-        self.as_ptr() == other.as_ptr()
+        self.0.as_ptr() == other.0.as_ptr()
     }
 
     fn ptr_clone(&self) -> Self {
-        Rc::clone(self)
+        Self(Rc::clone(self))
     }
 
     fn get_dependencies(&self) -> DepResult {

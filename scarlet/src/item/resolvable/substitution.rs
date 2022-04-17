@@ -3,14 +3,19 @@ use std::collections::HashSet;
 use itertools::Itertools;
 use maplit::hashset;
 
-use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
+use super::{BoxedResolvable, RPlaceholder, Resolvable, ResolveError, ResolveResult};
 use crate::{
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
     item::{
-        substitution::{CSubstitution, Substitutions},
-        variable::CVariable,
+        definitions::{
+            substitution::{DSubstitution, Substitutions},
+            variable::DVariable,
+        },
+        dependencies::Dependencies,
+        invariants::InvariantSet,
         ItemDefinition, ItemPtr,
     },
-    environment::{dependencies::Dependencies, invariants::InvariantSet, Environment},
     scope::Scope,
     shared::OrderedMap,
 };
@@ -21,6 +26,8 @@ pub struct RSubstitution {
     pub named_subs: Vec<(String, ItemPtr)>,
     pub anonymous_subs: Vec<ItemPtr>,
 }
+
+impl_any_eq_from_regular_eq!(RPlaceholder);
 
 impl Resolvable for RSubstitution {
     fn dyn_clone(&self) -> BoxedResolvable {
@@ -46,7 +53,7 @@ impl Resolvable for RSubstitution {
         let justifications = make_justification_statements(&subs, env, limit)?;
         let invs = create_invariants(env, this, base, &subs, justifications);
         let invs = env.push_invariant_set(invs);
-        let csub = CSubstitution::new(self.base, subs, invs);
+        let csub = DSubstitution::new(self.base, subs, invs);
         ResolveResult::Ok(ItemDefinition::Resolved(Box::new(csub)))
     }
 
@@ -165,7 +172,7 @@ impl RSubstitution {
     ) -> Result<(), ResolveError> {
         for &(name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, &name)?.unwrap();
-            if let Some(var) = env.get_and_downcast_construct_definition::<CVariable>(target)? {
+            if let Some(var) = env.get_and_downcast_construct_definition::<DVariable>(target)? {
                 subs.insert_no_replace(var.get_id(), value);
                 remaining_deps.remove(var.get_id());
             } else {

@@ -1,25 +1,19 @@
 use maplit::hashset;
 
 use crate::{
-    environment::{
-        dependencies::DepResult,
-        discover_equality::{DeqResult, DeqSide, Equal},
-        invariants::InvariantSet,
-        Environment,
-    },
-    impl_any_eq_for_construct,
-    item::{
-        base::ItemDefinition, downcast_construct, substitution::Substitutions, GenInvResult,
-        ItemPtr,
-    },
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
+    item::{equality::{Equal, EqualityFeature, EqualResult}, ItemPtr, ItemDefinition, invariants::{Icc, InvariantsFeature, OnlyCalledByIcc, InvariantsResult, InvariantSet}, dependencies::{DependenciesFeature, Dcc, OnlyCalledByDcc, DepResult}},
 };
 
+use super::substitution::Substitutions;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CAxiom {
+pub struct DAxiom {
     statement: ItemPtr,
 }
 
-impl CAxiom {
+impl DAxiom {
     fn new(env: &mut Environment, statement: &str) -> Self {
         Self {
             statement: env.get_language_item(statement),
@@ -43,36 +37,46 @@ impl CAxiom {
     }
 }
 
-impl_any_eq_for_construct!(CAxiom);
+impl_any_eq_from_regular_eq!(DAxiom);
 
-impl ItemDefinition for CAxiom {
+impl ItemDefinition for DAxiom {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+}
 
-    fn generated_invariants(&self, this: ItemPtr, env: &mut Environment) -> GenInvResult {
-        env.push_invariant_set(InvariantSet::new(
+impl InvariantsFeature for DAxiom {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        Ok(InvariantSet::new(
             this,
             vec![self.statement],
             vec![],
             hashset![],
         ))
     }
+}
 
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
-        env.get_dependencies(self.statement)
+impl DependenciesFeature for DAxiom {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+        ctx.get_dependencies(&self.statement)
     }
+}
 
-    fn discover_equality(
+impl EqualityFeature for DAxiom {
+    fn get_equality_using_context(
         &self,
         env: &mut Environment,
         self_subs: Vec<&Substitutions>,
-        other_id: ItemPtr,
-        other: &dyn ItemDefinition,
+        other: ItemPtr,
         other_subs: Vec<&Substitutions>,
         limit: u32,
-    ) -> DeqResult {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    ) -> EqualResult {
+        if let Some(other) = other.downcast() {
             let other = other.clone();
             env.discover_equal_with_subs(
                 self.statement,

@@ -3,53 +3,45 @@ use std::collections::{BTreeSet, HashSet};
 use maplit::hashset;
 
 use super::ItemPtr;
-use crate::{
-    environment::{Environment, UnresolvedItemError},
-    item::{
-        variable::{Dependency, VariableId},
-        ItemDefinition,
-    },
+use crate::item::{
+    definitions::variable::{VariableId},
+    resolvable::UnresolvedItemError,
 };
 
 #[derive(Clone, Debug, Default)]
 pub struct Dependencies {
     dependencies: BTreeSet<Dependency>,
-    /// Signifies this dependency list was built without considering the full
-    /// list of dependencies for each contained construct, due to that item
-    /// recursively depending on itself.
-    missing: HashSet<ItemPtr>,
-    /// Signifies this dependency list is missing all the dependencies from a
-    /// particular item and any dependencies after it.
-    error: Option<UnresolvedItemError>,
+    skipped_due_to_recursion: HashSet<ItemPtr>,
+    skipped_due_to_unresolved: Option<UnresolvedItemError>,
 }
 
 impl Dependencies {
     pub fn new() -> Self {
         Self {
             dependencies: BTreeSet::new(),
-            missing: HashSet::new(),
-            error: None,
+            skipped_due_to_recursion: HashSet::new(),
+            skipped_due_to_unresolved: None,
         }
     }
 
     pub fn new_missing(item: ItemPtr) -> Self {
         Self {
             dependencies: BTreeSet::new(),
-            missing: hashset![item],
-            error: None,
+            skipped_due_to_recursion: hashset![item],
+            skipped_due_to_unresolved: None,
         }
     }
 
     pub fn new_error(error: UnresolvedItemError) -> Self {
         Self {
             dependencies: BTreeSet::new(),
-            missing: HashSet::new(),
-            error: Some(error),
+            skipped_due_to_recursion: HashSet::new(),
+            skipped_due_to_unresolved: Some(error),
         }
     }
 
     pub fn push_eager(&mut self, dep: Dependency) {
-        if self.error.is_some() {
+        if self.skipped_due_to_unresolved.is_some() {
             return;
         }
         for var in &self.dependencies {
@@ -69,13 +61,13 @@ impl Dependencies {
     }
 
     pub fn append(&mut self, other: Dependencies) {
-        if self.error.is_some() {
+        if self.skipped_due_to_unresolved.is_some() {
             return;
         }
         for &new_missing in other.missing() {
-            self.missing.insert(new_missing);
+            self.skipped_due_to_recursion.insert(new_missing);
         }
-        self.error = other.error;
+        self.skipped_due_to_unresolved = other.skipped_due_to_unresolved;
         for eager in other.into_variables() {
             self.push_eager(eager);
         }
@@ -124,10 +116,10 @@ impl Dependencies {
     }
 
     pub fn missing(&self) -> &HashSet<ItemPtr> {
-        &self.missing
+        &self.skipped_due_to_recursion
     }
 
     pub fn error(&self) -> Option<UnresolvedItemError> {
-        self.error
+        self.skipped_due_to_unresolved
     }
 }

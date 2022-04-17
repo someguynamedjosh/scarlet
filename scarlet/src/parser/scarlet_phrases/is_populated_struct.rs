@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::{is_populated_struct::CIsPopulatedStruct, ItemPtr},
     environment::{vomit::VomitContext, Environment},
+    item::{definitions::is_populated_struct::DIsPopulatedStruct, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,17 +11,12 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".IS_POPULATED_STRUCT"));
     let this = env.push_placeholder(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_item(this, CIsPopulatedStruct::new(base));
+    env.define_item(this, DIsPopulatedStruct::new(base));
     this
 }
 
@@ -32,7 +27,7 @@ fn uncreate<'a>(
 ) -> UncreateResult<'a> {
     Ok(
         if let Some(cips) =
-            env.get_and_downcast_construct_definition::<CIsPopulatedStruct>(uncreate)?
+            env.get_and_downcast_construct_definition::<DIsPopulatedStruct>(uncreate)?
         {
             let cips = cips.clone();
             Some(Node {

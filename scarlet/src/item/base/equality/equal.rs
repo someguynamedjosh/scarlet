@@ -1,6 +1,9 @@
 use itertools::Itertools;
 
-use crate::item::{substitution::Substitutions, variable::VariableId, ItemPtr};
+use crate::item::{
+    definitions::{substitution::Substitutions, variable::VariableId},
+    ItemPtr,
+};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
@@ -99,7 +102,8 @@ impl Equal {
         match self {
             Self::Yes(subs, recursion) => {
                 let mut order = subs.iter().map(|(k, _)| *k).collect_vec();
-                order.sort_by_key(|x| &env.get_variable(*x).order);
+                // order.sort_by_key(|x| &env.get_variable(*x).order);
+                todo!();
                 Self::Yes(subs.reorder(&order.iter().collect_vec()), recursion)
             }
             other => other,

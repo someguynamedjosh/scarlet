@@ -63,3 +63,17 @@ impl<OriginalKey: Eq + Hash, IsomorphicKey: Isomorphism<OriginalKey>, Result>
 pub fn rcrc<T>(value: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(value))
 }
+
+#[macro_export]
+macro_rules! impl_any_eq_from_regular_eq {
+    ($ConstructName:ident) => {
+        impl crate::shared::AnyEq for $ConstructName {
+            fn eq(&self, other: &dyn crate::shared::AnyEq) -> bool {
+                (other as &dyn std::any::Any)
+                    .downcast_ref::<Self>()
+                    .map(|x| self == x)
+                    .unwrap_or(false)
+            }
+        }
+    };
+}

@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::{axiom::CAxiom, ItemPtr},
     environment::{vomit::VomitContext, Environment},
+    item::{definitions::axiom::DAxiom, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -22,7 +22,7 @@ fn create(
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let name = node.children[2].as_node().as_ident();
-    let con = CAxiom::from_name(env, name);
+    let con = DAxiom::from_name(env, name);
     env.push_construct(con, scope)
 }
 
@@ -31,10 +31,10 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
+    if let Some(cax) = env.get_and_downcast_construct_definition::<DAxiom>(uncreate)? {
         let cax = cax.clone();
         let statement = cax.get_statement(env);
-        let statement = &statement[..statement.len()];// - "_statement".len()];
+        let statement = &statement[..statement.len()]; // - "_statement".len()];
         Ok(Some(Node {
             phrase: "axiom",
             children: vec![

@@ -1,23 +1,17 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::ItemPtr,
     environment::{vomit::VomitContext, Environment},
+    item::{resolvable::RNamedMember, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, ParseContext,
     },
     phrase,
-    resolvable::RNamedMember,
     scope::Scope,
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope.dyn_clone());
     let member_name = node.children[2].as_node();
     if member_name.phrase != "identifier" {

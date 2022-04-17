@@ -1,8 +1,10 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
-use crate::{environment::Environment, item::ItemPtr, scope::Scope};
+use crate::{environment::Environment, item::ItemPtr, scope::Scope, impl_any_eq_from_regular_eq};
 
 #[derive(Clone, Debug)]
 pub struct RIdentifier(pub String);
+
+impl_any_eq_from_regular_eq!(RIdentifier);
 
 impl Resolvable for RIdentifier {
     fn dyn_clone(&self) -> BoxedResolvable {

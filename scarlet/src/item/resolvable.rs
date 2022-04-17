@@ -8,7 +8,7 @@ mod variable;
 use std::{
     convert::Infallible,
     fmt::Debug,
-    ops::{FromResidual, Try},
+    ops::{FromResidual, Try}, any::Any,
 };
 
 pub use identifier::RIdentifier;
@@ -18,13 +18,14 @@ pub use substitution::RSubstitution;
 pub use variable::RVariable;
 
 use crate::{
+    environment::Environment,
     item::{ItemDefinition, ItemPtr},
-    environment::{dependencies::{Dependencies, DepResult}, Environment, UnresolvedItemError},
-    scope::{LookupInvariantError, Scope},
+    scope::{LookupInvariantError, Scope}, shared::AnyEq,
 };
 
-use super::{DependencyCalculationContext, Dcc};
+use super::{check::CheckFeature, dependencies::{DependenciesFeature, Dcc, Dependencies}, equality::EqualityFeature, invariants::InvariantsFeature};
 
+#[derive(Debug)]
 pub struct DUnresolved(Box<dyn Resolvable>);
 
 impl DUnresolved {
@@ -39,7 +40,18 @@ impl ItemDefinition for DUnresolved {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+impl AnyEq for DUnresolved {
+    fn eq(&self, other: &dyn AnyEq) -> bool {
+        (other as &dyn Any).downcast_ref::<Self>().map(|other| self.0.eq(other.0));
+    }
+}
+
+impl CheckFeature for DUnresolved {}
+impl DependenciesFeature for DUnresolved {}
+impl EqualityFeature for DUnresolved {}
+impl InvariantsFeature for DUnresolved {}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnresolvedItemError(pub ItemPtr);
 
 #[derive(Clone, Debug)]
@@ -69,8 +81,8 @@ impl From<LookupInvariantError> for ResolveError {
 }
 
 pub enum ResolveResult {
-    Ok(ItemDefinition),
-    Partial(ItemDefinition),
+    Ok(ItemPtr),
+    Partial(ItemPtr),
     Err(ResolveError),
 }
 
@@ -101,7 +113,7 @@ impl FromResidual<Result<Infallible, ResolveError>> for ResolveResult {
     }
 }
 
-pub trait Resolvable: Debug {
+pub trait Resolvable: AnyEq + Debug {
     fn is_placeholder(&self) -> bool {
         false
     }
@@ -115,7 +127,7 @@ pub trait Resolvable: Debug {
     ) -> ResolveResult;
 
     #[allow(unused_variables)]
-    fn estimate_dependencies(&self, dcc: &mut Dcc) -> Dependencies {
+    fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {
         Dependencies::new()
     }
 }

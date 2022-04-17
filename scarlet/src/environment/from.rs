@@ -1,14 +1,16 @@
-use super::{Environment, UnresolvedItemError};
+use super::Environment;
 use crate::{
     item::{
-        decision::CDecision,
-        is_populated_struct::CIsPopulatedStruct,
-        structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
-        substitution::CSubstitution,
-        variable::CVariable,
-        ItemPtr,
+        definitions::{
+            decision::DDecision,
+            is_populated_struct::DIsPopulatedStruct,
+            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
+            substitution::DSubstitution,
+            variable::DVariable,
+        },
+        item::ItemPtr,
+        resolvable::{from::RFrom, RSubstitution, UnresolvedItemError},
     },
-    resolvable::{from::RFrom, RSubstitution},
     scope::{SPlain, Scope},
 };
 
@@ -49,13 +51,13 @@ impl Environment {
             let x = self.get_language_item("x");
 
             if let Some(structt) =
-                self.get_and_downcast_construct_definition::<CPopulatedStruct>(from)?
+                self.get_and_downcast_construct_definition::<DPopulatedStruct>(from)?
             {
                 let structt = structt.clone();
 
-                let is_populated_struct = self.push_construct(CIsPopulatedStruct::new(x), scope());
+                let is_populated_struct = self.push_construct(DIsPopulatedStruct::new(x), scope());
 
-                let x_value = CAtomicStructMember(x, AtomicStructMember::Value);
+                let x_value = DAtomicStructMember(x, AtomicStructMember::Value);
                 let x_value = self.push_construct(x_value, scope());
                 let value_from_value = RFrom {
                     left: x_value,
@@ -63,7 +65,7 @@ impl Environment {
                 };
                 let value_from_value = self.push_unresolved(value_from_value, scope());
 
-                let x_rest = CAtomicStructMember(x, AtomicStructMember::Rest);
+                let x_rest = DAtomicStructMember(x, AtomicStructMember::Rest);
                 let x_rest = self.push_construct(x_rest, scope());
                 let rest_from_rest = RFrom {
                     left: x_rest,
@@ -74,7 +76,7 @@ impl Environment {
                 let first_two = self.push_and(is_populated_struct, value_from_value, scope());
                 self.define_and(into, first_two, rest_from_rest);
             } else if let Some(var) =
-                self.get_and_downcast_construct_definition::<CVariable>(from)?
+                self.get_and_downcast_construct_definition::<DVariable>(from)?
             {
                 let id = var.get_id();
                 let var = self.get_variable(id);
@@ -96,12 +98,12 @@ impl Environment {
                 };
 
                 let subs = vec![(id, x)].into_iter().collect();
-                let con = CSubstitution::new_unchecked(self, into, statement, subs);
+                let con = DSubstitution::new_unchecked(into, statement, subs);
                 self.define_item(into, con);
             } else {
                 let truee = self.get_language_item("true");
                 let falsee = self.get_language_item("false");
-                let equal = CDecision::new(x, from, truee, falsee);
+                let equal = DDecision::new(x, from, truee, falsee);
                 self.define_item(into, equal);
             }
         }

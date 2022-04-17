@@ -5,7 +5,7 @@ pub type EqualResult = Result<Equal, UnresolvedItemError>;
 
 pub trait EqualityFeature {
     #[allow(unused_variables)]
-    fn discover_equality(&self, ctx: &Ecc) -> EqualResult {
+    fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
         Ok(Equal::Unknown)
     }
 }

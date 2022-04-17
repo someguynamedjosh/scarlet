@@ -1,13 +1,8 @@
 use std::collections::HashSet;
 
-use super::{
-    dependencies::DepResStackFrame, discover_equality::Equal, Environment, ItemPtr,
-    UnresolvedItemError,
-};
+use super::Environment;
 use crate::{
-    item::{
-        recursion::CRecursion, substitution::Substitutions, ItemDefinition, GenInvResult,
-    },
+    item::{resolvable::UnresolvedItemError, item::ItemPtr, definition::ItemDefinition, definitions::recursion::DRecursion},
     scope::{LookupInvariantError, LookupInvariantResult, Scope},
 };
 
@@ -18,7 +13,7 @@ impl Environment {
             &ItemDefinition::Other(other) => {
                 if stack.contains(&other) {
                     self.items[of].definition =
-                        ItemDefinition::Resolved(Box::new(CRecursion::new(other)));
+                        ItemDefinition::Resolved(Box::new(DRecursion::new(other)));
                 } else {
                     self.arrest_recursion_impl(other, stack);
                 }
@@ -41,7 +36,7 @@ impl Environment {
         &mut self,
         of: ItemPtr,
     ) -> Result<Vec<ItemPtr>, UnresolvedItemError> {
-        if let Some(rec) = self.get_and_downcast_construct_definition::<CRecursion>(of)? {
+        if let Some(rec) = self.get_and_downcast_construct_definition::<DRecursion>(of)? {
             Ok(vec![rec.get_base()])
         } else {
             let mut result = Vec::new();

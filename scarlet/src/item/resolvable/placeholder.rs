@@ -1,8 +1,10 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
-use crate::{environment::Environment, scope::Scope, item::ItemPtr};
+use crate::{environment::Environment, scope::Scope, item::ItemPtr, impl_any_eq_from_regular_eq};
 
 #[derive(Clone, Debug)]
 pub struct RPlaceholder;
+
+impl_any_eq_from_regular_eq!(RPlaceholder);
 
 impl Resolvable for RPlaceholder {
     fn is_placeholder(&self) -> bool {

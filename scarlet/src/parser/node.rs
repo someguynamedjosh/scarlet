@@ -30,7 +30,7 @@ impl<'a> NodeChild<'a> {
     pub(crate) fn as_construct(
         &self,
         pc: &ParseContext,
-        env: &mut Environment<'a>,
+        env: &mut Environment,
         scope: impl Scope + 'static,
     ) -> ItemPtr {
         self.as_node().as_construct(pc, env, scope)
@@ -39,7 +39,7 @@ impl<'a> NodeChild<'a> {
     pub(crate) fn as_construct_dyn_scope(
         &self,
         pc: &ParseContext,
-        env: &mut Environment<'a>,
+        env: &mut Environment,
         scope: Box<dyn Scope>,
     ) -> ItemPtr {
         self.as_node().as_construct_dyn_scope(pc, env, scope)
@@ -73,13 +73,13 @@ pub struct FilePosition {
 }
 
 #[derive(Clone, PartialEq, Eq, Default, Hash)]
-pub struct Node<'a> {
+pub struct Node<'x> {
     pub phrase: &'static str,
-    pub children: Vec<NodeChild<'a>>,
+    pub children: Vec<NodeChild<'x>>,
     pub position: FilePosition,
 }
 
-impl<'a> Debug for Node<'a> {
+impl<'x> Debug for Node<'x> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}:", self.phrase)?;
         for child in &self.children {
@@ -89,7 +89,7 @@ impl<'a> Debug for Node<'a> {
     }
 }
 
-impl Node {
+impl<'x> Node<'x> {
     pub fn vomit(&self, pc: &ParseContext) -> String {
         (pc.phrases_sorted_by_vomit_priority
             .get(self.phrase)

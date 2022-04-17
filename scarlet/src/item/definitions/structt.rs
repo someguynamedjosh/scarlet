@@ -1,29 +1,30 @@
-use crate::item::{
-    as_struct, base::ItemPtr, downcast_construct, substitution::Substitutions, ItemDefinition,
-    GenInvResult,
-};
 use crate::{
-    environment::{
-        dependencies::{DepResult, Dependencies},
-        discover_equality::{DeqResult, DeqSide, Equal},
-        invariants::InvariantSetPtr,
-        Environment,
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
+    item::{
+        definitions::{decision::DDecision, substitution::Substitutions},
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc, Dependencies},
+        equality::{Equal, EqualResult, EqualityFeature},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
+        ItemDefinition, ItemPtr,
     },
-    impl_any_eq_for_construct,
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        Scope,
+        SPlain, Scope,
     },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CPopulatedStruct {
+pub struct DPopulatedStruct {
     label: String,
     value: ItemPtr,
     rest: ItemPtr,
 }
 
-impl CPopulatedStruct {
+impl DPopulatedStruct {
     pub fn new(label: String, value: ItemPtr, rest: ItemPtr) -> Self {
         Self { label, value, rest }
     }
@@ -41,9 +42,9 @@ impl CPopulatedStruct {
     }
 }
 
-impl_any_eq_for_construct!(CPopulatedStruct);
+impl_any_eq_from_regular_eq!(DPopulatedStruct);
 
-impl ItemDefinition for CPopulatedStruct {
+impl ItemDefinition for DPopulatedStruct {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
@@ -51,23 +52,26 @@ impl ItemDefinition for CPopulatedStruct {
     fn contents(&self) -> Vec<ItemPtr> {
         vec![self.value, self.rest]
     }
+}
 
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
-        let mut deps = env.get_dependencies(self.value);
-        deps.append(env.get_dependencies(self.rest));
+impl DependenciesFeature for DPopulatedStruct {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+        let mut deps = ctx.get_dependencies(&self.value);
+        deps.append(ctx.get_dependencies(&self.rest));
         deps
     }
+}
 
-    fn discover_equality(
+impl EqualityFeature for DPopulatedStruct {
+    fn get_equality_using_context(
         &self,
         env: &mut Environment,
         self_subs: Vec<&Substitutions>,
-        other_id: ItemPtr,
-        other: &dyn ItemDefinition,
+        other: ItemPtr,
         other_subs: Vec<&Substitutions>,
         limit: u32,
-    ) -> DeqResult {
-        if let Some(other) = downcast_construct::<Self>(other) {
+    ) -> EqualResult {
+        if let Some(other) = other.downcast() {
             let other = other.clone();
             if self.label != other.label {
                 return Ok(Equal::No);
@@ -96,44 +100,48 @@ pub enum AtomicStructMember {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CAtomicStructMember(pub ItemPtr, pub AtomicStructMember);
+pub struct DAtomicStructMember(pub ItemPtr, pub AtomicStructMember);
 
-impl_any_eq_for_construct!(CAtomicStructMember);
+impl_any_eq_from_regular_eq!(DAtomicStructMember);
 
-impl ItemDefinition for CAtomicStructMember {
+impl ItemDefinition for DAtomicStructMember {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+}
 
-    fn generated_invariants(&self, _this: ItemPtr, env: &mut Environment) -> GenInvResult {
+impl InvariantsFeature for DAtomicStructMember {
+    fn get_invariants_using_context(&self, this: &ItemPtr, ctx: &mut Icc, _: OnlyCalledByIcc) -> InvariantsResult {
         if let Ok(Some(structt)) =
-            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
+            self.get_and_downcast_construct_definition::<DPopulatedStruct>(self.0)
         {
             let structt = structt.clone();
             match self.1 {
                 AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => env.generated_invariants(structt.value),
-                AtomicStructMember::Rest => env.generated_invariants(structt.rest),
+                AtomicStructMember::Value => ctx.generated_invariants(structt.value),
+                AtomicStructMember::Rest => ctx.generated_invariants(structt.rest),
             }
         } else {
-            env.generated_invariants(self.0)
+            ctx.generated_invariants(self.0)
         }
     }
+}
 
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
-        let base_def = match env.get_item_as_construct(self.0) {
+impl DependenciesFeature for DAtomicStructMember {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+        let base_def = match ctx.get_item_as_construct(self.0) {
             Ok(def) => &**def,
             Err(err) => return Dependencies::new_error(err),
         };
-        if let Some(structt) = as_struct(base_def) {
+        if let Some(structt) = base_def.downcast() {
             let structt = structt.clone();
             match self.1 {
                 AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => env.get_dependencies(structt.value),
-                AtomicStructMember::Rest => env.get_dependencies(structt.rest),
+                AtomicStructMember::Value => ctx.get_dependencies(structt.value),
+                AtomicStructMember::Rest => ctx.get_dependencies(structt.rest),
             }
         } else {
-            env.get_dependencies(self.0)
+            ctx.get_dependencies(&self.0)
         }
     }
 }
@@ -147,7 +155,7 @@ impl Scope for SField {
     }
 
     fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
+        if let Some(structt) = self.0.downcast() {
             let structt = structt.clone();
             Ok(if structt.label == ident {
                 Some(structt.value)
@@ -164,7 +172,7 @@ impl Scope for SField {
         env: &mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
+        if let Some(structt) = self.0.downcast() {
             let structt = structt.clone();
             Ok(if structt.value == value && structt.label.len() > 0 {
                 Some(structt.label.clone())
@@ -178,7 +186,7 @@ impl Scope for SField {
 
     fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
         if let Ok(Some(structt)) =
-            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
+            env.get_and_downcast_construct_definition::<DPopulatedStruct>(self.0)
         {
             let structt = structt.clone();
             vec![env.generated_invariants(structt.value)]
@@ -198,11 +206,11 @@ pub struct SFieldAndRest(pub ItemPtr);
 fn lookup_ident_in(
     env: &mut Environment,
     ident: &str,
-    inn: &CPopulatedStruct,
+    inn: &DPopulatedStruct,
 ) -> LookupIdentResult {
     Ok(if inn.label == ident {
         Some(inn.value)
-    } else if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
+    } else if let Some(rest) = inn.rest.downcast() {
         let rest = rest.clone();
         lookup_ident_in(env, ident, &rest)?
     } else {
@@ -213,11 +221,11 @@ fn lookup_ident_in(
 fn reverse_lookup_ident_in(
     env: &mut Environment,
     value: ItemPtr,
-    inn: &CPopulatedStruct,
+    inn: &DPopulatedStruct,
 ) -> ReverseLookupIdentResult {
     Ok(if inn.value == value && inn.label.len() > 0 {
         Some(inn.label.clone())
-    } else if let Some(rest) = as_struct(&**env.get_item_as_construct(inn.rest)?) {
+    } else if let Some(rest) = inn.rest.downcast() {
         let rest = rest.clone();
         reverse_lookup_ident_in(env, value, &rest)?
     } else {
@@ -225,12 +233,9 @@ fn reverse_lookup_ident_in(
     })
 }
 
-fn get_invariant_sets_in(
-    env: &mut Environment,
-    inn: &CPopulatedStruct,
-) -> Vec<InvariantSetPtr> {
+fn get_invariant_sets_in(env: &mut Environment, inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {
     let mut result = vec![env.generated_invariants(inn.value)];
-    if let Ok(Some(rest)) = env.get_and_downcast_construct_definition::<CPopulatedStruct>(inn.rest)
+    if let Ok(Some(rest)) = env.get_and_downcast_construct_definition::<DPopulatedStruct>(inn.rest)
     {
         let rest = rest.clone();
         result.append(&mut get_invariant_sets_in(env, &rest));
@@ -244,7 +249,7 @@ impl Scope for SFieldAndRest {
     }
 
     fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
+        if let Some(structt) = self.0.downcast() {
             let structt = structt.clone();
             lookup_ident_in(env, ident, &structt)
         } else {
@@ -257,7 +262,7 @@ impl Scope for SFieldAndRest {
         env: &'a mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
-        if let Some(structt) = as_struct(&**env.get_item_as_construct(self.0)?) {
+        if let Some(structt) = self.0.downcast() {
             let structt = structt.clone();
             reverse_lookup_ident_in(env, value, &structt)
         } else {
@@ -267,7 +272,7 @@ impl Scope for SFieldAndRest {
 
     fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
         if let Ok(Some(structt)) =
-            env.get_and_downcast_construct_definition::<CPopulatedStruct>(self.0)
+            env.get_and_downcast_construct_definition::<DPopulatedStruct>(self.0)
         {
             let structt = structt.clone();
             get_invariant_sets_in(env, &structt)

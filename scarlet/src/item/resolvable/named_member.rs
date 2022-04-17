@@ -1,8 +1,9 @@
-use super::{BoxedResolvable, Resolvable, ResolveResult};
+use super::{BoxedResolvable, Resolvable, ResolveResult, UnresolvedItemError};
 use crate::{
-    environment::{Environment, UnresolvedItemError},
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
     item::{
-        structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
+        definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         ItemDefinition, ItemPtr,
     },
     scope::Scope,
@@ -14,12 +15,14 @@ pub struct RNamedMember {
     pub member_name: String,
 }
 
+impl_any_eq_from_regular_eq!(RNamedMember);
+
 fn find_member(
     env: &mut Environment,
     inn: ItemPtr,
     name: &str,
 ) -> Result<Option<u32>, UnresolvedItemError> {
-    if let Some(cstruct) = env.get_and_downcast_construct_definition::<CPopulatedStruct>(inn)? {
+    if let Some(cstruct) = env.get_and_downcast_construct_definition::<DPopulatedStruct>(inn)? {
         if cstruct.get_label() == name {
             Ok(Some(0))
         } else {
@@ -55,11 +58,11 @@ impl Resolvable for RNamedMember {
         let mut base = self.base;
         for _ in 0..access_depth {
             base = env.push_construct(
-                CAtomicStructMember(base, AtomicStructMember::Rest),
+                DAtomicStructMember(base, AtomicStructMember::Rest),
                 scope.dyn_clone(),
             );
         }
-        let def = CAtomicStructMember(base, AtomicStructMember::Value);
+        let def = DAtomicStructMember(base, AtomicStructMember::Value);
         ResolveResult::Ok(ItemDefinition::Resolved(def.dyn_clone()))
     }
 }

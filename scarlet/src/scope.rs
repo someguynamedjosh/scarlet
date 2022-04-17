@@ -1,14 +1,8 @@
 use std::fmt::Debug;
 
-use maplit::hashset;
-
 use crate::{
-    item::ItemPtr,
-    environment::{
-        discover_equality::Equal,
-        invariants::{InvariantSet, InvariantSetPtr},
-        Environment, UnresolvedItemError,
-    },
+    environment::Environment,
+    item::{resolvable::UnresolvedItemError, ItemPtr, InvariantSetPtr},
 };
 
 pub type LookupIdentResult = Result<Option<ItemPtr>, UnresolvedItemError>;
@@ -95,11 +89,7 @@ impl Scope for SPlain {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(
-        &self,
-        _env: &mut Environment,
-        _ident: &str,
-    ) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _env: &mut Environment, _ident: &str) -> LookupIdentResult {
         Ok(None)
     }
 
@@ -128,11 +118,7 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(
-        &self,
-        _env: &mut Environment,
-        _ident: &str,
-    ) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _env: &mut Environment, _ident: &str) -> LookupIdentResult {
         Ok(None)
     }
 
@@ -165,11 +151,7 @@ impl Scope for SPlaceholder {
         true
     }
 
-    fn local_lookup_ident(
-        &self,
-        _env: &mut Environment,
-        _ident: &str,
-    ) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _env: &mut Environment, _ident: &str) -> LookupIdentResult {
         unreachable!()
     }
 

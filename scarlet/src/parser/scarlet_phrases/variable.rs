@@ -2,27 +2,22 @@ use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
+    environment::{vomit::VomitContext, Environment},
     item::{
-        variable::{CVariable, SVariableInvariants, VariableOrder},
+        definitions::variable::{DVariable, SVariableInvariants, VariableOrder},
+        resolvable::RVariable,
         ItemPtr,
     },
-    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
     phrase,
-    resolvable::RVariable,
     scope::{SPlain, SWithParent, Scope},
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
@@ -65,7 +60,7 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<CVariable>(uncreate) {
+    if let Ok(Some(cvar)) = env.get_and_downcast_construct_definition::<DVariable>(uncreate) {
         let cvar = cvar.clone();
         let scope_item = env.push_scope(ctx.scope.dyn_clone());
         let scope_parent = env.dereference(uncreate)?;

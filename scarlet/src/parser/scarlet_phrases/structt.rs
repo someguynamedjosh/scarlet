@@ -1,11 +1,12 @@
 use typed_arena::Arena;
 
 use crate::{
+    environment::{vomit::VomitContext, Environment},
     item::{
-        structt::{CPopulatedStruct, SField, SFieldAndRest},
+        definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
+        equality::Equal,
         ItemPtr,
     },
-    environment::{discover_equality::Equal, vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -32,18 +33,13 @@ fn struct_from_fields(
             env.set_name(field, label.clone());
         }
         let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
-        let this_def = CPopulatedStruct::new(label, field, rest);
+        let this_def = DPopulatedStruct::new(label, field, rest);
         env.define_item(this, this_def);
         this
     }
 }
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("{"));
     assert_eq!(node.children[2], NodeChild::Text("}"));
@@ -72,7 +68,7 @@ fn uncreate<'a>(
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
     while let Some(structt) =
-        env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)?
+        env.get_and_downcast_construct_definition::<DPopulatedStruct>(maybe_structt)?
     {
         let label = ctx.code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value();

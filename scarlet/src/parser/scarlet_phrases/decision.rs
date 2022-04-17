@@ -2,10 +2,10 @@ use maplit::hashset;
 
 use crate::{
     item::{
-        decision::{CDecision, SWithInvariant},
-        ItemPtr,
+       definitions:: decision::{DDecision, SWithInvariant},
+        ItemPtr, invariants::InvariantSet,
     },
-    environment::{invariants::InvariantSet, vomit::VomitContext, Environment},
+    environment::{vomit::VomitContext, Environment},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -35,22 +35,20 @@ fn create(
     let right = args[1].as_construct(pc, env, SPlain(this));
 
     let eq_inv = env.push_construct(
-        CDecision::new(left, right, truee, falsee),
+        DDecision::new(left, right, truee, falsee),
         SPlain(this).dyn_clone(),
     );
     let eq_inv = InvariantSet::new_statements_depending_on(this, vec![eq_inv], hashset![this]);
-    let eq_inv = env.push_invariant_set(eq_inv);
     let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
 
     let neq_inv = env.push_construct(
-        CDecision::new(left, right, falsee, truee),
+        DDecision::new(left, right, falsee, truee),
         SPlain(this).dyn_clone(),
     );
     let neq_inv = InvariantSet::new_statements_depending_on(this, vec![neq_inv], hashset![this]);
-    let neq_inv = env.push_invariant_set(neq_inv);
     let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
 
-    env.define_item(this, CDecision::new(left, right, equal, unequal));
+    env.define_item(this, DDecision::new(left, right, equal, unequal));
     this
 }
 
@@ -59,7 +57,7 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(cite) = env.get_and_downcast_construct_definition::<CDecision>(uncreate)? {
+    if let Some(cite) = env.get_and_downcast_construct_definition::<DDecision>(uncreate)? {
         let cite = cite.clone();
         Ok(Some(Node {
             phrase: "decision",

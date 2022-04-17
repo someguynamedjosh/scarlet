@@ -1,8 +1,5 @@
-use super::feature::InvariantsResult;
-use crate::{
-    environment::invariants::InvariantSet,
-    item::{base::util::RecursionPreventionStack, ItemPtr, ItemPtrExtensions},
-};
+use super::{feature::InvariantsResult, InvariantSet};
+use crate::item::{base::util::RecursionPreventionStack, ItemPtr, ItemPtrExtensions};
 
 /// Using this in a function signature guarantees that only
 /// InvariantCalculationContext can call that function.

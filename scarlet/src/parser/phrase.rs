@@ -4,8 +4,8 @@ use typed_arena::Arena;
 
 use super::{Node, ParseContext};
 use crate::{
-    item::ItemPtr,
-    environment::{vomit::VomitContext, Environment, UnresolvedItemError},
+    environment::{vomit::VomitContext, Environment},
+    item::{ItemPtr, resolvable::UnresolvedItemError},
     scope::Scope,
 };
 
@@ -56,11 +56,10 @@ impl PhraseComponent {
     }
 }
 
-pub type CreateFn =
-    for fn(&ParseContext, &mut Environment, Box<dyn Scope>, &Node) -> ItemPtr;
+pub type CreateFn = fn(&ParseContext, &mut Environment, Box<dyn Scope>, &Node) -> ItemPtr;
 
 pub type UncreateFn =
-    for<'a, 'x> fn(&mut Environment, &mut VomitContext<'a, '_>, ItemPtr) -> UncreateResult<'a>;
+    for<'a> fn(&mut Environment, &mut VomitContext<'a, '_>, ItemPtr) -> UncreateResult<'a>;
 pub type UncreateResult<'a> = Result<Option<Node<'a>>, UnresolvedItemError>;
 
 pub type VomitFn = fn(&ParseContext, &Node) -> String;

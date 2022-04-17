@@ -1,18 +1,26 @@
-use crate::item::{
-    base::{ItemDefinition, ItemPtr},
-    substitution::Substitutions,
-    variable::VariableId,
-    GenInvResult,
-};
 use crate::{
-    environment::{dependencies::DepResult, Environment},
-    impl_any_eq_for_construct,
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
+    item::{
+        definitions::{decision::DDecision, substitution::Substitutions},
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Equal, EqualResult, EqualityFeature},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
+        ItemDefinition, ItemPtr,
+    },
+    scope::{
+        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
+        SPlain, Scope,
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CRecursion(ItemPtr);
+pub struct DRecursion(ItemPtr);
 
-impl CRecursion {
+impl DRecursion {
     pub fn new(base: ItemPtr) -> Self {
         Self(base)
     }
@@ -22,25 +30,27 @@ impl CRecursion {
     }
 }
 
-impl_any_eq_for_construct!(CRecursion);
+impl_any_eq_from_regular_eq!(DRecursion);
 
-impl ItemDefinition for CRecursion {
+impl ItemDefinition for DRecursion {
     fn dyn_clone(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+}
 
-    fn dereference(
+impl DependenciesFeature for DRecursion {
+    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+        ctx.get_dependencies(&self.0)
+    }
+}
+
+impl InvariantsFeature for DRecursion {
+    fn get_invariants_using_context(
         &self,
-        env: &mut Environment,
-    ) -> Option<(ItemPtr, Option<&Substitutions>, Option<Vec<ItemPtr>>)> {
-        Some((self.0, None, Some(vec![self.0])))
-    }
-
-    fn get_dependencies(&self, env: &mut Environment) -> DepResult {
-        env.get_dependencies(self.0)
-    }
-
-    fn generated_invariants(&self, _this: ItemPtr, env: &mut Environment) -> GenInvResult {
-        env.generated_invariants(self.0)
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        ctx.generated_invariants(self.0)
     }
 }

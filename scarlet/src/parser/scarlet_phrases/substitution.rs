@@ -2,28 +2,23 @@ use itertools::Itertools;
 use typed_arena::Arena;
 
 use crate::{
+    environment::{vomit::VomitContext, Environment},
     item::{
-        substitution::CSubstitution,
-        variable::{Dependency, VariableId},
+        definitions::{substitution::DSubstitution, variable::VariableId},
+        dependencies::Dependency,
+        resolvable::{RSubstitution, UnresolvedItemError},
         ItemPtr,
     },
-    environment::{vomit::VomitContext, Environment, UnresolvedItemError},
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
         Node, NodeChild, ParseContext,
     },
     phrase,
-    resolvable::RSubstitution,
     scope::{SPlain, Scope},
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     assert!(node.children.len() == 4);
@@ -81,7 +76,7 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(csub) = env.get_and_downcast_construct_definition::<CSubstitution>(uncreate)? {
+    if let Some(csub) = env.get_and_downcast_construct_definition::<DSubstitution>(uncreate)? {
         let csub = csub.clone();
         let mut deps = env
             .get_dependencies(csub.base())

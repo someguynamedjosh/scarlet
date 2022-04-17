@@ -2,13 +2,14 @@ use std::ops::ControlFlow;
 
 use typed_arena::Arena;
 
-use super::{Environment, ItemPtr, UnresolvedItemError};
+use super::{Environment, ItemPtr};
 use crate::{
     item::{
-        downcast_construct,
-        shown::CShown,
-        variable::{CVariable, SVariableInvariants, VariableId},
-        ItemDefinition,
+        definition::ItemDefinition,
+        definitions::{
+            shown::DShown,
+            variable::{DVariable, SVariableInvariants, VariableId},
+        },
     },
     parser::{Node, NodeChild, ParseContext},
     scope::{SWithParent, Scope},
@@ -19,7 +20,7 @@ pub struct VomitContext<'x, 'y> {
     pub pc: &'x ParseContext,
     pub code_arena: &'x Arena<String>,
     pub scope: &'y dyn Scope,
-    pub temp_names: &'y mut OrderedMap<ItemPtr, (&'x str, Node)>,
+    pub temp_names: &'y mut OrderedMap<ItemPtr, (&'x str, Node<'x>)>,
     pub anon_name_counter: &'y mut usize,
 }
 
@@ -40,7 +41,7 @@ impl<'x, 'y> VomitContext<'x, 'y> {
         &mut self,
         env: &mut Environment,
         of: ItemPtr,
-        make_node: impl FnOnce() -> Node,
+        make_node: impl FnOnce() -> Node<'x>,
     ) -> &'x str {
         let of = env.dereference(of).unwrap_or(of);
         if let Some(name) = self.temp_names.get(&of) {
@@ -64,7 +65,7 @@ impl Environment {
         let mut to_vomit = Vec::new();
         for (from, aitem) in &self.items {
             if let ItemDefinition::Resolved(con) = &aitem.definition {
-                if let Some(shown) = downcast_construct::<CShown>(&**con) {
+                if let Some(shown) = con {
                     let base = shown.get_base();
                     to_vomit.push((base, from));
                 }
