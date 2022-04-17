@@ -2,9 +2,10 @@ use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
+        check::CheckFeature,
         definitions::{decision::DDecision, substitution::Substitutions},
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Equal, EqualResult, EqualityFeature},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -38,9 +39,17 @@ impl ItemDefinition for DRecursion {
     }
 }
 
+impl CheckFeature for DRecursion {}
+
 impl DependenciesFeature for DRecursion {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
         ctx.get_dependencies(&self.0)
+    }
+}
+
+impl EqualityFeature for DRecursion {
+    fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
+        unreachable!();
     }
 }
 

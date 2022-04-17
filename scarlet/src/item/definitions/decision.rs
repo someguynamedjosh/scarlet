@@ -1,13 +1,18 @@
 use itertools::Itertools;
 use maplit::hashset;
 
+use super::substitution::Substitutions;
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
+        check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
         equality::{Equal, EqualResult, EqualityFeature},
-        invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc, InvariantSetPtr},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
         ItemDefinition, ItemPtr,
     },
     scope::{
@@ -15,8 +20,6 @@ use crate::{
         Scope,
     },
 };
-
-use super::substitution::Substitutions;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DDecision {
@@ -65,34 +68,7 @@ impl ItemDefinition for DDecision {
     }
 }
 
-impl InvariantsFeature for DDecision {
-    fn get_invariants_using_context(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut Icc,
-        _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        let true_invs_id = ctx.generated_invariants(self.equal);
-        let true_invs = ctx.get_invariant_set(true_invs_id).clone();
-        let false_invs_id = ctx.generated_invariants(self.equal);
-        let false_invs = ctx.get_invariant_set(false_invs_id).clone();
-        let mut result_statements = Vec::new();
-        for &true_inv in true_invs.statements() {
-            for (index, &false_inv) in false_invs.statements().iter().enumerate() {
-                if ctx.discover_equal(true_inv, false_inv, 4) == Ok(Equal::yes()) {
-                    result_statements.push(true_inv);
-                    break;
-                }
-            }
-        }
-        let len = result_statements.len();
-        ctx.push_invariant_set(InvariantSet::new_justified_by(
-            this,
-            result_statements,
-            vec![vec![vec![true_invs_id, false_invs_id]]; len],
-        ))
-    }
-}
+impl CheckFeature for DDecision {}
 
 impl DependenciesFeature for DDecision {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
@@ -113,7 +89,6 @@ impl EqualityFeature for DDecision {
         other_subs: Vec<&Substitutions>,
         limit: u32,
     ) -> EqualResult {
-        // println!("{:?} = {:?}", self, other);
         if let Some(other) = other.downcast() {
             Ok(Equal::and(vec![
                 ctx.discover_equal_with_subs(
@@ -148,6 +123,35 @@ impl EqualityFeature for DDecision {
         } else {
             Ok(Equal::Unknown)
         }
+    }
+}
+
+impl InvariantsFeature for DDecision {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        let true_invs_id = ctx.generated_invariants(self.equal);
+        let true_invs = ctx.get_invariant_set(true_invs_id).clone();
+        let false_invs_id = ctx.generated_invariants(self.equal);
+        let false_invs = ctx.get_invariant_set(false_invs_id).clone();
+        let mut result_statements = Vec::new();
+        for &true_inv in true_invs.statements() {
+            for (index, &false_inv) in false_invs.statements().iter().enumerate() {
+                if ctx.discover_equal(true_inv, false_inv, 4) == Ok(Equal::yes()) {
+                    result_statements.push(true_inv);
+                    break;
+                }
+            }
+        }
+        let len = result_statements.len();
+        ctx.push_invariant_set(InvariantSet::new_justified_by(
+            this,
+            result_statements,
+            vec![vec![vec![true_invs_id, false_invs_id]]; len],
+        ))
     }
 }
 

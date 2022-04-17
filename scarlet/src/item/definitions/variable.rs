@@ -13,7 +13,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, check::CheckFeature,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
@@ -125,23 +125,7 @@ impl ItemDefinition for DVariable {
     }
 }
 
-impl InvariantsFeature for DVariable {
-    fn get_invariants_using_context(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut Icc,
-        _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        let statements = self.0.invariants.clone();
-        let dependencies = hashset![this];
-        todo!()
-        // env.push_invariant_set(InvariantSet::new_statements_depending_on(
-        //     this,
-        //     statements,
-        //     dependencies,
-        // ))
-    }
-}
+impl CheckFeature for DVariable {}
 
 impl DependenciesFeature for DVariable {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
@@ -160,6 +144,24 @@ impl DependenciesFeature for DVariable {
 impl EqualityFeature for DVariable {
     fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {
         unreachable!()
+    }
+}
+
+impl InvariantsFeature for DVariable {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        let statements = self.0.invariants.clone();
+        let dependencies = hashset![this];
+        todo!()
+        // env.push_invariant_set(InvariantSet::new_statements_depending_on(
+        //     this,
+        //     statements,
+        //     dependencies,
+        // ))
     }
 }
 

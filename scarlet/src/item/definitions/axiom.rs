@@ -1,12 +1,17 @@
 use maplit::hashset;
 
+use super::substitution::Substitutions;
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
-    item::{equality::{Equal, EqualityFeature, EqualResult}, ItemPtr, ItemDefinition, invariants::{Icc, InvariantsFeature, OnlyCalledByIcc, InvariantsResult, InvariantSet}, dependencies::{DependenciesFeature, Dcc, OnlyCalledByDcc, DepResult}},
+    item::{
+        check::CheckFeature,
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Equal, EqualResult, EqualityFeature},
+        invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        ItemDefinition, ItemPtr,
+    },
 };
-
-use super::substitution::Substitutions;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DAxiom {
@@ -45,21 +50,7 @@ impl ItemDefinition for DAxiom {
     }
 }
 
-impl InvariantsFeature for DAxiom {
-    fn get_invariants_using_context(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut Icc,
-        _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        Ok(InvariantSet::new(
-            this,
-            vec![self.statement],
-            vec![],
-            hashset![],
-        ))
-    }
-}
+impl CheckFeature for DAxiom {}
 
 impl DependenciesFeature for DAxiom {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
@@ -88,5 +79,21 @@ impl EqualityFeature for DAxiom {
         } else {
             Ok(Equal::Unknown)
         }
+    }
+}
+
+impl InvariantsFeature for DAxiom {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        Ok(InvariantSet::new(
+            this,
+            vec![self.statement],
+            vec![],
+            hashset![],
+        ))
     }
 }

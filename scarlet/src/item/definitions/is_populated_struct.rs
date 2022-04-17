@@ -2,6 +2,7 @@ use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
+        check::CheckFeature,
         definitions::{decision::DDecision, substitution::Substitutions},
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
         equality::{Equal, EqualResult, EqualityFeature},
@@ -40,29 +41,7 @@ impl ItemDefinition for DIsPopulatedStruct {
     }
 }
 
-impl InvariantsFeature for DIsPopulatedStruct {
-    fn get_invariants_using_context(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut Icc,
-        _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        let invs = ctx.generated_invariants(self.base);
-        let truee = ctx.get_language_item("true");
-        let falsee = ctx.get_language_item("false");
-        let this_is_false = ctx.push_construct(
-            DDecision::new(this, falsee, truee, falsee),
-            Box::new(SPlain(this)),
-        );
-        let is_bool = ctx.push_construct(
-            DDecision::new(this, truee, truee, this_is_false),
-            Box::new(SPlain(this)),
-        );
-        let mut set = ctx.get_invariant_set(invs).clone();
-        set.push(is_bool);
-        ctx.push_invariant_set(set)
-    }
-}
+impl CheckFeature for DIsPopulatedStruct {}
 
 impl DependenciesFeature for DIsPopulatedStruct {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
@@ -85,5 +64,29 @@ impl EqualityFeature for DIsPopulatedStruct {
         } else {
             Ok(Equal::Unknown)
         }
+    }
+}
+
+impl InvariantsFeature for DIsPopulatedStruct {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        let invs = ctx.generated_invariants(self.base);
+        let truee = ctx.get_language_item("true");
+        let falsee = ctx.get_language_item("false");
+        let this_is_false = ctx.push_construct(
+            DDecision::new(this, falsee, truee, falsee),
+            Box::new(SPlain(this)),
+        );
+        let is_bool = ctx.push_construct(
+            DDecision::new(this, truee, truee, this_is_false),
+            Box::new(SPlain(this)),
+        );
+        let mut set = ctx.get_invariant_set(invs).clone();
+        set.push(is_bool);
+        ctx.push_invariant_set(set)
     }
 }

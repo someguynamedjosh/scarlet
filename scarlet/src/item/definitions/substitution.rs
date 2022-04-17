@@ -4,8 +4,15 @@ use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
+        check::CheckFeature,
         definitions::variable::{DVariable, VariableId},
-        ItemPtr, invariants::{InvariantSetPtr, InvariantSet, InvariantsFeature, Icc, OnlyCalledByIcc, InvariantsResult}, dependencies::{Dependencies, DepResult, DependenciesFeature, Dcc, OnlyCalledByDcc}, ItemDefinition, equality::{EqualityFeature, EqualResult},
+        dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
+        equality::{EqualResult, EqualityFeature},
+        invariants::{
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            OnlyCalledByIcc,
+        },
+        ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
 };
@@ -89,11 +96,19 @@ impl ItemDefinition for DSubstitution {
     }
 }
 
+impl CheckFeature for DSubstitution {}
+
 impl DependenciesFeature for DSubstitution {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
         let base = ctx.get_dependencies(&self.base);
         let invs = self.invs.dependencies().clone();
         Self::sub_deps(base, &self.subs, &invs)
+    }
+}
+
+impl EqualityFeature for DSubstitution {
+    fn get_equality_using_context(&self, ctx: &crate::item::equality::Ecc) -> EqualResult {
+        unreachable!()
     }
 }
 
@@ -105,19 +120,5 @@ impl InvariantsFeature for DSubstitution {
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         Ok(self.invs)
-    }
-}
-
-impl EqualityFeature for DSubstitution {
-    fn get_equality_using_context(
-        &self,
-        env: &mut Environment,
-        self_subs: Vec<&Substitutions>,
-        other_id: ItemPtr,
-        other: &dyn ItemDefinition,
-        other_subs: Vec<&Substitutions>,
-        limit: u32,
-    ) -> EqualResult {
-        unreachable!()
     }
 }

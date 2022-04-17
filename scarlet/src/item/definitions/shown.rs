@@ -9,7 +9,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, check::CheckFeature,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
@@ -22,6 +22,7 @@ pub struct DShown(ItemPtr);
 
 impl DShown {
     pub fn new(base: ItemPtr) -> Self {
+        todo!("Maybe replace this with metadata?");
         Self(base)
     }
 
@@ -41,6 +42,9 @@ impl ItemDefinition for DShown {
         vec![self.0]
     }
 }
+
+impl CheckFeature for DShown {}
+impl EqualityFeature for DShown {}
 
 impl DependenciesFeature for DShown {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {

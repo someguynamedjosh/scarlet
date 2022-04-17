@@ -9,7 +9,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, check::CheckFeature,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
@@ -40,7 +40,9 @@ impl ItemDefinition for DUnique {
     }
 }
 
+impl CheckFeature for DUnique {}
 impl DependenciesFeature for DUnique {}
+impl InvariantsFeature for DUnique {}
 
 impl EqualityFeature for DUnique {
     fn get_equality_using_context(&self, ctx: &Ecc) -> EqualResult {

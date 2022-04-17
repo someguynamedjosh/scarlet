@@ -1,10 +1,11 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
+    environment::Environment,
+    impl_any_eq_from_regular_eq,
     item::{
         definitions::variable::{DVariable, Variable, VariableOrder},
         ItemDefinition, ItemPtr,
     },
-    environment::Environment,
     scope::Scope,
 };
 
@@ -14,6 +15,8 @@ pub struct RVariable {
     pub dependencies: Vec<ItemPtr>,
     pub order: VariableOrder,
 }
+
+impl_any_eq_from_regular_eq!(RVariable);
 
 impl Resolvable for RVariable {
     fn dyn_clone(&self) -> BoxedResolvable {

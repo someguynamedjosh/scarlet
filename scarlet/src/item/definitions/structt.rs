@@ -9,7 +9,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, check::CheckFeature,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
@@ -53,6 +53,9 @@ impl ItemDefinition for DPopulatedStruct {
         vec![self.value, self.rest]
     }
 }
+
+impl CheckFeature for DPopulatedStruct {}
+impl InvariantsFeature for DPopulatedStruct {}
 
 impl DependenciesFeature for DPopulatedStruct {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
@@ -110,22 +113,8 @@ impl ItemDefinition for DAtomicStructMember {
     }
 }
 
-impl InvariantsFeature for DAtomicStructMember {
-    fn get_invariants_using_context(&self, this: &ItemPtr, ctx: &mut Icc, _: OnlyCalledByIcc) -> InvariantsResult {
-        if let Ok(Some(structt)) =
-            self.get_and_downcast_construct_definition::<DPopulatedStruct>(self.0)
-        {
-            let structt = structt.clone();
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => ctx.generated_invariants(structt.value),
-                AtomicStructMember::Rest => ctx.generated_invariants(structt.rest),
-            }
-        } else {
-            ctx.generated_invariants(self.0)
-        }
-    }
-}
+impl CheckFeature for DAtomicStructMember {}
+impl EqualityFeature for DAtomicStructMember {}
 
 impl DependenciesFeature for DAtomicStructMember {
     fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
@@ -142,6 +131,23 @@ impl DependenciesFeature for DAtomicStructMember {
             }
         } else {
             ctx.get_dependencies(&self.0)
+        }
+    }
+}
+
+impl InvariantsFeature for DAtomicStructMember {
+    fn get_invariants_using_context(&self, this: &ItemPtr, ctx: &mut Icc, _: OnlyCalledByIcc) -> InvariantsResult {
+        if let Ok(Some(structt)) =
+            self.get_and_downcast_construct_definition::<DPopulatedStruct>(self.0)
+        {
+            let structt = structt.clone();
+            match self.1 {
+                AtomicStructMember::Label => todo!(),
+                AtomicStructMember::Value => ctx.generated_invariants(structt.value),
+                AtomicStructMember::Rest => ctx.generated_invariants(structt.rest),
+            }
+        } else {
+            ctx.generated_invariants(self.0)
         }
     }
 }
