@@ -31,3 +31,25 @@ impl RecursionPreventionStack {
         }
     }
 }
+
+pub(super) struct Stack<T>(Vec<T>);
+
+impl<T> Stack<T>
+where
+    T: PartialEq,
+{
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn contains(&self, t: &T) -> bool {
+        self.0.contains(t)
+    }
+
+    pub fn with_stack_frame<R>(&mut self, key: T, func: impl FnOnce(&mut Self) -> R) -> R {
+        self.0.push(key);
+        let result = func(self);
+        assert!(self.0.pop().unwrap() == key);
+        result
+    }
+}

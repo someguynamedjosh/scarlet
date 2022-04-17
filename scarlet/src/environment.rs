@@ -1,5 +1,3 @@
-pub mod from;
-pub mod recursion;
 pub mod resolve;
 pub mod vomit;
 

@@ -6,24 +6,29 @@ use std::{
     rc::Rc,
 };
 
+use itertools::Itertools;
 use owning_ref::{OwningRef, OwningRefMut};
 
 use super::{
     dependencies::{DepResult, DependencyCalculationContext},
     equality::{Ecc, EqualResult, EqualityCalculationContext},
-    invariants::{InvariantCalculationContext, InvariantSetPtr, InvariantsResult}, from::create_from_dex,
+    from::create_from_dex,
+    invariants::{InvariantCalculationContext, InvariantSetPtr, InvariantsResult},
+    util::{RecursionPreventionStack, Stack},
 };
 use crate::{
+    environment::Environment,
     item::{
         definitions::{
             other::DOther,
-            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct}, placeholder::DPlaceholder,
+            placeholder::DPlaceholder,
+            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         },
         resolvable::{BoxedResolvable, DResolvable, Resolvable},
         ItemDefinition,
     },
-    scope::{Scope, SRoot},
-    util::rcrc, environment::Environment,
+    scope::{SRoot, Scope},
+    util::rcrc,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -72,7 +77,7 @@ impl ItemPtr {
         self.0.borrow_mut()
     }
 
-    pub(crate) fn redefine(&self, new_definition: Box<dyn ItemDefinition>)  {
+    pub(crate) fn redefine(&self, new_definition: Box<dyn ItemDefinition>) {
         self.borrow_mut().definition = new_definition;
     }
 }
@@ -151,6 +156,41 @@ impl ItemPtr {
             from.ptr_clone()
         } else {
             create_from_dex(env, self.ptr_clone())
+        }
+    }
+
+    pub fn mark_recursion(&self) {
+        let mut stack = Stack::<ItemPtr>::new();
+        self.mark_recursion_impl(&mut stack);
+    }
+
+    fn mark_recursion_impl(&self, stack: &mut Stack<ItemPtr>) {
+        if stack.contains(self) {
+            if let Some(other) = self.downcast_definition_mut::<DOther>() {
+                other.mark_recursive();
+                return;
+            }
+        }
+        stack.with_stack_frame(self.ptr_clone(), |stack| {
+            for content in self.borrow().definition.contents() {
+                content.mark_recursion_impl(stack);
+            }
+        })
+    }
+
+    pub fn evaluation_recurses_over(&self) -> Vec<ItemPtr> {
+        if let Some(other) = self.downcast_definition::<DOther>() {
+            if other.is_recursive() {
+                vec![other.other().ptr_clone()]
+            } else {
+                other.other().evaluation_recurses_over()
+            }
+        } else {
+            let mut result = Vec::new();
+            for content in self.borrow().definition.contents() {
+                result.append(&mut content.evaluation_recurses_over());
+            }
+            result
         }
     }
 }

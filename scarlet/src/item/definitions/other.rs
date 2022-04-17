@@ -39,6 +39,10 @@ impl DOther {
     pub fn is_recursive(&self) -> bool {
         self.recursive
     }
+
+    pub fn mark_recursive(&self) {
+        self.recursive= true;
+    }
 }
 
 impl_any_eq_from_regular_eq!(DOther);
