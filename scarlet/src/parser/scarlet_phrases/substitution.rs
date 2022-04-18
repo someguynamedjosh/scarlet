@@ -16,6 +16,7 @@ use crate::{
     },
     phrase,
     scope::{SPlain, Scope},
+    util::PtrExtension,
 };
 
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
@@ -23,17 +24,17 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(node.children[3], NodeChild::Text("]"));
     assert!(node.children.len() == 4);
     let this = crate::item::Item::placeholder_with_scope(scope);
-    let base = node.children[0].as_construct(pc, env, SPlain(this));
+    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
     let mut named_subs = Vec::new();
     let mut anonymous_subs = Vec::new();
     for sub in util::collect_comma_list(&node.children[2]) {
         if sub.phrase == "is" {
             named_subs.push((
                 sub.children[0].as_node().as_ident().to_owned(),
-                sub.children[2].as_construct(pc, env, SPlain(this)),
+                sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone())),
             ));
         } else {
-            anonymous_subs.push(sub.as_construct(pc, env, SPlain(this)));
+            anonymous_subs.push(sub.as_construct(pc, env, SPlain(this.ptr_clone())));
         }
     }
     this.redefine(
@@ -86,13 +87,21 @@ fn uncreate<'a>(
         let subs = create_comma_list(
             csub.substitutions()
                 .into_iter()
-                .map(|(target, value)| uncreate_substitution(env, ctx, *target, *value, &mut deps))
+                .map(|(target, value)| {
+                    uncreate_substitution(
+                        env,
+                        ctx,
+                        target.ptr_clone(),
+                        value.ptr_clone(),
+                        &mut deps,
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         );
         Ok(Some(Node {
             phrase: "substitution",
             children: vec![
-                NodeChild::Node(env.vomit(4, ctx, csub.base())),
+                NodeChild::Node(env.vomit(4, ctx, csub.base().ptr_clone())),
                 NodeChild::Text("["),
                 subs,
                 NodeChild::Text("]"),

@@ -15,6 +15,7 @@ use crate::{
         ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
+    util::PtrExtension,
 };
 
 pub type Substitutions = OrderedMap<VariablePtr, ItemPtr>;
@@ -35,8 +36,8 @@ impl DSubstitution {
         Self::new(base, subs, InvariantSet::new_empty(this))
     }
 
-    pub fn base(&self) -> ItemPtr {
-        self.base
+    pub fn base(&self) -> &ItemPtr {
+        &self.base
     }
 
     pub fn substitutions(&self) -> &Substitutions {
@@ -53,23 +54,23 @@ impl DSubstitution {
         for dep in base.as_variables() {
             if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.var) {
                 let replaced_deps = rep.get_dependencies();
-                let replaced_err = replaced_deps.error();
+                let replaced_err = replaced_deps.error().clone();
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.var) {
                         deps.push_eager(rdep);
                     }
                 }
                 if let Some(err) = replaced_err {
-                    deps.append(Dependencies::new_error(err));
+                    deps.append(Dependencies::new_error(err.clone()));
                 }
             } else {
                 deps.push_eager(dep.clone());
             }
         }
         if let Some(err) = base_error {
-            deps.append(Dependencies::new_error(err));
+            deps.append(Dependencies::new_error(err.clone()));
         }
-        for &dep in justifications {
+        for dep in justifications {
             if let Some(var) = dep.downcast_definition::<DVariable>() {
                 deps.push_eager(var.as_dependency());
             } else {
@@ -123,6 +124,6 @@ impl InvariantsFeature for DSubstitution {
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        Ok(self.invs)
+        Ok(self.invs.ptr_clone())
     }
 }

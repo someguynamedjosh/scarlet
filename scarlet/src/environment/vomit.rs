@@ -61,7 +61,7 @@ impl<'x, 'y> VomitContext<'x, 'y> {
 impl Environment {
     pub fn show_all_requested(&mut self, root: &ItemPtr) {
         let mut to_vomit = Vec::new();
-        root.for_self_and_contents(|item| {
+        root.for_self_and_contents(&mut |item| {
             if item.borrow().show {
                 to_vomit.push((item.ptr_clone(), item.ptr_clone()));
             }
@@ -85,12 +85,12 @@ impl Environment {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        let original_vomit = self.vomit(255, &mut ctx, item_id);
+        let original_vomit = self.vomit(255, &mut ctx, item_id.ptr_clone());
         let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
         result.push_str(&format!("{}\n", original_vomit));
         result.push_str(&format!("proves:"));
 
-        let inv_from = SWithParent(SVariableInvariants(item_id), from_item);
+        let inv_from = SWithParent(SVariableInvariants(item_id.ptr_clone()), from_item);
         temp_names.clear();
         let mut inv_ctx = VomitContext {
             pc: &pc,
@@ -101,14 +101,14 @@ impl Environment {
         };
         let set_ptr = item_id.get_invariants().unwrap();
         let set = set_ptr.borrow();
-        for &invariant in set.statements() {
-            let vomited = self.vomit(255, &mut inv_ctx, invariant);
+        for invariant in set.statements() {
+            let vomited = self.vomit(255, &mut inv_ctx, invariant.ptr_clone());
             inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("\n    {} ", indented(&vomited,),));
         }
-        for &dep in set.dependencies() {
-            let vomited = self.vomit(255, &mut inv_ctx, dep);
+        for dep in set.dependencies() {
+            let vomited = self.vomit(255, &mut inv_ctx, dep.ptr_clone());
             inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("{}   ", indented(&vomited)));
@@ -161,7 +161,7 @@ impl Environment {
                 continue;
             }
             if let Some((_, uncreator)) = phrase.create_and_uncreate {
-                match uncreator(self, ctx, item_id) {
+                match uncreator(self, ctx, item_id.ptr_clone()) {
                     Err(new_err) => err = Some(new_err),
                     Ok(Some(uncreated)) => return uncreated,
                     _ => (),

@@ -2,7 +2,7 @@ use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::recursion::DRecursion, ItemPtr},
+    item::{definitions::other::DOther, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -25,8 +25,11 @@ fn uncreate<'x>(
     ctx: &mut VomitContext<'x, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'x> {
-    if let Some(recursion) = uncreate.downcast_definition::<DRecursion>() {
-        let base = recursion.get_base();
+    if let Some(recursion) = uncreate.downcast_definition::<DOther>() {
+        if !recursion.is_recursive() {
+            return Ok(None);
+        }
+        let base = recursion.other();
         Ok(Some(Node {
             phrase: "recursion",
             // children: vec![NodeChild::Node(env.vomit(255, ctx, base))],

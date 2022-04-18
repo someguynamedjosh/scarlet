@@ -9,7 +9,7 @@ use crate::{
 
 pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
     let mut unresolved = Vec::new();
-    root.for_self_and_contents(|item| {
+    root.for_self_and_contents(&mut |item| {
         if item.is_unresolved() {
             unresolved.push(item.ptr_clone());
         }
@@ -21,7 +21,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         let mut all_dead_ends = true;
         for id in unresolved {
             println!("Resolving {:?} limit {}", id, limit);
-            let res = resolve(env, id, limit);
+            let res = resolve(env, id.ptr_clone(), limit);
             if let Ok(true) = res {
                 // Right now this line actually significantly slows things
                 // down. In theory it should accelerate things. Maybe we
@@ -50,7 +50,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         }
     }
     let mut problem = false;
-    root.for_self_and_contents(|item| {
+    root.for_self_and_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
             println!("Failed to resolve {:?} because", item);
             problem = true;
@@ -67,7 +67,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
             }
         }
     });
-    root.for_self_and_contents(|item| {
+    root.for_self_and_contents(&mut |item| {
         item.get_invariants();
     });
     if problem {
@@ -80,7 +80,9 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
 fn resolve(env: &mut Environment, item: ItemPtr, limit: u32) -> Result<bool, ResolveError> {
     if let Some(wrapper) = item.downcast_definition::<DResolvable>() {
         let scope = item.clone_scope();
-        let new_def = wrapper.resolvable().resolve(env, item, scope, limit);
+        let new_def = wrapper
+            .resolvable()
+            .resolve(env, item.ptr_clone(), scope, limit);
         match new_def {
             ResolveResult::Ok(new_def) => {
                 item.redefine(new_def);

@@ -11,6 +11,7 @@ pub type Ecc = EqualityCalculationContext;
 pub struct OnlyCalledByEcc(());
 
 /// Used to restrict calls to `Ecc::refine_and_get_equality()`.
+#[derive(Clone, Copy)]
 pub struct PermissionToRefine(());
 
 impl EqualityCalculationContext {

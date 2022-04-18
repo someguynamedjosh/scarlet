@@ -85,17 +85,17 @@ impl Resolvable for RSubstitution {
 
         let justifications = make_justification_statements(&subs, limit)?;
         let invs = create_invariants(env, this, base, &subs, justifications)?;
-        let csub = DSubstitution::new(self.base, subs, invs);
+        let csub = DSubstitution::new(self.base.ptr_clone(), subs, invs);
         ResolveResult::Ok(csub.clone_into_box())
     }
 
     fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {
         let mut result = Dependencies::new();
-        for &(_, arg) in &self.named_subs {
-            result.append(ctx.get_dependencies(&arg));
+        for (_, arg) in &self.named_subs {
+            result.append(ctx.get_dependencies(arg));
         }
-        for &arg in &self.anonymous_subs {
-            result.append(ctx.get_dependencies(&arg));
+        for arg in &self.anonymous_subs {
+            result.append(ctx.get_dependencies(arg));
         }
         result
     }
@@ -132,9 +132,8 @@ fn make_justification_statements(
             target,
             value.ptr_clone(),
             &previous_subs,
-            limit,
         ));
-        previous_subs.insert_no_replace(*target, *value);
+        previous_subs.insert_no_replace(target.ptr_clone(), value.ptr_clone());
     }
     Ok(justifications)
 }
@@ -144,7 +143,8 @@ fn make_justification_statements(
 fn resolve_dep_subs(subs: &mut Substitutions) {
     for (target, value) in subs {
         let mut dep_subs = Substitutions::new();
-        let mut value_deps = value.get_dependencies().as_variables();
+        let value_deps = value.get_dependencies();
+        let mut value_deps = value_deps.as_variables();
         for dep in target.borrow().get_dependencies() {
             for desired_dep in dep.get_dependencies().as_variables() {
                 // We want to convert a dependency in the value to the
@@ -158,7 +158,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) {
             }
         }
         if dep_subs.len() > 0 {
-            *value = unchecked_substitution(*value, &dep_subs);
+            *value = unchecked_substitution(value.ptr_clone(), &dep_subs);
         }
     }
 }
@@ -170,17 +170,20 @@ impl RSubstitution {
         env: &mut Environment,
         subs: &mut Substitutions,
     ) -> Result<(), ResolveError> {
-        for &value in &self.anonymous_subs {
+        for value in &self.anonymous_subs {
             if remaining_deps.num_variables() == 0 {
                 if let Some(partial_dep_error) = remaining_deps.error() {
-                    return Err(partial_dep_error.into());
+                    return Err(partial_dep_error.clone().into());
                 } else {
-                    eprintln!("BASE:\n{}\n", env.show(self.base, self.base));
+                    eprintln!(
+                        "BASE:\n{}\n",
+                        env.show(self.base.ptr_clone(), self.base.ptr_clone())
+                    );
                     panic!("No more dependencies left to substitute!");
                 }
             }
             let dep = remaining_deps.pop_front().var;
-            subs.insert_no_replace(dep, value);
+            subs.insert_no_replace(dep, value.ptr_clone());
         }
         Ok(())
     }
@@ -192,14 +195,15 @@ impl RSubstitution {
         subs: &mut Substitutions,
         remaining_deps: &mut Dependencies,
     ) -> Result<(), ResolveError> {
-        for &(name, value) in &self.named_subs {
+        for (name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(env, &name)?.unwrap();
             if let Some(var) = target.downcast_definition::<DVariable>() {
-                subs.insert_no_replace(var.get_variable().ptr_clone(), value);
+                subs.insert_no_replace(var.get_variable().ptr_clone(), value.ptr_clone());
                 remaining_deps.remove(var.get_variable());
             } else {
                 panic!("{} is a valid name, but it is not a variable", name)
             }
+            drop(target);
         }
         Ok(())
     }

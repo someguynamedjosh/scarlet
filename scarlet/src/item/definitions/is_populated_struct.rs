@@ -30,8 +30,8 @@ impl DIsPopulatedStruct {
         })
     }
 
-    pub fn get_base(&self) -> ItemPtr {
-        self.base
+    pub fn get_base(&self) -> &ItemPtr {
+        &self.base
     }
 }
 

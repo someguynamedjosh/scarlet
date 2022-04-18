@@ -25,26 +25,46 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(args.len(), 4);
     let this = Item::placeholder_with_scope(scope);
 
-    let truee = env.get_language_item("true");
-    let falsee = env.get_language_item("false");
-    let left = args[0].as_construct(pc, env, SPlain(this));
-    let right = args[1].as_construct(pc, env, SPlain(this));
+    let truee = env.get_language_item("true").ptr_clone();
+    let falsee = env.get_language_item("false").ptr_clone();
+    let left = args[0].as_construct(pc, env, SPlain(this.ptr_clone()));
+    let right = args[1].as_construct(pc, env, SPlain(this.ptr_clone()));
 
     let eq_inv = Item::new(
-        DDecision::new(left, right, truee.ptr_clone(), falsee.ptr_clone()),
-        SPlain(this),
+        DDecision::new(
+            left.ptr_clone(),
+            right.ptr_clone(),
+            truee.ptr_clone(),
+            falsee.ptr_clone(),
+        ),
+        SPlain(this.ptr_clone()),
     );
-    let eq_inv = InvariantSet::new_statements_depending_on(this, vec![eq_inv], hashset![this]);
-    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this));
+    let eq_inv = InvariantSet::new_statements_depending_on(
+        this.ptr_clone(),
+        vec![eq_inv],
+        hashset![this.ptr_clone()],
+    );
+    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this.ptr_clone()));
 
     let neq_inv = Item::new(
-        DDecision::new(left, right, falsee.ptr_clone(), truee.ptr_clone()),
-        SPlain(this),
+        DDecision::new(
+            left.ptr_clone(),
+            right.ptr_clone(),
+            falsee.ptr_clone(),
+            truee.ptr_clone(),
+        ),
+        SPlain(this.ptr_clone()),
     );
-    let neq_inv = InvariantSet::new_statements_depending_on(this, vec![neq_inv], hashset![this]);
-    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this));
+    let neq_inv = InvariantSet::new_statements_depending_on(
+        this.ptr_clone(),
+        vec![neq_inv],
+        hashset![this.ptr_clone()],
+    );
+    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this.ptr_clone()));
 
-    this.redefine(DDecision::new(left, right, equal, unequal).clone_into_box());
+    this.redefine(
+        DDecision::new(left.ptr_clone(), right.ptr_clone(), equal, unequal).clone_into_box(),
+    );
 
     this
 }
@@ -62,10 +82,10 @@ fn uncreate<'a>(
                 NodeChild::Text("DECISION"),
                 NodeChild::Text("["),
                 create_comma_list(vec![
-                    env.vomit(255, ctx, cite.left()),
-                    env.vomit(255, ctx, cite.right()),
-                    env.vomit(255, ctx, cite.equal()),
-                    env.vomit(255, ctx, cite.unequal()),
+                    env.vomit(255, ctx, cite.left().ptr_clone()),
+                    env.vomit(255, ctx, cite.right().ptr_clone()),
+                    env.vomit(255, ctx, cite.equal().ptr_clone()),
+                    env.vomit(255, ctx, cite.unequal().ptr_clone()),
                 ]),
                 NodeChild::Text("]"),
             ],

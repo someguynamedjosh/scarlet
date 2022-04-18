@@ -40,8 +40,8 @@ impl Resolvable for RFrom {
         let x = env.get_language_item("x");
         let x = x.downcast_definition::<DVariable>();
         let x_id = x.unwrap().get_variable().ptr_clone();
-        let subs = vec![(x_id, self.left)].into_iter().collect();
-        let subbed = DSubstitution::new_unchecked(base, base, subs);
+        let subs = vec![(x_id, self.left.ptr_clone())].into_iter().collect();
+        let subbed = DSubstitution::new_unchecked(base.ptr_clone(), base.ptr_clone(), subs);
         ResolveResult::Ok(Box::new(subbed))
     }
 }

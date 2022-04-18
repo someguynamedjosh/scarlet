@@ -20,7 +20,7 @@ use crate::{
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     let this = crate::item::Item::placeholder_with_scope(scope);
-    let base = node.children[0].as_construct(pc, env, SPlain(this));
+    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
     this.redefine(DAtomicStructMember::new(base, AtomicStructMember::Rest).clone_into_box());
     this
 }
@@ -32,7 +32,7 @@ fn uncreate<'a>(
 ) -> UncreateResult<'a> {
     let source = if let Some(asm) = uncreate.downcast_definition::<DAtomicStructMember>() {
         if asm.member() == AtomicStructMember::Rest {
-            Some(asm.base())
+            Some(asm.base().ptr_clone())
         } else {
             None
         }

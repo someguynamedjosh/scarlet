@@ -30,6 +30,28 @@ impl RecursionPreventionStack {
             Some(result)
         }
     }
+
+    pub fn skip_recursion_or_execute_with_mutable_access<B, T>(
+        base: &mut B,
+        key: &ItemPtr,
+        get_self: impl Fn(&mut B) -> &mut Self,
+        func: impl FnOnce(&mut B) -> T,
+    ) -> Option<T> {
+        let this = get_self(base);
+        if this
+            .0
+            .iter()
+            .any(|previous_key| previous_key.is_same_instance_as(key))
+        {
+            None
+        } else {
+            this.0.push(key.ptr_clone());
+            let result = func(base);
+            let this = get_self(base);
+            assert!(this.0.pop().unwrap().is_same_instance_as(key));
+            Some(result)
+        }
+    }
 }
 
 pub(super) struct Stack<T>(Vec<T>);
@@ -47,9 +69,11 @@ where
     }
 
     pub fn with_stack_frame<R>(&mut self, key: T, func: impl FnOnce(&mut Self) -> R) -> R {
+        let len_before_executing = self.0.len();
         self.0.push(key);
         let result = func(self);
-        assert!(self.0.pop().unwrap() == key);
+        self.0.pop();
+        assert_eq!(self.0.len(), len_before_executing);
         result
     }
 }

@@ -28,11 +28,11 @@ fn struct_from_fields(
         let (label, field) = fields.remove(0);
         let label = label.unwrap_or("").to_owned();
         let this = crate::item::Item::placeholder_with_scope(scope);
-        let field = field.as_construct(pc, env, SFieldAndRest(this));
+        let field = field.as_construct(pc, env, SFieldAndRest(this.ptr_clone()));
         if label.len() > 0 {
             field.set_name(label.clone());
         }
-        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
+        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this.ptr_clone())));
         let this_def = DPopulatedStruct::new(label, field, rest);
         this.redefine(this_def.clone_into_box());
         this
@@ -69,10 +69,12 @@ fn uncreate<'a>(
     let mut fields = Vec::new();
     while let Some(structt) = maybe_structt.downcast_definition::<DPopulatedStruct>() {
         let label = ctx.code_arena.alloc(structt.get_label().to_owned());
-        let value = structt.get_value();
-        let scope = SFieldAndRest(maybe_structt);
+        let value = structt.get_value().ptr_clone();
+        let scope = SFieldAndRest(maybe_structt.ptr_clone());
         let ctx = &mut ctx.with_scope(&scope);
-        maybe_structt = structt.get_rest();
+        let rest = structt.get_rest().ptr_clone();
+        drop(structt);
+        maybe_structt = rest;
         let value = env.vomit(255, ctx, value);
         if label.len() > 0 {
             fields.push(Node {

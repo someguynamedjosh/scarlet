@@ -36,12 +36,12 @@ impl DPopulatedStruct {
         &self.label[..]
     }
 
-    pub fn get_value(&self) -> ItemPtr {
-        self.value
+    pub fn get_value(&self) -> &ItemPtr {
+        &self.value
     }
 
-    pub fn get_rest(&self) -> ItemPtr {
-        self.rest
+    pub fn get_rest(&self) -> &ItemPtr {
+        &self.rest
     }
 }
 
@@ -176,7 +176,7 @@ impl Scope for SField {
     fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
             Ok(if structt.label == ident {
-                Some(structt.value)
+                Some(structt.value.ptr_clone())
             } else {
                 None
             })
@@ -210,7 +210,7 @@ impl Scope for SField {
     }
 
     fn parent(&self) -> Option<ItemPtr> {
-        Some(self.0)
+        Some(self.0.ptr_clone())
     }
 }
 
@@ -223,7 +223,7 @@ fn lookup_ident_in(
     inn: &DPopulatedStruct,
 ) -> LookupIdentResult {
     Ok(if inn.label == ident {
-        Some(inn.value)
+        Some(inn.value.ptr_clone())
     } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
         lookup_ident_in(env, ident, &rest)?
     } else {
@@ -287,6 +287,6 @@ impl Scope for SFieldAndRest {
     }
 
     fn parent(&self) -> Option<ItemPtr> {
-        Some(self.0)
+        Some(self.0.ptr_clone())
     }
 }

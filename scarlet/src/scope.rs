@@ -53,13 +53,16 @@ pub trait Scope: Debug {
         env: &mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
-        if let Some(result) = self.local_reverse_lookup_ident(env, value)? {
+        if let Some(result) = self.local_reverse_lookup_ident(env, value.ptr_clone())? {
             if result.len() > 0 {
                 return Ok(Some(result.to_owned()));
             }
         }
         if let Some(parent) = self.parent() {
-            parent.borrow().scope.reverse_lookup_ident(env, value)
+            parent
+                .borrow()
+                .scope
+                .reverse_lookup_ident(env, value.ptr_clone())
         } else {
             Ok(None)
         }
@@ -100,7 +103,7 @@ impl Scope for SPlain {
     }
 
     fn parent(&self) -> Option<ItemPtr> {
-        Some(self.0)
+        Some(self.0.ptr_clone())
     }
 }
 
@@ -195,6 +198,6 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
     }
 
     fn parent(&self) -> Option<ItemPtr> {
-        Some(self.1)
+        Some(self.1.ptr_clone())
     }
 }

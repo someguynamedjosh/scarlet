@@ -36,10 +36,10 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
             mode = 2;
         } else if mode == 0 {
-            let con = arg.as_construct(pc, env, SVariableInvariants(this));
+            let con = arg.as_construct(pc, env, SVariableInvariants(this.ptr_clone()));
             invariants.push(con);
         } else if mode == 1 {
-            let con = arg.as_construct(pc, env, SPlain(this));
+            let con = arg.as_construct(pc, env, SPlain(this.ptr_clone()));
             dependencies.push(con);
         } else if mode == 2 {
             let text = arg.as_ident();
@@ -75,12 +75,12 @@ fn uncreate<'a>(
         let invariants = var
             .get_invariants()
             .into_iter()
-            .map(|&inv| env.vomit(255, ctx, inv))
+            .map(|inv| env.vomit(255, ctx, inv.ptr_clone()))
             .collect_vec();
         let dependencies = var
             .get_dependencies()
             .into_iter()
-            .map(|&dep| env.vomit(255, ctx, dep))
+            .map(|dep| env.vomit(255, ctx, dep.ptr_clone()))
             .collect_vec();
         let mut body = invariants;
         if dependencies.len() > 0 {
@@ -102,7 +102,7 @@ fn uncreate<'a>(
             ],
             ..Default::default()
         };
-        let name = ctx.get_name(env, uncreate, || node);
+        let name = ctx.get_name(env, uncreate.ptr_clone(), || node);
         Ok(Some(Node {
             phrase: "identifier",
             children: vec![NodeChild::Text(name)],

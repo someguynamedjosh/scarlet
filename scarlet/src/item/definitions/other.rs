@@ -40,8 +40,8 @@ impl DOther {
         self.recursive
     }
 
-    pub fn mark_recursive(&self) {
-        self.recursive= true;
+    pub fn mark_recursive(&mut self) {
+        self.recursive = true;
     }
 }
 

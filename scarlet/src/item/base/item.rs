@@ -85,17 +85,17 @@ impl ItemPtr {
 /// Wrappers for things that require contexts.
 impl ItemPtr {
     pub fn get_dependencies(&self) -> DepResult {
-        let ctx = DependencyCalculationContext::new();
+        let mut ctx = DependencyCalculationContext::new();
         ctx.get_dependencies(self)
     }
 
     pub fn get_equality(&self, other: &Self, limit: u32) -> EqualResult {
-        let ctx: Ecc = todo!();
+        let mut ctx: Ecc = todo!();
         todo!()
     }
 
     pub fn get_invariants(&self) -> InvariantsResult {
-        let ctx = InvariantCalculationContext::new();
+        let mut ctx = InvariantCalculationContext::new();
         ctx.get_invariants(self)
     }
 }
@@ -152,7 +152,7 @@ impl ItemPtr {
     /// Returns a dex that tells you if the language item "x" could have been
     /// returned by this item.
     pub fn get_from_dex(&self, env: &Environment) -> ItemPtr {
-        if let Some(from) = self.borrow().from_dex {
+        if let Some(from) = &self.borrow().from_dex {
             from.ptr_clone()
         } else {
             create_from_dex(env, self.ptr_clone())
@@ -166,7 +166,7 @@ impl ItemPtr {
 
     fn mark_recursion_impl(&self, stack: &mut Stack<ItemPtr>) {
         if stack.contains(self) {
-            if let Some(other) = self.downcast_definition_mut::<DOther>() {
+            if let Some(mut other) = self.downcast_definition_mut::<DOther>() {
                 other.mark_recursive();
                 return;
             }
@@ -195,12 +195,12 @@ impl ItemPtr {
     }
 
     pub fn check_all(&self) {
-        self.for_self_and_contents(|item| {
+        self.for_self_and_contents(&mut |item| {
             item.borrow().definition.check_self(item);
         })
     }
 
-    pub fn for_self_and_contents(&self, mut visitor: impl FnMut(&ItemPtr)) {
+    pub fn for_self_and_contents(&self, mut visitor: &mut impl FnMut(&ItemPtr)) {
         visitor(self);
         for content in self.borrow().definition.contents() {
             content.for_self_and_contents(visitor);
@@ -259,8 +259,9 @@ impl Item {
             show: false,
         }));
         let this2 = this.ptr_clone();
-        let inner = this.downcast_definition_mut().unwrap();
+        let mut inner = this.downcast_definition_mut().unwrap();
         modify_self(this2, &mut *inner);
+        drop(inner);
         this
     }
 
@@ -269,7 +270,7 @@ impl Item {
     }
 
     pub fn downcast_definition_mut<D: ItemDefinition>(&mut self) -> Option<&mut D> {
-        (&*self.definition as &dyn Any).downcast_mut()
+        (&mut *self.definition as &mut dyn Any).downcast_mut()
     }
 
     pub fn is_unresolved(&self) -> bool {

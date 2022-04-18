@@ -16,8 +16,8 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(node.children[1], NodeChild::Text("="));
     let this = Item::placeholder_with_scope(scope);
 
-    let left = node.children[0].as_construct(pc, env, SPlain(this));
-    let right = node.children[2].as_construct(pc, env, SPlain(this));
+    let left = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
+    let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()));
     let truee = env.get_language_item("true").ptr_clone();
     let falsee = env.get_language_item("false").ptr_clone();
     this.redefine(DDecision::new(left, right, truee, falsee).clone_into_box());
@@ -29,28 +29,30 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    Ok(if let Some(cite) = uncreate.downcast_definition::<DDecision>() {
-        let cite = cite.clone();
-        let truee = env.get_language_item("true");
-        let falsee = env.get_language_item("false");
-        if cite.equal().get_equality(&truee, 1024)? == Equal::yes()
-            && cite.unequal().get_equality(&falsee, 1024)? == Equal::yes()
-        {
-            Some(Node {
-                phrase: "equal",
-                children: vec![
-                    NodeChild::Node(env.vomit(127, ctx, cite.left())),
-                    NodeChild::Text("="),
-                    NodeChild::Node(env.vomit(127, ctx, cite.right())),
-                ],
-                ..Default::default()
-            })
+    Ok(
+        if let Some(cite) = uncreate.downcast_definition::<DDecision>() {
+            let cite = cite.clone();
+            let truee = env.get_language_item("true");
+            let falsee = env.get_language_item("false");
+            if cite.equal().get_equality(&truee, 1024)? == Equal::yes()
+                && cite.unequal().get_equality(&falsee, 1024)? == Equal::yes()
+            {
+                Some(Node {
+                    phrase: "equal",
+                    children: vec![
+                        NodeChild::Node(env.vomit(127, ctx, cite.left().ptr_clone())),
+                        NodeChild::Text("="),
+                        NodeChild::Node(env.vomit(127, ctx, cite.right().ptr_clone())),
+                    ],
+                    ..Default::default()
+                })
+            } else {
+                None
+            }
         } else {
             None
-        }
-    } else {
-        None
-    })
+        },
+    )
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

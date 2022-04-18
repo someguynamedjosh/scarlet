@@ -18,7 +18,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".IS_POPULATED_STRUCT"));
     let this = Item::placeholder_with_scope(scope.dyn_clone());
-    let base = node.children[0].as_construct(pc, env, SPlain(this));
+    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
     let ips = DIsPopulatedStruct::new(env, base, scope);
     this.redefine(DOther::new_plain(ips).clone_into_box());
     this
@@ -33,7 +33,11 @@ fn uncreate<'a>(
         if let Some(cips) = uncreate.downcast_definition::<DIsPopulatedStruct>() {
             Some(Node {
                 phrase: "is populated struct",
-                children: vec![NodeChild::Node(env.vomit(4, ctx, cips.get_base()))],
+                children: vec![NodeChild::Node(env.vomit(
+                    4,
+                    ctx,
+                    cips.get_base().ptr_clone(),
+                ))],
                 ..Default::default()
             })
         } else {

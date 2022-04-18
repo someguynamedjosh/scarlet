@@ -33,7 +33,7 @@ fn entry() {
 
     let mut env = Environment::new();
     let root = root.as_construct(&parse_context, &mut env, SRoot);
-    resolve_all(&mut env, root);
+    resolve_all(&mut env, root.ptr_clone());
     println!("Resolved");
     root.check_all();
     env.show_all_requested(&root);

@@ -64,10 +64,11 @@ impl Dependencies {
         if self.skipped_due_to_unresolved.is_some() {
             return;
         }
-        for &new_missing in other.missing() {
-            self.skipped_due_to_recursion.insert(new_missing);
+        for new_missing in other.missing() {
+            self.skipped_due_to_recursion
+                .insert(new_missing.ptr_clone());
         }
-        self.skipped_due_to_unresolved = other.skipped_due_to_unresolved;
+        self.skipped_due_to_unresolved = other.skipped_due_to_unresolved.clone();
         for eager in other.into_variables() {
             self.push_eager(eager);
         }
@@ -119,7 +120,7 @@ impl Dependencies {
         &self.skipped_due_to_recursion
     }
 
-    pub fn error(&self) -> Option<UnresolvedItemError> {
-        self.skipped_due_to_unresolved
+    pub fn error(&self) -> &Option<UnresolvedItemError> {
+        &self.skipped_due_to_unresolved
     }
 }

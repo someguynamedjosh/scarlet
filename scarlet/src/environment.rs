@@ -74,7 +74,7 @@ impl Environment {
         LANGUAGE_ITEM_NAMES.iter().copied()
     }
 
-    pub(crate) fn add_auto_theorem(&self, auto_theorem: ItemPtr) {
+    pub(crate) fn add_auto_theorem(&mut self, auto_theorem: ItemPtr) {
         self.auto_theorems.push(auto_theorem)
     }
 }

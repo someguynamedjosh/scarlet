@@ -82,12 +82,12 @@ impl InvariantsFeature for DAxiom {
     fn get_invariants_using_context(
         &self,
         this: &ItemPtr,
-        ctx: &mut Icc,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         Ok(InvariantSet::new(
             this.ptr_clone(),
-            vec![self.statement],
+            vec![self.statement.ptr_clone()],
             vec![],
             hashset![],
         ))

@@ -124,7 +124,7 @@ impl Variable {
 
     pub(crate) fn get_var_dependencies(&self) -> Dependencies {
         let mut result = Dependencies::new();
-        for &dep in &self.dependencies {
+        for dep in &self.dependencies {
             result.append(dep.get_dependencies());
         }
         result
@@ -134,13 +134,12 @@ impl Variable {
         this: &VariablePtr,
         value: ItemPtr,
         other_subs: &Substitutions,
-        limit: u32,
     ) -> Vec<ItemPtr> {
         let mut substitutions = other_subs.clone();
         let mut justifications = Vec::new();
         substitutions.insert_no_replace(this.ptr_clone(), value);
-        for &inv in &this.borrow().invariants {
-            let subbed = unchecked_substitution(inv, &substitutions);
+        for inv in &this.borrow().invariants {
+            let subbed = unchecked_substitution(inv.ptr_clone(), &substitutions);
             justifications.push(subbed);
         }
         justifications
@@ -148,12 +147,12 @@ impl Variable {
 
     pub fn as_dependency(this: &VariablePtr) -> Dependency {
         let mut deps = Dependencies::new();
-        for &dep in &this.borrow().dependencies {
+        for dep in &this.borrow().dependencies {
             deps.append(dep.get_dependencies());
         }
         Dependency {
             var: this.ptr_clone(),
-            swallow: deps.as_variables().map(|x| x.var).collect(),
+            swallow: deps.as_variables().map(|x| x.var.ptr_clone()).collect(),
             order: this.borrow().order.clone(),
         }
     }
@@ -176,7 +175,7 @@ impl DependenciesFeature for DVariable {
             deps.append(dep.get_dependencies());
         }
         deps.push_eager(Variable::as_dependency(&self.0));
-        for inv in self.0.borrow().invariants {
+        for inv in &self.0.borrow().invariants {
             deps.append(inv.get_dependencies());
         }
         deps
@@ -220,7 +219,11 @@ impl Scope for SVariableInvariants {
     }
 
     fn local_lookup_ident(&self, _env: &mut Environment, ident: &str) -> LookupIdentResult {
-        Ok(if ident == "SELF" { Some(self.0) } else { None })
+        Ok(if ident == "SELF" {
+            Some(self.0.ptr_clone())
+        } else {
+            None
+        })
     }
 
     fn local_reverse_lookup_ident<'a, 'x>(
@@ -240,6 +243,6 @@ impl Scope for SVariableInvariants {
     }
 
     fn parent(&self) -> Option<ItemPtr> {
-        Some(self.0)
+        Some(self.0.ptr_clone())
     }
 }

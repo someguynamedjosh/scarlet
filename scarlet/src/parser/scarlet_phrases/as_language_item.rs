@@ -23,7 +23,7 @@ fn create(
     assert_eq!(node.children[4], NodeChild::Text("]"));
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
     let name = node.children[3].as_node().as_ident();
-    env.define_language_item(name, base);
+    env.define_language_item(name, base.ptr_clone());
     base
 }
 

@@ -12,6 +12,7 @@ use crate::{
         ItemDefinition, ItemPtr,
     },
     scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
+    util::PtrExtension,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -37,20 +38,20 @@ impl DDecision {
         }
     }
 
-    pub fn left(&self) -> ItemPtr {
-        self.left
+    pub fn left(&self) -> &ItemPtr {
+        &self.left
     }
 
-    pub fn right(&self) -> ItemPtr {
-        self.right
+    pub fn right(&self) -> &ItemPtr {
+        &self.right
     }
 
-    pub fn equal(&self) -> ItemPtr {
-        self.when_equal
+    pub fn equal(&self) -> &ItemPtr {
+        &self.when_equal
     }
 
-    pub fn unequal(&self) -> ItemPtr {
-        self.when_not_equal
+    pub fn unequal(&self) -> &ItemPtr {
+        &self.when_not_equal
     }
 }
 
@@ -129,10 +130,10 @@ impl InvariantsFeature for DDecision {
         let true_invs = self.when_equal.get_invariants()?;
         let false_invs = self.when_equal.get_invariants()?;
         let mut result_statements = Vec::new();
-        for &true_inv in true_invs.borrow().statements() {
-            for (index, &false_inv) in false_invs.borrow().statements().iter().enumerate() {
-                if true_inv.get_equality(&false_inv, 4) == Ok(Equal::yes()) {
-                    result_statements.push(true_inv);
+        for true_inv in true_invs.borrow().statements() {
+            for (index, false_inv) in false_invs.borrow().statements().iter().enumerate() {
+                if true_inv.get_equality(false_inv, 4) == Ok(Equal::yes()) {
+                    result_statements.push(true_inv.ptr_clone());
                     break;
                 }
             }
@@ -167,10 +168,10 @@ impl Scope for SWithInvariant {
     }
 
     fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
-        vec![self.0]
+        vec![self.0.ptr_clone()]
     }
 
     fn parent(&self) -> Option<ItemPtr> {
-        Some(self.1)
+        Some(self.1.ptr_clone())
     }
 }

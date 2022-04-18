@@ -36,7 +36,7 @@ fn uncreate<'a>(
                 children: vec![NodeChild::Text("UNIQUE")],
                 ..Default::default()
             };
-            let name = ctx.get_name(env, uncreate, || node);
+            let name = ctx.get_name(env, uncreate.ptr_clone(), || node);
             Some(Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text(name)],

@@ -37,8 +37,13 @@ pub fn equals(env: &Environment, left: ItemPtr, right: ItemPtr) -> ItemPtr {
 pub fn is_bool(env: &Environment, item_to_test: ItemPtr) -> ItemPtr {
     let truee = env.get_true().ptr_clone();
     let falsee = env.get_false().ptr_clone();
-    let item_is_false = equals(env, item_to_test, falsee);
-    decision(item_to_test.ptr_clone(), truee, truee, item_is_false)
+    let item_is_false = equals(env, item_to_test.ptr_clone(), falsee);
+    decision(
+        item_to_test.ptr_clone(),
+        truee.ptr_clone(),
+        truee.ptr_clone(),
+        item_is_false,
+    )
 }
 
 pub fn placeholder() -> ItemPtr {
