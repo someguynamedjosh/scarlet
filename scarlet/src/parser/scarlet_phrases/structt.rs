@@ -67,7 +67,13 @@ fn uncreate<'a>(
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Some(structt) = maybe_structt.downcast_definition::<DPopulatedStruct>() {
+    loop {
+        let structt = if let Some(structt) = maybe_structt.downcast_definition::<DPopulatedStruct>()
+        {
+            structt
+        } else {
+            break;
+        };
         let label = ctx.code_arena.alloc(structt.get_label().to_owned());
         let value = structt.get_value().ptr_clone();
         let scope = SFieldAndRest(maybe_structt.ptr_clone());
