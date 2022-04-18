@@ -193,6 +193,13 @@ impl ItemPtr {
             result
         }
     }
+
+    pub fn for_self_and_contents(&self, mut visitor: impl FnMut(&ItemPtr)) {
+        visitor(self);
+        for content in self.borrow().definition.contents() {
+            content.for_self_and_contents(visitor);
+        }
+    }
 }
 
 #[derive(Debug)]

@@ -38,6 +38,10 @@ impl DResolvable {
     pub fn new<R: Resolvable>(resolvable: R) -> Self {
         Self(Box::new(resolvable))
     }
+
+    pub fn resolvable(&self) -> &dyn Resolvable {
+        &*self.0
+    }
 }
 
 impl ItemDefinition for DResolvable {
@@ -91,7 +95,6 @@ impl From<LookupInvariantError> for ResolveError {
 
 pub enum ResolveResult {
     Ok(Box<dyn ItemDefinition>),
-    Partial(Box<dyn ItemDefinition>),
     Err(ResolveError),
 }
 
