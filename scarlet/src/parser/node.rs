@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 
 use super::{phrase::PhraseTable, ParseContext};
-use crate::{item::ItemPtr, environment::Environment, scope::Scope, shared::indented};
+use crate::{environment::Environment, item::ItemPtr, scope::Scope, shared::indented};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum NodeChild<'a> {

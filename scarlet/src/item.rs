@@ -4,5 +4,4 @@ pub mod resolvable;
 mod test_util;
 pub mod util;
 
-pub use base::*;
-pub use base::{item::*, definition::*};
+pub use base::{definition::*, item::*, *};

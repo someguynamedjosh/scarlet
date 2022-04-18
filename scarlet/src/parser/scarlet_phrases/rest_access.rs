@@ -41,8 +41,8 @@ fn uncreate<'a>(
         // env.for_each_item(|env, id| {
         //     if let Ok(Some(cstruct)) = id.downcast::<DPopulatedStruct>() {
         //         let cstruct = cstruct.clone();
-        //         if cstruct.get_rest().get_equality(&uncreate, 4) == Ok(Equal::yes()) {
-        //             return ControlFlow::Break(id);
+        //         if cstruct.get_rest().get_equality(&uncreate, 4) ==
+        // Ok(Equal::yes()) {             return ControlFlow::Break(id);
         //         }
         //     }
         //     ControlFlow::Continue(())

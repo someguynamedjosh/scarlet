@@ -14,7 +14,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DPlaceholder; 
+pub struct DPlaceholder;
 
 impl_any_eq_from_regular_eq!(DPlaceholder);
 

@@ -1,4 +1,7 @@
-use crate::{item::definitions::variable::{VariableOrder, VariablePtr}, util::PtrExtension};
+use crate::{
+    item::definitions::variable::{VariableOrder, VariablePtr},
+    util::PtrExtension,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Dependency {

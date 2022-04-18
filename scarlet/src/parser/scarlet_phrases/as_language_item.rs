@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    item::ItemPtr,
     environment::{vomit::VomitContext, Environment},
+    item::ItemPtr,
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,12 +11,7 @@ use crate::{
     scope::Scope,
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> ItemPtr {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 5);
     assert_eq!(node.children[1], NodeChild::Text(".AS_LANGUAGE_ITEM"));
     assert_eq!(node.children[2], NodeChild::Text("["));

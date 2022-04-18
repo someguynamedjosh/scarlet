@@ -1,5 +1,5 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
-use crate::{environment::Environment, scope::Scope, item::ItemPtr, impl_any_eq_from_regular_eq};
+use crate::{environment::Environment, impl_any_eq_from_regular_eq, item::ItemPtr, scope::Scope};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RPlaceholder;

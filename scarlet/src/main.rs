@@ -10,11 +10,13 @@
 #![feature(map_first_last)]
 #![feature(ptr_to_from_bits)]
 
-use crate::{environment::Environment, parser::ParseContext, scope::SRoot, item::resolve::resolve_all};
+use crate::{
+    environment::Environment, item::resolve::resolve_all, parser::ParseContext, scope::SRoot,
+};
 
-mod item;
 mod environment;
 mod file_tree;
+mod item;
 pub mod parser;
 pub mod scope;
 mod shared;

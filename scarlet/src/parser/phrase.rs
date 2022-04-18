@@ -5,7 +5,7 @@ use typed_arena::Arena;
 use super::{Node, ParseContext};
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{ItemPtr, resolvable::UnresolvedItemError},
+    item::{resolvable::UnresolvedItemError, ItemPtr},
     scope::Scope,
 };
 
