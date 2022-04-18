@@ -1,4 +1,3 @@
-pub mod resolve;
 pub mod vomit;
 
 use std::collections::HashMap;

@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use super::{definitions::variable::VariablePtr, Item};
+use super::{definitions::variable::VariablePtr, Item, resolve::resolve_all};
 use crate::{
     environment::Environment,
     file_tree::FileNode,
@@ -38,7 +38,7 @@ pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, 
         def.set_name(lang_item_name.to_owned());
         env.define_language_item(lang_item_name, def);
     }
-    env.resolve_all();
+    resolve_all(&mut env, root);
 
     let root = root
         .downcast_definition::<DPopulatedStruct>()

@@ -6,14 +6,12 @@ use super::{Environment, ItemPtr};
 use crate::{
     item::{
         definition::ItemDefinition,
-        definitions::{
-            shown::DShown,
-            variable::{DVariable, SVariableInvariants, VariableId},
-        },
+        definitions::variable::{DVariable, SVariableInvariants, VariablePtr},
     },
     parser::{Node, NodeChild, ParseContext},
     scope::{SWithParent, Scope},
     shared::{indented, OrderedMap},
+    util::PtrExtension,
 };
 
 pub struct VomitContext<'x, 'y> {
@@ -43,11 +41,11 @@ impl<'x, 'y> VomitContext<'x, 'y> {
         of: ItemPtr,
         make_node: impl FnOnce() -> Node<'x>,
     ) -> &'x str {
-        let of = env.dereference(of).unwrap_or(of);
+        let of = of.dereference();
         if let Some(name) = self.temp_names.get(&of) {
             name.0
         } else {
-            let name = if let Some(name) = &env.items[of].name {
+            let name = if let Some(name) = &of.borrow().name {
                 name.clone()
             } else {
                 format!("anon_{}", self.anon_name_counter)
@@ -61,16 +59,13 @@ impl<'x, 'y> VomitContext<'x, 'y> {
 }
 
 impl Environment {
-    pub fn show_all_requested(&mut self) {
+    pub fn show_all_requested(&mut self, root: &ItemPtr) {
         let mut to_vomit = Vec::new();
-        for (from, aitem) in &self.items {
-            if let ItemDefinition::Resolved(con) = &aitem.definition {
-                if let Some(shown) = con {
-                    let base = shown.get_base();
-                    to_vomit.push((base, from));
-                }
+        root.for_self_and_contents(|item| {
+            if item.borrow().show {
+                to_vomit.push((item.ptr_clone(), item.ptr_clone()));
             }
-        }
+        });
         for (item_id, from) in to_vomit {
             println!("{}", self.show(item_id, from));
         }
@@ -79,7 +74,7 @@ impl Environment {
     pub fn show(&mut self, item_id: ItemPtr, from_item: ItemPtr) -> String {
         let mut result = String::new();
 
-        let from = self.items[from_item].scope.dyn_clone();
+        let from = from_item.clone_scope();
         let code_arena = Arena::new();
         let pc = ParseContext::new();
         let mut temp_names = OrderedMap::new();
@@ -104,8 +99,8 @@ impl Environment {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        let set_id = item_id.get_invariants();
-        let set = self.get_invariant_set(set_id).clone();
+        let set_ptr = item_id.get_invariants().unwrap();
+        let set = set_ptr.borrow();
         for &invariant in set.statements() {
             let vomited = self.vomit(255, &mut inv_ctx, invariant);
             inv_ctx.temp_names.clear();
@@ -119,8 +114,8 @@ impl Environment {
             result.push_str(&format!("{}   ", indented(&vomited)));
         }
         result.push_str(&format!("\ndepends on: "));
-        for dep in self.get_dependencies(item_id).into_variables() {
-            let vomited = self.vomit_var(&mut inv_ctx, dep.id);
+        for dep in item_id.get_dependencies().into_variables() {
+            let vomited = self.vomit_var(&mut inv_ctx, dep.var.ptr_clone());
             inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("{}   ", indented(&vomited)));
@@ -146,14 +141,12 @@ impl Environment {
         }
     }
 
-    pub fn show_var(&mut self, var: VariableId, from: ItemPtr) -> String {
-        let id = self.variables[var].item.unwrap();
-        self.show(id, from)
+    pub fn show_var(&mut self, var: VariablePtr, from: ItemPtr) -> String {
+        self.show(var.borrow().item().ptr_clone(), from)
     }
 
-    pub fn vomit_var<'a>(&mut self, ctx: &mut VomitContext<'a, '_>, var: VariableId) -> Node<'a> {
-        let id = self.variables[var].item.unwrap();
-        self.vomit(255, ctx, id)
+    pub fn vomit_var<'a>(&mut self, ctx: &mut VomitContext<'a, '_>, var: VariablePtr) -> Node<'a> {
+        self.vomit(255, ctx, var.borrow().item().ptr_clone())
     }
 
     pub fn vomit<'a>(

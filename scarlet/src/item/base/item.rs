@@ -194,6 +194,12 @@ impl ItemPtr {
         }
     }
 
+    pub fn check_all(&self) {
+        self.for_self_and_contents(|item| {
+            item.borrow().definition.check_self(item);
+        })
+    }
+
     pub fn for_self_and_contents(&self, mut visitor: impl FnMut(&ItemPtr)) {
         visitor(self);
         for content in self.borrow().definition.contents() {

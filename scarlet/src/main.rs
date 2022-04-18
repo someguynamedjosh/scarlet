@@ -10,7 +10,7 @@
 #![feature(map_first_last)]
 #![feature(ptr_to_from_bits)]
 
-use crate::{environment::Environment, parser::ParseContext, scope::SRoot};
+use crate::{environment::Environment, parser::ParseContext, scope::SRoot, item::resolve::resolve_all};
 
 mod item;
 mod environment;
@@ -32,12 +32,11 @@ fn entry() {
     println!("Parsed");
 
     let mut env = Environment::new();
-    root.as_construct(&parse_context, &mut env, SRoot);
-    env.resolve_all();
+    let root = root.as_construct(&parse_context, &mut env, SRoot);
+    resolve_all(&mut env, root);
     println!("Resolved");
-    // env.check_all().unwrap();
-    // println!("Checked");
-    env.show_all_requested();
+    root.check_all();
+    env.show_all_requested(&root);
 }
 
 fn main() {
