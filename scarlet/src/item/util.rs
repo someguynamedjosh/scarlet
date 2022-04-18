@@ -11,9 +11,9 @@ pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
     if subs.len() == 0 {
         return base;
     } else {
-        let def = DSubstitution::new_unchecked(todo!(), base, subs.clone());
-        let item = Item::new_boxed(Box::new(def), base.clone_scope());
-        item
+        let scope = base.clone_scope();
+        let def = DSubstitution::new_unchecked(base, subs.clone());
+        Item::new_boxed(Box::new(def), scope)
     }
 }
 

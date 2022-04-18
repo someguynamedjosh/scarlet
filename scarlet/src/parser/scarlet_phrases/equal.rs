@@ -34,8 +34,8 @@ fn uncreate<'a>(
             let cite = cite.clone();
             let truee = env.get_language_item("true");
             let falsee = env.get_language_item("false");
-            if cite.equal().get_equality(&truee, 1024)? == Equal::yes()
-                && cite.unequal().get_equality(&falsee, 1024)? == Equal::yes()
+            if cite.when_equal().get_equality(&truee, 1024)? == Equal::yes()
+                && cite.when_not_equal().get_equality(&falsee, 1024)? == Equal::yes()
             {
                 Some(Node {
                     phrase: "equal",

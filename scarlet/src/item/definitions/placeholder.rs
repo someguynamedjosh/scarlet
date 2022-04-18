@@ -35,7 +35,7 @@ impl DependenciesFeature for DPlaceholder {
 impl EqualityFeature for DPlaceholder {
     fn get_equality_using_context(
         &self,
-        _ctx: &Ecc,
+        _ctx: &mut Ecc,
         _can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {

@@ -1,7 +1,21 @@
-use super::EqualResult;
-use crate::item::ItemPtr;
+use std::cell::Ref;
 
-pub struct EqualityCalculationContext {}
+use owning_ref::OwningRef;
+
+use super::{item_wrapper::ItemWithSubsAndRecursion, EqualResult, Equal};
+use crate::item::{
+    definitions::{
+        other::DOther,
+        substitution::{DSubstitution, Substitutions},
+    },
+    Item, ItemPtr,
+};
+
+pub struct EqualityCalculationContext {
+    pub(super) lhs: ItemWithSubsAndRecursion,
+    pub(super) rhs: ItemWithSubsAndRecursion,
+    pub(super) limit: u32,
+}
 
 pub type Ecc = EqualityCalculationContext;
 
@@ -16,23 +30,40 @@ pub struct PermissionToRefine(());
 
 impl EqualityCalculationContext {
     pub fn rhs(&self) -> &ItemPtr {
-        todo!()
+        &self.rhs.item
     }
 
     pub fn get_equality(lhs: ItemPtr, rhs: ItemPtr, limit: u32) -> EqualResult {
-        todo!()
+        Self {
+            lhs: ItemWithSubsAndRecursion {
+                item: lhs,
+                subs: vec![],
+                recurses_over: vec![],
+            },
+            rhs: ItemWithSubsAndRecursion {
+                item: rhs,
+                subs: vec![],
+                recurses_over: vec![],
+            },
+            limit,
+        }
+        .get_equality_impl()
     }
 
     pub fn refine_and_get_equality(
-        &self,
-        new_lhs: ItemPtr,
-        new_rhs: ItemPtr,
+        &mut self,
+        mut new_lhs: ItemPtr,
+        mut new_rhs: ItemPtr,
         _: PermissionToRefine,
     ) -> EqualResult {
-        todo!()
-    }
-
-    fn get_equality_impl(&self) -> EqualResult {
-        todo!()
+        std::mem::swap(&mut new_lhs, &mut self.lhs.item);
+        std::mem::swap(&mut new_rhs, &mut self.rhs.item);
+        self.limit -= 1;
+        let result = self.get_equality_impl();
+        // Put the old ones back.
+        std::mem::swap(&mut new_lhs, &mut self.lhs.item);
+        std::mem::swap(&mut new_rhs, &mut self.rhs.item);
+        self.limit += 1;
+        result
     }
 }

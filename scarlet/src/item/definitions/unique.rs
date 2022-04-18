@@ -44,7 +44,7 @@ impl InvariantsFeature for DUnique {}
 impl EqualityFeature for DUnique {
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         _can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {

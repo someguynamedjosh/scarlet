@@ -69,11 +69,11 @@ impl ItemPtr {
         Self(Rc::clone(&self.0))
     }
 
-    pub fn borrow(&self) -> Ref<Item> {
+    pub fn borrow(&self) -> Ref<'_, Item> {
         self.0.borrow()
     }
 
-    pub fn borrow_mut(&self) -> RefMut<Item> {
+    pub fn borrow_mut(&self) -> RefMut<'_, Item> {
         self.0.borrow_mut()
     }
 
@@ -90,8 +90,7 @@ impl ItemPtr {
     }
 
     pub fn get_equality(&self, other: &Self, limit: u32) -> EqualResult {
-        let mut ctx: Ecc = todo!();
-        todo!()
+        Ecc::get_equality(self.ptr_clone(), other.ptr_clone(), limit)
     }
 
     pub fn get_invariants(&self) -> InvariantsResult {
@@ -106,7 +105,7 @@ impl ItemPtr {
         self.0.borrow_mut().name = Some(name);
     }
 
-    pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<Item>, D>> {
+    pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<'_, Item>, D>> {
         OwningRef::new(self.borrow())
             .try_map(|this| this.downcast_definition().ok_or(()))
             .ok()
@@ -127,6 +126,24 @@ impl ItemPtr {
 
 /// Extensions.
 impl ItemPtr {
+    pub fn dereference_once(&self) -> Option<ItemPtr> {
+        if let Some(other) = self.downcast_definition::<DOther>() {
+            Some(other.other().ptr_clone())
+        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
+            if let Some(structt) = asm.base().downcast_definition::<DPopulatedStruct>() {
+                Some(match asm.member() {
+                    AtomicStructMember::Label => todo!(),
+                    AtomicStructMember::Value => structt.get_value().ptr_clone(),
+                    AtomicStructMember::Rest => structt.get_rest().ptr_clone(),
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn dereference(&self) -> ItemPtr {
         if let Some(other) = self.downcast_definition::<DOther>() {
             other.other().dereference()

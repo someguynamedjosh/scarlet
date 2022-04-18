@@ -46,12 +46,16 @@ impl DDecision {
         &self.right
     }
 
-    pub fn equal(&self) -> &ItemPtr {
+    pub fn when_equal(&self) -> &ItemPtr {
         &self.when_equal
     }
 
-    pub fn unequal(&self) -> &ItemPtr {
+    pub fn when_not_equal(&self) -> &ItemPtr {
         &self.when_not_equal
+    }
+
+    pub(crate) fn set_when_equal(&mut self, when_equal: ItemPtr) {
+        self.when_equal = when_equal;
     }
 }
 
@@ -87,30 +91,33 @@ impl DependenciesFeature for DDecision {
 impl EqualityFeature for DDecision {
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
-        if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+        let others = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+            Some([
+                other.left.ptr_clone(),
+                other.right.ptr_clone(),
+                other.when_equal.ptr_clone(),
+                other.when_not_equal.ptr_clone(),
+            ])
+        } else {
+            None
+        };
+        if let Some(others) = others {
+            let [other_left, other_right, other_when_equal, other_when_not_equal] = others;
             Ok(Equal::and(vec![
-                ctx.refine_and_get_equality(
-                    self.left.ptr_clone(),
-                    other.left.ptr_clone(),
-                    can_refine,
-                )?,
-                ctx.refine_and_get_equality(
-                    self.right.ptr_clone(),
-                    other.right.ptr_clone(),
-                    can_refine,
-                )?,
+                ctx.refine_and_get_equality(self.left.ptr_clone(), other_left, can_refine)?,
+                ctx.refine_and_get_equality(self.right.ptr_clone(), other_right, can_refine)?,
                 ctx.refine_and_get_equality(
                     self.when_equal.ptr_clone(),
-                    other.when_equal.ptr_clone(),
+                    other_when_equal,
                     can_refine,
                 )?,
                 ctx.refine_and_get_equality(
                     self.when_not_equal.ptr_clone(),
-                    other.when_not_equal.ptr_clone(),
+                    other_when_not_equal,
                     can_refine,
                 )?,
             ]))

@@ -64,7 +64,7 @@ impl DependenciesFeature for DOther {
 impl EqualityFeature for DOther {
     fn get_equality_using_context(
         &self,
-        _ctx: &Ecc,
+        _ctx: &mut Ecc,
         _can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {

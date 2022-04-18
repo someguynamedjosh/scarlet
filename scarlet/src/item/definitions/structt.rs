@@ -71,25 +71,22 @@ impl DependenciesFeature for DPopulatedStruct {
 impl EqualityFeature for DPopulatedStruct {
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
-        if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+        let others = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
             if self.label != other.label {
                 return Ok(Equal::No);
             }
+            Some([other.value.ptr_clone(), other.rest.ptr_clone()])
+        } else {
+            None
+        };
+        if let Some([other_value, other_rest]) = others {
             Ok(Equal::and(vec![
-                ctx.refine_and_get_equality(
-                    self.value.ptr_clone(),
-                    other.value.ptr_clone(),
-                    can_refine,
-                )?,
-                ctx.refine_and_get_equality(
-                    self.rest.ptr_clone(),
-                    other.rest.ptr_clone(),
-                    can_refine,
-                )?,
+                ctx.refine_and_get_equality(self.value.ptr_clone(), other_value, can_refine)?,
+                ctx.refine_and_get_equality(self.rest.ptr_clone(), other_rest, can_refine)?,
             ]))
         } else {
             Ok(Equal::Unknown)

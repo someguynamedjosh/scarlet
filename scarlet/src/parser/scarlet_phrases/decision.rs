@@ -84,8 +84,8 @@ fn uncreate<'a>(
                 create_comma_list(vec![
                     env.vomit(255, ctx, cite.left().ptr_clone()),
                     env.vomit(255, ctx, cite.right().ptr_clone()),
-                    env.vomit(255, ctx, cite.equal().ptr_clone()),
-                    env.vomit(255, ctx, cite.unequal().ptr_clone()),
+                    env.vomit(255, ctx, cite.when_equal().ptr_clone()),
+                    env.vomit(255, ctx, cite.when_not_equal().ptr_clone()),
                 ]),
                 NodeChild::Text("]"),
             ],

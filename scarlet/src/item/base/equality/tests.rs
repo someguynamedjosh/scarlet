@@ -6,11 +6,17 @@ use nom::multi;
 
 use crate::{
     item::{
-        definitions::substitution::{DSubstitution, Substitutions},
+        definitions::{
+            decision::DDecision,
+            other::DOther,
+            substitution::{DSubstitution, Substitutions},
+        },
         equality::Equal,
         test_util::*,
         util::*,
+        Item,
     },
+    scope::SRoot,
     util::PtrExtension,
 };
 
@@ -921,13 +927,19 @@ fn sneaky_substitution() {
 // u should be
 #[test]
 fn recursion_is_tracked_in_decision() {
-    let mut env = env();
-
     let a = unique();
     let b = unique();
     let c = unique();
-    let dec = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), c.ptr_clone());
-    let dec_rec = todo!();
+    let mut dec_rec = unique();
+    let dec = Item::new_self_referencing(
+        DDecision::new(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), c.ptr_clone()),
+        Box::new(SRoot),
+        |ptr, this| {
+            let other = Item::new(DOther::new_recursive(ptr), SRoot);
+            dec_rec = other.ptr_clone();
+            this.set_when_equal(other);
+        },
+    );
 
     assert_eq!(
         dec.get_equality(&dec_rec, 3),

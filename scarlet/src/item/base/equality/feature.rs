@@ -7,7 +7,7 @@ pub trait EqualityFeature {
     #[allow(unused_variables)]
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {

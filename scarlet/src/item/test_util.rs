@@ -1,5 +1,9 @@
 #![cfg(test)]
 
+use std::sync::Mutex;
+
+use lazy_static::lazy_static;
+
 use super::{definitions::variable::VariablePtr, resolve::resolve_all, Item};
 use crate::{
     environment::Environment,
@@ -18,6 +22,10 @@ use crate::{
     scope::SRoot,
     util::PtrExtension,
 };
+
+lazy_static! {
+    static ref variable_counter: Mutex<u32> = Mutex::new(0);
+}
 
 pub(super) fn env() -> Environment {
     Environment::new()
@@ -68,7 +76,10 @@ pub(super) fn unique() -> ItemPtr {
 }
 
 fn next_variable_order() -> u32 {
-    todo!()
+    let mut ptr = variable_counter.lock().unwrap();
+    let value = *ptr;
+    *ptr += 1;
+    value
 }
 
 pub(super) fn variable() -> ItemPtr {

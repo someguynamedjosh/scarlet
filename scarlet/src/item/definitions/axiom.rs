@@ -61,17 +61,19 @@ impl DependenciesFeature for DAxiom {
 impl EqualityFeature for DAxiom {
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
-        if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
-            let other = other.clone();
-            ctx.refine_and_get_equality(
-                self.statement.ptr_clone(),
-                other.statement.ptr_clone(),
-                can_refine,
-            )
+        let statements = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+            let self_statement = self.statement.ptr_clone();
+            let other_statement = other.statement.ptr_clone();
+            Some((self_statement, other_statement))
+        } else {
+            None
+        };
+        if let Some((self_statement, other_statement)) = statements {
+            ctx.refine_and_get_equality(self_statement, other_statement, can_refine)
         } else {
             Ok(Equal::Unknown)
         }

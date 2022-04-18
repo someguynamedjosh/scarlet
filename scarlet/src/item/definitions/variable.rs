@@ -185,7 +185,7 @@ impl DependenciesFeature for DVariable {
 impl EqualityFeature for DVariable {
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {

@@ -12,8 +12,9 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        Item, ItemDefinition, ItemPtr,
     },
+    scope::Scope,
     shared::OrderedMap,
     util::PtrExtension,
 };
@@ -32,8 +33,8 @@ impl DSubstitution {
         Self { base, subs, invs }
     }
 
-    pub fn new_unchecked(this: ItemPtr, base: ItemPtr, subs: Substitutions) -> Self {
-        Self::new(base, subs, InvariantSet::new_empty(this))
+    pub fn new_unchecked(base: ItemPtr, subs: Substitutions) -> Self {
+        Self::new(base.ptr_clone(), subs, InvariantSet::new_empty(base))
     }
 
     pub fn base(&self) -> &ItemPtr {
@@ -109,7 +110,7 @@ impl DependenciesFeature for DSubstitution {
 impl EqualityFeature for DSubstitution {
     fn get_equality_using_context(
         &self,
-        ctx: &Ecc,
+        ctx: &mut Ecc,
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
