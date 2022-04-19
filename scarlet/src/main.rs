@@ -9,6 +9,7 @@
 #![feature(assert_matches)]
 #![feature(map_first_last)]
 #![feature(ptr_to_from_bits)]
+#![feature(core_intrinsics)]
 
 use crate::{
     environment::Environment, item::resolve::resolve_all, parser::ParseContext, scope::SRoot,

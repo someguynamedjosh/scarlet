@@ -2,7 +2,7 @@ use std::cell::Ref;
 
 use owning_ref::OwningRef;
 
-use super::{item_wrapper::ItemWithSubsAndRecursion, EqualResult, Equal};
+use super::{item_wrapper::ItemWithSubsAndRecursion, Equal, EqualResult};
 use crate::item::{
     definitions::{
         other::DOther,
@@ -22,11 +22,11 @@ pub type Ecc = EqualityCalculationContext;
 /// Using this in a function signature guarantees that only
 /// EqualityCalculationContext can call that function. If you are reusing this
 /// inside the function that is being called, you are doing something wrong.
-pub struct OnlyCalledByEcc(());
+pub struct OnlyCalledByEcc(pub(super) ());
 
 /// Used to restrict calls to `Ecc::refine_and_get_equality()`.
 #[derive(Clone, Copy)]
-pub struct PermissionToRefine(());
+pub struct PermissionToRefine(pub(super) ());
 
 impl EqualityCalculationContext {
     pub fn rhs(&self) -> &ItemPtr {

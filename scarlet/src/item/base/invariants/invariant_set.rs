@@ -1,4 +1,9 @@
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::HashSet,
+    fmt::{self, Debug, Formatter},
+    rc::Rc,
+};
 
 use crate::{item::ItemPtr, util::rcrc};
 
@@ -6,7 +11,7 @@ pub type SetJustification = Vec<StatementJustifications>;
 pub type StatementJustifications = Vec<StatementJustification>;
 pub type StatementJustification = Vec<InvariantSetPtr>;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct InvariantSet {
     context: ItemPtr,
     statements: Vec<ItemPtr>,
@@ -17,6 +22,21 @@ pub struct InvariantSet {
     pub(super) connected_to_root: bool,
     pub(super) required: bool,
     pub(super) dependencies: HashSet<ItemPtr>,
+}
+
+impl Debug for InvariantSet {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("InvariantSet")
+            .field("context", &self.context.address())
+            .field("statements", &self.statements)
+            .field(
+                "justification_requirements",
+                &self.justification_requirements,
+            )
+            .field("required", &self.required)
+            .field("dependencies", &self.dependencies)
+            .finish_non_exhaustive()
+    }
 }
 
 pub type InvariantSetPtr = Rc<RefCell<InvariantSet>>;

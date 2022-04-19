@@ -53,11 +53,14 @@ fn variable_equals_variable() {
 
 #[test]
 fn var_sub_something_equals_something() {
-    let mut env = env();
     let thing = unique();
+    thing.set_name("thing".to_owned());
     let another = unique();
+    another.set_name("another".to_owned());
     let (var_con, var_id) = variable_full();
+    var_con.set_name("var".to_owned());
     let var_sub_thing = unchecked_substitution(var_con, &subs(vec![(var_id, thing.ptr_clone())]));
+    var_sub_thing.set_name("var_sub_thing".to_owned());
     assert_eq!(var_sub_thing.get_equality(&thing, 2), Ok(Equal::yes()));
     assert_eq!(thing.get_equality(&var_sub_thing, 2), Ok(Equal::yes()));
     assert_eq!(var_sub_thing.get_equality(&another, 2), Ok(Equal::No));
@@ -288,7 +291,6 @@ fn fx_sub_a_is_gy_sub_a() {
 
 #[test]
 fn fx_sub_gy_is_gy_sub_x() {
-    let mut env = env();
     let x = variable_full(); // 13/0
     let y = variable_full(); // 14/1
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]); // 15/2
@@ -303,8 +305,8 @@ fn fx_sub_gy_is_gy_sub_x() {
         &subs(vec![(f.1.ptr_clone(), gx.ptr_clone())]),
     ); // 18
 
-    assert_eq!(fx_sub_gy.get_equality(&gx, 6), Ok(Equal::yes()));
     assert_eq!(gx.get_equality(&fx_sub_gy, 6), Ok(Equal::yes()));
+    assert_eq!(fx_sub_gy.get_equality(&gx, 6), Ok(Equal::yes()));
     assert_eq!(gx.get_equality(&fx_sub_gy, 1), Ok(Equal::NeedsHigherLimit));
 }
 

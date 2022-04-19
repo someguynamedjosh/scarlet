@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt::Debug};
 
 use crate::{
     environment::Environment,
@@ -21,11 +21,21 @@ use crate::{
 
 pub type Substitutions = OrderedMap<VariablePtr, ItemPtr>;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct DSubstitution {
     base: ItemPtr,
     subs: Substitutions,
     invs: InvariantSetPtr,
+}
+
+impl Debug for DSubstitution {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DSubstitution")
+            .field("base", &self.base)
+            .field("subs", &self.subs)
+            .field("invs", &self.invs)
+            .finish()
+    }
 }
 
 impl DSubstitution {

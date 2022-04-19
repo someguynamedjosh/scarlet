@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use maplit::hashset;
 
@@ -47,12 +47,23 @@ impl VariableOrder {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Variable {
     item: ItemPtr,
     invariants: Vec<ItemPtr>,
     dependencies: Vec<ItemPtr>,
     order: VariableOrder,
+}
+
+impl Debug for Variable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Variable")
+            .field("item", &self.item.address())
+            .field("invariants", &self.invariants)
+            .field("dependencies", &self.dependencies)
+            .field("order", &self.order)
+            .finish()
+    }
 }
 
 pub type VariablePtr = Rc<RefCell<Variable>>;

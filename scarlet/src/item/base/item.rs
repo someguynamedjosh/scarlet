@@ -41,7 +41,7 @@ impl Clone for ItemPtr {
 
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.0.borrow().fmt(f)
+        self.0.borrow().definition.fmt(f)
     }
 }
 
@@ -61,6 +61,10 @@ impl Hash for ItemPtr {
 
 /// Basic pointer functionality
 impl ItemPtr {
+    pub fn address(&self) -> String {
+        format!("@0x{:x}", Rc::as_ptr(&self.0).to_bits())
+    }
+
     pub fn is_same_instance_as(&self, other: &Self) -> bool {
         self.0.as_ptr() == other.0.as_ptr()
     }
