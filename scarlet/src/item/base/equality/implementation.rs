@@ -59,41 +59,8 @@ impl EqualityCalculationContext {
             VariableResult::ResultReached(result) => return result,
             VariableResult::ProceedWithVariable(var) => var,
         };
-        self.after_lhs_substitution(lvar, could_use_higher_limit)
-    }
-
-    fn after_lhs_substitution(
-        &mut self,
-        lvar: Option<VariablePtr>,
-        could_use_higher_limit: bool,
-    ) -> EqualResult {
-        // Just in case the previous expression didn't get to fully dereference rhs...
-        while self.rhs.dereference_once() {}
-        let rvar = match self.check_and_handle_right_variable_substitution() {
-            VariableResult::ResultReached(result) => return result,
-            VariableResult::ProceedWithVariable(var) => var,
-        };
-        if self.lhs.item.is_same_instance_as(&self.rhs.item) {
-            if self.lhs.subs.len() > 0 || self.rhs.subs.len() > 0 {
-                // todo!();
-            } else {
-                return Ok(Equal::yes());
-            }
-        }
-        if let (Some(lvar), Some(rvar)) = (lvar, rvar) {
-            // We can only get here if the variables aren't substituted.  We do
-            // an early return if either of the variables are substituted. We
-            // only need to pass one var because we already know they are the
-            // same variable.
-            if lvar.is_same_instance_as(&rvar) {
-                return self.check_var_args_are_equal(lvar);
-            } else {
-                return if could_use_higher_limit {
-                    Ok(Equal::NeedsHigherLimit)
-                } else {
-                    Ok(Equal::Unknown)
-                };
-            }
+        if let Some(result) = self.after_lhs_substitution(lvar, could_use_higher_limit) {
+            return result;
         }
         let lhs = self.lhs.item.ptr_clone();
         let def = &lhs.borrow().definition;
@@ -109,6 +76,42 @@ impl EqualityCalculationContext {
                 }
             }
         }
+    }
+
+    fn after_lhs_substitution(
+        &mut self,
+        lvar: Option<VariablePtr>,
+        could_use_higher_limit: bool,
+    ) -> Option<EqualResult> {
+        // Just in case the previous expression didn't get to fully dereference rhs...
+        while self.rhs.dereference_once() {}
+        let rvar = match self.check_and_handle_right_variable_substitution() {
+            VariableResult::ResultReached(result) => return Some(result),
+            VariableResult::ProceedWithVariable(var) => var,
+        };
+        if self.lhs.item.is_same_instance_as(&self.rhs.item) {
+            if self.lhs.subs.len() > 0 || self.rhs.subs.len() > 0 {
+                // todo!();
+            } else {
+                return Some(Ok(Equal::yes()));
+            }
+        }
+        if let (Some(lvar), Some(rvar)) = (lvar, rvar) {
+            // We can only get here if the variables aren't substituted.  We do
+            // an early return if either of the variables are substituted. We
+            // only need to pass one var because we already know they are the
+            // same variable.
+            if lvar.is_same_instance_as(&rvar) {
+                return Some(self.check_var_args_are_equal(lvar));
+            } else {
+                return if could_use_higher_limit {
+                    Some(Ok(Equal::NeedsHigherLimit))
+                } else {
+                    Some(Ok(Equal::Unknown))
+                };
+            }
+        }
+        None
     }
 
     fn check_and_handle_left_variable_by_dereferencing_rhs(
@@ -350,7 +353,8 @@ impl EqualityCalculationContext {
     fn check_if_new_rhs_is_just_lhs(&mut self, lvar: &VariablePtr, new_rhs: &ItemPtr) -> bool {
         let old_rhs = self.rhs.clone();
         self.rhs.item = new_rhs.ptr_clone();
-        let result = self.after_lhs_substitution(Some(lvar.ptr_clone()), false) == Ok(Equal::yes());
+        let result =
+            self.after_lhs_substitution(Some(lvar.ptr_clone()), false) == Some(Ok(Equal::yes()));
         self.rhs = old_rhs;
         result
     }
