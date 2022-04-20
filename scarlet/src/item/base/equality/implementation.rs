@@ -31,6 +31,17 @@ enum VariableResult {
 
 impl EqualityCalculationContext {
     pub(super) fn get_equality_impl(&mut self) -> EqualResult {
+        match self.get_equality_impl_impl() {
+            Ok(Equal::Yes(subs, mut rec_over)) => {
+                rec_over.append(&mut self.lhs.recurses_over.clone());
+                rec_over.append(&mut self.rhs.recurses_over.clone());
+                Ok(Equal::Yes(subs, rec_over))
+            }
+            other => other,
+        }
+    }
+
+    fn get_equality_impl_impl(&mut self) -> EqualResult {
         if TRACE {
             println!(
                 "{:#?} {:#?} = {:#?} {:#?}",
@@ -241,6 +252,9 @@ impl EqualityCalculationContext {
 
         // The value the lhs dex is going to be replaced by.
         let dex_replacement = self.store_substitions_not_appearing_on_lhs(ldeps, &rdeps);
+        println!("{:#?}", ldeps);
+        println!("{:#?}", rdeps);
+        println!("Dex replacement is {:#?}", dex_replacement);
         let dex_replacement = self.replace_rhs_vars_with_lhs_deps(dex_replacement, ldeps, &rdeps);
         // Step 3
         if !self.check_if_new_rhs_is_just_lhs(lvar, &dex_replacement) {
@@ -263,14 +277,14 @@ impl EqualityCalculationContext {
         //    convert a statement about a[something_specific] to a statement
         //    about a.
         let lhs_replacement = self.rhs.item.ptr_clone();
+        let skipped_deps = &rdeps[0..ldeps.len()];
         let remaining_rdeps = rdeps
             .iter()
             .skip(ldeps.len())
-            // If rhs is a variable, we already store its substitution in $subs.
-            .filter(|x| !x.var.borrow().item().is_same_instance_as(&lhs_replacement))
             .collect_vec();
         let mut remaining_rdep_subs = Substitutions::new();
         for dep in remaining_rdeps {
+            println!("DEP {:#?}", dep);
             let mut subbed = dep.var.borrow().item().ptr_clone();
             for sub in &self.rhs.subs {
                 // This is only necessary to produce clean results I.E. produce
@@ -279,6 +293,9 @@ impl EqualityCalculationContext {
                 let sdeps = subbed.get_dependencies();
                 let mut filtered_subs = Substitutions::new();
                 for dep in sdeps.into_variables() {
+                    if skipped_deps.contains(&dep) {
+                        continue;
+                    }
                     if let Some(value) = sub.get(&dep.var) {
                         filtered_subs.insert_or_replace(dep.var.ptr_clone(), value.ptr_clone());
                     }

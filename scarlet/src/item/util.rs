@@ -10,11 +10,15 @@ use crate::{environment::Environment, scope::SRoot};
 pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
     if subs.len() == 0 {
         return base;
-    } else {
-        let scope = base.clone_scope();
-        let def = DSubstitution::new_unchecked(base, subs.clone());
-        Item::new_boxed(Box::new(def), scope)
+    } else if subs.len() == 1  {
+        let (target, value) = subs.iter().next().unwrap();
+        if target.borrow().item().is_same_instance_as(&base) {
+            return value.ptr_clone()
+        }
     }
+    let scope = base.clone_scope();
+    let def = DSubstitution::new_unchecked(base, subs.clone());
+    Item::new_boxed(Box::new(def), scope)
 }
 
 pub fn decision(

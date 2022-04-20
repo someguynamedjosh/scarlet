@@ -252,18 +252,25 @@ fn fx_is_gy() {
 fn fx_sub_a_is_gy_sub_a() {
     let mut env = env();
     let a = unique();
+    a.set_name("a".to_owned());
     let x = variable_full();
+    x.0.set_name("x".to_owned());
     let y = variable_full();
+    y.0.set_name("y".to_owned());
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    f.0.set_name("f".to_owned());
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
+    g.0.set_name("g".to_owned());
     let f_sub_a = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), a.ptr_clone())]),
     );
+    f_sub_a.set_name("f[a]".to_owned());
     let g_sub_a = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), a.ptr_clone())]),
     );
+    g_sub_a.set_name("g[a]".to_owned());
     assert_matches!(f_sub_a.get_equality(&g_sub_a, 2), Ok(Equal::Yes(..)));
     assert_matches!(g_sub_a.get_equality(&f_sub_a, 2), Ok(Equal::Yes(..)));
     assert_matches!(
@@ -291,23 +298,28 @@ fn fx_sub_a_is_gy_sub_a() {
 
 #[test]
 fn fx_sub_gy_is_gy_sub_x() {
-    let x = variable_full(); // 13/0
-    let y = variable_full(); // 14/1
-    let f = variable_full_with_deps(vec![x.0.ptr_clone()]); // 15/2
-    let g = variable_full_with_deps(vec![y.0.ptr_clone()]); // 16/3
+    let x = variable_full();
+    x.0.set_name(format!("x"));
+    let y = variable_full();
+    y.0.set_name(format!("y"));
+    let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    f.0.set_name(format!("f"));
+    let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
+    g.0.set_name(format!("g"));
 
     let gx = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())]),
-    ); // 17
+    );
+    gx.set_name(format!("g[x]"));
     let fx_sub_gy = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(f.1.ptr_clone(), gx.ptr_clone())]),
-    ); // 18
+    );
+    fx_sub_gy.set_name(format!("f[g[x]]"));
 
     assert_eq!(gx.get_equality(&fx_sub_gy, 6), Ok(Equal::yes()));
     assert_eq!(fx_sub_gy.get_equality(&gx, 6), Ok(Equal::yes()));
-    assert_eq!(gx.get_equality(&fx_sub_gy, 1), Ok(Equal::NeedsHigherLimit));
 }
 
 #[test]
@@ -587,11 +599,16 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
 fn x_eq_y_sub_true_true_is_a_equal_a() {
     let mut env = env();
     let truee = unique();
+    truee.set_name("true".to_owned());
     let falsee = unique();
+    truee.set_name("false".to_owned());
 
     let a = variable_full();
+    a.0.set_name("a".to_owned());
     let x = variable_full();
+    x.0.set_name("x".to_owned());
     let y = variable_full();
+    y.0.set_name("y".to_owned());
 
     let x_eq_y = decision(
         x.0.ptr_clone(),
@@ -599,6 +616,7 @@ fn x_eq_y_sub_true_true_is_a_equal_a() {
         truee.ptr_clone(),
         falsee.ptr_clone(),
     );
+    x_eq_y.set_name("x=y".to_owned());
     let true_eq_true = unchecked_substitution(
         x_eq_y,
         &subs(vec![
@@ -606,12 +624,14 @@ fn x_eq_y_sub_true_true_is_a_equal_a() {
             (y.1.ptr_clone(), truee.ptr_clone()),
         ]),
     );
+    true_eq_true.set_name("true=true".to_owned());
     let a_eq_a = decision(
         a.0.ptr_clone(),
         a.0.ptr_clone(),
         truee.ptr_clone(),
         falsee.ptr_clone(),
     );
+    a_eq_a.set_name("a=a".to_owned());
 
     assert_matches!(a_eq_a.get_equality(&true_eq_true, 3), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = a_eq_a.get_equality(&true_eq_true, 3) {

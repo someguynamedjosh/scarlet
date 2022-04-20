@@ -1,4 +1,8 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::{self, Debug, Formatter},
+    rc::Rc,
+};
 
 use maplit::hashset;
 
@@ -27,7 +31,7 @@ use crate::{
     util::{rcrc, PtrExtension},
 };
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VariableOrder {
     /// Explicitly defined order, 0-255.
     pub major_order: u8,
@@ -35,6 +39,16 @@ pub struct VariableOrder {
     file_order: u32,
     /// Implicit order by position in file.
     minor_order: u32,
+}
+
+impl Debug for VariableOrder {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}:{}:{}",
+            self.major_order, self.file_order, self.minor_order
+        )
+    }
 }
 
 impl VariableOrder {
@@ -56,13 +70,16 @@ pub struct Variable {
 }
 
 impl Debug for Variable {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Variable")
-            .field("item", &self.item.address())
-            .field("invariants", &self.invariants)
-            .field("dependencies", &self.dependencies)
-            .field("order", &self.order)
-            .finish()
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut base = f.debug_struct("Variable");
+        base.field("item", &self.item.address());
+        if self.invariants.len() > 0 {
+            base.field("invariants", &self.invariants);
+        }
+        if self.dependencies.len() > 0 {
+            base.field("dependencies", &self.dependencies);
+        }
+        base.field("order", &self.order).finish()
     }
 }
 
@@ -86,8 +103,14 @@ impl Variable {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct DVariable(VariablePtr);
+
+impl Debug for DVariable {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.0.borrow().fmt(f)
+    }
+}
 
 impl PartialEq for DVariable {
     fn eq(&self, other: &Self) -> bool {

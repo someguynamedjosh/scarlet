@@ -52,18 +52,23 @@ impl EqualityCalculationContext {
 
     pub fn refine_and_get_equality(
         &mut self,
-        mut new_lhs: ItemPtr,
-        mut new_rhs: ItemPtr,
+        new_lhs: ItemPtr,
+        new_rhs: ItemPtr,
         _: PermissionToRefine,
     ) -> EqualResult {
-        std::mem::swap(&mut new_lhs, &mut self.lhs.item);
-        std::mem::swap(&mut new_rhs, &mut self.rhs.item);
-        self.limit -= 1;
-        let result = self.get_equality_impl();
-        // Put the old ones back.
-        std::mem::swap(&mut new_lhs, &mut self.lhs.item);
-        std::mem::swap(&mut new_rhs, &mut self.rhs.item);
-        self.limit += 1;
-        result
+        let mut new_self = Self {
+            lhs: ItemWithSubsAndRecursion {
+                item: new_lhs,
+                subs: self.lhs.subs.clone(),
+                recurses_over: self.lhs.recurses_over.clone(),
+            },
+            rhs: ItemWithSubsAndRecursion {
+                item: new_rhs,
+                subs: self.rhs.subs.clone(),
+                recurses_over: self.rhs.recurses_over.clone(),
+            },
+            limit: self.limit - 1,
+        };
+        new_self.get_equality_impl()
     }
 }

@@ -62,7 +62,11 @@ impl Hash for ItemPtr {
 /// Basic pointer functionality
 impl ItemPtr {
     pub fn address(&self) -> String {
-        format!("@0x{:x}", Rc::as_ptr(&self.0).to_bits())
+        format!(
+            "{}@0x{:x}",
+            self.0.borrow().name.as_ref().unwrap_or(&format!("")),
+            Rc::as_ptr(&self.0).to_bits()
+        )
     }
 
     pub fn is_same_instance_as(&self, other: &Self) -> bool {

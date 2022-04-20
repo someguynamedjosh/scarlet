@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::{
     impl_any_eq_from_regular_eq,
     item::{
@@ -13,10 +15,20 @@ use crate::{
     shared::{Id, Pool},
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct DOther {
     other: ItemPtr,
     recursive: bool,
+}
+
+impl Debug for DOther {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.recursive {
+            write!(f, "(recursive) {}", self.other.address())
+        } else {
+            self.other.borrow().fmt(f)
+        }
+    }
 }
 
 impl DOther {
