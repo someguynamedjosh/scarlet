@@ -13,8 +13,8 @@ pub type StatementJustification = Vec<InvariantSetPtr>;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct InvariantSet {
-    context: ItemPtr,
-    statements: Vec<ItemPtr>,
+    pub(super) context: ItemPtr,
+    pub(super) statements: Vec<ItemPtr>,
     /// For the original statements to hold, all the statements in this list
     /// must also hold.
     pub(super) justification_requirements: Vec<ItemPtr>,

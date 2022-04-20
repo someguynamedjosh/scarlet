@@ -24,10 +24,10 @@ use crate::{
             placeholder::DPlaceholder,
             structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         },
-        resolvable::{BoxedResolvable, DResolvable, Resolvable},
+        resolvable::{BoxedResolvable, DResolvable, Resolvable, UnresolvedItemError},
         ItemDefinition,
     },
-    scope::{SRoot, Scope},
+    scope::{LookupIdentResult, SRoot, Scope},
     util::rcrc,
 };
 
@@ -41,6 +41,7 @@ impl Clone for ItemPtr {
 
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "{}", self.address())?;
         self.0.borrow().definition.fmt(f)
     }
 }
@@ -77,14 +78,17 @@ impl ItemPtr {
         Self(Rc::clone(&self.0))
     }
 
+    #[track_caller]
     pub fn borrow(&self) -> Ref<'_, Item> {
         self.0.borrow()
     }
 
+    #[track_caller]
     pub fn borrow_mut(&self) -> RefMut<'_, Item> {
         self.0.borrow_mut()
     }
 
+    #[track_caller]
     pub(crate) fn redefine(&self, new_definition: Box<dyn ItemDefinition>) {
         self.borrow_mut().definition = new_definition;
     }
@@ -117,6 +121,18 @@ impl ItemPtr {
         OwningRef::new(self.borrow())
             .try_map(|this| this.downcast_definition().ok_or(()))
             .ok()
+    }
+
+    pub fn downcast_resolved_definition<D: ItemDefinition>(
+        &self,
+    ) -> Result<Option<OwningRef<Ref<'_, Item>, D>>, UnresolvedItemError> {
+        if self.downcast_definition::<DResolvable>().is_some() {
+            Err(UnresolvedItemError(self.ptr_clone()))
+        } else {
+            Ok(OwningRef::new(self.borrow())
+                .try_map(|this| this.downcast_definition().ok_or(()))
+                .ok())
+        }
     }
 
     pub fn downcast_definition_mut<D: ItemDefinition>(
@@ -197,7 +213,14 @@ impl ItemPtr {
             }
         }
         stack.with_stack_frame(self.ptr_clone(), |stack| {
-            for content in self.borrow().definition.contents() {
+            let contents = self
+                .borrow()
+                .definition
+                .contents()
+                .into_iter()
+                .map(ItemPtr::ptr_clone)
+                .collect_vec();
+            for content in contents {
                 content.mark_recursion_impl(stack);
             }
         })
@@ -230,6 +253,10 @@ impl ItemPtr {
         for content in self.borrow().definition.contents() {
             content.for_self_and_contents(visitor);
         }
+    }
+
+    pub fn lookup_ident(&self, ident: &str) -> LookupIdentResult {
+        self.borrow().scope.lookup_ident(ident)
     }
 }
 

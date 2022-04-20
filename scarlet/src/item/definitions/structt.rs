@@ -170,7 +170,7 @@ impl Scope for SField {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, ident: &str) -> LookupIdentResult {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
             Ok(if structt.label == ident {
                 Some(structt.value.ptr_clone())
@@ -198,7 +198,7 @@ impl Scope for SField {
         }
     }
 
-    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
             structt.value.get_invariants().into_iter().collect()
         } else {
@@ -214,15 +214,11 @@ impl Scope for SField {
 #[derive(Debug, Clone)]
 pub struct SFieldAndRest(pub ItemPtr);
 
-fn lookup_ident_in(
-    env: &mut Environment,
-    ident: &str,
-    inn: &DPopulatedStruct,
-) -> LookupIdentResult {
+fn lookup_ident_in(ident: &str, inn: &DPopulatedStruct) -> LookupIdentResult {
     Ok(if inn.label == ident {
         Some(inn.value.ptr_clone())
     } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        lookup_ident_in(env, ident, &rest)?
+        lookup_ident_in(ident, &rest)?
     } else {
         None
     })
@@ -242,10 +238,10 @@ fn reverse_lookup_ident_in(
     })
 }
 
-fn get_invariant_sets_in(env: &mut Environment, inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {
+fn get_invariant_sets_in(inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {
     let mut result = inn.value.get_invariants().into_iter().collect_vec();
     if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        result.append(&mut get_invariant_sets_in(env, &*rest));
+        result.append(&mut get_invariant_sets_in(&*rest));
     }
     result
 }
@@ -255,9 +251,9 @@ impl Scope for SFieldAndRest {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, ident: &str) -> LookupIdentResult {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
-            lookup_ident_in(env, ident, &structt)
+            lookup_ident_in(ident, &structt)
         } else {
             unreachable!()
         }
@@ -275,9 +271,9 @@ impl Scope for SFieldAndRest {
         }
     }
 
-    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         if let Some(structt) = self.0.downcast_definition() {
-            get_invariant_sets_in(env, &structt)
+            get_invariant_sets_in(&structt)
         } else {
             unreachable!()
         }

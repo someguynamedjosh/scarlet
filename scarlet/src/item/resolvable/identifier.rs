@@ -24,7 +24,7 @@ impl Resolvable for RIdentifier {
         _limit: u32,
     ) -> ResolveResult {
         let identified = scope
-            .lookup_ident(env, &self.0)?
+            .lookup_ident(&self.0)?
             .expect(&format!("Cannot find what {} refers to", self.0));
         ResolveResult::Ok(DOther::new_plain(identified).clone_into_box())
     }

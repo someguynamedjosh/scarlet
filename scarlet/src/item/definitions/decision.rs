@@ -162,7 +162,7 @@ impl Scope for SWithInvariant {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(&self, _ctx: &mut Environment, _ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _ident: &str) -> LookupIdentResult {
         Ok(None)
     }
 
@@ -174,7 +174,7 @@ impl Scope for SWithInvariant {
         Ok(None)
     }
 
-    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         vec![self.0.ptr_clone()]
     }
 

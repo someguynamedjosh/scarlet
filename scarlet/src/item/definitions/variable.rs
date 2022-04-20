@@ -4,6 +4,7 @@ use std::{
     rc::Rc,
 };
 
+use itertools::Itertools;
 use maplit::hashset;
 
 use crate::{
@@ -104,7 +105,7 @@ impl Variable {
 }
 
 #[derive(Clone)]
-pub struct DVariable(VariablePtr);
+pub struct DVariable(VariablePtr, Vec<ItemPtr>);
 
 impl Debug for DVariable {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -136,11 +137,17 @@ impl DVariable {
         let placeholder = Item::placeholder();
         let variable = Variable {
             item: placeholder,
-            invariants,
-            dependencies,
+            invariants: invariants.clone(),
+            dependencies: dependencies.clone(),
             order,
         };
-        let def = DVariable(rcrc(variable));
+        let def = DVariable(
+            rcrc(variable),
+            invariants
+                .into_iter()
+                .chain(dependencies.into_iter())
+                .collect(),
+        );
         Item::new_self_referencing(def, scope, |ptr, this| {
             this.0.borrow_mut().item = ptr;
         })
@@ -198,6 +205,10 @@ impl ItemDefinition for DVariable {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        self.1.iter().collect_vec()
+    }
 }
 
 impl CheckFeature for DVariable {}
@@ -252,7 +263,7 @@ impl Scope for SVariableInvariants {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(&self, _env: &mut Environment, ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, ident: &str) -> LookupIdentResult {
         Ok(if ident == "SELF" {
             Some(self.0.ptr_clone())
         } else {
@@ -272,7 +283,7 @@ impl Scope for SVariableInvariants {
         })
     }
 
-    fn local_get_invariant_sets(&self, _env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         vec![]
     }
 

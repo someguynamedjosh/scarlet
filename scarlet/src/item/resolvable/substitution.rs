@@ -196,8 +196,11 @@ impl RSubstitution {
         remaining_deps: &mut Dependencies,
     ) -> Result<(), ResolveError> {
         for (name, value) in &self.named_subs {
-            let target = base_scope.lookup_ident(env, &name)?.unwrap();
-            if let Some(var) = target.downcast_definition::<DVariable>() {
+            let target = base_scope.lookup_ident(&name)?.unwrap();
+            if let Some(var) = target
+                .dereference()
+                .downcast_resolved_definition::<DVariable>()?
+            {
                 subs.insert_no_replace(var.get_variable().ptr_clone(), value.ptr_clone());
                 remaining_deps.remove(var.get_variable());
             } else {

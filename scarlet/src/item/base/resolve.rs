@@ -67,9 +67,6 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
             }
         }
     });
-    root.for_self_and_contents(&mut |item| {
-        item.get_invariants();
-    });
     if problem {
         panic!("Failed to resolve construct(s)");
     }
@@ -83,6 +80,7 @@ fn resolve(env: &mut Environment, item: ItemPtr, limit: u32) -> Result<bool, Res
         let new_def = wrapper
             .resolvable()
             .resolve(env, item.ptr_clone(), scope, limit);
+        drop(wrapper);
         match new_def {
             ResolveResult::Ok(new_def) => {
                 item.redefine(new_def);

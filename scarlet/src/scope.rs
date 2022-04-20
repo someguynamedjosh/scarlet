@@ -29,20 +29,20 @@ pub trait Scope: Debug {
         false
     }
 
-    fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult;
+    fn local_lookup_ident(&self, ident: &str) -> LookupIdentResult;
     fn local_reverse_lookup_ident(
         &self,
         env: &mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult;
-    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr>;
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr>;
     fn parent(&self) -> Option<ItemPtr>;
 
-    fn lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
-        if let Some(result) = self.local_lookup_ident(env, ident)? {
+    fn lookup_ident(&self, ident: &str) -> LookupIdentResult {
+        if let Some(result) = self.local_lookup_ident(ident)? {
             Ok(Some(result))
         } else if let Some(parent) = self.parent() {
-            parent.borrow().scope.lookup_ident(env, ident)
+            parent.borrow().scope.lookup_ident(ident)
         } else {
             Ok(None)
         }
@@ -68,11 +68,11 @@ pub trait Scope: Debug {
         }
     }
 
-    fn get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
-        let mut result = self.local_get_invariant_sets(env);
+    fn get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+        let mut result = self.local_get_invariant_sets();
         if let Some(parent) = self.parent() {
             let parent_scope = &parent.borrow().scope;
-            result.append(&mut parent_scope.get_invariant_sets(env));
+            result.append(&mut parent_scope.get_invariant_sets());
         }
         result
     }
@@ -86,7 +86,7 @@ impl Scope for SPlain {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(&self, _env: &mut Environment, _ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _ident: &str) -> LookupIdentResult {
         Ok(None)
     }
 
@@ -98,7 +98,7 @@ impl Scope for SPlain {
         Ok(None)
     }
 
-    fn local_get_invariant_sets(&self, _env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         vec![]
     }
 
@@ -115,7 +115,7 @@ impl Scope for SRoot {
         Box::new(self.clone())
     }
 
-    fn local_lookup_ident(&self, _env: &mut Environment, _ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _ident: &str) -> LookupIdentResult {
         Ok(None)
     }
 
@@ -127,7 +127,7 @@ impl Scope for SRoot {
         Ok(None)
     }
 
-    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         vec![]
     }
 
@@ -148,7 +148,7 @@ impl Scope for SPlaceholder {
         true
     }
 
-    fn local_lookup_ident(&self, _env: &mut Environment, _ident: &str) -> LookupIdentResult {
+    fn local_lookup_ident(&self, _ident: &str) -> LookupIdentResult {
         unreachable!()
     }
 
@@ -160,7 +160,7 @@ impl Scope for SPlaceholder {
         unreachable!()
     }
 
-    fn local_get_invariant_sets(&self, _env: &mut Environment) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
         unreachable!()
     }
 
@@ -181,8 +181,8 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         false
     }
 
-    fn local_lookup_ident(&self, env: &mut Environment, ident: &str) -> LookupIdentResult {
-        self.0.local_lookup_ident(env, ident)
+    fn local_lookup_ident(&self, ident: &str) -> LookupIdentResult {
+        self.0.local_lookup_ident(ident)
     }
 
     fn local_reverse_lookup_ident(
@@ -193,8 +193,8 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         self.0.local_reverse_lookup_ident(env, value)
     }
 
-    fn local_get_invariant_sets(&self, env: &mut Environment) -> Vec<InvariantSetPtr> {
-        self.0.local_get_invariant_sets(env)
+    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+        self.0.local_get_invariant_sets()
     }
 
     fn parent(&self) -> Option<ItemPtr> {

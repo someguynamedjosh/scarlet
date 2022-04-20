@@ -26,7 +26,8 @@ impl Debug for DOther {
         if self.recursive {
             write!(f, "(recursive) {}", self.other.address())
         } else {
-            self.other.borrow().fmt(f)
+            write!(f, "(other) ")?;
+            self.other.fmt(f)
         }
     }
 }
@@ -62,6 +63,14 @@ impl_any_eq_from_regular_eq!(DOther);
 impl ItemDefinition for DOther {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
+    }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        if self.recursive {
+            vec![]
+        } else {
+            vec![&self.other]
+        }
     }
 }
 

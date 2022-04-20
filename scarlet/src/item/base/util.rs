@@ -54,6 +54,7 @@ impl RecursionPreventionStack {
     }
 }
 
+#[derive(Clone)]
 pub(super) struct Stack<T>(Vec<T>);
 
 impl<T> Stack<T>
@@ -75,5 +76,9 @@ where
         self.0.pop();
         assert_eq!(self.0.len(), len_before_executing);
         result
+    }
+
+    pub fn into_frames(self) -> Vec<T> {
+        self.0
     }
 }
