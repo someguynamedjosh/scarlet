@@ -22,14 +22,12 @@ use crate::{
 
 #[test]
 fn something_equals_itself() {
-    let mut env = env();
     let thing = unique();
     assert_eq!(thing.get_equality(&thing, 0), Ok(Equal::yes()));
 }
 
 #[test]
 fn something_equals_variable() {
-    let mut env = env();
     let thing = unique();
     let (var_con, var_id) = variable_full();
     let expected = subs(vec![(var_id, thing.ptr_clone())]);
@@ -41,7 +39,6 @@ fn something_equals_variable() {
 
 #[test]
 fn variable_equals_variable() {
-    let mut env = env();
     let x = variable_full();
     let y = variable_full();
     let expected = subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]);
@@ -69,7 +66,6 @@ fn var_sub_something_equals_something() {
 
 #[test]
 fn decision_equals_identical_decision() {
-    let mut env = env();
     let a = variable();
     let b = variable();
     let c = variable();
@@ -82,7 +78,6 @@ fn decision_equals_identical_decision() {
 
 #[test]
 fn aabc_is_ddef() {
-    let mut env = env();
     let a = variable_full();
     let b = variable_full();
     let c = variable_full();
@@ -123,7 +118,6 @@ fn aabc_is_ddef() {
 
 #[test]
 fn xxbc_is_aabc() {
-    let mut env = env();
     let a = unique();
     let b = unique();
     let c = unique();
@@ -144,7 +138,6 @@ fn xxbc_is_aabc() {
 
 #[test]
 fn aabc_eq_b_is_ddef_eq_e() {
-    let mut env = env();
     let truee = unique();
     let falsee = unique();
     let a = variable_full();
@@ -189,7 +182,6 @@ fn aabc_eq_b_is_ddef_eq_e() {
 
 #[test]
 fn decision_equals_decision_with_subs() {
-    let mut env = env();
     let a = variable_full();
     let b = variable_full();
     let c = variable_full();
@@ -219,7 +211,6 @@ fn decision_equals_decision_with_subs() {
 
 #[test]
 fn fx_is_gy() {
-    let mut env = env();
     let x = variable_full();
     let y = variable_full();
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
@@ -250,7 +241,6 @@ fn fx_is_gy() {
 
 #[test]
 fn fx_sub_a_is_gy_sub_a() {
-    let mut env = env();
     let a = unique();
     a.set_name("a".to_owned());
     let x = variable_full();
@@ -324,7 +314,6 @@ fn fx_sub_gy_is_gy_sub_x() {
 
 #[test]
 fn fx_sub_nothing_is_gy_sub_nothing() {
-    let mut env = env();
     let x = variable_full();
     let y = variable_full();
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
@@ -356,7 +345,6 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
 
 #[test]
 fn fx_sub_z_is_gy_sub_nothing() {
-    let mut env = env();
     let x = variable_full();
     let y = variable_full();
     let z = variable_full();
@@ -392,7 +380,6 @@ fn fx_sub_z_is_gy_sub_nothing() {
 
 #[test]
 fn fx_sub_decision_is_gy_sub_decision() {
-    let mut env = env();
     let a = unique();
     let b = unique();
     let c = unique();
@@ -431,7 +418,6 @@ fn fx_sub_decision_is_gy_sub_decision() {
 
 #[test]
 fn dex_sub_decision_is_gy_sub_decision() {
-    let mut env = env();
     let a = unique();
     let b = unique();
     let c = unique();
@@ -484,8 +470,6 @@ fn dex_sub_decision_is_gy_sub_decision() {
 
 #[test]
 fn fx_sub_decision_with_var_is_gy_sub_decision() {
-    let mut env = env();
-
     let aa = variable_full();
 
     let a = unique();
@@ -531,8 +515,6 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
 
 #[test]
 fn fx_sub_gy_sub_a_is_gy_sub_a() {
-    let mut env = env();
-
     // 13
     let a = unique();
     // 14
@@ -567,8 +549,6 @@ fn fx_sub_gy_sub_a_is_gy_sub_a() {
 
 #[test]
 fn fx_sub_a_sub_gy_is_gy_sub_a() {
-    let mut env = env();
-
     let a = unique();
 
     let x = variable_full();
@@ -597,7 +577,6 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
 
 #[test]
 fn x_eq_y_sub_true_true_is_a_equal_a() {
-    let mut env = env();
     let truee = unique();
     truee.set_name("true".to_owned());
     let falsee = unique();
@@ -646,8 +625,6 @@ fn x_eq_y_sub_true_true_is_a_equal_a() {
 
 #[test]
 fn is_bool_sub_y_is_y_is_bool() {
-    let mut env = env();
-
     let x = variable_full();
     let y = variable_full();
     let t = unique();
@@ -671,8 +648,6 @@ fn is_bool_sub_y_is_y_is_bool() {
 /// f[z] <=> DECISION[x y a b]
 #[test]
 fn multi_variable_dex_is_single_variable_dex() {
-    let mut env = env();
-
     let a = unique();
     let b = unique();
     let x = variable_full();
@@ -718,8 +693,6 @@ fn multi_variable_dex_is_single_variable_dex() {
 /// f[z] <=> DECISION[x y a b][a]
 #[test]
 fn multi_variable_dex_sub_something_is_single_variable_dex() {
-    let mut env = env();
-
     let a = unique();
     let b = unique();
     let x = variable_full();
@@ -772,8 +745,6 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
 /// f[z] <=> DECISION[x y a b][x2 y2]
 #[test]
 fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
-    let mut env = env();
-
     let a = unique();
     let b = unique();
     let x = variable_full();
@@ -833,8 +804,6 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
 /// f[z] <=> DECISION[x y a b][a b]
 #[test]
 fn multi_variable_dex_sub_two_uniques_is_single_variable_dex() {
-    let mut env = env();
-
     let a = unique();
     let b = unique();
     let x = variable_full();
@@ -901,8 +870,6 @@ fn multi_variable_dex_sub_two_uniques_is_single_variable_dex() {
 /// fx[fx IS x = y   x IS a   y IS b] <=/=> a = b
 #[test]
 fn sneaky_substitution() {
-    let mut env = env();
-
     // I13
     let a = unique();
     // I14
@@ -967,4 +934,28 @@ fn recursion_is_tracked_in_decision() {
         dec.get_equality(&dec_rec, 3),
         Ok(Equal::Yes(subs(vec![]), vec![dec]))
     );
+}
+
+#[test]
+fn x_x_is_y_y() {
+    let x = variable_full();
+    x.0.set_name("x".to_owned());
+    let y = variable_full();
+    y.0.set_name("y".to_owned());
+    let void = unique();
+
+    let x_x = structt(vec![("", x.0.ptr_clone()), ("", x.0.ptr_clone())], &void);
+    x_x.set_name(format!("{{x x}}"));
+    let y_y = structt(vec![("", y.0.ptr_clone()), ("", y.0.ptr_clone())], &void);
+    y_y.set_name(format!("{{y y}}"));
+
+    assert_matches!(x_x.get_equality(&y_y, 3), Ok(Equal::Yes(..)));
+    if let Ok(Equal::Yes(lsubs, _)) = x_x.get_equality(&y_y, 3) {
+        assert_eq!(lsubs.len(), 1);
+        let mut entries = lsubs.iter();
+        let last = entries.next().unwrap();
+        assert_eq!(last, &(x.1.ptr_clone(), y.0.ptr_clone()));
+    } else {
+        unreachable!()
+    }
 }

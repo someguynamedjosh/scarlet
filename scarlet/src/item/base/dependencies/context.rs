@@ -20,7 +20,8 @@ impl DependencyCalculationContext {
             |s| &mut s.stack,
             |this| {
                 let def = &of_item.borrow().definition;
-                let mut deps = def.get_dependencies_using_context(this, OnlyCalledByDcc(()));
+                let mut deps =
+                    def.get_dependencies_using_context(of_item, this, OnlyCalledByDcc(()));
                 deps.skipped_due_to_recursion.remove(of_item);
                 deps
             },

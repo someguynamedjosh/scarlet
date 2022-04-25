@@ -61,7 +61,12 @@ impl CheckFeature for DPopulatedStruct {}
 impl InvariantsFeature for DPopulatedStruct {}
 
 impl DependenciesFeature for DPopulatedStruct {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         let mut deps = ctx.get_dependencies(&self.value);
         deps.append(ctx.get_dependencies(&self.rest));
         deps
@@ -124,13 +129,22 @@ impl ItemDefinition for DAtomicStructMember {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![&self.0]
+    }
 }
 
 impl CheckFeature for DAtomicStructMember {}
 impl EqualityFeature for DAtomicStructMember {}
 
 impl DependenciesFeature for DAtomicStructMember {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
             match self.1 {
                 AtomicStructMember::Label => todo!(),

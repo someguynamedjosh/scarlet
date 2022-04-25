@@ -58,4 +58,15 @@ impl Resolvable for RVariable {
         );
         ResolveResult::Ok(DOther::new_plain(id).clone_into_box())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        let mut result = vec![];
+        for inv in &self.invariants {
+            result.push(inv);
+        }
+        for dep in &self.dependencies {
+            result.push(dep);
+        }
+        result
+    }
 }

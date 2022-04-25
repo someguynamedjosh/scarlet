@@ -25,4 +25,8 @@ impl Resolvable for RPlaceholder {
         eprintln!("{:#?}", env);
         unreachable!()
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![]
+    }
 }

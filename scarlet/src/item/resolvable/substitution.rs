@@ -99,6 +99,17 @@ impl Resolvable for RSubstitution {
         }
         result
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        let mut result = vec![&self.base];
+        for (_, value) in &self.named_subs {
+            result.push(value);
+        }
+        for value in &self.anonymous_subs {
+            result.push(value);
+        }
+        result
+    }
 }
 
 fn create_invariants(
@@ -175,10 +186,7 @@ impl RSubstitution {
                 if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error.clone().into());
                 } else {
-                    eprintln!(
-                        "BASE:\n{}\n",
-                        env.show(self.base.ptr_clone(), self.base.ptr_clone())
-                    );
+                    eprintln!("BASE:\n{:#?}\n", self.base,);
                     panic!("No more dependencies left to substitute!");
                 }
             }

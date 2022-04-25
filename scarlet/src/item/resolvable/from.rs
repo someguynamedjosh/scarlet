@@ -44,4 +44,8 @@ impl Resolvable for RFrom {
         let subbed = DSubstitution::new_unchecked(base.ptr_clone(), subs);
         ResolveResult::Ok(subbed.clone_into_box())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![&self.left, &self.right]
+    }
 }

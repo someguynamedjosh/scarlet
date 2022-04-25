@@ -6,7 +6,10 @@ use crate::{
     item::{
         check::CheckFeature,
         definitions::variable::{DVariable, VariablePtr},
-        dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
+        dependencies::{
+            Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
+            OnlyCalledByDcc,
+        },
         equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
@@ -56,6 +59,7 @@ impl DSubstitution {
     }
 
     pub fn sub_deps(
+        ctx: &mut DependencyCalculationContext,
         base: Dependencies,
         subs: &Substitutions,
         justifications: &HashSet<ItemPtr>,
@@ -64,7 +68,7 @@ impl DSubstitution {
         let base_error = base.error();
         for dep in base.as_variables() {
             if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.var) {
-                let replaced_deps = rep.get_dependencies();
+                let replaced_deps = ctx.get_dependencies(rep);
                 let replaced_err = replaced_deps.error().clone();
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.var) {
@@ -110,10 +114,15 @@ impl ItemDefinition for DSubstitution {
 impl CheckFeature for DSubstitution {}
 
 impl DependenciesFeature for DSubstitution {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         let base = ctx.get_dependencies(&self.base);
         let invs = self.invs.borrow().dependencies().clone();
-        Self::sub_deps(base, &self.subs, &invs)
+        Self::sub_deps(ctx, base, &self.subs, &invs)
     }
 }
 

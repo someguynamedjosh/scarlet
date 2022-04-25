@@ -48,12 +48,21 @@ impl ItemDefinition for DAxiom {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(self.clone())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![&self.statement]
+    }
 }
 
 impl CheckFeature for DAxiom {}
 
 impl DependenciesFeature for DAxiom {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         ctx.get_dependencies(&self.statement)
     }
 }

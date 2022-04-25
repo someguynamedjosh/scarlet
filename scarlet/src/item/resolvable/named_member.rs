@@ -71,4 +71,8 @@ impl Resolvable for RNamedMember {
         let def = DAtomicStructMember::new(base, AtomicStructMember::Value);
         ResolveResult::Ok(def.clone_into_box())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![&self.base]
+    }
 }

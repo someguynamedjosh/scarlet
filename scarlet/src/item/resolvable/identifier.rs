@@ -28,4 +28,8 @@ impl Resolvable for RIdentifier {
             .expect(&format!("Cannot find what {} refers to", self.0));
         ResolveResult::Ok(DOther::new_plain(identified).clone_into_box())
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        vec![]
+    }
 }

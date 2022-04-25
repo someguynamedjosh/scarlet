@@ -20,7 +20,7 @@ pub use variable::RVariable;
 
 use super::{
     check::CheckFeature,
-    dependencies::{Dcc, Dependencies, DependenciesFeature},
+    dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
     equality::EqualityFeature,
     invariants::InvariantsFeature,
 };
@@ -48,6 +48,10 @@ impl ItemDefinition for DResolvable {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
         Box::new(Self(self.0.dyn_clone()))
     }
+
+    fn contents(&self) -> Vec<&ItemPtr> {
+        self.0.contents()
+    }
 }
 
 impl AnyEq for DResolvable {
@@ -60,7 +64,16 @@ impl AnyEq for DResolvable {
 }
 
 impl CheckFeature for DResolvable {}
-impl DependenciesFeature for DResolvable {}
+impl DependenciesFeature for DResolvable {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
+        Dependencies::new_error(UnresolvedItemError(this.ptr_clone()))
+    }
+}
 impl EqualityFeature for DResolvable {}
 impl InvariantsFeature for DResolvable {}
 
@@ -137,6 +150,8 @@ pub trait Resolvable: AnyEq + Debug {
         scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult;
+
+    fn contents(&self) -> Vec<&ItemPtr>;
 
     #[allow(unused_variables)]
     fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {

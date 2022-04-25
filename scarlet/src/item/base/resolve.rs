@@ -20,7 +20,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         let mut still_unresolved = Vec::new();
         let mut all_dead_ends = true;
         for id in unresolved {
-            println!("Resolving {:?} limit {}", id, limit);
+            println!("Resolving {:#?} limit {}", id, limit);
             let res = resolve(env, id.ptr_clone(), limit);
             if let Ok(true) = res {
                 // Right now this line actually significantly slows things
@@ -52,12 +52,12 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
     let mut problem = false;
     root.for_self_and_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
-            println!("Failed to resolve {:?} because", item);
+            println!("Failed to resolve {:#?} because", item);
             problem = true;
             match err {
                 ResolveError::Unresolved(err) => {
                     // eprintln!("{}", &format!("{:#?}", env)[0..30_000]);
-                    eprintln!("{:?} relies on {:?}", item, err.0);
+                    eprintln!("it relies on {:#?}", err.0);
                 }
                 ResolveError::InvariantDeadEnd(err) => eprintln!("{}", err),
                 ResolveError::MaybeInvariantDoesNotExist => {

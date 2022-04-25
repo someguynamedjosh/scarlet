@@ -11,7 +11,7 @@ fn basic_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let y_statement = root.lookup_ident("y_statement").unwrap().unwrap();
-        env.justify(&root, &y_statement, &y_statement, 1).unwrap();
+        env.justify(&root, &y_statement, &y_statement, 2).unwrap();
         root.check_all();
     });
 }
@@ -167,7 +167,7 @@ fn equality_theorem_invariant() {
 }
 
 #[test]
-fn theorem_invariant() {
+fn real_theorem_invariant() {
     let code = r"
     a IS VAR[]
     b IS VAR[a = SELF]
@@ -189,6 +189,128 @@ fn theorem_invariant() {
 
     justify_this IS 
     statement[c d identity]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn simpler_auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    statement IS UNIQUE.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+
+    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+
+    justify_this IS statement
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn single_sub_auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    x IS VAR[]
+    y IS VAR[]
+
+    statement IS x.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+
+    justify_this IS y
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn single_sub_in_struct_auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    x IS VAR[]
+    y IS VAR[]
+
+    statement IS {x}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+
+    justify_this IS {y}
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn double_sub_auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    a IS VAR[]
+    b IS VAR[]
+    x IS VAR[]
+    y IS VAR[]
+
+    statement IS {x y}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+
+    justify_this IS {a b}
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn repeated_single_sub_auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    a IS VAR[]
+    x IS VAR[]
+
+    statement IS {x x}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+
+    justify_this IS {a a}
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 2).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn repeated_double_sub_auto_theorem_invariant() {
+    let code = r"
+    # Abusing the axiom feature to introduce a theorem that can be proven from
+    # other axioms without doing the full proof.
+    a IS VAR[]
+    b IS VAR[]
+    x IS VAR[]
+    y IS VAR[]
+
+    statement IS {x y x y}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+
+    justify_this IS {a b a b}
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();

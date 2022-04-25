@@ -37,18 +37,7 @@ fn uncreate<'a>(
             None
         }
     } else {
-        todo!()
-        // env.for_each_item(|env, id| {
-        //     if let Ok(Some(cstruct)) = id.downcast::<DPopulatedStruct>() {
-        //         let cstruct = cstruct.clone();
-        //         if cstruct.get_value().get_equality(&uncreate, 4) ==
-        // Ok(Equal::yes())             && ctx.scope.parent() !=
-        // Some(id)         {
-        //             return ControlFlow::Break(id);
-        //         }
-        //     }
-        //     ControlFlow::Continue(())
-        // })
+        None
     };
     Ok(if let Some(id) = source {
         Some(Node {

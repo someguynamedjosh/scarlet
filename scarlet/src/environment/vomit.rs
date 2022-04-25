@@ -7,6 +7,7 @@ use crate::{
     item::{
         definition::ItemDefinition,
         definitions::variable::{DVariable, SVariableInvariants, VariablePtr},
+        resolvable::DResolvable,
     },
     parser::{Node, NodeChild, ParseContext},
     scope::{SWithParent, Scope},
@@ -153,15 +154,22 @@ impl Environment {
         &mut self,
         max_precedence: u8,
         ctx: &mut VomitContext<'a, '_>,
-        item_id: ItemPtr,
+        item_ptr: ItemPtr,
     ) -> Node<'a> {
         let mut err = None;
+        if let Some(_) = item_ptr.downcast_definition::<DResolvable>() {
+            return Node {
+                phrase: "identifier",
+                children: vec![NodeChild::Text("UNRESOLVED")],
+                ..Default::default()
+            };
+        }
         for (_, phrase) in &ctx.pc.phrases_sorted_by_vomit_priority {
             if phrase.precedence > max_precedence {
                 continue;
             }
             if let Some((_, uncreator)) = phrase.create_and_uncreate {
-                match uncreator(self, ctx, item_id.ptr_clone()) {
+                match uncreator(self, ctx, item_ptr.ptr_clone()) {
                     Err(new_err) => err = Some(new_err),
                     Ok(Some(uncreated)) => return uncreated,
                     _ => (),
@@ -178,7 +186,7 @@ impl Environment {
         eprintln!("{:#?}", self);
         todo!(
             "{:?} could not be vomited (at least one parser phrase should apply)",
-            item_id
+            item_ptr
         );
     }
 }

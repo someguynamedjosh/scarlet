@@ -79,7 +79,12 @@ impl ItemDefinition for DDecision {
 impl CheckFeature for DDecision {}
 
 impl DependenciesFeature for DDecision {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         let mut deps = ctx.get_dependencies(&self.left);
         deps.append(ctx.get_dependencies(&self.right));
         deps.append(ctx.get_dependencies(&self.when_equal));

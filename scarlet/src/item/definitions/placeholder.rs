@@ -27,7 +27,12 @@ impl ItemDefinition for DPlaceholder {
 impl CheckFeature for DPlaceholder {}
 
 impl DependenciesFeature for DPlaceholder {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         panic!("Attempted to get dependencies of placeholder.");
     }
 }

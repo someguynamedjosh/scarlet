@@ -46,7 +46,12 @@ impl ItemDefinition for DIsPopulatedStruct {
 impl CheckFeature for DIsPopulatedStruct {}
 
 impl DependenciesFeature for DIsPopulatedStruct {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         ctx.get_dependencies(&self.base)
     }
 }

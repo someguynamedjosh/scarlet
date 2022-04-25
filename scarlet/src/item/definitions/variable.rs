@@ -214,14 +214,19 @@ impl ItemDefinition for DVariable {
 impl CheckFeature for DVariable {}
 
 impl DependenciesFeature for DVariable {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         let mut deps = Dependencies::new();
         for dep in self.0.borrow().dependencies.clone() {
-            deps.append(dep.get_dependencies());
+            deps.append(ctx.get_dependencies(&dep));
         }
         deps.push_eager(Variable::as_dependency(&self.0));
         for inv in &self.0.borrow().invariants {
-            deps.append(inv.get_dependencies());
+            deps.append(ctx.get_dependencies(inv));
         }
         deps
     }

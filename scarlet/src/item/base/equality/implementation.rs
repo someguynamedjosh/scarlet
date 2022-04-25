@@ -252,9 +252,6 @@ impl EqualityCalculationContext {
 
         // The value the lhs dex is going to be replaced by.
         let dex_replacement = self.store_substitions_not_appearing_on_lhs(ldeps, &rdeps);
-        println!("{:#?}", ldeps);
-        println!("{:#?}", rdeps);
-        println!("Dex replacement is {:#?}", dex_replacement);
         let dex_replacement = self.replace_rhs_vars_with_lhs_deps(dex_replacement, ldeps, &rdeps);
         // Step 3
         if !self.check_if_new_rhs_is_just_lhs(lvar, &dex_replacement) {
@@ -262,7 +259,6 @@ impl EqualityCalculationContext {
             subs.insert_no_replace(lvar.ptr_clone(), dex_replacement);
         }
         // Step 5
-        println!("Resulting subs are {:#?}", subs);
         Ok(Equal::Yes(subs, rec_over))
     }
 
@@ -284,7 +280,6 @@ impl EqualityCalculationContext {
             .collect_vec();
         let mut remaining_rdep_subs = Substitutions::new();
         for dep in remaining_rdeps {
-            println!("DEP {:#?}", dep);
             let mut subbed = dep.var.borrow().item().ptr_clone();
             for sub in &self.rhs.subs {
                 // This is only necessary to produce clean results I.E. produce

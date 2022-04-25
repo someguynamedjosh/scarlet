@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::item::{
     definitions::substitution::{DSubstitution, Substitutions},
     Item, ItemPtr,

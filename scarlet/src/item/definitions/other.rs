@@ -77,7 +77,12 @@ impl ItemDefinition for DOther {
 impl CheckFeature for DOther {}
 
 impl DependenciesFeature for DOther {
-    fn get_dependencies_using_context(&self, ctx: &mut Dcc, _: OnlyCalledByDcc) -> DepResult {
+    fn get_dependencies_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Dcc,
+        _: OnlyCalledByDcc,
+    ) -> DepResult {
         ctx.get_dependencies(&self.other)
     }
 }

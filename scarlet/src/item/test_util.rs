@@ -107,3 +107,13 @@ pub(super) fn variable_full_with_deps(deps: Vec<ItemPtr>) -> (ItemPtr, VariableP
     let var = extract_var_ptr_from_item_ptr(&item);
     (item, var)
 }
+
+pub(super) fn structt(mut fields: Vec<(&str, ItemPtr)>, void: &ItemPtr) -> ItemPtr {
+    if fields.len() == 0 {
+        void.ptr_clone()
+    } else {
+        let top = fields.pop().unwrap();
+        let rest = structt(fields, void);
+        Item::new(DPopulatedStruct::new(top.0.to_owned(), top.1, rest), SRoot)
+    }
+}
