@@ -46,18 +46,18 @@ fn moderate_invariant() {
     a IS VAR[]
     b IS VAR[a = SELF]
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[]
     fx IS VAR[DEP x]
 
     statement IS 
     (fx[b] = fx[a])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    invariant IS statement[t u]
 
     t IS VAR[]
-    u IS VAR[t = u   statement[t u]]
+    u IS VAR[invariant]
 
-    justify_this IS
-    statement[t u]
+    justify_this IS invariant
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();

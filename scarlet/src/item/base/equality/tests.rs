@@ -959,3 +959,32 @@ fn x_x_is_y_y() {
         unreachable!()
     }
 }
+
+#[test]
+fn x_x_is_y_other_y_other() {
+    let x = variable_full();
+    x.0.set_name("x".to_owned());
+    let y = variable_full();
+    y.0.set_name("y".to_owned());
+    let void = unique();
+
+    let x_x = structt(vec![("", x.0.ptr_clone()), ("", x.0.ptr_clone())], &void);
+    x_x.set_name(format!("{{x x}}"));
+    let y_other_0 = other(y.0.ptr_clone());
+    let y_other_1 = other(y.0.ptr_clone());
+    let y_y = structt(
+        vec![("", y_other_0.ptr_clone()), ("", y_other_1.ptr_clone())],
+        &void,
+    );
+    y_y.set_name(format!("{{y y}}"));
+
+    assert_matches!(x_x.get_equality(&y_y, 3), Ok(Equal::Yes(..)));
+    if let Ok(Equal::Yes(lsubs, _)) = x_x.get_equality(&y_y, 3) {
+        assert_eq!(lsubs.len(), 1);
+        let mut entries = lsubs.iter();
+        let last = entries.next().unwrap();
+        assert_eq!(last, &(x.1.ptr_clone(), y_other_1.ptr_clone()));
+    } else {
+        unreachable!()
+    }
+}

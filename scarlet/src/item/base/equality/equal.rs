@@ -18,8 +18,10 @@ pub enum Equal {
 
 fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -> Result<(), ()> {
     for (target, value) in from {
-        if target_subs.contains_key(&target) {
-            if target_subs.get(&target) != Some(&value) {
+        if let Some(other) = target_subs.get(&target) {
+            if other.get_equality(&value, 5) == Ok(Equal::yes()) {
+                continue;
+            } else {
                 return Err(());
             }
         } else {

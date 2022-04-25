@@ -4,7 +4,7 @@ use std::sync::Mutex;
 
 use lazy_static::lazy_static;
 
-use super::{definitions::variable::VariablePtr, resolve::resolve_all, Item};
+use super::{definitions::{variable::VariablePtr, other::DOther}, resolve::resolve_all, Item};
 use crate::{
     environment::Environment,
     file_tree::FileNode,
@@ -116,4 +116,8 @@ pub(super) fn structt(mut fields: Vec<(&str, ItemPtr)>, void: &ItemPtr) -> ItemP
         let rest = structt(fields, void);
         Item::new(DPopulatedStruct::new(top.0.to_owned(), top.1, rest), SRoot)
     }
+}
+
+pub(super) fn other(base: ItemPtr) -> ItemPtr {
+    return Item::new(DOther::new_plain(base), SRoot)
 }

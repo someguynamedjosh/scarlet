@@ -16,6 +16,8 @@ use crate::{
     util::{rcrc, PtrExtension},
 };
 
+const TRACE: bool = false;
+
 pub type JustifyInvariantResult = Result<Vec<InvariantSetPtr>, LookupInvariantError>;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -210,10 +212,14 @@ impl<'a> JustificationContext<'a> {
         let iterate_over = available_invariant_sets;
         for other_set in iterate_over {
             for other_statement in other_set.borrow().statements() {
-                println!("{:#?}", other_statement);
-                println!("{:#?}", statement);
+                if TRACE {
+                    println!("{:#?}", other_statement);
+                    println!("{:#?}", statement);
+                }
                 let eq = statement.get_equality(other_statement, limit);
-                println!("{:#?}", eq);
+                if TRACE {
+                    println!("{:#?}", eq);
+                }
                 if let Ok(Equal::Yes(subs, _)) = eq {
                     if subs.len() > 0 {
                         continue;
