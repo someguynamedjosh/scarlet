@@ -31,28 +31,35 @@ enum VariableResult {
 
 impl EqualityCalculationContext {
     pub(super) fn get_equality_impl(&mut self) -> EqualResult {
-        match self.get_equality_impl_impl() {
+        let result = match self.get_equality_impl_impl() {
             Ok(Equal::Yes(subs, mut rec_over)) => {
                 rec_over.append(&mut self.lhs.recurses_over.clone());
                 rec_over.append(&mut self.rhs.recurses_over.clone());
                 Ok(Equal::Yes(subs, rec_over))
             }
             other => other,
+        };
+        if TRACE {
+            println!("Resulting in {:?}", result);
         }
+        result
     }
 
     fn get_equality_impl_impl(&mut self) -> EqualResult {
         if TRACE {
             println!(
-                "{:#?} {:#?} = {:#?} {:#?}",
-                self.lhs.item, self.lhs.subs, self.rhs.item, self.rhs.subs
+                "--------------------------------------------------------------------------------"
             );
             println!(
-                "--------------------------------------------------------------------------------"
+                "{:#?} {:#?} = {:#?} {:#?}",
+                self.lhs.item, self.lhs.subs, self.rhs.item, self.rhs.subs
             );
         }
         if self.lhs.item.is_same_instance_as(&self.rhs.item) {
             if self.lhs.subs.len() > 0 || self.rhs.subs.len() > 0 {
+                if self.lhs.subs == self.rhs.subs {
+                    return Ok(Equal::yes());
+                }
                 // todo!();
             } else {
                 return Ok(Equal::yes());
@@ -95,7 +102,11 @@ impl EqualityCalculationContext {
         could_use_higher_limit: bool,
     ) -> Option<EqualResult> {
         // Just in case the previous expression didn't get to fully dereference rhs...
-        while self.rhs.dereference_once() {}
+        while self.rhs.dereference_once() {
+            if self.lhs.item.is_same_instance_as(&self.rhs.item) && self.lhs.subs.len() == 0 && self.rhs.subs.len() == 0 {
+                return Some(Ok(Equal::yes()));
+            }
+        }
         let rvar = match self.check_and_handle_right_variable_substitution() {
             VariableResult::ResultReached(result) => return Some(result),
             VariableResult::ProceedWithVariable(var) => var,
@@ -223,6 +234,7 @@ impl EqualityCalculationContext {
         mut subs: Substitutions,
         rec_over: Vec<ItemPtr>,
     ) -> EqualResult {
+        self.rhs.item = self.rhs.item.dereference();
         if TRACE {
             println!("Making result where right is assigned to left variable.");
             println!("Left variable is {:#?}", lvar);
@@ -250,10 +262,20 @@ impl EqualityCalculationContext {
             .into_variables()
             .collect_vec();
 
+        if TRACE {
+            println!("Storing substitutions not appearing on lhs.");
+        }
         // The value the lhs dex is going to be replaced by.
         let dex_replacement = self.store_substitions_not_appearing_on_lhs(ldeps, &rdeps);
+        if TRACE {
+            println!("Replacing RHS vars with LHS deps.");
+        }
         let dex_replacement = self.replace_rhs_vars_with_lhs_deps(dex_replacement, ldeps, &rdeps);
         // Step 3
+        if TRACE {
+            println!("New RHS is {:#?}", dex_replacement);
+            println!("Checking if new RHS is just the LHS, again.");
+        }
         if !self.check_if_new_rhs_is_just_lhs(lvar, &dex_replacement) {
             // Step 4
             subs.insert_no_replace(lvar.ptr_clone(), dex_replacement);
@@ -274,10 +296,7 @@ impl EqualityCalculationContext {
         //    about a.
         let lhs_replacement = self.rhs.item.ptr_clone();
         let skipped_deps = &rdeps[0..ldeps.len()];
-        let remaining_rdeps = rdeps
-            .iter()
-            .skip(ldeps.len())
-            .collect_vec();
+        let remaining_rdeps = rdeps.iter().skip(ldeps.len()).collect_vec();
         let mut remaining_rdep_subs = Substitutions::new();
         for dep in remaining_rdeps {
             let mut subbed = dep.var.borrow().item().ptr_clone();
@@ -292,6 +311,9 @@ impl EqualityCalculationContext {
                         continue;
                     }
                     if let Some(value) = sub.get(&dep.var) {
+                        if &value.dereference() == dep.var.borrow().item() {
+                            continue;
+                        }
                         filtered_subs.insert_or_replace(dep.var.ptr_clone(), value.ptr_clone());
                     }
                 }
@@ -332,9 +354,13 @@ impl EqualityCalculationContext {
         for (index, subs) in selected.subs.iter().enumerate() {
             if let Some(sub) = subs.get(of) {
                 let sub = sub.ptr_clone();
+                if TRACE {
+                    println!("Selecting {:?} {:#?}", of, sub);
+                    // println!("{}", caller_location());
+                }
                 selected.select_substitution(index, of, sub);
                 if TRACE {
-                    println!("{}", caller_location());
+                    println!("Leaving {:#?}", selected);
                 }
                 return Some(self.get_equality_impl());
             }

@@ -41,10 +41,31 @@ fn sub_invariant() {
 }
 
 #[test]
+fn sub_fx_invariant() {
+    let code = r"
+    a IS VAR[]
+
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    statement IS fx[a]
+
+    t IS VAR[statement]
+
+    justify_this IS statement
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        env.justify(&root, &justify_this, &justify_this, 10).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
 fn moderate_invariant() {
     let code = r"
     a IS VAR[]
-    b IS VAR[a = SELF]
+    b IS VAR[]
 
     x IS VAR[]
     fx IS VAR[DEP x]
@@ -292,7 +313,7 @@ fn repeated_single_sub_auto_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 2).unwrap();
+        env.justify(&root, &justify_this, &justify_this, 4).unwrap();
         root.check_all();
     });
 }
@@ -314,7 +335,7 @@ fn repeated_double_sub_auto_theorem_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        env.justify(&root, &justify_this, &justify_this, 8).unwrap();
         root.check_all();
     });
 }

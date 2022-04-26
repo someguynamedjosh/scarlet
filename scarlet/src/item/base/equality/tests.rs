@@ -983,7 +983,7 @@ fn x_x_is_y_other_y_other() {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
-        assert_eq!(last, &(x.1.ptr_clone(), y_other_1.ptr_clone()));
+        assert_eq!(last, &(x.1.ptr_clone(), y.0.ptr_clone()));
     } else {
         unreachable!()
     }

@@ -11,7 +11,7 @@ use crate::item::{
     Item, ItemPtr,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(super) struct ItemWithSubsAndRecursion {
     pub(super) item: ItemPtr,
     /// Each set of substitutions is applied in the order they were inserted.
@@ -52,7 +52,11 @@ impl ItemWithSubsAndRecursion {
 
     /// Modifies self assuming the base has been substituted with value.
     pub fn select_substitution(&mut self, index: usize, target: &VariablePtr, value: ItemPtr) {
-        self.subs[index].remove(target);
+        let removed = self.subs[index].remove(target);
+        assert!(removed.is_some());
+        if self.subs[index].len() == 0 {
+            self.subs.remove(index);
+        }
         self.item = value;
     }
 }

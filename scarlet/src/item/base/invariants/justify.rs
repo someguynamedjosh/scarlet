@@ -213,8 +213,8 @@ impl<'a> JustificationContext<'a> {
         for other_set in iterate_over {
             for other_statement in other_set.borrow().statements() {
                 if TRACE {
-                    println!("{:#?}", other_statement);
-                    println!("{:#?}", statement);
+                    println!("Trying to link {:#?}", statement);
+                    println!("by {:#?}", other_statement);
                 }
                 let eq = statement.get_equality(other_statement, limit);
                 if TRACE {

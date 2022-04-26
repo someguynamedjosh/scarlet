@@ -18,8 +18,9 @@ pub enum Equal {
 
 fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -> Result<(), ()> {
     for (target, value) in from {
+        let value = value.dereference();
         if let Some(other) = target_subs.get(&target) {
-            if other.get_equality(&value, 5) == Ok(Equal::yes()) {
+            if other.dereference() == value.dereference() {
                 continue;
             } else {
                 return Err(());
