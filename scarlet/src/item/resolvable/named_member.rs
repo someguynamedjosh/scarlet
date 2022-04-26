@@ -28,7 +28,10 @@ fn find_member(
     inn: ItemPtr,
     name: &str,
 ) -> Result<Option<u32>, UnresolvedItemError> {
-    if let Some(cstruct) = inn.downcast_definition::<DPopulatedStruct>() {
+    if let Some(cstruct) = inn
+        .dereference()
+        .downcast_resolved_definition::<DPopulatedStruct>()?
+    {
         if cstruct.get_label() == name {
             Ok(Some(0))
         } else {
@@ -57,8 +60,9 @@ impl Resolvable for RNamedMember {
             ad
         } else {
             todo!(
-                "Nice error, failed to find a member named {}.",
-                self.member_name
+                "Nice error, failed to find a member named {} in {}.",
+                self.member_name,
+                self.base.debug_label()
             );
         };
         let mut base = self.base.ptr_clone();

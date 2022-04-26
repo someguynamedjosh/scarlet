@@ -24,7 +24,7 @@ pub struct DOther {
 impl Debug for DOther {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.recursive {
-            write!(f, "(recursive) {}", self.other.address())
+            write!(f, "(recursive) {}", self.other.debug_label())
         } else {
             write!(f, "(other) ")?;
             self.other.fmt(f)

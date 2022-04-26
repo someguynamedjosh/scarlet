@@ -20,7 +20,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         let mut still_unresolved = Vec::new();
         let mut all_dead_ends = true;
         for id in unresolved {
-            println!("Resolving {:#?} limit {}", id, limit);
+            println!("Resolving {:?} limit {}", id.debug_label(), limit);
             let res = resolve(env, id.ptr_clone(), limit);
             if let Ok(true) = res {
                 // Right now this line actually significantly slows things

@@ -27,7 +27,7 @@ pub struct InvariantSet {
 impl Debug for InvariantSet {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("InvariantSet")
-            .field("context", &self.context.address())
+            .field("context", &self.context.debug_label())
             .field("statements", &self.statements)
             .field(
                 "justification_requirements",

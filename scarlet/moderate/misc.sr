@@ -2,7 +2,9 @@ logic IS std.logic
 true IS std.true
 false IS std.false
 void IS std.void
-x IS std.basics.x
+# x IS std.basics.x
+
+x IS VAR[]
 
 # x.IS_POPULATED_STRUCT
 
@@ -12,8 +14,6 @@ x IS std.basics.x
 #    is_struct[x.REST]
 # ]
 
-thing IS DECISION[x x thing false]
-
-t_just[thing]
+t_just[false]
 
 t_just IS VAR[SELF]

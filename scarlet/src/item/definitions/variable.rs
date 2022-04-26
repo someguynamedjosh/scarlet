@@ -73,7 +73,7 @@ pub struct Variable {
 impl Debug for Variable {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut base = f.debug_struct("Variable");
-        base.field("item", &self.item.address());
+        base.field("item", &self.item.debug_label());
         if self.invariants.len() > 0 {
             base.field("invariants", &self.invariants);
         }

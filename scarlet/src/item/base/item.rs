@@ -41,7 +41,7 @@ impl Clone for ItemPtr {
 
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}", self.address())?;
+        writeln!(f, "{}", self.debug_label())?;
         self.0.borrow().definition.fmt(f)
     }
 }
@@ -62,7 +62,7 @@ impl Hash for ItemPtr {
 
 /// Basic pointer functionality
 impl ItemPtr {
-    pub fn address(&self) -> String {
+    pub fn debug_label(&self) -> String {
         format!(
             "{}@0x{:x}",
             self.0.borrow().name.as_ref().unwrap_or(&format!("")),
@@ -193,9 +193,12 @@ impl ItemPtr {
     /// Returns a dex that tells you if the language item "x" could have been
     /// returned by this item.
     pub fn get_from_dex(&self, env: &Environment) -> ItemPtr {
-        if let Some(from) = &self.borrow().from_dex {
-            from.ptr_clone()
+        let ptr = self.borrow();
+        if let Some(from) = &ptr.from_dex {
+            return from.ptr_clone()
         } else {
+            drop(ptr);
+            assert!(self.0.try_borrow_mut().is_ok());
             create_from_dex(env, self.ptr_clone())
         }
     }
@@ -244,11 +247,11 @@ impl ItemPtr {
 
     pub fn check_all(&self) {
         self.for_self_and_contents(&mut |item| {
-            item.borrow().definition.check_self(item);
+            item.borrow().definition.check_self(item).unwrap();
         })
     }
 
-    pub fn for_self_and_contents(&self, mut visitor: &mut impl FnMut(&ItemPtr)) {
+    pub fn for_self_and_contents(&self, visitor: &mut impl FnMut(&ItemPtr)) {
         visitor(self);
         for content in self.borrow().definition.contents() {
             content.for_self_and_contents(visitor);

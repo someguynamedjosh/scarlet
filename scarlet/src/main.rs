@@ -39,6 +39,9 @@ fn entry() {
     resolve_all(&mut env, root.ptr_clone());
     println!("Resolved");
     root.check_all();
+    println!("Checked!");
+    env.justify_all(&root);
+    println!("Justified!");
     env.show_all_requested(&root);
 }
 
