@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter, self};
+
 use itertools::Itertools;
 
 use crate::{
@@ -12,7 +14,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
@@ -52,8 +54,11 @@ impl ItemDefinition for DPopulatedStruct {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        vec![&self.value, &self.rest]
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        vec![
+            (ContainmentType::Computational, &self.value),
+            (ContainmentType::Computational, &self.rest),
+        ]
     }
 }
 
@@ -106,8 +111,14 @@ pub enum AtomicStructMember {
     Rest,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct DAtomicStructMember(ItemPtr, AtomicStructMember);
+
+impl Debug for DAtomicStructMember {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "DAtomicStructMember({:?})", self.1)
+    }
+}
 
 impl DAtomicStructMember {
     pub fn new(base: ItemPtr, member: AtomicStructMember) -> Self {
@@ -130,8 +141,8 @@ impl ItemDefinition for DAtomicStructMember {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        vec![&self.0]
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        vec![(ContainmentType::Computational, &self.0)]
     }
 }
 

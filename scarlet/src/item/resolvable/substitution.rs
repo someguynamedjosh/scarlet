@@ -15,7 +15,7 @@ use crate::{
         dependencies::{Dcc, Dependencies},
         invariants::{InvariantSet, InvariantsResult},
         util::unchecked_substitution,
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, ContainmentType,
     },
     scope::Scope,
     shared::OrderedMap,
@@ -100,13 +100,13 @@ impl Resolvable for RSubstitution {
         result
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        let mut result = vec![&self.base];
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        let mut result = vec![(ContainmentType::Computational, &self.base)];
         for (_, value) in &self.named_subs {
-            result.push(value);
+            result.push((ContainmentType::Computational, value));
         }
         for value in &self.anonymous_subs {
-            result.push(value);
+            result.push((ContainmentType::Computational, value));
         }
         result
     }

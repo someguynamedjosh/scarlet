@@ -52,10 +52,10 @@ fn propogate_root_connectedness(of: &[InvariantSetPtr]) {
         for set_ptr in of {
             let set = set_ptr.borrow();
             if set.connected_to_root {
-                return;
+                continue;
             }
             let mut all_statements_connected = true;
-            if let Some(just) = &set.statement_justifications {
+            if let Some(just) = &set.set_justification {
                 for statement_justifications in just {
                     if !is_any_statement_justification_connected_to_root(statement_justifications) {
                         all_statements_connected = false;
@@ -65,6 +65,7 @@ fn propogate_root_connectedness(of: &[InvariantSetPtr]) {
             } else {
                 all_statements_connected = false;
             }
+            drop(set);
             if all_statements_connected {
                 let mut set = set_ptr.borrow_mut();
                 set.connected_to_root = true;
@@ -124,17 +125,14 @@ impl Environment {
 impl<'a> JustificationContext<'a> {
     fn justify_all(&mut self) {
         let mut encountered_err = false;
-        const MAX_LIMIT: u32 = 6;
+        const MAX_LIMIT: u32 = 4;
         for limit in 0..MAX_LIMIT {
             println!("{}/{}", limit, MAX_LIMIT);
             for set_ptr in self.sets.clone() {
                 let set = set_ptr.borrow();
-                if !set.required || set.connected_to_root {
-                    return;
+                if set.connected_to_root {
+                    continue;
                 }
-                // if set.statements.len() > 0 {
-                //     println!("{:?}", id);
-                // }
                 drop(set);
                 let res = self.justify(&set_ptr, limit);
                 let set = set_ptr.borrow();
@@ -144,6 +142,7 @@ impl<'a> JustificationContext<'a> {
                         eprintln!("{:?}", err);
                     } else {
                         eprintln!("The following can only be justified circularly:");
+                        eprintln!("{:#?}", set);
                     }
                     encountered_err = true;
                 }
@@ -159,21 +158,6 @@ impl<'a> JustificationContext<'a> {
             if all_connected {
                 break;
             } else if limit == MAX_LIMIT - 1 {
-                // for (id, set) in self.invariant_sets.clone() {
-                //     if !set.connected_to_root {
-                //         println!("UNJUSTIFIED:")
-                //     }
-                //     println!("{:#?}", id);
-                //     for &statement in &set.statements {
-                //         println!("  statement:");
-                //         println!("  {}", self.show(statement, statement));
-                //     }
-                //     for &just in &set.justification_requirements {
-                //         println!("  requirement:");
-                //         println!("  {}", self.show(just, just));
-                //     }
-                //     println!("{:#?}", set.justified_by());
-                // }
                 eprintln!("Some invariants can only be justified circularly.");
                 encountered_err = true;
             }
@@ -188,15 +172,12 @@ impl<'a> JustificationContext<'a> {
         set: &InvariantSetPtr,
         limit: u32,
     ) -> Result<SetJustification, LookupInvariantError> {
-        // if let Some(just) = set.statement_justifications {
-        //     return Ok(just);
-        // }
         let mut justifications = Vec::new();
         for required in set.borrow().justification_requirements() {
             let justified_by = self.justify_statement(&set.borrow().context, required, limit)?;
             justifications.push(justified_by);
         }
-        set.borrow_mut().statement_justifications = Some(justifications.clone());
+        set.borrow_mut().set_justification = Some(justifications.clone());
         Ok(justifications)
     }
 
@@ -271,7 +252,6 @@ impl<'a> JustificationContext<'a> {
                 // Deduplicate
                 let rec: HashSet<_> = rec.into_iter().collect();
                 let rec: Vec<_> = rec.into_iter().collect();
-                println!("{:?}", rec);
                 if rec.len() != 1 {
                     return Err(LookupInvariantError::DefinitelyDoesNotExist);
                 }
@@ -358,7 +338,7 @@ impl<'a> JustificationContext<'a> {
                         let set = rcrc(InvariantSet {
                             context: context.ptr_clone(),
                             statements: vec![statement.ptr_clone()],
-                            statement_justifications: Some(vec![new_justifications]),
+                            set_justification: Some(vec![new_justifications]),
                             justification_requirements: vec![statement],
                             dependencies: hashset![],
                             required: false,

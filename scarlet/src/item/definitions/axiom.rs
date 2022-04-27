@@ -9,7 +9,7 @@ use crate::{
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
-        ItemDefinition, ItemPtr,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
 };
 
@@ -49,8 +49,8 @@ impl ItemDefinition for DAxiom {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        vec![&self.statement]
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        vec![(ContainmentType::Definitional, &self.statement)]
     }
 }
 

@@ -9,7 +9,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, ContainmentType,
     },
     scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
     util::PtrExtension,
@@ -66,12 +66,12 @@ impl ItemDefinition for DDecision {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
         vec![
-            &self.left,
-            &self.right,
-            &self.when_equal,
-            &self.when_not_equal,
+            (ContainmentType::Computational, &self.left),
+            (ContainmentType::Computational, &self.right),
+            (ContainmentType::Computational, &self.when_equal),
+            (ContainmentType::Computational, &self.when_not_equal),
         ]
     }
 }

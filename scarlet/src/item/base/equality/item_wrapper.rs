@@ -23,7 +23,7 @@ impl ItemWithSubsAndRecursion {
     /// Returns true if self was modified.
     pub fn dereference_once(&mut self) -> bool {
         let new_item = if let Some(other) = self.item.downcast_definition::<DOther>() {
-            if other.is_recursive() {
+            if other.is_computationally_recursive() {
                 self.recurses_over.push(other.other().ptr_clone());
             }
             Some(other.other().ptr_clone())

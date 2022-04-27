@@ -4,7 +4,7 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         definitions::{other::DOther, substitution::DSubstitution, variable::DVariable},
-        Item, ItemDefinition, ItemPtr,
+        ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     scope::Scope,
     util::PtrExtension,
@@ -45,7 +45,10 @@ impl Resolvable for RFrom {
         ResolveResult::Ok(subbed.clone_into_box())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        vec![&self.left, &self.right]
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        vec![
+            (ContainmentType::Computational, &self.left),
+            (ContainmentType::Definitional, &self.right),
+        ]
     }
 }

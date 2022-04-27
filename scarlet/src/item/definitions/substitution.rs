@@ -15,7 +15,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        Item, ItemDefinition, ItemPtr,
+        ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     scope::Scope,
     shared::OrderedMap,
@@ -103,10 +103,14 @@ impl ItemDefinition for DSubstitution {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        vec![&self.base]
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        vec![(ContainmentType::Computational, &self.base)]
             .into_iter()
-            .chain(self.subs.iter().map(|x| &x.1))
+            .chain(
+                self.subs
+                    .iter()
+                    .map(|x| (ContainmentType::Computational, &x.1)),
+            )
             .collect()
     }
 }

@@ -22,7 +22,7 @@ use crate::{
             OnlyCalledByIcc,
         },
         util::unchecked_substitution,
-        Item, ItemDefinition, ItemPtr,
+        ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     scope::{
         LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
@@ -206,8 +206,11 @@ impl ItemDefinition for DVariable {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        self.1.iter().collect_vec()
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        self.1
+            .iter()
+            .map(|inv_or_dep| (ContainmentType::Definitional, inv_or_dep))
+            .collect_vec()
     }
 }
 

@@ -10,7 +10,7 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
     shared::{Id, Pool},
 };
@@ -18,13 +18,16 @@ use crate::{
 #[derive(Clone, PartialEq, Eq)]
 pub struct DOther {
     other: ItemPtr,
-    recursive: bool,
+    computationally_recursive: bool,
+    definitionally_recursive: bool,
 }
 
 impl Debug for DOther {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.recursive {
-            write!(f, "(recursive) {}", self.other.debug_label())
+        if self.computationally_recursive {
+            write!(f, "(computationally recursive) {}", self.other.debug_label())
+        } else if self.definitionally_recursive {
+            write!(f, "(definitionally recursive) {}", self.other.debug_label())
         } else {
             write!(f, "(other) ")?;
             self.other.fmt(f)
@@ -33,16 +36,24 @@ impl Debug for DOther {
 }
 
 impl DOther {
-    pub fn new(other: ItemPtr, recursive: bool) -> Self {
-        Self { other, recursive }
+    pub fn new(
+        other: ItemPtr,
+        definitionally_recursive: bool,
+        computationally_recursive: bool,
+    ) -> Self {
+        Self {
+            other,
+            definitionally_recursive,
+            computationally_recursive,
+        }
     }
 
     pub fn new_plain(other: ItemPtr) -> Self {
-        Self::new(other, false)
+        Self::new(other, false, false)
     }
 
-    pub fn new_recursive(other: ItemPtr) -> Self {
-        Self::new(other, true)
+    pub fn new_computationally_recursive(other: ItemPtr) -> Self {
+        Self::new(other, false, true)
     }
 
     pub fn other(&self) -> &ItemPtr {
@@ -50,11 +61,19 @@ impl DOther {
     }
 
     pub fn is_recursive(&self) -> bool {
-        self.recursive
+        self.computationally_recursive || self.definitionally_recursive
     }
 
-    pub fn mark_recursive(&mut self) {
-        self.recursive = true;
+    pub fn is_computationally_recursive(&self) -> bool {
+        self.computationally_recursive
+    }
+
+    pub fn mark_recursive(&mut self, t: ContainmentType) {
+        if let ContainmentType::Computational = t {
+            self.computationally_recursive = true;
+        } else {
+            self.definitionally_recursive = true;
+        }
     }
 }
 
@@ -65,11 +84,11 @@ impl ItemDefinition for DOther {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        if self.recursive {
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        if self.computationally_recursive {
             vec![]
         } else {
-            vec![&self.other]
+            vec![(ContainmentType::Computational, &self.other)]
         }
     }
 }

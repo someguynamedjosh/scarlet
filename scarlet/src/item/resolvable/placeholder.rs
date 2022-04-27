@@ -1,5 +1,5 @@
 use super::{BoxedResolvable, Resolvable, ResolveResult};
-use crate::{environment::Environment, impl_any_eq_from_regular_eq, item::ItemPtr, scope::Scope};
+use crate::{environment::Environment, impl_any_eq_from_regular_eq, item::{ItemPtr, ContainmentType}, scope::Scope};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RPlaceholder;
@@ -26,7 +26,7 @@ impl Resolvable for RPlaceholder {
         unreachable!()
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
         vec![]
     }
 }

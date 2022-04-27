@@ -25,10 +25,10 @@ use crate::{
             structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         },
         resolvable::{BoxedResolvable, DResolvable, Resolvable, UnresolvedItemError},
-        ItemDefinition,
+        ItemDefinition, ContainmentType,
     },
     scope::{LookupIdentResult, SRoot, Scope},
-    util::rcrc,
+    util::{rcrc, PtrExtension},
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -195,7 +195,7 @@ impl ItemPtr {
     pub fn get_from_dex(&self, env: &Environment) -> ItemPtr {
         let ptr = self.borrow();
         if let Some(from) = &ptr.from_dex {
-            return from.ptr_clone()
+            return from.ptr_clone();
         } else {
             drop(ptr);
             assert!(self.0.try_borrow_mut().is_ok());
@@ -205,13 +205,13 @@ impl ItemPtr {
 
     pub fn mark_recursion(&self) {
         let mut stack = Stack::<ItemPtr>::new();
-        self.mark_recursion_impl(&mut stack);
+        self.mark_recursion_impl(ContainmentType::Computational, &mut stack);
     }
 
-    fn mark_recursion_impl(&self, stack: &mut Stack<ItemPtr>) {
+    fn mark_recursion_impl(&self, containment_type: ContainmentType, stack: &mut Stack<ItemPtr>) {
         if stack.contains(self) {
             if let Some(mut other) = self.downcast_definition_mut::<DOther>() {
-                other.mark_recursive();
+                other.mark_recursive(containment_type);
                 return;
             }
         }
@@ -221,24 +221,24 @@ impl ItemPtr {
                 .definition
                 .contents()
                 .into_iter()
-                .map(ItemPtr::ptr_clone)
+                .map(|(t, x)| (t, x.ptr_clone()))
                 .collect_vec();
-            for content in contents {
-                content.mark_recursion_impl(stack);
+            for (t, content) in contents {
+                content.mark_recursion_impl(t, stack);
             }
         })
     }
 
     pub fn evaluation_recurses_over(&self) -> Vec<ItemPtr> {
         if let Some(other) = self.downcast_definition::<DOther>() {
-            if other.is_recursive() {
+            if other.is_computationally_recursive() {
                 vec![other.other().ptr_clone()]
             } else {
                 other.other().evaluation_recurses_over()
             }
         } else {
             let mut result = Vec::new();
-            for content in self.borrow().definition.contents() {
+            for (t, content) in self.borrow().definition.contents() {
                 result.append(&mut content.evaluation_recurses_over());
             }
             result
@@ -253,7 +253,7 @@ impl ItemPtr {
 
     pub fn for_self_and_contents(&self, visitor: &mut impl FnMut(&ItemPtr)) {
         visitor(self);
-        for content in self.borrow().definition.contents() {
+        for (_, content) in self.borrow().definition.contents() {
             content.for_self_and_contents(visitor);
         }
     }

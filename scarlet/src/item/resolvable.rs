@@ -23,6 +23,7 @@ use super::{
     dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
     equality::EqualityFeature,
     invariants::InvariantsFeature,
+    ContainmentType,
 };
 use crate::{
     environment::Environment,
@@ -49,7 +50,7 @@ impl ItemDefinition for DResolvable {
         Box::new(Self(self.0.dyn_clone()))
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
         self.0.contents()
     }
 }
@@ -151,7 +152,7 @@ pub trait Resolvable: AnyEq + Debug {
         limit: u32,
     ) -> ResolveResult;
 
-    fn contents(&self) -> Vec<&ItemPtr>;
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)>;
 
     #[allow(unused_variables)]
     fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {

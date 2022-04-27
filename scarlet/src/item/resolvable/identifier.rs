@@ -2,7 +2,7 @@ use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
-    item::{definitions::other::DOther, ItemDefinition, ItemPtr},
+    item::{definitions::other::DOther, ItemDefinition, ItemPtr, ContainmentType},
     scope::Scope,
 };
 
@@ -29,7 +29,7 @@ impl Resolvable for RIdentifier {
         ResolveResult::Ok(DOther::new_plain(identified).clone_into_box())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
         vec![]
     }
 }

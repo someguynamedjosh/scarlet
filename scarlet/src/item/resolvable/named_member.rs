@@ -4,7 +4,7 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
-        Item, ItemDefinition, ItemPtr,
+        ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     scope::Scope,
 };
@@ -76,7 +76,7 @@ impl Resolvable for RNamedMember {
         ResolveResult::Ok(def.clone_into_box())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
-        vec![&self.base]
+    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+        vec![(ContainmentType::Computational, &self.base)]
     }
 }

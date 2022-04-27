@@ -924,7 +924,7 @@ fn recursion_is_tracked_in_decision() {
         DDecision::new(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), c.ptr_clone()),
         Box::new(SRoot),
         |ptr, this| {
-            let other = Item::new(DOther::new_recursive(ptr), SRoot);
+            let other = Item::new(DOther::new_computationally_recursive(ptr), SRoot);
             dec_rec = other.ptr_clone();
             this.set_when_equal(other);
         },

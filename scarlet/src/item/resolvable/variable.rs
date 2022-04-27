@@ -7,7 +7,7 @@ use crate::{
             other::DOther,
             variable::{DVariable, Variable, VariableOrder},
         },
-        ItemDefinition, ItemPtr,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::Scope,
 };
@@ -59,13 +59,13 @@ impl Resolvable for RVariable {
         ResolveResult::Ok(DOther::new_plain(id).clone_into_box())
     }
 
-    fn contents(&self) -> Vec<&ItemPtr> {
+    fn contents(&self) -> Vec<(crate::item::ContainmentType, &ItemPtr)> {
         let mut result = vec![];
         for inv in &self.invariants {
-            result.push(inv);
+            result.push((ContainmentType::Definitional, inv));
         }
         for dep in &self.dependencies {
-            result.push(dep);
+            result.push((ContainmentType::Definitional, dep));
         }
         result
     }

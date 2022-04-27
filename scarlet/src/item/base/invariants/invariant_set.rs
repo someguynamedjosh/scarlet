@@ -18,7 +18,7 @@ pub struct InvariantSet {
     /// For the original statements to hold, all the statements in this list
     /// must also hold.
     pub(super) justification_requirements: Vec<ItemPtr>,
-    pub(super) statement_justifications: Option<SetJustification>,
+    pub(super) set_justification: Option<SetJustification>,
     pub(super) connected_to_root: bool,
     pub(super) required: bool,
     pub(super) dependencies: HashSet<ItemPtr>,
@@ -56,7 +56,7 @@ impl InvariantSet {
             context,
             statements,
             justification_requirements,
-            statement_justifications: None,
+            set_justification: None,
             connected_to_root: false,
             required: true,
             dependencies,
@@ -73,7 +73,7 @@ impl InvariantSet {
             context,
             statements,
             justification_requirements,
-            statement_justifications: None,
+            set_justification: None,
             connected_to_root: false,
             required: false,
             dependencies,
@@ -89,7 +89,7 @@ impl InvariantSet {
             context,
             statements,
             justification_requirements: Vec::new(),
-            statement_justifications: Some(justified_by),
+            set_justification: Some(justified_by),
             connected_to_root: false,
             required: false,
             dependencies: HashSet::new(),
@@ -104,7 +104,7 @@ impl InvariantSet {
             context,
             statements: Vec::new(),
             justification_requirements: Vec::new(),
-            statement_justifications: None,
+            set_justification: None,
             connected_to_root: true,
             required: false,
             dependencies,
@@ -120,7 +120,7 @@ impl InvariantSet {
             context,
             statements,
             justification_requirements: Vec::new(),
-            statement_justifications: None,
+            set_justification: None,
             connected_to_root: false,
             required: true,
             dependencies,
@@ -142,7 +142,7 @@ impl InvariantSet {
     /// Get a reference to the invariant set's justified by.
     #[must_use]
     pub fn justified_by(&self) -> Option<&SetJustification> {
-        self.statement_justifications.as_ref()
+        self.set_justification.as_ref()
     }
 
     /// Get a reference to the invariant set's dependencies.
