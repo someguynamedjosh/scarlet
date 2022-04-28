@@ -345,6 +345,22 @@ fn justified_substitution() {
 }
 
 #[test]
+fn scope_separated_substitution() {
+    let code = r"
+    amod IS { a IS VAR[SELF] }
+    bmod IS { 
+        a[b]
+        b IS VAR[SELF] 
+    }
+    a IS amod.a
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
+
+#[test]
 #[should_panic]
 fn unjustified_substitution() {
     let code = r"
