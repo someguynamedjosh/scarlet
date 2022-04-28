@@ -61,9 +61,9 @@ impl<'x, 'y> VomitContext<'x, 'y> {
 
 impl Environment {
     pub fn show_all_requested(&mut self, root: &ItemPtr) {
-        let mut to_vomit = Vec::new();
+        let mut to_vomit: Vec<(ItemPtr, ItemPtr)> = Vec::new();
         root.for_self_and_contents(&mut |item| {
-            if item.borrow().show {
+            if item.borrow().show && !to_vomit.iter().any(|x| x.0.is_same_instance_as(item)) {
                 to_vomit.push((item.ptr_clone(), item.ptr_clone()));
             }
         });
@@ -104,42 +104,40 @@ impl Environment {
         let set = set_ptr.borrow();
         for invariant in set.statements() {
             let vomited = self.vomit(255, &mut inv_ctx, invariant.ptr_clone());
-            inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("\n    {} ", indented(&vomited,),));
         }
         for dep in set.dependencies() {
             let vomited = self.vomit(255, &mut inv_ctx, dep.ptr_clone());
-            inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("{}   ", indented(&vomited)));
         }
         result.push_str(&format!("\ndepends on: "));
         for dep in item_id.get_dependencies().into_variables() {
             let vomited = self.vomit_var(&mut inv_ctx, dep.var.ptr_clone());
-            inv_ctx.temp_names.clear();
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("{}   ", indented(&vomited)));
         }
+
+        result.push_str(&Self::format_vomit_temp_names(&inv_ctx));
         result
     }
 
     fn format_vomit_output(ctx: &VomitContext, output: Node) -> String {
-        let base = output.vomit(&ctx.pc);
-        if ctx.temp_names.len() == 0 {
-            base
-        } else {
-            let mut result = base;
-            result.push_str("\nUSING {");
-            for (_id, (name, node)) in &*ctx.temp_names {
-                result.push_str("\n    ");
-                result.push_str(name);
-                result.push_str(" IS ");
-                result.push_str(&node.vomit(&ctx.pc));
-            }
-            result.push_str("\n}");
-            result
+        output.vomit(&ctx.pc)
+    }
+
+    fn format_vomit_temp_names(ctx: &VomitContext) -> String {
+        let mut result = String::new();
+        result.push_str("\nUSING {");
+        for (_id, (name, node)) in &*ctx.temp_names {
+            result.push_str("\n    ");
+            result.push_str(name);
+            result.push_str(" IS ");
+            result.push_str(&node.vomit(&ctx.pc));
         }
+        result.push_str("\n}");
+        result
     }
 
     pub fn show_var(&mut self, var: VariablePtr, from: ItemPtr) -> String {
@@ -157,10 +155,18 @@ impl Environment {
         item_ptr: ItemPtr,
     ) -> Node<'a> {
         let mut err = None;
+        let item_ptr = item_ptr.dereference();
         if let Some(_) = item_ptr.downcast_definition::<DResolvable>() {
             return Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text("UNRESOLVED")],
+                ..Default::default()
+            };
+        }
+        if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(self, item_ptr.ptr_clone()) {
+            return Node {
+                phrase: "identifier",
+                children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],
                 ..Default::default()
             };
         }

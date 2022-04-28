@@ -24,16 +24,7 @@ fn uncreate<'a>(
     ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    Ok(if uncreate.borrow().show {
-        let unshown = todo!();
-        Some(Node {
-            phrase: "shown",
-            children: vec![NodeChild::Node(env.vomit(4, ctx, unshown))],
-            ..Default::default()
-        })
-    } else {
-        None
-    })
+    Ok(None)
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
