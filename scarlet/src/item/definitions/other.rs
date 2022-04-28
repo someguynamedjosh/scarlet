@@ -85,7 +85,7 @@ impl ItemDefinition for DOther {
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        if self.computationally_recursive {
+        if self.computationally_recursive || self.definitionally_recursive {
             vec![]
         } else {
             vec![(ContainmentType::Computational, &self.other)]

@@ -1,6 +1,15 @@
 #![cfg(test)]
 
-use crate::item::test_util::*;
+use crate::item::{definitions::structt::DPopulatedStruct, test_util::*, ItemPtr};
+
+fn get_member(root: &ItemPtr, name: &str) -> ItemPtr {
+    root.downcast_definition::<DPopulatedStruct>()
+        .unwrap()
+        .get_value()
+        .lookup_ident(name)
+        .unwrap()
+        .unwrap()
+}
 
 #[test]
 fn basic_invariant() {
@@ -10,7 +19,7 @@ fn basic_invariant() {
     y_statement IS y = a
     ";
     with_env_from_code(code, |mut env, root| {
-        let y_statement = root.lookup_ident("y_statement").unwrap().unwrap();
+        let y_statement = get_member(&root, "y_statement");
         env.justify(&root, &y_statement, &y_statement, 2).unwrap();
         root.check_all();
     });
@@ -34,8 +43,9 @@ fn sub_invariant() {
     statement[x IS t]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 10).unwrap();
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 10)
+            .unwrap();
         root.check_all();
     });
 }
@@ -55,8 +65,9 @@ fn sub_fx_invariant() {
     justify_this IS statement
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 10).unwrap();
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 10)
+            .unwrap();
         root.check_all();
     });
 }
@@ -81,8 +92,9 @@ fn moderate_invariant() {
     justify_this IS invariant
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 10).unwrap();
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 10)
+            .unwrap();
         root.check_all();
     });
 }
@@ -96,8 +108,9 @@ fn nonexistant_invariant() {
     z_statement IS y = b
     ";
     with_env_from_code(code, |mut env, root| {
-        let z_statement = root.lookup_ident("z_statement").unwrap().unwrap();
-        env.justify(&root, &z_statement, &z_statement, 1).unwrap_err();
+        let z_statement = get_member(&root, "z_statement");
+        env.justify(&root, &z_statement, &z_statement, 1)
+            .unwrap_err();
     });
 }
 
@@ -113,7 +126,7 @@ fn basic_theorem_invariant() {
     justify_this IS statement
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
     });
@@ -134,7 +147,7 @@ fn subbed_theorem_invariant() {
     justify_this IS a
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
     });
@@ -158,7 +171,7 @@ fn function_invariant() {
     justify_this IS statement[identity a]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
     });
@@ -181,7 +194,7 @@ fn equality_theorem_invariant() {
     justify_this IS statement[a b]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
     });
@@ -212,164 +225,95 @@ fn real_theorem_invariant() {
     statement[c d identity]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
     });
 }
 
 #[test]
-fn simpler_auto_theorem_invariant() {
+fn real_theorem_rewritten_invariant() {
     let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
-    statement IS UNIQUE.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+    a IS VAR[]
+    b IS VAR[a = SELF]
 
-    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
 
-    justify_this IS statement
+    statement IS 
+    (fx[b] = fx[a])
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    c IS VAR[]
+    d IS VAR[c = SELF]
+    identity IS VAR[]
+
+    t_eq_ext_rev[c d identity]
+
+    justify_this IS d = c
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
+        env.justify_all(&root);
     });
 }
 
 #[test]
-fn single_sub_auto_theorem_invariant() {
+fn subbed_statement() {
     let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
-    x IS VAR[]
-    y IS VAR[]
-
-    statement IS x.AS_LANGUAGE_ITEM[t_decision_eq_statement]
-    AXIOM[t_decision_eq].AS_AUTO_THEOREM
-
-    justify_this IS y
-    ";
-    with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
-        root.check_all();
-    });
-}
-
-#[test]
-fn single_sub_in_struct_auto_theorem_invariant() {
-    let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
-    x IS VAR[]
-    y IS VAR[]
-
-    statement IS {x}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
-    AXIOM[t_decision_eq].AS_AUTO_THEOREM
-
-    justify_this IS {y}
-    ";
-    with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
-        root.check_all();
-    });
-}
-
-#[test]
-fn double_sub_auto_theorem_invariant() {
-    let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
     a IS VAR[]
     b IS VAR[]
-    x IS VAR[]
-    y IS VAR[]
 
-    statement IS {x y}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
-    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+    c IS VAR[]
+    d IS VAR[c = SELF]
+    identity IS VAR[]
 
-    justify_this IS {a b}
+    justify_this IS (a = b)[c d]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
+        env.justify_all(&root);
     });
 }
 
 #[test]
-fn repeated_single_sub_auto_theorem_invariant() {
+fn justified_substitution() {
     let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
     a IS VAR[]
-    x IS VAR[]
+    b IS VAR[a = SELF]
 
-    statement IS {x x}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
-    AXIOM[t_decision_eq].AS_AUTO_THEOREM
+    c IS VAR[]
+    d IS VAR[c = SELF]
 
-    justify_this IS {a a}
+    {a b}[c d]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 4).unwrap();
         root.check_all();
+        env.justify_all(&root);
     });
 }
 
 #[test]
-fn repeated_double_sub_auto_theorem_invariant() {
+#[should_panic]
+fn unjustified_substitution() {
     let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
     a IS VAR[]
-    b IS VAR[]
-    x IS VAR[]
-    y IS VAR[]
+    b IS VAR[a = SELF]
 
-    statement IS {x y x y}.AS_LANGUAGE_ITEM[t_decision_eq_statement]
-    AXIOM[t_decision_eq].AS_AUTO_THEOREM
-
-    justify_this IS {a b a b}
-    ";
-    with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 8).unwrap();
-        root.check_all();
-    });
-}
-
-#[test]
-fn auto_theorem_invariant() {
-    let code = r"
-    # Abusing the axiom feature to introduce a theorem that can be proven from
-    # other axioms without doing the full proof.
-    t_decision_eq IS
-    { 
-        AXIOM[t_decision_eq]
-
-        (DECISION[a a b c] = b)
-        .AS_LANGUAGE_ITEM[t_decision_eq_statement]
-
-        a IS VAR[]
-        b IS VAR[]
-        c IS VAR[]
-    }
-    .VALUE
-    .AS_AUTO_THEOREM
-
+    c IS VAR[]
     d IS VAR[]
-    e IS VAR[]
-    f IS VAR[]
 
-    justify_this IS
-    DECISION[d d e f] = e
+    {a b}[c d]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
+        env.justify_all(&root);
     });
 }
 
@@ -402,35 +346,7 @@ fn t_just_after_theorem() {
     b IS VAR[a = SELF]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
-        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
-        root.check_all();
-    });
-}
-
-#[test]
-fn justify_auto_refl() {
-    let code = r"
-    t_refl IS
-    {
-        AXIOM[t_refl]
-
-        (a = a)
-        .AS_LANGUAGE_ITEM[t_refl_statement]
-
-        a IS VAR[]
-    }
-    .VALUE
-    .AS_AUTO_THEOREM
-
-    t_just IS VAR[SELF]
-
-    asdf IS UNIQUE
-
-    justify_this IS asdf = asdf
-    ";
-    with_env_from_code(code, |mut env, root| {
-        let justify_this = root.lookup_ident("justify_this").unwrap().unwrap();
+        let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
     });

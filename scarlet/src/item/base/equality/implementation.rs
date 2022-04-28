@@ -356,7 +356,6 @@ impl EqualityCalculationContext {
                 let sub = sub.ptr_clone();
                 if TRACE {
                     println!("Selecting {:?} {:#?}", of, sub);
-                    // println!("{}", caller_location());
                 }
                 selected.select_substitution(index, of, sub);
                 if TRACE {

@@ -34,6 +34,7 @@ computation_axioms.t_decision_neq
 
 # t_decision_eq_inv IS other.t_decision_eq_inv
 # t_just IS other.t_just
+t_just IS VAR[SELF]
 
 x IS basics.x
 fx IS basics.fx

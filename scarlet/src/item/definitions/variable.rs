@@ -242,7 +242,7 @@ impl EqualityFeature for DVariable {
         can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
-        unreachable!()
+        Ok(Equal::Unknown)
     }
 }
 

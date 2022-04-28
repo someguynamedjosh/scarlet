@@ -24,7 +24,7 @@ use crate::{
 };
 
 lazy_static! {
-    static ref variable_counter: Mutex<u32> = Mutex::new(0);
+    static ref VARIABLE_COUNTER: Mutex<u32> = Mutex::new(0);
 }
 
 pub(super) fn env() -> Environment {
@@ -48,12 +48,6 @@ pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, 
     }
     resolve_all(&mut env, root.ptr_clone());
 
-    let root = root
-        .downcast_definition::<DPopulatedStruct>()
-        .unwrap()
-        .get_value()
-        .ptr_clone();
-
     callback(env, root)
 }
 
@@ -76,7 +70,7 @@ pub(super) fn unique() -> ItemPtr {
 }
 
 fn next_variable_order() -> u32 {
-    let mut ptr = variable_counter.lock().unwrap();
+    let mut ptr = VARIABLE_COUNTER.lock().unwrap();
     let value = *ptr;
     *ptr += 1;
     value

@@ -81,9 +81,7 @@ fn propogate_root_connectedness(of: &[InvariantSetPtr]) {
 fn collect_invariant_sets(root: &ItemPtr) -> Vec<InvariantSetPtr> {
     let mut result = Vec::new();
     root.for_self_and_contents(&mut |item| {
-        for inv_set in item.get_invariants() {
-            result.push(inv_set);
-        }
+        result.push(item.get_invariants().unwrap());
     });
     result
 }
@@ -136,7 +134,7 @@ impl<'a> JustificationContext<'a> {
                 drop(set);
                 let res = self.justify(&set_ptr, limit);
                 let set = set_ptr.borrow();
-                if limit == MAX_LIMIT - 1 && !set.connected_to_root && set.statements().len() > 0 {
+                if limit == MAX_LIMIT - 1 && !set.connected_to_root {
                     if let Err(err) = res {
                         eprintln!("Error while justifying invariant set:");
                         eprintln!("{:?}", err);
