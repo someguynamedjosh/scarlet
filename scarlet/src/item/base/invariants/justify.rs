@@ -125,7 +125,7 @@ impl Environment {
 impl<'a> JustificationContext<'a> {
     fn justify_all(&mut self) {
         let mut encountered_err = false;
-        const MAX_LIMIT: u32 = 4;
+        const MAX_LIMIT: u32 = 16;
         for limit in 0..MAX_LIMIT {
             println!("{}/{}", limit, MAX_LIMIT);
             for set_ptr in self.sets.clone() {
@@ -210,159 +210,10 @@ impl<'a> JustificationContext<'a> {
                 }
             }
         }
-        match self.create_justification(context, statement, limit) {
-            Ok(mut extra_invs) => result.append(&mut extra_invs),
-            Err(err) => {
-                if result.len() == 0 {
-                    return Err(LookupInvariantError::MightNotExist);
-                }
-            }
-        }
-        Ok(result)
-    }
-
-    fn create_justification(
-        &mut self,
-        context: &ItemPtr,
-        statement: &ItemPtr,
-        limit: u32,
-    ) -> Result<StatementJustifications, LookupInvariantError> {
-        let mut err = LookupInvariantError::DefinitelyDoesNotExist;
-        // let trace = statement.index == 833;
-        let trace = false;
-        if trace {
-            println!("Trying to find justification of {:?}", statement);
-        }
-        if limit == 0 {
-            if trace {
-                println!("Limit reached.");
-            }
-            return Err(err);
-        }
-        let mut successful_candidates = Vec::new();
-        for frame in self.stack.clone() {
-            let subbed = unchecked_substitution(frame.base, &frame.subs);
-            if let Equal::Yes(subs, rec) = statement.get_equality(&subbed, limit)? {
-                if subs.len() > 0 {
-                    continue;
-                };
-                if trace {
-                    println!("Equal to a previous thing!");
-                }
-                // Deduplicate
-                let rec: HashSet<_> = rec.into_iter().collect();
-                let rec: Vec<_> = rec.into_iter().collect();
-                if rec.len() != 1 {
-                    return Err(LookupInvariantError::DefinitelyDoesNotExist);
-                }
-                let rec = &rec[0];
-                let new_set = InvariantSet::new_recursive_justification(
-                    context.ptr_clone(),
-                    vec![rec.ptr_clone()].into_iter().collect(),
-                );
-                self.sets.push(new_set.ptr_clone());
-                successful_candidates.push(vec![new_set]);
-            }
-        }
-        let mut candidates = Vec::new();
-        for at in self.env.auto_theorems.clone() {
-            let invs_ptr = at.get_invariants()?;
-            let invs = invs_ptr.borrow();
-            for inv in invs.statements() {
-                match inv.get_equality(&statement, limit - 1)? {
-                    Equal::Yes(subs, _) => {
-                        candidates.push((invs_ptr.ptr_clone(), inv.ptr_clone(), subs))
-                    }
-                    Equal::NeedsHigherLimit => err = LookupInvariantError::MightNotExist,
-                    _ => (),
-                }
-            }
-        }
-        'check_next_candidate: for (inv_id, inv, subs) in candidates {
-            if subs.len() == 0 {
-                successful_candidates.push(vec![inv_id]);
-                continue;
-            }
-            self.stack.push(JustifyStackFrame {
-                base: inv.ptr_clone(),
-                subs: subs.clone(),
-            });
-            let mut justifications = Vec::new();
-            let ok = self.check_subs(
-                context,
-                statement,
-                subs.clone(),
-                limit,
-                &mut justifications,
-                &mut err,
-                trace,
-            );
-            self.stack.pop();
-            if !ok {
-                continue 'check_next_candidate;
-            }
-            successful_candidates.push(justifications);
-        }
-        if successful_candidates.len() > 0 {
-            Ok(successful_candidates)
+        if result.len() == 0 {
+            Err(LookupInvariantError::MightNotExist)
         } else {
-            Err(err)
+            Ok(result)
         }
-    }
-
-    fn check_subs(
-        &mut self,
-        context: &ItemPtr,
-        statement: &ItemPtr,
-        subs: Substitutions,
-        limit: u32,
-        justifications: &mut Vec<InvariantSetPtr>,
-        err: &mut LookupInvariantError,
-        trace: bool,
-    ) -> bool {
-        let mut inv_subs = Substitutions::new();
-        for (target, value) in subs {
-            inv_subs.insert_no_replace(target.ptr_clone(), value);
-            let target = target.borrow();
-            for invv in target.invariants() {
-                let statement = unchecked_substitution(invv.ptr_clone(), &inv_subs);
-                if trace {
-                    println!("Need to justify {:?}", statement);
-                }
-                let result = self.justify_statement(context, &statement, limit - 1);
-                match result {
-                    Ok(new_justifications) => {
-                        if trace {
-                            println!("Success!");
-                        }
-                        let set = rcrc(InvariantSet {
-                            context: context.ptr_clone(),
-                            statements: vec![statement.ptr_clone()],
-                            set_justification: Some(vec![new_justifications]),
-                            justification_requirements: vec![statement],
-                            dependencies: hashset![],
-                            required: false,
-                            connected_to_root: false,
-                        });
-                        justifications.push(set);
-                    }
-                    Err(LookupInvariantError::Unresolved(..))
-                    | Err(LookupInvariantError::MightNotExist) => {
-                        if trace {
-                            println!("{:?}", result);
-                        }
-                        *err = result.unwrap_err();
-                        return false;
-                    }
-                    Err(LookupInvariantError::DefinitelyDoesNotExist) => {
-                        if trace {
-                            println!("Definitely unjustified");
-                        }
-                        return false;
-                    }
-                }
-            }
-        }
-        true
     }
 }

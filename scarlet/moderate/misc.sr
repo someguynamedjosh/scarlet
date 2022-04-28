@@ -14,6 +14,3 @@ x IS VAR[]
 #    is_struct[x.REST]
 # ]
 
-t_just[false]
-
-t_just IS VAR[SELF]
