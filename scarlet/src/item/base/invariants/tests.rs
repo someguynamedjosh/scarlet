@@ -1,6 +1,14 @@
 #![cfg(test)]
 
-use crate::item::{definitions::structt::DPopulatedStruct, test_util::*, ItemPtr};
+use crate::{
+    item::{
+        definitions::{structt::DPopulatedStruct, variable::DVariable},
+        test_util::*,
+        util::unchecked_substitution,
+        ItemPtr,
+    },
+    util::PtrExtension,
+};
 
 fn get_member(root: &ItemPtr, name: &str) -> ItemPtr {
     root.downcast_definition::<DPopulatedStruct>()
@@ -277,6 +285,43 @@ fn subbed_statement() {
     with_env_from_code(code, |mut env, root| {
         let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
+
+#[test]
+fn simpler_justified_substitution() {
+    let code = r"
+    a IS VAR[SELF]
+
+    c IS VAR[SELF]
+
+    a[c]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
+
+#[test]
+fn justify_unchecked_sub() {
+    let code = r"
+    a IS VAR[SELF]
+    b IS VAR[SELF]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let a = get_member(&root, "a");
+        let a_var = a
+            .dereference()
+            .downcast_definition::<DVariable>()
+            .unwrap()
+            .get_variable()
+            .ptr_clone();
+        let b = get_member(&root, "b");
+        let a_sub_b = unchecked_substitution(a, &subs(vec![(a_var, b.ptr_clone())]));
+        env.justify(&root, &b, &a_sub_b, 10).unwrap();
         root.check_all();
         env.justify_all(&root);
     });

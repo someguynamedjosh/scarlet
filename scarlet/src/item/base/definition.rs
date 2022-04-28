@@ -10,6 +10,7 @@ use crate::{
     shared::AnyEq,
 };
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ContainmentType {
     /// Use this if computing a term would cause the contained term to be
     /// computed.

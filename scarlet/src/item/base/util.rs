@@ -83,4 +83,8 @@ where
     pub fn into_frames(self) -> Vec<T> {
         self.0
     }
+
+    pub(crate) fn frames(&self) -> &[T] {
+        &self.0
+    }
 }

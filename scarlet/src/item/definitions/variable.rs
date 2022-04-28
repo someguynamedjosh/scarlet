@@ -255,7 +255,7 @@ impl InvariantsFeature for DVariable {
     ) -> InvariantsResult {
         let statements = self.0.borrow().invariants.clone();
         let dependencies = hashset![this.ptr_clone()];
-        Ok(InvariantSet::new_statements_depending_on(
+        Ok(InvariantSet::new_root_statements_depending_on(
             this.ptr_clone(),
             statements,
             dependencies,

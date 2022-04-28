@@ -139,6 +139,7 @@ impl<'a> JustificationContext<'a> {
                         eprintln!("Error while justifying invariant set:");
                         eprintln!("{:?}", err);
                     } else {
+                        println!("{:#?}", res);
                         eprintln!("The following can only be justified circularly:");
                         eprintln!("{:#?}", set);
                     }

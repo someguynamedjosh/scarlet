@@ -34,6 +34,7 @@ impl Debug for InvariantSet {
                 &self.justification_requirements,
             )
             .field("required", &self.required)
+            .field("connected_to_root", &self.connected_to_root)
             .field("dependencies", &self.dependencies)
             .finish_non_exhaustive()
     }
@@ -111,7 +112,7 @@ impl InvariantSet {
         })
     }
 
-    pub fn new_statements_depending_on(
+    pub fn new_root_statements_depending_on(
         context: ItemPtr,
         statements: Vec<ItemPtr>,
         dependencies: HashSet<ItemPtr>,
@@ -121,7 +122,7 @@ impl InvariantSet {
             statements,
             justification_requirements: Vec::new(),
             set_justification: None,
-            connected_to_root: false,
+            connected_to_root: true,
             required: true,
             dependencies,
         })

@@ -39,7 +39,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         ),
         SPlain(this.ptr_clone()),
     );
-    let eq_inv = InvariantSet::new_statements_depending_on(
+    let eq_inv = InvariantSet::new_root_statements_depending_on(
         this.ptr_clone(),
         vec![eq_inv],
         hashset![this.ptr_clone()],
@@ -55,7 +55,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         ),
         SPlain(this.ptr_clone()),
     );
-    let neq_inv = InvariantSet::new_statements_depending_on(
+    let neq_inv = InvariantSet::new_root_statements_depending_on(
         this.ptr_clone(),
         vec![neq_inv],
         hashset![this.ptr_clone()],

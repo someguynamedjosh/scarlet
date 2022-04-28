@@ -25,7 +25,7 @@ use crate::{
             structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         },
         resolvable::{BoxedResolvable, DResolvable, Resolvable, UnresolvedItemError},
-        ItemDefinition, ContainmentType,
+        ContainmentType, ItemDefinition,
     },
     scope::{LookupIdentResult, SRoot, Scope},
     util::{rcrc, PtrExtension},
@@ -204,18 +204,32 @@ impl ItemPtr {
     }
 
     pub fn mark_recursion(&self) {
-        let mut stack = Stack::<ItemPtr>::new();
+        let mut stack = Stack::new();
         self.mark_recursion_impl(ContainmentType::Computational, &mut stack);
     }
 
-    fn mark_recursion_impl(&self, containment_type: ContainmentType, stack: &mut Stack<ItemPtr>) {
-        if stack.contains(self) {
+    fn mark_recursion_impl(
+        &self,
+        containment_type: ContainmentType,
+        stack: &mut Stack<(ItemPtr, ContainmentType)>,
+    ) {
+        if let Some(index) = stack
+            .frames()
+            .iter()
+            .position(|x| x.0.is_same_instance_as(self))
+        {
+            let mut containment_type = containment_type;
+            for frame in &stack.frames()[index + 1..] {
+                if frame.1 == ContainmentType::Definitional {
+                    containment_type = ContainmentType::Definitional;
+                }
+            }
             if let Some(mut other) = self.downcast_definition_mut::<DOther>() {
                 other.mark_recursive(containment_type);
                 return;
             }
         }
-        stack.with_stack_frame(self.ptr_clone(), |stack| {
+        stack.with_stack_frame((self.ptr_clone(), containment_type), |stack| {
             let contents = self
                 .borrow()
                 .definition
