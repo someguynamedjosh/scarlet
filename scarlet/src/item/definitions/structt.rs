@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Formatter, self};
+use std::fmt::{self, Debug, Formatter};
 
 use itertools::Itertools;
 
@@ -156,7 +156,11 @@ impl DependenciesFeature for DAtomicStructMember {
         ctx: &mut Dcc,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
+        if let Some(structt) = self
+            .0
+            .dereference()
+            .downcast_definition::<DPopulatedStruct>()
+        {
             match self.1 {
                 AtomicStructMember::Label => todo!(),
                 AtomicStructMember::Value => ctx.get_dependencies(&structt.value),
@@ -175,7 +179,11 @@ impl InvariantsFeature for DAtomicStructMember {
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
+        if let Some(structt) = self
+            .0
+            .dereference()
+            .downcast_definition::<DPopulatedStruct>()
+        {
             match self.1 {
                 AtomicStructMember::Label => todo!(),
                 AtomicStructMember::Value => structt.value.get_invariants(),
