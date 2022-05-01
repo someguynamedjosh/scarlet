@@ -441,3 +441,26 @@ fn t_just_after_theorem() {
         root.check_all();
     });
 }
+
+#[test]
+fn mysterious_hang() {
+    let code = r"
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    (fx[b] = fx[a])
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev[fx b a]
+
+    a IS VAR[]
+    b IS VAR[SELF = a]
+    ";
+
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
