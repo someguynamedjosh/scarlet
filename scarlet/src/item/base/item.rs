@@ -154,7 +154,11 @@ impl ItemPtr {
         if let Some(other) = self.downcast_definition::<DOther>() {
             Some(other.other().ptr_clone())
         } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
-            if let Some(structt) = asm.base().downcast_definition::<DPopulatedStruct>() {
+            if let Some(structt) = asm
+                .base()
+                .dereference()
+                .downcast_definition::<DPopulatedStruct>()
+            {
                 Some(match asm.member() {
                     AtomicStructMember::Label => todo!(),
                     AtomicStructMember::Value => structt.get_value().ptr_clone(),

@@ -2,7 +2,7 @@ t_eq_symm IS
 {
    # t_just[b = a]
 
-   # t_eq_ext_rev[x a b]
+   t_eq_ext_rev[x a b].SHOWN
    # t_eq_ext_rev.SHOWN
 
    a IS VAR[]

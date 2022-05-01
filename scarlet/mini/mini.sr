@@ -1,27 +1,37 @@
-std.true.SHOWN
-
-true IS UNIQUE.AS_LANGUAGE_ITEM[true]
-false IS UNIQUE.AS_LANGUAGE_ITEM[false]
-void IS UNIQUE.AS_LANGUAGE_ITEM[void]
-void.AS_LANGUAGE_ITEM[and]
-true.AS_LANGUAGE_ITEM[t_trivial_statement]
-true.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
-true.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
-t_eq_ext_rev IS 
-{
-   AXIOM[t_eq_ext_rev]
-
-   (fx[b] = fx[a])
-   .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+asdf IS {
+   x IS VAR[]
+   fx IS VAR[DEP x]
 
    a IS VAR[]
    b IS VAR[a = SELF]
-}
-.VALUE
-true.AS_LANGUAGE_ITEM[t_inv_eq_statement]
-true.AS_LANGUAGE_ITEM[t_refl_statement]
-true.AS_LANGUAGE_ITEM[t_decision_eq_statement]
-true.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 
-x IS VAR[]
-fx IS VAR[DEP x]
+   true IS UNIQUE.AS_LANGUAGE_ITEM[true]
+   false IS UNIQUE.AS_LANGUAGE_ITEM[false]
+   void IS UNIQUE.AS_LANGUAGE_ITEM[void]
+   void.AS_LANGUAGE_ITEM[and]
+   true.AS_LANGUAGE_ITEM[t_trivial_statement]
+   true.AS_LANGUAGE_ITEM[t_invariant_truth_statement]
+   true.AS_LANGUAGE_ITEM[t_invariant_truth_rev_statement]
+   true.AS_LANGUAGE_ITEM[t_inv_eq_statement]
+   true.AS_LANGUAGE_ITEM[t_refl_statement]
+   true.AS_LANGUAGE_ITEM[t_decision_eq_statement]
+   true.AS_LANGUAGE_ITEM[t_decision_neq_statement]
+
+   t_just IS VAR[SELF]
+
+   jkl.t_eq_ext_rev[x a b].SHOWN
+   t_just[b = a]
+}
+
+jkl IS {
+   x IS asdf.x
+   fx IS asdf.fx
+
+   t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+      (fx[b] = fx[a])
+      .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+      a IS VAR[]
+      b IS VAR[a = SELF]
+}

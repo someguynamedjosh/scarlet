@@ -240,6 +240,33 @@ fn real_theorem_invariant() {
 }
 
 #[test]
+fn real_theorem_separated_invariant() {
+    let code = r"
+    asdf IS {
+        x IS VAR[]
+        fx IS VAR[DEP x]
+    }
+
+    t_eq_ext_rev[asdf.x]
+
+    t_just IS VAR[SELF]
+    t_just[b = a]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    (asdf.fx[b] = asdf.fx[a])
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    a IS VAR[]
+    b IS VAR[a = SELF]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
+
+#[test]
 fn real_theorem_rewritten_invariant() {
     let code = r"
     a IS VAR[]
@@ -256,11 +283,13 @@ fn real_theorem_rewritten_invariant() {
 
     c IS VAR[]
     d IS VAR[c = SELF]
-    identity IS VAR[]
 
-    t_eq_ext_rev[c d identity]
+    t_eq_ext_rev[c d x]
 
     justify_this IS d = c
+
+    t_just IS VAR[SELF]
+    t_just[d = c]
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = get_member(&root, "justify_this");
