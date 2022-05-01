@@ -46,6 +46,10 @@ impl EqualityCalculationContext {
     }
 
     fn get_equality_impl_impl(&mut self) -> EqualResult {
+        for _ in backtrace::Backtrace::new().frames() {
+            print!(" ");
+        }
+        println!("Testing...");
         if TRACE {
             println!(
                 "--------------------------------------------------------------------------------"
@@ -103,7 +107,10 @@ impl EqualityCalculationContext {
     ) -> Option<EqualResult> {
         // Just in case the previous expression didn't get to fully dereference rhs...
         while self.rhs.dereference_once() {
-            if self.lhs.item.is_same_instance_as(&self.rhs.item) && self.lhs.subs.len() == 0 && self.rhs.subs.len() == 0 {
+            if self.lhs.item.is_same_instance_as(&self.rhs.item)
+                && self.lhs.subs.len() == 0
+                && self.rhs.subs.len() == 0
+            {
                 return Some(Ok(Equal::yes()));
             }
         }
@@ -350,16 +357,26 @@ impl EqualityCalculationContext {
         of: &VariablePtr,
         selector: impl FnOnce(&mut Self) -> &mut ItemWithSubsAndRecursion,
     ) -> Option<EqualResult> {
+        const TRACE: bool = true;
         let selected = selector(self);
         for (index, subs) in selected.subs.iter().enumerate() {
             if let Some(sub) = subs.get(of) {
                 let sub = sub.ptr_clone();
                 if TRACE {
-                    println!("Selecting {:?} {:#?}", of, sub);
+                    // println!("Selecting {:?} {:#?}", of, sub);
+                    println!("Selecting {:?}", of);
+                    println!(
+                        "{:#?}",
+                        selected
+                            .subs
+                            .iter()
+                            .map(|x| x.iter().map(|y| &y.0).collect_vec())
+                            .collect_vec()
+                    )
                 }
                 selected.select_substitution(index, of, sub);
                 if TRACE {
-                    println!("Leaving {:#?}", selected);
+                    // println!("Leaving {:#?}", selected);
                 }
                 return Some(self.get_equality_impl());
             }
