@@ -10,22 +10,13 @@ true.AS_LANGUAGE_ITEM[t_refl_statement]
 true.AS_LANGUAGE_ITEM[t_decision_eq_statement]
 true.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 
-x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
-fx IS VAR[DEP x ORD 32]
+a IS VAR[]
 
-t_eq_ext_rev IS 
-{
-   AXIOM[t_eq_ext_rev]
+x IS VAR[]
+fx IS VAR[DEP x]
 
-   (fx[b] = fx[a])
-   .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+statement IS fx[a]
+t IS VAR[statement]
 
-   a IS VAR[]
-   b IS VAR[a = SELF]
-}
-.VALUE
-
-t_eq_ext_rev[fx b a]
-
-a IS VAR[SELF = SELF]
-b IS VAR[SELF = a]
+just_t IS VAR[SELF]
+just_t[t]

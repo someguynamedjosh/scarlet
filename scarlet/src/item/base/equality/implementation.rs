@@ -46,10 +46,6 @@ impl EqualityCalculationContext {
     }
 
     fn get_equality_impl_impl(&mut self) -> EqualResult {
-        for _ in backtrace::Backtrace::new().frames() {
-            print!(" ");
-        }
-        println!("Testing...");
         if TRACE {
             println!(
                 "--------------------------------------------------------------------------------"
@@ -293,7 +289,7 @@ impl EqualityCalculationContext {
 
     /// Step 1 of make_result_where_right_is_assigned_to_left_variable.
     fn store_substitions_not_appearing_on_lhs(
-        &self,
+        &mut self,
         ldeps: &Vec<Dependency>,
         rdeps: &[Dependency],
     ) -> ItemPtr {
@@ -307,7 +303,7 @@ impl EqualityCalculationContext {
         let mut remaining_rdep_subs = Substitutions::new();
         for dep in remaining_rdeps {
             let mut subbed = dep.var.borrow().item().ptr_clone();
-            for sub in &self.rhs.subs {
+            for sub in &mut self.rhs.subs {
                 // This is only necessary to produce clean results I.E. produce
                 // a blank list of substitutions when values are identical and
                 // need no substitutions.
@@ -322,6 +318,7 @@ impl EqualityCalculationContext {
                             continue;
                         }
                         filtered_subs.insert_or_replace(dep.var.ptr_clone(), value.ptr_clone());
+                        sub.remove(&dep.var);
                     }
                 }
                 subbed = unchecked_substitution(subbed, &filtered_subs);
@@ -357,26 +354,16 @@ impl EqualityCalculationContext {
         of: &VariablePtr,
         selector: impl FnOnce(&mut Self) -> &mut ItemWithSubsAndRecursion,
     ) -> Option<EqualResult> {
-        const TRACE: bool = true;
         let selected = selector(self);
         for (index, subs) in selected.subs.iter().enumerate() {
             if let Some(sub) = subs.get(of) {
                 let sub = sub.ptr_clone();
                 if TRACE {
-                    // println!("Selecting {:?} {:#?}", of, sub);
-                    println!("Selecting {:?}", of);
-                    println!(
-                        "{:#?}",
-                        selected
-                            .subs
-                            .iter()
-                            .map(|x| x.iter().map(|y| &y.0).collect_vec())
-                            .collect_vec()
-                    )
+                    println!("Selecting {:?} {:#?}", of, sub);
                 }
                 selected.select_substitution(index, of, sub);
                 if TRACE {
-                    // println!("Leaving {:#?}", selected);
+                    println!("Leaving {:#?}", selected);
                 }
                 return Some(self.get_equality_impl());
             }
