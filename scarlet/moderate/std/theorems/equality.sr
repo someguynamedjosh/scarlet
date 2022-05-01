@@ -1,30 +1,29 @@
 t_eq_symm IS 
 {
-   # t_just[b = a]
+   t_just[b = a]
 
    t_eq_ext_rev[x a b].SHOWN
-   # t_eq_ext_rev.SHOWN
 
    a IS VAR[]
    b IS VAR[a = SELF]
 }
 .VALUE
 
-# # From a = b
-# # Proves fx[a] = fx[b]
-# t_eq_ext IS 
-# {
-#    t_just[fx[a] = fx[b]]
+# From a = b
+# Proves fx[a] = fx[b]
+t_eq_ext IS 
+{
+   # t_just[fx[a] = fx[b]]
 
-#    t_eq_ext_rev[fx b a]
+   t_eq_ext_rev[fx b a]
 
-#    # Proves b = a
-#    t_eq_symm[a b]
+   # Proves b = a
+   # t_eq_symm[a b]
 
-#    a IS VAR[]
-#    b IS VAR[a = SELF]
-# }
-# .VALUE
+   a IS VAR[]
+   b IS VAR[SELF = a]
+}
+.VALUE
 
 # # From a=b  fx[a]
 # # Proves fx[b]
