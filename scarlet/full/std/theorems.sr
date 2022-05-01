@@ -17,10 +17,10 @@ t_decision_neq IS
 computation_axioms.t_decision_neq
 
 
-# t_eq_symm IS equality.t_eq_symm
-# t_eq_ext IS equality.t_eq_ext
-# t_inv_eq_ext IS equality.t_inv_eq_ext
-# t_eq_trans IS equality.t_eq_trans
+t_eq_symm IS equality.t_eq_symm
+t_eq_ext IS equality.t_eq_ext
+t_inv_eq_ext IS equality.t_inv_eq_ext
+t_eq_trans IS equality.t_eq_trans
 
 
 # t_extract_eq_from_decision IS 
@@ -33,8 +33,7 @@ computation_axioms.t_decision_neq
 # other.t_decision_by_parts_ext
 
 # t_decision_eq_inv IS other.t_decision_eq_inv
-# t_just IS other.t_just
-t_just IS VAR[SELF]
+t_just IS other.t_just
 
 x IS basics.x
 fx IS basics.fx
