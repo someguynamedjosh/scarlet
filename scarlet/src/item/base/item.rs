@@ -172,7 +172,11 @@ impl ItemPtr {
         if let Some(other) = self.downcast_definition::<DOther>() {
             other.other().dereference()
         } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
-            if let Some(structt) = asm.base().downcast_definition::<DPopulatedStruct>() {
+            if let Some(structt) = asm
+                .base()
+                .dereference()
+                .downcast_definition::<DPopulatedStruct>()
+            {
                 match asm.member() {
                     AtomicStructMember::Label => todo!(),
                     AtomicStructMember::Value => structt.get_value().dereference(),
@@ -183,6 +187,28 @@ impl ItemPtr {
             }
         } else {
             self.ptr_clone()
+        }
+    }
+
+    pub fn dereference_resolved(&self) -> Result<ItemPtr, UnresolvedItemError> {
+        if let Some(other) = self.downcast_resolved_definition::<DOther>()? {
+            other.other().dereference_resolved()
+        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
+            if let Some(structt) = asm
+                .base()
+                .dereference_resolved()?
+                .downcast_resolved_definition::<DPopulatedStruct>()?
+            {
+                match asm.member() {
+                    AtomicStructMember::Label => todo!(),
+                    AtomicStructMember::Value => structt.get_value().dereference_resolved(),
+                    AtomicStructMember::Rest => structt.get_rest().dereference_resolved(),
+                }
+            } else {
+                Ok(self.ptr_clone())
+            }
+        } else {
+            Ok(self.ptr_clone())
         }
     }
 

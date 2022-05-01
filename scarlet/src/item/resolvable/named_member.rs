@@ -29,7 +29,7 @@ fn find_member(
     name: &str,
 ) -> Result<Option<u32>, UnresolvedItemError> {
     if let Some(cstruct) = inn
-        .dereference()
+        .dereference_resolved()?
         .downcast_resolved_definition::<DPopulatedStruct>()?
     {
         if cstruct.get_label() == name {
