@@ -132,7 +132,7 @@ impl<'a> JustificationContext<'a> {
                     continue;
                 }
                 drop(set);
-                let res = self.justify(&set_ptr, limit);
+                let res = self.justify_set(&set_ptr, limit);
                 let set = set_ptr.borrow();
                 if limit == MAX_LIMIT - 1 && !set.connected_to_root {
                     if let Err(err) = res {
@@ -165,7 +165,7 @@ impl<'a> JustificationContext<'a> {
         }
     }
 
-    fn justify(
+    fn justify_set(
         &mut self,
         set: &InvariantSetPtr,
         limit: u32,
@@ -185,13 +185,18 @@ impl<'a> JustificationContext<'a> {
         statement: &ItemPtr,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
+        println!("----------------------------------------");
+        println!(
+            "{}",
+            self.env.show(statement.ptr_clone(), context.ptr_clone())
+        );
         let mut result = Vec::new();
         let ctx_scope = context.clone_scope();
         let available_invariant_sets = ctx_scope.get_invariant_sets();
         let iterate_over = available_invariant_sets;
         for other_set in iterate_over {
             for other_statement in other_set.borrow().statements() {
-                if TRACE {
+                if TRACE || true {
                     println!("Trying to link {:#?}", statement);
                     println!("by {:#?}", other_statement);
                 }

@@ -203,6 +203,9 @@ impl EqualityCalculationContext {
         }
         let mut equal = Equal::yes();
         for (ldep, rdep) in ldeps.iter().zip(rdeps.iter()) {
+            if rdep.swallow.contains(&ldep.var) {
+                return Ok(Equal::Unknown);
+            }
             let ldep = ldep.var.borrow().item().ptr_clone();
             let rdep = rdep.var.borrow().item().ptr_clone();
             if TRACE {

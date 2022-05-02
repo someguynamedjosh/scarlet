@@ -69,14 +69,16 @@ fn sub_fx_invariant() {
     statement IS fx[a]
 
     t IS VAR[statement]
-
     justify_this IS statement
+
+    other IS VAR[SELF][justify_this]
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = get_member(&root, "justify_this");
-        env.justify(&root, &justify_this, &justify_this, 10)
-            .unwrap();
+        let context = get_member(&root, "other");
         root.check_all();
+        env.justify_all(&root);
+        env.justify(&root, &context, &justify_this, 2).unwrap();
     });
 }
 

@@ -988,3 +988,28 @@ fn x_x_is_y_other_y_other() {
         unreachable!()
     }
 }
+
+#[test]
+fn other_fx_a_is_self() {
+    let x = variable_full();
+    let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    let a = variable_full();
+    let fa = unchecked_substitution(
+        f.0.ptr_clone(),
+        &subs(vec![(x.1.ptr_clone(), a.0.ptr_clone())]),
+    );
+    let other_base = other(fa.ptr_clone());
+    let other_0 = other(other_base.ptr_clone());
+    let other_1 = other(other_base.ptr_clone());
+    assert_eq!(other_0.get_equality(&other_1, 2), Ok(Equal::yes()));
+}
+
+#[test]
+fn other_fx_is_self() {
+    let x = variable_full();
+    let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    let other_base = other(f.0.ptr_clone());
+    let other_0 = other(other_base.ptr_clone());
+    let other_1 = other(other_base.ptr_clone());
+    assert_eq!(other_0.get_equality(&other_1, 2), Ok(Equal::yes()));
+}

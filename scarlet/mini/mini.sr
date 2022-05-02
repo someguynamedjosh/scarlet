@@ -19,4 +19,4 @@ statement IS fx[a]
 t IS VAR[statement]
 
 just_t IS VAR[SELF]
-just_t[t]
+just_t[statement]

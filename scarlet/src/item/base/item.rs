@@ -106,8 +106,12 @@ impl ItemPtr {
     }
 
     pub fn get_invariants(&self) -> InvariantsResult {
-        let mut ctx = InvariantCalculationContext::new();
-        ctx.get_invariants(self)
+        if self.borrow().invariants.is_none() {
+            let mut ctx = InvariantCalculationContext::new();
+            let invs = ctx.get_invariants(self)?;
+            self.borrow_mut().invariants = Some(invs);
+        }
+        Ok(self.borrow().invariants.as_ref().unwrap().ptr_clone())
     }
 }
 
