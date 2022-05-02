@@ -69,12 +69,11 @@ fn sub_fx_invariant() {
     statement IS fx[a]
 
     t IS VAR[statement]
-    justify_this IS statement
 
-    other IS VAR[SELF][justify_this]
+    other IS VAR[SELF][statement]
     ";
     with_env_from_code(code, |mut env, root| {
-        let justify_this = get_member(&root, "justify_this");
+        let justify_this = get_member(&root, "statement");
         let context = get_member(&root, "other");
         root.check_all();
         env.justify_all(&root);
@@ -459,6 +458,22 @@ fn mysterious_hang() {
 
     a IS VAR[]
     b IS VAR[SELF = a]
+    ";
+
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
+
+#[test]
+fn fx_asserting_self_sub_a() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[SELF[a] DEP x]
+    a IS VAR[]
+
+    VAR[SELF][fx[a]]
     ";
 
     with_env_from_code(code, |mut env, root| {

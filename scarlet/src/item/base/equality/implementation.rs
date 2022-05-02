@@ -22,7 +22,7 @@ use crate::{
     util::PtrExtension,
 };
 
-const TRACE: bool = false;
+const TRACE: bool = true;
 
 enum VariableResult {
     ResultReached(EqualResult),

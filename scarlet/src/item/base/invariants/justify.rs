@@ -185,18 +185,22 @@ impl<'a> JustificationContext<'a> {
         statement: &ItemPtr,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
-        println!("----------------------------------------");
-        println!(
-            "{}",
-            self.env.show(statement.ptr_clone(), context.ptr_clone())
-        );
+        if TRACE {
+            println!("----------------------------------------");
+            println!(
+                "{} {} {}",
+                context.debug_label(),
+                statement.debug_label(),
+                limit,
+            );
+        }
         let mut result = Vec::new();
         let ctx_scope = context.clone_scope();
         let available_invariant_sets = ctx_scope.get_invariant_sets();
         let iterate_over = available_invariant_sets;
         for other_set in iterate_over {
             for other_statement in other_set.borrow().statements() {
-                if TRACE || true {
+                if TRACE {
                     println!("Trying to link {:#?}", statement);
                     println!("by {:#?}", other_statement);
                 }

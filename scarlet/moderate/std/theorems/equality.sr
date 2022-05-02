@@ -13,34 +13,34 @@ t_eq_symm IS
 # Proves fx[a] = fx[b]
 t_eq_ext IS 
 {
-   # t_just[fx[a] = fx[b]]
+   t_just[fx[a] = fx[b]]
 
    t_eq_ext_rev[fx b a]
 
    # Proves b = a
-   # t_eq_symm[a b]
+   t_eq_symm[a b]
 
    a IS VAR[]
-   b IS VAR[SELF = a]
+   b IS VAR[a = SELF]
 }
 .VALUE
 
-# # From a=b  fx[a]
-# # Proves fx[b]
-# t_inv_eq_ext IS 
-# {
-#    t_just[fx[b]]
+# From a=b  fx[a]
+# Proves fx[b]
+t_inv_eq_ext IS 
+{
+   # t_just[fx[b]]
 
-#    t_inv_eq[fx[a] fx[b]]
+   # t_inv_eq[fx[a] fx[b]]
 
-#    # Proves fx[a] = fx[b]
-#    t_eq_ext[fx a b]
+   # Proves fx[a] = fx[b]
+   t_eq_ext[fx a b]
 
-#    a IS VAR[]
-#    b IS VAR[a = SELF]
-#    fx IS VAR[SELF[a]  DEP x]
-# }
-# .VALUE
+   a IS VAR[]
+   b IS VAR[a = SELF]
+   fx IS VAR[SELF[a]  DEP x]
+}
+.VALUE
 
 # # # From a = b   b = c
 # # # Proves a = c
