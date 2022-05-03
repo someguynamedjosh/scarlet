@@ -23,22 +23,29 @@ THE LHS REFINEMENT RULES:
     3. If I have dependencies, and the other side has an equal or greater number
        of dependencies, return Yes({SELF -> rhs(rd1 -> sd1, rd2 -> sd2, etc.),
        self_dep_1 -> rhs_dep_1, self_dep_2 -> rhs_dep_2, etc.}, {})
-    4. If I have dependencies, and the other side has fewer dependencies, refine
-       the right.
+    4. If I am the lhs and I have dependencies, and the other side has fewer
+    dependencies, refine the right.
+    5. If I am the rhs and I have more dependencies than the other side, return
+    Unknown.
 - For substitutions:
     1. Everything rules
     2. Check if our base is equal to rhs.
         a. If yes, select all substitutions in the result with targets we also
-           substitute.
-        b. Remove those substitutions from the lhs of the result.
-        c. Test the equality of the value from SELF on the left and the value
-           from the result on the right.
-        d. If it's anything other than Yes, return that.
-        e. If it's Yes, insert its substitutions into the result.
-        f. Insert any substitutions not already tested.
-        g. Return the modified result.
+           substitute (also select dependencies that aren't substituted and
+           treat them as a substitution like dep -> dep).
+            a. Remove those substitutions from the lhs of the result.
+            b. Test the equality of the value from SELF on the left and the value
+            from the result on the right.
+            c. If it's anything other than Yes, return Unknown.
+            d. If it's Yes, insert its substitutions into the result.
+        b. Insert any substitutions that the base is dependent on on the other
+        side.
+        c. Insert any substitutions that the substituted values in the result
+        are dependant on on the other side.
+        d. Return the modified result.
 - For uniques:
     1. Everything rules
+    2. If rhs is a unique of a different id, return No.
 
 THE RHS REFINEMENT RULES:
 - For variables, substitutions, uniques:
@@ -50,12 +57,10 @@ THE POST-PROCESSING RULES:
 2. Any substitution of the form x -> x should be removed, both in items and in
    the result.
 3. Any empty substitution item should be converted to its base.
-4. Any pair of substitutions on the LHS and RHS with the same target should be
-   removed.
-    a. Following this, insert any substitutions resulting from computing
-       `left_target =<= right_target`.
+4. Any pair of substitutions on the LHS and RHS with the same target and value
+should be removed.
 5. Remove any substitutions for which computing `value =<= target` produces
-   `Yes({}, {})`.
+   `Yes({}, {})` after applying 1-4.
 ```rs
 x =<= x
 "yes() by #1"
@@ -67,6 +72,8 @@ x =<= x OTHER
 ```rs
 x =<= x(x IS a)
 "Yes({x -> x(x IS a)}) by #2"
+// After post processing
+"Yes({x -> a}) by #2"
 ```
 ```rs
 x(y) =<= y
@@ -84,9 +91,9 @@ a =<= x(x IS a)
             "Yes({}, {x -> a}) by #2"
         "Yes({}, {x -> a}) by #99"
         a =<= a
-        "Yes({}, {}) by #1"
-    "Yes({}, {}) by #2"
-"Yes({}) by #99"
+        "Yes() by #1"
+    "Yes() by #2"
+"Yes() by #99"
 ```
 ```rs
 fx =<= x OTHER
@@ -121,11 +128,11 @@ fx(x IS a) =<= fx(x IS a)
         "Yes({}, {x -> a}) by #2"
     "Yes({}, {x -> a}) by #4"
 "Yes({x -> a}, {x -> a}) by #4"
-// Post processing
-a =<= a
-"Yes()"
+    // Post processing
+    a =<= a
+    "Yes()"
 // After post processing
-"Yes({}, {}) by #4"
+"Yes()"
 ```
 ```rs
 fx(x IS y) =<= fx(x IS y)
@@ -134,29 +141,125 @@ fx(x IS y) =<= fx(x IS y)
     y =<= y
     "Yes() by #1"
 "Yes({fx -> fx(x IS y)(y IS x)}) by #2"
+    // Post processing
+    fx(x IS y)(y IS x) =<= fx
+        fx(x IS y) =<= fx
+            fx =<= fx
+            "Yes() by #1"
+        "Yes({x -> y}) by #2"
+    "Yes({x -> y(y IS x)}) by #2"
+    // After post processing
+    "Yes()"
+// After post processing
+"Yes()"
 ```
-
-# Will these be problematic?
 ```rs
-x =<= x(x IS a)
-"Yes({x -> x(x IS a)}) by #1"
+x(x IS y) =<= z
+    x =<= z
+    "Yes({x IS z}) by #2"
+    y =<= z
+    "Yes({y IS z}) by #2"
+"Yes({y IS z}) by #2"
 ```
-
-Consider a theorem that proves `x = true` from `x`. You would invoke it as follows:
 ```rs
-invariant_truth_t(y)
+x(x IS y) =<= z(z IS w)
+    x =<= z(z IS w)
+    "Yes({x IS z(z IS w)}) by #2"
+    y =<= z(z IS w)
+    "Yes({y IS z(z IS w)}) by #2"
+"Yes({y IS z(z IS w)}) by #2"
+// After post-processing.
+"Yes({y IS w}) by #2"
 ```
-Which would trigger a search for statements of the form
 ```rs
-x(x IS y)
+fx(x IS y(y IS z)) =<= fx(x IS z)
+    fx =<= fx(x IS z)
+    "Yes({fx IS fx(x IS z)(z IS x)   x IS z}) by #2"
+    y(y IS z) =<= z
+        y =<= z
+        "Yes({y IS z}) by #2"
+        z =<= z
+        "Yes() by #1"
+    "Yes() by #2"
+"Yes({fx IS fx(x IS z)(z IS x)}) by #2"
+    // Post processing
+    fx(x IS z)(z IS x) =<= fx
+        fx(x IS z) =<= fx
+            fx =<= fx
+            "Yes() by #1"
+        "Yes({} {x IS z}) by #2"
+    "Yes({} {x IS z(z IS x)}) by #2"
+    // After post-processing.
+    "Yes() by #2"
+// After post-processing.
+"Yes() by #2"
 ```
-Which is different from these cases.
-
-But if we want to reintroduce ATP, we would start doing things like:
 ```rs
-y =<= x(x IS y)
+fx(x IS y) =<= fx(x IS z)
+    fx =<= fx(x IS z)
+    "Yes({fx IS fx(x IS z)(z IS x)   x IS z}) by #2"
+    y =<= z
+    "Yes({y IS z}) by #2"
+"Yes({fx IS fx(x IS z)(z IS x)   y IS z}) by #2"
+    // Post processing
+    fx(x IS z)(z IS x) =<= fx
+        fx(x IS z) =<= fx
+            fx =<= fx
+            "Yes() by #1"
+        "Yes({} {x IS z}) by #2"
+    "Yes({} {x IS z(z IS x)}) by #2"
+    // After post-processing.
+    "Yes() by #2"
+    z =<= y
+    "Yes({z IS y}) by #2"
+// After post-processing.
+"Yes({y IS z}) by #2"
 ```
-so that we can capture situations where we just need to apply some substitutions
-to a theorem to get the result we want. But in that case it might not be
-undesirable because we can just do `thing_that_proves_y(y IS x(x IS y))` and
-move on with our lives.
+```rs
+fx =<= fxy
+"Yes({fx IS fxy(x IS x), x IS x}) by #3"
+    // Post processing
+    fxy =<= fx
+        fxy =>= fx
+        "Unknown"
+    "Unknown"
+// After post-processing.
+"Yes({fx IS fxy}) by #2"
+```
+```rs
+fx =<= fxy(y IS a)
+"Yes({fx IS fxy(y IS a)(x IS x), x IS x}) by #3"
+    // Post processing
+    fxy(y IS a) =<= fx
+        fxy =<= fx
+            fxy =>= fx
+            "Unknown"
+        "Unknown"
+    "Unknown"
+// After post-processing.
+"Yes({fx IS fxy(y IS a)}) by #2"
+```
+```rs
+// THIS IS A TRICKY CASE!
+// Need to check that:
+// fx(x IS y)(fx IS fxy   y IS x)
+// Is dependant on both x *and* y, not just x.
+// Explanation: the substitution should not replace the y being introduced by
+// fxy, only the y in the original expression. However, the first (x IS y)
+// should still replace the x in `fxy`.
+fx(x IS y) =<= fxy
+    fx =<= fxy
+    "Yes({fx IS fxy(x IS x), x IS x}) by #3"
+    y =<= x
+    "Yes({y IS x}) by #2"
+"Yes({fx IS fxy(x IS x), y IS x}) by #2"
+    // Post processing
+    fxy =<= fx
+        fxy =>= fx
+        "Unknown"
+    "Unknown"
+    y =<= x
+    "Yes({y IS x}) by #2"
+// After post-processing.
+"Yes({fx IS fxy   y IS x}) by #2"
+```
