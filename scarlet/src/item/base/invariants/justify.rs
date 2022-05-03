@@ -204,12 +204,12 @@ impl<'a> JustificationContext<'a> {
                     println!("Trying to link {:#?}", statement);
                     println!("by {:#?}", other_statement);
                 }
-                let eq = statement.get_equality(other_statement, limit);
+                let eq = statement.get_trimmed_equality(other_statement);
                 if TRACE {
                     println!("{:#?}", eq);
                 }
-                if let Ok(Equal::Yes(subs, _)) = eq {
-                    if subs.len() > 0 {
+                if let Ok(Equal::Yes(lsubs, rsubs)) = eq {
+                    if lsubs.len() + rsubs.len() > 0 {
                         continue;
                     }
                     result.push(vec![other_set.ptr_clone()]);

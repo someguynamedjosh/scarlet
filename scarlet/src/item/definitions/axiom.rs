@@ -7,7 +7,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -30,12 +30,10 @@ impl DAxiom {
     }
 
     pub fn get_statement(&self, env: &mut Environment) -> &'static str {
-        for limit in 0..32 {
-            for lang_item_name in env.language_item_names() {
-                let lang_item = env.get_language_item(lang_item_name);
-                if self.statement.get_equality(&lang_item, limit) == Ok(Equal::yes()) {
-                    return lang_item_name;
-                }
+        for lang_item_name in env.language_item_names() {
+            let lang_item = env.get_language_item(lang_item_name);
+            if self.statement.get_trimmed_equality(&lang_item) == Ok(Equal::yes()) {
+                return lang_item_name;
             }
         }
         panic!("{:?} is not an axiom statement", self.statement)
@@ -68,13 +66,8 @@ impl DependenciesFeature for DAxiom {
 }
 
 impl EqualityFeature for DAxiom {
-    fn get_equality_using_context(
-        &self,
-        ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
-        _: OnlyCalledByEcc,
-    ) -> EqualResult {
-        let statements = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
+        let statements = if let Some(other) = ctx.other().downcast_definition::<Self>() {
             let self_statement = self.statement.ptr_clone();
             let other_statement = other.statement.ptr_clone();
             Some((self_statement, other_statement))
@@ -82,7 +75,8 @@ impl EqualityFeature for DAxiom {
             None
         };
         if let Some((self_statement, other_statement)) = statements {
-            ctx.refine_and_get_equality(self_statement, other_statement, can_refine)
+            ctx.with_primary_and_other(self_statement, other_statement)
+                .get_equality_left()
         } else {
             Ok(Equal::Unknown)
         }

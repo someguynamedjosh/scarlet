@@ -10,7 +10,7 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
             OnlyCalledByDcc,
         },
-        equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -134,10 +134,9 @@ impl EqualityFeature for DSubstitution {
     fn get_equality_using_context(
         &self,
         ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
-        unreachable!()
+        todo!()
     }
 }
 

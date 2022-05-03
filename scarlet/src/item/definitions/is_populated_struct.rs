@@ -4,7 +4,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         util::{is_bool, placeholder},
         Item, ItemDefinition, ItemPtr,
@@ -57,19 +57,15 @@ impl DependenciesFeature for DIsPopulatedStruct {
 }
 
 impl EqualityFeature for DIsPopulatedStruct {
-    fn get_equality_using_context(
-        &self,
-        ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
-        _: OnlyCalledByEcc,
-    ) -> EqualResult {
+    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         let other = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
             Some(other.base.ptr_clone())
         } else {
             None
         };
         if let Some(other) = other {
-            ctx.refine_and_get_equality(self.base.ptr_clone(), other, can_refine)
+            ctx.with_primary_and_other(self.base.ptr_clone(), other)
+                .get_equality_left()
         } else {
             Ok(Equal::Unknown)
         }

@@ -4,12 +4,12 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        ItemDefinition, ItemPtr, ContainmentType,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
     util::PtrExtension,
@@ -94,12 +94,7 @@ impl DependenciesFeature for DDecision {
 }
 
 impl EqualityFeature for DDecision {
-    fn get_equality_using_context(
-        &self,
-        ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
-        _: OnlyCalledByEcc,
-    ) -> EqualResult {
+    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         let others = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
             Some([
                 other.left.ptr_clone(),
@@ -113,18 +108,14 @@ impl EqualityFeature for DDecision {
         if let Some(others) = others {
             let [other_left, other_right, other_when_equal, other_when_not_equal] = others;
             Ok(Equal::and(vec![
-                ctx.refine_and_get_equality(self.left.ptr_clone(), other_left, can_refine)?,
-                ctx.refine_and_get_equality(self.right.ptr_clone(), other_right, can_refine)?,
-                ctx.refine_and_get_equality(
-                    self.when_equal.ptr_clone(),
-                    other_when_equal,
-                    can_refine,
-                )?,
-                ctx.refine_and_get_equality(
-                    self.when_not_equal.ptr_clone(),
-                    other_when_not_equal,
-                    can_refine,
-                )?,
+                ctx.with_primary_and_other(self.left.ptr_clone(), other_left)
+                    .get_equality_left()?,
+                ctx.with_primary_and_other(self.right.ptr_clone(), other_right)
+                    .get_equality_left()?,
+                ctx.with_primary_and_other(self.when_equal.ptr_clone(), other_when_equal)
+                    .get_equality_left()?,
+                ctx.with_primary_and_other(self.when_not_equal.ptr_clone(), other_when_not_equal)
+                    .get_equality_left()?,
             ]))
         } else {
             Ok(Equal::Unknown)
@@ -144,7 +135,7 @@ impl InvariantsFeature for DDecision {
         let mut result_statements = Vec::new();
         for true_inv in true_invs.borrow().statements() {
             for (index, false_inv) in false_invs.borrow().statements().iter().enumerate() {
-                if true_inv.get_equality(false_inv, 4) == Ok(Equal::yes()) {
+                if true_inv.get_trimmed_equality(false_inv) == Ok(Equal::yes()) {
                     result_statements.push(true_inv.ptr_clone());
                     break;
                 }

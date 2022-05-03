@@ -9,7 +9,7 @@ use crate::{
         check::CheckFeature,
         definitions::{decision::DDecision, substitution::Substitutions},
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -79,12 +79,7 @@ impl DependenciesFeature for DPopulatedStruct {
 }
 
 impl EqualityFeature for DPopulatedStruct {
-    fn get_equality_using_context(
-        &self,
-        ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
-        _: OnlyCalledByEcc,
-    ) -> EqualResult {
+    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         let others = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
             if self.label != other.label {
                 return Ok(Equal::No);
@@ -95,8 +90,10 @@ impl EqualityFeature for DPopulatedStruct {
         };
         if let Some([other_value, other_rest]) = others {
             Ok(Equal::and(vec![
-                ctx.refine_and_get_equality(self.value.ptr_clone(), other_value, can_refine)?,
-                ctx.refine_and_get_equality(self.rest.ptr_clone(), other_rest, can_refine)?,
+                ctx.with_primary_and_other(self.value.ptr_clone(), other_value)
+                    .get_equality_left()?,
+                ctx.with_primary_and_other(self.rest.ptr_clone(), other_rest)
+                    .get_equality_left()?,
             ]))
         } else {
             Ok(Equal::Unknown)

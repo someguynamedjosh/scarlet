@@ -101,10 +101,6 @@ impl ItemPtr {
         ctx.get_dependencies(self)
     }
 
-    pub fn get_equality(&self, other: &Self, limit: u32) -> EqualResult {
-        Ecc::get_equality(self.ptr_clone(), other.ptr_clone(), limit)
-    }
-
     pub fn get_invariants(&self) -> InvariantsResult {
         if self.borrow().invariants.is_none() {
             let mut ctx = InvariantCalculationContext::new();

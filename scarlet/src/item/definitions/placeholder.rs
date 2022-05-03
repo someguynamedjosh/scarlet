@@ -3,7 +3,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -40,8 +40,7 @@ impl DependenciesFeature for DPlaceholder {
 impl EqualityFeature for DPlaceholder {
     fn get_equality_using_context(
         &self,
-        _ctx: &mut Ecc,
-        _can_refine: PermissionToRefine,
+        ctx: &mut Ecc,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
         panic!("Attempted to test equality of placeholder.");

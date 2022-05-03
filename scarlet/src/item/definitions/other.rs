@@ -5,7 +5,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -25,7 +25,11 @@ pub struct DOther {
 impl Debug for DOther {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.computationally_recursive {
-            write!(f, "(computationally recursive) {}", self.other.debug_label())
+            write!(
+                f,
+                "(computationally recursive) {}",
+                self.other.debug_label()
+            )
         } else if self.definitionally_recursive {
             write!(f, "(definitionally recursive) {}", self.other.debug_label())
         } else {
@@ -107,13 +111,12 @@ impl DependenciesFeature for DOther {
 }
 
 impl EqualityFeature for DOther {
-    fn get_equality_using_context(
-        &self,
-        _ctx: &mut Ecc,
-        _can_refine: PermissionToRefine,
-        _: OnlyCalledByEcc,
-    ) -> EqualResult {
-        unreachable!()
+    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
+        if self.computationally_recursive {
+            todo!()
+        } else {
+            ctx.with_primary(self.other.ptr_clone()).get_equality_left()
+        }
     }
 }
 

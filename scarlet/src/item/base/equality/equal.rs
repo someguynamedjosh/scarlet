@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
-    Yes(Substitutions, Vec<ItemPtr>),
+    Yes(Substitutions, Substitutions),
     NeedsHigherLimit,
     Unknown,
     No,
@@ -37,18 +37,14 @@ impl Equal {
         Self::Yes(Default::default(), Default::default())
     }
 
-    pub fn yes_recursing_over(recursing_over: Vec<ItemPtr>) -> Self {
-        Self::Yes(Default::default(), recursing_over)
-    }
-
     pub fn and(over: Vec<Self>) -> Self {
         let mut default = Self::yes();
         for b in over {
             match b {
-                Self::Yes(left, mut lrecursion) => {
-                    if let Self::Yes(exleft, exrecursion) = &mut default {
+                Self::Yes(left, mut right) => {
+                    if let Self::Yes(exleft, exright) = &mut default {
                         let success = combine_substitutions(left, exleft);
-                        exrecursion.append(&mut lrecursion);
+                        let success = success.and(combine_substitutions(right, exright));
                         if success.is_err() {
                             default = Self::Unknown
                         }
@@ -59,8 +55,7 @@ impl Equal {
                         default = Self::NeedsHigherLimit
                     }
                 }
-                Self::Unknown => default = Self::Unknown,
-                Self::No => return Self::No,
+                Self::Unknown | Self::No => default = Self::Unknown,
             }
         }
         default
@@ -77,7 +72,7 @@ impl Equal {
                     }
                 }
                 Self::NeedsHigherLimit => default = Self::NeedsHigherLimit,
-                Self::No => return Self::No,
+                Self::No => (),
             }
         }
         default
@@ -113,19 +108,6 @@ impl Equal {
                 Self::Yes(subs.reorder(&order.iter().collect_vec()), recursion)
             }
             other => other,
-        }
-    }
-
-    pub(crate) fn recursing_over(self, recurses_over: Vec<ItemPtr>) -> Self {
-        match self {
-            Equal::Yes(subs, previous_recurses_over) => Self::Yes(
-                subs,
-                recurses_over
-                    .into_iter()
-                    .chain(previous_recurses_over)
-                    .collect(),
-            ),
-            _ => self,
         }
     }
 }

@@ -5,7 +5,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, EqualityTestSide},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -45,11 +45,10 @@ impl EqualityFeature for DUnique {
     fn get_equality_using_context(
         &self,
         ctx: &mut Ecc,
-        _can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
         Ok(
-            if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+            if let Some(other) = ctx.other().downcast_definition::<Self>() {
                 if self.0.is_same_instance_as(&other.0) {
                     Equal::yes()
                 } else {

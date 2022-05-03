@@ -16,7 +16,7 @@ use crate::{
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc, PermissionToRefine},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
         invariants::{
             self, Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -239,10 +239,9 @@ impl EqualityFeature for DVariable {
     fn get_equality_using_context(
         &self,
         ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
-        Ok(Equal::Unknown)
+        todo!()
     }
 }
 

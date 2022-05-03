@@ -1,4 +1,4 @@
-use super::{Ecc, Equal, OnlyCalledByEcc, PermissionToRefine};
+use super::{Ecc, Equal, EqualityTestSide, OnlyCalledByEcc};
 use crate::item::resolvable::UnresolvedItemError;
 
 pub type EqualResult = Result<Equal, UnresolvedItemError>;
@@ -8,7 +8,6 @@ pub trait EqualityFeature {
     fn get_equality_using_context(
         &self,
         ctx: &mut Ecc,
-        can_refine: PermissionToRefine,
         _: OnlyCalledByEcc,
     ) -> EqualResult {
         Ok(Equal::Unknown)
