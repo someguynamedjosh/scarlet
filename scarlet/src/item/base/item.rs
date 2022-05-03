@@ -156,7 +156,11 @@ impl ItemPtr {
 impl ItemPtr {
     pub fn dereference_once(&self) -> Option<ItemPtr> {
         if let Some(other) = self.downcast_definition::<DOther>() {
-            Some(other.other().ptr_clone())
+            if other.is_computationally_recursive() {
+                None
+            } else {
+                Some(other.other().ptr_clone())
+            }
         } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
             if let Some(structt) = asm
                 .base()
@@ -178,7 +182,11 @@ impl ItemPtr {
 
     pub fn dereference(&self) -> ItemPtr {
         if let Some(other) = self.downcast_definition::<DOther>() {
-            other.other().dereference()
+            if other.is_computationally_recursive() {
+                self.ptr_clone()
+            } else {
+                other.other().dereference()
+            }
         } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
             if let Some(structt) = asm
                 .base()
@@ -200,7 +208,11 @@ impl ItemPtr {
 
     pub fn dereference_resolved(&self) -> Result<ItemPtr, UnresolvedItemError> {
         if let Some(other) = self.downcast_resolved_definition::<DOther>()? {
-            other.other().dereference_resolved()
+            if other.is_computationally_recursive() {
+                Ok(self.ptr_clone())
+            } else {
+                other.other().dereference_resolved()
+            }
         } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
             if let Some(structt) = asm
                 .base()
