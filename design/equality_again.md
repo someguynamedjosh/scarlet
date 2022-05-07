@@ -31,17 +31,18 @@ THE LHS REFINEMENT RULES:
     1. Everything rules
     2. Check if our base is equal to rhs.
         a. If yes, select all substitutions in the result with targets we also
-           substitute (also select dependencies that aren't substituted and
-           treat them as a substitution like dep -> dep).
+           substitute (also select targets that aren't substituted in the result
+           and treat them as a substitution like target -> target).
             a. Remove those substitutions from the lhs of the result.
-            b. Test the equality of the value from SELF on the left and the value
-            from the result on the right.
-            c. If it's anything other than Yes, return Unknown.
-            d. If it's Yes, insert its substitutions into the result.
-        b. Insert any substitutions that the base is dependent on on the other
-        side.
-        c. Insert any substitutions that the substituted values in the result
-        are dependant on on the other side.
+            b1. If on rhs, test equality of the value from the substitution on
+            the left and the value from SELF on the right.
+            b2. If on lhs, test equality of the value from SELF on the left and
+            the value from the substitution on the right.
+            c1. If it's anything other than Yes, return Unknown.
+            c2. If it's Yes, insert its substitutions into the result as long as
+            the appropriate side is actually dependant on them.
+        c. Insert any substitutions that the substituted values in the opposite
+        side of the result are dependant on into those values.
         d. Return the modified result.
 - For uniques:
     1. Everything rules
@@ -76,12 +77,12 @@ x =<= x(x IS a)
 "Yes({x -> a}) by #2"
 ```
 ```rs
-x(y) =<= y
+x(x IS y) =<= y
     x =<= y
     "Yes({x -> y}) by #2"
     y =<= y
-    "Yes({}) by #1"
-"Yes({}) by #2"
+    "Yes() by #1"
+"Yes() by #2"
 ```
 ```rs
 a =<= x(x IS a)
@@ -125,14 +126,13 @@ fx(x IS a) =<= fx(x IS a)
         fx =>= fx(x IS a)
             fx =<= fx
             "Yes() by #1"
-        "Yes({}, {x -> a}) by #2"
-    "Yes({}, {x -> a}) by #4"
-"Yes({x -> a}, {x -> a}) by #4"
-    // Post processing
-    a =<= a
-    "Yes()"
-// After post processing
-"Yes()"
+            x =>= a
+            "Yes({x -> a}) by #2"
+        "Yes({x -> a}) by #2"
+    "Yes({x -> a}) by #4"
+    a =>= a
+    "Yes() by #2"
+"Yes() by #4"
 ```
 ```rs
 fx(x IS y) =<= fx(x IS y)
@@ -146,6 +146,8 @@ fx(x IS y) =<= fx(x IS y)
         fx(x IS y) =<= fx
             fx =<= fx
             "Yes() by #1"
+            x =>= y
+            "Yes({x -> y}) by #2"
         "Yes({x -> y}) by #2"
     "Yes({x -> y(y IS x)}) by #2"
     // After post processing
@@ -187,9 +189,11 @@ fx(x IS y(y IS z)) =<= fx(x IS z)
         fx(x IS z) =<= fx
             fx =<= fx
             "Yes() by #1"
-        "Yes({} {x IS z}) by #2"
-    "Yes({} {x IS z(z IS x)}) by #2"
-    // After post-processing.
+            z =<= x
+            "Yes({z IS x}) by #2"
+        "Yes({z IS x}) by #2"
+        x =<= x
+        "Yes() by #1"
     "Yes() by #2"
 // After post-processing.
 "Yes() by #2"
@@ -206,9 +210,11 @@ fx(x IS y) =<= fx(x IS z)
         fx(x IS z) =<= fx
             fx =<= fx
             "Yes() by #1"
-        "Yes({} {x IS z}) by #2"
-    "Yes({} {x IS z(z IS x)}) by #2"
-    // After post-processing.
+            z =<= x
+            "Yes({z IS x}) by #2"
+        "Yes({z IS x}) by #2"
+        x =<= x
+        "Yes() by #1"
     "Yes() by #2"
     z =<= y
     "Yes({z IS y}) by #2"
@@ -217,12 +223,14 @@ fx(x IS y) =<= fx(x IS z)
 ```
 ```rs
 fx =<= fxy
-"Yes({fx IS fxy(x IS x), x IS x}) by #3"
+"Yes({fx IS fxy(x IS x)  x IS x}) by #3"
     // Post processing
     fxy =<= fx
         fxy =>= fx
-        "Unknown"
-    "Unknown"
+        "Yes({} {fx IS fxy(x IS x)  x IS x}) by #3"
+    "Yes({} {fx IS fxy(x IS x)  x IS x}) by #3"
+    // After post-processing.
+    "Yes({} {fx IS fxy}) by #3"
 // After post-processing.
 "Yes({fx IS fxy}) by #2"
 ```
@@ -233,9 +241,11 @@ fx =<= fxy(y IS a)
     fxy(y IS a) =<= fx
         fxy =<= fx
             fxy =>= fx
-            "Unknown"
-        "Unknown"
-    "Unknown"
+            "Yes({} {fx IS fxy(x IS x)  x IS x}) by #3"
+        "Yes({} {fx IS fxy(x IS x)  x IS x}) by #3"
+        a =<= y
+        "Yes({} {y IS a})"
+    "Yes({} {fx IS fxy(x IS x)(y IS a)  x IS x}) by #3"
 // After post-processing.
 "Yes({fx IS fxy(y IS a)}) by #2"
 ```
@@ -256,8 +266,8 @@ fx(x IS y) =<= fxy
     // Post processing
     fxy =<= fx
         fxy =>= fx
-        "Unknown"
-    "Unknown"
+        "Yes({} {fx IS fxy(x IS x)  x IS x}) by #3"
+    "Yes({} {fx IS fxy(x IS x)  x IS x}) by #3"
     y =<= x
     "Yes({y IS x}) by #2"
 // After post-processing.
