@@ -2,7 +2,7 @@ use std::cell::Ref;
 
 use owning_ref::OwningRef;
 
-use super::{Equal, EqualResult};
+use super::{Equal, EqualResult, trim::trim_result};
 use crate::item::{
     definitions::{
         other::DOther,
@@ -112,7 +112,8 @@ impl ItemPtr {
     /// Gets equality and trims away redundant substitutions like x -> x,
     /// y -> x(x IS y), fx -> fx(x IS y)(y IS x) and so on.
     pub fn get_trimmed_equality(&self, other: &Self) -> EqualResult {
-        let result = self.get_equality_left(other)?;
-        todo!()
+        let mut result = self.get_equality_left(other)?;
+        trim_result(&mut result);
+        Ok(result)
     }
 }

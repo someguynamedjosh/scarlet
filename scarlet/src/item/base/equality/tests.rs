@@ -25,14 +25,6 @@ fn something_equals_variable() {
     let expected = subs(vec![(var_id, thing.ptr_clone())]);
     let left = Equal::Yes(expected.clone(), Default::default());
     assert_eq!(var_con.get_trimmed_equality(&thing), Ok(left));
-    assert_eq!(
-        var_con.get_trimmed_equality(&thing),
-        Ok(Equal::NeedsHigherLimit)
-    );
-    assert_eq!(
-        thing.get_trimmed_equality(&var_con),
-        Ok(Equal::NeedsHigherLimit)
-    );
 }
 
 #[test]
@@ -42,8 +34,6 @@ fn variable_equals_variable() {
     let expected = subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]);
     let left = Equal::Yes(expected.clone(), Default::default());
     assert_eq!(x.0.get_trimmed_equality(&y.0), Ok(left));
-    assert_eq!(x.0.get_trimmed_equality(&y.0), Ok(Equal::NeedsHigherLimit));
-    assert_eq!(y.0.get_trimmed_equality(&x.0), Ok(Equal::NeedsHigherLimit));
 }
 
 #[test]
@@ -64,10 +54,10 @@ fn var_sub_something_equals_something() {
 
 #[test]
 fn decision_equals_identical_decision() {
-    let a = variable();
-    let b = variable();
-    let c = variable();
-    let d = variable();
+    let a = unique();
+    let b = unique();
+    let c = unique();
+    let d = unique();
     let dec1 = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
     let dec2 = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
     assert_eq!(dec1.get_trimmed_equality(&dec2), Ok(Equal::yes()));
@@ -215,7 +205,6 @@ fn fx_is_gy() {
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
     assert_matches!(f.0.get_trimmed_equality(&g.0), Ok(Equal::Yes(..)));
     assert_matches!(g.0.get_trimmed_equality(&f.0), Ok(Equal::Yes(..)));
-    assert_matches!(g.0.get_trimmed_equality(&f.0), Ok(Equal::NeedsHigherLimit));
     if let Ok(Equal::Yes(lsubs, _)) = f.0.get_trimmed_equality(&g.0) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
@@ -261,10 +250,6 @@ fn fx_sub_a_is_gy_sub_a() {
     g_sub_a.set_name("g[a]".to_owned());
     assert_matches!(f_sub_a.get_trimmed_equality(&g_sub_a), Ok(Equal::Yes(..)));
     assert_matches!(g_sub_a.get_trimmed_equality(&f_sub_a), Ok(Equal::Yes(..)));
-    assert_matches!(
-        g_sub_a.get_trimmed_equality(&f_sub_a),
-        Ok(Equal::NeedsHigherLimit)
-    );
     if let Ok(Equal::Yes(lsubs, _)) = f_sub_a.get_trimmed_equality(&g_sub_a) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
@@ -320,10 +305,6 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
     let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default());
     assert_matches!(f_sub.get_trimmed_equality(&g_sub), Ok(Equal::Yes(..)));
     assert_matches!(g_sub.get_trimmed_equality(&f_sub), Ok(Equal::Yes(..)));
-    assert_matches!(
-        g_sub.get_trimmed_equality(&f_sub),
-        Ok(Equal::NeedsHigherLimit)
-    );
     if let Ok(Equal::Yes(lsubs, _)) = f_sub.get_trimmed_equality(&g_sub) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
@@ -358,10 +339,6 @@ fn fx_sub_z_is_gy_sub_nothing() {
     let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default());
     assert_matches!(f_sub.get_trimmed_equality(&g_sub), Ok(Equal::Yes(..)));
     assert_matches!(g_sub.get_trimmed_equality(&f_sub), Ok(Equal::Yes(..)));
-    assert_matches!(
-        g_sub.get_trimmed_equality(&f_sub),
-        Ok(Equal::NeedsHigherLimit)
-    );
     if let Ok(Equal::Yes(lsubs, _)) = f_sub.get_trimmed_equality(&g_sub) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();

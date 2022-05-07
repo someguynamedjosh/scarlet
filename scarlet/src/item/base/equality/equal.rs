@@ -11,7 +11,6 @@ use crate::{
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
     Yes(Substitutions, Substitutions),
-    NeedsHigherLimit,
     Unknown,
     No,
 }
@@ -50,11 +49,6 @@ impl Equal {
                         }
                     }
                 }
-                Self::NeedsHigherLimit => {
-                    if let Self::Yes(..) = default {
-                        default = Self::NeedsHigherLimit
-                    }
-                }
                 Self::Unknown | Self::No => default = Self::Unknown,
             }
         }
@@ -71,7 +65,6 @@ impl Equal {
                         default = Self::Unknown
                     }
                 }
-                Self::NeedsHigherLimit => default = Self::NeedsHigherLimit,
                 Self::No => (),
             }
         }
@@ -90,13 +83,6 @@ impl Equal {
             Self::Yes(subs, recursion) => Self::Yes(subs.reorder(order), recursion),
             other => other,
         }
-    }
-
-    /// Returns `true` if the equal is [`NeedsHigherLimit`].
-    ///
-    /// [`NeedsHigherLimit`]: Equal::NeedsHigherLimit
-    pub fn is_needs_higher_limit(&self) -> bool {
-        matches!(self, Self::NeedsHigherLimit)
     }
 
     pub(crate) fn sort(self) -> Equal {

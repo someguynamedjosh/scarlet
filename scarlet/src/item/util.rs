@@ -16,6 +16,11 @@ pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
             return value.ptr_clone()
         }
     }
+    unchecked_substitution_without_shortcuts(base, subs)
+}
+
+/// Unlike unchecked_substitution, does not simplify cases like abc[] or def[def IS ghjkl]
+pub fn unchecked_substitution_without_shortcuts(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
     let scope = base.clone_scope();
     let def = DSubstitution::new_unchecked(base, subs.clone());
     Item::new_boxed(Box::new(def), scope)
