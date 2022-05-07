@@ -2,7 +2,7 @@ use std::cell::Ref;
 
 use owning_ref::OwningRef;
 
-use super::{Equal, EqualResult, trim::trim_result};
+use super::{trim::trim_result, Equal, EqualResult};
 use crate::item::{
     definitions::{
         other::DOther,
@@ -51,6 +51,10 @@ impl EqualityCalculationContext {
             EqualityTestSide::Left => self.rhs(),
             EqualityTestSide::Right => self.lhs(),
         }
+    }
+
+    pub fn currently_computing_equality_for_rhs(&self) -> bool {
+        self.self_side == EqualityTestSide::Right
     }
 
     pub fn lhs(&self) -> &ItemPtr {

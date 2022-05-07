@@ -23,8 +23,8 @@ THE LHS REFINEMENT RULES:
     3. If I have dependencies, and the other side has an equal or greater number
        of dependencies, return Yes({SELF -> rhs(rd1 -> sd1, rd2 -> sd2, etc.),
        self_dep_1 -> rhs_dep_1, self_dep_2 -> rhs_dep_2, etc.}, {})
-    4. If I am the lhs and I have dependencies, and the other side has fewer
-    dependencies, refine the right.
+    4. If I am the lhs and I have more dependencies than the other side, refine
+    the right.
     5. If I am the rhs and I have more dependencies than the other side, return
     Unknown.
 - For substitutions:
