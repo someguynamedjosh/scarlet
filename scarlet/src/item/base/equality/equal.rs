@@ -96,4 +96,8 @@ impl Equal {
             other => other,
         }
     }
+
+    pub fn is_yes(&self) -> bool {
+        matches!(self, Self::Yes(..))
+    }
 }

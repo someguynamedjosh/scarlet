@@ -53,6 +53,10 @@ impl EqualityCalculationContext {
         }
     }
 
+    pub fn currently_computing_equality_for_lhs(&self) -> bool {
+        self.self_side == EqualityTestSide::Left
+    }
+
     pub fn currently_computing_equality_for_rhs(&self) -> bool {
         self.self_side == EqualityTestSide::Right
     }
