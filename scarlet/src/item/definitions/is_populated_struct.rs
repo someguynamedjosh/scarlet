@@ -58,7 +58,7 @@ impl DependenciesFeature for DIsPopulatedStruct {
 
 impl EqualityFeature for DIsPopulatedStruct {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        let other = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+        let other = if let Some(other) = ctx.other().downcast_definition::<Self>() {
             Some(other.base.ptr_clone())
         } else {
             None

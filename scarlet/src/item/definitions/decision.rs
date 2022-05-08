@@ -95,7 +95,7 @@ impl DependenciesFeature for DDecision {
 
 impl EqualityFeature for DDecision {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        let others = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+        let others = if let Some(other) = ctx.other().downcast_definition::<Self>() {
             Some([
                 other.left.ptr_clone(),
                 other.right.ptr_clone(),

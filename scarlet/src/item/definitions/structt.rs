@@ -80,7 +80,7 @@ impl DependenciesFeature for DPopulatedStruct {
 
 impl EqualityFeature for DPopulatedStruct {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        let others = if let Some(other) = ctx.rhs().downcast_definition::<Self>() {
+        let others = if let Some(other) = ctx.other().downcast_definition::<Self>() {
             if self.label != other.label {
                 return Ok(Equal::No);
             }
