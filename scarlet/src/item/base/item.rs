@@ -302,15 +302,21 @@ impl ItemPtr {
     }
 
     pub fn check_all(&self) {
-        self.for_self_and_contents(&mut |item| {
+        self.for_self_and_deep_contents(&mut |item| {
             item.borrow().definition.check_self(item).unwrap();
         })
     }
 
-    pub fn for_self_and_contents(&self, visitor: &mut impl FnMut(&ItemPtr)) {
+    pub fn for_self_and_deep_contents(&self, visitor: &mut impl FnMut(&ItemPtr)) {
         visitor(self);
         for (_, content) in self.borrow().definition.contents() {
-            content.for_self_and_contents(visitor);
+            content.for_self_and_deep_contents(visitor);
+        }
+    }
+
+    pub fn visit_contents(&self, mut visitor: impl FnMut(&ItemPtr)) {
+        for (_, content) in self.borrow().definition.contents() {
+            visitor(content);
         }
     }
 

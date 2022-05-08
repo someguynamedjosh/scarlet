@@ -9,7 +9,7 @@ use crate::{
 
 pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
     let mut unresolved = Vec::new();
-    root.for_self_and_contents(&mut |item| {
+    root.for_self_and_deep_contents(&mut |item| {
         if item.is_unresolved() {
             unresolved.push(item.ptr_clone());
         }
@@ -50,7 +50,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         }
     }
     let mut problem = false;
-    root.for_self_and_contents(&mut |item| {
+    root.for_self_and_deep_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
             println!("Failed to resolve {:#?} because", item);
             problem = true;

@@ -80,7 +80,7 @@ fn propogate_root_connectedness(of: &[InvariantSetPtr]) {
 
 fn collect_invariant_sets(root: &ItemPtr) -> Vec<InvariantSetPtr> {
     let mut result = Vec::new();
-    root.for_self_and_contents(&mut |item| {
+    root.for_self_and_deep_contents(&mut |item| {
         result.push(item.get_invariants().unwrap());
     });
     result

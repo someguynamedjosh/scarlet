@@ -62,7 +62,7 @@ impl<'x, 'y> VomitContext<'x, 'y> {
 impl Environment {
     pub fn show_all_requested(&mut self, root: &ItemPtr) {
         let mut to_vomit: Vec<(ItemPtr, ItemPtr)> = Vec::new();
-        root.for_self_and_contents(&mut |item| {
+        root.for_self_and_deep_contents(&mut |item| {
             if item.borrow().show && !to_vomit.iter().any(|x| x.0.is_same_instance_as(item)) {
                 to_vomit.push((item.ptr_clone(), item.ptr_clone()));
             }

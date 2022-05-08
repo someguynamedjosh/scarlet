@@ -237,14 +237,14 @@ impl DependenciesFeature for DVariable {
 
 impl EqualityFeature for DVariable {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        if let Some(other_var) = ctx.rhs().downcast_resolved_definition::<Self>()? {
+        if let Some(other_var) = ctx.other().downcast_resolved_definition::<Self>()? {
             if other_var.0.is_same_instance_as(&self.0) {
                 return Ok(Equal::yes());
             }
         }
         let num_deps = self.0.borrow().dependencies.len();
         if num_deps == 0 {
-            let primary_subs: Substitutions = vec![(self.0.ptr_clone(), ctx.rhs().ptr_clone())]
+            let primary_subs: Substitutions = vec![(self.0.ptr_clone(), ctx.other().ptr_clone())]
                 .into_iter()
                 .collect();
             if ctx.currently_computing_equality_for_lhs() {
@@ -253,7 +253,7 @@ impl EqualityFeature for DVariable {
                 Ok(Equal::Yes(Substitutions::new(), primary_subs))
             }
         } else {
-            let other_deps = ctx.rhs().get_dependencies();
+            let other_deps = ctx.other().get_dependencies();
             if other_deps.num_variables() >= num_deps {
                 let self_var = self.0.borrow();
                 let self_deps = self_var
@@ -274,7 +274,7 @@ impl EqualityFeature for DVariable {
                     other_subs.insert_no_replace(other_dep, self_dep_item);
                 }
 
-                let subbed_right = unchecked_substitution(ctx.rhs().ptr_clone(), &other_subs);
+                let subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs);
                 primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
 
                 if ctx.currently_computing_equality_for_lhs() {

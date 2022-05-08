@@ -121,7 +121,7 @@ impl ItemPtr {
     /// y -> x(x IS y), fx -> fx(x IS y)(y IS x) and so on.
     pub fn get_trimmed_equality(&self, other: &Self) -> EqualResult {
         let mut result = self.get_equality_left(other)?;
-        trim_result(&mut result);
+        trim_result(&mut result)?;
         Ok(result)
     }
 }

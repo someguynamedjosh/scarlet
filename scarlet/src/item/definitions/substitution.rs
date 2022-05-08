@@ -55,8 +55,28 @@ impl DSubstitution {
         &self.base
     }
 
+    // Only allows access if self is an *unchecked* substitution. This ensures
+    // soundness.
+    pub fn base_mut(&mut self) -> Option<&mut ItemPtr> {
+        if self.invs.borrow().justification_requirements().len() == 0 {
+            Some(&mut self.base)
+        } else {
+            None
+        }
+    }
+
     pub fn substitutions(&self) -> &Substitutions {
         &self.subs
+    }
+
+    // Only allows access if self is an *unchecked* substitution. This ensures
+    // soundness.
+    pub fn substitutions_mut(&mut self) -> Option<&mut Substitutions> {
+        if self.invs.borrow().justification_requirements().len() == 0 {
+            Some(&mut self.subs)
+        } else {
+            None
+        }
     }
 
     pub fn sub_deps(

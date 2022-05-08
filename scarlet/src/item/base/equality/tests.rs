@@ -19,12 +19,12 @@ fn something_equals_itself() {
 }
 
 #[test]
-fn something_equals_variable() {
-    let thing = unique();
+fn variable_equals_something() {
     let (var_con, var_id) = variable_full();
+    let thing = unique();
     let expected = subs(vec![(var_id, thing.ptr_clone())]);
-    let left = Equal::Yes(expected.clone(), Default::default());
-    assert_eq!(var_con.get_trimmed_equality(&thing), Ok(left));
+    let result = Equal::Yes(expected.clone(), Default::default());
+    assert_eq!(var_con.get_trimmed_equality(&thing), Ok(result));
 }
 
 #[test]
