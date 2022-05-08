@@ -173,7 +173,7 @@ impl EqualityFeature for DSubstitution {
                     subs_to_check.push((target.borrow().item().ptr_clone(), value));
                 }
             }
-            for (_, value) in primary_subs.iter_mut().chain(other_subs.iter_mut()) {
+            for (_, value) in other_subs.iter_mut() {
                 let deps = value.get_dependencies();
                 let mut subs = Substitutions::new();
                 for dep in deps.into_variables() {

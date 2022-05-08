@@ -273,3 +273,27 @@ fx(x IS y) =<= fxy
 // After post-processing.
 "Yes({fx IS fxy   y IS x}) by #2"
 ```
+
+```rs
+fx(x IS a) =<= fx(x IS a)
+    fx =<= fx(x IS a)
+        fx =>= fx(x IS a)
+            fx =<= fx
+            "Yes()"
+            x =<= a
+            "Yes({x IS a})"
+        "Yes({x IS a})"
+    "Yes({x IS a})"
+    a =>= a
+    "Yes({})"
+"Yes()"
+```
+
+```rs
+fx(x IS a) =<= fx(x IS a)
+    fx =<= fx(x IS a)
+    "Yes({fx IS fx(x IS a)(a IS x)  x IS a})"
+    a =<= a
+    "Yes()"
+"Yes({fx IS fx(x IS a)(a IS x)})"
+```
