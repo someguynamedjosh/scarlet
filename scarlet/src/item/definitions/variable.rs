@@ -253,20 +253,31 @@ impl EqualityFeature for DVariable {
                 Ok(Equal::Yes(Substitutions::new(), primary_subs))
             }
         } else {
-            let other_deps = ctx.other().get_dependencies();
-            if other_deps.num_variables() >= num_deps {
+            let mut acceptable_dependencies = Vec::new();
+            for dep in ctx.other().get_dependencies().into_variables() {
+                if dep.swallow.len() > 0 {
+                    continue;
+                }
+                acceptable_dependencies.push(dep);
+            }
+            if acceptable_dependencies.len() >= num_deps {
                 let self_var = self.0.borrow();
                 let self_deps = self_var
                     .dependencies
                     .iter()
                     .flat_map(|x| x.get_dependencies().into_variables())
                     .collect_vec();
-                let pairings = self_deps.into_iter().zip(other_deps.into_variables());
+                let pairings = self_deps
+                    .into_iter()
+                    .zip(acceptable_dependencies.into_iter());
 
                 let mut primary_subs = Substitutions::new();
                 let mut other_subs = Substitutions::new();
                 for (self_dep, other_dep) in pairings {
                     let self_dep = self_dep.var;
+                    if self_dep.borrow().dependencies.len() > 0 {
+                        return Ok(Equal::Unknown);
+                    }
                     let self_dep_item = self_dep.borrow().item.ptr_clone();
                     let other_dep = other_dep.var;
                     let other_dep_item = other_dep.borrow().item.ptr_clone();

@@ -196,6 +196,7 @@ impl EqualityFeature for DSubstitution {
                 };
                 result = Equal::and(vec![result, original_is_replaced]);
             }
+            result.filter(&*ctx);
             if result.is_yes() {
                 Ok(result)
             } else {

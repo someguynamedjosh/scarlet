@@ -23,6 +23,10 @@ THE LHS REFINEMENT RULES:
     3. If I have dependencies, and the other side has an equal or greater number
        of dependencies, return Yes({SELF -> rhs(rd1 -> sd1, rd2 -> sd2, etc.),
        self_dep_1 -> rhs_dep_1, self_dep_2 -> rhs_dep_2, etc.}, {})
+        a. During this process, if I have any dependencies that themselves have
+        dependencies, return Unknown.
+        b. During this process, do not consider dependencies on the RHS that
+        have their own dependencies.
     4. If I am the lhs and I have more dependencies than the other side, refine
     the right.
     5. If I am the rhs and I have more dependencies than the other side, return
@@ -290,10 +294,22 @@ fx(x IS a) =<= fx(x IS a)
 ```
 
 ```rs
-fx(x IS a) =<= fx(x IS a)
-    fx =<= fx(x IS a)
-    "Yes({fx IS fx(x IS a)(a IS x)  x IS a})"
-    a =<= a
+fx(x IS a) =<= gy(y IS a)
+    fx =<= gy(y IS a)
+        fx =>= gy(y IS a)
+            fx =<= gy
+            "Yes({fx IS gy(y IS x)   x IS y})"
+        "Yes({fx IS gy(y IS x)   x IS y(y IS a)})"
+    "Yes({fx IS gy(y IS x)   x IS y(y IS a)})"
+    a =<= y(y IS a)
+        a =>= y(y IS a)
+            a =<= y
+                a =>= y
+                "Yes({} {y IS a})"
+            "Yes({} {y IS a})"
+        a =<= a
+            "Yes()"
+        "Yes()"
     "Yes()"
-"Yes({fx IS fx(x IS a)(a IS x)})"
+"Yes({fx IS gy(y IS x)})"
 ```
