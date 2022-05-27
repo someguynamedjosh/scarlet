@@ -176,8 +176,85 @@ fn function_invariant() {
     identity IS VAR[]
 
     a IS VAR[]
+    t_eq_ext_rev[a identity]
+    justify_this IS a
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn indirect_function_invariant() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+    y IS VAR[]
+
+    statement IS 
+    fx[y].AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    identity IS VAR[]
+
+    a IS VAR[]
     t_eq_ext_rev[identity a]
-    justify_this IS statement[identity a]
+    justify_this IS a
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn equality_function_invariant() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+    y IS VAR[]
+
+    statement IS 
+    (fx[x] = y).AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    identity IS VAR[]
+
+    a IS VAR[]
+    b IS VAR[]
+    t_eq_ext_rev[a identity b]
+    justify_this IS a = b
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
+fn full_equality_function_invariant() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+    y IS VAR[]
+
+    statement IS 
+    (fx[x] = fx[y]).AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    identity IS VAR[]
+
+    a IS VAR[]
+    b IS VAR[]
+    t_eq_ext_rev[a identity b]
+    justify_this IS a = b
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = get_member(&root, "justify_this");
@@ -210,6 +287,29 @@ fn equality_theorem_invariant() {
 }
 
 #[test]
+fn theorem_verbatim() {
+    let code = r"
+    a IS VAR[]
+    b IS VAR[a = SELF]
+
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
+    statement IS fx[b]
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    justify_this IS statement
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
 fn real_theorem_invariant() {
     let code = r"
     a IS VAR[]
@@ -230,8 +330,7 @@ fn real_theorem_invariant() {
 
     t_eq_ext_rev[c d identity]
 
-    justify_this IS 
-    statement[c d identity]
+    justify_this IS d = c
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = get_member(&root, "justify_this");

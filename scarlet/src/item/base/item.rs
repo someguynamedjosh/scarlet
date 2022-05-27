@@ -1,11 +1,14 @@
+#[cfg(not(feature = "trace_borrows"))]
+use std::cell::{Ref, RefCell, RefMut};
 use std::{
     any::Any,
-    cell::{Ref, RefCell, RefMut},
     fmt::{self, Debug, Formatter},
     hash::Hash,
     rc::Rc,
 };
 
+#[cfg(feature = "trace_borrows")]
+use debug_cell::{Ref, RefCell, RefMut};
 use itertools::Itertools;
 use owning_ref::{OwningRef, OwningRefMut};
 
@@ -56,7 +59,7 @@ impl Eq for ItemPtr {}
 
 impl Hash for ItemPtr {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.0.as_ptr().to_bits().hash(state)
+        Rc::as_ptr(&self.0).to_bits().hash(state)
     }
 }
 
@@ -71,7 +74,7 @@ impl ItemPtr {
     }
 
     pub fn is_same_instance_as(&self, other: &Self) -> bool {
-        self.0.as_ptr() == other.0.as_ptr()
+        Rc::as_ptr(&self.0) == Rc::as_ptr(&other.0)
     }
 
     pub fn ptr_clone(&self) -> Self {
@@ -352,14 +355,14 @@ impl Item {
     }
 
     pub fn new_boxed(definition: Box<dyn ItemDefinition>, scope: Box<dyn Scope>) -> ItemPtr {
-        ItemPtr(rcrc(Self {
+        ItemPtr(Rc::new(RefCell::new(Self {
             definition,
             scope,
             invariants: None,
             from_dex: None,
             name: None,
             show: false,
-        }))
+        })))
     }
 
     pub fn new_self_referencing<D: ItemDefinition>(
@@ -367,14 +370,14 @@ impl Item {
         scope: Box<dyn Scope>,
         modify_self: impl FnOnce(ItemPtr, &mut D),
     ) -> ItemPtr {
-        let this = ItemPtr(rcrc(Self {
+        let this = ItemPtr(Rc::new(RefCell::new(Self {
             definition: Box::new(definition),
             scope,
             invariants: None,
             from_dex: None,
             name: None,
             show: false,
-        }));
+        })));
         let this2 = this.ptr_clone();
         let mut inner = this.downcast_definition_mut().unwrap();
         modify_self(this2, &mut *inner);

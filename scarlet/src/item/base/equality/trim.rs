@@ -103,7 +103,6 @@ fn remove_identity_substitutions(substitutions: &mut Substitutions) {
 
 fn trim_item(item: &ItemPtr) -> ItemPtr {
     let item = item.dereference();
-    println!("{:#?}", item);
     if let Some(mut sub_item) = item.downcast_definition_mut::<DSubstitution>() {
         let mut new_base = sub_item.base().ptr_clone();
         if let Some(subs) = sub_item.substitutions_mut() {

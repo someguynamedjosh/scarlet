@@ -499,36 +499,44 @@ fn dex_sub_decision_is_gy_sub_decision() {
 
 #[test]
 fn fx_sub_decision_with_var_is_gy_sub_decision() {
-    let aa = variable_full();
+    let z = variable_full();
+    z.0.set_name(format!("z"));
 
     let a = unique();
+    a.set_name(format!("a"));
     let b = unique();
+    b.set_name(format!("b"));
     let c = unique();
+    c.set_name(format!("c"));
     let d = unique();
+    d.set_name(format!("d"));
 
     let dec = decision(
-        aa.0.ptr_clone(),
+        z.0.ptr_clone(),
         b.ptr_clone(),
         c.ptr_clone(),
         d.ptr_clone(),
     );
     let x = variable_full();
+    x.0.set_name(format!("x"));
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    f.0.set_name(format!("f"));
     let f_dec = unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)]));
 
     let dec = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
     let y = variable_full();
+    y.0.set_name(format!("y"));
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
+    g.0.set_name(format!("g"));
     let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)]));
 
     assert_matches!(f_dec.get_trimmed_equality(&g_dec), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = f_dec.get_trimmed_equality(&g_dec) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
-        assert_eq!(Some(&(aa.1.ptr_clone(), a.ptr_clone())), entries.next());
-        let last = entries.next().unwrap();
-        assert_eq!(last.0, f.1.ptr_clone());
-        if let Some(sub) = last.1.downcast_definition::<DSubstitution>() {
+        let next = entries.next().unwrap();
+        assert_eq!(next.0, f.1.ptr_clone());
+        if let Some(sub) = next.1.downcast_definition::<DSubstitution>() {
             assert_eq!(sub.base(), &g.0);
             assert_eq!(
                 sub.substitutions(),
@@ -537,6 +545,7 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
         } else {
             panic!("Expected second substitution to be itself another substitution");
         }
+        assert_eq!(Some(&(z.1.ptr_clone(), a.ptr_clone())), entries.next());
     } else {
         unreachable!()
     }

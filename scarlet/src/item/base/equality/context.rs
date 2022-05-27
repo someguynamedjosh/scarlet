@@ -92,6 +92,7 @@ impl EqualityCalculationContext {
             .definition
             .get_equality_using_context(self, OnlyCalledByEcc(()))?;
         if result == Equal::Unknown {
+            drop(lhs);
             return self.get_equality_right();
         }
         Ok(result)
