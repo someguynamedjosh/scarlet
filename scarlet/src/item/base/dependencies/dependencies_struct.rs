@@ -45,11 +45,11 @@ impl Dependencies {
             return;
         }
         for var in &self.dependencies {
-            if &dep == var {
+            if &dep == var && var.affects_return_value >= dep.affects_return_value{
                 return;
             }
         }
-        self.dependencies.insert(dep);
+        self.dependencies.replace(dep);
     }
 
     pub fn as_variables(&self) -> impl Iterator<Item = &Dependency> {

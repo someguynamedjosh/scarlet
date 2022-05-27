@@ -16,4 +16,4 @@ b IS VAR[a]
 x IS VAR[]
 fx IS VAR[DEP x]
 
-fx[b].SHOWN
+{b a}.SHOWN
