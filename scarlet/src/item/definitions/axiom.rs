@@ -59,9 +59,10 @@ impl DependenciesFeature for DAxiom {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        ctx.get_dependencies(&self.statement)
+        ctx.get_dependencies(&self.statement, affects_return_value)
     }
 }
 

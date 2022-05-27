@@ -8,6 +8,7 @@ pub trait DependenciesFeature {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         Dependencies::new()

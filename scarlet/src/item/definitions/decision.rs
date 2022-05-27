@@ -83,12 +83,13 @@ impl DependenciesFeature for DDecision {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        let mut deps = ctx.get_dependencies(&self.left);
-        deps.append(ctx.get_dependencies(&self.right));
-        deps.append(ctx.get_dependencies(&self.when_equal));
-        deps.append(ctx.get_dependencies(&self.when_not_equal));
+        let mut deps = ctx.get_dependencies(&self.left, affects_return_value);
+        deps.append(ctx.get_dependencies(&self.right, affects_return_value));
+        deps.append(ctx.get_dependencies(&self.when_equal, affects_return_value));
+        deps.append(ctx.get_dependencies(&self.when_not_equal, affects_return_value));
         deps
     }
 }

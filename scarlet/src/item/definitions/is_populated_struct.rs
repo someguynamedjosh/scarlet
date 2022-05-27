@@ -50,9 +50,10 @@ impl DependenciesFeature for DIsPopulatedStruct {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        ctx.get_dependencies(&self.base)
+        ctx.get_dependencies(&self.base, affects_return_value)
     }
 }
 

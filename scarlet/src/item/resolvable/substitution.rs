@@ -15,7 +15,7 @@ use crate::{
         dependencies::{Dcc, Dependencies},
         invariants::{InvariantSet, InvariantsResult},
         util::unchecked_substitution,
-        ItemDefinition, ItemPtr, ContainmentType,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::Scope,
     shared::OrderedMap,
@@ -89,13 +89,13 @@ impl Resolvable for RSubstitution {
         ResolveResult::Ok(csub.clone_into_box())
     }
 
-    fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {
+    fn estimate_dependencies(&self, ctx: &mut Dcc, affects_return_value: bool) -> Dependencies {
         let mut result = Dependencies::new();
         for (_, arg) in &self.named_subs {
-            result.append(ctx.get_dependencies(arg));
+            result.append(ctx.get_dependencies(arg, affects_return_value));
         }
         for arg in &self.anonymous_subs {
-            result.append(ctx.get_dependencies(arg));
+            result.append(ctx.get_dependencies(arg, affects_return_value));
         }
         result
     }

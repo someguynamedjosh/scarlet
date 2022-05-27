@@ -117,6 +117,9 @@ impl Environment {
         for dep in item_id.get_dependencies().into_variables() {
             let vomited = self.vomit_var(&mut inv_ctx, dep.var.ptr_clone());
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            if !dep.affects_return_value {
+                result.push_str("*");
+            }
             result.push_str(&format!("{}   ", indented(&vomited)));
         }
 

@@ -84,12 +84,13 @@ impl DSubstitution {
         base: Dependencies,
         subs: &Substitutions,
         justifications: &HashSet<ItemPtr>,
+        affects_return_value: bool,
     ) -> DepResult {
         let mut deps = Dependencies::new();
         let base_error = base.error();
         for dep in base.as_variables() {
             if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.var) {
-                let replaced_deps = ctx.get_dependencies(rep);
+                let replaced_deps = ctx.get_dependencies(rep, affects_return_value);
                 let replaced_err = replaced_deps.error().clone();
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.var) {
@@ -108,7 +109,7 @@ impl DSubstitution {
         }
         for dep in justifications {
             if let Some(var) = dep.downcast_definition::<DVariable>() {
-                deps.push_eager(var.as_dependency());
+                deps.push_eager(var.as_dependency(false));
             } else {
                 deps.append(dep.get_dependencies());
             }
@@ -143,11 +144,12 @@ impl DependenciesFeature for DSubstitution {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        let base = ctx.get_dependencies(&self.base);
+        let base = ctx.get_dependencies(&self.base, affects_return_value);
         let invs = self.invs.borrow().dependencies().clone();
-        Self::sub_deps(ctx, base, &self.subs, &invs)
+        Self::sub_deps(ctx, base, &self.subs, &invs, affects_return_value)
     }
 }
 

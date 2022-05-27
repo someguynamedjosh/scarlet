@@ -124,8 +124,8 @@ impl DVariable {
         &self.0
     }
 
-    pub fn as_dependency(&self) -> Dependency {
-        Variable::as_dependency(&self.0)
+    pub fn as_dependency(&self, affects_return_value: bool) -> Dependency {
+        Variable::as_dependency(&self.0, affects_return_value)
     }
 
     pub fn new(
@@ -186,7 +186,7 @@ impl Variable {
         justifications
     }
 
-    pub fn as_dependency(this: &VariablePtr) -> Dependency {
+    pub fn as_dependency(this: &VariablePtr, affects_return_value: bool) -> Dependency {
         let mut deps = Dependencies::new();
         for dep in &this.borrow().dependencies {
             deps.append(dep.get_dependencies());
@@ -195,6 +195,7 @@ impl Variable {
             var: this.ptr_clone(),
             swallow: deps.as_variables().map(|x| x.var.ptr_clone()).collect(),
             order: this.borrow().order.clone(),
+            affects_return_value,
         }
     }
 }
@@ -221,15 +222,16 @@ impl DependenciesFeature for DVariable {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         let mut deps = Dependencies::new();
         for dep in self.0.borrow().dependencies.clone() {
-            deps.append(ctx.get_dependencies(&dep));
+            deps.append(ctx.get_dependencies(&dep, affects_return_value));
         }
-        deps.push_eager(Variable::as_dependency(&self.0));
+        deps.push_eager(Variable::as_dependency(&self.0, affects_return_value));
         for inv in &self.0.borrow().invariants {
-            deps.append(ctx.get_dependencies(inv));
+            deps.append(ctx.get_dependencies(inv, false));
         }
         deps
     }

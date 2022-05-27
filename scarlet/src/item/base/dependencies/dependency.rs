@@ -8,6 +8,7 @@ pub struct Dependency {
     pub var: VariablePtr,
     pub swallow: Vec<VariablePtr>,
     pub order: VariableOrder,
+    pub affects_return_value: bool,
 }
 
 impl PartialOrd for Dependency {

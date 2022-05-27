@@ -70,10 +70,11 @@ impl DependenciesFeature for DPopulatedStruct {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        let mut deps = ctx.get_dependencies(&self.value);
-        deps.append(ctx.get_dependencies(&self.rest));
+        let mut deps = ctx.get_dependencies(&self.value, affects_return_value);
+        deps.append(ctx.get_dependencies(&self.rest, affects_return_value));
         deps
     }
 }
@@ -151,6 +152,7 @@ impl DependenciesFeature for DAtomicStructMember {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         if let Some(structt) = self
@@ -160,11 +162,11 @@ impl DependenciesFeature for DAtomicStructMember {
         {
             match self.1 {
                 AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => ctx.get_dependencies(&structt.value),
-                AtomicStructMember::Rest => ctx.get_dependencies(&structt.rest),
+                AtomicStructMember::Value => ctx.get_dependencies(&structt.value, affects_return_value),
+                AtomicStructMember::Rest => ctx.get_dependencies(&structt.rest, affects_return_value),
             }
         } else {
-            ctx.get_dependencies(&self.0)
+            ctx.get_dependencies(&self.0, affects_return_value)
         }
     }
 }

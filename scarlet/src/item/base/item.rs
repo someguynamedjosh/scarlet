@@ -101,7 +101,7 @@ impl ItemPtr {
 impl ItemPtr {
     pub fn get_dependencies(&self) -> DepResult {
         let mut ctx = DependencyCalculationContext::new();
-        ctx.get_dependencies(self)
+        ctx.get_dependencies(self, true)
     }
 
     pub fn get_invariants(&self) -> InvariantsResult {

@@ -70,6 +70,7 @@ impl DependenciesFeature for DResolvable {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         Dependencies::new_error(UnresolvedItemError(this.ptr_clone()))
@@ -155,7 +156,7 @@ pub trait Resolvable: AnyEq + Debug {
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)>;
 
     #[allow(unused_variables)]
-    fn estimate_dependencies(&self, ctx: &mut Dcc) -> Dependencies {
+    fn estimate_dependencies(&self, ctx: &mut Dcc, affects_return_value: bool) -> Dependencies {
         Dependencies::new()
     }
 }

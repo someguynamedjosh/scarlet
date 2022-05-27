@@ -31,6 +31,7 @@ impl DependenciesFeature for DPlaceholder {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         panic!("Attempted to get dependencies of placeholder.");

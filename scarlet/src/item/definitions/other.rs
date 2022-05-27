@@ -104,9 +104,10 @@ impl DependenciesFeature for DOther {
         &self,
         this: &ItemPtr,
         ctx: &mut Dcc,
+        affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        ctx.get_dependencies(&self.other)
+        ctx.get_dependencies(&self.other, affects_return_value)
     }
 }
 
