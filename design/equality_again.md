@@ -313,3 +313,30 @@ fx(x IS a) =<= gy(y IS a)
     "Yes()"
 "Yes({fx IS gy(y IS x)})"
 ```
+
+```rs
+fx(x IS y) =<= fx(x IS y)
+    fx =<= fx(x IS y)
+    "Yes({fx IS fx(x IS y)(y IS x)  x IS y})"
+    y =<= y
+    "Yes()"
+"Yes({fx IS fx(x IS a)(a IS x)})"
+```
+
+
+```rs
+fx(x IS a)(fx IS gy(y IS x)) =<= gy(y IS a)
+    fx(x IS a) =<= gy(y IS a)
+        fx =<= gy(y IS a)
+            fx =>= gy(y IS a)
+                fx =<= gy
+                "Yes({fx IS gy(y IS x)   x IS y})"
+            "Yes({fx IS gy(y IS x)   x IS y(y IS a)})"
+        "Yes({fx IS gy(y IS x)   x IS y(y IS a)})"
+        a =<= y(y IS a)
+        "Yes({})"
+    "Yes({fx IS gy(y IS x)})"
+    gy(y IS x) =<= gy(y IS x)
+    "Yes({gy IS gy(y IS x)(x IS y)})"
+"Yes({})"
+```
