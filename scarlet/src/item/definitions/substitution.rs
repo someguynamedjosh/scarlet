@@ -190,9 +190,9 @@ impl EqualityFeature for DSubstitution {
             };
             for (original_value, replaced_value) in subs_to_check {
                 let original_is_replaced = if ctx.currently_computing_equality_for_lhs() {
-                    replaced_value.get_equality_left(&original_value)?
+                    replaced_value.get_trimmed_equality(&original_value)?
                 } else {
-                    original_value.get_equality_left(&replaced_value)?
+                    original_value.get_trimmed_equality(&replaced_value)?
                 };
                 result = Equal::and(vec![result, original_is_replaced]);
             }

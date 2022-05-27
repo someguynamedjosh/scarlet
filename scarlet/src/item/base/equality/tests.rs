@@ -619,6 +619,7 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
         f_sub_a_sub_gy.get_trimmed_equality(&gy_sub_a),
         Ok(Equal::yes())
     );
+    println!("{:#?}", gy_sub_a.get_equality_left(&f_sub_a_sub_gy));
     println!("{:#?}", gy_sub_a.get_trimmed_equality(&f_sub_a_sub_gy));
     // gy IS fx(y)(fx IS gy(x))
     assert_eq!(
@@ -655,8 +656,7 @@ fn fx_sub_y_sub_gx_is_gy() {
     f_sub_y_sub_gx.set_name("fx(y)(fx IS gy(x))".to_owned());
 
     println!("{:#?}", f_sub_y_sub_gx.get_equality_left(&g.0));
-    // gy IS gy(y IS x)(x IS y)
-    assert_eq!(f_sub_y_sub_gx.get_equality_left(&g.0), Ok(Equal::yes()));
+    assert_eq!(f_sub_y_sub_gx.get_trimmed_equality(&g.0), Ok(Equal::yes()));
 }
 
 // This case cannot be detected with the new system.

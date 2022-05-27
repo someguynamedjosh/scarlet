@@ -323,7 +323,6 @@ fx(x IS y) =<= fx(x IS y)
 "Yes({fx IS fx(x IS a)(a IS x)})"
 ```
 
-
 ```rs
 fx(x IS a)(fx IS gy(y IS x)) =<= gy(y IS a)
     fx(x IS a) =<= gy(y IS a)
@@ -338,5 +337,33 @@ fx(x IS a)(fx IS gy(y IS x)) =<= gy(y IS a)
     "Yes({fx IS gy(y IS x)})"
     gy(y IS x) =<= gy(y IS x)
     "Yes({gy IS gy(y IS x)(x IS y)})"
-"Yes({})"
+"Yes({gy IS gy(y IS x)(x IS y)})"
+```
+
+```rs
+gy(y IS a) =<= fx(x IS a)(fx IS gy(y IS x))
+    gy =<= fx(x IS a)(fx IS gy(y IS x))
+        gy =>= fx(x IS a)(fx IS gy(y IS x))
+            gy =<= fx(x IS a)
+                gy =>= fx(x IS a)
+                    gy =<= fx
+                    "Yes({gy IS fx(x IS y)   y IS x})"
+                "Yes({gy IS fx(x IS y)   y IS x(x IS a)})"
+            "Yes({gy IS fx(x IS y)   y IS x(x IS a)})"
+        "Yes({gy IS fx(x IS y)(fx IS gy(y IS x))   y IS x(x IS a)})"
+    "Yes({gy IS fx(x IS y)(fx IS gy(y IS x))   y IS x(x IS a)})"
+    a =<= x(x IS a)
+    "Yes()"
+"Yes({gy IS fx(x IS y)(fx IS gy(y IS x))})"
+Post-procesing:
+    fx(x IS y)(fx IS gy(y IS x)) =<= gy
+        fx(x IS y) =<= gy
+            fx =<= gy
+            "Yes({fx IS gy(y IS x)   x IS y})"
+            y =<= y
+            "Yes()"
+        "Yes({fx IS gy(y IS x)})"
+        gy(y IS x) =<= gy(y IS x)
+        "Yes({gy IS gy(y IS x)(x IS y)})"
+    "Yes({gy IS gy(y IS x)(x IS y)})"
 ```
