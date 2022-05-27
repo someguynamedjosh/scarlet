@@ -260,6 +260,9 @@ impl EqualityFeature for DVariable {
                 if dep.swallow.len() > 0 {
                     continue;
                 }
+                if !dep.affects_return_value {
+                    continue;
+                }
                 acceptable_dependencies.push(dep);
             }
             if acceptable_dependencies.len() >= num_deps {
