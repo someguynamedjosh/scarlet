@@ -87,12 +87,11 @@ impl EqualityCalculationContext {
     pub fn get_equality_left(&mut self) -> EqualResult {
         self.self_side = EqualityTestSide::Left;
         let lhs = self.lhs.ptr_clone();
-        let lhs = lhs.borrow();
-        let result = lhs
-            .definition
-            .get_equality_using_context(self, OnlyCalledByEcc(()))?;
+        let lhs_borrow = lhs.borrow();
+        let lhs = lhs_borrow.definition.clone_into_box();
+        drop(lhs_borrow);
+        let result = lhs.get_equality_using_context(self, OnlyCalledByEcc(()))?;
         if result == Equal::Unknown {
-            drop(lhs);
             return self.get_equality_right();
         }
         Ok(result)
