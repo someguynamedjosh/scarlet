@@ -367,3 +367,99 @@ Post-procesing:
         "Yes({gy IS gy(y IS x)(x IS y)})"
     "Yes({gy IS gy(y IS x)(x IS y)})"
 ```
+
+<!-- Old behavior -->
+```rs
+fx({x y}) =<= fx({x y})
+    fx =<= fx({x y})
+    "Yes({fx IS fx({x y})})"
+"Yes({fx IS fx({x y})} {x IS {x y}})"
+```
+
+<!-- Experimental behavior -->
+```rs
+fx({x y}) =<= fx({x y})
+    fx =<= fx({x y})
+    "Yes({fx IS fx({x y})(x)})"
+"Yes({fx IS fx(x)})"
+```
+
+```rs
+gy({x z}) =<= fx({x z})
+    gy =<= fx({x z})
+    "Yes({gy IS fx({x z})(y)})"
+"Yes({gy IS fx(y)})"
+```
+
+```rs
+fx({x y}) =<= fx({x x})({x y})
+    fx =<= fx({x y})
+    "Yes({fx IS fx(x)   x IS x({x x})({x y})})"
+"Yes({fx IS fx(x)   x IS {x y}   y IS {x y}})"
+```
+
+```rs
+fx(2 * x) =<= fx(x + 1)(2 * x)
+    fx =<= fx(x + 1)(2 * x)
+    "Yes({fx IS fx(x)   x IS (x + 1)(2 * x)})"
+    2 * x =<= (x + 1)(2 * x)
+        2 * x =<= (x + 1)
+        "Unknown"
+    "Unknown"
+"Unknown"
+```
+
+```rs
+fx(2 * x) =<= fx(x + 1)(2 * x)
+    fx =<= fx(x + 1)(2 * x)
+    "Yes({fx IS fx(x + 1)(2 * x)(x)})"
+```
+
+```rs
+fx(a) =<= fx({x x})(a)
+    fx =<= fx({x x})(a)
+    "Yes({fx IS fx({x x})   x IS a})"
+    a =<= {x x}(a)
+    "No"
+```
+
+```rs
+fx({x x})({x y}) =<= fx({{x y} {x y}})
+    fx({x x}) =<= fx({{x y} {x y}})
+        fx =<= fx({{x y} {x y}})
+        "Yes({fx IS fx({{x y} {x y}})})"
+```
+
+```rs
+fx({u v}) =<= fx({x y})
+    fx =<= fx({x y})
+    "Yes({fx IS fx({x y})})"
+```
+
+```rs
+decide IS {x = y   x ~= y}
+decide(u v) =<= decide(x y)
+    decide =<= decide(x y)
+        decide =<= decide
+        "Yes()"
+    "Yes({x IS x   y IS y})"
+"Yes({u IS x   v IS y})"
+```
+
+```rs
+func IS x = x
+func({x y}) =<= fx({x y})
+    func =<= fx({x y})
+        func =<= fx
+        "Yes({} {fx IS func})"
+    "Yes({x IS {x y}} {fx IS func})"
+"Yes({} {fx IS func})"
+```
+
+```rs
+decide IS {x = y   x ~= y}
+decide(x x) =<= fx
+    decide =<= fx
+    "Yes({} {fx IS decide})"
+"Yes({} {fx IS decide(y IS x)})"
+```
