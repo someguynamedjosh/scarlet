@@ -43,7 +43,7 @@ impl Equal {
 
     pub fn is_trivial_yes(&self) -> bool {
         if let Self::Yes(cases) = self {
-            cases.iter().any(|x| x.0.len() == 0 && x.1.len() == 1)
+            cases.iter().any(|x| x.0.len() == 0 && x.1.len() == 0)
         } else {
             false
         }
