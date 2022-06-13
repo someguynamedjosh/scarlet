@@ -8,7 +8,7 @@ use crate::{
     util::PtrExtension,
 };
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Dependencies {
     pub(super) dependencies: BTreeSet<Dependency>,
     pub(super) skipped_due_to_recursion: HashSet<ItemPtr>,
@@ -44,8 +44,10 @@ impl Dependencies {
         if self.skipped_due_to_unresolved.is_some() {
             return;
         }
-        for var in &self.dependencies {
-            if &dep == var && var.affects_return_value >= dep.affects_return_value{
+        for other_dep in &self.dependencies {
+            if dep.var.is_same_instance_as(&other_dep.var)
+                && other_dep.affects_return_value >= dep.affects_return_value
+            {
                 return;
             }
         }

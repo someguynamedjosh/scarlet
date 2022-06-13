@@ -105,6 +105,20 @@ impl Variable {
     pub fn order(&self) -> &VariableOrder {
         &self.order
     }
+
+    pub fn new(
+        dependencies: Vec<ItemPtr>,
+        invariants: Vec<ItemPtr>,
+        item: ItemPtr,
+        order: VariableOrder,
+    ) -> Rc<RefCell<Variable>> {
+        rcrc(Self {
+            dependencies,
+            invariants,
+            item,
+            order,
+        })
+    }
 }
 
 #[derive(Clone)]

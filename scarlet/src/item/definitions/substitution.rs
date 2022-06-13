@@ -10,7 +10,10 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
             OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc, EqualSuccess},
+        equality::{
+            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
+            OnlyCalledByEcc,
+        },
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -86,14 +89,29 @@ impl DSubstitution {
         justifications: &HashSet<ItemPtr>,
         affects_return_value: bool,
     ) -> DepResult {
+        const TRACE: bool = false;
+        if TRACE {
+            println!(
+                "--------------------------------------------------------------------------------"
+            );
+        }
         let mut deps = Dependencies::new();
         let base_error = base.error();
         for dep in base.as_variables() {
-            if let Some((_, rep)) = subs.iter().find(|(var, _)| *var == dep.var) {
+            if TRACE {
+                println!("-");
+            }
+            if let Some((_, rep)) = subs
+                .iter()
+                .find(|(var, _)| var.is_same_instance_as(&dep.var))
+            {
                 let replaced_deps = ctx.get_dependencies(rep, affects_return_value);
                 let replaced_err = replaced_deps.error().clone();
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.var) {
+                        if TRACE {
+                            println!("{:#?}", rdep);
+                        }
                         deps.push_eager(rdep);
                     }
                 }
@@ -101,6 +119,9 @@ impl DSubstitution {
                     deps.append(Dependencies::new_error(err.clone()));
                 }
             } else {
+                if TRACE {
+                    println!("UNCHANGED {:#?}", dep);
+                }
                 deps.push_eager(dep.clone());
             }
         }

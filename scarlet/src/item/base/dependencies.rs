@@ -2,6 +2,7 @@ mod context;
 mod dependencies_struct;
 mod dependency;
 mod feature;
+mod tests;
 
 use std::collections::{BTreeSet, HashSet};
 
