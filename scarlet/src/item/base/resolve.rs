@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use itertools::Itertools;
+
 use crate::{
     environment::Environment,
     item::{
@@ -8,12 +12,13 @@ use crate::{
 };
 
 pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
-    let mut unresolved = Vec::new();
+    let mut unresolved = HashSet::new();
     root.for_self_and_deep_contents(&mut |item| {
         if item.is_unresolved() {
-            unresolved.push(item.ptr_clone());
+            unresolved.insert(item.ptr_clone());
         }
     });
+    let mut unresolved = unresolved.into_iter().collect_vec();
     let mut limit = 0;
     while limit < 16 {
         let mut reset_limit = false;
@@ -21,6 +26,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         let mut all_dead_ends = true;
         for id in unresolved {
             println!("Resolving {:?} limit {}", id.debug_label(), limit);
+            assert!(id.is_unresolved());
             let res = resolve(env, id.ptr_clone(), limit);
             if let Ok(true) = res {
                 // Right now this line actually significantly slows things
@@ -36,6 +42,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
                 } else {
                     all_dead_ends = false;
                 }
+                assert!(id.is_unresolved());
                 still_unresolved.push(id);
             }
         }
