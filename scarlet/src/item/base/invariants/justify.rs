@@ -16,7 +16,7 @@ use crate::{
     util::{rcrc, PtrExtension},
 };
 
-const TRACE: bool = false;
+const TRACE: bool = true;
 
 pub type JustifyInvariantResult = Result<Vec<InvariantSetPtr>, LookupInvariantError>;
 
@@ -209,7 +209,7 @@ impl<'a> JustificationContext<'a> {
                     println!("{:#?}", eq);
                 }
                 if let Ok(Equal::Yes(subs)) = eq {
-                    if subs.iter().any(|(l, r)| l.len() == 0 && r.len() == 0) {
+                    if !subs.iter().any(|(l, r)| l.len() == 0 && r.len() == 0) {
                         continue;
                     }
                     result.push(vec![other_set.ptr_clone()]);

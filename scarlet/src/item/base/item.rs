@@ -44,8 +44,13 @@ impl Clone for ItemPtr {
 
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}", self.debug_label())?;
-        self.0.borrow().definition.fmt(f)
+        write!(f, "{}", self.debug_label())?;
+        if self.0.borrow().name.is_none() {
+            writeln!(f)?;
+            self.0.borrow().definition.fmt(f)
+        } else {
+            Ok(())
+        }
     }
 }
 

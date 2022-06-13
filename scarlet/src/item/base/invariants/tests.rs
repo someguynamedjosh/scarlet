@@ -310,6 +310,32 @@ fn theorem_verbatim() {
 }
 
 #[test]
+fn simplified_real_theorem_invariant() {
+    let code = r"
+    y IS VAR[]
+    z IS VAR[]
+
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
+    statement IS 
+    (fx[z] = fx[y])
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
+
+    t_eq_ext_rev[fx IS x]
+
+    justify_this IS z = y
+    ";
+    with_env_from_code(code, |mut env, root| {
+        let justify_this = get_member(&root, "justify_this");
+        env.justify(&root, &justify_this, &justify_this, 5).unwrap();
+        root.check_all();
+    });
+}
+
+#[test]
 fn real_theorem_invariant() {
     let code = r"
     a IS VAR[]

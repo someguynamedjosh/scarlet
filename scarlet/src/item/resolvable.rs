@@ -22,7 +22,7 @@ use super::{
     check::CheckFeature,
     dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
     equality::EqualityFeature,
-    invariants::InvariantsFeature,
+    invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
     ContainmentType,
 };
 use crate::{
@@ -77,7 +77,16 @@ impl DependenciesFeature for DResolvable {
     }
 }
 impl EqualityFeature for DResolvable {}
-impl InvariantsFeature for DResolvable {}
+impl InvariantsFeature for DResolvable {
+    fn get_invariants_using_context(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut Icc,
+        _: OnlyCalledByIcc,
+    ) -> InvariantsResult {
+        Err(UnresolvedItemError(this.ptr_clone()))
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnresolvedItemError(pub ItemPtr);

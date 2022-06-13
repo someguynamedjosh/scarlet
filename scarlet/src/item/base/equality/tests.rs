@@ -1277,3 +1277,65 @@ fn fx_sub_a_z_is_gy_sub_a_z() {
         unreachable!()
     }
 }
+
+#[test]
+fn equality_symmetry() {
+    let t = unique();
+    t.set_name("true".to_owned());
+    let f = unique();
+    f.set_name("false".to_owned());
+    let identity = variable_full();
+    identity.0.set_name("identity".to_owned());
+    let y = variable_full();
+    y.0.set_name("y".to_owned());
+    let z = variable_full();
+    z.0.set_name("z".to_owned());
+    let x = variable_full();
+    x.0.set_name("x".to_owned());
+    let fx = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    fx.0.set_name("f".to_owned());
+    let identity_x = unchecked_substitution_without_shortcuts(
+        identity.0.ptr_clone(),
+        &subs(vec![(identity.1.ptr_clone(), x.0.ptr_clone())]),
+    );
+    let fy = unchecked_substitution(
+        fx.0.ptr_clone(),
+        &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
+    );
+    fy.set_name("f(y)".to_owned());
+    let fz = unchecked_substitution(
+        fx.0.ptr_clone(),
+        &subs(vec![(x.1.ptr_clone(), z.0.ptr_clone())]),
+    );
+    fz.set_name("f(z)".to_owned());
+    let fz_eq_fy = decision(fz.ptr_clone(), fy.ptr_clone(), t.ptr_clone(), f.ptr_clone());
+    let fz_eq_fy_sub_f_is_identity = unchecked_substitution(
+        fz_eq_fy.ptr_clone(),
+        &subs(vec![(fx.1.ptr_clone(), identity_x.ptr_clone())]),
+    );
+    let z_eq_y = decision(
+        z.0.ptr_clone(),
+        y.0.ptr_clone(),
+        t.ptr_clone(),
+        f.ptr_clone(),
+    );
+
+    println!(
+        "{:#?}",
+        fz_eq_fy_sub_f_is_identity.get_trimmed_equality(&z_eq_y)
+    );
+    assert_eq!(
+        fz_eq_fy_sub_f_is_identity
+            .get_trimmed_equality(&z_eq_y)
+            .as_ref()
+            .map(Equal::is_trivial_yes),
+        Ok(true)
+    );
+    assert_eq!(
+        z_eq_y
+            .get_trimmed_equality(&fz_eq_fy_sub_f_is_identity)
+            .as_ref()
+            .map(Equal::is_trivial_yes),
+        Ok(true)
+    );
+}
