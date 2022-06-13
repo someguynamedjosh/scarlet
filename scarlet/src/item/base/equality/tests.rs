@@ -221,10 +221,7 @@ fn fx_is_gy() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected second substitution to be itself another
-substitution"
-            );
+            panic!("Expected second substitution to be itself another substitution");
         }
         drop(last);
     } else {
@@ -281,10 +278,7 @@ fn fx_is_gy_sub_a() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected substitution to be itself another
-substitution"
-            );
+            panic!("Expected substitution to be itself another substitution");
         }
         drop(last);
     } else {
@@ -330,10 +324,7 @@ fn fx_sub_a_is_gy_sub_a() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected substitution to be itself another
-substitution"
-            );
+            panic!("Expected substitution to be itself another substitution");
         }
         drop(last);
     } else {
@@ -398,10 +389,7 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected second substitution to be itself another
-substitution"
-            );
+            panic!("Expected second substitution to be itself another substitution");
         }
         drop(last);
     } else {
@@ -437,10 +425,7 @@ fn fx_sub_z_is_gy_sub_nothing() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected second substitution to be itself another
-substitution"
-            );
+            panic!("Expected second substitution to be itself another substitution");
         }
         assert_eq!(entries.next(), Some(&(z.1.ptr_clone(), y.0.ptr_clone())));
     } else {
@@ -481,10 +466,7 @@ fn fx_sub_decision_is_gy_sub_decision() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected second substitution to be itself another
-substitution"
-            );
+            panic!("Expected second substitution to be itself another substitution");
         }
         drop(last);
     } else {
@@ -535,10 +517,7 @@ fn dex_sub_decision_is_gy_sub_decision() {
                 &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected first substitution to be itself another
-substitution"
-            );
+            panic!("Expected first substitution to be itself another substitution");
         }
         assert_eq!(entries.next().unwrap(), &(s.1.ptr_clone(), a.ptr_clone()));
         assert_eq!(entries.next().unwrap(), &(t.1.ptr_clone(), b.ptr_clone()));
@@ -592,10 +571,7 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
                 &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())])
             )
         } else {
-            panic!(
-                "Expected second substitution to be itself another
-substitution"
-            );
+            panic!("Expected second substitution to be itself another substitution");
         }
         assert_eq!(Some(&(z.1.ptr_clone(), a.ptr_clone())), entries.next());
     } else {
@@ -719,11 +695,7 @@ fn fx_sub_y_sub_gx_is_gy() {
     );
     f_sub_y.set_name("fx(y)".to_owned());
     let f_sub_y_sub_gx = unchecked_substitution(f_sub_y, &subs(vec![(f.1.ptr_clone(), gx)]));
-    f_sub_y_sub_gx.set_name(
-        "fx(y)(fx IS
-gy(x))"
-            .to_owned(),
-    );
+    f_sub_y_sub_gx.set_name("fx(y)(fx IS gy(x))".to_owned());
 
     println!("{:#?}", f_sub_y_sub_gx.get_equality_left(&g.0));
     assert_eq!(
