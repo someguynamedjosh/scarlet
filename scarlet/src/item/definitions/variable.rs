@@ -16,7 +16,10 @@ use crate::{
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
+        equality::{
+            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
+            OnlyCalledByEcc,
+        },
         invariants::{
             self, Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -241,7 +244,10 @@ impl EqualityFeature for DVariable {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         if let Some(other_var) = ctx.other().downcast_resolved_definition::<Self>()? {
             if other_var.0.is_same_instance_as(&self.0) {
-                return Ok(Equal::yes());
+                return Ok(EqualSuccess {
+                    equal: Equal::yes(),
+                    unique: true,
+                });
             }
         }
         let num_deps = self.0.borrow().dependencies.len();
@@ -250,9 +256,15 @@ impl EqualityFeature for DVariable {
                 .into_iter()
                 .collect();
             if ctx.currently_computing_equality_for_lhs() {
-                Ok(Equal::yes1(primary_subs, Substitutions::new()))
+                Ok(EqualSuccess {
+                    equal: Equal::yes1(primary_subs, Substitutions::new()),
+                    unique: true,
+                })
             } else {
-                Ok(Equal::yes1(Substitutions::new(), primary_subs))
+                Ok(EqualSuccess {
+                    equal: Equal::yes1(Substitutions::new(), primary_subs),
+                    unique: true,
+                })
             }
         } else {
             let mut acceptable_dependencies = Vec::new();
@@ -281,7 +293,10 @@ impl EqualityFeature for DVariable {
                 for (self_dep, other_dep) in pairings {
                     let self_dep = self_dep.var;
                     if self_dep.borrow().dependencies.len() > 0 {
-                        return Ok(Equal::Unknown);
+                        return Ok(EqualSuccess {
+                            equal: Equal::Unknown,
+                            unique: true,
+                        });
                     }
                     let self_dep_item = self_dep.borrow().item.ptr_clone();
                     let other_dep = other_dep.var;
@@ -294,12 +309,21 @@ impl EqualityFeature for DVariable {
                 primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
 
                 if ctx.currently_computing_equality_for_lhs() {
-                    Ok(Equal::yes1(primary_subs, Substitutions::new()))
+                    Ok(EqualSuccess {
+                        equal: Equal::yes1(primary_subs, Substitutions::new()),
+                        unique: false,
+                    })
                 } else {
-                    Ok(Equal::yes1(Substitutions::new(), primary_subs))
+                    Ok(EqualSuccess {
+                        equal: Equal::yes1(Substitutions::new(), primary_subs),
+                        unique: false,
+                    })
                 }
             } else {
-                Ok(Equal::Unknown)
+                Ok(EqualSuccess {
+                    equal: Equal::Unknown,
+                    unique: true,
+                })
             }
         }
     }

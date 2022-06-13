@@ -5,7 +5,10 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
+        equality::{
+            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
+            OnlyCalledByEcc,
+        },
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -116,7 +119,13 @@ impl EqualityFeature for DOther {
         if self.computationally_recursive {
             todo!()
         } else {
-            ctx.with_primary(self.other.ptr_clone()).get_equality_left()
+            let equal = ctx
+                .with_primary(self.other.ptr_clone())
+                .get_equality_left()?;
+            Ok(EqualSuccess {
+                equal,
+                unique: true,
+            })
         }
     }
 }

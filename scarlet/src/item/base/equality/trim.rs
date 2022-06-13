@@ -42,7 +42,7 @@ fn thoroughly_remove_identity_substitutions(
         let mut result = value.get_equality_left(target.borrow().item())?;
         // Skip the last step to prevent infinite cycles.
         mostly_trim_result(&mut result);
-        if result == Equal::yes() {
+        if result.is_trivial_yes() {
             subs.remove(&target);
         }
     }

@@ -10,7 +10,7 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
             OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc, EqualSuccess},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -158,7 +158,7 @@ impl EqualityFeature for DSubstitution {
         let base_eq = ctx
             .with_primary(self.base.ptr_clone())
             .get_equality_left()?;
-        if let Equal::Yes(original_subs) = base_eq {
+        let equal = if let Equal::Yes(original_subs) = base_eq {
             let mut valid_subs = Vec::new();
             for (left_subs, right_subs) in original_subs {
                 let (mut primary_subs, mut other_subs) =
@@ -207,13 +207,17 @@ impl EqualityFeature for DSubstitution {
                 }
             }
             if valid_subs.len() > 0 {
-                Ok(Equal::Yes(valid_subs))
+                Equal::Yes(valid_subs)
             } else {
-                Ok(Equal::Unknown)
+                Equal::Unknown
             }
         } else {
-            Ok(Equal::Unknown)
-        }
+            Equal::Unknown
+        };
+        Ok(EqualSuccess {
+            equal,
+            unique: true,
+        })
     }
 }
 

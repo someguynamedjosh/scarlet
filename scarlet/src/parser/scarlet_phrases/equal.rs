@@ -34,8 +34,14 @@ fn uncreate<'a>(
             let cite = cite.clone();
             let truee = env.get_language_item("true");
             let falsee = env.get_language_item("false");
-            if cite.when_equal().get_trimmed_equality(&truee)? == Equal::yes()
-                && cite.when_not_equal().get_trimmed_equality(&falsee)? == Equal::yes()
+            if cite
+                .when_equal()
+                .get_trimmed_equality(&truee)?
+                .is_trivial_yes()
+                && cite
+                    .when_not_equal()
+                    .get_trimmed_equality(&falsee)?
+                    .is_trivial_yes()
             {
                 Some(Node {
                     phrase: "equal",

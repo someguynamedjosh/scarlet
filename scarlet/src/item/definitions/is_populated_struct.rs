@@ -4,7 +4,10 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
+        equality::{
+            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
+            OnlyCalledByEcc,
+        },
         invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         util::{is_bool, placeholder},
         Item, ItemDefinition, ItemPtr,
@@ -64,12 +67,16 @@ impl EqualityFeature for DIsPopulatedStruct {
         } else {
             None
         };
-        if let Some(other) = other {
+        let equal = if let Some(other) = other {
             ctx.with_primary_and_other(self.base.ptr_clone(), other)
-                .get_equality_left()
+                .get_equality_left()?
         } else {
-            Ok(Equal::Unknown)
-        }
+            Equal::Unknown
+        };
+        Ok(EqualSuccess {
+            equal,
+            unique: true,
+        })
     }
 }
 

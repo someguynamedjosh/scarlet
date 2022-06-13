@@ -101,7 +101,10 @@ fn uncreate<'a>(
         }
     }
     Ok(
-        if maybe_structt.get_trimmed_equality(&env.get_language_item("void"))? == Equal::yes() {
+        if maybe_structt
+            .get_trimmed_equality(&env.get_language_item("void"))?
+            .is_trivial_yes()
+        {
             Some(Node {
                 phrase: "struct",
                 children: vec![

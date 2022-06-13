@@ -9,7 +9,10 @@ use crate::{
         check::CheckFeature,
         definitions::{decision::DDecision, substitution::Substitutions},
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
+        equality::{
+            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
+            OnlyCalledByEcc,
+        },
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -83,22 +86,29 @@ impl EqualityFeature for DPopulatedStruct {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         let others = if let Some(other) = ctx.other().downcast_definition::<Self>() {
             if self.label != other.label {
-                return Ok(Equal::No);
+                return Ok(EqualSuccess {
+                    equal: Equal::No,
+                    unique: true,
+                });
             }
             Some([other.value.ptr_clone(), other.rest.ptr_clone()])
         } else {
             None
         };
-        if let Some([other_value, other_rest]) = others {
-            Ok(Equal::and(vec![
+        let equal = if let Some([other_value, other_rest]) = others {
+            Equal::and(vec![
                 ctx.with_primary_and_other(self.value.ptr_clone(), other_value)
                     .get_equality_left()?,
                 ctx.with_primary_and_other(self.rest.ptr_clone(), other_rest)
                     .get_equality_left()?,
-            ]))
+            ])
         } else {
-            Ok(Equal::Unknown)
-        }
+            Equal::Unknown
+        };
+        Ok(EqualSuccess {
+            equal,
+            unique: true,
+        })
     }
 }
 
@@ -162,8 +172,12 @@ impl DependenciesFeature for DAtomicStructMember {
         {
             match self.1 {
                 AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => ctx.get_dependencies(&structt.value, affects_return_value),
-                AtomicStructMember::Rest => ctx.get_dependencies(&structt.rest, affects_return_value),
+                AtomicStructMember::Value => {
+                    ctx.get_dependencies(&structt.value, affects_return_value)
+                }
+                AtomicStructMember::Rest => {
+                    ctx.get_dependencies(&structt.rest, affects_return_value)
+                }
             }
         } else {
             ctx.get_dependencies(&self.0, affects_return_value)

@@ -4,7 +4,10 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
+        equality::{
+            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
+            OnlyCalledByEcc,
+        },
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -106,9 +109,9 @@ impl EqualityFeature for DDecision {
         } else {
             None
         };
-        if let Some(others) = others {
+        let equal = if let Some(others) = others {
             let [other_left, other_right, other_when_equal, other_when_not_equal] = others;
-            Ok(Equal::and(vec![
+            Equal::and(vec![
                 ctx.with_primary_and_other(self.left.ptr_clone(), other_left)
                     .get_equality_left()?,
                 ctx.with_primary_and_other(self.right.ptr_clone(), other_right)
@@ -117,10 +120,14 @@ impl EqualityFeature for DDecision {
                     .get_equality_left()?,
                 ctx.with_primary_and_other(self.when_not_equal.ptr_clone(), other_when_not_equal)
                     .get_equality_left()?,
-            ]))
+            ])
         } else {
-            Ok(Equal::Unknown)
-        }
+            Equal::Unknown
+        };
+        Ok(EqualSuccess {
+            equal,
+            unique: true,
+        })
     }
 }
 
@@ -136,7 +143,12 @@ impl InvariantsFeature for DDecision {
         let mut result_statements = Vec::new();
         for true_inv in true_invs.borrow().statements() {
             for (index, false_inv) in false_invs.borrow().statements().iter().enumerate() {
-                if true_inv.get_trimmed_equality(false_inv) == Ok(Equal::yes()) {
+                if true_inv
+                    .get_trimmed_equality(false_inv)
+                    .as_ref()
+                    .map(Equal::is_trivial_yes)
+                    == Ok(true)
+                {
                     result_statements.push(true_inv.ptr_clone());
                     break;
                 }
