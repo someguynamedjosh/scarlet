@@ -208,8 +208,8 @@ impl<'a> JustificationContext<'a> {
                 if TRACE {
                     println!("{:#?}", eq);
                 }
-                if let Ok(Equal::Yes(lsubs, rsubs)) = eq {
-                    if lsubs.len() + rsubs.len() > 0 {
+                if let Ok(Equal::Yes(subs)) = eq {
+                    if subs.iter().any(|(l, r)| l.len() == 0 && r.len() == 0) {
                         continue;
                     }
                     result.push(vec![other_set.ptr_clone()]);

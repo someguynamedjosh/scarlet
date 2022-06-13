@@ -158,49 +158,56 @@ impl EqualityFeature for DSubstitution {
         let base_eq = ctx
             .with_primary(self.base.ptr_clone())
             .get_equality_left()?;
-        if let Equal::Yes(left_subs, right_subs) = base_eq {
-            let (mut primary_subs, mut other_subs) = if ctx.currently_computing_equality_for_lhs() {
-                (left_subs, right_subs)
-            } else {
-                (right_subs, left_subs)
-            };
-            // Contains tuples of what the base has and what our substitution replaces it
-            // with.
-            let mut subs_to_check = Vec::new();
-            for (target, value) in &self.subs {
-                let value = value.ptr_clone();
-                if let Some(original_value) = primary_subs.remove(target) {
-                    subs_to_check.push((original_value.1, value));
-                } else {
-                    subs_to_check.push((target.borrow().item().ptr_clone(), value));
-                }
-            }
-            for (_, value) in other_subs.iter_mut() {
-                let deps = value.get_dependencies();
-                let mut subs = Substitutions::new();
-                for dep in deps.into_variables() {
-                    if let Some(replacement) = self.subs.get(&dep.var) {
-                        subs.insert_no_replace(dep.var, replacement.ptr_clone());
+        if let Equal::Yes(original_subs) = base_eq {
+            let mut valid_subs = Vec::new();
+            for (left_subs, right_subs) in original_subs {
+                let (mut primary_subs, mut other_subs) =
+                    if ctx.currently_computing_equality_for_lhs() {
+                        (left_subs, right_subs)
+                    } else {
+                        (right_subs, left_subs)
+                    };
+                // Contains tuples of what the base has and what our substitution replaces it
+                // with.
+                let mut subs_to_check = Vec::new();
+                for (target, value) in &self.subs {
+                    let value = value.ptr_clone();
+                    if let Some(original_value) = primary_subs.remove(target) {
+                        subs_to_check.push((original_value.1, value));
+                    } else {
+                        subs_to_check.push((target.borrow().item().ptr_clone(), value));
                     }
                 }
-                *value = unchecked_substitution(value.ptr_clone(), &subs);
-            }
-            let mut result = if ctx.currently_computing_equality_for_lhs() {
-                Equal::Yes(primary_subs, other_subs)
-            } else {
-                Equal::Yes(other_subs, primary_subs)
-            };
-            for (original_value, replaced_value) in subs_to_check {
-                let original_is_replaced = if ctx.currently_computing_equality_for_lhs() {
-                    replaced_value.get_trimmed_equality(&original_value)?
+                for (_, value) in other_subs.iter_mut() {
+                    let deps = value.get_dependencies();
+                    let mut subs = Substitutions::new();
+                    for dep in deps.into_variables() {
+                        if let Some(replacement) = self.subs.get(&dep.var) {
+                            subs.insert_no_replace(dep.var, replacement.ptr_clone());
+                        }
+                    }
+                    *value = unchecked_substitution(value.ptr_clone(), &subs);
+                }
+                let mut result = if ctx.currently_computing_equality_for_lhs() {
+                    Equal::yes1(primary_subs, other_subs)
                 } else {
-                    original_value.get_trimmed_equality(&replaced_value)?
+                    Equal::yes1(other_subs, primary_subs)
                 };
-                result = Equal::and(vec![result, original_is_replaced]);
+                for (original_value, replaced_value) in subs_to_check {
+                    let original_is_replaced = if ctx.currently_computing_equality_for_lhs() {
+                        replaced_value.get_trimmed_equality(&original_value)?
+                    } else {
+                        original_value.get_trimmed_equality(&replaced_value)?
+                    };
+                    result = Equal::and(vec![result, original_is_replaced]);
+                }
+                result.filter(&*ctx);
+                if let Equal::Yes(mut result) = result {
+                    valid_subs.append(&mut result);
+                }
             }
-            result.filter(&*ctx);
-            if result.is_yes() {
-                Ok(result)
+            if valid_subs.len() > 0 {
+                Ok(Equal::Yes(valid_subs))
             } else {
                 Ok(Equal::Unknown)
             }

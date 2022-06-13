@@ -11,7 +11,7 @@ use crate::{
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
-    Yes(Substitutions, Substitutions),
+    Yes(Vec<(Substitutions, Substitutions)>),
     Unknown,
     No,
 }
@@ -34,19 +34,32 @@ fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -
 
 impl Equal {
     pub fn yes() -> Self {
-        Self::Yes(Default::default(), Default::default())
+        Self::Yes(vec![(Default::default(), Default::default())])
+    }
+
+    pub fn yes1(left: Substitutions, right: Substitutions) -> Self {
+        Self::Yes(vec![(left, right)])
     }
 
     pub fn and(over: Vec<Self>) -> Self {
         let mut default = Self::yes();
         for b in over {
             match b {
-                Self::Yes(left, mut right) => {
-                    if let Self::Yes(exleft, exright) = &mut default {
-                        let success = combine_substitutions(left, exleft);
-                        let success = success.and(combine_substitutions(right, exright));
-                        if success.is_err() {
-                            default = Self::Unknown
+                Self::Yes(other_subs) => {
+                    if let Self::Yes(ex_subs) = std::mem::replace(&mut default, Self::Unknown) {
+                        let mut new_subs = Vec::new();
+                        for ((left, right), (mut exleft, mut exright)) in other_subs
+                            .into_iter()
+                            .cartesian_product(ex_subs.into_iter())
+                        {
+                            let success = combine_substitutions(left, &mut exleft);
+                            let success = success.and(combine_substitutions(right, &mut exright));
+                            if success.is_ok() {
+                                new_subs.push((exleft, exright));
+                            }
+                        }
+                        if new_subs.len() > 0 {
+                            default = Self::Yes(new_subs);
                         }
                     }
                 }
@@ -79,25 +92,6 @@ impl Equal {
         }
     }
 
-    pub fn reorder(self, order: &[&VariablePtr]) -> Self {
-        match self {
-            Self::Yes(subs, recursion) => Self::Yes(subs.reorder(order), recursion),
-            other => other,
-        }
-    }
-
-    pub(crate) fn sort(self) -> Equal {
-        match self {
-            Self::Yes(subs, recursion) => {
-                let mut order = subs.iter().map(|(k, _)| k.ptr_clone()).collect_vec();
-                // order.sort_by_key(|x| &env.get_variable(*x).order);
-                todo!();
-                Self::Yes(subs.reorder(&order.iter().collect_vec()), recursion)
-            }
-            other => other,
-        }
-    }
-
     pub fn is_yes(&self) -> bool {
         matches!(self, Self::Yes(..))
     }
@@ -105,27 +99,29 @@ impl Equal {
     /// Removes substitutions that substitute targets the lhs or rhs is not
     /// dependent on.
     pub(crate) fn filter(&mut self, ctx: &Ecc) {
-        if let Self::Yes(lhs_subs, rhs_subs) = self {
-            let lhs_deps = ctx
-                .lhs()
-                .get_dependencies()
-                .as_variables()
-                .map(|d| d.var.ptr_clone())
-                .collect_vec();
-            for (target, _) in lhs_subs.clone() {
-                if !lhs_deps.contains(&target) {
-                    lhs_subs.remove(&target);
+        if let Self::Yes(subs) = self {
+            for (lhs_subs, rhs_subs) in subs {
+                let lhs_deps = ctx
+                    .lhs()
+                    .get_dependencies()
+                    .as_variables()
+                    .map(|d| d.var.ptr_clone())
+                    .collect_vec();
+                for (target, _) in lhs_subs.clone() {
+                    if !lhs_deps.contains(&target) {
+                        lhs_subs.remove(&target);
+                    }
                 }
-            }
-            let rhs_deps = ctx
-                .rhs()
-                .get_dependencies()
-                .as_variables()
-                .map(|d| d.var.ptr_clone())
-                .collect_vec();
-            for (target, _) in rhs_subs.clone() {
-                if !rhs_deps.contains(&target) {
-                    rhs_subs.remove(&target);
+                let rhs_deps = ctx
+                    .rhs()
+                    .get_dependencies()
+                    .as_variables()
+                    .map(|d| d.var.ptr_clone())
+                    .collect_vec();
+                for (target, _) in rhs_subs.clone() {
+                    if !rhs_deps.contains(&target) {
+                        rhs_subs.remove(&target);
+                    }
                 }
             }
         }

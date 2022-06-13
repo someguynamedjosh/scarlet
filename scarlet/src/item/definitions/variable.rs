@@ -250,9 +250,9 @@ impl EqualityFeature for DVariable {
                 .into_iter()
                 .collect();
             if ctx.currently_computing_equality_for_lhs() {
-                Ok(Equal::Yes(primary_subs, Substitutions::new()))
+                Ok(Equal::yes1(primary_subs, Substitutions::new()))
             } else {
-                Ok(Equal::Yes(Substitutions::new(), primary_subs))
+                Ok(Equal::yes1(Substitutions::new(), primary_subs))
             }
         } else {
             let mut acceptable_dependencies = Vec::new();
@@ -294,9 +294,9 @@ impl EqualityFeature for DVariable {
                 primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
 
                 if ctx.currently_computing_equality_for_lhs() {
-                    Ok(Equal::Yes(primary_subs, Substitutions::new()))
+                    Ok(Equal::yes1(primary_subs, Substitutions::new()))
                 } else {
-                    Ok(Equal::Yes(Substitutions::new(), primary_subs))
+                    Ok(Equal::yes1(Substitutions::new(), primary_subs))
                 }
             } else {
                 Ok(Equal::Unknown)
