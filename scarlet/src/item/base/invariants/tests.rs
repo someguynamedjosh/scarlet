@@ -568,7 +568,7 @@ fn mysterious_hang() {
     (fx[b] = fx[a])
     .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
-    t_eq_ext_rev[fx b a]
+    t_eq_ext_rev[fx a b]
 
     a IS VAR[]
     b IS VAR[SELF = a]

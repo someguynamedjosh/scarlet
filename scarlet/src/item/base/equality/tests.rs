@@ -1359,8 +1359,6 @@ fn complex_fx_sub_is_arg_env() {
     with_env_from_code(code, |_, root| {
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
-        println!("It is {:#?}", v1.get_trimmed_equality(&v2));
-        panic!();
         assert_eq!(
             v1.get_trimmed_equality(&v2)
                 .as_ref()
