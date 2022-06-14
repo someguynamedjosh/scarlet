@@ -595,3 +595,64 @@ fn fx_asserting_self_sub_a() {
         env.justify_all(&root);
     });
 }
+
+#[test]
+fn eq_ext_simplified() {
+    let code = r"
+    y IS VAR[]
+    z IS VAR[y = SELF]
+
+    x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x ORD 32]
+
+    (fx[z] = fx[y])
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    eq_ext_rev_t IS AXIOM[t_eq_ext_rev]
+
+    u IS VAR[]
+    v IS VAR[SELF = u]
+
+    eq_ext_rev_t[fx v u]
+
+    VAR[SELF][fx[u] = fx[v]]
+    ";
+
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
+
+#[test]
+fn eq_ext_full() {
+    let code = r"
+    y IS VAR[]
+    z IS VAR[y = SELF]
+
+    x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x ORD 32]
+
+    (fx[z] = fx[y])
+    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+    eq_ext_rev_t IS AXIOM[t_eq_ext_rev]
+
+    u IS VAR[]
+    v IS VAR[u = SELF]
+    identity IS VAR[]
+
+    eq_symm_t IS eq_ext_rev_t[identity]
+
+    eq_symm_t[u v]
+
+    eq_ext_rev_t[fx v u]
+
+    VAR[SELF][fx[u] = fx[v]]
+    ";
+
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}

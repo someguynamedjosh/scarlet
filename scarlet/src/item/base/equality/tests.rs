@@ -1353,10 +1353,12 @@ fn complex_fx_sub_is_arg_env() {
     v IS VAR[u = SELF]
     identity IS VAR[]
 
-    v1 IS fx[x IS z][z IS v   fx IS identity[identity IS x]]
+    v1 IS fx[x IS z][y IS u   z IS v   fx IS identity[identity IS x]]
     v2 IS v
     ";
-    with_env_from_code(code, |_, root| {
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1392,7 +1394,9 @@ fn advanced_equality_symmetry_env() {
     v1 IS statement[u v identity]
     v2 IS v = u
     ";
-    with_env_from_code(code, |_, root| {
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1483,7 +1487,9 @@ fn fx_eq_a_is_self_sub_y_env() {
     # v1 IS fx = a
     # v2 IS (gy = a)[y IS t]
     ";
-    with_env_from_code(code, |_, root| {
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
         let x = get_member(&root, "x");
         let t = get_member(&root, "t");
         let v1 = get_member(&root, "v1");
@@ -1514,16 +1520,12 @@ fn fx_eq_a_sub_y_is_self_env() {
     t IS VAR[]
     s1 IS statement[x IS t]
     s2 IS statement[x IS t]
-
-    v1 IS statement
-    v2 IS statement[x IS t]
     ";
-    with_env_from_code(code, |_, root| {
-        let v1 = get_member(&root, "v1");
-        let v2 = get_member(&root, "v2");
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
         let fx_eq_a_sub_y_1 = get_member(&root, "s1");
         let fx_eq_a_sub_y_2 = get_member(&root, "s2");
-        println!("{:#?}", v1.get_trimmed_equality(&v2));
         assert_eq!(
             fx_eq_a_sub_y_1
                 .get_trimmed_equality(&fx_eq_a_sub_y_2)
@@ -1534,6 +1536,43 @@ fn fx_eq_a_sub_y_is_self_env() {
         assert_eq!(
             fx_eq_a_sub_y_2
                 .get_trimmed_equality(&fx_eq_a_sub_y_1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
+fn subbed_eq_ext_rev_is_eq_ext() {
+    let code = r"
+    y IS VAR[]
+    z IS VAR[y = SELF]
+
+    x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x ORD 32]
+
+    statement IS fx[z] = fx[y]
+
+    u IS VAR[]
+    v IS VAR[SELF = u]
+
+    v1 IS statement[fx v u]
+    v2 IS fx[u] = fx[v]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
                 .as_ref()
                 .map(Equal::is_trivial_yes),
             Ok(true)

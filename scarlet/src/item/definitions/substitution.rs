@@ -193,7 +193,12 @@ impl EqualityFeature for DSubstitution {
                 // Contains tuples of what the base has and what our substitution replaces it
                 // with.
                 let mut subs_to_check = Vec::new();
-                for (target, value) in &self.subs {
+                'next_self_sub: for (target, value) in &self.subs {
+                    for dep in self.base.get_dependencies().into_variables() {
+                        if dep.var.is_same_instance_as(target) && !dep.affects_return_value {
+                            continue 'next_self_sub;
+                        }
+                    }
                     let value = value.ptr_clone();
                     if let Some(original_value) = primary_subs.remove(target) {
                         subs_to_check.push((original_value.1, value));
