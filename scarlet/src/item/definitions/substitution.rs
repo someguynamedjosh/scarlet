@@ -99,7 +99,7 @@ impl DSubstitution {
         }
         let mut deps = Dependencies::new();
         let base_error = base.error();
-        for dep in base.as_complete_variables() {
+        for dep in base.as_variables() {
             if TRACE {
                 println!("-");
             }

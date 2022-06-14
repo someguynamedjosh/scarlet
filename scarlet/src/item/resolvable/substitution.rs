@@ -155,10 +155,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
     for (target, value) in subs {
         let mut dep_subs = Substitutions::new();
         let value_deps = value.get_dependencies();
-        if let Some(err) = value_deps.error() {
-            return Err(err.clone().into());
-        }
-        let mut value_deps = value_deps.as_complete_variables();
+        let mut value_deps_iter = value_deps.as_variables();
         for dep in target.borrow().get_dependencies() {
             let dep_args = dep.get_dependencies();
             if let Some(err) = dep_args.error() {
@@ -167,11 +164,13 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
             for desired_arg in dep_args.as_complete_variables() {
                 // We want to convert a dependency in the value to the
                 // dependency required by the variable it is assigned to.
-                if let Some(existing_dep) = value_deps.next() {
+                if let Some(existing_dep) = value_deps_iter.next() {
                     if !existing_dep.is_same_variable_as(&desired_arg) {
                         let desired_dep = desired_arg.var.borrow().item().ptr_clone();
                         dep_subs.insert_no_replace(existing_dep.var.ptr_clone(), desired_dep);
                     }
+                } else if let Some(err) = value_deps.error() {
+                    return Err(err.clone().into());
                 }
             }
         }

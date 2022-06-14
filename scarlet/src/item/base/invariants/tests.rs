@@ -85,7 +85,9 @@ fn moderate_invariant() {
     invariant IS statement[t u]
 
     t IS VAR[]
-    u IS VAR[invariant]
+    u IS VAR[]
+
+    VAR[invariant]
 
     justify_this IS invariant
     ";
