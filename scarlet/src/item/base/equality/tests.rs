@@ -1341,6 +1341,42 @@ fn equality_symmetry() {
 }
 
 #[test]
+fn complex_fx_sub_is_arg_env() {
+    let code = r"
+    y IS VAR[]
+    z IS VAR[y = SELF]
+
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    u IS VAR[]
+    v IS VAR[u = SELF]
+    identity IS VAR[]
+
+    v1 IS fx[x IS z][z IS v   fx IS identity[identity IS x]]
+    v2 IS v
+    ";
+    with_env_from_code(code, |_, root| {
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        println!("It is {:#?}", v1.get_trimmed_equality(&v2));
+        panic!();
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
 fn advanced_equality_symmetry_env() {
     let code = r"
     y IS VAR[]
@@ -1363,6 +1399,12 @@ fn advanced_equality_symmetry_env() {
         let v2 = get_member(&root, "v2");
         assert_eq!(
             v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
                 .as_ref()
                 .map(Equal::is_trivial_yes),
             Ok(true)

@@ -205,6 +205,9 @@ impl EqualityFeature for DSubstitution {
                     let deps = value.get_dependencies();
                     let mut subs = Substitutions::new();
                     'next_value_dependency: for dep in deps.into_variables() {
+                        if !dep.affects_return_value {
+                            continue 'next_value_dependency;
+                        }
                         if let Some(replacement) = self.subs.get(&dep.var) {
                             for target_dep in target.borrow().dependencies() {
                                 if target_dep
