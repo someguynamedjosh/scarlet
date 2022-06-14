@@ -1339,3 +1339,134 @@ fn equality_symmetry() {
         Ok(true)
     );
 }
+
+#[test]
+fn fx_eq_a_sub_y_is_self() {
+    let a = unique();
+    a.set_name("a".to_owned());
+    let t = unique();
+    t.set_name("true".to_owned());
+    let f = unique();
+    f.set_name("false".to_owned());
+    let y = variable_full();
+    y.0.set_name("y".to_owned());
+    let x = variable_full();
+    x.0.set_name("x".to_owned());
+    let fx = variable_full_with_deps(vec![x.0.ptr_clone()]);
+    fx.0.set_name("f".to_owned());
+    let fx_eq_a = decision(
+        fx.0.ptr_clone(),
+        a.ptr_clone(),
+        t.ptr_clone(),
+        f.ptr_clone(),
+    );
+    fx_eq_a.set_name("f = a".to_owned());
+    let fx_eq_a_sub_y_1 = unchecked_substitution(
+        other(fx_eq_a.ptr_clone()),
+        &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
+    );
+    fx_eq_a_sub_y_1.set_name("(f = a)(x IS y) 1".to_owned());
+    let fx_eq_a_sub_y_2 = unchecked_substitution(
+        other(fx_eq_a.ptr_clone()),
+        &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
+    );
+    fx_eq_a_sub_y_2.set_name("(f = a)(x IS y) 2".to_owned());
+
+    assert_eq!(
+        fx_eq_a_sub_y_1
+            .get_trimmed_equality(&fx_eq_a_sub_y_2)
+            .as_ref()
+            .map(Equal::is_trivial_yes),
+        Ok(true)
+    );
+    assert_eq!(
+        fx_eq_a_sub_y_2
+            .get_trimmed_equality(&fx_eq_a_sub_y_1)
+            .as_ref()
+            .map(Equal::is_trivial_yes),
+        Ok(true)
+    );
+}
+
+#[test]
+fn fx_eq_a_is_self_sub_y() {
+    let code = r"
+    a IS UNIQUE
+
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
+    y IS VAR[]
+    gy IS VAR[DEP y]
+
+    statement IS fx = a
+
+    t IS VAR[]
+
+    # x -> t
+    # fx -> fx(x IS t)
+    v1 IS statement
+    v2 IS statement[x IS t]
+
+    # # x -> t
+    # # fx -> gy(y IS x)
+    # v1 IS fx = a
+    # v2 IS (gy = a)[y IS t]
+    ";
+    with_env_from_code(code, |_, root| {
+        let x = get_member(&root, "x");
+        let t = get_member(&root, "t");
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        if let Ok(Equal::Yes(mut cases)) = v1.get_trimmed_equality(&v2) {
+            assert_eq!(cases.len(), 1);
+            let (lsubs, _) = cases.pop().unwrap();
+            assert_eq!(lsubs.len(), 1);
+            let (target, value) = lsubs.into_iter().next().unwrap();
+            assert!(target.borrow().item().is_same_instance_as(&x.dereference()));
+            assert!(value.is_same_instance_as(&t.dereference()));
+        } else {
+            panic!("Expected values to be equal.");
+        }
+    });
+}
+
+#[test]
+fn fx_eq_a_sub_y_is_self_env() {
+    let code = r"
+    a IS UNIQUE
+
+    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    fx IS VAR[DEP x]
+
+    statement IS fx = a
+
+    t IS VAR[]
+    s1 IS statement[x IS t]
+    s2 IS statement[x IS t]
+
+    v1 IS statement
+    v2 IS statement[x IS t]
+    ";
+    with_env_from_code(code, |_, root| {
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        let fx_eq_a_sub_y_1 = get_member(&root, "s1");
+        let fx_eq_a_sub_y_2 = get_member(&root, "s2");
+        println!("{:#?}", v1.get_trimmed_equality(&v2));
+        assert_eq!(
+            fx_eq_a_sub_y_1
+                .get_trimmed_equality(&fx_eq_a_sub_y_2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            fx_eq_a_sub_y_2
+                .get_trimmed_equality(&fx_eq_a_sub_y_1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}

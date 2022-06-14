@@ -86,13 +86,14 @@ impl EqualityCalculationContext {
     /// the right element. Tries get_equality_right as a backup if that does not
     /// produce a conclusive answer.
     pub fn get_equality_left(&mut self) -> Result<Equal, UnresolvedItemError> {
+        println!("{:#?} =<= {:#?}", self.lhs, self.rhs);
         self.self_side = EqualityTestSide::Left;
         let lhs = self.lhs.ptr_clone();
         let lhs_borrow = lhs.borrow();
         let lhs = lhs_borrow.definition.clone_into_box();
         drop(lhs_borrow);
         let result = lhs.get_equality_using_context(self, OnlyCalledByEcc(()))?;
-        if let Equal::Yes(cases) = result.equal {
+        let result = if let Equal::Yes(cases) = result.equal {
             let equal = if result.unique {
                 Equal::Yes(cases)
             } else if self.rhs.downcast_definition::<DSubstitution>().is_some() {
@@ -109,7 +110,9 @@ impl EqualityCalculationContext {
             self.get_equality_right()
         } else {
             Ok(result.equal)
-        }
+        };
+        println!("{:#?}", result);
+        result
     }
 
     /// Computes equality by querying the right element whether it is equal to

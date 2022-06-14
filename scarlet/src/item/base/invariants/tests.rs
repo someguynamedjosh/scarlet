@@ -10,15 +10,6 @@ use crate::{
     util::PtrExtension,
 };
 
-fn get_member(root: &ItemPtr, name: &str) -> ItemPtr {
-    root.downcast_definition::<DPopulatedStruct>()
-        .unwrap()
-        .get_value()
-        .lookup_ident(name)
-        .unwrap()
-        .unwrap()
-}
-
 #[test]
 fn basic_invariant() {
     let code = r"
@@ -41,9 +32,7 @@ fn sub_invariant() {
     x IS VAR[].AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
-    statement IS 
-    (fx = a)
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    statement IS fx = a
 
     t IS VAR[statement[x IS SELF]]
 

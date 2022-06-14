@@ -1,5 +1,7 @@
 use std::{collections::HashSet, fmt::Debug};
 
+use lazy_static::__Deref;
+
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
@@ -199,11 +201,19 @@ impl EqualityFeature for DSubstitution {
                         subs_to_check.push((target.borrow().item().ptr_clone(), value));
                     }
                 }
-                for (_, value) in other_subs.iter_mut() {
+                for (target, value) in other_subs.iter_mut() {
                     let deps = value.get_dependencies();
                     let mut subs = Substitutions::new();
-                    for dep in deps.into_variables() {
+                    'next_value_dependency: for dep in deps.into_variables() {
                         if let Some(replacement) = self.subs.get(&dep.var) {
+                            for target_dep in target.borrow().dependencies() {
+                                if target_dep
+                                    .dereference()
+                                    .is_same_instance_as(&dep.var.borrow().item().dereference())
+                                {
+                                    continue 'next_value_dependency;
+                                }
+                            }
                             subs.insert_no_replace(dep.var, replacement.ptr_clone());
                         }
                     }
