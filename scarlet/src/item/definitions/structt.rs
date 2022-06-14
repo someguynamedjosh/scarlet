@@ -155,7 +155,38 @@ impl ItemDefinition for DAtomicStructMember {
 }
 
 impl CheckFeature for DAtomicStructMember {}
-impl EqualityFeature for DAtomicStructMember {}
+impl EqualityFeature for DAtomicStructMember {
+    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
+        if let Some(structt) = self
+            .0
+            .dereference()
+            .downcast_definition::<DPopulatedStruct>()
+        {
+            match self.1 {
+                AtomicStructMember::Label => todo!(),
+                AtomicStructMember::Value => ctx
+                    .with_primary(structt.value.ptr_clone())
+                    .get_equality_left()
+                    .map(|equal| EqualSuccess {
+                        equal,
+                        unique: true,
+                    }),
+                AtomicStructMember::Rest => ctx
+                    .with_primary(structt.rest.ptr_clone())
+                    .get_equality_left()
+                    .map(|equal| EqualSuccess {
+                        equal,
+                        unique: true,
+                    }),
+            }
+        } else {
+            Ok(EqualSuccess {
+                equal: Equal::Unknown,
+                unique: true,
+            })
+        }
+    }
+}
 
 impl DependenciesFeature for DAtomicStructMember {
     fn get_dependencies_using_context(

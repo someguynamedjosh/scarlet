@@ -1608,3 +1608,38 @@ fn fx_sub_x_is_x() {
         );
     });
 }
+
+
+#[test]
+fn separated_fx_sub_x_is_x() {
+    let code = r"
+    std IS {
+        x IS VAR[]
+        fx IS VAR[DEP x]
+    }
+
+    x IS std.x
+    fx IS std.fx
+
+    v1 IS fx[fx IS x]
+    v2 IS x
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}

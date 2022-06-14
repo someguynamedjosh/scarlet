@@ -13,15 +13,15 @@ t_eq_symm IS
 # Proves fx[a] = fx[b]
 t_eq_ext IS 
 {
-   a IS VAR[]
-   b IS VAR[a = SELF]
+   t_just[fx[a] = fx[b]]
+
+   t_eq_ext_rev[fx b a].SHOWN
 
    # Proves b = a
    t_eq_symm[a b]
 
-   t_eq_ext_rev[fx b a].SHOWN
-
-   t_just[fx[a] = fx[b]]
+   a IS VAR[]
+   b IS VAR[a = SELF]
 }
 .VALUE
 

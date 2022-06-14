@@ -658,3 +658,55 @@ fn eq_ext_full() {
         env.justify_all(&root);
     });
 }
+
+#[test]
+fn eq_ext_full_separated() {
+    let code = r"
+    std IS {
+        x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+        fx IS VAR[DEP x ORD 32]
+    }
+
+    x IS std.x
+    fx IS std.fx
+
+    eq_ext_rev_t IS 
+    {
+        AXIOM[t_eq_ext_rev]
+
+        (fx[z] = fx[y])
+        .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+
+        y IS VAR[]
+        z IS VAR[y = SELF]
+    }
+    .VALUE
+
+    eq_symm_t IS 
+    {
+        eq_ext_rev_t[identity u v]
+
+        u IS VAR[]
+        v IS VAR[u = SELF]
+        identity IS VAR[]
+    }
+    .VALUE
+
+
+    {
+        VAR[SELF][fx[s] = fx[t]]
+
+        eq_ext_rev_t[fx t s]
+
+        eq_symm_t[s t]
+
+        s IS VAR[]
+        t IS VAR[s = SELF]
+    }
+    ";
+
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+    });
+}
