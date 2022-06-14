@@ -12,6 +12,8 @@ use crate::item::{
     Item, ItemPtr,
 };
 
+const TRACE: bool = true;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EqualityTestSide {
     Left,
@@ -86,7 +88,9 @@ impl EqualityCalculationContext {
     /// the right element. Tries get_equality_right as a backup if that does not
     /// produce a conclusive answer.
     pub fn get_equality_left(&mut self) -> Result<Equal, UnresolvedItemError> {
-        println!("{:#?} =<= {:#?}", self.lhs, self.rhs);
+        if TRACE {
+            println!("{:#?} =<= {:#?}", self.lhs, self.rhs);
+        }
         self.self_side = EqualityTestSide::Left;
         let lhs = self.lhs.ptr_clone();
         let lhs_borrow = lhs.borrow();
@@ -111,7 +115,9 @@ impl EqualityCalculationContext {
         } else {
             Ok(result.equal)
         };
-        println!("{:#?}", result);
+        if TRACE {
+            println!("{:#?}", result);
+        }
         result
     }
 

@@ -20,7 +20,12 @@ fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -
     for (target, value) in from {
         let value = value.dereference();
         if let Some(other) = target_subs.get(&target) {
-            if other.dereference() == value.dereference() {
+            if other
+                .get_trimmed_equality(&value)
+                .as_ref()
+                .map(Equal::is_trivial_yes)
+                == Ok(true)
+            {
                 continue;
             } else {
                 return Err(());

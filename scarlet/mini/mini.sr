@@ -10,19 +10,20 @@ true.AS_LANGUAGE_ITEM[t_refl_statement]
 true.AS_LANGUAGE_ITEM[t_decision_eq_statement]
 true.AS_LANGUAGE_ITEM[t_decision_neq_statement]
 
-a IS UNIQUE
+a IS VAR[]
+b IS VAR[a = SELF]
 
 x IS VAR[].AS_LANGUAGE_ITEM[x]
 fx IS VAR[DEP x]
 
 statement IS 
-(fx = a)
+(fx[b] = fx[a])
 .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
-t IS VAR[].SHOWN
+t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
-VAR[statement[x IS t]]
+c IS VAR[]
+d IS VAR[c = SELF]
+identity IS VAR[]
 
-just_t IS VAR[SELF]
-
-just_t[statement[x IS t]]
+t_eq_ext_rev[c d identity].SHOWN

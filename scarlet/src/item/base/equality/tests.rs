@@ -1341,6 +1341,36 @@ fn equality_symmetry() {
 }
 
 #[test]
+fn advanced_equality_symmetry_env() {
+    let code = r"
+    y IS VAR[]
+    z IS VAR[y = SELF]
+
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    statement IS fx[z] = fx[y]
+
+    u IS VAR[]
+    v IS VAR[u = SELF]
+    identity IS VAR[]
+
+    v1 IS statement[u v identity]
+    v2 IS v = u
+    ";
+    with_env_from_code(code, |_, root| {
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
 fn fx_eq_a_sub_y_is_self() {
     let a = unique();
     a.set_name("a".to_owned());
@@ -1389,7 +1419,7 @@ fn fx_eq_a_sub_y_is_self() {
 }
 
 #[test]
-fn fx_eq_a_is_self_sub_y() {
+fn fx_eq_a_is_self_sub_y_env() {
     let code = r"
     a IS UNIQUE
 
