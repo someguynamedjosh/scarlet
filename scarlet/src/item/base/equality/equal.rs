@@ -117,7 +117,7 @@ impl Equal {
                 let lhs_deps = ctx
                     .lhs()
                     .get_dependencies()
-                    .as_variables()
+                    .as_complete_variables()
                     .map(|d| d.var.ptr_clone())
                     .collect_vec();
                 for (target, _) in lhs_subs.clone() {
@@ -128,7 +128,7 @@ impl Equal {
                 let rhs_deps = ctx
                     .rhs()
                     .get_dependencies()
-                    .as_variables()
+                    .as_complete_variables()
                     .map(|d| d.var.ptr_clone())
                     .collect_vec();
                 for (target, _) in rhs_subs.clone() {

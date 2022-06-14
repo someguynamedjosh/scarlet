@@ -99,7 +99,7 @@ impl DSubstitution {
         }
         let mut deps = Dependencies::new();
         let base_error = base.error();
-        for dep in base.as_variables() {
+        for dep in base.as_complete_variables() {
             if TRACE {
                 println!("-");
             }
@@ -132,7 +132,7 @@ impl DSubstitution {
         }
         for dep in justifications {
             if let Some(var) = dep.downcast_definition::<DVariable>() {
-                deps.push_eager(var.as_dependency(false));
+                deps.append(var.as_dependency(false));
             } else {
                 deps.append(dep.get_dependencies());
             }

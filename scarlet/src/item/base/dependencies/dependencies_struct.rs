@@ -54,7 +54,16 @@ impl Dependencies {
         self.dependencies.replace(dep);
     }
 
+    #[track_caller]
     pub fn as_variables(&self) -> impl Iterator<Item = &Dependency> {
+        self.dependencies.iter()
+    }
+
+    #[track_caller]
+    pub fn as_complete_variables(&self) -> impl Iterator<Item = &Dependency> {
+        if self.error().is_some() {
+            panic!("Tried to get dependencies when dependencies contained an error!");
+        }
         self.dependencies.iter()
     }
 

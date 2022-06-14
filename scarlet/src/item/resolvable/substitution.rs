@@ -81,7 +81,7 @@ impl Resolvable for RSubstitution {
 
         self.resolve_named_subs(base_scope, env, &mut subs, &mut remaining_deps)?;
         self.resolve_anonymous_subs(remaining_deps, env, &mut subs)?;
-        resolve_dep_subs(&mut subs);
+        resolve_dep_subs(&mut subs)?;
 
         let justifications = make_justification_statements(&subs, limit)?;
         let invs = create_invariants(env, this, base, &subs, justifications)?;
@@ -151,18 +151,25 @@ fn make_justification_statements(
 
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the
 /// dependencies match.
-fn resolve_dep_subs(subs: &mut Substitutions) {
+fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
     for (target, value) in subs {
         let mut dep_subs = Substitutions::new();
         let value_deps = value.get_dependencies();
-        let mut value_deps = value_deps.as_variables();
+        if let Some(err) = value_deps.error() {
+            return Err(err.clone().into());
+        }
+        let mut value_deps = value_deps.as_complete_variables();
         for dep in target.borrow().get_dependencies() {
-            for desired_dep in dep.get_dependencies().as_variables() {
+            let dep_args = dep.get_dependencies();
+            if let Some(err) = dep_args.error() {
+                return Err(err.clone().into());
+            }
+            for desired_arg in dep_args.as_complete_variables() {
                 // We want to convert a dependency in the value to the
                 // dependency required by the variable it is assigned to.
                 if let Some(existing_dep) = value_deps.next() {
-                    if !existing_dep.is_same_variable_as(&desired_dep) {
-                        let desired_dep = desired_dep.var.borrow().item().ptr_clone();
+                    if !existing_dep.is_same_variable_as(&desired_arg) {
+                        let desired_dep = desired_arg.var.borrow().item().ptr_clone();
                         dep_subs.insert_no_replace(existing_dep.var.ptr_clone(), desired_dep);
                     }
                 }
@@ -172,6 +179,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) {
             *value = unchecked_substitution(value.ptr_clone(), &dep_subs);
         }
     }
+    Ok(())
 }
 
 impl RSubstitution {

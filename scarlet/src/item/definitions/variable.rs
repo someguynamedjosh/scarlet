@@ -24,6 +24,7 @@ use crate::{
             self, Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
+        resolvable::UnresolvedItemError,
         util::unchecked_substitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
     },
@@ -141,7 +142,7 @@ impl DVariable {
         &self.0
     }
 
-    pub fn as_dependency(&self, affects_return_value: bool) -> Dependency {
+    pub fn as_dependency(&self, affects_return_value: bool) -> Dependencies {
         Variable::as_dependency(&self.0, affects_return_value)
     }
 
@@ -203,16 +204,25 @@ impl Variable {
         justifications
     }
 
-    pub fn as_dependency(this: &VariablePtr, affects_return_value: bool) -> Dependency {
+    pub fn as_dependency(this: &VariablePtr, affects_return_value: bool) -> Dependencies {
         let mut deps = Dependencies::new();
         for dep in &this.borrow().dependencies {
             deps.append(dep.get_dependencies());
         }
-        Dependency {
-            var: this.ptr_clone(),
-            swallow: deps.as_variables().map(|x| x.var.ptr_clone()).collect(),
-            order: this.borrow().order.clone(),
-            affects_return_value,
+        if let Some(err) = deps.error() {
+            Dependencies::new_error(err.clone())
+        } else {
+            let mut res = Dependencies::new();
+            res.push_eager(Dependency {
+                var: this.ptr_clone(),
+                swallow: deps
+                    .as_complete_variables()
+                    .map(|x| x.var.ptr_clone())
+                    .collect(),
+                order: this.borrow().order.clone(),
+                affects_return_value,
+            });
+            res
         }
     }
 }
@@ -246,7 +256,7 @@ impl DependenciesFeature for DVariable {
         for dep in self.0.borrow().dependencies.clone() {
             deps.append(ctx.get_dependencies(&dep, affects_return_value));
         }
-        deps.push_eager(Variable::as_dependency(&self.0, affects_return_value));
+        deps.append(Variable::as_dependency(&self.0, affects_return_value));
         for inv in &self.0.borrow().invariants {
             deps.append(ctx.get_dependencies(inv, false));
         }
