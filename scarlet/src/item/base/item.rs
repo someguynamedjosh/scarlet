@@ -345,7 +345,7 @@ impl ItemPtr {
 
     pub fn visit_contents(&self, mut visitor: impl FnMut(&ItemPtr)) {
         for (_, content) in self.borrow().definition.contents() {
-            visitor(content);
+            visitor(&content);
         }
     }
 

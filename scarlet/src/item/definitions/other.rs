@@ -40,8 +40,8 @@ impl ItemDefinition for DOther {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        vec![(ContainmentType::Computational, &self.other)]
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
+        vec![(ContainmentType::Computational, self.other.ptr_clone())]
     }
 }
 

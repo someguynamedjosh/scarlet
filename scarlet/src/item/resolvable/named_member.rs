@@ -60,9 +60,9 @@ impl Resolvable for RNamedMember {
             ad
         } else {
             todo!(
-                "Nice error, failed to find a member named {} in {}.",
+                "Nice error, failed to find a member named {} in {:#?}.",
                 self.member_name,
-                self.base.debug_label()
+                self.base
             );
         };
         let mut base = self.base.ptr_clone();

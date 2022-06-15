@@ -8,6 +8,7 @@ mod variable;
 use std::{any::Any, convert::Infallible, fmt::Debug, ops::FromResidual};
 
 pub use identifier::RIdentifier;
+use itertools::Itertools;
 pub use named_member::RNamedMember;
 pub use placeholder::RPlaceholder;
 pub use substitution::RSubstitution;
@@ -45,8 +46,12 @@ impl ItemDefinition for DResolvable {
         Box::new(Self(self.0.dyn_clone()))
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        self.0.contents()
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
+        self.0
+            .contents()
+            .into_iter()
+            .map(|(x, y)| (x, y.ptr_clone()))
+            .collect_vec()
     }
 }
 

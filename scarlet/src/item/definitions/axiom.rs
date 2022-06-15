@@ -52,8 +52,8 @@ impl ItemDefinition for DAxiom {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        vec![(ContainmentType::Definitional, &self.statement)]
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
+        vec![(ContainmentType::Definitional, self.statement.ptr_clone())]
     }
 }
 
@@ -82,8 +82,8 @@ impl EqualityFeature for DAxiom {
         };
         if let Some((self_statement, other_statement)) = statements {
             Ok(ctx
-                    .with_primary_and_other(self_statement, other_statement)
-                    .get_equality_left()?)
+                .with_primary_and_other(self_statement, other_statement)
+                .get_equality_left()?)
         } else {
             Ok(Equal::Unknown)
         }

@@ -66,12 +66,15 @@ impl ItemDefinition for DDecision {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         vec![
-            (ContainmentType::Computational, &self.left),
-            (ContainmentType::Computational, &self.right),
-            (ContainmentType::Computational, &self.when_equal),
-            (ContainmentType::Computational, &self.when_not_equal),
+            (ContainmentType::Computational, self.left.ptr_clone()),
+            (ContainmentType::Computational, self.right.ptr_clone()),
+            (ContainmentType::Computational, self.when_equal.ptr_clone()),
+            (
+                ContainmentType::Computational,
+                self.when_not_equal.ptr_clone(),
+            ),
         ]
     }
 }

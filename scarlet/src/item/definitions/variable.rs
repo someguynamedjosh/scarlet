@@ -226,10 +226,10 @@ impl ItemDefinition for DVariable {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         self.1
             .iter()
-            .map(|inv_or_dep| (ContainmentType::Definitional, inv_or_dep))
+            .map(|inv_or_dep| (ContainmentType::Definitional, inv_or_dep.ptr_clone()))
             .collect_vec()
     }
 }
@@ -261,7 +261,9 @@ impl EqualityFeature for DVariable {
         if let Some(other_var) = ctx.other().downcast_resolved_definition::<Self>()? {
             if other_var.0.is_same_instance_as(&self.0) && ctx.no_subs() {
                 return Ok(Equal::yes());
-            } else if let Ok(Some(mut ctx)) = ctx.try_select_value_substituted_for_var_in_other(&other_var.0) {
+            } else if let Ok(Some(mut ctx)) =
+                ctx.try_select_value_substituted_for_var_in_other(&other_var.0)
+            {
                 return ctx.get_equality_left();
             }
         }

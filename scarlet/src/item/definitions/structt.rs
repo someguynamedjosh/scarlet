@@ -47,10 +47,10 @@ impl ItemDefinition for DPopulatedStruct {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         vec![
-            (ContainmentType::Computational, &self.value),
-            (ContainmentType::Computational, &self.rest),
+            (ContainmentType::Computational, self.value.ptr_clone()),
+            (ContainmentType::Computational, self.rest.ptr_clone()),
         ]
     }
 }
@@ -133,8 +133,31 @@ impl ItemDefinition for DAtomicStructMember {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        vec![(ContainmentType::Computational, &self.0)]
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
+        // return vec![(ContainmentType::Computational, self.0.ptr_clone())];
+        if let Some(structt) = self
+            .0
+            .dereference()
+            .downcast_definition::<DPopulatedStruct>()
+        {
+            match self.1 {
+                AtomicStructMember::Label => todo!(),
+                AtomicStructMember::Value => {
+                    vec![
+                        (ContainmentType::Definitional, self.0.ptr_clone()),
+                        (ContainmentType::Computational, structt.value.ptr_clone()),
+                    ]
+                }
+                AtomicStructMember::Rest => {
+                    vec![
+                        (ContainmentType::Definitional, self.0.ptr_clone()),
+                        (ContainmentType::Computational, structt.rest.ptr_clone()),
+                    ]
+                }
+            }
+        } else {
+            vec![(ContainmentType::Computational, self.0.ptr_clone())]
+        }
     }
 }
 

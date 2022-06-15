@@ -142,13 +142,13 @@ impl ItemDefinition for DSubstitution {
         Box::new(self.clone())
     }
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        vec![(ContainmentType::Computational, &self.base)]
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
+        vec![(ContainmentType::Computational, self.base.ptr_clone())]
             .into_iter()
             .chain(
                 self.subs
                     .iter()
-                    .map(|x| (ContainmentType::Computational, &x.1)),
+                    .map(|x| (ContainmentType::Computational, x.1.ptr_clone())),
             )
             .collect()
     }

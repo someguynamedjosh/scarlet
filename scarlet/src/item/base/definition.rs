@@ -20,7 +20,7 @@ pub trait ItemDefinition:
 {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition>;
 
-    fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
+    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         vec![]
     }
 }
