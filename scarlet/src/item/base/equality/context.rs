@@ -1,9 +1,21 @@
+use std::collections::HashSet;
+
 use super::{trim::trim_result, Equal};
-use crate::item::{
-    definitions::substitution::DSubstitution, resolvable::UnresolvedItemError, ItemPtr,
+use crate::{
+    item::{
+        definitions::{
+            substitution::{DSubstitution, Substitutions},
+            variable::VariablePtr,
+        },
+        dependencies::Dependencies,
+        resolvable::UnresolvedItemError,
+        util::unchecked_substitution,
+        ItemPtr,
+    },
+    util::PtrExtension,
 };
 
-const TRACE: bool = false;
+const TRACE: bool = true;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EqualityTestSide {
@@ -11,9 +23,21 @@ pub enum EqualityTestSide {
     Right,
 }
 
+impl EqualityTestSide {
+    fn opposite(&self) -> EqualityTestSide {
+        match self {
+            EqualityTestSide::Left => EqualityTestSide::Right,
+            EqualityTestSide::Right => EqualityTestSide::Left,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct EqualityCalculationContext {
     lhs: ItemPtr,
+    lhs_subs: Vec<Substitutions>,
     rhs: ItemPtr,
+    rhs_subs: Vec<Substitutions>,
     self_side: EqualityTestSide,
 }
 
@@ -27,8 +51,10 @@ pub struct OnlyCalledByEcc(pub(super) ());
 impl EqualityCalculationContext {
     fn new(lhs: ItemPtr, rhs: ItemPtr) -> Self {
         Self {
-            lhs,
-            rhs,
+            lhs: lhs.dereference(),
+            lhs_subs: Vec::new(),
+            rhs: rhs.dereference(),
+            rhs_subs: Vec::new(),
             self_side: EqualityTestSide::Left,
         }
     }
@@ -63,6 +89,87 @@ impl EqualityCalculationContext {
         &self.rhs
     }
 
+    pub fn prepend_substitutions_for_primary(&mut self, subs: Substitutions) {
+        let sub_list = match self.self_side {
+            EqualityTestSide::Left => &mut self.lhs_subs,
+            EqualityTestSide::Right => &mut self.rhs_subs,
+        };
+        sub_list.insert(0, subs);
+    }
+
+    fn try_select_value_substituted_for_var(
+        &self,
+        target_to_look_for: &VariablePtr,
+        side: EqualityTestSide,
+    ) -> Result<Option<Self>, UnresolvedItemError> {
+        let sub_list = match side {
+            EqualityTestSide::Left => &self.lhs_subs,
+            EqualityTestSide::Right => &self.rhs_subs,
+        };
+        let mut dependencies = Dependencies::new();
+        for dep in target_to_look_for.borrow().dependencies() {
+            dependencies.append(dep.get_dependencies());
+        }
+        let mut new_sub_list = Vec::new();
+        let mut new_value = None;
+        for sub in sub_list {
+            let mut new_sub = Substitutions::new();
+            let mut new_dependencies = Dependencies::new();
+            for (target, value) in sub {
+                if target.is_same_instance_as(target_to_look_for) {
+                    new_value = Some(value.ptr_clone());
+                    let mut sub_without_target = sub.clone();
+                    sub_without_target.remove(target).unwrap();
+                    new_dependencies.append(value.get_dependencies());
+                } else if dependencies.contains_var(target) {
+                    dependencies.remove(target);
+                    new_dependencies.append(value.get_dependencies());
+                    new_sub.insert_no_replace(target.ptr_clone(), value.ptr_clone());
+                }
+            }
+            dependencies.append(new_dependencies);
+            if new_sub.len() > 0 {
+                new_sub_list.push(new_sub);
+            }
+        }
+        if let Some(err) = dependencies.error() {
+            Err(err.clone())
+        } else if let Some(value) = new_value {
+            Ok(Some(match side {
+                EqualityTestSide::Left => Self {
+                    lhs: value,
+                    lhs_subs: new_sub_list,
+                    rhs: self.rhs.ptr_clone(),
+                    rhs_subs: self.rhs_subs.clone(),
+                    self_side: self.self_side,
+                },
+                EqualityTestSide::Right => Self {
+                    lhs: self.lhs.ptr_clone(),
+                    lhs_subs: self.lhs_subs.clone(),
+                    rhs: value,
+                    rhs_subs: new_sub_list,
+                    self_side: self.self_side,
+                },
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn try_select_value_substituted_for_var_in_primary(
+        &self,
+        target_to_look_for: &VariablePtr,
+    ) -> Result<Option<Self>, UnresolvedItemError> {
+        self.try_select_value_substituted_for_var(target_to_look_for, self.self_side)
+    }
+
+    pub fn try_select_value_substituted_for_var_in_other(
+        &self,
+        target_to_look_for: &VariablePtr,
+    ) -> Result<Option<Self>, UnresolvedItemError> {
+        self.try_select_value_substituted_for_var(target_to_look_for, self.self_side.opposite())
+    }
+
     pub fn with_primary(&self, new_primary: ItemPtr) -> Self {
         self.with_primary_and_other(new_primary, self.other().ptr_clone())
     }
@@ -72,7 +179,13 @@ impl EqualityCalculationContext {
             EqualityTestSide::Left => (new_primary, new_other),
             EqualityTestSide::Right => (new_other, new_primary),
         };
-        Self::new(lhs, rhs)
+        Self {
+            lhs: lhs.dereference(),
+            lhs_subs: self.lhs_subs.clone(),
+            rhs: rhs.dereference(),
+            rhs_subs: self.rhs_subs.clone(),
+            self_side: self.self_side,
+        }
     }
 
     /// Computes equality by querying the left element whether it is equal to
@@ -81,6 +194,8 @@ impl EqualityCalculationContext {
     pub fn get_equality_left(&mut self) -> Result<Equal, UnresolvedItemError> {
         if TRACE {
             println!("{:#?} =<= {:#?}", self.lhs, self.rhs);
+            println!("LHS Subs: {:#?}", self.lhs_subs);
+            println!("RHS Subs: {:#?}", self.rhs_subs);
         }
         self.self_side = EqualityTestSide::Left;
         let lhs = self.lhs.ptr_clone();
@@ -88,23 +203,20 @@ impl EqualityCalculationContext {
         let lhs = lhs_borrow.definition.clone_into_box();
         drop(lhs_borrow);
         let result = lhs.get_equality_using_context(self, OnlyCalledByEcc(()))?;
-        let result = if let Equal::Yes(cases) = result.equal {
-            let equal = if result.unique {
-                Equal::Yes(cases)
-            } else if self.rhs.downcast_definition::<DSubstitution>().is_some() {
-                if let Ok(Equal::Yes(other_cases)) = self.get_equality_right() {
-                    Equal::Yes([cases, other_cases].concat())
+        let result = if let Equal::Yes(lhs, rhs) = result {
+            if rhs.len() > 0 {
+                if let Ok(Equal::Yes(lhs, rhs)) = self.get_equality_right() {
+                    Ok(Equal::Yes(lhs, rhs))
                 } else {
-                    Equal::Yes(cases)
+                    Ok(Equal::Yes(lhs, rhs))
                 }
             } else {
-                Equal::Yes(cases)
-            };
-            Ok(equal)
-        } else if result.equal == Equal::Unknown {
+                Ok(Equal::Yes(lhs, rhs))
+            }
+        } else if result == Equal::Unknown {
             self.get_equality_right()
         } else {
-            Ok(result.equal)
+            Ok(result)
         };
         if TRACE {
             println!("{:#?}", result);
@@ -120,8 +232,41 @@ impl EqualityCalculationContext {
         let rhs = rhs.borrow();
         Ok(rhs
             .definition
-            .get_equality_using_context(self, OnlyCalledByEcc(()))?
-            .equal)
+            .get_equality_using_context(self, OnlyCalledByEcc(()))?)
+    }
+
+    pub fn other_with_subs(&self) -> ItemPtr {
+        let mut other = self.other().ptr_clone();
+        let sub_list = match self.self_side {
+            EqualityTestSide::Left => &self.rhs_subs,
+            EqualityTestSide::Right => &self.lhs_subs,
+        };
+        for subs in sub_list {
+            other = unchecked_substitution(other, subs);
+        }
+        other
+    }
+
+    /// No, I don't want
+    pub fn no_subs(&self) -> bool {
+        for subs in &self.lhs_subs {
+            if subs.len() > 0 {
+                return false;
+            }
+        }
+        for subs in &self.rhs_subs {
+            if subs.len() > 0 {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub(crate) fn other_subs(&self) -> &[Substitutions] {
+        match self.self_side {
+            EqualityTestSide::Left => &self.rhs_subs,
+            EqualityTestSide::Right => &self.lhs_subs,
+        }
     }
 }
 

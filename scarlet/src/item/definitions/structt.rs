@@ -8,7 +8,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantSetPtr, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -76,10 +76,7 @@ impl EqualityFeature for DPopulatedStruct {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         let others = if let Some(other) = ctx.other().downcast_definition::<Self>() {
             if self.label != other.label {
-                return Ok(EqualSuccess {
-                    equal: Equal::No,
-                    unique: true,
-                });
+                return Ok(Equal::No);
             }
             Some([other.value.ptr_clone(), other.rest.ptr_clone()])
         } else {
@@ -95,10 +92,7 @@ impl EqualityFeature for DPopulatedStruct {
         } else {
             Equal::Unknown
         };
-        Ok(EqualSuccess {
-            equal,
-            unique: true,
-        })
+        Ok(equal)
     }
 }
 
@@ -156,24 +150,13 @@ impl EqualityFeature for DAtomicStructMember {
                 AtomicStructMember::Label => todo!(),
                 AtomicStructMember::Value => ctx
                     .with_primary(structt.value.ptr_clone())
-                    .get_equality_left()
-                    .map(|equal| EqualSuccess {
-                        equal,
-                        unique: true,
-                    }),
+                    .get_equality_left(),
                 AtomicStructMember::Rest => ctx
                     .with_primary(structt.rest.ptr_clone())
-                    .get_equality_left()
-                    .map(|equal| EqualSuccess {
-                        equal,
-                        unique: true,
-                    }),
+                    .get_equality_left(),
             }
         } else {
-            Ok(EqualSuccess {
-                equal: Equal::Unknown,
-                unique: true,
-            })
+            Ok(Equal::Unknown)
         }
     }
 }

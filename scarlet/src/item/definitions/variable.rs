@@ -16,7 +16,7 @@ use crate::{
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -201,21 +201,21 @@ impl Variable {
         for dep in &this.borrow().dependencies {
             deps.append(dep.get_dependencies());
         }
-        if let Some(err) = deps.error() {
-            Dependencies::new_error(err.clone())
-        } else {
-            let mut res = Dependencies::new();
-            res.push_eager(Dependency {
-                var: this.ptr_clone(),
-                swallow: deps
-                    .as_complete_variables()
-                    .map(|x| x.var.ptr_clone())
-                    .collect(),
-                order: this.borrow().order.clone(),
-                affects_return_value,
-            });
-            res
-        }
+        let result = match deps.as_complete_variables() {
+            Ok(swallowed) => {
+                let mut res = Dependencies::new();
+                res.push_eager(Dependency {
+                    var: this.ptr_clone(),
+                    swallow: swallowed.map(|x| x.var.ptr_clone()).collect(),
+                    order: this.borrow().order.clone(),
+                    affects_return_value,
+                });
+                res
+            }
+            Err(err) => Dependencies::new_error(err.clone()),
+        };
+        drop(deps);
+        result
     }
 }
 
@@ -259,28 +259,23 @@ impl DependenciesFeature for DVariable {
 impl EqualityFeature for DVariable {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         if let Some(other_var) = ctx.other().downcast_resolved_definition::<Self>()? {
-            if other_var.0.is_same_instance_as(&self.0) {
-                return Ok(EqualSuccess {
-                    equal: Equal::yes(),
-                    unique: true,
-                });
+            if other_var.0.is_same_instance_as(&self.0) && ctx.no_subs() {
+                return Ok(Equal::yes());
+            } else if let Ok(Some(mut ctx)) = ctx.try_select_value_substituted_for_var_in_other(&other_var.0) {
+                return ctx.get_equality_left();
             }
+        }
+        if let Ok(Some(mut ctx)) = ctx.try_select_value_substituted_for_var_in_primary(&self.0) {
+            return ctx.get_equality_left();
         }
         let num_deps = self.0.borrow().dependencies.len();
         if num_deps == 0 {
-            let primary_subs: Substitutions = vec![(self.0.ptr_clone(), ctx.other().ptr_clone())]
-                .into_iter()
-                .collect();
+            let value = ctx.other_with_subs().ptr_clone();
+            let subs: Substitutions = vec![(self.0.ptr_clone(), value)].into_iter().collect();
             if ctx.currently_computing_equality_for_lhs() {
-                Ok(EqualSuccess {
-                    equal: Equal::yes1(primary_subs, Substitutions::new()),
-                    unique: true,
-                })
+                Ok(Equal::Yes(subs, Substitutions::new()))
             } else {
-                Ok(EqualSuccess {
-                    equal: Equal::yes1(Substitutions::new(), primary_subs),
-                    unique: true,
-                })
+                Ok(Equal::Yes(Substitutions::new(), subs))
             }
         } else {
             let mut acceptable_dependencies = Vec::new();
@@ -304,42 +299,58 @@ impl EqualityFeature for DVariable {
                     .into_iter()
                     .zip(acceptable_dependencies.into_iter());
 
-                let mut primary_subs = Substitutions::new();
+                let mut results = vec![];
                 let mut other_subs = Substitutions::new();
                 for (self_dep, other_dep) in pairings {
                     let self_dep = self_dep.var;
                     if self_dep.borrow().dependencies.len() > 0 {
-                        return Ok(EqualSuccess {
-                            equal: Equal::Unknown,
-                            unique: true,
-                        });
+                        return Ok(Equal::Unknown);
                     }
                     let self_dep_item = self_dep.borrow().item.ptr_clone();
                     let other_dep = other_dep.var;
                     let other_dep_item = other_dep.borrow().item.ptr_clone();
-                    primary_subs.insert_no_replace(self_dep, other_dep_item);
+                    results.push(
+                        ctx.with_primary_and_other(
+                            self_dep_item.ptr_clone(),
+                            other_dep_item.ptr_clone(),
+                        )
+                        .get_equality_left()?,
+                    );
                     other_subs.insert_no_replace(other_dep, self_dep_item);
                 }
 
-                let subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs);
-                primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
-
-                if ctx.currently_computing_equality_for_lhs() {
-                    Ok(EqualSuccess {
-                        equal: Equal::yes1(primary_subs, Substitutions::new()),
-                        unique: false,
-                    })
+                let mut subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs);
+                let mut deps = ctx.other().get_dependencies();
+                for (target, _) in &other_subs {
+                    deps.remove(target);
+                }
+                for subs in ctx.other_subs() {
+                    let mut new_subs = Substitutions::new();
+                    let mut new_deps = Dependencies::new();
+                    for (target, value) in subs {
+                        if deps.contains_var(target) {
+                            new_subs.insert_no_replace(target.ptr_clone(), value.ptr_clone());
+                            deps.remove(target);
+                            new_deps.append(value.get_dependencies());
+                        }
+                    }
+                    if new_subs.len() > 0 {
+                        subbed_right = unchecked_substitution(subbed_right, &new_subs);
+                    }
+                }
+                if let Equal::Yes(mut lhs, mut rhs) = Equal::and(results) {
+                    let primary_subs = if ctx.currently_computing_equality_for_lhs() {
+                        &mut lhs
+                    } else {
+                        &mut rhs
+                    };
+                    primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
+                    Ok(Equal::Yes(lhs, rhs))
                 } else {
-                    Ok(EqualSuccess {
-                        equal: Equal::yes1(Substitutions::new(), primary_subs),
-                        unique: false,
-                    })
+                    Ok(Equal::Unknown)
                 }
             } else {
-                Ok(EqualSuccess {
-                    equal: Equal::Unknown,
-                    unique: true,
-                })
+                Ok(Equal::Unknown)
             }
         }
     }

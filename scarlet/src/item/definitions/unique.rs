@@ -5,7 +5,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::DependenciesFeature,
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::InvariantsFeature,
         ItemDefinition,
     },
@@ -48,9 +48,6 @@ impl EqualityFeature for DUnique {
         } else {
             Equal::Unknown
         };
-        Ok(EqualSuccess {
-            equal,
-            unique: true,
-        })
+        Ok(equal)
     }
 }

@@ -13,12 +13,7 @@ use crate::{
 
 pub(super) fn trim_result(result: &mut Equal) -> Result<(), UnresolvedItemError> {
     match result {
-        Equal::Yes(subs) => {
-            for (left, right) in subs {
-                trim_yes(left, right)?;
-            }
-            Ok(())
-        }
+        Equal::Yes(left, right) => trim_yes(left, right),
         _ => Ok(()),
     }
 }
@@ -52,11 +47,7 @@ fn thoroughly_remove_identity_substitutions(
 // Skips the final step.
 fn mostly_trim_result(result: &mut Equal) {
     match result {
-        Equal::Yes(subs) => {
-            for (left, right) in subs {
-                mostly_trim_yes(left, right);
-            }
-        }
+        Equal::Yes(left, right) => mostly_trim_yes(left, right),
         _ => (),
     }
 }
@@ -93,7 +84,7 @@ fn mostly_trim_yes(left: &mut Substitutions, right: &mut Substitutions) {
 
 fn trim_substitutions(substitutions: &mut Substitutions) {
     for (_, item) in substitutions.iter_mut() {
-        trim_item(item);
+        *item = trim_item(item);
     }
     remove_identity_substitutions(substitutions);
 }
@@ -110,6 +101,7 @@ fn remove_identity_substitutions(substitutions: &mut Substitutions) {
     *substitutions = filtered;
 }
 
+#[must_use]
 fn trim_item(item: &ItemPtr) -> ItemPtr {
     let item = item.dereference();
     if let Some(mut sub_item) = item.downcast_definition_mut::<DSubstitution>() {
@@ -123,6 +115,7 @@ fn trim_item(item: &ItemPtr) -> ItemPtr {
                     .item()
                     .dereference()
                     .is_same_instance_as(&new_base)
+                    && target.borrow().dependencies().len() == 0
                 {
                     return value.ptr_clone();
                 }

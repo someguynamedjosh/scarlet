@@ -205,9 +205,7 @@ fn fx_is_gy() {
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
     assert_matches!(f.0.get_trimmed_equality(&g.0), Ok(Equal::Yes(..)));
     assert_matches!(g.0.get_trimmed_equality(&f.0), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f.0.get_trimmed_equality(&g.0) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f.0.get_trimmed_equality(&g.0) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         let next = entries.next().unwrap();
@@ -261,9 +259,7 @@ fn fx_is_gy_sub_a() {
     );
     g_sub_a.set_name("g(a)".to_owned());
     assert_matches!(f.0.get_trimmed_equality(&g_sub_a), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f.0.get_equality_left(&g_sub_a) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f.0.get_equality_left(&g_sub_a) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         let first = entries.next().unwrap();
@@ -310,9 +306,7 @@ fn fx_sub_a_is_gy_sub_a() {
     g_sub_a.set_name("g(a)".to_owned());
     assert_matches!(f_sub_a.get_trimmed_equality(&g_sub_a), Ok(Equal::Yes(..)));
     assert_matches!(g_sub_a.get_trimmed_equality(&f_sub_a), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f_sub_a.get_trimmed_equality(&g_sub_a) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f_sub_a.get_trimmed_equality(&g_sub_a) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -354,20 +348,8 @@ fn fx_sub_gy_is_gy_sub_x() {
     );
     fx_sub_gy.set_name(format!("f[g[x]]"));
 
-    assert_eq!(
-        gx.get_trimmed_equality(&fx_sub_gy),
-        Ok(Equal::Yes(vec![
-            (Default::default(), Default::default()),
-            (Default::default(), Default::default())
-        ]))
-    );
-    assert_eq!(
-        fx_sub_gy.get_trimmed_equality(&gx),
-        Ok(Equal::Yes(vec![
-            (Default::default(), Default::default()),
-            (Default::default(), Default::default()),
-        ]))
-    );
+    assert_eq!(gx.get_trimmed_equality(&fx_sub_gy), Ok(Equal::yes()));
+    assert_eq!(fx_sub_gy.get_trimmed_equality(&gx), Ok(Equal::yes()));
 }
 
 #[test]
@@ -380,9 +362,7 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
     let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default());
     assert_matches!(f_sub.get_trimmed_equality(&g_sub), Ok(Equal::Yes(..)));
     assert_matches!(g_sub.get_trimmed_equality(&f_sub), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f_sub.get_trimmed_equality(&g_sub) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f_sub.get_trimmed_equality(&g_sub) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
         assert_eq!(entries.next(), Some(&(x.1.ptr_clone(), y.0.ptr_clone())));
@@ -417,14 +397,13 @@ fn fx_sub_z_is_gy_sub_nothing() {
     let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default());
     assert_matches!(f_sub.get_trimmed_equality(&g_sub), Ok(Equal::Yes(..)));
     assert_matches!(g_sub.get_trimmed_equality(&f_sub), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f_sub.get_trimmed_equality(&g_sub) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f_sub.get_trimmed_equality(&g_sub) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
-        let first = entries.next().unwrap();
-        assert_eq!(first.0, f.1.ptr_clone());
-        if let Some(sub) = first.1.downcast_definition::<DSubstitution>() {
+        assert_eq!(entries.next(), Some(&(z.1.ptr_clone(), y.0.ptr_clone())));
+        let next = entries.next().unwrap();
+        assert_eq!(next.0, f.1.ptr_clone());
+        if let Some(sub) = next.1.downcast_definition::<DSubstitution>() {
             assert_eq!(sub.base(), &g.0);
             assert_eq!(
                 sub.substitutions(),
@@ -433,7 +412,6 @@ fn fx_sub_z_is_gy_sub_nothing() {
         } else {
             panic!("Expected second substitution to be itself another substitution");
         }
-        assert_eq!(entries.next(), Some(&(z.1.ptr_clone(), y.0.ptr_clone())));
     } else {
         unreachable!()
     }
@@ -458,9 +436,7 @@ fn fx_sub_decision_is_gy_sub_decision() {
 
     assert_matches!(f_dec.get_trimmed_equality(&g_dec), Ok(Equal::Yes(..)));
     assert_matches!(g_dec.get_trimmed_equality(&f_dec), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f_dec.get_trimmed_equality(&g_dec) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f_dec.get_trimmed_equality(&g_dec) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -509,26 +485,24 @@ fn dex_sub_decision_is_gy_sub_decision() {
     let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec_for_g)]));
 
     assert_matches!(g_dec.get_trimmed_equality(&dex_dec), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = g_dec.get_trimmed_equality(&dex_dec) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = g_dec.get_trimmed_equality(&dex_dec) {
         assert_eq!(lsubs.len(), 5);
         let mut entries = lsubs.iter();
-        let first = entries.next().unwrap();
-        assert_eq!(first.0, g.1.ptr_clone());
-        if let Some(sub) = first.1.downcast_definition::<DSubstitution>() {
+        assert_eq!(entries.next().unwrap(), &(s.1.ptr_clone(), a.ptr_clone()));
+        assert_eq!(entries.next().unwrap(), &(t.1.ptr_clone(), b.ptr_clone()));
+        assert_eq!(entries.next().unwrap(), &(u.1.ptr_clone(), c.ptr_clone()));
+        assert_eq!(entries.next().unwrap(), &(v.1.ptr_clone(), d.ptr_clone()));
+        let next = entries.next().unwrap();
+        assert_eq!(next.0, g.1.ptr_clone());
+        if let Some(sub) = next.1.downcast_definition::<DSubstitution>() {
             assert_eq!(sub.base(), &dex);
             assert_eq!(
                 sub.substitutions(),
                 &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())])
             )
         } else {
-            panic!("Expected first substitution to be itself another substitution");
+            panic!("Expected last substitution to be itself another substitution");
         }
-        assert_eq!(entries.next().unwrap(), &(s.1.ptr_clone(), a.ptr_clone()));
-        assert_eq!(entries.next().unwrap(), &(t.1.ptr_clone(), b.ptr_clone()));
-        assert_eq!(entries.next().unwrap(), &(u.1.ptr_clone(), c.ptr_clone()));
-        assert_eq!(entries.next().unwrap(), &(v.1.ptr_clone(), d.ptr_clone()));
     } else {
         unreachable!()
     }
@@ -563,11 +537,10 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
     let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)]));
 
     assert_matches!(f_dec.get_trimmed_equality(&g_dec), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut tsubs)) = f_dec.get_trimmed_equality(&g_dec) {
-        assert_eq!(tsubs.len(), 1);
-        let (lsubs, _) = tsubs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = f_dec.get_trimmed_equality(&g_dec) {
         assert_eq!(lsubs.len(), 2);
         let mut entries = lsubs.iter();
+        assert_eq!(Some(&(z.1.ptr_clone(), a.ptr_clone())), entries.next());
         let next = entries.next().unwrap();
         assert_eq!(next.0, f.1.ptr_clone());
         if let Some(sub) = next.1.downcast_definition::<DSubstitution>() {
@@ -579,7 +552,6 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
         } else {
             panic!("Expected second substitution to be itself another substitution");
         }
-        assert_eq!(Some(&(z.1.ptr_clone(), a.ptr_clone())), entries.next());
     } else {
         unreachable!()
     }
@@ -620,10 +592,7 @@ fn fx_sub_gy_sub_a_is_gy_sub_a() {
     );
     assert_eq!(
         gy_sub_a.get_trimmed_equality(&f_sub_gx_sub_a),
-        Ok(Equal::Yes(vec![
-            (Default::default(), Default::default()),
-            (Default::default(), Default::default())
-        ]))
+        Ok(Equal::yes())
     );
 }
 
@@ -667,13 +636,14 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
     //         (Default::default(), Default::default())
     //     ]))
     // );
-    println!("{:#?}", gy_sub_a.get_trimmed_equality(&f_sub_a_sub_gy));
-    // gy IS fx(y)(fx IS gy(x))
-    if let Ok(Equal::Yes(cases)) = gy_sub_a.get_trimmed_equality(&f_sub_a_sub_gy) {
-        assert!(cases.iter().any(|x| x.0.len() == 0 && x.1.len() == 0));
-    } else {
-        panic!("Expected a positive result.");
-    }
+    // gy(a) IS fx(a)(fx IS gy(x))
+    assert_eq!(
+        gy_sub_a
+            .get_trimmed_equality(&f_sub_a_sub_gy)
+            .as_ref()
+            .map(Equal::is_trivial_yes),
+        Ok(true)
+    );
 }
 
 #[test]
@@ -704,66 +674,56 @@ fn fx_sub_y_sub_gx_is_gy() {
     f_sub_y_sub_gx.set_name("fx(y)(fx IS gy(x))".to_owned());
 
     println!("{:#?}", f_sub_y_sub_gx.get_equality_left(&g.0));
-    assert_eq!(
-        f_sub_y_sub_gx.get_trimmed_equality(&g.0),
-        Ok(Equal::Yes(vec![
-            (Default::default(), Default::default()),
-            (Default::default(), Default::default())
-        ]))
-    );
+    assert_eq!(f_sub_y_sub_gx.get_trimmed_equality(&g.0), Ok(Equal::yes()));
 }
 
-// This case cannot be detected with the new system.
-// #[test]
-// fn z_equal_z_is_x_eq_y_sub_true_true() {
-//     let truee = unique();
-//     truee.set_name("true".to_owned());
-//     let falsee = unique();
-//     truee.set_name("false".to_owned());
+#[test]
+fn z_equal_z_is_x_eq_y_sub_true_true() {
+    let truee = unique();
+    truee.set_name("true".to_owned());
+    let falsee = unique();
+    truee.set_name("false".to_owned());
 
-//     let x = variable_full();
-//     x.0.set_name("x".to_owned());
-//     let y = variable_full();
-//     y.0.set_name("y".to_owned());
-//     let z = variable_full();
-//     z.0.set_name("z".to_owned());
+    let x = variable_full();
+    x.0.set_name("x".to_owned());
+    let y = variable_full();
+    y.0.set_name("y".to_owned());
+    let z = variable_full();
+    z.0.set_name("z".to_owned());
 
-//     let x_eq_y = decision(
-//         x.0.ptr_clone(),
-//         y.0.ptr_clone(),
-//         truee.ptr_clone(),
-//         falsee.ptr_clone(),
-//     );
-//     x_eq_y.set_name("x=y".to_owned());
-//     let true_eq_true = unchecked_substitution(
-//         x_eq_y,
-//         &subs(vec![
-//             (x.1.ptr_clone(), truee.ptr_clone()),
-//             (y.1.ptr_clone(), truee.ptr_clone()),
-//         ]),
-//     );
-//     true_eq_true.set_name("true=true".to_owned());
-//     let z_eq_z = decision(
-//         z.0.ptr_clone(),
-//         z.0.ptr_clone(),
-//         truee.ptr_clone(),
-//         falsee.ptr_clone(),
-//     );
-//     z_eq_z.set_name("z=z".to_owned());
+    let x_eq_y = decision(
+        x.0.ptr_clone(),
+        y.0.ptr_clone(),
+        truee.ptr_clone(),
+        falsee.ptr_clone(),
+    );
+    x_eq_y.set_name("x=y".to_owned());
+    let true_eq_true = unchecked_substitution(
+        x_eq_y,
+        &subs(vec![
+            (x.1.ptr_clone(), truee.ptr_clone()),
+            (y.1.ptr_clone(), truee.ptr_clone()),
+        ]),
+    );
+    true_eq_true.set_name("true=true".to_owned());
+    let z_eq_z = decision(
+        z.0.ptr_clone(),
+        z.0.ptr_clone(),
+        truee.ptr_clone(),
+        falsee.ptr_clone(),
+    );
+    z_eq_z.set_name("z=z".to_owned());
 
-//     assert_matches!(
-//         z_eq_z.get_trimmed_equality(&true_eq_true),
-//         Ok(Equal::Yes(..))
-//     );
-//     if let Ok(Equal::Yes(lsubs, _)) =
-// z_eq_z.get_trimmed_equality(&true_eq_true) {
-// assert_eq!(lsubs.len(), // 1);         let mut entries = lsubs.iter();
-//         let last = entries.next().unwrap();
-//         assert_eq!(last, &(z.1.ptr_clone(), truee.ptr_clone()));
-//     } else {
-//         unreachable!()
-//     }
-// }
+    if let Ok(Equal::Yes(lsubs, rsubs)) = z_eq_z.get_trimmed_equality(&true_eq_true) {
+        assert_eq!(lsubs.len(), 1);
+        assert_eq!(rsubs.len(), 0);
+        let mut entries = lsubs.iter();
+        let last = entries.next().unwrap();
+        assert_eq!(last, &(z.1.ptr_clone(), truee.ptr_clone()));
+    } else {
+        panic!("Expected positive result");
+    }
+}
 
 #[test]
 fn is_bool_sub_y_is_y_is_bool() {
@@ -787,7 +747,7 @@ fn is_bool_sub_y_is_y_is_bool() {
     );
 }
 
-/// f[z] <=> DECISION[x y a b]
+/// fz <=> DECISION[x y a b]
 #[test]
 fn multi_variable_dex_is_single_variable_dex() {
     let a = unique();
@@ -809,13 +769,11 @@ fn multi_variable_dex_is_single_variable_dex() {
         b.ptr_clone(),
     );
 
-    if let Equal::Yes(mut subs) =
+    if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
             .get_trimmed_equality(&multi_variable_dex)
             .unwrap()
     {
-        assert_eq!(subs.len(), 1);
-        let (lsubs, _) = subs.pop().unwrap();
         assert_eq!(lsubs.len(), 2);
         let sub = lsubs.get(&z.1.ptr_clone()).unwrap().ptr_clone();
         assert_eq!(sub, x.0.ptr_clone());
@@ -834,7 +792,7 @@ fn multi_variable_dex_is_single_variable_dex() {
     }
 }
 
-/// f[z] <=> DECISION[x y a b][a]
+/// fz <=> DECISION[x y a b][a]
 #[test]
 fn multi_variable_dex_sub_something_is_single_variable_dex() {
     let a = unique();
@@ -864,25 +822,20 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
     );
     subbed_multi_variable_dex.set_name("DECISION(x y a b)(x IS a)".to_owned());
 
-    if let Equal::Yes(mut subs) =
+    if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
             .get_trimmed_equality(&subbed_multi_variable_dex)
             .unwrap()
     {
-        assert_eq!(subs.len(), 2);
-
-        let (lsubs, _) = subs.pop().unwrap();
         assert_eq!(lsubs.len(), 2);
-        let sub = lsubs.get(&z.1).unwrap().ptr_clone();
-        assert_eq!(sub, a.ptr_clone());
         let sub = lsubs.get(&fz.1).unwrap();
         if let Some(def) = sub.downcast_definition::<DSubstitution>() {
             let def = def.clone();
             let mut expected = Substitutions::new();
-            expected.insert_no_replace(x.1.ptr_clone(), z.0.ptr_clone());
+            expected.insert_no_replace(y.1.ptr_clone(), z.0.ptr_clone());
             assert_eq!(def.substitutions(), &expected);
             assert_eq!(
-                def.base().get_trimmed_equality(&multi_variable_dex),
+                def.base().get_trimmed_equality(&subbed_multi_variable_dex),
                 Ok(Equal::yes())
             );
         } else {
@@ -890,7 +843,6 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
         }
         drop(sub);
 
-        let (lsubs, _) = subs.pop().unwrap();
         assert_eq!(lsubs.len(), 2);
         let sub = lsubs.get(&z.1).unwrap().ptr_clone();
         assert_eq!(sub, y.0.ptr_clone());
@@ -913,7 +865,7 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
     }
 }
 
-/// f[z] <=> DECISION[x y a b][x2 y2]
+/// fz <=> DECISION[x y a b][x2 y2]
 #[test]
 fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
     let a = unique();
@@ -948,17 +900,13 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
             (y.1.ptr_clone(), y2.0.ptr_clone()),
         ]),
     );
-    subbed_multi_variable_dex.set_name("DECISION(x y a b)(x IS x2   y IS y2)".to_owned());
+    subbed_multi_variable_dex.set_name("DECISION(x y a b)(x2 y2)".to_owned());
 
-    if let Equal::Yes(mut subs) =
+    if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
             .get_trimmed_equality(&subbed_multi_variable_dex)
             .unwrap()
     {
-        println!("{:#?}", subs);
-        assert_eq!(subs.len(), 2);
-
-        let (lsubs, _) = subs.pop().unwrap();
         assert_eq!(lsubs.len(), 2);
         let sub = lsubs.get(&z.1).unwrap();
         assert_eq!(sub, &x2.0);
@@ -967,25 +915,13 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
         if let Some(def) = sub.downcast_definition::<DSubstitution>() {
             let def = def.clone();
             let mut expected = Substitutions::new();
-            expected.insert_no_replace(y.1.ptr_clone(), y2.0.ptr_clone());
+            expected.insert_no_replace(x2.1.ptr_clone(), z.0.ptr_clone());
             assert_eq!(def.substitutions(), &expected);
-            if let Some(def) = def.base().clone().downcast_definition::<DSubstitution>() {
-                let mut expected = Substitutions::new();
-                expected.insert_no_replace(x.1.ptr_clone(), z.0.ptr_clone());
-                assert_eq!(def.substitutions(), &expected);
-                assert_eq!(
-                    def.base().get_trimmed_equality(&multi_variable_dex),
-                    Ok(Equal::yes())
-                );
-            } else {
-                panic!("Substituted value is not itself a substitution!");
-            }
         } else {
             panic!("Substituted value is not itself a substitution!");
         }
         drop(sub);
 
-        let (lsubs, _) = subs.pop().unwrap();
         assert_eq!(lsubs.len(), 2);
         let sub = lsubs.get(&z.1).unwrap();
         assert_eq!(sub, &x2.0);
@@ -1039,19 +975,15 @@ fn single_variable_dex_is_multi_variable_dex_sub_two_uniques() {
         ]),
     );
 
-    if let Equal::Yes(mut subs) =
+    if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
             .get_trimmed_equality(&subbed_multi_variable_dex)
             .unwrap()
     {
-        assert_eq!(subs.len(), 1);
-        let (lsubs, _) = subs.pop().unwrap();
         assert_eq!(lsubs.len(), 2);
         let sub = lsubs.get(&z.1).unwrap();
         assert_eq!(sub, &a);
         let sub = lsubs.get(&fz.1).unwrap();
-        // DECISION{x y a b}(x IS z)(y IS b)
-        println!("{:#?}", sub);
         if let Some(def) = sub.downcast_definition::<DSubstitution>() {
             let def = def.clone();
             let mut expected = Substitutions::new();
@@ -1127,9 +1059,7 @@ fn x_x_is_y_y() {
     y_y.set_name(format!("{{y y}}"));
 
     assert_matches!(x_x.get_trimmed_equality(&y_y), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut subs)) = x_x.get_trimmed_equality(&y_y) {
-        assert_eq!(subs.len(), 1);
-        let (lsubs, _) = subs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = x_x.get_trimmed_equality(&y_y) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -1158,9 +1088,7 @@ fn x_x_is_y_other_y_other() {
     y_y.set_name(format!("{{y y}}"));
 
     assert_matches!(x_x.get_trimmed_equality(&y_y), Ok(Equal::Yes(..)));
-    if let Ok(Equal::Yes(mut subs)) = x_x.get_trimmed_equality(&y_y) {
-        assert_eq!(subs.len(), 1);
-        let (lsubs, _) = subs.pop().unwrap();
+    if let Ok(Equal::Yes(lsubs, _)) = x_x.get_trimmed_equality(&y_y) {
         assert_eq!(lsubs.len(), 1);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
@@ -1256,10 +1184,10 @@ fn fx_sub_a_z_is_gy_sub_a_z() {
         g_sub_a_z.get_trimmed_equality(&f_sub_a_z),
         Ok(Equal::Yes(..))
     );
-    if let Ok(Equal::Yes(tsubs)) = f_sub_a_z.get_trimmed_equality(&g_sub_a_z) {
-        assert_eq!(tsubs.iter().filter(|x| x.1.len() == 0).count(), 1);
-        let (lsubs, _) = tsubs.into_iter().filter(|x| x.1.len() == 0).next().unwrap();
+    if let Ok(Equal::Yes(lsubs, rsubs)) = f_sub_a_z.get_trimmed_equality(&g_sub_a_z) {
+        println!("{:#?}", lsubs);
         assert_eq!(lsubs.len(), 1);
+        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
         assert_eq!(last.0.ptr_clone(), f.1.ptr_clone());
@@ -1470,9 +1398,6 @@ fn fx_eq_a_is_self_sub_y_env() {
     x IS VAR[].AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
-    y IS VAR[]
-    gy IS VAR[DEP y]
-
     statement IS fx = a
 
     t IS VAR[]
@@ -1481,11 +1406,6 @@ fn fx_eq_a_is_self_sub_y_env() {
     # fx -> fx(x IS t)
     v1 IS statement
     v2 IS statement[x IS t]
-
-    # # x -> t
-    # # fx -> gy(y IS x)
-    # v1 IS fx = a
-    # v2 IS (gy = a)[y IS t]
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1494,9 +1414,7 @@ fn fx_eq_a_is_self_sub_y_env() {
         let t = get_member(&root, "t");
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
-        if let Ok(Equal::Yes(mut cases)) = v1.get_trimmed_equality(&v2) {
-            assert_eq!(cases.len(), 1);
-            let (lsubs, _) = cases.pop().unwrap();
+        if let Ok(Equal::Yes(lsubs, _)) = v1.get_trimmed_equality(&v2) {
             assert_eq!(lsubs.len(), 1);
             let (target, value) = lsubs.into_iter().next().unwrap();
             assert!(target.borrow().item().is_same_instance_as(&x.dereference()));
@@ -1701,11 +1619,17 @@ fn fx_sub_s_and_r_x_is_r_s_env() {
         env.justify_all(&root);
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
+        println!(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        );
         assert_eq!(
             v1.get_trimmed_equality(&v2)
                 .as_ref()
                 .map(Equal::is_trivial_yes),
             Ok(true)
+        );
+        println!(
+            "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
         );
         assert_eq!(
             v2.get_trimmed_equality(&v1)
@@ -1744,8 +1668,109 @@ fn try_build_trans_result_env() {
         env.justify_all(&root);
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
-        println!("{:#?}", v1.get_trimmed_equality(&v2));
-        panic!();
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
+fn fx_sub_y_sub_x_is_fx() {
+    let code = r"
+    x IS VAR[]
+    y IS VAR[]
+    fx IS VAR[DEP x]
+
+    v1 IS fx[y][x]
+    v2 IS fx
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
+fn fx_sub_y_is_fx() {
+    let code = r"
+    x IS VAR[]
+    y IS VAR[]
+    fx IS VAR[DEP x]
+
+    v1 IS fx[y]
+    v2 IS fx
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let x = get_member(&root, "x").dereference();
+        let y = get_member(&root, "y").dereference();
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        if let Ok(Equal::Yes(lsubs, rsubs)) = v1.get_trimmed_equality(&v2) {
+            assert_eq!(lsubs.len(), 1);
+            assert_eq!(rsubs.len(), 0);
+            let (target, value) = lsubs.into_iter().next().unwrap();
+            assert!(target.borrow().item().dereference().is_same_instance_as(&y));
+            assert!(value.dereference().is_same_instance_as(&x));
+        } else {
+            panic!("Expected positive result!");
+        }
+        if let Ok(Equal::Yes(lsubs, rsubs)) = v2.get_trimmed_equality(&v1) {
+            assert_eq!(lsubs.len(), 1);
+            assert_eq!(rsubs.len(), 0);
+            let (target, value) = lsubs.into_iter().next().unwrap();
+            assert!(target.borrow().item().dereference().is_same_instance_as(&x));
+            assert!(value.dereference().is_same_instance_as(&y));
+        } else {
+            panic!("Expected positive result!");
+        }
+    });
+}
+
+#[test]
+fn function_invariant_statement_env() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    statement IS fx
+
+    identity IS VAR[]
+
+    u IS VAR[]
+
+    v1 IS fx[u identity]
+    v2 IS u
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
         assert_eq!(
             v1.get_trimmed_equality(&v2)
                 .as_ref()
