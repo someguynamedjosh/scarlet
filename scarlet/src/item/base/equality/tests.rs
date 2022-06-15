@@ -716,17 +716,14 @@ fn z_equal_z_is_x_eq_y_sub_true_true() {
     );
     z_eq_z.set_name("z=z".to_owned());
 
-    assert_matches!(
-        z_eq_z.get_trimmed_equality(&true_eq_true),
-        Ok(Equal::Yes(..))
-    );
-    if let Ok(Equal::Yes(lsubs, _)) = z_eq_z.get_trimmed_equality(&true_eq_true) {
+    if let Ok(Equal::Yes(lsubs, rsubs)) = z_eq_z.get_trimmed_equality(&true_eq_true) {
         assert_eq!(lsubs.len(), 1);
+        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
         assert_eq!(last, &(z.1.ptr_clone(), truee.ptr_clone()));
     } else {
-        unreachable!()
+        panic!("Expected positive result");
     }
 }
 

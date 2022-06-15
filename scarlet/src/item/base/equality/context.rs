@@ -15,7 +15,7 @@ use crate::{
     util::PtrExtension,
 };
 
-const TRACE: bool = false;
+const TRACE: bool = true;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EqualityTestSide {
@@ -112,17 +112,15 @@ impl EqualityCalculationContext {
         }
         let mut new_sub_list = Vec::new();
         let mut new_value = None;
-        'sub_list_loop: for (sub_index, sub) in sub_list.iter().enumerate() {
+        for sub in sub_list {
             let mut new_sub = Substitutions::new();
             let mut new_dependencies = Dependencies::new();
             for (target, value) in sub {
                 if target.is_same_instance_as(target_to_look_for) {
+                    new_value = Some(value.ptr_clone());
                     let mut sub_without_target = sub.clone();
                     sub_without_target.remove(target).unwrap();
-                    new_sub_list.push(sub_without_target);
-                    new_sub_list.extend(sub_list[sub_index + 1..].iter().cloned());
-                    new_value = Some(value.ptr_clone());
-                    break 'sub_list_loop;
+                    new_dependencies.append(value.get_dependencies());
                 } else if dependencies.contains_var(target) {
                     dependencies.remove(target);
                     new_dependencies.append(value.get_dependencies());
