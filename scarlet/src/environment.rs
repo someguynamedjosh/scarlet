@@ -11,14 +11,14 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "void",
     "x",
     "and",
-    "t_trivial_statement",
-    "t_invariant_truth_statement",
-    "t_invariant_truth_rev_statement",
-    "t_eq_ext_rev_statement",
-    "t_inv_eq_statement",
-    "t_refl_statement",
-    "t_decision_eq_statement",
-    "t_decision_neq_statement",
+    "trivial_t_statement",
+    "invariant_truth_t_statement",
+    "invariant_truth_rev_t_statement",
+    "eq_ext_rev_t_statement",
+    "inv_eq_t_statement",
+    "refl_t_statement",
+    "decision_eq_t_statement",
+    "decision_neq_t_statement",
 ];
 
 #[cfg(feature = "no_axioms")]

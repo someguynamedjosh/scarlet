@@ -1,60 +1,60 @@
-t_eq_symm IS 
+eq_symm_t IS 
 {
-   t_just(b = a)
+   just_t(z = y)
 
-   t_eq_ext_rev(x a b)
+   eq_ext_rev_t(x y z)
 
-   a IS VAR()
-   b IS VAR(a = SELF)
+   y IS VAR()
+   z IS VAR(y = SELF)
 }
 .VALUE
 
-# From a = b
-# Proves fx(a) = fx(b)
-t_eq_ext IS 
+# From y = z
+# Proves f(y) = f(z)
+eq_ext_t IS 
 {
-   t_just(fx(a) = fx(b))
+   just_t(f(y) = f(z))
 
-   t_eq_ext_rev(fx b a)
+   eq_ext_rev_t(f z y)
 
-   # Proves b = a
-   t_eq_symm(a b)
+   # Proves z = y
+   eq_symm_t(y z)
 
-   a IS VAR()
-   b IS VAR(a = SELF)
+   y IS VAR()
+   z IS VAR(y = SELF)
 }
 .VALUE
 
-# From a=b  fx(a)
-# Proves fx(b)
-t_inv_eq_ext IS 
+# From y=z  f(y)
+# Proves f(z)
+inv_eq_ext_t IS 
 {
-   t_just(fx(b))
+   just_t(f(z))
 
-   t_inv_eq(fx(a) fx(b))
+   inv_eq_t(f(y) f(z))
 
-   # Proves fx(a) = fx(b)
-   t_eq_ext(fx a b)
+   # Proves f(y) = f(z)
+   eq_ext_t(f y z)
 
-   a IS VAR()
-   b IS VAR(a = SELF)
-   fx IS VAR(SELF(a)  DEP x)
+   y IS VAR()
+   z IS VAR(y = SELF)
+   f IS VAR(SELF(y)  DEP x)
 }
 .VALUE
 
-# # From a = b   b = c
-# # Proves a = c
-t_eq_trans IS 
+# # From y = z   z = c
+# # Proves y = c
+eq_trans_t IS 
 {
-   t_just(a = c)
+   just_t(y = c)
 
-   t_inv_eq(a = b  a = c)
-   t_eq_ext(a_equals_x b c)
+   inv_eq_t(y = z  y = c)
+   eq_ext_t(a_equals_x z c)
 
-   a_equals_x IS a = x
+   a_equals_x IS y = x
 
-   a IS VAR()
-   b IS VAR(a = SELF)
-   c IS VAR(b = SELF)
+   y IS VAR()
+   z IS VAR(y = SELF)
+   c IS VAR(z = SELF)
 }
 .VALUE

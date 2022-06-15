@@ -1,73 +1,69 @@
-t_trivial IS 
+trivial_t IS 
 {
-   AXIOM(t_trivial)
+   AXIOM(trivial_t)
 
-   true AS_LANGUAGE_ITEM(t_trivial_statement)
+   true AS_LANGUAGE_ITEM(trivial_t_statement)
 }
 .VALUE
 
-t_invariant_truth IS 
+invariant_truth_t IS 
 {
-   AXIOM(t_invariant_truth)
+   AXIOM(invariant_truth_t)
 
-   x(a = true)
-    AS_LANGUAGE_ITEM(
-      t_invariant_truth_statement 
-  )
+   x(y = true)
+   AS_LANGUAGE_ITEM(invariant_truth_t_statement)
 
-   a IS VAR(SELF)
+   y IS VAR(SELF)
 }
 .VALUE
 
 
-t_invariant_truth_rev IS 
+invariant_truth_rev_t IS 
 {
-   AXIOM(t_invariant_truth_rev)
+   AXIOM(invariant_truth_rev_t)
 
-   a
-    AS_LANGUAGE_ITEM(
-      t_invariant_truth_rev_statement 
-  )
+   y
+   AS_LANGUAGE_ITEM(
+      invariant_truth_rev_t_statement 
+   )
 
-   a IS VAR(SELF = true)
-}
-.VALUE
- AS_AUTO_THEOREM
-
-t_eq_ext_rev IS 
-{
-   AXIOM(t_eq_ext_rev)
-
-   x(fx(b) = fx(a))
-   AS_LANGUAGE_ITEM(t_eq_ext_rev_statement)
-
-   a IS VAR()
-   b IS VAR(a = SELF)
-}
-.VALUE
-
-# From a = b   a
-# Proves b
-t_inv_eq IS 
-{
-   AXIOM(t_inv_eq)
-
-   b
-    AS_LANGUAGE_ITEM(t_inv_eq_statement)
-
-   a IS VAR(SELF)
-   b IS VAR(a = SELF)
-}
-.VALUE
-
-t_refl IS
-{
-   AXIOM(t_refl)
-
-   x(a = a)
-   AS_LANGUAGE_ITEM(t_refl_statement)
-
-   a IS VAR()
+   y IS VAR(SELF = true)
 }
 .VALUE
  AS_AUTO_THEOREM
+
+eq_ext_rev_t IS 
+{
+   AXIOM(eq_ext_rev_t)
+
+   x(f(z) = f(y))
+   AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
+
+   y IS VAR()
+   z IS VAR(y = SELF)
+}
+.VALUE
+
+# From y = z   y
+# Proves z
+inv_eq_t IS 
+{
+   AXIOM(inv_eq_t)
+
+   z AS_LANGUAGE_ITEM(inv_eq_t_statement)
+
+   y IS VAR(SELF)
+   z IS VAR(y = SELF)
+}
+.VALUE
+
+refl_t IS
+{
+   AXIOM(refl_t)
+
+   x(y = y)
+   AS_LANGUAGE_ITEM(refl_t_statement)
+
+   y IS VAR()
+}
+.VALUE
