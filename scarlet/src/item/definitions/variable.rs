@@ -259,8 +259,10 @@ impl DependenciesFeature for DVariable {
 impl EqualityFeature for DVariable {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         if let Some(other_var) = ctx.other().downcast_resolved_definition::<Self>()? {
-            if other_var.0.is_same_instance_as(&self.0) {
+            if other_var.0.is_same_instance_as(&self.0) && ctx.no_subs() {
                 return Ok(Equal::yes());
+            } else if let Ok(Some(mut ctx)) = ctx.try_select_value_substituted_for_var_in_other(&other_var.0) {
+                return ctx.get_equality_left();
             }
         }
         if let Ok(Some(mut ctx)) = ctx.try_select_value_substituted_for_var_in_primary(&self.0) {

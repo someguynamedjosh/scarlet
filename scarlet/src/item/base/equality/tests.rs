@@ -488,21 +488,21 @@ fn dex_sub_decision_is_gy_sub_decision() {
     if let Ok(Equal::Yes(lsubs, _)) = g_dec.get_trimmed_equality(&dex_dec) {
         assert_eq!(lsubs.len(), 5);
         let mut entries = lsubs.iter();
-        let first = entries.next().unwrap();
-        assert_eq!(first.0, g.1.ptr_clone());
-        if let Some(sub) = first.1.downcast_definition::<DSubstitution>() {
+        assert_eq!(entries.next().unwrap(), &(s.1.ptr_clone(), a.ptr_clone()));
+        assert_eq!(entries.next().unwrap(), &(t.1.ptr_clone(), b.ptr_clone()));
+        assert_eq!(entries.next().unwrap(), &(u.1.ptr_clone(), c.ptr_clone()));
+        assert_eq!(entries.next().unwrap(), &(v.1.ptr_clone(), d.ptr_clone()));
+        let next = entries.next().unwrap();
+        assert_eq!(next.0, g.1.ptr_clone());
+        if let Some(sub) = next.1.downcast_definition::<DSubstitution>() {
             assert_eq!(sub.base(), &dex);
             assert_eq!(
                 sub.substitutions(),
                 &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())])
             )
         } else {
-            panic!("Expected first substitution to be itself another substitution");
+            panic!("Expected last substitution to be itself another substitution");
         }
-        assert_eq!(entries.next().unwrap(), &(s.1.ptr_clone(), a.ptr_clone()));
-        assert_eq!(entries.next().unwrap(), &(t.1.ptr_clone(), b.ptr_clone()));
-        assert_eq!(entries.next().unwrap(), &(u.1.ptr_clone(), c.ptr_clone()));
-        assert_eq!(entries.next().unwrap(), &(v.1.ptr_clone(), d.ptr_clone()));
     } else {
         unreachable!()
     }
@@ -637,7 +637,8 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
     //     ]))
     // );
     println!("{:#?}", gy_sub_a.get_trimmed_equality(&f_sub_a_sub_gy));
-    // gy IS fx(y)(fx IS gy(x))
+    panic!();
+    // gy(a) IS fx(a)(fx IS gy(x))
     assert_eq!(
         gy_sub_a
             .get_trimmed_equality(&f_sub_a_sub_gy)
@@ -1415,9 +1416,6 @@ fn fx_eq_a_is_self_sub_y_env() {
     x IS VAR[].AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
-    y IS VAR[]
-    gy IS VAR[DEP y]
-
     statement IS fx = a
 
     t IS VAR[]
@@ -1426,11 +1424,6 @@ fn fx_eq_a_is_self_sub_y_env() {
     # fx -> fx(x IS t)
     v1 IS statement
     v2 IS statement[x IS t]
-
-    # # x -> t
-    # # fx -> gy(y IS x)
-    # v1 IS fx = a
-    # v2 IS (gy = a)[y IS t]
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1439,7 +1432,7 @@ fn fx_eq_a_is_self_sub_y_env() {
         let t = get_member(&root, "t");
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
-        if let Ok(Equal::Yes(lsubs, _)) = v1.get_trimmed_equality(&v2) {
+        if let Ok(Equal::Yes(lsubs, _ )) = v1.get_trimmed_equality(&v2) {
             assert_eq!(lsubs.len(), 1);
             let (target, value) = lsubs.into_iter().next().unwrap();
             assert!(target.borrow().item().is_same_instance_as(&x.dereference()));
@@ -1687,6 +1680,36 @@ fn try_build_trans_result_env() {
 
     v1 IS eq_ext_statement[r = x  s  t]
     v2 IS inv_eq_req[r = s   r = t]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
+fn fx_sub_y_sub_x_is_self() {
+    let code = r"
+    x IS VAR[]
+    y IS VAR[]
+    fx IS VAR[DEP x]
+
+    v1 IS fx[y][x]
+    v2 IS fx
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();

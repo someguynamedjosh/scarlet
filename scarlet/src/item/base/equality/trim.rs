@@ -46,10 +46,12 @@ fn thoroughly_remove_identity_substitutions(
 
 // Skips the final step.
 fn mostly_trim_result(result: &mut Equal) {
+    println!("{:#?}", result);
     match result {
         Equal::Yes(left, right) => mostly_trim_yes(left, right),
         _ => (),
     }
+    println!("{:#?}", result);
 }
 
 // Skips the final step.
@@ -84,7 +86,7 @@ fn mostly_trim_yes(left: &mut Substitutions, right: &mut Substitutions) {
 
 fn trim_substitutions(substitutions: &mut Substitutions) {
     for (_, item) in substitutions.iter_mut() {
-        trim_item(item);
+        *item = trim_item(item);
     }
     remove_identity_substitutions(substitutions);
 }
@@ -101,6 +103,7 @@ fn remove_identity_substitutions(substitutions: &mut Substitutions) {
     *substitutions = filtered;
 }
 
+#[must_use]
 fn trim_item(item: &ItemPtr) -> ItemPtr {
     let item = item.dereference();
     if let Some(mut sub_item) = item.downcast_definition_mut::<DSubstitution>() {

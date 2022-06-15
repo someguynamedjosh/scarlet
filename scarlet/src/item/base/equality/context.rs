@@ -23,6 +23,15 @@ pub enum EqualityTestSide {
     Right,
 }
 
+impl EqualityTestSide {
+    fn opposite(&self) -> EqualityTestSide {
+        match self {
+            EqualityTestSide::Left => EqualityTestSide::Right,
+            EqualityTestSide::Right => EqualityTestSide::Left,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct EqualityCalculationContext {
     lhs: ItemPtr,
@@ -88,11 +97,12 @@ impl EqualityCalculationContext {
         sub_list.insert(0, subs);
     }
 
-    pub fn try_select_value_substituted_for_var_in_primary(
+    fn try_select_value_substituted_for_var(
         &self,
         target_to_look_for: &VariablePtr,
+        side: EqualityTestSide,
     ) -> Result<Option<Self>, UnresolvedItemError> {
-        let sub_list = match &self.self_side {
+        let sub_list = match side {
             EqualityTestSide::Left => &self.lhs_subs,
             EqualityTestSide::Right => &self.rhs_subs,
         };
@@ -127,7 +137,7 @@ impl EqualityCalculationContext {
         if let Some(err) = dependencies.error() {
             Err(err.clone())
         } else if let Some(value) = new_value {
-            Ok(Some(match self.self_side {
+            Ok(Some(match side {
                 EqualityTestSide::Left => Self {
                     lhs: value,
                     lhs_subs: new_sub_list,
@@ -146,6 +156,20 @@ impl EqualityCalculationContext {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn try_select_value_substituted_for_var_in_primary(
+        &self,
+        target_to_look_for: &VariablePtr,
+    ) -> Result<Option<Self>, UnresolvedItemError> {
+        self.try_select_value_substituted_for_var(target_to_look_for, self.self_side)
+    }
+
+    pub fn try_select_value_substituted_for_var_in_other(
+        &self,
+        target_to_look_for: &VariablePtr,
+    ) -> Result<Option<Self>, UnresolvedItemError> {
+        self.try_select_value_substituted_for_var(target_to_look_for, self.self_side.opposite())
     }
 
     pub fn with_primary(&self, new_primary: ItemPtr) -> Self {
@@ -172,6 +196,8 @@ impl EqualityCalculationContext {
     pub fn get_equality_left(&mut self) -> Result<Equal, UnresolvedItemError> {
         if TRACE {
             println!("{:#?} =<= {:#?}", self.lhs, self.rhs);
+            println!("LHS Subs: {:#?}", self.lhs_subs);
+            println!("RHS Subs: {:#?}", self.rhs_subs);
         }
         self.self_side = EqualityTestSide::Left;
         let lhs = self.lhs.ptr_clone();
@@ -213,6 +239,21 @@ impl EqualityCalculationContext {
             other = unchecked_substitution(other, subs);
         }
         other
+    }
+
+    /// No, I don't want
+    pub fn no_subs(&self) -> bool {
+        for subs in &self.lhs_subs {
+            if subs.len() > 0 {
+                return false;
+            }
+        }
+        for subs in &self.rhs_subs {
+            if subs.len() > 0 {
+                return false;
+            }
+        }
+        true
     }
 }
 
