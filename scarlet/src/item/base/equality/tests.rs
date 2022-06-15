@@ -1750,3 +1750,38 @@ fn fx_sub_y_is_fx() {
         }
     });
 }
+
+#[test]
+fn function_invariant_statement_env() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    statement IS fx
+
+    identity IS VAR[]
+
+    u IS VAR[]
+
+    v1 IS fx[u identity]
+    v2 IS u
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}

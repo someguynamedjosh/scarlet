@@ -115,6 +115,7 @@ fn trim_item(item: &ItemPtr) -> ItemPtr {
                     .item()
                     .dereference()
                     .is_same_instance_as(&new_base)
+                    && target.borrow().dependencies().len() == 0
                 {
                     return value.ptr_clone();
                 }
