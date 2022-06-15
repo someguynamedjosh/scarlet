@@ -585,14 +585,18 @@ fn mysterious_hang() {
 #[test]
 fn fx_asserting_self_sub_a() {
     let code = r"
+    a IS VAR[]
     x IS VAR[]
     fx IS VAR[SELF[a] DEP x]
-    a IS VAR[]
 
-    VAR[SELF][fx[a]]
+    item IS fx
+
+    VAR[SELF]
     ";
 
     with_env_from_code(code, |mut env, root| {
+        let item = get_member(&root, "item");
+        println!("{:#?}", item.dereference());
         root.check_all();
         env.justify_all(&root);
     });

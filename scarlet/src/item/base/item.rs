@@ -45,7 +45,7 @@ impl Clone for ItemPtr {
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.debug_label())?;
-        if self.0.borrow().name.is_none() {
+        if self.0.borrow().name.is_none() || true {
             writeln!(f)?;
             self.0.borrow().definition.fmt(f)
         } else {
@@ -289,6 +289,11 @@ impl ItemPtr {
                 .collect_vec();
             for (t, content) in contents {
                 content.mark_recursion_impl(t, stack);
+            }
+            if let Ok(invariants) = self.get_invariants() {
+                for statement in invariants.borrow().statements() {
+                    statement.mark_recursion_impl(ContainmentType::Definitional, stack);
+                }
             }
         })
     }

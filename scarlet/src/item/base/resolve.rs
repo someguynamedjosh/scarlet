@@ -74,6 +74,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
             }
         }
     });
+    root.mark_recursion();
     if problem {
         panic!("Failed to resolve construct(s)");
     }
