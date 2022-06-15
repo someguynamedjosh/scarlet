@@ -9,6 +9,7 @@ use crate::{
         },
         dependencies::Dependencies,
         resolvable::UnresolvedItemError,
+        util::unchecked_substitution,
         ItemPtr,
     },
     util::PtrExtension,
@@ -22,6 +23,7 @@ pub enum EqualityTestSide {
     Right,
 }
 
+#[derive(Debug)]
 pub struct EqualityCalculationContext {
     lhs: ItemPtr,
     lhs_subs: Vec<Substitutions>,
@@ -40,9 +42,9 @@ pub struct OnlyCalledByEcc(pub(super) ());
 impl EqualityCalculationContext {
     fn new(lhs: ItemPtr, rhs: ItemPtr) -> Self {
         Self {
-            lhs,
+            lhs: lhs.dereference(),
             lhs_subs: Vec::new(),
-            rhs,
+            rhs: rhs.dereference(),
             rhs_subs: Vec::new(),
             self_side: EqualityTestSide::Left,
         }
@@ -155,7 +157,13 @@ impl EqualityCalculationContext {
             EqualityTestSide::Left => (new_primary, new_other),
             EqualityTestSide::Right => (new_other, new_primary),
         };
-        Self::new(lhs, rhs)
+        Self {
+            lhs: lhs.dereference(),
+            lhs_subs: self.lhs_subs.clone(),
+            rhs: rhs.dereference(),
+            rhs_subs: self.rhs_subs.clone(),
+            self_side: self.self_side,
+        }
     }
 
     /// Computes equality by querying the left element whether it is equal to
@@ -193,6 +201,18 @@ impl EqualityCalculationContext {
         Ok(rhs
             .definition
             .get_equality_using_context(self, OnlyCalledByEcc(()))?)
+    }
+
+    pub fn other_with_subs(&self) -> ItemPtr {
+        let mut other = self.other().ptr_clone();
+        let sub_list = match self.self_side {
+            EqualityTestSide::Left => &self.rhs_subs,
+            EqualityTestSide::Right => &self.lhs_subs,
+        };
+        for subs in sub_list {
+            other = unchecked_substitution(other, subs);
+        }
+        other
     }
 }
 

@@ -1644,11 +1644,17 @@ fn fx_sub_s_and_r_x_is_r_s_env() {
         env.justify_all(&root);
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
+        println!(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        );
         assert_eq!(
             v1.get_trimmed_equality(&v2)
                 .as_ref()
                 .map(Equal::is_trivial_yes),
             Ok(true)
+        );
+        println!(
+            "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
         );
         assert_eq!(
             v2.get_trimmed_equality(&v1)
@@ -1687,8 +1693,6 @@ fn try_build_trans_result_env() {
         env.justify_all(&root);
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
-        println!("{:#?}", v1.get_trimmed_equality(&v2));
-        panic!();
         assert_eq!(
             v1.get_trimmed_equality(&v2)
                 .as_ref()

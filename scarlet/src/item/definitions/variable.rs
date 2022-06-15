@@ -268,9 +268,70 @@ impl EqualityFeature for DVariable {
         }
         let num_deps = self.0.borrow().dependencies.len();
         if num_deps == 0 {
-            todo!()
+            let value = ctx.other_with_subs().ptr_clone();
+            let subs: Substitutions = vec![(self.0.ptr_clone(), value)].into_iter().collect();
+            if ctx.currently_computing_equality_for_lhs() {
+                Ok(Equal::Yes(subs, Substitutions::new()))
+            } else {
+                Ok(Equal::Yes(Substitutions::new(), subs))
+            }
         } else {
-            todo!()
+            let mut acceptable_dependencies = Vec::new();
+            for dep in ctx.other().get_dependencies().into_variables() {
+                if dep.swallow.len() > 0 {
+                    continue;
+                }
+                if !dep.affects_return_value {
+                    continue;
+                }
+                acceptable_dependencies.push(dep);
+            }
+            if acceptable_dependencies.len() >= num_deps {
+                let self_var = self.0.borrow();
+                let self_deps = self_var
+                    .dependencies
+                    .iter()
+                    .flat_map(|x| x.get_dependencies().into_variables())
+                    .collect_vec();
+                let pairings = self_deps
+                    .into_iter()
+                    .zip(acceptable_dependencies.into_iter());
+
+                let mut results = vec![];
+                let mut other_subs = Substitutions::new();
+                for (self_dep, other_dep) in pairings {
+                    let self_dep = self_dep.var;
+                    if self_dep.borrow().dependencies.len() > 0 {
+                        return Ok(Equal::Unknown);
+                    }
+                    let self_dep_item = self_dep.borrow().item.ptr_clone();
+                    let other_dep = other_dep.var;
+                    let other_dep_item = other_dep.borrow().item.ptr_clone();
+                    results.push(
+                        ctx.with_primary_and_other(
+                            self_dep_item.ptr_clone(),
+                            other_dep_item.ptr_clone(),
+                        )
+                        .get_equality_left()?,
+                    );
+                    other_subs.insert_no_replace(other_dep, self_dep_item);
+                }
+
+                let subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs);
+                if let Equal::Yes(mut lhs, mut rhs) = Equal::and(results) {
+                    let primary_subs = if ctx.currently_computing_equality_for_lhs() {
+                        &mut lhs
+                    } else {
+                        &mut rhs
+                    };
+                    primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
+                    Ok(Equal::Yes(lhs, rhs))
+                } else {
+                    Ok(Equal::Unknown)
+                }
+            } else {
+                Ok(Equal::Unknown)
+            }
         }
     }
 }
