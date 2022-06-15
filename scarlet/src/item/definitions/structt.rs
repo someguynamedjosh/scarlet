@@ -261,11 +261,15 @@ impl Scope for SField {
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
-            Ok(if structt.value == value && structt.label.len() > 0 {
-                Some(structt.label.clone())
-            } else {
-                None
-            })
+            Ok(
+                if structt.value.dereference().is_same_instance_as(&value)
+                    && structt.label.len() > 0
+                {
+                    Some(structt.label.clone())
+                } else {
+                    None
+                },
+            )
         } else {
             unreachable!()
         }
@@ -302,13 +306,15 @@ fn reverse_lookup_ident_in(
     value: ItemPtr,
     inn: &DPopulatedStruct,
 ) -> ReverseLookupIdentResult {
-    Ok(if inn.value == value && inn.label.len() > 0 {
-        Some(inn.label.clone())
-    } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        reverse_lookup_ident_in(env, value, &rest)?
-    } else {
-        None
-    })
+    Ok(
+        if inn.value.dereference().is_same_instance_as(&value) && inn.label.len() > 0 {
+            Some(inn.label.clone())
+        } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
+            reverse_lookup_ident_in(env, value, &rest)?
+        } else {
+            None
+        },
+    )
 }
 
 fn get_invariant_sets_in(inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {

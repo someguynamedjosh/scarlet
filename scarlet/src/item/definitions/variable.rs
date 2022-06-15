@@ -397,7 +397,7 @@ impl Scope for SVariableInvariants {
         _env: &'a mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
-        Ok(if value == self.0 {
+        Ok(if self.0.dereference().is_same_instance_as(&value) {
             Some("SELF".to_owned())
         } else {
             None
