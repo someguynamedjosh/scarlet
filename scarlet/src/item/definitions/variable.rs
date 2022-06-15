@@ -16,7 +16,7 @@ use crate::{
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -260,87 +260,17 @@ impl EqualityFeature for DVariable {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         if let Some(other_var) = ctx.other().downcast_resolved_definition::<Self>()? {
             if other_var.0.is_same_instance_as(&self.0) {
-                return Ok(EqualSuccess {
-                    equal: Equal::yes(),
-                    unique: true,
-                });
+                return Ok(Equal::yes());
             }
+        }
+        if let Ok(Some(mut ctx)) = ctx.try_select_value_substituted_for_var_in_primary(&self.0) {
+            return ctx.get_equality_left();
         }
         let num_deps = self.0.borrow().dependencies.len();
         if num_deps == 0 {
-            let primary_subs: Substitutions = vec![(self.0.ptr_clone(), ctx.other().ptr_clone())]
-                .into_iter()
-                .collect();
-            if ctx.currently_computing_equality_for_lhs() {
-                Ok(EqualSuccess {
-                    equal: Equal::yes1(primary_subs, Substitutions::new()),
-                    unique: true,
-                })
-            } else {
-                Ok(EqualSuccess {
-                    equal: Equal::yes1(Substitutions::new(), primary_subs),
-                    unique: true,
-                })
-            }
+            todo!()
         } else {
-            let mut acceptable_dependencies = Vec::new();
-            for dep in ctx.other().get_dependencies().into_variables() {
-                if dep.swallow.len() > 0 {
-                    continue;
-                }
-                if !dep.affects_return_value {
-                    continue;
-                }
-                acceptable_dependencies.push(dep);
-            }
-            if acceptable_dependencies.len() >= num_deps {
-                let self_var = self.0.borrow();
-                let self_deps = self_var
-                    .dependencies
-                    .iter()
-                    .flat_map(|x| x.get_dependencies().into_variables())
-                    .collect_vec();
-                let pairings = self_deps
-                    .into_iter()
-                    .zip(acceptable_dependencies.into_iter());
-
-                let mut primary_subs = Substitutions::new();
-                let mut other_subs = Substitutions::new();
-                for (self_dep, other_dep) in pairings {
-                    let self_dep = self_dep.var;
-                    if self_dep.borrow().dependencies.len() > 0 {
-                        return Ok(EqualSuccess {
-                            equal: Equal::Unknown,
-                            unique: true,
-                        });
-                    }
-                    let self_dep_item = self_dep.borrow().item.ptr_clone();
-                    let other_dep = other_dep.var;
-                    let other_dep_item = other_dep.borrow().item.ptr_clone();
-                    primary_subs.insert_no_replace(self_dep, other_dep_item);
-                    other_subs.insert_no_replace(other_dep, self_dep_item);
-                }
-
-                let subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs);
-                primary_subs.insert_no_replace(self.0.ptr_clone(), subbed_right);
-
-                if ctx.currently_computing_equality_for_lhs() {
-                    Ok(EqualSuccess {
-                        equal: Equal::yes1(primary_subs, Substitutions::new()),
-                        unique: false,
-                    })
-                } else {
-                    Ok(EqualSuccess {
-                        equal: Equal::yes1(Substitutions::new(), primary_subs),
-                        unique: false,
-                    })
-                }
-            } else {
-                Ok(EqualSuccess {
-                    equal: Equal::Unknown,
-                    unique: true,
-                })
-            }
+            todo!()
         }
     }
 }

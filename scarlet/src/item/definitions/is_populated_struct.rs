@@ -4,7 +4,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         util::{is_bool, placeholder},
         Item, ItemDefinition, ItemPtr,
@@ -70,10 +70,7 @@ impl EqualityFeature for DIsPopulatedStruct {
         } else {
             Equal::Unknown
         };
-        Ok(EqualSuccess {
-            equal,
-            unique: true,
-        })
+        Ok(equal)
     }
 }
 

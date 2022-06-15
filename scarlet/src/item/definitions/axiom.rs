@@ -6,7 +6,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -81,17 +81,11 @@ impl EqualityFeature for DAxiom {
             None
         };
         if let Some((self_statement, other_statement)) = statements {
-            Ok(EqualSuccess {
-                equal: ctx
+            Ok(ctx
                     .with_primary_and_other(self_statement, other_statement)
-                    .get_equality_left()?,
-                unique: true,
-            })
+                    .get_equality_left()?)
         } else {
-            Ok(EqualSuccess {
-                equal: Equal::Unknown,
-                unique: true,
-            })
+            Ok(Equal::Unknown)
         }
     }
 }

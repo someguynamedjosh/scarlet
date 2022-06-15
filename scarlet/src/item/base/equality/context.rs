@@ -171,12 +171,12 @@ impl EqualityCalculationContext {
         let lhs = lhs_borrow.definition.clone_into_box();
         drop(lhs_borrow);
         let result = lhs.get_equality_using_context(self, OnlyCalledByEcc(()))?;
-        let result = if let Equal::Yes(lhs, rhs) = result.equal {
+        let result = if let Equal::Yes(lhs, rhs) = result {
             Ok(Equal::Yes(lhs, rhs))
-        } else if result.equal == Equal::Unknown {
+        } else if result == Equal::Unknown {
             self.get_equality_right()
         } else {
-            Ok(result.equal)
+            Ok(result)
         };
         if TRACE {
             println!("{:#?}", result);
@@ -192,8 +192,7 @@ impl EqualityCalculationContext {
         let rhs = rhs.borrow();
         Ok(rhs
             .definition
-            .get_equality_using_context(self, OnlyCalledByEcc(()))?
-            .equal)
+            .get_equality_using_context(self, OnlyCalledByEcc(()))?)
     }
 }
 

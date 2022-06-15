@@ -5,7 +5,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -64,10 +64,7 @@ impl EqualityFeature for DOther {
         let equal = ctx
             .with_primary(self.other.ptr_clone())
             .get_equality_left()?;
-        Ok(EqualSuccess {
-            equal,
-            unique: true,
-        })
+        Ok(equal)
     }
 }
 

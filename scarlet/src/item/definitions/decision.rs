@@ -4,7 +4,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -121,10 +121,7 @@ impl EqualityFeature for DDecision {
         } else {
             Equal::Unknown
         };
-        Ok(EqualSuccess {
-            equal,
-            unique: true,
-        })
+        Ok(equal)
     }
 }
 
