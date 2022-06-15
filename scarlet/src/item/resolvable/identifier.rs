@@ -2,7 +2,7 @@ use super::{BoxedResolvable, Resolvable, ResolveResult};
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
-    item::{definitions::other::DOther, ItemDefinition, ItemPtr, ContainmentType},
+    item::{definitions::other::DOther, ContainmentType, ItemDefinition, ItemPtr},
     scope::Scope,
 };
 
@@ -26,7 +26,7 @@ impl Resolvable for RIdentifier {
         let identified = scope
             .lookup_ident(&self.0)?
             .expect(&format!("Cannot find what {} refers to", self.0));
-        ResolveResult::Ok(DOther::new_plain(identified).clone_into_box())
+        ResolveResult::Ok(DOther::new(identified).clone_into_box())
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {

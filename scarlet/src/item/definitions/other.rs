@@ -21,66 +21,22 @@ use crate::{
 #[derive(Clone, PartialEq, Eq)]
 pub struct DOther {
     other: ItemPtr,
-    computationally_recursive: bool,
-    definitionally_recursive: bool,
 }
 
 impl Debug for DOther {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.computationally_recursive {
-            write!(
-                f,
-                "(computationally recursive) {}",
-                self.other.debug_label()
-            )
-        } else if self.definitionally_recursive {
-            write!(f, "(definitionally recursive) {}", self.other.debug_label())
-        } else {
-            write!(f, "(other) ")?;
-            self.other.fmt(f)
-        }
+        write!(f, "(other) ")?;
+        self.other.fmt(f)
     }
 }
 
 impl DOther {
-    pub fn new(
-        other: ItemPtr,
-        definitionally_recursive: bool,
-        computationally_recursive: bool,
-    ) -> Self {
-        Self {
-            other,
-            definitionally_recursive,
-            computationally_recursive,
-        }
-    }
-
-    pub fn new_plain(other: ItemPtr) -> Self {
-        Self::new(other, false, false)
-    }
-
-    pub fn new_computationally_recursive(other: ItemPtr) -> Self {
-        Self::new(other, false, true)
+    pub fn new(other: ItemPtr) -> Self {
+        Self { other }
     }
 
     pub fn other(&self) -> &ItemPtr {
         &self.other
-    }
-
-    pub fn is_recursive(&self) -> bool {
-        self.computationally_recursive || self.definitionally_recursive
-    }
-
-    pub fn is_computationally_recursive(&self) -> bool {
-        self.computationally_recursive
-    }
-
-    pub fn mark_recursive(&mut self, t: ContainmentType) {
-        if let ContainmentType::Computational = t {
-            self.computationally_recursive = true;
-        } else {
-            self.definitionally_recursive = true;
-        }
     }
 }
 
@@ -92,11 +48,7 @@ impl ItemDefinition for DOther {
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
-        if self.computationally_recursive || self.definitionally_recursive {
-            vec![]
-        } else {
-            vec![(ContainmentType::Computational, &self.other)]
-        }
+        vec![(ContainmentType::Computational, &self.other)]
     }
 }
 
@@ -116,17 +68,13 @@ impl DependenciesFeature for DOther {
 
 impl EqualityFeature for DOther {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        if self.computationally_recursive {
-            todo!()
-        } else {
-            let equal = ctx
-                .with_primary(self.other.ptr_clone())
-                .get_equality_left()?;
-            Ok(EqualSuccess {
-                equal,
-                unique: true,
-            })
-        }
+        let equal = ctx
+            .with_primary(self.other.ptr_clone())
+            .get_equality_left()?;
+        Ok(EqualSuccess {
+            equal,
+            unique: true,
+        })
     }
 }
 

@@ -20,7 +20,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     let this = Item::placeholder_with_scope(scope.dyn_clone());
     let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
     let ips = DIsPopulatedStruct::new(env, base, scope);
-    this.redefine(DOther::new_plain(ips).clone_into_box());
+    this.redefine(DOther::new(ips).clone_into_box());
     this
 }
 

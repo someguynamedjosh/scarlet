@@ -56,7 +56,7 @@ impl Resolvable for RVariable {
             self.order.clone(),
             scope,
         );
-        ResolveResult::Ok(DOther::new_plain(id).clone_into_box())
+        ResolveResult::Ok(DOther::new(id).clone_into_box())
     }
 
     fn contents(&self) -> Vec<(crate::item::ContainmentType, &ItemPtr)> {

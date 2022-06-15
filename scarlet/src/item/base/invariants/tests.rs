@@ -589,14 +589,10 @@ fn fx_asserting_self_sub_a() {
     x IS VAR[]
     fx IS VAR[SELF[a] DEP x]
 
-    item IS fx
-
-    VAR[SELF]
+    VAR[SELF][fx[a]]
     ";
 
     with_env_from_code(code, |mut env, root| {
-        let item = get_member(&root, "item");
-        println!("{:#?}", item.dereference());
         root.check_all();
         env.justify_all(&root);
     });

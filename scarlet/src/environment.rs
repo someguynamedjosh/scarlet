@@ -48,7 +48,7 @@ impl Environment {
 
     pub fn define_language_item(&mut self, name: &str, definition: ItemPtr) {
         let id = self.get_language_item(name);
-        id.redefine(DOther::new_plain(definition).clone_into_box());
+        id.redefine(DOther::new(definition).clone_into_box());
     }
 
     #[track_caller]

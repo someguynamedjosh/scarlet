@@ -25,19 +25,15 @@ fn uncreate<'x>(
     ctx: &mut VomitContext<'x, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'x> {
-    if let Some(recursion) = uncreate.downcast_definition::<DOther>() {
-        if !recursion.is_recursive() {
-            return Ok(None);
-        }
-        let base = recursion.other();
+    if !uncreate.is_recursive() {
+        Ok(None)
+    } else {
         Ok(Some(Node {
             phrase: "recursion",
             // children: vec![NodeChild::Node(env.vomit(255, ctx, base))],
             children: vec![],
             ..Default::default()
         }))
-    } else {
-        Ok(None)
     }
 }
 

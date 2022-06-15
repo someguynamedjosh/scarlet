@@ -113,7 +113,7 @@ pub(super) fn structt(mut fields: Vec<(&str, ItemPtr)>, void: &ItemPtr) -> ItemP
 }
 
 pub(super) fn other(base: ItemPtr) -> ItemPtr {
-    return Item::new(DOther::new_plain(base), SRoot)
+    return Item::new(DOther::new(base), SRoot)
 }
 
 pub(super) fn get_member(root: &ItemPtr, name: &str) -> ItemPtr {

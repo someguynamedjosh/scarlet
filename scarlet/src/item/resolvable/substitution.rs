@@ -74,7 +74,7 @@ impl Resolvable for RSubstitution {
         _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult {
-        let base = self.base.ptr_clone();
+        let base = self.base.dereference();
         let base_scope = base.clone_scope();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = self.base.get_dependencies();

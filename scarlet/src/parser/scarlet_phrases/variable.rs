@@ -31,14 +31,13 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         VariableOrder::new(128, node.position.file_index, node.position.start_char as _);
     let mut mode = 0;
     let this = crate::item::Item::placeholder_with_scope(scope.dyn_clone());
-    let other_this = Item::new_boxed(Box::new(DOther::new(this.ptr_clone(), true, false)), scope);
     for arg in util::collect_comma_list(&node.children[2]) {
         if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEP")] {
             mode = 1;
         } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
             mode = 2;
         } else if mode == 0 {
-            let con = arg.as_construct(pc, env, SVariableInvariants(other_this.ptr_clone()));
+            let con = arg.as_construct(pc, env, SVariableInvariants(this.ptr_clone()));
             invariants.push(con);
         } else if mode == 1 {
             let con = arg.as_construct(pc, env, SPlain(this.ptr_clone()));
