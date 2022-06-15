@@ -10,9 +10,7 @@ mod is_populated_struct;
 mod label_access;
 mod member_access;
 mod multiple_items;
-mod parentheses;
 mod populated_struct;
-mod recursion;
 mod rest_access;
 mod shown;
 mod structt;
@@ -65,19 +63,7 @@ pub fn phrases() -> Vec<Phrase> {
         substitution::phrase(),
         structt::phrase(),
         is::phrase(),
-        // phrase!(
-        //     "add operator",
-        //     None,
-        //     20 => 20, r"\+", 20
-        // ),
-        // phrase!(
-        //     "exponent operator",
-        //     None,
-        //     10 => 9, r"\^", 10
-        // ),
         multiple_items::phrase(),
-        parentheses::phrase(),
-        recursion::phrase(),
         identifier::phrase(),
     ]
 }

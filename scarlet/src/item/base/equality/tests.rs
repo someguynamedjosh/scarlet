@@ -1395,7 +1395,7 @@ fn fx_eq_a_is_self_sub_y_env() {
     let code = r"
     a IS UNIQUE
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS fx = a
@@ -1430,7 +1430,7 @@ fn fx_eq_a_sub_y_is_self_env() {
     let code = r"
     a IS UNIQUE
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS fx = a
@@ -1467,7 +1467,7 @@ fn subbed_eq_ext_rev_is_eq_ext() {
     y IS VAR[]
     z IS VAR[y = SELF]
 
-    x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+    x IS VAR[ORD 32] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x ORD 32]
 
     statement IS fx[z] = fx[y]

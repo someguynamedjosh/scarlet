@@ -51,7 +51,11 @@ fn push_match<'a>(
         if Some(to.0.len() - 1) == matchh.continuation_of {
             append.push(NodeChild::Missing);
         } else {
-            append.push(NodeChild::Node(to.0.pop().unwrap()));
+            let top = to.0.pop().unwrap();
+            if !top.is_complete(pt) {
+                panic!("Incomplete phrase {:?}", top);
+            }
+            append.push(NodeChild::Node(top));
         }
     } else {
         if to

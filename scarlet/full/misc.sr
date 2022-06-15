@@ -4,13 +4,13 @@ false IS std.false
 void IS std.void
 # x IS std.basics.x
 
-x IS VAR[]
+x IS VAR()
 
 # x.IS_POPULATED_STRUCT
 
 # is_struct IS 
-# logic.and[
+# logic.and(
 #    x.IS_POPULATED_STRUCT
-#    is_struct[x.REST]
-# ]
+#    is_struct(x.REST)
+# )
 

@@ -48,7 +48,7 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("{}.REST", src.children[0].as_node().vomit(pc))
+    format!("{}.BODY", src.children[0].as_node().vomit(pc))
 }
 
 pub fn phrase() -> Phrase {
@@ -57,6 +57,6 @@ pub fn phrase() -> Phrase {
         128, 136,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\.REST"
+        4 => 4, r"\.\bBODY\b"
     )
 }

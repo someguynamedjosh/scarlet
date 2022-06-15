@@ -17,6 +17,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         None,
         vomit,
-        250 => 250, r"IS", 250
+        250 => 250, r"\bIS\b", 250
     )
 }

@@ -17,8 +17,8 @@ fn create(
 ) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("AXIOM"));
-    assert_eq!(node.children[1], NodeChild::Text("["));
-    assert_eq!(node.children[3], NodeChild::Text("]"));
+    assert_eq!(node.children[1], NodeChild::Text("("));
+    assert_eq!(node.children[3], NodeChild::Text(")"));
     let name = node.children[2].as_node().as_ident();
     let con = DAxiom::from_name(env, name);
     Item::new_boxed(con.clone_into_box(), scope)
@@ -37,9 +37,9 @@ fn uncreate<'a>(
             phrase: "axiom",
             children: vec![
                 NodeChild::Text("AXIOM"),
-                NodeChild::Text("["),
+                NodeChild::Text("("),
                 NodeChild::Text(statement),
-                NodeChild::Text("]"),
+                NodeChild::Text(")"),
             ],
             ..Default::default()
         }))
@@ -58,6 +58,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => r"\bAXIOM\b", r"\[", 255, r"\]"
+        4 => r"\bAXIOM\b", r"\(", 255, r"\)"
     )
 }

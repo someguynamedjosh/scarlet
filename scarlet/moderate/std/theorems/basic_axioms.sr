@@ -2,7 +2,7 @@ t_trivial IS
 {
    AXIOM[t_trivial]
 
-   true.AS_LANGUAGE_ITEM[t_trivial_statement]
+   true AS_LANGUAGE_ITEM[t_trivial_statement]
 }
 .VALUE
 
@@ -10,10 +10,10 @@ t_invariant_truth IS
 {
    AXIOM[t_invariant_truth]
 
-   (a = true)
-   .AS_LANGUAGE_ITEM[
+   x(a = true)
+   AS_LANGUAGE_ITEM(
       t_invariant_truth_statement 
-  ]
+   )
 
    a IS VAR[SELF]
 }
@@ -25,21 +25,21 @@ t_invariant_truth_rev IS
    AXIOM[t_invariant_truth_rev]
 
    a
-   .AS_LANGUAGE_ITEM[
+    AS_LANGUAGE_ITEM[
       t_invariant_truth_rev_statement 
   ]
 
    a IS VAR[SELF = true]
 }
 .VALUE
-.AS_AUTO_THEOREM
+ AS_AUTO_THEOREM
 
 t_eq_ext_rev IS 
 {
    AXIOM[t_eq_ext_rev]
 
-   (fx[b] = fx[a])
-   .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+   x(fx[b] = fx[a])
+    AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
    a IS VAR[]
    b IS VAR[a = SELF]
@@ -53,7 +53,7 @@ t_inv_eq IS
    AXIOM[t_inv_eq]
 
    b
-   .AS_LANGUAGE_ITEM[t_inv_eq_statement]
+    AS_LANGUAGE_ITEM[t_inv_eq_statement]
 
    a IS VAR[SELF]
    b IS VAR[a = SELF]
@@ -64,10 +64,10 @@ t_refl IS
 {
    AXIOM[t_refl]
 
-   (a = a)
-   .AS_LANGUAGE_ITEM[t_refl_statement]
+   x(a = a)
+   AS_LANGUAGE_ITEM[t_refl_statement]
 
    a IS VAR[]
 }
 .VALUE
-.AS_AUTO_THEOREM
+ AS_AUTO_THEOREM

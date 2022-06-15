@@ -24,7 +24,7 @@ fn sub_invariant() {
     let code = r"
     a IS UNIQUE
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS fx = a
@@ -114,7 +114,7 @@ fn basic_theorem_invariant() {
     let code = r"
     statement IS 
     UNIQUE
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -133,7 +133,7 @@ fn subbed_theorem_invariant() {
     x IS VAR[]
 
     statement IS 
-    x.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    x AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -155,7 +155,7 @@ fn function_invariant() {
     fx IS VAR[DEP x]
 
     statement IS 
-    fx.AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    fx AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -180,7 +180,7 @@ fn indirect_function_invariant() {
     y IS VAR[]
 
     statement IS 
-    fx[y].AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    fx[y] AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -205,7 +205,7 @@ fn equality_function_invariant() {
     y IS VAR[]
 
     statement IS 
-    (fx[x] = y).AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    (fx[x] = y) AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -231,7 +231,7 @@ fn full_equality_function_invariant() {
     y IS VAR[]
 
     statement IS 
-    (fx[x] = fx[y]).AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    (fx[x] = fx[y]) AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -256,7 +256,7 @@ fn equality_theorem_invariant() {
     y IS VAR[]
 
     statement IS 
-    (x = y).AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+    (x = y) AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -278,11 +278,11 @@ fn theorem_verbatim() {
     a IS VAR[]
     b IS VAR[a = SELF]
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS fx[b]
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -301,12 +301,12 @@ fn simplified_real_theorem_invariant() {
     y IS VAR[]
     z IS VAR[]
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS 
     (fx[z] = fx[y])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -327,12 +327,12 @@ fn real_theorem_invariant() {
     a IS VAR[]
     b IS VAR[a = SELF]
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS 
     (fx[b] = fx[a])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -367,7 +367,7 @@ fn real_theorem_separated_invariant() {
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
     (asdf.fx[b] = asdf.fx[a])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     a IS VAR[]
     b IS VAR[a = SELF]
@@ -384,12 +384,12 @@ fn real_theorem_rewritten_invariant() {
     a IS VAR[]
     b IS VAR[a = SELF]
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     statement IS 
     (fx[b] = fx[a])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
@@ -531,11 +531,11 @@ fn t_just_after_theorem() {
 
         statement IS 
         (fx[b] = fx[a])
-        .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+         AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
     }
     .VALUE
 
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     t_just IS VAR[SELF]
@@ -557,13 +557,13 @@ fn t_just_after_theorem() {
 #[test]
 fn mysterious_hang() {
     let code = r"
-    x IS VAR[].AS_LANGUAGE_ITEM[x]
+    x IS VAR[] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x]
 
     t_eq_ext_rev IS AXIOM[t_eq_ext_rev]
 
     (fx[b] = fx[a])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     t_eq_ext_rev[fx a b]
 
@@ -599,11 +599,11 @@ fn eq_ext_simplified() {
     y IS VAR[]
     z IS VAR[y = SELF]
 
-    x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+    x IS VAR[ORD 32] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x ORD 32]
 
     (fx[z] = fx[y])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     eq_ext_rev_t IS AXIOM[t_eq_ext_rev]
 
@@ -627,11 +627,11 @@ fn eq_ext_full() {
     y IS VAR[]
     z IS VAR[y = SELF]
 
-    x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+    x IS VAR[ORD 32] AS_LANGUAGE_ITEM[x]
     fx IS VAR[DEP x ORD 32]
 
     (fx[z] = fx[y])
-    .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+     AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
     eq_ext_rev_t IS AXIOM[t_eq_ext_rev]
 
@@ -658,7 +658,7 @@ fn eq_ext_full() {
 fn eq_ext_full_separated() {
     let code = r"
     std IS {
-        x IS VAR[ORD 32].AS_LANGUAGE_ITEM[x]
+        x IS VAR[ORD 32] AS_LANGUAGE_ITEM[x]
         fx IS VAR[DEP x ORD 32]
     }
 
@@ -670,7 +670,7 @@ fn eq_ext_full_separated() {
         AXIOM[t_eq_ext_rev]
 
         (fx[z] = fx[y])
-        .AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
+         AS_LANGUAGE_ITEM[t_eq_ext_rev_statement]
 
         y IS VAR[]
         z IS VAR[y = SELF]

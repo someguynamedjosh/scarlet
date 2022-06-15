@@ -11,7 +11,7 @@ use crate::{
 
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
-    assert_eq!(node.children[1], NodeChild::Text(".AS_AUTO_THEOREM"));
+    assert_eq!(node.children[1], NodeChild::Text("AS_AUTO_THEOREM"));
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
     env.add_auto_theorem(base.ptr_clone());
     base
@@ -35,6 +35,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\.AS_AUTO_THEOREM"
+        4 => 4, r"AS_AUTO_THEOREM"
     )
 }
