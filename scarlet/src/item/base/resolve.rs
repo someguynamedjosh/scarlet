@@ -60,6 +60,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
     root.for_self_and_deep_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
             println!("Failed to resolve {:#?} because", item);
+            println!("{:#?}", item.borrow().definition);
             problem = true;
             match err {
                 ResolveError::Unresolved(err) => {

@@ -1271,17 +1271,17 @@ fn equality_symmetry() {
 #[test]
 fn complex_fx_sub_is_arg_env() {
     let code = r"
-    y IS VAR[]
-    z IS VAR[y = SELF]
+    y IS VAR()
+    z IS VAR(y = SELF)
 
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
-    u IS VAR[]
-    v IS VAR[u = SELF]
-    identity IS VAR[]
+    u IS VAR()
+    v IS VAR(u = SELF)
+    identity IS VAR()
 
-    v1 IS fx[x IS z][y IS u   z IS v   fx IS identity[identity IS x]]
+    v1 IS fx(x IS z)(y IS u   z IS v   fx IS identity(identity IS x))
     v2 IS v
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1307,19 +1307,19 @@ fn complex_fx_sub_is_arg_env() {
 #[test]
 fn advanced_equality_symmetry_env() {
     let code = r"
-    y IS VAR[]
-    z IS VAR[y = SELF]
+    y IS VAR()
+    z IS VAR(y = SELF)
 
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
-    statement IS fx[z] = fx[y]
+    statement IS fx(z) = fx(y)
 
-    u IS VAR[]
-    v IS VAR[u = SELF]
-    identity IS VAR[]
+    u IS VAR()
+    v IS VAR(u = SELF)
+    identity IS VAR()
 
-    v1 IS statement[u v identity]
+    v1 IS statement(u v identity)
     v2 IS v = u
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1395,17 +1395,17 @@ fn fx_eq_a_is_self_sub_y_env() {
     let code = r"
     a IS UNIQUE
 
-    x IS VAR[] AS_LANGUAGE_ITEM[x]
-    fx IS VAR[DEP x]
+    x IS VAR() AS_LANGUAGE_ITEM(x)
+    fx IS VAR(DEP x)
 
     statement IS fx = a
 
-    t IS VAR[]
+    t IS VAR()
 
     # x -> t
     # fx -> fx(x IS t)
     v1 IS statement
-    v2 IS statement[x IS t]
+    v2 IS statement(x IS t)
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1430,14 +1430,14 @@ fn fx_eq_a_sub_y_is_self_env() {
     let code = r"
     a IS UNIQUE
 
-    x IS VAR[] AS_LANGUAGE_ITEM[x]
-    fx IS VAR[DEP x]
+    x IS VAR() AS_LANGUAGE_ITEM(x)
+    fx IS VAR(DEP x)
 
     statement IS fx = a
 
-    t IS VAR[]
-    s1 IS statement[x IS t]
-    s2 IS statement[x IS t]
+    t IS VAR()
+    s1 IS statement(x IS t)
+    s2 IS statement(x IS t)
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1464,19 +1464,19 @@ fn fx_eq_a_sub_y_is_self_env() {
 #[test]
 fn subbed_eq_ext_rev_is_eq_ext() {
     let code = r"
-    y IS VAR[]
-    z IS VAR[y = SELF]
+    y IS VAR()
+    z IS VAR(y = SELF)
 
-    x IS VAR[ORD 32] AS_LANGUAGE_ITEM[x]
-    fx IS VAR[DEP x ORD 32]
+    x IS VAR(ORD 32) AS_LANGUAGE_ITEM(x)
+    fx IS VAR(DEP x ORD 32)
 
-    statement IS fx[z] = fx[y]
+    statement IS fx(z) = fx(y)
 
-    u IS VAR[]
-    v IS VAR[SELF = u]
+    u IS VAR()
+    v IS VAR(SELF = u)
 
-    v1 IS statement[fx v u]
-    v2 IS fx[u] = fx[v]
+    v1 IS statement(fx v u)
+    v2 IS fx(u) = fx(v)
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1501,10 +1501,10 @@ fn subbed_eq_ext_rev_is_eq_ext() {
 #[test]
 fn fx_sub_x_is_x() {
     let code = r"
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
-    v1 IS fx[fx IS x]
+    v1 IS fx(fx IS x)
     v2 IS x
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1531,14 +1531,14 @@ fn fx_sub_x_is_x() {
 fn separated_fx_sub_x_is_x() {
     let code = r"
     std IS {
-        x IS VAR[]
-        fx IS VAR[DEP x]
+        x IS VAR()
+        fx IS VAR(DEP x)
     }
 
     x IS std.x
     fx IS std.fx
 
-    v1 IS fx[fx IS x]
+    v1 IS fx(fx IS x)
     v2 IS x
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1564,23 +1564,23 @@ fn separated_fx_sub_x_is_x() {
 #[test]
 fn fx_a_inv_eq_result_is_fx_a_env() {
     let code = r"
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
-    y IS VAR[SELF]
-    z IS VAR[y = z]
+    y IS VAR(SELF)
+    z IS VAR(y = z)
 
-    u IS VAR[]
-    v IS VAR[u = v]
+    u IS VAR()
+    v IS VAR(u = v)
 
-    VAR[fx[u]]
-    VAR[fx[v]]
-    VAR[fx[u] = fx[v]]
+    VAR(fx(u))
+    VAR(fx(v))
+    VAR(fx(u) = fx(v))
 
-    t_just IS VAR[SELF]
+    t_just IS VAR(SELF)
 
-    v1 IS z[fx[u] fx[v]]
-    v2 IS fx[v]
+    v1 IS z(fx(u) fx(v))
+    v2 IS fx(v)
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1605,13 +1605,13 @@ fn fx_a_inv_eq_result_is_fx_a_env() {
 #[test]
 fn fx_sub_s_and_r_x_is_r_s_env() {
     let code = r"
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
-    r IS VAR[]
-    s IS VAR[]
+    r IS VAR()
+    s IS VAR()
 
-    v1 IS fx[s  r = x]
+    v1 IS fx(s  r = x)
     v2 IS r = s
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1643,25 +1643,25 @@ fn fx_sub_s_and_r_x_is_r_s_env() {
 #[test]
 fn try_build_trans_result_env() {
     let code = r"
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
-    y IS VAR[]
-    z IS VAR[y = SELF]
+    y IS VAR()
+    z IS VAR(y = SELF)
 
-    eq_ext_statement IS fx[y] = fx[z]
+    eq_ext_statement IS fx(y) = fx(z)
 
-    u IS VAR[]
-    v IS VAR[]
+    u IS VAR()
+    v IS VAR()
 
     inv_eq_req IS u = v
 
-    r IS VAR[]
-    s IS VAR[]
-    t IS VAR[s = SELF]
+    r IS VAR()
+    s IS VAR()
+    t IS VAR(s = SELF)
 
-    v1 IS eq_ext_statement[r = x  s  t]
-    v2 IS inv_eq_req[r = s   r = t]
+    v1 IS eq_ext_statement(r = x  s  t)
+    v2 IS inv_eq_req(r = s   r = t)
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
@@ -1686,11 +1686,11 @@ fn try_build_trans_result_env() {
 #[test]
 fn fx_sub_y_sub_x_is_fx() {
     let code = r"
-    x IS VAR[]
-    y IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    y IS VAR()
+    fx IS VAR(DEP x)
 
-    v1 IS fx[y][x]
+    v1 IS fx(y)(x)
     v2 IS fx
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1716,11 +1716,11 @@ fn fx_sub_y_sub_x_is_fx() {
 #[test]
 fn fx_sub_y_is_fx() {
     let code = r"
-    x IS VAR[]
-    y IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    y IS VAR()
+    fx IS VAR(DEP x)
 
-    v1 IS fx[y]
+    v1 IS fx(y)
     v2 IS fx
     ";
     with_env_from_code(code, |mut env, root| {
@@ -1754,16 +1754,16 @@ fn fx_sub_y_is_fx() {
 #[test]
 fn function_invariant_statement_env() {
     let code = r"
-    x IS VAR[]
-    fx IS VAR[DEP x]
+    x IS VAR()
+    fx IS VAR(DEP x)
 
     statement IS fx
 
-    identity IS VAR[]
+    identity IS VAR()
 
-    u IS VAR[]
+    u IS VAR()
 
-    v1 IS fx[u identity]
+    v1 IS fx(u identity)
     v2 IS u
     ";
     with_env_from_code(code, |mut env, root| {
