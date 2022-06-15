@@ -264,6 +264,7 @@ impl EqualityFeature for DVariable {
             } else if let Ok(Some(mut ctx)) =
                 ctx.try_select_value_substituted_for_var_in_other(&other_var.0)
             {
+                drop(other_var);
                 return ctx.get_equality_left();
             }
         }
