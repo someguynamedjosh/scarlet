@@ -1,0 +1,890 @@
+fx
+
+fx[1]
+
+75 -> x
+76 -> fx
+77 -> a
+--------------------------------------------------------------------------------
+(o) (o) fx[x IS a]
+=
+(o) (o) fx[x IS a]
+Testing if dependency x and fx are equal.
+    --------------------------------------------------------------------------------
+    @0x7f0dac001880
+    x[x IS a]
+    =
+    fx
+    Selecting x -> a
+    Leaving ItemWithSubsAndRecursion {
+        item: a,
+        subs: [],
+        recurses_over: [],
+    }
+        --------------------------------------------------------------------------------
+        a
+        = 
+        fx
+        Making result where right is assigned to left variable.
+        Left variable is a
+        Right is fx
+        Storing substitutions not appearing on lhs.
+        Replacing RHS vars with LHS deps.
+        New RHS is fx
+        Checking if new RHS is just the LHS, again.
+        Resulting in Ok(Yes({ a -> fx }, []))
+    Resulting in Ok(Yes({ a -> fx }, []))
+Making result where right is assigned to left variable.
+Left variable is fx
+Right is @0x7f0dac002b70
+fx[x IS a]
+Storing substitutions not appearing on lhs.
+Replacing RHS vars with LHS deps.
+New RHS is @0x7f0dac007980
+fx[x IS a][fx IS x]
+Checking if new RHS is just the LHS, again.
+Selecting fx -> x
+Leaving ItemWithSubsAndRecursion {
+    item: x
+    subs: [{x IS a}],
+    recurses_over: [],
+}
+    --------------------------------------------------------------------------------
+    fx[x IS a]
+    =
+    x[x IS a]
+    Testing if dependency x and x are equal.
+        --------------------------------------------------------------------------------
+        x[x IS a]
+        = 
+        x[x IS a]
+        Resulting in Ok(Yes({
+        }, []))
+    Making result where right is assigned to left variable.
+    Left variable is fx
+    Right is x[x IS a]
+    Storing substitutions not appearing on lhs.
+    Replacing RHS vars with LHS deps.
+    New RHS is x
+    Checking if new RHS is just the LHS, again.
+    Selecting x -> a
+    Leaving ItemWithSubsAndRecursion {
+        item: a
+        subs: [],
+        recurses_over: [],
+    }
+        --------------------------------------------------------------------------------
+        fx{x IS a}
+        =
+        a
+        Testing if dependency x and a are equal.
+            --------------------------------------------------------------------------------
+            @0x7f0dac001880
+            x{x IS a}
+            =
+            a
+            Selecting x -> a
+            Leaving ItemWithSubsAndRecursion {
+                item: a
+                subs: [],
+                recurses_over: [],
+            }
+                --------------------------------------------------------------------------------
+                a
+                =
+                a
+                Resulting in Ok(Yes({}, []))
+            Resulting in Ok(Yes({}, []))
+        Making result where right is assigned to left variable.
+        Left variable is fx
+        Right is a
+        Storing substitutions not appearing on lhs.
+        Replacing RHS vars with LHS deps.
+        New RHS is x
+        Checking if new RHS is just the LHS, again.
+        Resulting in Ok(Yes({ fx -> x }, []))
+    Resulting in Ok(Yes({ fx -> x }, []))
+Resulting in Ok(Yes({
+    a -> x,
+    fx -> fx[x IS a][fx IS x],
+}, []))
+
+Original question: fx[a] = fx[a]?
+
+
+
+
+
+Ok(
+    Yes(
+        {
+            RefCell {
+                value: Variable {
+                    item: "@0x7f0dac0016a0",
+                    order: 0:0:77,
+                },
+            } -> @0x7f0dac001a10
+            Variable {
+                item: "@0x7f0dac001a10",
+                dependencies: [
+                    @0x7f0dac001880
+                    Variable {
+                        item: "@0x7f0dac001880",
+                        order: 0:0:75,
+                    },
+                ],
+                order: 0:0:76,
+            }
+            RefCell {
+                value: Variable {
+                    item: "@0x7f0dac001a10",
+                    dependencies: [
+                        @0x7f0dac001880
+                        Variable {
+                            item: "@0x7f0dac001880",
+                            order: 0:0:75,
+                        },
+                    ],
+                    order: 0:0:76,
+                },
+            } -> @0x7f0dac007980
+            DSubstitution {
+                base: @0x7f0dac002b70
+                DSubstitution {
+                    base: @0x7f0dac001a10
+                    Variable {
+                        item: "@0x7f0dac001a10",
+                        dependencies: [
+                            @0x7f0dac001880
+                            Variable {
+                                item: "@0x7f0dac001880",
+                                order: 0:0:75,
+                            },
+                        ],
+                        order: 0:0:76,
+                    },
+                    subs: {
+                        RefCell {
+                            value: Variable {
+                                item: "@0x7f0dac001880",
+                                order: 0:0:75,
+                            },
+                        } -> @0x7f0dac0016a0
+                        Variable {
+                            item: "@0x7f0dac0016a0",
+                            order: 0:0:77,
+                        }
+                    },
+                    invs: RefCell {
+                        value: InvariantSet {
+                            context: "@0x7f0dac001a10",
+                            statements: [],
+                            justification_requirements: [],
+                            required: true,
+                            connected_to_root: false,
+                            dependencies: {},
+                            ..
+                        },
+                    },
+                },
+                subs: {
+                    RefCell {
+                        value: Variable {
+                            item: "@0x7f0dac001a10",
+                            dependencies: [
+                                @0x7f0dac001880
+                                Variable {
+                                    item: "@0x7f0dac001880",
+                                    order: 0:0:75,
+                                },
+                            ],
+                            order: 0:0:76,
+                        },
+                    } -> @0x7f0dac001880
+                    Variable {
+                        item: "@0x7f0dac001880",
+                        order: 0:0:75,
+                    }
+                },
+                invs: RefCell {
+                    value: InvariantSet {
+                        context: "@0x7f0dac002b70",
+                        statements: [],
+                        justification_requirements: [],
+                        required: true,
+                        connected_to_root: false,
+                        dependencies: {},
+                        ..
+                    },
+                },
+            }
+        },
+        [],
+    ),
+)
+--------------------------------------------------------------------------------
+@0x7f0dac002be0
+(other) @0x7f0dac000c40
+(other) @0x7f0dac002b70
+DSubstitution {
+    base: @0x7f0dac001a10
+    Variable {
+        item: "@0x7f0dac001a10",
+        dependencies: [
+            @0x7f0dac001880
+            Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        ],
+        order: 0:0:76,
+    },
+    subs: {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+    invs: RefCell {
+        value: InvariantSet {
+            context: "@0x7f0dac001a10",
+            statements: [],
+            justification_requirements: [],
+            required: true,
+            connected_to_root: false,
+            dependencies: {},
+            ..
+        },
+    },
+} [] = @0x7f0dac002c50
+(other) @0x7f0dac000c40
+(other) @0x7f0dac002b70
+DSubstitution {
+    base: @0x7f0dac001a10
+    Variable {
+        item: "@0x7f0dac001a10",
+        dependencies: [
+            @0x7f0dac001880
+            Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        ],
+        order: 0:0:76,
+    },
+    subs: {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+    invs: RefCell {
+        value: InvariantSet {
+            context: "@0x7f0dac001a10",
+            statements: [],
+            justification_requirements: [],
+            required: true,
+            connected_to_root: false,
+            dependencies: {},
+            ..
+        },
+    },
+} []
+Testing if dependency @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} and @0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+} are equal.
+--------------------------------------------------------------------------------
+@0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+] = @0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+} []
+Selecting RefCell { value: Variable { item: "@0x7f0dac001880", order: 0:0:75 } } @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+}
+Leaving ItemWithSubsAndRecursion {
+    item: @0x7f0dac0016a0
+    Variable {
+        item: "@0x7f0dac0016a0",
+        order: 0:0:77,
+    },
+    subs: [],
+    recurses_over: [],
+}
+--------------------------------------------------------------------------------
+@0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} [] = @0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+} []
+Making result where right is assigned to left variable.
+Left variable is RefCell {
+    value: Variable {
+        item: "@0x7f0dac0016a0",
+        order: 0:0:77,
+    },
+}
+Right is @0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+} []
+Storing substitutions not appearing on lhs.
+Replacing RHS vars with LHS deps.
+New RHS is @0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+}
+Checking if new RHS is just the LHS, again.
+Resulting in Ok(Yes({
+    RefCell { value: Variable { item: "@0x7f0dac0016a0", order: 0:0:77 } } -> @0x7f0dac001a10
+Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 }
+}, []))
+Resulting in Ok(Yes({
+    RefCell { value: Variable { item: "@0x7f0dac0016a0", order: 0:0:77 } } -> @0x7f0dac001a10
+Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 }
+}, []))
+Making result where right is assigned to left variable.
+Left variable is RefCell {
+    value: Variable {
+        item: "@0x7f0dac001a10",
+        dependencies: [
+            @0x7f0dac001880
+            Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        ],
+        order: 0:0:76,
+    },
+}
+Right is @0x7f0dac002b70
+DSubstitution {
+    base: @0x7f0dac001a10
+    Variable {
+        item: "@0x7f0dac001a10",
+        dependencies: [
+            @0x7f0dac001880
+            Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        ],
+        order: 0:0:76,
+    },
+    subs: {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+    invs: RefCell {
+        value: InvariantSet {
+            context: "@0x7f0dac001a10",
+            statements: [],
+            justification_requirements: [],
+            required: true,
+            connected_to_root: false,
+            dependencies: {},
+            ..
+        },
+    },
+} []
+Storing substitutions not appearing on lhs.
+Replacing RHS vars with LHS deps.
+New RHS is @0x7f0dac007710
+DSubstitution {
+    base: @0x7f0dac002b70
+    DSubstitution {
+        base: @0x7f0dac001a10
+        Variable {
+            item: "@0x7f0dac001a10",
+            dependencies: [
+                @0x7f0dac001880
+                Variable {
+                    item: "@0x7f0dac001880",
+                    order: 0:0:75,
+                },
+            ],
+            order: 0:0:76,
+        },
+        subs: {
+            RefCell {
+                value: Variable {
+                    item: "@0x7f0dac001880",
+                    order: 0:0:75,
+                },
+            } -> @0x7f0dac0016a0
+            Variable {
+                item: "@0x7f0dac0016a0",
+                order: 0:0:77,
+            }
+        },
+        invs: RefCell {
+            value: InvariantSet {
+                context: "@0x7f0dac001a10",
+                statements: [],
+                justification_requirements: [],
+                required: true,
+                connected_to_root: false,
+                dependencies: {},
+                ..
+            },
+        },
+    },
+    subs: {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001a10",
+                dependencies: [
+                    @0x7f0dac001880
+                    Variable {
+                        item: "@0x7f0dac001880",
+                        order: 0:0:75,
+                    },
+                ],
+                order: 0:0:76,
+            },
+        } -> @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        }
+    },
+    invs: RefCell {
+        value: InvariantSet {
+            context: "@0x7f0dac002b70",
+            statements: [],
+            justification_requirements: [],
+            required: true,
+            connected_to_root: false,
+            dependencies: {},
+            ..
+        },
+    },
+}
+Checking if new RHS is just the LHS, again.
+Selecting RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+}
+Leaving ItemWithSubsAndRecursion {
+    item: @0x7f0dac001880
+    Variable {
+        item: "@0x7f0dac001880",
+        order: 0:0:75,
+    },
+    subs: [
+        {
+            RefCell {
+                value: Variable {
+                    item: "@0x7f0dac001880",
+                    order: 0:0:75,
+                },
+            } -> @0x7f0dac0016a0
+            Variable {
+                item: "@0x7f0dac0016a0",
+                order: 0:0:77,
+            }
+        },
+    ],
+    recurses_over: [],
+}
+--------------------------------------------------------------------------------
+@0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+] = @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+]
+Testing if dependency @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} and @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} are equal.
+--------------------------------------------------------------------------------
+@0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+] = @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+]
+Resulting in Ok(Yes({
+}, []))
+Making result where right is assigned to left variable.
+Left variable is RefCell {
+    value: Variable {
+        item: "@0x7f0dac001a10",
+        dependencies: [
+            @0x7f0dac001880
+            Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        ],
+        order: 0:0:76,
+    },
+}
+Right is @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+]
+Storing substitutions not appearing on lhs.
+Replacing RHS vars with LHS deps.
+New RHS is @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+}
+Checking if new RHS is just the LHS, again.
+Selecting RefCell { value: Variable { item: "@0x7f0dac001880", order: 0:0:75 } } @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+}
+Leaving ItemWithSubsAndRecursion {
+    item: @0x7f0dac0016a0
+    Variable {
+        item: "@0x7f0dac0016a0",
+        order: 0:0:77,
+    },
+    subs: [],
+    recurses_over: [],
+}
+--------------------------------------------------------------------------------
+@0x7f0dac001a10
+Variable {
+    item: "@0x7f0dac001a10",
+    dependencies: [
+        @0x7f0dac001880
+        Variable {
+            item: "@0x7f0dac001880",
+            order: 0:0:75,
+        },
+    ],
+    order: 0:0:76,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+] = @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} []
+Testing if dependency @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} and @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} are equal.
+--------------------------------------------------------------------------------
+@0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+} [
+    {
+        RefCell {
+            value: Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        } -> @0x7f0dac0016a0
+        Variable {
+            item: "@0x7f0dac0016a0",
+            order: 0:0:77,
+        }
+    },
+] = @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} []
+Selecting RefCell { value: Variable { item: "@0x7f0dac001880", order: 0:0:75 } } @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+}
+Leaving ItemWithSubsAndRecursion {
+    item: @0x7f0dac0016a0
+    Variable {
+        item: "@0x7f0dac0016a0",
+        order: 0:0:77,
+    },
+    subs: [],
+    recurses_over: [],
+}
+--------------------------------------------------------------------------------
+@0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} [] = @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} []
+Resulting in Ok(Yes({
+}, []))
+Resulting in Ok(Yes({
+}, []))
+Making result where right is assigned to left variable.
+Left variable is RefCell {
+    value: Variable {
+        item: "@0x7f0dac001a10",
+        dependencies: [
+            @0x7f0dac001880
+            Variable {
+                item: "@0x7f0dac001880",
+                order: 0:0:75,
+            },
+        ],
+        order: 0:0:76,
+    },
+}
+Right is @0x7f0dac0016a0
+Variable {
+    item: "@0x7f0dac0016a0",
+    order: 0:0:77,
+} []
+Storing substitutions not appearing on lhs.
+Replacing RHS vars with LHS deps.
+New RHS is @0x7f0dac001880
+Variable {
+    item: "@0x7f0dac001880",
+    order: 0:0:75,
+}
+Checking if new RHS is just the LHS, again.
+Resulting in Ok(Yes({
+    RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } -> @0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }
+}, []))
+Resulting in Ok(Yes({
+    RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } -> @0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }
+}, []))
+Resulting in Ok(Yes({
+    RefCell { value: Variable { item: "@0x7f0dac0016a0", order: 0:0:77 } } -> @0x7f0dac001a10
+Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 }
+    RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } -> @0x7f0dac007710
+DSubstitution { base: @0x7f0dac002b70
+DSubstitution { base: @0x7f0dac001a10
+Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 }, subs: {
+    RefCell { value: Variable { item: "@0x7f0dac001880", order: 0:0:75 } } -> @0x7f0dac0016a0
+Variable { item: "@0x7f0dac0016a0", order: 0:0:77 }
+}, invs: RefCell { value: InvariantSet { context: "@0x7f0dac001a10", statements: [], justification_requirements: [], required: true, connected_to_root: false, dependencies: {}, .. } } }, subs: {
+    RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } -> @0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }
+}, invs: RefCell { value: InvariantSet { context: "@0x7f0dac002b70", statements: [], justification_requirements: [], required: true, connected_to_root: false, dependencies: {}, .. } } }
+}, []))
+thread 'item::base::equality::tests::other_fx_a_is_self' panicked at 'assertion failed: `(left == right)`
+  left: `Ok(Yes({
+    RefCell { value: Variable { item: "@0x7f0dac0016a0", order: 0:0:77 } } -> @0x7f0dac001a10
+Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 }
+    RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } -> @0x7f0dac007710
+DSubstitution { base: @0x7f0dac002b70
+DSubstitution { base: @0x7f0dac001a10
+Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 }, subs: {
+    RefCell { value: Variable { item: "@0x7f0dac001880", order: 0:0:75 } } -> @0x7f0dac0016a0
+Variable { item: "@0x7f0dac0016a0", order: 0:0:77 }
+}, invs: RefCell { value: InvariantSet { context: "@0x7f0dac001a10", statements: [], justification_requirements: [], required: true, connected_to_root: false, dependencies: {}, .. } } }, subs: {
+    RefCell { value: Variable { item: "@0x7f0dac001a10", dependencies: [@0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }], order: 0:0:76 } } -> @0x7f0dac001880
+Variable { item: "@0x7f0dac001880", order: 0:0:75 }
+}, invs: RefCell { value: InvariantSet { context: "@0x7f0dac002b70", statements: [], justification_requirements: [], required: true, connected_to_root: false, dependencies: {}, .. } } }
+}, []))`,
+ right: `Ok(Yes({
+}, []))`', src/item/base/equality/tests.rs:1006:5
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

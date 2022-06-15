@@ -3,70 +3,50 @@ use std::ops::ControlFlow;
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
-        structt::{AtomicStructMember, CAtomicStructMember, CPopulatedStruct},
-        ConstructId,
+    environment::{vomit::VomitContext, Environment},
+    item::{
+        definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
+        equality::Equal,
+        ItemDefinition, ItemPtr,
     },
-    environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
     },
     phrase,
     scope::{SPlain, Scope},
-    shared::TripleBool,
 };
 
-fn create<'x>(
-    pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
-    let this = env.push_placeholder(scope);
-    let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_construct(this, CAtomicStructMember(base, AtomicStructMember::Rest));
+    let this = crate::item::Item::placeholder_with_scope(scope);
+    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
+    this.redefine(DAtomicStructMember::new(base, AtomicStructMember::Rest).clone_into_box());
     this
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    let source = if let Ok(Some(asm)) =
-        env.get_and_downcast_construct_definition::<CAtomicStructMember>(uncreate)
-    {
-        if asm.1 == AtomicStructMember::Rest {
-            Some(asm.0)
+    let source = if let Some(asm) = uncreate.downcast_definition::<DAtomicStructMember>() {
+        if asm.member() == AtomicStructMember::Rest {
+            Some(asm.base().ptr_clone())
         } else {
             None
         }
     } else {
-        env.for_each_construct(|env, id| {
-            if let Ok(Some(cstruct)) =
-                env.get_and_downcast_construct_definition::<CPopulatedStruct>(id)
-            {
-                let cstruct = cstruct.clone();
-                if env.is_def_equal_without_subs(cstruct.get_rest(), uncreate, 1024)
-                    == Ok(TripleBool::True)
-                {
-                    return ControlFlow::Break(id);
-                }
-            }
-            ControlFlow::Continue(())
-        })
+        None
     };
     match source {
         Some(id) => Ok(Some(Node {
             phrase: "rest access",
             children: vec![
-                NodeChild::Node(env.vomit(4, pc, code_arena, id, from)?),
+                NodeChild::Node(env.vomit(4, ctx, id.ptr_clone())),
                 NodeChild::Text(".REST"),
             ],
+            ..Default::default()
         })),
         None => Ok(None),
     }

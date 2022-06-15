@@ -1,42 +1,46 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
+    item::{
+        resolvable::{DResolvable, RIdentifier, Resolvable},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
     },
     phrase,
-    resolvable::RIdentifier,
     scope::Scope,
 };
 
-fn create<'x>(
+fn create(
     _pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.phrase, "identifier");
     assert_eq!(node.children.len(), 1);
-    env.push_unresolved(RIdentifier(node.children[0].as_text()), scope)
+    Item::new_boxed(
+        DResolvable::new(RIdentifier(node.children[0].as_text().to_owned())).clone_into_box(),
+        scope,
+    )
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    let dereffed = env.dereference(uncreate)?;
+    let dereffed = uncreate.dereference();
     Ok(if dereffed == uncreate {
         None
-    } else if let Ok(Some(ident)) = from.reverse_lookup_ident(env, dereffed) {
+    } else if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(env, dereffed) {
         Some(Node {
             phrase: "identifier",
-            children: vec![NodeChild::Text(code_arena.alloc(ident))],
+            children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],
+            ..Default::default()
         })
     } else {
         None

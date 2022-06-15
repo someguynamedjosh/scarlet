@@ -1,11 +1,12 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{
-        structt::{CPopulatedStruct, SField, SFieldAndRest},
-        ConstructId,
+    environment::{vomit::VomitContext, Environment},
+    item::{
+        definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
+        equality::Equal,
+        ItemDefinition, ItemPtr,
     },
-    environment::Environment,
     parser::{
         phrase::{Phrase, UncreateResult},
         util::{self, create_comma_list},
@@ -13,35 +14,32 @@ use crate::{
     },
     phrase,
     scope::Scope,
-    shared::TripleBool,
 };
 
-fn struct_from_fields<'x>(
+fn struct_from_fields(
     pc: &ParseContext,
-    env: &mut Environment<'x>,
-    mut fields: Vec<(Option<&str>, &Node<'x>)>,
+    env: &mut Environment,
+    mut fields: Vec<(Option<&str>, &Node)>,
     scope: Box<dyn Scope>,
-) -> ConstructId {
+) -> ItemPtr {
     if fields.is_empty() {
-        env.get_language_item("void")
+        env.get_language_item("void").ptr_clone()
     } else {
         let (label, field) = fields.remove(0);
         let label = label.unwrap_or("").to_owned();
-        let this = env.push_placeholder(scope);
-        let field = field.as_construct(pc, env, SFieldAndRest(this));
-        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this)));
-        let this_def = CPopulatedStruct::new(label, field, rest);
-        env.define_construct(this, this_def);
+        let this = crate::item::Item::placeholder_with_scope(scope);
+        let field = field.as_construct(pc, env, SFieldAndRest(this.ptr_clone()));
+        if label.len() > 0 {
+            field.set_name(label.clone());
+        }
+        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this.ptr_clone())));
+        let this_def = DPopulatedStruct::new(label, field, rest);
+        this.redefine(this_def.clone_into_box());
         this
     }
 }
 
-fn create<'x>(
-    pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("{"));
     assert_eq!(node.children[2], NodeChild::Text("}"));
@@ -63,22 +61,27 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    _from: &dyn Scope,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     let mut maybe_structt = uncreate;
     let mut fields = Vec::new();
-    while let Some(structt) =
-        env.get_and_downcast_construct_definition::<CPopulatedStruct>(maybe_structt)?
-    {
-        let label = code_arena.alloc(structt.get_label().to_owned());
-        let value = structt.get_value();
-        let scope = SFieldAndRest(maybe_structt);
-        maybe_structt = structt.get_rest();
-        let value = env.vomit(255, pc, code_arena, value, &scope)?;
+    loop {
+        let structt = if let Some(structt) = maybe_structt.downcast_definition::<DPopulatedStruct>()
+        {
+            structt
+        } else {
+            break;
+        };
+        let label = ctx.code_arena.alloc(structt.get_label().to_owned());
+        let value = structt.get_value().ptr_clone();
+        let scope = SFieldAndRest(maybe_structt.ptr_clone());
+        let ctx = &mut ctx.with_scope(&scope);
+        let rest = structt.get_rest().ptr_clone();
+        drop(structt);
+        maybe_structt = rest;
+        let value = env.vomit(255, ctx, value);
         if label.len() > 0 {
             fields.push(Node {
                 phrase: "is",
@@ -86,18 +89,21 @@ fn uncreate<'a>(
                     NodeChild::Node(Node {
                         phrase: "identifier",
                         children: vec![NodeChild::Text(label)],
+                        ..Default::default()
                     }),
                     NodeChild::Text("IS"),
                     NodeChild::Node(value),
                 ],
+                ..Default::default()
             });
         } else {
             fields.push(value);
         }
     }
     Ok(
-        if env.is_def_equal_without_subs(maybe_structt, env.get_language_item("void"), 1024)?
-            == TripleBool::True
+        if maybe_structt
+            .get_trimmed_equality(&env.get_language_item("void"))?
+            .is_trivial_yes()
         {
             Some(Node {
                 phrase: "struct",
@@ -106,6 +112,7 @@ fn uncreate<'a>(
                     create_comma_list(fields),
                     NodeChild::Text("}"),
                 ],
+                ..Default::default()
             })
         } else {
             None

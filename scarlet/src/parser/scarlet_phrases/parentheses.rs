@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
+    item::ItemPtr,
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,12 +11,7 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
-    pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("("));
     assert_eq!(node.children[2], NodeChild::Text(")"));
@@ -24,19 +19,18 @@ fn create<'x>(
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(Some(Node {
         phrase: "parentheses",
         children: vec![
             NodeChild::Text("("),
-            NodeChild::Node(env.vomit(255, pc, code_arena, uncreate, from)?),
+            NodeChild::Node(env.vomit(255, ctx, uncreate)),
             NodeChild::Text(")"),
         ],
+        ..Default::default()
     }))
 }
 

@@ -1,0 +1,12 @@
+
+and IS 
+DECISION[a true b false]
+.AS_LANGUAGE_ITEM[and]
+
+or IS DECISION[a true true b]
+
+a IS VAR[SELF FROM Bool]
+b IS VAR[SELF FROM Bool]
+
+Bool IS 
+VAR[DECISION[SELF  true  true  SELF = false]]

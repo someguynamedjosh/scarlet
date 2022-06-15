@@ -41,6 +41,7 @@ fn read_path(at: &Path) -> Option<FileNode> {
     if folder_path.exists() && folder_path.is_dir() {
         children = read_folder_contents(folder_path);
     }
+    children.sort_by(|a, b| a.0.cmp(&b.0));
     let file_path = at.with_extension("sr");
     if file_path.exists() && file_path.is_file() {
         let content = std::fs::read_to_string(file_path).unwrap();

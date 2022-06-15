@@ -1,9 +1,8 @@
 t_eq_symm IS 
 {
    t_just[b = a]
-   .WITH_DEPENDENCIES[a b]
 
-   t_eq_ext_rev[a b x]
+   t_eq_ext_rev[x a b].SHOWN
 
    a IS VAR[]
    b IS VAR[a = SELF]
@@ -15,9 +14,8 @@ t_eq_symm IS
 t_eq_ext IS 
 {
    t_just[fx[a] = fx[b]]
-   .WITH_DEPENDENCIES[a b fx]
 
-   t_eq_ext_rev[b a]
+   t_eq_ext_rev[fx b a]
 
    # Proves b = a
    t_eq_symm[a b]
@@ -31,13 +29,12 @@ t_eq_ext IS
 # Proves fx[b]
 t_inv_eq_ext IS 
 {
-   t_just[fx[b]]
-   .WITH_DEPENDENCIES[a b fx]
+   # t_just[fx[b]]
 
-   t_inv_eq[fx[a] fx[b]]
+   # t_inv_eq[fx[a] fx[b]]
 
    # Proves fx[a] = fx[b]
-   t_eq_ext[a b fx]
+   t_eq_ext[fx a b]
 
    a IS VAR[]
    b IS VAR[a = SELF]
@@ -45,21 +42,19 @@ t_inv_eq_ext IS
 }
 .VALUE
 
-# # From a = b   b = c
-# # Proves a = c
-t_eq_trans IS 
-{
-   t_just[a = c]
-   .WITH_DEPENDENCIES[a b c]
+# # # From a = b   b = c
+# # # Proves a = c
+# t_eq_trans IS 
+# {
+#    t_just[a = c]
 
-   t_inv_eq[a = b  a = c]
-   t_eq_ext[b c a_equals_x]
+#    t_inv_eq[a = b  a = c]
+#    t_eq_ext[a_equals_x b c]
 
-   a_equals_x IS
-   (a = x).WITH_DEPENDENCIES[x]
+#    a_equals_x IS a = x
 
-   a IS VAR[]
-   b IS VAR[a = SELF]
-   c IS VAR[b = SELF]
-}
-.VALUE
+#    a IS VAR[]
+#    b IS VAR[a = SELF]
+#    c IS VAR[b = SELF]
+# }
+# .VALUE

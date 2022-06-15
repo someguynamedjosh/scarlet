@@ -1,23 +1,25 @@
+mod as_auto_theorem;
 mod as_language_item;
 mod axiom;
 mod decision;
 mod equal;
+mod from;
 mod identifier;
 mod is;
 mod is_populated_struct;
-mod keyword_unique;
 mod label_access;
 mod member_access;
-mod multiple_constructs;
+mod multiple_items;
 mod parentheses;
 mod populated_struct;
+mod recursion;
 mod rest_access;
 mod shown;
 mod structt;
 mod substitution;
+mod unique;
 mod value_access;
 mod variable;
-mod with_dependencies;
 
 use super::phrase::Phrase;
 
@@ -45,11 +47,12 @@ macro_rules! phrase {
 
 pub fn phrases() -> Vec<Phrase> {
     vec![
-        keyword_unique::phrase(),
+        unique::phrase(),
         axiom::phrase(),
         variable::phrase(),
         populated_struct::phrase(),
         equal::phrase(),
+        from::phrase(),
         decision::phrase(),
         label_access::phrase(),
         value_access::phrase(),
@@ -57,7 +60,7 @@ pub fn phrases() -> Vec<Phrase> {
         is_populated_struct::phrase(),
         shown::phrase(),
         as_language_item::phrase(),
-        with_dependencies::phrase(),
+        as_auto_theorem::phrase(),
         member_access::phrase(),
         substitution::phrase(),
         structt::phrase(),
@@ -72,8 +75,9 @@ pub fn phrases() -> Vec<Phrase> {
         //     None,
         //     10 => 9, r"\^", 10
         // ),
-        multiple_constructs::phrase(),
+        multiple_items::phrase(),
         parentheses::phrase(),
+        recursion::phrase(),
         identifier::phrase(),
     ]
 }

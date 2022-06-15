@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{shown::CShown, ConstructId},
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
+    item::ItemPtr,
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,44 +11,20 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create<'x>(
-    pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".SHOWN"));
-    let this = env.push_placeholder(scope);
-    let base = node.children[0].as_construct(pc, env, SPlain(this));
-    env.define_construct(this, CShown::new(base));
-    this
+    let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
+    base.borrow_mut().show = true;
+    base
 }
 
 fn uncreate<'a>(
-    pc: &ParseContext,
     env: &mut Environment,
-    code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    from: &dyn Scope,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    Ok(
-        if let Some(cshown) = env.get_and_downcast_construct_definition::<CShown>(uncreate)? {
-            let cshown = cshown.clone();
-            Some(Node {
-                phrase: "shown",
-                children: vec![NodeChild::Node(env.vomit(
-                    4,
-                    pc,
-                    code_arena,
-                    cshown.get_base(),
-                    from,
-                )?)],
-            })
-        } else {
-            None
-        },
-    )
+    Ok(None)
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {

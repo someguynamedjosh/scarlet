@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::ConstructId,
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
+    item::ItemPtr,
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,28 +11,21 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
-    pc: &ParseContext,
-    env: &mut Environment<'x>,
-    scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 5);
     assert_eq!(node.children[1], NodeChild::Text(".AS_LANGUAGE_ITEM"));
     assert_eq!(node.children[2], NodeChild::Text("["));
     assert_eq!(node.children[4], NodeChild::Text("]"));
     let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
     let name = node.children[3].as_node().as_ident();
-    env.define_language_item(name, base);
+    env.define_language_item(name, base.ptr_clone());
     base
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
-    _env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    _uncreate: ConstructId,
-    _from: &dyn Scope,
+    env: &mut Environment,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

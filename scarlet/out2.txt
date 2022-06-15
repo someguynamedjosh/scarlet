@@ -1,0 +1,6 @@
+0 -> a
+1 -> x
+2 -> fx
+{
+    fx -> fx[x IS a][a IS x]
+},

@@ -1,8 +1,8 @@
 use typed_arena::Arena;
 
 use crate::{
-    constructs::{axiom::CAxiom, ConstructId},
-    environment::Environment,
+    environment::{vomit::VomitContext, Environment},
+    item::{definitions::axiom::DAxiom, Item, ItemDefinition, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -11,32 +11,30 @@ use crate::{
     scope::Scope,
 };
 
-fn create<'x>(
+fn create(
     _pc: &ParseContext,
-    env: &mut Environment<'x>,
+    env: &mut Environment,
     scope: Box<dyn Scope>,
-    node: &Node<'x>,
-) -> ConstructId {
+    node: &Node,
+) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("AXIOM"));
     assert_eq!(node.children[1], NodeChild::Text("["));
     assert_eq!(node.children[3], NodeChild::Text("]"));
     let name = node.children[2].as_node().as_ident();
-    let con = CAxiom::from_name(env, name);
-    env.push_construct(con, scope)
+    let con = DAxiom::from_name(env, name);
+    Item::new_boxed(con.clone_into_box(), scope)
 }
 
 fn uncreate<'a>(
-    _pc: &ParseContext,
     env: &mut Environment,
-    _code_arena: &'a Arena<String>,
-    uncreate: ConstructId,
-    _from: &dyn Scope,
+    ctx: &mut VomitContext<'a, '_>,
+    uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(cax) = env.get_and_downcast_construct_definition::<CAxiom>(uncreate)? {
+    if let Some(cax) = uncreate.downcast_definition::<DAxiom>() {
         let cax = cax.clone();
         let statement = cax.get_statement(env);
-        let statement = &statement[..statement.len() - "_statement".len()];
+        let statement = &statement[..statement.len()]; // - "_statement".len()];
         Ok(Some(Node {
             phrase: "axiom",
             children: vec![
@@ -45,6 +43,7 @@ fn uncreate<'a>(
                 NodeChild::Text(statement),
                 NodeChild::Text("]"),
             ],
+            ..Default::default()
         }))
     } else {
         Ok(None)

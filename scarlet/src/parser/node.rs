@@ -1,9 +1,9 @@
 use std::fmt::{self, Debug, Formatter};
 
 use super::{phrase::PhraseTable, ParseContext};
-use crate::{constructs::ConstructId, environment::Environment, scope::Scope, shared::indented};
+use crate::{environment::Environment, item::ItemPtr, scope::Scope, shared::indented};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum NodeChild<'a> {
     Node(Node<'a>),
     Text(&'a str),
@@ -30,18 +30,18 @@ impl<'a> NodeChild<'a> {
     pub(crate) fn as_construct(
         &self,
         pc: &ParseContext,
-        env: &mut Environment<'a>,
+        env: &mut Environment,
         scope: impl Scope + 'static,
-    ) -> ConstructId {
+    ) -> ItemPtr {
         self.as_node().as_construct(pc, env, scope)
     }
 
     pub(crate) fn as_construct_dyn_scope(
         &self,
         pc: &ParseContext,
-        env: &mut Environment<'a>,
+        env: &mut Environment,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemPtr {
         self.as_node().as_construct_dyn_scope(pc, env, scope)
     }
 
@@ -64,13 +64,22 @@ impl<'a> Debug for NodeChild<'a> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
-pub struct Node<'a> {
-    pub phrase: &'static str,
-    pub children: Vec<NodeChild<'a>>,
+#[derive(Clone, PartialEq, Eq, Default, Hash)]
+pub struct FilePosition {
+    pub file_index: u32,
+    pub start_char: usize,
+    /// Exclusive, I.E. the selection ends before end_char.
+    pub end_char: usize,
 }
 
-impl<'a> Debug for Node<'a> {
+#[derive(Clone, PartialEq, Eq, Default, Hash)]
+pub struct Node<'x> {
+    pub phrase: &'static str,
+    pub children: Vec<NodeChild<'x>>,
+    pub position: FilePosition,
+}
+
+impl<'x> Debug for Node<'x> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}:", self.phrase)?;
         for child in &self.children {
@@ -111,18 +120,18 @@ impl<'x> Node<'x> {
     pub fn as_construct(
         &self,
         pc: &ParseContext,
-        env: &mut Environment<'x>,
+        env: &mut Environment,
         scope: impl Scope + 'static,
-    ) -> ConstructId {
+    ) -> ItemPtr {
         self.as_construct_dyn_scope(pc, env, Box::new(scope))
     }
 
     pub fn as_construct_dyn_scope(
         &self,
         pc: &ParseContext,
-        env: &mut Environment<'x>,
+        env: &mut Environment,
         scope: Box<dyn Scope>,
-    ) -> ConstructId {
+    ) -> ItemPtr {
         pc.phrases_sorted_by_priority
             .get(self.phrase)
             .unwrap()
