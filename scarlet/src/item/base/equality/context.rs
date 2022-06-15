@@ -261,6 +261,13 @@ impl EqualityCalculationContext {
         }
         true
     }
+
+    pub(crate) fn other_subs(&self) -> &[Substitutions] {
+        match self.self_side {
+            EqualityTestSide::Left => &self.rhs_subs,
+            EqualityTestSide::Right => &self.lhs_subs,
+        }
+    }
 }
 
 impl ItemPtr {
