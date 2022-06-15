@@ -1643,3 +1643,121 @@ fn separated_fx_sub_x_is_x() {
         );
     });
 }
+
+#[test]
+fn fx_a_inv_eq_result_is_fx_a_env() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    y IS VAR[SELF]
+    z IS VAR[y = z]
+
+    u IS VAR[]
+    v IS VAR[u = v]
+
+    VAR[fx[u]]
+    VAR[fx[v]]
+    VAR[fx[u] = fx[v]]
+
+    t_just IS VAR[SELF]
+
+    v1 IS z[fx[u] fx[v]]
+    v2 IS fx[v]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
+fn fx_sub_s_and_r_x_is_r_s_env() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    r IS VAR[]
+    s IS VAR[]
+
+    v1 IS fx[s  r = x]
+    v2 IS r = s
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}
+
+#[test]
+fn try_build_trans_result_env() {
+    let code = r"
+    x IS VAR[]
+    fx IS VAR[DEP x]
+
+    y IS VAR[]
+    z IS VAR[y = SELF]
+
+    eq_ext_statement IS fx[y] = fx[z]
+
+    u IS VAR[]
+    v IS VAR[]
+
+    inv_eq_req IS u = v
+
+    r IS VAR[]
+    s IS VAR[]
+    t IS VAR[s = SELF]
+
+    v1 IS eq_ext_statement[r = x  s  t]
+    v2 IS inv_eq_req[r = s   r = t]
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        println!("{:#?}", v1.get_trimmed_equality(&v2));
+        panic!();
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}

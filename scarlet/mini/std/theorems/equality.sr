@@ -29,7 +29,7 @@ t_eq_ext IS
 # Proves fx[b]
 t_inv_eq_ext IS 
 {
-   # t_just[fx[b]]
+   t_just[fx[b]]
 
    t_inv_eq[fx[a] fx[b]]
 
@@ -42,19 +42,24 @@ t_inv_eq_ext IS
 }
 .VALUE
 
-# # # From a = b   b = c
-# # # Proves a = c
-# t_eq_trans IS 
-# {
-#    t_just[a = c]
+# From a = b   b = c
+# Proves a = c
+t_eq_trans IS 
+{
+   # t_just[a = c]
 
-#    t_inv_eq[a = b  a = c]
-#    t_eq_ext[a_equals_x b c]
+   # From a = b and (a = b) = (a = c)
+   # Proves a = c
+   # t_inv_eq[a = b  a = c]
 
-#    a_equals_x IS a = x
+   # From b = c
+   # Proves (a = b) = (a = c)
+   t_eq_ext[a_equals_x b c].SHOWN
 
-#    a IS VAR[]
-#    b IS VAR[a = SELF]
-#    c IS VAR[b = SELF]
-# }
-# .VALUE
+   a_equals_x IS a = x
+
+   a IS VAR[]
+   b IS VAR[a = SELF]
+   c IS VAR[b = SELF]
+}
+.VALUE

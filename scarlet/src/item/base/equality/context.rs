@@ -12,7 +12,7 @@ use crate::item::{
     Item, ItemPtr,
 };
 
-const TRACE: bool = true;
+const TRACE: bool = false;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EqualityTestSide {

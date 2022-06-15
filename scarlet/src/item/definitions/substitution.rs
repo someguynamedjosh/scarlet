@@ -107,7 +107,8 @@ impl DSubstitution {
                 .iter()
                 .find(|(var, _)| var.is_same_instance_as(&dep.var))
             {
-                let replaced_deps = ctx.get_dependencies(rep, affects_return_value);
+                let replaced_deps =
+                    ctx.get_dependencies(rep, affects_return_value && dep.affects_return_value);
                 let replaced_err = replaced_deps.error().clone();
                 for rdep in replaced_deps.into_variables() {
                     if !dep.swallow.contains(&rdep.var) {
