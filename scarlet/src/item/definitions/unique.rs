@@ -4,18 +4,11 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
-        invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc,
-        },
-        ItemDefinition, ItemPtr,
+        dependencies::DependenciesFeature,
+        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        invariants::InvariantsFeature,
+        ItemDefinition,
     },
-    shared::{Id, Pool},
     util::PtrExtension,
 };
 

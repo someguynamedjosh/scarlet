@@ -51,7 +51,7 @@ impl Resolvable for RNamedMember {
     fn resolve(
         &self,
         env: &mut Environment,
-        this: ItemPtr,
+        _this: ItemPtr,
         scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {

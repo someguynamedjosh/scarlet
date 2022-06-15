@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},

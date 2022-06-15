@@ -1,12 +1,9 @@
-use std::ops::ControlFlow;
-
 use typed_arena::Arena;
 
 use super::{Environment, ItemPtr};
 use crate::{
     item::{
-        definition::ItemDefinition,
-        definitions::variable::{DVariable, SVariableInvariants, VariablePtr},
+        definitions::variable::{SVariableInvariants, VariablePtr},
         resolvable::DResolvable,
     },
     parser::{Node, NodeChild, ParseContext},
@@ -38,7 +35,7 @@ impl<'x, 'y> VomitContext<'x, 'y> {
 
     pub fn get_name(
         &mut self,
-        env: &mut Environment,
+        _env: &mut Environment,
         of: ItemPtr,
         make_node: impl FnOnce() -> Node<'x>,
     ) -> &'x str {
@@ -186,7 +183,7 @@ impl Environment {
                 }
             }
         }
-        if let Some(err) = err {
+        if let Some(_err) = err {
             return Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text("UNRESOLVED")],

@@ -14,10 +14,9 @@ use owning_ref::{OwningRef, OwningRefMut};
 
 use super::{
     dependencies::{DepResult, DependencyCalculationContext},
-    equality::{Ecc, EqualResult, EqualityCalculationContext},
     from::create_from_dex,
     invariants::{InvariantCalculationContext, InvariantSetPtr, InvariantsResult},
-    util::{RecursionPreventionStack, Stack},
+    util::Stack,
 };
 use crate::{
     environment::Environment,
@@ -27,11 +26,11 @@ use crate::{
             placeholder::DPlaceholder,
             structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
         },
-        resolvable::{BoxedResolvable, DResolvable, Resolvable, UnresolvedItemError},
+        resolvable::{DResolvable, Resolvable, UnresolvedItemError},
         ContainmentType, ItemDefinition,
     },
     scope::{LookupIdentResult, SRoot, Scope},
-    util::{rcrc, PtrExtension},
+    util::PtrExtension,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -319,10 +318,10 @@ impl ItemPtr {
         if self.is_computationally_recursive() {
             vec![self.ptr_clone()]
         } else if let Some(other) = self.downcast_definition::<DOther>() {
-                other.other().evaluation_recurses_over()
+            other.other().evaluation_recurses_over()
         } else {
             let mut result = Vec::new();
-            for (t, content) in self.borrow().definition.contents() {
+            for (_t, content) in self.borrow().definition.contents() {
                 result.append(&mut content.evaluation_recurses_over());
             }
             result

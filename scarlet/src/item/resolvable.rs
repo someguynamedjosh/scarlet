@@ -5,12 +5,7 @@ mod placeholder;
 mod substitution;
 mod variable;
 
-use std::{
-    any::Any,
-    convert::Infallible,
-    fmt::Debug,
-    ops::{FromResidual, Try},
-};
+use std::{any::Any, convert::Infallible, fmt::Debug, ops::FromResidual};
 
 pub use identifier::RIdentifier;
 pub use named_member::RNamedMember;
@@ -69,8 +64,8 @@ impl DependenciesFeature for DResolvable {
     fn get_dependencies_using_context(
         &self,
         this: &ItemPtr,
-        ctx: &mut Dcc,
-        affects_return_value: bool,
+        _ctx: &mut Dcc,
+        _affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         Dependencies::new_error(UnresolvedItemError(this.ptr_clone()))
@@ -81,7 +76,7 @@ impl InvariantsFeature for DResolvable {
     fn get_invariants_using_context(
         &self,
         this: &ItemPtr,
-        ctx: &mut Icc,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         Err(UnresolvedItemError(this.ptr_clone()))

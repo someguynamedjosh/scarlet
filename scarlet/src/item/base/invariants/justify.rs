@@ -1,19 +1,9 @@
-use std::collections::HashSet;
-
-use backtrace::Backtrace;
-use itertools::Itertools;
-use maplit::hashset;
-
-use super::{InvariantSet, InvariantSetPtr, SetJustification, StatementJustifications};
+use super::{InvariantSetPtr, SetJustification, StatementJustifications};
 use crate::{
     environment::Environment,
-    item::{
-        base::util::Stack, definitions::substitution::Substitutions, equality::Equal,
-        util::unchecked_substitution, ItemPtr,
-    },
-    scope::{LookupInvariantError, LookupInvariantResult, Scope},
-    shared::{indented, indented_with, TripleBool},
-    util::{rcrc, PtrExtension},
+    item::{definitions::substitution::Substitutions, equality::Equal, ItemPtr},
+    scope::{LookupInvariantError, Scope},
+    util::PtrExtension,
 };
 
 const TRACE: bool = false;

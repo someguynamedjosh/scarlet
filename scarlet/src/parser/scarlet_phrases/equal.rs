@@ -1,8 +1,6 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::decision::DDecision, equality::Equal, Item, ItemDefinition, ItemPtr},
+    item::{definitions::decision::DDecision, Item, ItemDefinition, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,

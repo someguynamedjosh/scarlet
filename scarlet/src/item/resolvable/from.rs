@@ -3,8 +3,8 @@ use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
-        definitions::{other::DOther, substitution::DSubstitution, variable::DVariable},
-        ContainmentType, Item, ItemDefinition, ItemPtr,
+        definitions::{substitution::DSubstitution, variable::DVariable},
+        ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::Scope,
     util::PtrExtension,
@@ -32,8 +32,8 @@ impl Resolvable for RFrom {
     fn resolve(
         &self,
         env: &mut Environment,
-        this: ItemPtr,
-        scope: Box<dyn Scope>,
+        _this: ItemPtr,
+        _scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {
         let base = self.right.get_from_dex(env);

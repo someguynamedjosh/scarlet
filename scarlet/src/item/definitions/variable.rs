@@ -12,27 +12,19 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        definitions::{decision::DDecision, substitution::Substitutions},
+        definitions::substitution::Substitutions,
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
+        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
         invariants::{
-            self, Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        resolvable::UnresolvedItemError,
         util::unchecked_substitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
     },
-    scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        SPlain, SRoot, Scope,
-    },
-    shared::{Id, Pool},
+    scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
     util::{rcrc, PtrExtension},
 };
 
@@ -247,7 +239,7 @@ impl CheckFeature for DVariable {}
 impl DependenciesFeature for DVariable {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,
@@ -357,7 +349,7 @@ impl InvariantsFeature for DVariable {
     fn get_invariants_using_context(
         &self,
         this: &ItemPtr,
-        ctx: &mut Icc,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         let statements = self.0.borrow().invariants.clone();

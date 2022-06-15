@@ -1,12 +1,7 @@
-use std::ops::ControlFlow;
-
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
-        definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
-        equality::Equal,
+        definitions::structt::{AtomicStructMember, DAtomicStructMember},
         ItemDefinition, ItemPtr,
     },
     parser::{

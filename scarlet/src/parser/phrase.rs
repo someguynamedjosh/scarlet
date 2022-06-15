@@ -1,6 +1,5 @@
 use indexmap::IndexMap;
 use regex::Regex;
-use typed_arena::Arena;
 
 use super::{Node, ParseContext};
 use crate::{

@@ -2,10 +2,7 @@ pub mod vomit;
 
 use std::collections::HashMap;
 
-use crate::{
-    item::{definitions::other::DOther, Item, ItemDefinition, ItemPtr},
-    scope::SRoot,
-};
+use crate::item::{definitions::other::DOther, Item, ItemDefinition, ItemPtr};
 
 #[cfg(not(feature = "no_axioms"))]
 pub const LANGUAGE_ITEM_NAMES: &[&str] = &[

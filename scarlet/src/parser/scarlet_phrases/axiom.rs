@@ -1,5 +1,3 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{definitions::axiom::DAxiom, Item, ItemDefinition, ItemPtr},
@@ -28,7 +26,7 @@ fn create(
 
 fn uncreate<'a>(
     env: &mut Environment,
-    ctx: &mut VomitContext<'a, '_>,
+    _ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Some(cax) = uncreate.downcast_definition::<DAxiom>() {

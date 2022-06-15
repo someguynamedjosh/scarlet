@@ -4,18 +4,11 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
-        invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc,
-        },
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Ecc, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
-    shared::{Id, Pool},
 };
 
 #[derive(Clone, PartialEq, Eq)]
@@ -57,7 +50,7 @@ impl CheckFeature for DOther {}
 impl DependenciesFeature for DOther {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,

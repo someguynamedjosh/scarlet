@@ -5,7 +5,7 @@ use crate::{
     item::{
         definitions::{
             other::DOther,
-            variable::{DVariable, Variable, VariableOrder},
+            variable::{DVariable, VariableOrder},
         },
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -45,8 +45,8 @@ impl Resolvable for RVariable {
 
     fn resolve(
         &self,
-        env: &mut Environment,
-        this: ItemPtr,
+        _env: &mut Environment,
+        _this: ItemPtr,
         scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {

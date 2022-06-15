@@ -4,10 +4,7 @@ use crate::{
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
+        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
@@ -84,7 +81,7 @@ impl CheckFeature for DDecision {}
 impl DependenciesFeature for DDecision {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,
@@ -135,14 +132,14 @@ impl InvariantsFeature for DDecision {
     fn get_invariants_using_context(
         &self,
         this: &ItemPtr,
-        ctx: &mut Icc,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         let true_invs = self.when_equal.get_invariants()?;
         let false_invs = self.when_equal.get_invariants()?;
         let mut result_statements = Vec::new();
         for true_inv in true_invs.borrow().statements() {
-            for (index, false_inv) in false_invs.borrow().statements().iter().enumerate() {
+            for (_index, false_inv) in false_invs.borrow().statements().iter().enumerate() {
                 if true_inv
                     .get_trimmed_equality(false_inv)
                     .as_ref()

@@ -1,11 +1,9 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::other::DOther, ItemPtr},
+    item::ItemPtr,
     parser::{
         phrase::{Phrase, UncreateResult},
-        Node, NodeChild, ParseContext,
+        Node, ParseContext,
     },
     phrase,
     scope::Scope,
@@ -21,8 +19,8 @@ fn create(
 }
 
 fn uncreate<'x>(
-    env: &mut Environment,
-    ctx: &mut VomitContext<'x, '_>,
+    _env: &mut Environment,
+    _ctx: &mut VomitContext<'x, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'x> {
     if !uncreate.is_recursive() {
@@ -37,7 +35,7 @@ fn uncreate<'x>(
     }
 }
 
-fn vomit(pc: &ParseContext, src: &Node) -> String {
+fn vomit(_pc: &ParseContext, _src: &Node) -> String {
     // format!("#= recursive =# {}", src.children[0].as_node().vomit(pc))
     format!("RECURSE")
 }

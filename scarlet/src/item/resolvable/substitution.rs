@@ -1,9 +1,6 @@
-use std::collections::HashSet;
-
-use itertools::Itertools;
 use maplit::hashset;
 
-use super::{BoxedResolvable, RPlaceholder, Resolvable, ResolveError, ResolveResult};
+use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
@@ -113,7 +110,7 @@ impl Resolvable for RSubstitution {
 }
 
 fn create_invariants(
-    env: &mut Environment,
+    _env: &mut Environment,
     this: ItemPtr,
     base: ItemPtr,
     subs: &Substitutions,
@@ -134,7 +131,7 @@ fn create_invariants(
 /// `(an_int FROM I32)[an_int IS something]`.
 fn make_justification_statements(
     subs: &Substitutions,
-    limit: u32,
+    _limit: u32,
 ) -> Result<Vec<ItemPtr>, ResolveError> {
     let mut justifications = Vec::new();
     let mut previous_subs = Substitutions::new();
@@ -185,7 +182,7 @@ impl RSubstitution {
     fn resolve_anonymous_subs(
         &self,
         mut remaining_deps: Dependencies,
-        env: &mut Environment,
+        _env: &mut Environment,
         subs: &mut Substitutions,
     ) -> Result<(), ResolveError> {
         for value in &self.anonymous_subs {
@@ -206,7 +203,7 @@ impl RSubstitution {
     fn resolve_named_subs(
         &self,
         base_scope: Box<dyn Scope>,
-        env: &mut Environment,
+        _env: &mut Environment,
         subs: &mut Substitutions,
         remaining_deps: &mut Dependencies,
     ) -> Result<(), ResolveError> {

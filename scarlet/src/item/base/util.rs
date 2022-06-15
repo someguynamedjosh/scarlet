@@ -1,9 +1,6 @@
 use itertools::Itertools;
 
-use crate::item::{
-    definitions::substitution::{DSubstitution, Substitutions},
-    Item, ItemPtr,
-};
+use crate::item::ItemPtr;
 
 pub(super) struct RecursionPreventionStack(Vec<ItemPtr>);
 

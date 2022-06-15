@@ -1,11 +1,9 @@
 use itertools::Itertools;
-use typed_arena::Arena;
 
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::{
-            other::DOther,
             unique::DUnique,
             variable::{DVariable, SVariableInvariants, VariableOrder},
         },

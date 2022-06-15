@@ -1,9 +1,7 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
-        resolvable::{DResolvable, RIdentifier, Resolvable},
+        resolvable::{DResolvable, RIdentifier},
         Item, ItemDefinition, ItemPtr,
     },
     parser::{
@@ -16,7 +14,7 @@ use crate::{
 
 fn create(
     _pc: &ParseContext,
-    env: &mut Environment,
+    _env: &mut Environment,
     scope: Box<dyn Scope>,
     node: &Node,
 ) -> ItemPtr {

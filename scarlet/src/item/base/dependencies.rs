@@ -4,10 +4,6 @@ mod dependency;
 mod feature;
 mod tests;
 
-use std::collections::{BTreeSet, HashSet};
-
-use maplit::hashset;
-
 pub use self::{context::*, dependencies_struct::*, dependency::*, feature::*};
 use crate::{environment::Environment, item::resolvable::UnresolvedItemError};
 

@@ -1,8 +1,8 @@
 #![cfg(test)]
 
-use super::{Dependencies, Dependency};
+use super::Dependencies;
 use crate::item::{
-    definitions::variable::{Variable, VariableOrder, VariablePtr},
+    definitions::variable::{Variable, VariableOrder},
     test_util::unique,
 };
 

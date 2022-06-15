@@ -9,7 +9,7 @@ use crate::{
             variable::DVariable,
         },
         item::ItemPtr,
-        resolvable::{from::RFrom, DResolvable, RSubstitution, UnresolvedItemError},
+        resolvable::{from::RFrom, DResolvable, RSubstitution},
         Item, ItemDefinition,
     },
     scope::{SPlain, Scope},

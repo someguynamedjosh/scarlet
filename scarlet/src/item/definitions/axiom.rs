@@ -1,16 +1,12 @@
 use maplit::hashset;
 
-use super::substitution::Substitutions;
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
+        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -66,7 +62,7 @@ impl CheckFeature for DAxiom {}
 impl DependenciesFeature for DAxiom {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,

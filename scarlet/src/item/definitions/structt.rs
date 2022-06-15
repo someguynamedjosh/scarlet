@@ -7,22 +7,12 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        definitions::{decision::DDecision, substitution::Substitutions},
-        dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
-        invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc,
-        },
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
+        invariants::{Icc, InvariantSetPtr, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
-    scope::{
-        LookupIdentResult, LookupInvariantError, LookupInvariantResult, ReverseLookupIdentResult,
-        SPlain, Scope,
-    },
+    scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -71,7 +61,7 @@ impl InvariantsFeature for DPopulatedStruct {}
 impl DependenciesFeature for DPopulatedStruct {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,
@@ -191,7 +181,7 @@ impl EqualityFeature for DAtomicStructMember {
 impl DependenciesFeature for DAtomicStructMember {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,
@@ -219,8 +209,8 @@ impl DependenciesFeature for DAtomicStructMember {
 impl InvariantsFeature for DAtomicStructMember {
     fn get_invariants_using_context(
         &self,
-        this: &ItemPtr,
-        ctx: &mut Icc,
+        _this: &ItemPtr,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         if let Some(structt) = self
@@ -261,7 +251,7 @@ impl Scope for SField {
 
     fn local_reverse_lookup_ident(
         &self,
-        env: &mut Environment,
+        _env: &mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {

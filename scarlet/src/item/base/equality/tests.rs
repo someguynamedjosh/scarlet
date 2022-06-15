@@ -5,7 +5,7 @@ use std::assert_matches::assert_matches;
 use crate::{
     item::{
         definitions::substitution::{DSubstitution, Substitutions},
-        equality::{Equal, EqualResult, EqualSuccess},
+        equality::Equal,
         test_util::*,
         util::*,
     },
@@ -1099,14 +1099,14 @@ fn sneaky_substitution() {
         t.ptr_clone(),
         f.ptr_clone(),
     );
-    let a_eq_b = decision(a.ptr_clone(), b.ptr_clone(), t.ptr_clone(), f.ptr_clone());
+    let _a_eq_b = decision(a.ptr_clone(), b.ptr_clone(), t.ptr_clone(), f.ptr_clone());
 
     let this_subs = subs(vec![
         (fx.1.ptr_clone(), x_eq_y),
         (x.1.ptr_clone(), a.ptr_clone()),
         (y.1.ptr_clone(), b.ptr_clone()),
     ]);
-    let tricky_sub = unchecked_substitution(fx.0.ptr_clone(), &this_subs);
+    let _tricky_sub = unchecked_substitution(fx.0.ptr_clone(), &this_subs);
 
     // Currently we can't determine that (x IS a   y IS b) solves this
     // equality.     assert_eq!(tricky_sub.get_trimmed_equality(&a_eq_b),
@@ -1608,7 +1608,6 @@ fn fx_sub_x_is_x() {
         );
     });
 }
-
 
 #[test]
 fn separated_fx_sub_x_is_x() {

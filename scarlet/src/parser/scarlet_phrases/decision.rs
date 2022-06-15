@@ -13,7 +13,7 @@ use crate::{
         Node, NodeChild, ParseContext,
     },
     phrase,
-    scope::{SPlain, SRoot, Scope},
+    scope::{SPlain, Scope},
 };
 
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {

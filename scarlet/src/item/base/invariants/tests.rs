@@ -1,12 +1,7 @@
 #![cfg(test)]
 
 use crate::{
-    item::{
-        definitions::{structt::DPopulatedStruct, variable::DVariable},
-        test_util::*,
-        util::unchecked_substitution,
-        ItemPtr,
-    },
+    item::{definitions::variable::DVariable, test_util::*, util::unchecked_substitution},
     util::PtrExtension,
 };
 

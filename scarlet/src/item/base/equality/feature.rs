@@ -1,4 +1,4 @@
-use super::{Ecc, Equal, EqualityTestSide, OnlyCalledByEcc};
+use super::{Ecc, Equal, OnlyCalledByEcc};
 use crate::item::resolvable::UnresolvedItemError;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

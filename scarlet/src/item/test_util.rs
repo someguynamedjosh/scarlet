@@ -4,17 +4,20 @@ use std::sync::Mutex;
 
 use lazy_static::lazy_static;
 
-use super::{definitions::{variable::VariablePtr, other::DOther}, resolve::resolve_all, Item};
+use super::{
+    definitions::{other::DOther, variable::VariablePtr},
+    resolve::resolve_all,
+    Item,
+};
 use crate::{
     environment::Environment,
     file_tree::FileNode,
     item::{
         definitions::{
-            decision::DDecision,
             structt::DPopulatedStruct,
             substitution::Substitutions,
             unique::DUnique,
-            variable::{DVariable, Variable, VariableOrder},
+            variable::{DVariable, VariableOrder},
         },
         ItemPtr,
     },
@@ -113,7 +116,7 @@ pub(super) fn structt(mut fields: Vec<(&str, ItemPtr)>, void: &ItemPtr) -> ItemP
 }
 
 pub(super) fn other(base: ItemPtr) -> ItemPtr {
-    return Item::new(DOther::new(base), SRoot)
+    return Item::new(DOther::new(base), SRoot);
 }
 
 pub(super) fn get_member(root: &ItemPtr, name: &str) -> ItemPtr {

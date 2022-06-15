@@ -1,13 +1,7 @@
 use itertools::Itertools;
 
 use super::Ecc;
-use crate::{
-    item::{
-        definitions::{substitution::Substitutions, variable::VariablePtr},
-        ItemPtr,
-    },
-    util::PtrExtension,
-};
+use crate::{item::definitions::substitution::Substitutions, util::PtrExtension};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {

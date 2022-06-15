@@ -24,9 +24,9 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
 }
 
 fn uncreate<'a>(
-    env: &mut Environment,
-    ctx: &mut VomitContext<'a, '_>,
-    uncreate: ItemPtr,
+    _env: &mut Environment,
+    _ctx: &mut VomitContext<'a, '_>,
+    _uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(None)
 }

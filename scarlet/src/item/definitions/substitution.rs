@@ -1,9 +1,6 @@
 use std::{collections::HashSet, fmt::Debug};
 
-use lazy_static::__Deref;
-
 use crate::{
-    environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
@@ -12,18 +9,14 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
             OnlyCalledByDcc,
         },
-        equality::{
-            Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, EqualityTestSide,
-            OnlyCalledByEcc,
-        },
+        equality::{Ecc, Equal, EqualResult, EqualSuccess, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
         util::unchecked_substitution,
-        ContainmentType, Item, ItemDefinition, ItemPtr,
+        ContainmentType, ItemDefinition, ItemPtr,
     },
-    scope::Scope,
     shared::OrderedMap,
     util::PtrExtension,
 };
@@ -166,7 +159,7 @@ impl CheckFeature for DSubstitution {}
 impl DependenciesFeature for DSubstitution {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
+        _this: &ItemPtr,
         ctx: &mut Dcc,
         affects_return_value: bool,
         _: OnlyCalledByDcc,
@@ -264,8 +257,8 @@ impl EqualityFeature for DSubstitution {
 impl InvariantsFeature for DSubstitution {
     fn get_invariants_using_context(
         &self,
-        this: &ItemPtr,
-        ctx: &mut Icc,
+        _this: &ItemPtr,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         Ok(self.invs.ptr_clone())

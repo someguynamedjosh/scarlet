@@ -1,15 +1,6 @@
-use std::cell::Ref;
-
-use owning_ref::OwningRef;
-
-use super::{trim::trim_result, Equal, EqualResult, EqualSuccess};
+use super::{trim::trim_result, Equal};
 use crate::item::{
-    definitions::{
-        other::DOther,
-        substitution::{DSubstitution, Substitutions},
-    },
-    resolvable::UnresolvedItemError,
-    Item, ItemPtr,
+    definitions::substitution::DSubstitution, resolvable::UnresolvedItemError, ItemPtr,
 };
 
 const TRACE: bool = false;

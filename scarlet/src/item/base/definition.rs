@@ -1,14 +1,10 @@
-use std::{any::Any, cell::RefCell, fmt::Debug, rc::Rc};
+use std::{any::Any, fmt::Debug};
 
 use super::{
     check::CheckFeature, dependencies::DependenciesFeature, equality::EqualityFeature,
     invariants::InvariantsFeature,
 };
-use crate::{
-    environment::Environment,
-    item::{definitions::substitution::Substitutions, ItemPtr},
-    shared::AnyEq,
-};
+use crate::{item::ItemPtr, shared::AnyEq};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ContainmentType {

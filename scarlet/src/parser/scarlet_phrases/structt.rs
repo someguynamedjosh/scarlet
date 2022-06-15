@@ -1,10 +1,7 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
-        equality::Equal,
         ItemDefinition, ItemPtr,
     },
     parser::{

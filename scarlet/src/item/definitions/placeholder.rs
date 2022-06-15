@@ -2,15 +2,11 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, EqualityTestSide, OnlyCalledByEcc},
-        invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc,
-        },
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
+        invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ItemDefinition, ItemPtr,
     },
-    shared::{Id, Pool},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -29,9 +25,9 @@ impl CheckFeature for DPlaceholder {}
 impl DependenciesFeature for DPlaceholder {
     fn get_dependencies_using_context(
         &self,
-        this: &ItemPtr,
-        ctx: &mut Dcc,
-        affects_return_value: bool,
+        _this: &ItemPtr,
+        _ctx: &mut Dcc,
+        _affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
         panic!("Attempted to get dependencies of placeholder.");
@@ -39,11 +35,7 @@ impl DependenciesFeature for DPlaceholder {
 }
 
 impl EqualityFeature for DPlaceholder {
-    fn get_equality_using_context(
-        &self,
-        ctx: &mut Ecc,
-        _: OnlyCalledByEcc,
-    ) -> EqualResult {
+    fn get_equality_using_context(&self, _ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
         panic!("Attempted to test equality of placeholder.");
     }
 }
@@ -52,7 +44,7 @@ impl InvariantsFeature for DPlaceholder {
     fn get_invariants_using_context(
         &self,
         _this: &ItemPtr,
-        ctx: &mut Icc,
+        _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
         panic!("Attempted to get invariants of placeholder.");

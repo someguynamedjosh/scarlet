@@ -1,11 +1,6 @@
-use typed_arena::Arena;
-
 use crate::{
     environment::{vomit::VomitContext, Environment},
-    item::{
-        definitions::unique::{DUnique, Unique},
-        Item, ItemDefinition, ItemPtr,
-    },
+    item::{definitions::unique::DUnique, Item, ItemDefinition, ItemPtr},
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -16,7 +11,7 @@ use crate::{
 
 fn create(
     _pc: &ParseContext,
-    env: &mut Environment,
+    _env: &mut Environment,
     scope: Box<dyn Scope>,
     node: &Node,
 ) -> ItemPtr {
