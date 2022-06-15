@@ -46,12 +46,10 @@ fn thoroughly_remove_identity_substitutions(
 
 // Skips the final step.
 fn mostly_trim_result(result: &mut Equal) {
-    println!("{:#?}", result);
     match result {
         Equal::Yes(left, right) => mostly_trim_yes(left, right),
         _ => (),
     }
-    println!("{:#?}", result);
 }
 
 // Skips the final step.

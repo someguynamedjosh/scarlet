@@ -206,7 +206,15 @@ impl EqualityCalculationContext {
         drop(lhs_borrow);
         let result = lhs.get_equality_using_context(self, OnlyCalledByEcc(()))?;
         let result = if let Equal::Yes(lhs, rhs) = result {
-            Ok(Equal::Yes(lhs, rhs))
+            if rhs.len() > 0 {
+                if let Ok(Equal::Yes(lhs, rhs)) = self.get_equality_right() {
+                    Ok(Equal::Yes(lhs, rhs))
+                } else {
+                    Ok(Equal::Yes(lhs, rhs))
+                }
+            } else {
+                Ok(Equal::Yes(lhs, rhs))
+            }
         } else if result == Equal::Unknown {
             self.get_equality_right()
         } else {

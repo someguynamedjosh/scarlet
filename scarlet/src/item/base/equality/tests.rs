@@ -1204,8 +1204,10 @@ fn fx_sub_a_z_is_gy_sub_a_z() {
         g_sub_a_z.get_trimmed_equality(&f_sub_a_z),
         Ok(Equal::Yes(..))
     );
-    if let Ok(Equal::Yes(lsubs, _)) = f_sub_a_z.get_trimmed_equality(&g_sub_a_z) {
+    if let Ok(Equal::Yes(lsubs, rsubs)) = f_sub_a_z.get_trimmed_equality(&g_sub_a_z) {
+        println!("{:#?}", lsubs);
         assert_eq!(lsubs.len(), 1);
+        assert_eq!(rsubs.len(), 0);
         let mut entries = lsubs.iter();
         let last = entries.next().unwrap();
         assert_eq!(last.0.ptr_clone(), f.1.ptr_clone());
