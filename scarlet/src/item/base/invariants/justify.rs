@@ -198,8 +198,8 @@ impl<'a> JustificationContext<'a> {
                 if TRACE {
                     println!("{:#?}", eq);
                 }
-                if let Ok(Equal::Yes(subs)) = eq {
-                    if !subs.iter().any(|(l, r)| l.len() == 0 && r.len() == 0) {
+                if let Ok(eq) = eq {
+                    if !eq.is_trivial_yes() {
                         continue;
                     }
                     result.push(vec![other_set.ptr_clone()]);

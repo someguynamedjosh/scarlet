@@ -60,11 +60,14 @@ impl Dependencies {
     }
 
     #[track_caller]
-    pub fn as_complete_variables(&self) -> impl Iterator<Item = &Dependency> {
-        if self.error().is_some() {
-            panic!("Tried to get dependencies when dependencies contained an error!");
+    pub fn as_complete_variables(
+        &self,
+    ) -> Result<impl Iterator<Item = &Dependency>, UnresolvedItemError> {
+        if let Some(err) = self.error() {
+            Err(err.clone())
+        } else {
+            Ok(self.dependencies.iter())
         }
-        self.dependencies.iter()
     }
 
     pub fn into_variables(self) -> impl Iterator<Item = Dependency> {

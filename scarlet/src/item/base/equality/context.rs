@@ -1,6 +1,17 @@
+use std::collections::HashSet;
+
 use super::{trim::trim_result, Equal};
-use crate::item::{
-    definitions::substitution::DSubstitution, resolvable::UnresolvedItemError, ItemPtr,
+use crate::{
+    item::{
+        definitions::{
+            substitution::{DSubstitution, Substitutions},
+            variable::VariablePtr,
+        },
+        dependencies::Dependencies,
+        resolvable::UnresolvedItemError,
+        ItemPtr,
+    },
+    util::PtrExtension,
 };
 
 const TRACE: bool = false;
@@ -13,7 +24,9 @@ pub enum EqualityTestSide {
 
 pub struct EqualityCalculationContext {
     lhs: ItemPtr,
+    lhs_subs: Vec<Substitutions>,
     rhs: ItemPtr,
+    rhs_subs: Vec<Substitutions>,
     self_side: EqualityTestSide,
 }
 
@@ -28,7 +41,9 @@ impl EqualityCalculationContext {
     fn new(lhs: ItemPtr, rhs: ItemPtr) -> Self {
         Self {
             lhs,
+            lhs_subs: Vec::new(),
             rhs,
+            rhs_subs: Vec::new(),
             self_side: EqualityTestSide::Left,
         }
     }
@@ -63,6 +78,74 @@ impl EqualityCalculationContext {
         &self.rhs
     }
 
+    pub fn prepend_substitutions_for_primary(&mut self, subs: Substitutions) {
+        let sub_list = match self.self_side {
+            EqualityTestSide::Left => &mut self.lhs_subs,
+            EqualityTestSide::Right => &mut self.rhs_subs,
+        };
+        sub_list.insert(0, subs);
+    }
+
+    pub fn try_select_value_substituted_for_var_in_primary(
+        &self,
+        target_to_look_for: &VariablePtr,
+    ) -> Result<Option<Self>, UnresolvedItemError> {
+        let sub_list = match &self.self_side {
+            EqualityTestSide::Left => &self.lhs_subs,
+            EqualityTestSide::Right => &self.rhs_subs,
+        };
+        let mut dependencies = Dependencies::new();
+        for dep in target_to_look_for.borrow().dependencies() {
+            dependencies.append(dep.get_dependencies());
+        }
+        let mut new_sub_list = Vec::new();
+        let mut new_value = None;
+        'sub_list_loop: for (sub_index, sub) in sub_list.iter().enumerate() {
+            let mut new_sub = Substitutions::new();
+            let mut new_dependencies = Dependencies::new();
+            for (target, value) in sub {
+                if target.is_same_instance_as(target_to_look_for) {
+                    let mut sub_without_target = sub.clone();
+                    sub_without_target.remove(target).unwrap();
+                    new_sub_list.push(sub_without_target);
+                    new_sub_list.extend(sub_list[sub_index + 1..].iter().cloned());
+                    new_value = Some(value.ptr_clone());
+                    break 'sub_list_loop;
+                } else if dependencies.contains_var(target) {
+                    dependencies.remove(target);
+                    new_dependencies.append(value.get_dependencies());
+                    new_sub.insert_no_replace(target.ptr_clone(), value.ptr_clone());
+                }
+            }
+            dependencies.append(new_dependencies);
+            if new_sub.len() > 0 {
+                new_sub_list.push(new_sub);
+            }
+        }
+        if let Some(err) = dependencies.error() {
+            Err(err.clone())
+        } else if let Some(value) = new_value {
+            Ok(Some(match self.self_side {
+                EqualityTestSide::Left => Self {
+                    lhs: value,
+                    lhs_subs: new_sub_list,
+                    rhs: self.rhs.ptr_clone(),
+                    rhs_subs: self.rhs_subs.clone(),
+                    self_side: self.self_side,
+                },
+                EqualityTestSide::Right => Self {
+                    lhs: self.lhs.ptr_clone(),
+                    lhs_subs: self.lhs_subs.clone(),
+                    rhs: value,
+                    rhs_subs: new_sub_list,
+                    self_side: self.self_side,
+                },
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn with_primary(&self, new_primary: ItemPtr) -> Self {
         self.with_primary_and_other(new_primary, self.other().ptr_clone())
     }
@@ -88,19 +171,8 @@ impl EqualityCalculationContext {
         let lhs = lhs_borrow.definition.clone_into_box();
         drop(lhs_borrow);
         let result = lhs.get_equality_using_context(self, OnlyCalledByEcc(()))?;
-        let result = if let Equal::Yes(cases) = result.equal {
-            let equal = if result.unique {
-                Equal::Yes(cases)
-            } else if self.rhs.downcast_definition::<DSubstitution>().is_some() {
-                if let Ok(Equal::Yes(other_cases)) = self.get_equality_right() {
-                    Equal::Yes([cases, other_cases].concat())
-                } else {
-                    Equal::Yes(cases)
-                }
-            } else {
-                Equal::Yes(cases)
-            };
-            Ok(equal)
+        let result = if let Equal::Yes(lhs, rhs) = result.equal {
+            Ok(Equal::Yes(lhs, rhs))
         } else if result.equal == Equal::Unknown {
             self.get_equality_right()
         } else {

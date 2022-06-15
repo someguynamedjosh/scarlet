@@ -201,21 +201,21 @@ impl Variable {
         for dep in &this.borrow().dependencies {
             deps.append(dep.get_dependencies());
         }
-        if let Some(err) = deps.error() {
-            Dependencies::new_error(err.clone())
-        } else {
-            let mut res = Dependencies::new();
-            res.push_eager(Dependency {
-                var: this.ptr_clone(),
-                swallow: deps
-                    .as_complete_variables()
-                    .map(|x| x.var.ptr_clone())
-                    .collect(),
-                order: this.borrow().order.clone(),
-                affects_return_value,
-            });
-            res
-        }
+        let result = match deps.as_complete_variables() {
+            Ok(swallowed) => {
+                let mut res = Dependencies::new();
+                res.push_eager(Dependency {
+                    var: this.ptr_clone(),
+                    swallow: swallowed.map(|x| x.var.ptr_clone()).collect(),
+                    order: this.borrow().order.clone(),
+                    affects_return_value,
+                });
+                res
+            }
+            Err(err) => Dependencies::new_error(err.clone()),
+        };
+        drop(deps);
+        result
     }
 }
 

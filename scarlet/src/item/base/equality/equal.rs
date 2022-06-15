@@ -1,11 +1,14 @@
 use itertools::Itertools;
 
 use super::Ecc;
-use crate::{item::definitions::substitution::Substitutions, util::PtrExtension};
+use crate::{
+    item::{definitions::substitution::Substitutions, resolvable::UnresolvedItemError},
+    util::PtrExtension,
+};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Equal {
-    Yes(Vec<(Substitutions, Substitutions)>),
+    Yes(Substitutions, Substitutions),
     Unknown,
     No,
 }
@@ -33,16 +36,16 @@ fn combine_substitutions(from: Substitutions, target_subs: &mut Substitutions) -
 
 impl Equal {
     pub fn yes() -> Self {
-        Self::Yes(vec![(Default::default(), Default::default())])
+        Self::Yes(Default::default(), Default::default())
     }
 
     pub fn yes1(left: Substitutions, right: Substitutions) -> Self {
-        Self::Yes(vec![(left, right)])
+        Self::Yes(left, right)
     }
 
     pub fn is_trivial_yes(&self) -> bool {
-        if let Self::Yes(cases) = self {
-            cases.iter().any(|x| x.0.len() == 0 && x.1.len() == 0)
+        if let Self::Yes(left, right) = self {
+            left.len() == 0 && right.len() == 0
         } else {
             false
         }
@@ -52,21 +55,12 @@ impl Equal {
         let mut default = Self::yes();
         for b in over {
             match b {
-                Self::Yes(other_subs) => {
-                    if let Self::Yes(ex_subs) = std::mem::replace(&mut default, Self::Unknown) {
-                        let mut new_subs = Vec::new();
-                        for ((left, right), (mut exleft, mut exright)) in other_subs
-                            .into_iter()
-                            .cartesian_product(ex_subs.into_iter())
-                        {
-                            let success = combine_substitutions(left, &mut exleft);
-                            let success = success.and(combine_substitutions(right, &mut exright));
-                            if success.is_ok() {
-                                new_subs.push((exleft, exright));
-                            }
-                        }
-                        if new_subs.len() > 0 {
-                            default = Self::Yes(new_subs);
+                Self::Yes(left, right) => {
+                    if let Self::Yes(exleft, exright) = &mut default {
+                        let success = combine_substitutions(left, exleft);
+                        let success = success.and(combine_substitutions(right, exright));
+                        if !success.is_ok() {
+                            default = Self::Unknown;
                         }
                     }
                 }
@@ -105,32 +99,31 @@ impl Equal {
 
     /// Removes substitutions that substitute targets the lhs or rhs is not
     /// dependent on.
-    pub(crate) fn filter(&mut self, ctx: &Ecc) {
-        if let Self::Yes(subs) = self {
-            for (lhs_subs, rhs_subs) in subs {
-                let lhs_deps = ctx
-                    .lhs()
-                    .get_dependencies()
-                    .as_complete_variables()
-                    .map(|d| d.var.ptr_clone())
-                    .collect_vec();
-                for (target, _) in lhs_subs.clone() {
-                    if !lhs_deps.contains(&target) {
-                        lhs_subs.remove(&target);
-                    }
+    pub(crate) fn filter(&mut self, ctx: &Ecc) -> Result<(), UnresolvedItemError> {
+        if let Self::Yes(lhs_subs, rhs_subs) = self {
+            let lhs_deps = ctx
+                .lhs()
+                .get_dependencies()
+                .as_complete_variables()?
+                .map(|d| d.var.ptr_clone())
+                .collect_vec();
+            for (target, _) in lhs_subs.clone() {
+                if !lhs_deps.contains(&target) {
+                    lhs_subs.remove(&target);
                 }
-                let rhs_deps = ctx
-                    .rhs()
-                    .get_dependencies()
-                    .as_complete_variables()
-                    .map(|d| d.var.ptr_clone())
-                    .collect_vec();
-                for (target, _) in rhs_subs.clone() {
-                    if !rhs_deps.contains(&target) {
-                        rhs_subs.remove(&target);
-                    }
+            }
+            let rhs_deps = ctx
+                .rhs()
+                .get_dependencies()
+                .as_complete_variables()?
+                .map(|d| d.var.ptr_clone())
+                .collect_vec();
+            for (target, _) in rhs_subs.clone() {
+                if !rhs_deps.contains(&target) {
+                    rhs_subs.remove(&target);
                 }
             }
         }
+        Ok(())
     }
 }

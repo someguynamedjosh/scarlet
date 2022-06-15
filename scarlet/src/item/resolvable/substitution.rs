@@ -155,10 +155,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
         let mut value_deps_iter = value_deps.as_variables();
         for dep in target.borrow().get_dependencies() {
             let dep_args = dep.get_dependencies();
-            if let Some(err) = dep_args.error() {
-                return Err(err.clone().into());
-            }
-            for desired_arg in dep_args.as_complete_variables() {
+            for desired_arg in dep_args.as_complete_variables()? {
                 // We want to convert a dependency in the value to the
                 // dependency required by the variable it is assigned to.
                 if let Some(existing_dep) = value_deps_iter.next() {

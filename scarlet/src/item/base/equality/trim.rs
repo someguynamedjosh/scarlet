@@ -13,12 +13,7 @@ use crate::{
 
 pub(super) fn trim_result(result: &mut Equal) -> Result<(), UnresolvedItemError> {
     match result {
-        Equal::Yes(subs) => {
-            for (left, right) in subs {
-                trim_yes(left, right)?;
-            }
-            Ok(())
-        }
+        Equal::Yes(left, right) => trim_yes(left, right),
         _ => Ok(()),
     }
 }
@@ -52,11 +47,7 @@ fn thoroughly_remove_identity_substitutions(
 // Skips the final step.
 fn mostly_trim_result(result: &mut Equal) {
     match result {
-        Equal::Yes(subs) => {
-            for (left, right) in subs {
-                mostly_trim_yes(left, right);
-            }
-        }
+        Equal::Yes(left, right) => mostly_trim_yes(left, right),
         _ => (),
     }
 }
