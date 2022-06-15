@@ -1,6 +1,7 @@
 use super::{
     definitions::{
         decision::DDecision,
+        placeholder::DPlaceholder,
         substitution::{DSubstitution, Substitutions},
     },
     Item, ItemPtr,
@@ -10,16 +11,17 @@ use crate::{environment::Environment, scope::SRoot};
 pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
     if subs.len() == 0 {
         return base;
-    } else if subs.len() == 1  {
+    } else if subs.len() == 1 {
         let (target, value) = subs.iter().next().unwrap();
         if target.borrow().item().is_same_instance_as(&base) {
-            return value.ptr_clone()
+            return value.ptr_clone();
         }
     }
     unchecked_substitution_without_shortcuts(base, subs)
 }
 
-/// Unlike unchecked_substitution, does not simplify cases like abc[] or def[def IS ghjkl]
+/// Unlike unchecked_substitution, does not simplify cases like abc[] or def[def
+/// IS ghjkl]
 pub fn unchecked_substitution_without_shortcuts(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
     let scope = base.clone_scope();
     let def = DSubstitution::new_unchecked(base, subs.clone());
@@ -56,6 +58,6 @@ pub fn is_bool(env: &Environment, item_to_test: ItemPtr) -> ItemPtr {
 }
 
 pub fn placeholder() -> ItemPtr {
-    let def: DSubstitution = todo!("DPlaceholder");
+    let def = DPlaceholder;
     Item::new(def, SRoot)
 }
