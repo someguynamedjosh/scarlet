@@ -2,9 +2,11 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::{
     any::Any,
+    collections::HashSet,
     fmt::{self, Debug, Formatter},
     hash::Hash,
     rc::Rc,
+    time::{Duration, Instant},
 };
 
 #[cfg(feature = "trace_borrows")]
@@ -43,22 +45,7 @@ impl Clone for ItemPtr {
 
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let write_body = if self.borrow().computationally_recursive {
-            write!(f, "(computationally recursive)",)?;
-            false
-        } else if self.borrow().definitionally_recursive {
-            write!(f, "(definitionally recursive)")?;
-            false
-        } else {
-            true
-        };
-        write!(f, "{}", self.debug_label())?;
-        if self.0.borrow().name.is_none() && write_body {
-            writeln!(f)?;
-            self.0.borrow().definition.fmt(f)
-        } else {
-            Ok(())
-        }
+        write!(f, "{}", self.debug_label())
     }
 }
 
@@ -162,30 +149,12 @@ impl ItemPtr {
     pub fn is_unresolved(&self) -> bool {
         self.borrow().is_unresolved()
     }
-
-    pub fn is_recursive(&self) -> bool {
-        self.borrow().computationally_recursive || self.borrow().definitionally_recursive
-    }
-
-    pub fn is_computationally_recursive(&self) -> bool {
-        self.borrow().computationally_recursive
-    }
-
-    pub fn mark_recursive(&self, t: ContainmentType) {
-        if let ContainmentType::Computational = t {
-            self.borrow_mut().computationally_recursive = true;
-        } else {
-            self.borrow_mut().definitionally_recursive = true;
-        }
-    }
 }
 
 /// Extensions.
 impl ItemPtr {
     pub fn dereference_once(&self) -> Option<ItemPtr> {
-        if self.is_computationally_recursive() {
-            None
-        } else if let Some(other) = self.downcast_definition::<DOther>() {
+        if let Some(other) = self.downcast_definition::<DOther>() {
             Some(other.other().ptr_clone())
         } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
             if let Some(structt) = asm
@@ -207,50 +176,45 @@ impl ItemPtr {
     }
 
     pub fn dereference(&self) -> ItemPtr {
-        if self.is_computationally_recursive() {
+        self.dereference_impl(&mut HashSet::new())
+    }
+
+    fn dereference_impl(&self, visited: &mut HashSet<Self>) -> ItemPtr {
+        if visited.contains(self) {
             self.ptr_clone()
-        } else if let Some(other) = self.downcast_definition::<DOther>() {
-            other.other().dereference()
-        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
-            if let Some(structt) = asm
-                .base()
-                .dereference()
-                .downcast_definition::<DPopulatedStruct>()
-            {
-                match asm.member() {
-                    AtomicStructMember::Label => todo!(),
-                    AtomicStructMember::Value => structt.get_value().dereference(),
-                    AtomicStructMember::Rest => structt.get_rest().dereference(),
-                }
-            } else {
-                self.ptr_clone()
-            }
+        } else if let Some(dereferenced) = self.dereference_once() {
+            visited.insert(self.ptr_clone());
+            dereferenced.dereference_impl(visited)
         } else {
             self.ptr_clone()
         }
     }
 
     pub fn dereference_resolved(&self) -> Result<ItemPtr, UnresolvedItemError> {
-        if self.is_computationally_recursive() {
+        self.dereference_resolved_impl(&mut HashSet::new())
+    }
+
+    fn dereference_resolved_impl(
+        &self,
+        visited: &mut HashSet<Self>,
+    ) -> Result<ItemPtr, UnresolvedItemError> {
+        if visited.contains(self) {
             Ok(self.ptr_clone())
-        } else if let Some(other) = self.downcast_resolved_definition::<DOther>()? {
-            other.other().dereference_resolved()
-        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
-            if let Some(structt) = asm
-                .base()
-                .dereference_resolved()?
-                .downcast_resolved_definition::<DPopulatedStruct>()?
-            {
-                match asm.member() {
-                    AtomicStructMember::Label => todo!(),
-                    AtomicStructMember::Value => structt.get_value().dereference_resolved(),
-                    AtomicStructMember::Rest => structt.get_rest().dereference_resolved(),
-                }
-            } else {
-                Ok(self.ptr_clone())
-            }
+        } else if let Err(err) = self.resolved() {
+            Err(err)
+        } else if let Some(dereferenced) = self.dereference_once() {
+            visited.insert(self.ptr_clone());
+            dereferenced.dereference_resolved_impl(visited)
         } else {
             Ok(self.ptr_clone())
+        }
+    }
+
+    pub fn resolved(&self) -> Result<(), UnresolvedItemError> {
+        if self.downcast_definition::<DResolvable>().is_some() {
+            Err(UnresolvedItemError(self.ptr_clone()))
+        } else {
+            Ok(())
         }
     }
 
@@ -271,76 +235,28 @@ impl ItemPtr {
         }
     }
 
-    pub fn mark_recursion(&self) {
-        let mut stack = Stack::new();
-        self.mark_recursion_impl(ContainmentType::Computational, &mut stack);
-    }
-
-    fn mark_recursion_impl(
-        &self,
-        containment_type: ContainmentType,
-        stack: &mut Stack<(ItemPtr, ContainmentType)>,
-    ) {
-        if let Some(index) = stack
-            .frames()
-            .iter()
-            .position(|x| x.0.is_same_instance_as(self))
-        {
-            let mut containment_type = containment_type;
-            for frame in &stack.frames()[index + 1..] {
-                if frame.1 == ContainmentType::Definitional {
-                    containment_type = ContainmentType::Definitional;
-                }
-            }
-            self.mark_recursive(containment_type);
-        } else {
-            stack.with_stack_frame((self.ptr_clone(), containment_type), |stack| {
-                let contents = self
-                    .borrow()
-                    .definition
-                    .contents()
-                    .into_iter()
-                    .map(|(t, x)| (t, x.ptr_clone()))
-                    .collect_vec();
-                for (t, content) in contents {
-                    content.mark_recursion_impl(t, stack);
-                }
-                if let Ok(invariants) = self.get_invariants() {
-                    for statement in invariants.borrow().statements() {
-                        statement.mark_recursion_impl(ContainmentType::Definitional, stack);
-                    }
-                }
-            })
-        }
-    }
-
-    pub fn evaluation_recurses_over(&self) -> Vec<ItemPtr> {
-        if self.is_computationally_recursive() {
-            vec![self.ptr_clone()]
-        } else if let Some(other) = self.downcast_definition::<DOther>() {
-            other.other().evaluation_recurses_over()
-        } else {
-            let mut result = Vec::new();
-            for (_t, content) in self.borrow().definition.contents() {
-                result.append(&mut content.evaluation_recurses_over());
-            }
-            result
-        }
-    }
-
     pub fn check_all(&self) {
         self.for_self_and_deep_contents(&mut |item| {
             item.borrow().definition.check_self(item).unwrap();
         })
     }
 
-    pub fn for_self_and_deep_contents(&self, visitor: &mut impl FnMut(&ItemPtr)) {
-        visitor(self);
-        if !self.is_recursive() {
+    pub fn for_self_and_deep_contents_impl(
+        &self,
+        visitor: &mut impl FnMut(&ItemPtr),
+        visited: &mut HashSet<ItemPtr>,
+    ) {
+        if !visited.contains(self) {
+            visited.insert(self.ptr_clone());
+            visitor(self);
             for (_, content) in self.borrow().definition.contents() {
-                content.for_self_and_deep_contents(visitor);
+                content.for_self_and_deep_contents_impl(visitor, visited);
             }
         }
+    }
+
+    pub fn for_self_and_deep_contents(&self, visitor: &mut impl FnMut(&ItemPtr)) {
+        self.for_self_and_deep_contents_impl(visitor, &mut HashSet::new())
     }
 
     pub fn visit_contents(&self, mut visitor: impl FnMut(&ItemPtr)) {
@@ -365,8 +281,6 @@ pub struct Item {
     pub from_dex: Option<ItemPtr>,
     pub name: Option<String>,
     pub show: bool,
-    pub computationally_recursive: bool,
-    pub definitionally_recursive: bool,
 }
 
 impl Item {
@@ -390,8 +304,6 @@ impl Item {
             from_dex: None,
             name: None,
             show: false,
-            computationally_recursive: false,
-            definitionally_recursive: false,
         })))
     }
 
@@ -407,8 +319,6 @@ impl Item {
             from_dex: None,
             name: None,
             show: false,
-            computationally_recursive: false,
-            definitionally_recursive: false,
         })));
         let this2 = this.ptr_clone();
         let mut inner = this.downcast_definition_mut().unwrap();

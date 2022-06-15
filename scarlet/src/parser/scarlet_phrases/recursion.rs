@@ -23,16 +23,7 @@ fn uncreate<'x>(
     _ctx: &mut VomitContext<'x, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'x> {
-    if !uncreate.is_recursive() {
-        Ok(None)
-    } else {
-        Ok(Some(Node {
-            phrase: "recursion",
-            // children: vec![NodeChild::Node(env.vomit(255, ctx, base))],
-            children: vec![],
-            ..Default::default()
-        }))
-    }
+    Ok(None)
 }
 
 fn vomit(_pc: &ParseContext, _src: &Node) -> String {

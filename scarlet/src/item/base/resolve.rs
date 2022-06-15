@@ -25,7 +25,7 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         let mut still_unresolved = Vec::new();
         let mut all_dead_ends = true;
         for id in unresolved {
-            println!("Resolving {:?} limit {}", id.debug_label(), limit);
+            println!("Resolving {} limit {}", id.debug_label(), limit);
             assert!(id.is_unresolved());
             let res = resolve(env, id.ptr_clone(), limit);
             if let Ok(true) = res {
@@ -74,7 +74,6 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
             }
         }
     });
-    root.mark_recursion();
     if problem {
         panic!("Failed to resolve construct(s)");
     }
@@ -92,7 +91,6 @@ fn resolve(env: &mut Environment, item: ItemPtr, limit: u32) -> Result<bool, Res
         match new_def {
             ResolveResult::Ok(new_def) => {
                 item.redefine(new_def);
-                item.mark_recursion();
                 Ok(true)
             }
             ResolveResult::Err(err) => Err(err),
