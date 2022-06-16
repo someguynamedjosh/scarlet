@@ -13,7 +13,7 @@ use crate::{
         Item, ItemDefinition,
     },
     scope::{SPlain, Scope},
-    util::PtrExtension,
+    util::PtrExtension, diagnostic::Position,
 };
 
 /// Makes a dex that returns true if the dependency "x" is substituted with a
@@ -96,6 +96,7 @@ fn create_and(
     Item::new(
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
+            position: Position::placeholder(),
             named_subs: vec![].into_iter().collect(),
             anonymous_subs: vec![left, right],
         }),
@@ -108,6 +109,7 @@ fn redefine_as_and(env: &Environment, original: ItemPtr, left: ItemPtr, right: I
     original.redefine(
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
+            position: Position::placeholder(),
             named_subs: vec![].into_iter().collect(),
             anonymous_subs: vec![left, right],
         })

@@ -45,6 +45,7 @@ fn create(
     this.redefine(
         DResolvable::new(RSubstitution {
             base,
+            position: node.position,
             named_subs,
             anonymous_subs,
         })

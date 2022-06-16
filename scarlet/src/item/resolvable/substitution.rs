@@ -2,6 +2,7 @@ use maplit::hashset;
 
 use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
 use crate::{
+    diagnostic::{Diagnostic, Position},
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
@@ -22,6 +23,7 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct RSubstitution {
     pub base: ItemPtr,
+    pub position: Position,
     pub named_subs: Vec<(String, ItemPtr)>,
     pub anonymous_subs: Vec<ItemPtr>,
 }
@@ -75,9 +77,10 @@ impl Resolvable for RSubstitution {
         let base_scope = base.clone_scope();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = self.base.get_dependencies();
+        let total_dep_count = remaining_deps.num_variables();
 
         self.resolve_named_subs(base_scope, env, &mut subs, &mut remaining_deps)?;
-        self.resolve_anonymous_subs(remaining_deps, env, &mut subs)?;
+        self.resolve_anonymous_subs(total_dep_count, remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs)?;
 
         let justifications = make_justification_statements(&subs, limit)?;
@@ -178,8 +181,9 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
 impl RSubstitution {
     fn resolve_anonymous_subs(
         &self,
+        total_dep_count: usize,
         mut remaining_deps: Dependencies,
-        _env: &mut Environment,
+        env: &mut Environment,
         subs: &mut Substitutions,
     ) -> Result<(), ResolveError> {
         for value in &self.anonymous_subs {
@@ -187,7 +191,15 @@ impl RSubstitution {
                 if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error.clone().into());
                 } else {
-                    panic!("No more dependencies left to substitute!");
+                    return Err(Diagnostic::new()
+                        .with_text_error(format!("This substitution has too many arguments:"))
+                        .with_source_code_block_error(self.position)
+                        .with_text_info(format!(
+                            "The base only has {} dependencies:",
+                            total_dep_count
+                        ))
+                        .with_item_info(&self.base, &self.base, env)
+                        .into());
                 }
             }
             let dep = remaining_deps.pop_front().var;

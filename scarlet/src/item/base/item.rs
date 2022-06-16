@@ -32,7 +32,7 @@ use crate::{
         ContainmentType, ItemDefinition,
     },
     scope::{LookupIdentResult, SRoot, Scope},
-    util::PtrExtension,
+    util::PtrExtension, diagnostic::Position,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -272,6 +272,7 @@ impl ItemPtr {
 
 #[derive(Debug)]
 pub struct Item {
+    pub position: Option<Position>,
     pub definition: Box<dyn ItemDefinition>,
     pub scope: Box<dyn Scope>,
     pub invariants: Option<InvariantSetPtr>,
@@ -298,6 +299,7 @@ impl Item {
 
     pub fn new_boxed(definition: Box<dyn ItemDefinition>, scope: Box<dyn Scope>) -> ItemPtr {
         ItemPtr(Rc::new(RefCell::new(Self {
+            position: None,
             definition,
             scope,
             invariants: None,
@@ -313,6 +315,7 @@ impl Item {
         modify_self: impl FnOnce(ItemPtr, &mut D),
     ) -> ItemPtr {
         let this = ItemPtr(Rc::new(RefCell::new(Self {
+            position: None,
             definition: Box::new(definition),
             scope,
             invariants: None,
