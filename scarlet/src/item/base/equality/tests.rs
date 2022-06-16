@@ -1785,3 +1785,45 @@ fn function_invariant_statement_env() {
         );
     });
 }
+
+#[test]
+fn equality_function_statement_env() {
+    let code = r"
+    x IS VAR()
+    fx IS VAR(DEP x)
+    y IS VAR()
+
+    statement IS x(fx(x) = fx(y))
+
+    identity IS VAR()
+    u IS VAR()
+    v IS VAR()
+
+    v1 IS statement(u identity v)
+    v2 IS u = v
+    ";
+    with_env_from_code(code, |mut env, root| {
+        root.check_all();
+        env.justify_all(&root);
+        let v1 = get_member(&root, "v1");
+        let v2 = get_member(&root, "v2");
+        assert_eq!(
+            v1.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v1.get_trimmed_equality(&v2)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+        assert_eq!(
+            v2.get_trimmed_equality(&v1)
+                .as_ref()
+                .map(Equal::is_trivial_yes),
+            Ok(true)
+        );
+    });
+}

@@ -13,7 +13,9 @@ AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 eq_ext_rev_t IS AXIOM(eq_ext_rev_t)
 
 identity IS VAR()
-
 a IS VAR()
 b IS VAR()
-{ statement eq_ext_rev_t(a identity b) } SHOWN
+eq_ext_rev_t(a identity b) SHOWN
+
+just_t IS VAR(SELF)
+just_t(statement(a identity b))

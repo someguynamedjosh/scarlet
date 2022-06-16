@@ -15,7 +15,7 @@ use crate::{
     util::PtrExtension,
 };
 
-const TRACE: bool = false;
+const TRACE: bool = true;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EqualityTestSide {
@@ -116,7 +116,7 @@ impl EqualityCalculationContext {
             let mut new_sub = Substitutions::new();
             let mut new_dependencies = Dependencies::new();
             for (target, value) in sub {
-                if target.is_same_instance_as(target_to_look_for) {
+                if target.is_same_instance_as(target_to_look_for) && new_value.is_none() {
                     new_value = Some(value.ptr_clone());
                     let mut sub_without_target = sub.clone();
                     sub_without_target.remove(target).unwrap();
