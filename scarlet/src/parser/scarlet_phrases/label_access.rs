@@ -56,6 +56,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\.LABEL"
+        4 => 4, r"\b\.LABEL\b"
     )
 }

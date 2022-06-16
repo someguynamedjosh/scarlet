@@ -1,39 +1,40 @@
-t_trivial IS basic_axioms.t_trivial
-t_eq_ext_rev IS basic_axioms.t_eq_ext_rev
-t_inv_eq IS basic_axioms.t_inv_eq
-t_refl IS basic_axioms.t_refl
+trivial_t IS basic_axioms.trivial_t
+eq_ext_rev_t IS basic_axioms.eq_ext_rev_t
+inv_eq_t IS basic_axioms.inv_eq_t
+refl_t IS basic_axioms.refl_t
 
-t_invariant_truth IS 
-basic_axioms.t_invariant_truth
+invariant_truth_t IS 
+basic_axioms.invariant_truth_t
 
-t_invariant_truth_rev IS 
-basic_axioms.t_invariant_truth_rev
-
-
-t_decision_eq IS 
-computation_axioms.t_decision_eq
-
-t_decision_neq IS
-computation_axioms.t_decision_neq
+invariant_truth_rev_t IS 
+basic_axioms.invariant_truth_rev_t
 
 
-t_eq_symm IS equality.t_eq_symm
-t_eq_ext IS equality.t_eq_ext
-t_inv_eq_ext IS equality.t_inv_eq_ext
-t_eq_trans IS equality.t_eq_trans
+decision_eq_t IS 
+computation_axioms.decision_eq_t
+
+decision_neq_t IS
+computation_axioms.decision_neq_t
 
 
-# t_extract_eq_from_decision IS 
-# other.t_extract_eq_from_decision
+eq_symm_t IS equality.eq_symm_t
+eq_ext_t IS equality.eq_ext_t
+inv_eq_ext_t IS equality.inv_eq_ext_t
+eq_trans_t IS equality.eq_trans_t
 
-# t_decision_by_parts IS 
-# other.t_decision_by_parts
 
-# t_decision_by_parts_ext IS 
-# other.t_decision_by_parts_ext
+# extract_eq_from_decision_t IS 
+# other.extract_eq_from_decision_t
 
-# t_decision_eq_inv IS other.t_decision_eq_inv
-t_just IS other.t_just
+# decision_by_parts_t IS 
+# other.decision_by_parts_t
+
+# decision_by_parts_ext_t IS 
+# other.decision_by_parts_ext_t
+
+# decision_eq_inv_t IS other.decision_eq_inv_t
+just_t IS other.just_t
+just IS std.basics.just
 
 x IS basics.x
-fx IS basics.fx
+f IS basics.f

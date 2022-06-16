@@ -21,8 +21,8 @@ use crate::{
 
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
-    assert_eq!(node.children[1], NodeChild::Text("["));
-    assert_eq!(node.children[3], NodeChild::Text("]"));
+    assert_eq!(node.children[1], NodeChild::Text("("));
+    assert_eq!(node.children[3], NodeChild::Text(")"));
     let mut invariants = Vec::new();
     let mut dependencies = Vec::new();
     let mut order =
@@ -95,9 +95,9 @@ fn uncreate<'a>(
             phrase: "variable",
             children: vec![
                 NodeChild::Text("VAR"),
-                NodeChild::Text("["),
+                NodeChild::Text("("),
                 create_comma_list(body),
-                NodeChild::Text("]"),
+                NodeChild::Text(")"),
             ],
             ..Default::default()
         };
@@ -113,7 +113,7 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("VAR[ {} ]", src.children[2].vomit(pc))
+    format!("VAR({})", src.children[2].vomit(pc))
 }
 
 pub fn phrase() -> Phrase {
@@ -122,6 +122,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        0 => r"\b(VARIABLE|VAR|V)\b" , r"\[", 255, r"\]"
+        0 => r"\b(VARIABLE|VAR|V)\b" , r"\(", 255, r"\)"
     )
 }

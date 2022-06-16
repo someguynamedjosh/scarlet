@@ -54,6 +54,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\.IS_POPULATED_STRUCT"
+        4 => 4, r"\bIS_POPULATED_STRUCT\b"
     )
 }

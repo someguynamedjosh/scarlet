@@ -22,7 +22,7 @@ struct:
                                                     as language item:
                                                         UNIQUE:
                                                             "UNIQUE"
-                                                        ".AS_LANGUAGE_ITEM"
+                                                        " AS_LANGUAGE_ITEM"
                                                         "["
                                                         identifier:
                                                             "true"
@@ -35,7 +35,7 @@ struct:
                                                     as language item:
                                                         UNIQUE:
                                                             "UNIQUE"
-                                                        ".AS_LANGUAGE_ITEM"
+                                                        " AS_LANGUAGE_ITEM"
                                                         "["
                                                         identifier:
                                                             "false"
@@ -48,7 +48,7 @@ struct:
                                                 as language item:
                                                     UNIQUE:
                                                         "UNIQUE"
-                                                    ".AS_LANGUAGE_ITEM"
+                                                    " AS_LANGUAGE_ITEM"
                                                     "["
                                                     identifier:
                                                         "void"
@@ -69,7 +69,7 @@ struct:
                                                         identifier:
                                                             "32"
                                                     "]"
-                                                ".AS_LANGUAGE_ITEM"
+                                                " AS_LANGUAGE_ITEM"
                                                 "["
                                                 identifier:
                                                     "x"
@@ -186,7 +186,7 @@ struct:
                                                 "false"
                                         "]"
                                     ")"
-                                ".AS_LANGUAGE_ITEM"
+                                " AS_LANGUAGE_ITEM"
                                 "["
                                 identifier:
                                     "and"
@@ -371,7 +371,7 @@ struct:
                                                             as language item:
                                                                 UNIQUE:
                                                                     "UNIQUE"
-                                                                ".AS_LANGUAGE_ITEM"
+                                                                " AS_LANGUAGE_ITEM"
                                                                 "["
                                                                 identifier:
                                                                     "t_inv_eq_statement"
@@ -380,7 +380,7 @@ struct:
                                                             as language item:
                                                                 UNIQUE:
                                                                     "UNIQUE"
-                                                                ".AS_LANGUAGE_ITEM"
+                                                                " AS_LANGUAGE_ITEM"
                                                                 "["
                                                                 identifier:
                                                                     "t_decision_eq_statement"
@@ -389,7 +389,7 @@ struct:
                                                         as language item:
                                                             UNIQUE:
                                                                 "UNIQUE"
-                                                            ".AS_LANGUAGE_ITEM"
+                                                            " AS_LANGUAGE_ITEM"
                                                             "["
                                                             identifier:
                                                                 "t_decision_neq_statement"
@@ -466,7 +466,7 @@ struct:
                                                                         identifier:
                                                                             "a"
                                                                     ")"
-                                                                ".AS_LANGUAGE_ITEM"
+                                                                " AS_LANGUAGE_ITEM"
                                                                 "["
                                                                 identifier:
                                                                     "t_refl_statement"
@@ -483,7 +483,7 @@ struct:
                                                                 "]"
                                                     "}"
                                                 ".VALUE"
-                                            ".AS_AUTO_THEOREM"
+                                            " AS_AUTO_THEOREM"
                                 ","
                                 is:
                                     identifier:
@@ -524,7 +524,7 @@ struct:
                                                                                 identifier:
                                                                                     "v"
                                                                             "]"
-                                                                        ".AS_LANGUAGE_ITEM"
+                                                                        " AS_LANGUAGE_ITEM"
                                                                         "["
                                                                         identifier:
                                                                             "t_trivial_statement"
@@ -577,7 +577,7 @@ struct:
                                                             "]"
                                                 "}"
                                             ".VALUE"
-                                        ".AS_AUTO_THEOREM"
+                                        " AS_AUTO_THEOREM"
                             ","
                             is:
                                 identifier:
@@ -618,7 +618,7 @@ struct:
                                                                             identifier:
                                                                                 "v"
                                                                         "]"
-                                                                    ".AS_LANGUAGE_ITEM"
+                                                                    " AS_LANGUAGE_ITEM"
                                                                     "["
                                                                     identifier:
                                                                         "t_invariant_truth_statement"
@@ -683,7 +683,7 @@ struct:
                                                         "]"
                                             "}"
                                         ".VALUE"
-                                    ".AS_AUTO_THEOREM"
+                                    " AS_AUTO_THEOREM"
                         ","
                         is:
                             identifier:
@@ -710,7 +710,7 @@ struct:
                                                                     as language item:
                                                                         identifier:
                                                                             "conclusion"
-                                                                        ".AS_LANGUAGE_ITEM"
+                                                                        " AS_LANGUAGE_ITEM"
                                                                         "["
                                                                         identifier:
                                                                             "t_eq_ext_rev_statement"
@@ -804,7 +804,7 @@ struct:
                                                     "]"
                                         "}"
                                     ".VALUE"
-                                ".AS_AUTO_THEOREM"
+                                " AS_AUTO_THEOREM"
                     ","
                     is:
                         identifier:
@@ -831,7 +831,7 @@ struct:
                                                                 as language item:
                                                                     identifier:
                                                                         "conclusion"
-                                                                    ".AS_LANGUAGE_ITEM"
+                                                                    " AS_LANGUAGE_ITEM"
                                                                     "["
                                                                     identifier:
                                                                         "t_invariant_truth_rev_statement"
@@ -910,6 +910,6 @@ struct:
                                                 "]"
                                     "}"
                                 ".VALUE"
-                            ".AS_AUTO_THEOREM"
+                            " AS_AUTO_THEOREM"
                 "}"
     "}"

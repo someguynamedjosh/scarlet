@@ -164,7 +164,7 @@ impl Environment {
                 ..Default::default()
             };
         }
-        if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(self, item_ptr.ptr_clone()) {
+        if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(self, item_ptr.dereference()) {
             return Node {
                 phrase: "identifier",
                 children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],

@@ -19,8 +19,8 @@ use crate::{
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("DECISION"));
-    assert_eq!(node.children[1], NodeChild::Text("["));
-    assert_eq!(node.children[3], NodeChild::Text("]"));
+    assert_eq!(node.children[1], NodeChild::Text("("));
+    assert_eq!(node.children[3], NodeChild::Text(")"));
     let args = util::collect_comma_list(&node.children[2]);
     assert_eq!(args.len(), 4);
     let this = Item::placeholder_with_scope(scope);
@@ -80,14 +80,14 @@ fn uncreate<'a>(
             phrase: "decision",
             children: vec![
                 NodeChild::Text("DECISION"),
-                NodeChild::Text("["),
+                NodeChild::Text("("),
                 create_comma_list(vec![
                     env.vomit(255, ctx, cite.left().ptr_clone()),
                     env.vomit(255, ctx, cite.right().ptr_clone()),
                     env.vomit(255, ctx, cite.when_equal().ptr_clone()),
                     env.vomit(255, ctx, cite.when_not_equal().ptr_clone()),
                 ]),
-                NodeChild::Text("]"),
+                NodeChild::Text(")"),
             ],
             ..Default::default()
         }))
@@ -106,6 +106,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        0 => r"\bDECISION\b" , r"\[", 255, r"\]"
+        0 => r"\bDECISION\b" , r"\(", 255, r"\)"
     )
 }

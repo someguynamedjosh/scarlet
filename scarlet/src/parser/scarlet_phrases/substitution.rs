@@ -19,8 +19,8 @@ use crate::{
 };
 
 fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
-    assert_eq!(node.children[1], NodeChild::Text("["));
-    assert_eq!(node.children[3], NodeChild::Text("]"));
+    assert_eq!(node.children[1], NodeChild::Text("("));
+    assert_eq!(node.children[3], NodeChild::Text(")"));
     assert!(node.children.len() == 4);
     let this = crate::item::Item::placeholder_with_scope(scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
@@ -101,9 +101,9 @@ fn uncreate<'a>(
             phrase: "substitution",
             children: vec![
                 NodeChild::Node(env.vomit(4, ctx, csub.base().ptr_clone())),
-                NodeChild::Text("["),
+                NodeChild::Text("("),
                 subs,
-                NodeChild::Text("]"),
+                NodeChild::Text(")"),
             ],
             ..Default::default()
         }))
@@ -114,7 +114,7 @@ fn uncreate<'a>(
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
     format!(
-        "{}[ {} ]",
+        "{}({})",
         src.children[0].vomit(pc),
         src.children[2].vomit(pc)
     )
@@ -126,6 +126,6 @@ pub fn phrase() -> Phrase {
         128, 120,
         Some((create, uncreate)),
         vomit,
-        4 => 4, r"\[", 255, r"\]"
+        4 => 4, r"\(", 255, r"\)"
     )
 }

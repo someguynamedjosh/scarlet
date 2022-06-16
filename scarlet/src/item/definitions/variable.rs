@@ -264,6 +264,7 @@ impl EqualityFeature for DVariable {
             } else if let Ok(Some(mut ctx)) =
                 ctx.try_select_value_substituted_for_var_in_other(&other_var.0)
             {
+                drop(other_var);
                 return ctx.get_equality_left();
             }
         }
@@ -396,7 +397,7 @@ impl Scope for SVariableInvariants {
         _env: &'a mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult {
-        Ok(if value == self.0 {
+        Ok(if self.0.dereference().is_same_instance_as(&value) {
             Some("SELF".to_owned())
         } else {
             None

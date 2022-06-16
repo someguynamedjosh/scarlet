@@ -116,7 +116,7 @@ impl EqualityCalculationContext {
             let mut new_sub = Substitutions::new();
             let mut new_dependencies = Dependencies::new();
             for (target, value) in sub {
-                if target.is_same_instance_as(target_to_look_for) {
+                if target.is_same_instance_as(target_to_look_for) && new_value.is_none() {
                     new_value = Some(value.ptr_clone());
                     let mut sub_without_target = sub.clone();
                     sub_without_target.remove(target).unwrap();
@@ -229,10 +229,10 @@ impl EqualityCalculationContext {
     pub fn get_equality_right(&mut self) -> Result<Equal, UnresolvedItemError> {
         self.self_side = EqualityTestSide::Right;
         let rhs = self.rhs.ptr_clone();
-        let rhs = rhs.borrow();
-        Ok(rhs
-            .definition
-            .get_equality_using_context(self, OnlyCalledByEcc(()))?)
+        let rhs_borrow = rhs.borrow();
+        let rhs = rhs_borrow.definition.clone_into_box();
+        drop(rhs_borrow);
+        Ok(rhs.get_equality_using_context(self, OnlyCalledByEcc(()))?)
     }
 
     pub fn other_with_subs(&self) -> ItemPtr {
