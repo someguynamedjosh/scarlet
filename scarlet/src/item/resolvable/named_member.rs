@@ -1,7 +1,6 @@
-use std::time::Instant;
-
 use super::{BoxedResolvable, Resolvable, ResolveResult, UnresolvedItemError};
 use crate::{
+    diagnostic::{Diagnostic, Position},
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
@@ -15,6 +14,7 @@ use crate::{
 pub struct RNamedMember {
     pub base: ItemPtr,
     pub member_name: String,
+    pub position: Position,
 }
 
 impl PartialEq for RNamedMember {
@@ -53,7 +53,7 @@ impl Resolvable for RNamedMember {
     fn resolve(
         &self,
         env: &mut Environment,
-        _this: ItemPtr,
+        this: ItemPtr,
         scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {
@@ -61,10 +61,20 @@ impl Resolvable for RNamedMember {
         let access_depth = if let Some(ad) = access_depth {
             ad
         } else {
-            todo!(
-                "Nice error, failed to find a member named {} in {:#?}.",
-                self.member_name,
-                self.base
+            return ResolveResult::Err(
+                Diagnostic::new()
+                    .with_text_error(format!(
+                        "Failed to find a member named {}:",
+                        self.member_name
+                    ))
+                    .with_source_code_block_error(self.position)
+                    .with_text_info(format!("The base is defined as follows:"))
+                    .with_item_info(
+                        self.base.dereference_once().as_ref().unwrap_or(&self.base),
+                        &this,
+                        env,
+                    )
+                    .into(),
             );
         };
         let mut base = self.base.ptr_clone();
