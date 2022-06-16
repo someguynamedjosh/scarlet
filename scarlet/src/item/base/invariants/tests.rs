@@ -369,7 +369,7 @@ fn real_theorem_separated_invariant() {
 
     eq_ext_rev_t IS AXIOM(eq_ext_rev_t)
 
-    x(asdf.fx(b) = asdf.fx(a))
+    asdf.x(asdf.fx(b) = asdf.fx(a))
     AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
     a IS VAR()
@@ -417,14 +417,14 @@ fn real_theorem_rewritten_invariant() {
 #[test]
 fn subbed_statement() {
     let code = r"
-    a IS VAR()
-    b IS VAR()
+    x IS VAR()
+    y IS VAR()
 
-    c IS VAR()
-    d IS VAR(c = SELF)
+    u IS VAR()
+    v IS VAR(u = SELF)
     identity IS VAR()
 
-    justify_this IS x(a = b)(c d)
+    justify_this IS x(x = y)(u v)
     ";
     with_env_from_code(code, |mut env, root| {
         let justify_this = get_member(&root, "justify_this");
