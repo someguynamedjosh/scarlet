@@ -60,7 +60,7 @@ fn sub_fx_invariant() {
         let justify_this = get_member(&root, "statement");
         let context = get_member(&root, "other");
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         env.justify(&root, &context, &justify_this, 2).unwrap();
     });
 }
@@ -377,7 +377,7 @@ fn real_theorem_separated_invariant() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -410,7 +410,7 @@ fn real_theorem_rewritten_invariant() {
         let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -430,7 +430,7 @@ fn subbed_statement() {
         let justify_this = get_member(&root, "justify_this");
         env.justify(&root, &justify_this, &justify_this, 5).unwrap();
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -445,7 +445,7 @@ fn simpler_justified_substitution() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -464,10 +464,10 @@ fn justify_unchecked_sub() {
             .get_variable()
             .ptr_clone();
         let b = get_member(&root, "b");
-        let a_sub_b = unchecked_substitution(a, &subs(vec!((a_var, b.ptr_clone()))));
+        let a_sub_b = unchecked_substitution(a, &subs(vec![(a_var, b.ptr_clone())]));
         env.justify(&root, &b, &a_sub_b, 10).unwrap();
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -484,7 +484,7 @@ fn justified_substitution() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -500,7 +500,7 @@ fn scope_separated_substitution() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -518,7 +518,7 @@ fn unjustified_substitution() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -576,7 +576,7 @@ fn mysterious_hang() {
 
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -592,7 +592,7 @@ fn fx_asserting_self_sub_a() {
 
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -620,7 +620,7 @@ fn eq_ext_simplified() {
 
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -653,7 +653,7 @@ fn eq_ext_full() {
 
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }
 
@@ -705,6 +705,6 @@ fn eq_ext_full_separated() {
 
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
     });
 }

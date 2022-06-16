@@ -21,6 +21,4 @@ eq_ext_rev_t(a identity b) SHOWN
 just_t IS VAR(SELF)
 just_t(statement(a identity b))
 
-struct IS {
-    what IS what
-}
+just_t(true)

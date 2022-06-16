@@ -85,40 +85,16 @@ impl Environment {
         };
         let original_vomit = self.vomit(255, &mut ctx, item_id.ptr_clone());
         let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
-        result.push_str(&format!("{}\n", original_vomit));
-        result.push_str(&format!("proves:"));
+        result.push_str(&format!("{}", original_vomit));
 
         let inv_from = SWithParent(SVariableInvariants(item_id.ptr_clone()), from_item);
-        temp_names.clear();
-        let mut inv_ctx = VomitContext {
+        let inv_ctx = VomitContext {
             pc: &pc,
             code_arena: &code_arena,
             scope: &inv_from,
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        let set_ptr = item_id.get_invariants().unwrap();
-        let set = set_ptr.borrow();
-        for invariant in set.statements() {
-            let vomited = self.vomit(255, &mut inv_ctx, invariant.ptr_clone());
-            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            result.push_str(&format!("\n    {} ", indented(&vomited,),));
-        }
-        result.push_str(&format!("\nproof depend on: "));
-        for dep in set.dependencies() {
-            let vomited = self.vomit(255, &mut inv_ctx, dep.ptr_clone());
-            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            result.push_str(&format!("{}   ", indented(&vomited)));
-        }
-        result.push_str(&format!("\ndepends on: "));
-        for dep in item_id.get_dependencies().into_variables() {
-            let vomited = self.vomit_var(&mut inv_ctx, dep.var.ptr_clone());
-            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            if !dep.affects_return_value {
-                result.push_str("*");
-            }
-            result.push_str(&format!("{}   ", indented(&vomited)));
-        }
 
         result.push_str(&Self::format_vomit_temp_names(&inv_ctx));
         result
@@ -129,6 +105,9 @@ impl Environment {
     }
 
     fn format_vomit_temp_names(ctx: &VomitContext) -> String {
+        if ctx.temp_names.len() == 0 {
+            return format!("");
+        }
         let mut result = String::new();
         result.push_str("\nUSING {");
         for (_id, (name, node)) in &*ctx.temp_names {

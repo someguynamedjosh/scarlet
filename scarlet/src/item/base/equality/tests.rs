@@ -1286,7 +1286,7 @@ fn complex_fx_sub_is_arg_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1324,7 +1324,7 @@ fn advanced_equality_symmetry_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1409,7 +1409,7 @@ fn fx_eq_a_is_self_sub_y_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let x = get_member(&root, "x");
         let t = get_member(&root, "t");
         let v1 = get_member(&root, "v1");
@@ -1441,7 +1441,7 @@ fn fx_eq_a_sub_y_is_self_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let fx_eq_a_sub_y_1 = get_member(&root, "s1");
         let fx_eq_a_sub_y_2 = get_member(&root, "s2");
         assert_eq!(
@@ -1480,7 +1480,7 @@ fn subbed_eq_ext_rev_is_eq_ext() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1509,7 +1509,7 @@ fn fx_sub_x_is_x() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1543,7 +1543,7 @@ fn separated_fx_sub_x_is_x() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1584,7 +1584,7 @@ fn fx_a_inv_eq_result_is_fx_a_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1616,7 +1616,7 @@ fn fx_sub_s_and_r_x_is_r_s_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         println!(
@@ -1665,7 +1665,7 @@ fn try_build_trans_result_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1695,7 +1695,7 @@ fn fx_sub_y_sub_x_is_fx() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1725,7 +1725,7 @@ fn fx_sub_y_is_fx() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let x = get_member(&root, "x").dereference();
         let y = get_member(&root, "y").dereference();
         let v1 = get_member(&root, "v1");
@@ -1768,7 +1768,7 @@ fn function_invariant_statement_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
@@ -1804,7 +1804,7 @@ fn equality_function_statement_env() {
     ";
     with_env_from_code(code, |mut env, root| {
         root.check_all();
-        env.justify_all(&root);
+        env.justify_all(&root).unwrap();
         let v1 = get_member(&root, "v1");
         let v2 = get_member(&root, "v2");
         assert_eq!(
