@@ -51,7 +51,7 @@ impl Position {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Element {
     Text(String),
     GeneratedCodeBlock(String),
@@ -143,7 +143,7 @@ impl Element {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Diagnostic {
     elements: Vec<(Level, Element)>,
 }

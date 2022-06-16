@@ -3,7 +3,9 @@ use std::collections::HashSet;
 use itertools::Itertools;
 
 use crate::{
+    diagnostic::Diagnostic,
     environment::Environment,
+    file_tree::FileNode,
     item::{
         definitions::placeholder::DPlaceholder,
         resolvable::{DResolvable, ResolveError, ResolveResult},
@@ -11,7 +13,7 @@ use crate::{
     },
 };
 
-pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
+pub fn resolve_all(env: &mut Environment, root: ItemPtr) -> Result<(), Vec<Diagnostic>> {
     let mut unresolved = HashSet::new();
     root.for_self_and_deep_contents(&mut |item| {
         if item.is_unresolved() {
@@ -25,7 +27,6 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
         let mut still_unresolved = Vec::new();
         let mut all_dead_ends = true;
         for id in unresolved {
-            println!("Resolving {} limit {}", id.debug_label(), limit);
             assert!(id.is_unresolved());
             let res = resolve(env, id.ptr_clone(), limit);
             if let Ok(true) = res {
@@ -56,27 +57,27 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) {
             break;
         }
     }
-    let mut problem = false;
+    let mut problems = Vec::new();
     root.for_self_and_deep_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
-            println!("Failed to resolve {:#?} because", item);
-            println!("{:#?}", item.borrow().definition);
-            problem = true;
-            match err {
+            let diagnostic = match err {
                 ResolveError::Unresolved(err) => {
-                    // eprintln!("{}", &format!("{:#?}", env)[0..30_000]);
-                    eprintln!("it relies on {:#?}", err.0);
+                    todo!("Nice error, it relies on {:#?}", err.0);
                 }
-                ResolveError::InvariantDeadEnd(err) => eprintln!("{}", err),
+                ResolveError::InvariantDeadEnd(err) => todo!("Nice error, {}", err),
                 ResolveError::MaybeInvariantDoesNotExist => {
-                    eprintln!("Recursion limit exceeded while searching for invariants")
+                    todo!("Nice error, Recursion limit exceeded while searching for invariants")
                 }
-                ResolveError::Placeholder => eprintln!("placeholder"),
-            }
+                ResolveError::Placeholder => todo!("Nice error, placeholder"),
+                ResolveError::Diagnostic(diagnostic) => diagnostic,
+            };
+            problems.push(diagnostic);
         }
     });
-    if problem {
-        panic!("Failed to resolve construct(s)");
+    if problems.len() == 0 {
+        Ok(())
+    } else {
+        Err(problems)
     }
 }
 

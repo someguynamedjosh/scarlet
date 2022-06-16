@@ -49,7 +49,7 @@ pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, 
         def.set_name(lang_item_name.to_owned());
         env.define_language_item(lang_item_name, def);
     }
-    resolve_all(&mut env, root.ptr_clone());
+    resolve_all(&mut env, root.ptr_clone()).unwrap();
 
     callback(env, root)
 }

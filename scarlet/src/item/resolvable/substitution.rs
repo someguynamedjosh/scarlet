@@ -187,7 +187,6 @@ impl RSubstitution {
                 if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error.clone().into());
                 } else {
-                    eprintln!("BASE:\n{:#?}\n", self.base,);
                     panic!("No more dependencies left to substitute!");
                 }
             }

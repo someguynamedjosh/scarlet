@@ -53,7 +53,12 @@ fn entry() {
             return;
         }
     };
-    resolve_all(&mut env, root.ptr_clone());
+    if let Err(diagnostics) = resolve_all(&mut env, root.ptr_clone()) {
+        for diagnostic in diagnostics {
+            println!("{}", diagnostic.format_colorful(&file_tree));
+        }
+        return;
+    }
     println!("Resolved");
     root.check_all();
     println!("Checked!");

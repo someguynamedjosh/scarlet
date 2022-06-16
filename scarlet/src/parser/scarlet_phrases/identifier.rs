@@ -22,7 +22,11 @@ fn create(
     assert_eq!(node.phrase, "identifier");
     assert_eq!(node.children.len(), 1);
     Ok(Item::new_boxed(
-        DResolvable::new(RIdentifier(node.children[0].as_text().to_owned())).clone_into_box(),
+        DResolvable::new(RIdentifier(
+            node.children[0].as_text().to_owned(),
+            node.position,
+        ))
+        .clone_into_box(),
         scope,
     ))
 }

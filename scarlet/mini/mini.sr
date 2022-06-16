@@ -22,3 +22,5 @@ just_t IS VAR(SELF)
 just_t(statement(a identity b))
 
 struct IS {}
+
+thing IS VAR()(x y)
