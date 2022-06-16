@@ -3,16 +3,16 @@
 	"name": "Scarlet",
 	"patterns": [
 		{
+			"name": "keyword.operator",
+			"match": "\\b(:|::|\\.|\\+|-|\\*|\\/|AND|OR|=|\\<|\\>)\\b"
+		},
+		{
 			"name": "keyword.control",
-			"match": "\\b(is|on|else|using|Builtin|V|Var|Variable|S|Shown|M|Matched|Shy|E|Eager)\\b"
+			"match": "\\b[A-Z_]+\\b"
 		},
 		{
 			"name": "punctuation",
 			"match": "[\\{\\}\\[\\]\\(\\)]"
-		},
-		{
-			"name": "keyword.operator",
-			"match": "\\b(:|::|\\.|\\+|-|\\*|\\/|matches|AND|OR|=|and|or|\\<|\\>)\\b"
 		},
 		{
 			"name": "constant.numeric",
@@ -20,7 +20,7 @@
 		},
 		{
 			"name": "entity.name.type",
-			"match": "\\b[0-9A-Z_]+\\b"
+			"match": "\\b[0-9A-Z_][0-9A-Za-z_]*\\b"
 		},
 		{
 			"name": "entity.name.function",
