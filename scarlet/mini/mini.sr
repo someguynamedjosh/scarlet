@@ -22,5 +22,3 @@ just_t IS VAR(SELF)
 just_t(statement(a identity b))
 
 struct IS {}
-
-x(asdf IS fdsa) IS asdf

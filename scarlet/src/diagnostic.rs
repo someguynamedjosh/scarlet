@@ -44,6 +44,11 @@ impl Position {
     pub fn range(&self) -> Range<usize> {
         self.start..self.end
     }
+
+    pub fn extend(&mut self, position: Position) {
+        self.start = self.start.min(position.start);
+        self.end = self.end.max(position.end);
+    }
 }
 
 #[derive(Debug)]
@@ -63,7 +68,7 @@ fn expand_text_range_to_include_full_lines(range: Range<usize>, text: &str) -> R
             break;
         }
     }
-    let mut first_line_after_dr = range.end;
+    let mut first_line_after_dr = text.len();
     for (index, byte) in text.bytes().enumerate() {
         if index < range.end {
             continue;

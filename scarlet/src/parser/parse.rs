@@ -84,7 +84,14 @@ fn push_match<'a>(
     if matchh.continuation_of.is_some() {
         let index = to.0.len() - 1;
         to.0[index].children.append(&mut append);
+        to.0[index].position.extend(position);
     } else {
+        let mut position = position;
+        for child in &append {
+            if let NodeChild::Node(node) = child {
+                position.extend(node.position);
+            }
+        }
         to.0.push(Node {
             phrase: matchh.phrase,
             children: append,
