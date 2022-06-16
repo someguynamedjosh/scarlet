@@ -44,10 +44,10 @@ fn create(
         } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
             mode = 2;
         } else if mode == 0 {
-            let con = arg.as_construct(pc, env, SVariableInvariants(this.ptr_clone()))?;
+            let con = arg.as_item(pc, env, SVariableInvariants(this.ptr_clone()))?;
             invariants.push(con);
         } else if mode == 1 {
-            let con = arg.as_construct(pc, env, SPlain(this.ptr_clone()))?;
+            let con = arg.as_item(pc, env, SPlain(this.ptr_clone()))?;
             dependencies.push(con);
         } else if mode == 2 {
             let text = arg.as_ident()?;

@@ -120,6 +120,10 @@ impl ItemPtr {
         self.0.borrow_mut().name = Some(name);
     }
 
+    pub fn set_position(&self, position: Position) {
+        self.0.borrow_mut().position = Some(position);
+    }
+
     pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<'_, Item>, D>> {
         OwningRef::new(self.borrow())
             .try_map(|this| this.downcast_definition().ok_or(()))

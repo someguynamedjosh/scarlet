@@ -45,7 +45,7 @@ fn entry() {
     println!("Parsed");
 
     let mut env = Environment::new();
-    let root = root.as_construct(&parse_context, &mut env, SRoot);
+    let root = root.as_item(&parse_context, &mut env, SRoot);
     let root = match root {
         Ok(root) => root,
         Err(diagnostic) => {

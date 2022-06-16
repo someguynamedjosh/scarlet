@@ -26,7 +26,7 @@ fn struct_from_fields(
         let (label, field) = fields.remove(0);
         let label = label.unwrap_or("").to_owned();
         let this = crate::item::Item::placeholder_with_scope(scope);
-        let field = field.as_construct(pc, env, SFieldAndRest(this.ptr_clone()))?;
+        let field = field.as_item(pc, env, SFieldAndRest(this.ptr_clone()))?;
         if label.len() > 0 {
             field.set_name(label.clone());
         }

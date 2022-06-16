@@ -33,8 +33,8 @@ fn create(
 
     let truee = env.get_language_item("true").unwrap().ptr_clone();
     let falsee = env.get_language_item("false").unwrap().ptr_clone();
-    let left = args[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
-    let right = args[1].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+    let left = args[0].as_item(pc, env, SPlain(this.ptr_clone()))?;
+    let right = args[1].as_item(pc, env, SPlain(this.ptr_clone()))?;
 
     let eq_inv = Item::new(
         DDecision::new(
@@ -50,7 +50,7 @@ fn create(
         vec![eq_inv],
         hashset![this.ptr_clone()],
     );
-    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this.ptr_clone()))?;
+    let equal = args[2].as_item(pc, env, SWithInvariant(eq_inv, this.ptr_clone()))?;
 
     let neq_inv = Item::new(
         DDecision::new(
@@ -66,7 +66,7 @@ fn create(
         vec![neq_inv],
         hashset![this.ptr_clone()],
     );
-    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this.ptr_clone()))?;
+    let unequal = args[3].as_item(pc, env, SWithInvariant(neq_inv, this.ptr_clone()))?;
 
     this.redefine(
         DDecision::new(left.ptr_clone(), right.ptr_clone(), equal, unequal).clone_into_box(),

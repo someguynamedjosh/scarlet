@@ -39,7 +39,7 @@ fn create(
                 sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?,
             ));
         } else {
-            anonymous_subs.push(sub.as_construct(pc, env, SPlain(this.ptr_clone()))?);
+            anonymous_subs.push(sub.as_item(pc, env, SPlain(this.ptr_clone()))?);
         }
     }
     this.redefine(

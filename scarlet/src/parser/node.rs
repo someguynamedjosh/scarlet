@@ -39,7 +39,7 @@ impl<'a> NodeChild<'a> {
         env: &mut Environment,
         scope: impl Scope + 'static,
     ) -> Result<ItemPtr, Diagnostic> {
-        self.as_node().as_construct(pc, env, scope)
+        self.as_node().as_item(pc, env, scope)
     }
 
     pub(crate) fn as_construct_dyn_scope(
@@ -48,7 +48,7 @@ impl<'a> NodeChild<'a> {
         env: &mut Environment,
         scope: Box<dyn Scope>,
     ) -> Result<ItemPtr, Diagnostic> {
-        self.as_node().as_construct_dyn_scope(pc, env, scope)
+        self.as_node().as_item_dyn_scope(pc, env, scope)
     }
 
     pub fn vomit(&self, pc: &ParseContext) -> String {
@@ -115,27 +115,30 @@ impl<'x> Node<'x> {
         pt.get(self.phrase).unwrap().components.len() == self.children.len()
     }
 
-    pub fn as_construct(
+    pub fn as_item(
         &self,
         pc: &ParseContext,
         env: &mut Environment,
         scope: impl Scope + 'static,
     ) -> Result<ItemPtr, Diagnostic> {
-        self.as_construct_dyn_scope(pc, env, Box::new(scope))
+        self.as_item_dyn_scope(pc, env, Box::new(scope))
     }
 
-    pub fn as_construct_dyn_scope(
+    pub fn as_item_dyn_scope(
         &self,
         pc: &ParseContext,
         env: &mut Environment,
         scope: Box<dyn Scope>,
     ) -> Result<ItemPtr, Diagnostic> {
-        pc.phrases_sorted_by_priority
+        let item = pc
+            .phrases_sorted_by_priority
             .get(self.phrase)
             .unwrap()
             .create_and_uncreate
             .expect(&format!("{} is not a construct", self.phrase))
-            .0(pc, env, scope, self)
+            .0(pc, env, scope, self)?;
+        item.set_position(self.position);
+        Ok(item)
     }
 
     pub fn as_ident(&self) -> Result<&'x str, Diagnostic> {

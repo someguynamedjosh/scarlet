@@ -28,8 +28,8 @@ fn create(
     let this = crate::item::Item::placeholder_with_scope(scope);
 
     let label = args[0].as_ident()?.to_owned();
-    let value = args[1].as_construct(pc, env, SFieldAndRest(this.ptr_clone()))?;
-    let rest = args[2].as_construct(pc, env, SField(this.ptr_clone()))?;
+    let value = args[1].as_item(pc, env, SFieldAndRest(this.ptr_clone()))?;
+    let rest = args[2].as_item(pc, env, SField(this.ptr_clone()))?;
     this.redefine(DPopulatedStruct::new(label, value, rest).clone_into_box());
     Ok(this)
 }

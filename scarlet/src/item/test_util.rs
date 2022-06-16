@@ -59,7 +59,7 @@ fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment, 
     let parsed = parse_tree(code, &pc, &mut file_counter).unwrap();
 
     let mut env = env();
-    let root = parsed.as_construct(&pc, &mut env, SRoot).unwrap();
+    let root = parsed.as_item(&pc, &mut env, SRoot).unwrap();
 
     (env, root)
 }
