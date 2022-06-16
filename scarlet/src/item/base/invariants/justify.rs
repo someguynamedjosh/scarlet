@@ -132,6 +132,8 @@ impl<'a> JustificationContext<'a> {
                     for statement in &set.statements {
                         d = d.with_item_error(statement, &set.context, self.env);
                     }
+                    d = d.with_text_info("Required by this substitution:".to_owned());
+                    d = d.with_item_info(&set.context, &set.context, self.env);
                     if res.is_ok() {
                         d = d.with_text_info(format!("There exists circular reasoning that justifies these statements, but circular reasoning is not allowed."));
                     }

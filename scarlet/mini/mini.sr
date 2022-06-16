@@ -4,7 +4,7 @@ void IS UNIQUE AS_LANGUAGE_ITEM(void)
 
 x IS VAR()
 fx IS VAR(DEP x)
-y IS VAR()
+y IS VAR(x = SELF)
 just IS VAR()
 
 statement IS 
@@ -16,9 +16,4 @@ eq_ext_rev_t IS AXIOM(eq_ext_rev_t)
 identity IS VAR()
 a IS VAR()
 b IS VAR()
-eq_ext_rev_t(a identity b) SHOWN
-
-just_t IS VAR(SELF)
-just_t(statement(a identity b))
-
-just_t(true)
+eq_ext_rev_t(x IS a   y IS b) SHOWN
