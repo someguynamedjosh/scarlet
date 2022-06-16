@@ -129,7 +129,7 @@ impl Element {
                 let (line, column) = find_line_and_column(diagnostic_range.start, content);
                 let mut result = format!(
                     "{}",
-                    level.colorize(&format!("> {}:{}:{}\n", path, line, column))
+                    level.colorize(&format!("> {}.sr:{}:{}\n", path, line, column))
                 );
                 let mut position = expanded_range.start;
                 for line in text.lines() {

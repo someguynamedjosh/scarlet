@@ -23,4 +23,6 @@ just_t(statement(a identity b))
 
 struct IS {}
 
-thing IS VAR()(x y)
+my_func IS VAR()
+
+my_func(true IS false)

@@ -34,8 +34,10 @@ fn create(
     let mut anonymous_subs = Vec::new();
     for sub in util::collect_comma_list(&node.children[2]) {
         if sub.phrase == "is" {
+            let name = sub.children[0].as_node();
             named_subs.push((
-                sub.children[0].as_node().as_ident()?.to_owned(),
+                name.position,
+                name.as_ident()?.to_owned(),
                 sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?,
             ));
         } else {
