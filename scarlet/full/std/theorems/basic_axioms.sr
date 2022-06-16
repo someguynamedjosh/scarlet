@@ -10,7 +10,7 @@ invariant_truth_t IS
 {
    AXIOM(invariant_truth_t)
 
-   x(y = true)
+   just(y = true)
    AS_LANGUAGE_ITEM(invariant_truth_t_statement)
 
    y IS VAR(SELF)
@@ -36,7 +36,7 @@ eq_ext_rev_t IS
 {
    AXIOM(eq_ext_rev_t)
 
-   x(f(z) = f(y))
+   just(f(z) = f(y))
    AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
    y IS VAR()
@@ -61,7 +61,7 @@ refl_t IS
 {
    AXIOM(refl_t)
 
-   x(y = y)
+   just(y = y)
    AS_LANGUAGE_ITEM(refl_t_statement)
 
    y IS VAR()

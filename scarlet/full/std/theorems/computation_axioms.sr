@@ -4,7 +4,7 @@ decision_eq_t IS
 { 
    AXIOM(decision_eq_t)
 
-   x(DECISION(y z u v) = u)
+   just(DECISION(y z u v) = u)
    AS_LANGUAGE_ITEM(decision_eq_t_statement)
 
    y IS VAR()
@@ -20,7 +20,7 @@ decision_neq_t IS
 {
    AXIOM(decision_neq_t)
 
-   x(DECISION(y z u v) = v)
+   just(DECISION(y z u v) = v)
    AS_LANGUAGE_ITEM(
       decision_neq_t_statement 
   )

@@ -5,9 +5,10 @@ void IS UNIQUE AS_LANGUAGE_ITEM(void)
 x IS VAR()
 fx IS VAR(DEP x)
 y IS VAR()
+just IS VAR()
 
 statement IS 
-x(fx(x) = fx(y)) 
+just(fx(x) = fx(y)) 
 AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
 eq_ext_rev_t IS AXIOM(eq_ext_rev_t)

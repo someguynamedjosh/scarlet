@@ -16,7 +16,7 @@ extract_eq_from_decision_t IS
          decision_eq_t(y z u v)
          # Proves t = u
          inv_eq_t(hypothesis   t = u)
-         # Proves hypothesis = x(t = u)
+         # Proves hypothesis = just(t = u)
          decision_eq_t(y   z   t = u   t = v)
       }
       .VALUE
@@ -30,7 +30,7 @@ extract_eq_from_decision_t IS
          decision_neq_t(y z u v)
          # Proves t = v
          inv_eq_t(hypothesis   t = v)
-         # Proves hypothesis = x(t = v)
+         # Proves hypothesis = just(t = v)
          decision_neq_t(
             y   z   t = u   t = v
          )

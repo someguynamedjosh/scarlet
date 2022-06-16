@@ -34,6 +34,7 @@ eq_trans_t IS equality.eq_trans_t
 
 # decision_eq_inv_t IS other.decision_eq_inv_t
 just_t IS other.just_t
+just IS std.basics.just
 
 x IS basics.x
 f IS basics.f
