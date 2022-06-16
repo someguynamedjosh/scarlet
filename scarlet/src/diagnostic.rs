@@ -16,7 +16,7 @@ impl Level {
         match self {
             Level::Error => text.red(),
             Level::Warning => text.yellow(),
-            Level::Info => text.cyan(),
+            Level::Info => text.blue(),
         }
     }
 }
@@ -94,25 +94,43 @@ impl Element {
         match self {
             Element::Text(text) => {
                 let level_text = match level {
-                    Level::Error => "ERROR: ",
-                    Level::Warning => todo!(),
-                    Level::Info => todo!(),
+                    Level::Error => "ERROR:",
+                    Level::Warning => "WARN:",
+                    Level::Info => "INFO:",
                 };
-                format!("{} {}\n", level.colorize(level_text), text)
+                format!("{} {}\n", level.colorize(level_text).bold(), text.bold())
             }
             Element::GeneratedCodeBlock(_) => todo!(),
             Element::SourceCodeBlock(location) => {
                 let (path, content) = files.get_file(location.file_index());
                 let diagnostic_range = location.range();
-                let text = &content
-                    [expand_text_range_to_include_full_lines(diagnostic_range.clone(), content)];
+                let expanded_range =
+                    expand_text_range_to_include_full_lines(diagnostic_range.clone(), content);
+                let text = &content[expanded_range.clone()];
                 let (line, column) = find_line_and_column(diagnostic_range.start, content);
                 let mut result = format!(
                     "{}",
                     level.colorize(&format!("> {}:{}:{}\n", path, line, column))
                 );
+                let mut position = expanded_range.start;
                 for line in text.lines() {
-                    result.push_str(&format!("{}{}", level.colorize("| "), line));
+                    result.push_str(&format!("{}{}\n", level.colorize("| "), line));
+                    let mut highlight = String::new();
+                    for char in line.chars() {
+                        if diagnostic_range.contains(&position) {
+                            highlight.push('^');
+                        } else {
+                            highlight.push(' ');
+                        }
+                        position += char.len_utf8();
+                    }
+                    if highlight.contains("^") {
+                        result.push_str(&format!(
+                            "{}{}\n",
+                            level.colorize("| "),
+                            level.colorize(&highlight)
+                        ));
+                    }
                 }
                 result
             }

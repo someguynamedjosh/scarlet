@@ -37,7 +37,7 @@ impl Resolvable for RFrom {
         _limit: u32,
     ) -> ResolveResult {
         let base = self.right.get_from_dex(env);
-        let x = env.get_language_item("x").dereference();
+        let x = env.get_language_item("x").unwrap().dereference();
         let x = x.downcast_resolved_definition::<DVariable>()?;
         let x_id = x.unwrap().get_variable().ptr_clone();
         let subs = vec![(x_id, self.left.ptr_clone())].into_iter().collect();

@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::{substitution::DSubstitution, variable::VariablePtr},
@@ -18,22 +19,27 @@ use crate::{
     util::PtrExtension,
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
     assert!(node.children.len() == 4);
     let this = crate::item::Item::placeholder_with_scope(scope);
-    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
+    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let mut named_subs = Vec::new();
     let mut anonymous_subs = Vec::new();
     for sub in util::collect_comma_list(&node.children[2]) {
         if sub.phrase == "is" {
             named_subs.push((
-                sub.children[0].as_node().as_ident().to_owned(),
-                sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone())),
+                sub.children[0].as_node().as_ident()?.to_owned(),
+                sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?,
             ));
         } else {
-            anonymous_subs.push(sub.as_construct(pc, env, SPlain(this.ptr_clone())));
+            anonymous_subs.push(sub.as_construct(pc, env, SPlain(this.ptr_clone()))?);
         }
     }
     this.redefine(
@@ -44,7 +50,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         })
         .clone_into_box(),
     );
-    this
+    Ok(this)
 }
 
 fn uncreate_substitution<'a>(

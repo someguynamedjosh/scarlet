@@ -18,19 +18,19 @@ pub struct DAxiom {
 }
 
 impl DAxiom {
-    fn new(env: &mut Environment, statement: &str) -> Self {
-        Self {
-            statement: env.get_language_item(statement).ptr_clone(),
-        }
+    fn new(env: &mut Environment, statement: &str) -> Option<Self> {
+        Some(Self {
+            statement: env.get_language_item(statement)?.ptr_clone(),
+        })
     }
 
-    pub fn from_name(env: &mut Environment, name: &str) -> Self {
+    pub fn from_name(env: &mut Environment, name: &str) -> Option<Self> {
         Self::new(env, &format!("{}_statement", name))
     }
 
     pub fn get_statement(&self, env: &mut Environment) -> &'static str {
         for lang_item_name in env.language_item_names() {
-            let lang_item = env.get_language_item(lang_item_name);
+            let lang_item = env.get_language_item(lang_item_name).unwrap();
             if self
                 .statement
                 .get_trimmed_equality(&lang_item)

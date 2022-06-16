@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         resolvable::{from::RFrom, DResolvable},
@@ -12,15 +13,20 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[1], NodeChild::Text("FROM"));
     let this = Item::placeholder_with_scope(scope);
 
-    let left = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
-    let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()));
+    let left = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+    let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     this.redefine(DResolvable::new(RFrom { left, right }).clone_into_box());
-    this
+    Ok(this)
 }
 
 fn uncreate<'a>(

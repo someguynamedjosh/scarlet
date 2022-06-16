@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::{is_populated_struct::DIsPopulatedStruct, other::DOther},
@@ -12,14 +13,19 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text(".IS_POPULATED_STRUCT"));
     let this = Item::placeholder_with_scope(scope.dyn_clone());
-    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
+    let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let ips = DIsPopulatedStruct::new(env, base, scope);
     this.redefine(DOther::new(ips).clone_into_box());
-    this
+    Ok(this)
 }
 
 fn uncreate<'a>(

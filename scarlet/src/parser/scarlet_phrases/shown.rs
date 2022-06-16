@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::ItemPtr,
     parser::{
@@ -9,12 +10,17 @@ use crate::{
     scope::Scope,
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 2);
     assert_eq!(node.children[1], NodeChild::Text("SHOWN"));
-    let base = node.children[0].as_construct_dyn_scope(pc, env, scope);
+    let base = node.children[0].as_construct_dyn_scope(pc, env, scope)?;
     base.borrow_mut().show = true;
-    base
+    Ok(base)
 }
 
 fn uncreate<'a>(

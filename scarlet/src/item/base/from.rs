@@ -22,7 +22,7 @@ pub(super) fn create_from_dex(env: &Environment, from: ItemPtr) -> ItemPtr {
     let scope = || SPlain(from.ptr_clone());
     let into = Item::placeholder_with_scope(Box::new(scope()));
     from.borrow_mut().from_dex = Some(into.ptr_clone());
-    let x = env.get_language_item("x");
+    let x = env.get_language_item("x").unwrap();
 
     if let Some(structt) = from.downcast_definition::<DPopulatedStruct>() {
         let structt = structt.clone();
@@ -92,7 +92,7 @@ fn create_and(
     right: ItemPtr,
     scope: impl Scope + 'static,
 ) -> ItemPtr {
-    let and = env.get_language_item("and");
+    let and = env.get_language_item("and").unwrap();
     Item::new(
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
@@ -104,7 +104,7 @@ fn create_and(
 }
 
 fn redefine_as_and(env: &Environment, original: ItemPtr, left: ItemPtr, right: ItemPtr) {
-    let and = env.get_language_item("and");
+    let and = env.get_language_item("and").unwrap();
     original.redefine(
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),

@@ -43,28 +43,27 @@ impl Environment {
         this
     }
 
-    pub fn define_language_item(&mut self, name: &str, definition: ItemPtr) {
-        let id = self.get_language_item(name);
+    pub fn define_language_item(&mut self, name: &str, definition: ItemPtr) -> Option<()> {
+        let id = self.get_language_item(name)?;
         id.redefine(DOther::new(definition).clone_into_box());
+        Some(())
     }
 
     #[track_caller]
-    pub fn get_language_item(&self, name: &str) -> &ItemPtr {
-        self.language_items
-            .get(name)
-            .expect(&format!("nice error, no language item named {}", name))
+    pub fn get_language_item(&self, name: &str) -> Option<&ItemPtr> {
+        self.language_items.get(name)
     }
 
     pub fn get_true(&self) -> &ItemPtr {
-        self.get_language_item("true")
+        self.get_language_item("true").unwrap()
     }
 
     pub fn get_false(&self) -> &ItemPtr {
-        self.get_language_item("false")
+        self.get_language_item("false").unwrap()
     }
 
     pub fn get_void(&self) -> &ItemPtr {
-        self.get_language_item("void")
+        self.get_language_item("void").unwrap()
     }
 
     pub(crate) fn language_item_names(&self) -> impl Iterator<Item = &'static str> {

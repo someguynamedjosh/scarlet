@@ -1,6 +1,7 @@
 use maplit::hashset;
 
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::decision::{DDecision, SWithInvariant},
@@ -16,7 +17,12 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[0], NodeChild::Text("DECISION"));
     assert_eq!(node.children[1], NodeChild::Text("("));
@@ -25,10 +31,10 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(args.len(), 4);
     let this = Item::placeholder_with_scope(scope);
 
-    let truee = env.get_language_item("true").ptr_clone();
-    let falsee = env.get_language_item("false").ptr_clone();
-    let left = args[0].as_construct(pc, env, SPlain(this.ptr_clone()));
-    let right = args[1].as_construct(pc, env, SPlain(this.ptr_clone()));
+    let truee = env.get_language_item("true").unwrap().ptr_clone();
+    let falsee = env.get_language_item("false").unwrap().ptr_clone();
+    let left = args[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+    let right = args[1].as_construct(pc, env, SPlain(this.ptr_clone()))?;
 
     let eq_inv = Item::new(
         DDecision::new(
@@ -44,7 +50,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         vec![eq_inv],
         hashset![this.ptr_clone()],
     );
-    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this.ptr_clone()));
+    let equal = args[2].as_construct(pc, env, SWithInvariant(eq_inv, this.ptr_clone()))?;
 
     let neq_inv = Item::new(
         DDecision::new(
@@ -60,13 +66,13 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         vec![neq_inv],
         hashset![this.ptr_clone()],
     );
-    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this.ptr_clone()));
+    let unequal = args[3].as_construct(pc, env, SWithInvariant(neq_inv, this.ptr_clone()))?;
 
     this.redefine(
         DDecision::new(left.ptr_clone(), right.ptr_clone(), equal, unequal).clone_into_box(),
     );
 
-    this
+    Ok(this)
 }
 
 fn uncreate<'a>(

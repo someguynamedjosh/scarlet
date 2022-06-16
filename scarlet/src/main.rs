@@ -15,6 +15,7 @@ use crate::{
     environment::Environment, item::resolve::resolve_all, parser::ParseContext, scope::SRoot,
 };
 
+pub mod diagnostic;
 mod environment;
 mod file_tree;
 mod item;
@@ -27,15 +28,31 @@ fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
-    let root = file_tree::read_root(&path).unwrap();
+    let file_tree = file_tree::read_root(&path).unwrap();
 
     let parse_context = ParseContext::new();
     let mut file_counter = 0;
-    let root = parser::parse_tree(&root, &parse_context, &mut file_counter);
+    let root = parser::parse_tree(&file_tree, &parse_context, &mut file_counter);
+    let root = match root {
+        Ok(root) => root,
+        Err(diagnostics) => {
+            for diagnostic in diagnostics {
+                println!("{}", diagnostic.format_colorful(&file_tree));
+            }
+            return;
+        }
+    };
     println!("Parsed");
 
     let mut env = Environment::new();
     let root = root.as_construct(&parse_context, &mut env, SRoot);
+    let root = match root {
+        Ok(root) => root,
+        Err(diagnostic) => {
+            println!("{}", diagnostic.format_colorful(&file_tree));
+            return;
+        }
+    };
     resolve_all(&mut env, root.ptr_clone());
     println!("Resolved");
     root.check_all();

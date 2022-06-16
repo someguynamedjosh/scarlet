@@ -23,4 +23,4 @@ just_t(statement(a identity b))
 
 struct IS {}
 
-struct []
+x(asdf IS fdsa) IS asdf

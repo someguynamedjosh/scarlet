@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{definitions::decision::DDecision, Item, ItemDefinition, ItemPtr},
     parser::{
@@ -9,17 +10,22 @@ use crate::{
     scope::{SPlain, Scope},
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[1], NodeChild::Text("="));
     let this = Item::placeholder_with_scope(scope);
 
-    let left = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()));
-    let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()));
-    let truee = env.get_language_item("true").ptr_clone();
-    let falsee = env.get_language_item("false").ptr_clone();
+    let left = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+    let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+    let truee = env.get_language_item("true").unwrap().ptr_clone();
+    let falsee = env.get_language_item("false").unwrap().ptr_clone();
     this.redefine(DDecision::new(left, right, truee, falsee).clone_into_box());
-    this
+    Ok(this)
 }
 
 fn uncreate<'a>(
@@ -30,8 +36,8 @@ fn uncreate<'a>(
     Ok(
         if let Some(cite) = uncreate.downcast_definition::<DDecision>() {
             let cite = cite.clone();
-            let truee = env.get_language_item("true");
-            let falsee = env.get_language_item("false");
+            let truee = env.get_language_item("true").unwrap();
+            let falsee = env.get_language_item("false").unwrap();
             if cite
                 .when_equal()
                 .get_trimmed_equality(&truee)?
