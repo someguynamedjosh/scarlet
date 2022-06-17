@@ -38,6 +38,7 @@ fn uncreate<'a>(
             let cite = cite.clone();
             let truee = env.get_language_item("true").unwrap();
             let falsee = env.get_language_item("false").unwrap();
+            println!("{:#?}", cite.when_equal().get_trimmed_equality(&truee));
             if cite
                 .when_equal()
                 .get_trimmed_equality(&truee)?

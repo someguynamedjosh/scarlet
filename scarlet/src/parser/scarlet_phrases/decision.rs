@@ -103,7 +103,7 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("DECISION[ {} ]", src.children[2].as_node().vomit(pc))
+    format!("DECISION({})", src.children[2].as_node().vomit(pc))
 }
 
 pub fn phrase() -> Phrase {

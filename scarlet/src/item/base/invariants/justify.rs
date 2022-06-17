@@ -129,8 +129,8 @@ impl<'a> JustificationContext<'a> {
                     let mut d = Diagnostic::new().with_text_error(format!(
                         "Failed to find any justification for the following statements:"
                     ));
-                    for statement in &set.statements {
-                        d = d.with_item_error(statement, &set.context, self.env);
+                    for requirement in &set.justification_requirements {
+                        d = d.with_item_error(requirement, &set.context, self.env);
                     }
                     d = d.with_text_info("Required by this substitution:".to_owned());
                     d = d.with_item_info(&set.context, &set.context, self.env);
