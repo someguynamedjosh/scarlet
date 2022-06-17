@@ -1,3 +1,11 @@
 true IS UNIQUE AS_LANGUAGE_ITEM(true)
 false IS UNIQUE AS_LANGUAGE_ITEM(false)
 void IS UNIQUE AS_LANGUAGE_ITEM(void)
+
+x IS VAR()
+is_peano_number IS
+DECISION(x {} true is_peano_number(x.VALUE))
+
+
+just_t IS VAR(SELF)
+just_t(true)
