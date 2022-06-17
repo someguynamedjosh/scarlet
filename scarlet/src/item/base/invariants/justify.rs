@@ -1,5 +1,6 @@
 use super::{InvariantSetPtr, SetJustification, StatementJustifications};
 use crate::{
+    diagnostic::Diagnostic,
     environment::Environment,
     item::{definitions::substitution::Substitutions, equality::Equal, ItemPtr},
     scope::{LookupInvariantError, Scope},
@@ -83,7 +84,7 @@ struct JustificationContext<'a> {
 }
 
 impl Environment {
-    pub fn justify_all(&mut self, root: &ItemPtr) {
+    pub fn justify_all(&mut self, root: &ItemPtr) -> Result<(), Vec<Diagnostic>> {
         let all_sets = collect_invariant_sets(root);
         JustificationContext {
             stack: Vec::new(),
@@ -111,9 +112,9 @@ impl Environment {
 }
 
 impl<'a> JustificationContext<'a> {
-    fn justify_all(&mut self) {
-        let mut encountered_err = false;
+    fn justify_all(&mut self) -> Result<(), Vec<Diagnostic>> {
         const MAX_LIMIT: u32 = 16;
+        let mut diagnostics = Vec::new();
         for limit in 0..MAX_LIMIT {
             println!("{}/{}", limit, MAX_LIMIT);
             for set_ptr in self.sets.clone() {
@@ -125,14 +126,18 @@ impl<'a> JustificationContext<'a> {
                 let res = self.justify_set(&set_ptr, limit);
                 let set = set_ptr.borrow();
                 if limit == MAX_LIMIT - 1 && !set.connected_to_root {
-                    if let Err(err) = res {
-                        eprintln!("Error while justifying invariant set:");
-                        eprintln!("{:?}", err);
-                    } else {
-                        eprintln!("The following can only be justified circularly:");
-                        eprintln!("{:#?}", set);
+                    let mut d = Diagnostic::new().with_text_error(format!(
+                        "Failed to find any justification for the following statements:"
+                    ));
+                    for requirement in &set.justification_requirements {
+                        d = d.with_item_error(requirement, &set.context, self.env);
                     }
-                    encountered_err = true;
+                    d = d.with_text_info("Required by this substitution:".to_owned());
+                    d = d.with_item_info(&set.context, &set.context, self.env);
+                    if res.is_ok() {
+                        d = d.with_text_info(format!("There exists circular reasoning that justifies these statements, but circular reasoning is not allowed."));
+                    }
+                    diagnostics.push(d);
                 }
             }
             propogate_root_connectedness(&self.sets);
@@ -145,13 +150,12 @@ impl<'a> JustificationContext<'a> {
             }
             if all_connected {
                 break;
-            } else if limit == MAX_LIMIT - 1 {
-                eprintln!("Some invariants can only be justified circularly.");
-                encountered_err = true;
             }
         }
-        if encountered_err {
-            todo!("nice error: Invariants are not justified.");
+        if diagnostics.len() == 0 {
+            Ok(())
+        } else {
+            Err(diagnostics)
         }
     }
 

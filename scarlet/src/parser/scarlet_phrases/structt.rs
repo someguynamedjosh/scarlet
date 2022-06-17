@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
@@ -18,25 +19,30 @@ fn struct_from_fields(
     env: &mut Environment,
     mut fields: Vec<(Option<&str>, &Node)>,
     scope: Box<dyn Scope>,
-) -> ItemPtr {
+) -> Result<ItemPtr, Diagnostic> {
     if fields.is_empty() {
-        env.get_language_item("void").ptr_clone()
+        Ok(env.get_language_item("void").unwrap().ptr_clone())
     } else {
         let (label, field) = fields.remove(0);
         let label = label.unwrap_or("").to_owned();
         let this = crate::item::Item::placeholder_with_scope(scope);
-        let field = field.as_construct(pc, env, SFieldAndRest(this.ptr_clone()));
+        let field = field.as_item(pc, env, SFieldAndRest(this.ptr_clone()))?;
         if label.len() > 0 {
             field.set_name(label.clone());
         }
-        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this.ptr_clone())));
+        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this.ptr_clone())))?;
         let this_def = DPopulatedStruct::new(label, field, rest);
         this.redefine(this_def.clone_into_box());
-        this
+        Ok(this)
     }
 }
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[0], NodeChild::Text("{"));
     assert_eq!(node.children[2], NodeChild::Text("}"));
@@ -44,16 +50,16 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     let fields = fields
         .into_iter()
         .map(|field| {
-            if field.phrase == "is" {
+            Ok(if field.phrase == "is" {
                 (
-                    Some(field.children[0].as_node().as_ident()),
+                    Some(field.children[0].as_node().as_ident()?),
                     field.children[2].as_node(),
                 )
             } else {
                 (None, field)
-            }
+            })
         })
-        .collect();
+        .collect::<Result<_, _>>()?;
     struct_from_fields(pc, env, fields, scope)
 }
 
@@ -99,7 +105,7 @@ fn uncreate<'a>(
     }
     Ok(
         if maybe_structt
-            .get_trimmed_equality(&env.get_language_item("void"))?
+            .get_trimmed_equality(&env.get_language_item("void").unwrap())?
             .is_trivial_yes()
         {
             Some(Node {

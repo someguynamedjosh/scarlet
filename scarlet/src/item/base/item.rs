@@ -32,7 +32,7 @@ use crate::{
         ContainmentType, ItemDefinition,
     },
     scope::{LookupIdentResult, SRoot, Scope},
-    util::PtrExtension,
+    util::PtrExtension, diagnostic::Position,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -118,6 +118,10 @@ impl ItemPtr {
 impl ItemPtr {
     pub fn set_name(&self, name: String) {
         self.0.borrow_mut().name = Some(name);
+    }
+
+    pub fn set_position(&self, position: Position) {
+        self.0.borrow_mut().position = Some(position);
     }
 
     pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<'_, Item>, D>> {
@@ -272,6 +276,7 @@ impl ItemPtr {
 
 #[derive(Debug)]
 pub struct Item {
+    pub position: Option<Position>,
     pub definition: Box<dyn ItemDefinition>,
     pub scope: Box<dyn Scope>,
     pub invariants: Option<InvariantSetPtr>,
@@ -298,6 +303,7 @@ impl Item {
 
     pub fn new_boxed(definition: Box<dyn ItemDefinition>, scope: Box<dyn Scope>) -> ItemPtr {
         ItemPtr(Rc::new(RefCell::new(Self {
+            position: None,
             definition,
             scope,
             invariants: None,
@@ -313,6 +319,7 @@ impl Item {
         modify_self: impl FnOnce(ItemPtr, &mut D),
     ) -> ItemPtr {
         let this = ItemPtr(Rc::new(RefCell::new(Self {
+            position: None,
             definition: Box::new(definition),
             scope,
             invariants: None,

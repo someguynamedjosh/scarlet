@@ -49,17 +49,17 @@ pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, 
         def.set_name(lang_item_name.to_owned());
         env.define_language_item(lang_item_name, def);
     }
-    resolve_all(&mut env, root.ptr_clone());
+    resolve_all(&mut env, root.ptr_clone()).unwrap();
 
     callback(env, root)
 }
 
 fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment, ItemPtr) {
     let mut file_counter = 0;
-    let parsed = parse_tree(code, &pc, &mut file_counter);
+    let parsed = parse_tree(code, &pc, &mut file_counter).unwrap();
 
     let mut env = env();
-    let root = parsed.as_construct(&pc, &mut env, SRoot);
+    let root = parsed.as_item(&pc, &mut env, SRoot).unwrap();
 
     (env, root)
 }

@@ -22,6 +22,7 @@ use super::{
     ContainmentType,
 };
 use crate::{
+    diagnostic::Diagnostic,
     environment::Environment,
     item::{ItemDefinition, ItemPtr},
     scope::{LookupInvariantError, Scope},
@@ -97,6 +98,7 @@ pub enum ResolveError {
     InvariantDeadEnd(String),
     MaybeInvariantDoesNotExist,
     Placeholder,
+    Diagnostic(Diagnostic),
 }
 
 impl From<UnresolvedItemError> for ResolveError {
@@ -117,6 +119,12 @@ impl From<LookupInvariantError> for ResolveError {
     }
 }
 
+impl From<Diagnostic> for ResolveError {
+    fn from(v: Diagnostic) -> Self {
+        Self::Diagnostic(v)
+    }
+}
+
 pub enum ResolveResult {
     Ok(Box<dyn ItemDefinition>),
     Err(ResolveError),
@@ -133,6 +141,15 @@ impl FromResidual<Result<Infallible, UnresolvedItemError>> for ResolveResult {
 
 impl FromResidual<Result<Infallible, LookupInvariantError>> for ResolveResult {
     fn from_residual(residual: Result<Infallible, LookupInvariantError>) -> Self {
+        match residual {
+            Ok(ok) => match ok {},
+            Err(err) => Self::Err(err.into()),
+        }
+    }
+}
+
+impl FromResidual<Result<Infallible, Diagnostic>> for ResolveResult {
+    fn from_residual(residual: Result<Infallible, Diagnostic>) -> Self {
         match residual {
             Ok(ok) => match ok {},
             Err(err) => Self::Err(err.into()),

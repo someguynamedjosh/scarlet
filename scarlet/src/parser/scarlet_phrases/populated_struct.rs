@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
@@ -12,7 +13,12 @@ use crate::{
     scope::Scope,
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert!(node.children.len() == 4);
     assert_eq!(node.children[0], NodeChild::Text("POPULATED_STRUCT"));
     assert_eq!(node.children[1], NodeChild::Text("("));
@@ -21,11 +27,11 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
     assert_eq!(args.len(), 3);
     let this = crate::item::Item::placeholder_with_scope(scope);
 
-    let label = args[0].as_ident().to_owned();
-    let value = args[1].as_construct(pc, env, SFieldAndRest(this.ptr_clone()));
-    let rest = args[2].as_construct(pc, env, SField(this.ptr_clone()));
+    let label = args[0].as_ident()?.to_owned();
+    let value = args[1].as_item(pc, env, SFieldAndRest(this.ptr_clone()))?;
+    let rest = args[2].as_item(pc, env, SField(this.ptr_clone()))?;
     this.redefine(DPopulatedStruct::new(label, value, rest).clone_into_box());
-    this
+    Ok(this)
 }
 
 fn uncreate<'a>(

@@ -8,6 +8,7 @@ version = "0.1.0"
 
 [dependencies]
 backtrace = "0.3.64"
+colored = "2.0.0"
 debug-cell = {git = "https://github.com/joshua-maros/debug-cell"}
 indexmap = "1.7.0"
 itertools = "0.10.1"

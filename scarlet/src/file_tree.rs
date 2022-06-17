@@ -6,6 +6,26 @@ pub struct FileNode {
     pub children: Vec<(String, FileNode)>,
 }
 
+impl FileNode {
+    fn get_file_impl(&self, index: &mut usize) -> Option<(String, &str)> {
+        if *index == 0 {
+            Some(("".to_owned(), &self.self_content))
+        } else {
+            *index -= 1;
+            for child in &self.children {
+                if let Some((path, content)) = child.1.get_file_impl(index) {
+                    return Some((format!("/{}{}", child.0, path), content))
+                }
+            }
+            None
+        }
+    }
+
+    pub fn get_file(&self, index: usize) -> (String, &str) {
+        self.get_file_impl(&mut (index - 1)).unwrap()
+    }
+}
+
 fn read_folder_contents(at: &Path) -> Vec<(String, FileNode)> {
     let mut results = Vec::new();
     for entry in std::fs::read_dir(at).unwrap() {

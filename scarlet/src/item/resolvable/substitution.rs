@@ -2,6 +2,7 @@ use maplit::hashset;
 
 use super::{BoxedResolvable, Resolvable, ResolveError, ResolveResult};
 use crate::{
+    diagnostic::{Diagnostic, Position},
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
@@ -22,7 +23,8 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct RSubstitution {
     pub base: ItemPtr,
-    pub named_subs: Vec<(String, ItemPtr)>,
+    pub position: Position,
+    pub named_subs: Vec<(Position, String, ItemPtr)>,
     pub anonymous_subs: Vec<ItemPtr>,
 }
 
@@ -34,8 +36,8 @@ impl PartialEq for RSubstitution {
         {
             return false;
         }
-        'next_sub: for (key, value) in &self.named_subs {
-            for (other_key, other_value) in &other.named_subs {
+        'next_sub: for (_, key, value) in &self.named_subs {
+            for (_, other_key, other_value) in &other.named_subs {
                 if key == other_key {
                     if value.is_same_instance_as(other_value) {
                         continue 'next_sub;
@@ -75,9 +77,10 @@ impl Resolvable for RSubstitution {
         let base_scope = base.clone_scope();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = self.base.get_dependencies();
+        let total_dep_count = remaining_deps.num_variables();
 
         self.resolve_named_subs(base_scope, env, &mut subs, &mut remaining_deps)?;
-        self.resolve_anonymous_subs(remaining_deps, env, &mut subs)?;
+        self.resolve_anonymous_subs(total_dep_count, remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs)?;
 
         let justifications = make_justification_statements(&subs, limit)?;
@@ -88,7 +91,7 @@ impl Resolvable for RSubstitution {
 
     fn estimate_dependencies(&self, ctx: &mut Dcc, affects_return_value: bool) -> Dependencies {
         let mut result = Dependencies::new();
-        for (_, arg) in &self.named_subs {
+        for (_, _, arg) in &self.named_subs {
             result.append(ctx.get_dependencies(arg, affects_return_value));
         }
         for arg in &self.anonymous_subs {
@@ -99,7 +102,7 @@ impl Resolvable for RSubstitution {
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {
         let mut result = vec![(ContainmentType::Computational, &self.base)];
-        for (_, value) in &self.named_subs {
+        for (_, _, value) in &self.named_subs {
             result.push((ContainmentType::Computational, value));
         }
         for value in &self.anonymous_subs {
@@ -178,8 +181,9 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
 impl RSubstitution {
     fn resolve_anonymous_subs(
         &self,
+        total_dep_count: usize,
         mut remaining_deps: Dependencies,
-        _env: &mut Environment,
+        env: &mut Environment,
         subs: &mut Substitutions,
     ) -> Result<(), ResolveError> {
         for value in &self.anonymous_subs {
@@ -187,8 +191,15 @@ impl RSubstitution {
                 if let Some(partial_dep_error) = remaining_deps.error() {
                     return Err(partial_dep_error.clone().into());
                 } else {
-                    eprintln!("BASE:\n{:#?}\n", self.base,);
-                    panic!("No more dependencies left to substitute!");
+                    return Err(Diagnostic::new()
+                        .with_text_error(format!("This substitution has too many arguments:"))
+                        .with_source_code_block_error(self.position)
+                        .with_text_info(format!(
+                            "The base only has {} dependencies:",
+                            total_dep_count
+                        ))
+                        .with_item_info(&self.base, &self.base, env)
+                        .into());
                 }
             }
             let dep = remaining_deps.pop_front().var;
@@ -200,11 +211,11 @@ impl RSubstitution {
     fn resolve_named_subs(
         &self,
         base_scope: Box<dyn Scope>,
-        _env: &mut Environment,
+        env: &mut Environment,
         subs: &mut Substitutions,
         remaining_deps: &mut Dependencies,
     ) -> Result<(), ResolveError> {
-        for (name, value) in &self.named_subs {
+        for (position, name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(&name)?.unwrap();
             if let Some(var) = target
                 .dereference()
@@ -213,7 +224,15 @@ impl RSubstitution {
                 subs.insert_no_replace(var.get_variable().ptr_clone(), value.ptr_clone());
                 remaining_deps.remove(var.get_variable());
             } else {
-                panic!("{} is a valid name, but it is not a variable", name)
+                return Err(Diagnostic::new()
+                    .with_text_error(format!(
+                        "{} is used as a variable here but it is actually something else:",
+                        name
+                    ))
+                    .with_source_code_block_error(*position)
+                    .with_text_info(format!("{} is actually defined as follows:", name))
+                    .with_item_info(&target, value, env)
+                    .into());
             }
             drop(target);
         }

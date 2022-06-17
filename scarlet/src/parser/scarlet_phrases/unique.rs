@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{definitions::unique::DUnique, Item, ItemDefinition, ItemPtr},
     parser::{
@@ -14,9 +15,9 @@ fn create(
     _env: &mut Environment,
     scope: Box<dyn Scope>,
     node: &Node,
-) -> ItemPtr {
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children, &[NodeChild::Text("UNIQUE")]);
-    Item::new_boxed(DUnique::new().clone_into_box(), scope)
+    Ok(Item::new_boxed(DUnique::new().clone_into_box(), scope))
 }
 
 fn uncreate<'a>(

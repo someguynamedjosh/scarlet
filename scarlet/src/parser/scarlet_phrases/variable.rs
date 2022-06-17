@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::{
@@ -19,14 +20,22 @@ use crate::{
     scope::{SPlain, SWithParent, Scope},
 };
 
-fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node: &Node) -> ItemPtr {
+fn create(
+    pc: &ParseContext,
+    env: &mut Environment,
+    scope: Box<dyn Scope>,
+    node: &Node,
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
     let mut invariants = Vec::new();
     let mut dependencies = Vec::new();
-    let mut order =
-        VariableOrder::new(128, node.position.file_index, node.position.start_char as _);
+    let mut order = VariableOrder::new(
+        128,
+        node.position.file_index() as _,
+        node.position.range().start as _,
+    );
     let mut mode = 0;
     let this = crate::item::Item::placeholder_with_scope(scope.dyn_clone());
     for arg in util::collect_comma_list(&node.children[2]) {
@@ -35,13 +44,13 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
             mode = 2;
         } else if mode == 0 {
-            let con = arg.as_construct(pc, env, SVariableInvariants(this.ptr_clone()));
+            let con = arg.as_item(pc, env, SVariableInvariants(this.ptr_clone()))?;
             invariants.push(con);
         } else if mode == 1 {
-            let con = arg.as_construct(pc, env, SPlain(this.ptr_clone()));
+            let con = arg.as_item(pc, env, SPlain(this.ptr_clone()))?;
             dependencies.push(con);
         } else if mode == 2 {
-            let text = arg.as_ident();
+            let text = arg.as_ident()?;
             order.major_order = text
                 .parse()
                 .expect("TODO: Nice error, expected order to be a number between 0 and 255");
@@ -54,7 +63,7 @@ fn create(pc: &ParseContext, env: &mut Environment, scope: Box<dyn Scope>, node:
         order,
     };
     this.redefine(DResolvable::new(def).clone_into_box());
-    this
+    Ok(this)
 }
 
 fn uncreate<'a>(

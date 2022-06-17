@@ -1,7 +1,13 @@
 use std::fmt::{self, Debug, Formatter};
 
 use super::{phrase::PhraseTable, ParseContext};
-use crate::{environment::Environment, item::ItemPtr, scope::Scope, shared::indented};
+use crate::{
+    diagnostic::{Diagnostic, Position},
+    environment::Environment,
+    item::ItemPtr,
+    scope::Scope,
+    shared::indented,
+};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum NodeChild<'a> {
@@ -32,8 +38,8 @@ impl<'a> NodeChild<'a> {
         pc: &ParseContext,
         env: &mut Environment,
         scope: impl Scope + 'static,
-    ) -> ItemPtr {
-        self.as_node().as_construct(pc, env, scope)
+    ) -> Result<ItemPtr, Diagnostic> {
+        self.as_node().as_item(pc, env, scope)
     }
 
     pub(crate) fn as_construct_dyn_scope(
@@ -41,8 +47,8 @@ impl<'a> NodeChild<'a> {
         pc: &ParseContext,
         env: &mut Environment,
         scope: Box<dyn Scope>,
-    ) -> ItemPtr {
-        self.as_node().as_construct_dyn_scope(pc, env, scope)
+    ) -> Result<ItemPtr, Diagnostic> {
+        self.as_node().as_item_dyn_scope(pc, env, scope)
     }
 
     pub fn vomit(&self, pc: &ParseContext) -> String {
@@ -65,18 +71,10 @@ impl<'a> Debug for NodeChild<'a> {
 }
 
 #[derive(Clone, PartialEq, Eq, Default, Hash)]
-pub struct FilePosition {
-    pub file_index: u32,
-    pub start_char: usize,
-    /// Exclusive, I.E. the selection ends before end_char.
-    pub end_char: usize,
-}
-
-#[derive(Clone, PartialEq, Eq, Default, Hash)]
 pub struct Node<'x> {
     pub phrase: &'static str,
     pub children: Vec<NodeChild<'x>>,
-    pub position: FilePosition,
+    pub position: Position,
 }
 
 impl<'x> Debug for Node<'x> {
@@ -117,36 +115,45 @@ impl<'x> Node<'x> {
         pt.get(self.phrase).unwrap().components.len() == self.children.len()
     }
 
-    pub fn as_construct(
+    pub fn as_item(
         &self,
         pc: &ParseContext,
         env: &mut Environment,
         scope: impl Scope + 'static,
-    ) -> ItemPtr {
-        self.as_construct_dyn_scope(pc, env, Box::new(scope))
+    ) -> Result<ItemPtr, Diagnostic> {
+        self.as_item_dyn_scope(pc, env, Box::new(scope))
     }
 
-    pub fn as_construct_dyn_scope(
+    pub fn as_item_dyn_scope(
         &self,
         pc: &ParseContext,
         env: &mut Environment,
         scope: Box<dyn Scope>,
-    ) -> ItemPtr {
-        pc.phrases_sorted_by_priority
+    ) -> Result<ItemPtr, Diagnostic> {
+        let item = pc
+            .phrases_sorted_by_priority
             .get(self.phrase)
             .unwrap()
             .create_and_uncreate
             .expect(&format!("{} is not a construct", self.phrase))
-            .0(pc, env, scope, self)
+            .0(pc, env, scope, self)?;
+        item.set_position(self.position);
+        Ok(item)
     }
 
-    pub fn as_ident(&self) -> &'x str {
-        if self.phrase != "identifier" {
-            panic!("{} is not an identifier", self.phrase)
+    pub fn as_ident(&self) -> Result<&'x str, Diagnostic> {
+        if self.phrase == "identifier" {
+            if self.children.len() != 1 {
+                panic!("identifier is not complete")
+            }
+            Ok(self.children[0].as_text())
+        } else {
+            Err(Diagnostic::new()
+                .with_text_error(format!(
+                    "Expected an identifier, got a \"{}\" phrase instead:",
+                    self.phrase
+                ))
+                .with_source_code_block_error(self.position))
         }
-        if self.children.len() != 1 {
-            panic!("identifier is not complete")
-        }
-        self.children[0].as_text()
     }
 }

@@ -5,7 +5,7 @@ use super::{Node, ParseContext};
 use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{resolvable::UnresolvedItemError, ItemPtr},
-    scope::Scope,
+    scope::Scope, diagnostic::Diagnostic,
 };
 
 pub type Precedence = u8;
@@ -55,7 +55,7 @@ impl PhraseComponent {
     }
 }
 
-pub type CreateFn = fn(&ParseContext, &mut Environment, Box<dyn Scope>, &Node) -> ItemPtr;
+pub type CreateFn = fn(&ParseContext, &mut Environment, Box<dyn Scope>, &Node) -> Result<ItemPtr, Diagnostic>;
 
 pub type UncreateFn =
     for<'a> fn(&mut Environment, &mut VomitContext<'a, '_>, ItemPtr) -> UncreateResult<'a>;

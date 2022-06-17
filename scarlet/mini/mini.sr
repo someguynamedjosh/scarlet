@@ -1,22 +1,3 @@
 true IS UNIQUE AS_LANGUAGE_ITEM(true)
 false IS UNIQUE AS_LANGUAGE_ITEM(false)
 void IS UNIQUE AS_LANGUAGE_ITEM(void)
-
-x IS VAR()
-fx IS VAR(DEP x)
-y IS VAR()
-just IS VAR()
-
-statement IS 
-just(fx(x) = fx(y)) 
-AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
-
-eq_ext_rev_t IS AXIOM(eq_ext_rev_t)
-
-identity IS VAR()
-a IS VAR()
-b IS VAR()
-eq_ext_rev_t(a identity b) SHOWN
-
-just_t IS VAR(SELF)
-just_t(statement(a identity b))

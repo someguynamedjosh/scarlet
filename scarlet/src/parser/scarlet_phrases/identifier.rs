@@ -1,4 +1,5 @@
 use crate::{
+    diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
     item::{
         resolvable::{DResolvable, RIdentifier},
@@ -17,13 +18,17 @@ fn create(
     _env: &mut Environment,
     scope: Box<dyn Scope>,
     node: &Node,
-) -> ItemPtr {
+) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.phrase, "identifier");
     assert_eq!(node.children.len(), 1);
-    Item::new_boxed(
-        DResolvable::new(RIdentifier(node.children[0].as_text().to_owned())).clone_into_box(),
+    Ok(Item::new_boxed(
+        DResolvable::new(RIdentifier(
+            node.children[0].as_text().to_owned(),
+            node.position,
+        ))
+        .clone_into_box(),
         scope,
-    )
+    ))
 }
 
 fn uncreate<'a>(
