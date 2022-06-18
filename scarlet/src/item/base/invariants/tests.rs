@@ -525,8 +525,10 @@ fn unjustified_substitution() {
 #[test]
 fn t_just_after_theorem() {
     let code = r"
+    tail_value IS BUILTIN_FUNCTION(tail_value)
+
     eq_ext_rev_t IS 
-    {
+    tail_value({
         AXIOM(eq_ext_rev_t)
 
         a IS VAR()
@@ -535,8 +537,7 @@ fn t_just_after_theorem() {
         statement IS 
         x(fx(b) = fx(a))
         AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
-    }
-    .VALUE
+    })
 
     x IS VAR() AS_LANGUAGE_ITEM(x)
     fx IS VAR(DEP x)
@@ -667,9 +668,10 @@ fn eq_ext_full_separated() {
 
     x IS std.x
     fx IS std.fx
+    tail_value IS BUILTIN_FUNCTION(tail_value)
 
     eq_ext_rev_t IS 
-    {
+    tail_value({
         AXIOM(eq_ext_rev_t)
 
         x(fx(z) = fx(y))
@@ -677,19 +679,16 @@ fn eq_ext_full_separated() {
 
         y IS VAR()
         z IS VAR(y = SELF)
-    }
-    .VALUE
+    })
 
     eq_symm_t IS 
-    {
+    tail_value({
         eq_ext_rev_t(identity u v)
 
         u IS VAR()
         v IS VAR(u = SELF)
         identity IS VAR()
-    }
-    .VALUE
-
+    })
 
     {
         VAR(SELF)(fx(s) = fx(t))

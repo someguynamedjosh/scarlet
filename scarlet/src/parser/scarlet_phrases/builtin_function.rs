@@ -42,7 +42,7 @@ fn uncreate<'a>(
         let cfn = cfn.clone();
         let name = cfn.get_name();
         Ok(Some(Node {
-            phrase: "axiom",
+            phrase: "builtin function",
             children: vec![
                 NodeChild::Text("BUILTIN_FUNCTION"),
                 NodeChild::Text("("),

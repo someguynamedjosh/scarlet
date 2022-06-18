@@ -135,7 +135,11 @@ impl ItemPtr {
 
     pub fn downcast_builtin_function_call(&self) -> Option<(BuiltinFunction, Vec<ItemPtr>)> {
         if let Some(sub) = self.downcast_definition::<DSubstitution>() {
-            if let Some(bf) = sub.base().downcast_definition::<DBuiltinFunction>() {
+            if let Some(bf) = sub
+                .base()
+                .dereference()
+                .downcast_definition::<DBuiltinFunction>()
+            {
                 let params = sub.base().get_dependencies();
                 let args = params
                     .into_variables()

@@ -44,9 +44,9 @@ impl DBuiltinFunction {
             },
             args: match name {
                 "decision" => vec!["x", "y", "when_equal", "when_not_equal"],
-                "body" => vec!["value_with_tail"],
-                "tail_label" => vec!["value_with_tail"],
-                "tail_value" => vec!["value_with_tail"],
+                "body" => vec!["x"],
+                "tail_label" => vec!["x"],
+                "tail_value" => vec!["x"],
                 "has_tail" => vec!["x"],
                 _ => return None,
             }

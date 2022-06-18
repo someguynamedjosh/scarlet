@@ -84,7 +84,7 @@ fn uncreate<'a>(
         let rest = structt.get_rest().ptr_clone();
         drop(structt);
         maybe_structt = rest;
-        let value = env.vomit(255, ctx, value);
+        let value = env.vomit(255, ctx, value, true);
         if label.len() > 0 {
             fields.push(Node {
                 phrase: "is",

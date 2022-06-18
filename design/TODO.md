@@ -1,2 +1,1 @@
-- Visibility
-- Match Thing[var1 var1] uses the last instance of var1
+- Make name assignment drill down through others that don't have a name.

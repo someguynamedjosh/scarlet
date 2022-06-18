@@ -58,9 +58,9 @@ fn uncreate<'a>(
                 Some(Node {
                     phrase: "equal",
                     children: vec![
-                        NodeChild::Node(env.vomit(127, ctx, args[0].ptr_clone())),
+                        NodeChild::Node(env.vomit(127, ctx, args[0].ptr_clone(), true)),
                         NodeChild::Text("="),
-                        NodeChild::Node(env.vomit(127, ctx, args[1].ptr_clone())),
+                        NodeChild::Node(env.vomit(127, ctx, args[1].ptr_clone(), true)),
                     ],
                     ..Default::default()
                 })

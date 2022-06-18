@@ -83,7 +83,7 @@ impl Environment {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
-        let original_vomit = self.vomit(255, &mut ctx, item_id.ptr_clone());
+        let original_vomit = self.vomit(255, &mut ctx, item_id.ptr_clone(), false);
         let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
         result.push_str(&format!("{}", original_vomit));
 
@@ -125,7 +125,7 @@ impl Environment {
     }
 
     pub fn vomit_var<'a>(&mut self, ctx: &mut VomitContext<'a, '_>, var: VariablePtr) -> Node<'a> {
-        self.vomit(255, ctx, var.borrow().item().ptr_clone())
+        self.vomit(255, ctx, var.borrow().item().ptr_clone(), true)
     }
 
     pub fn vomit<'a>(
@@ -133,6 +133,7 @@ impl Environment {
         max_precedence: u8,
         ctx: &mut VomitContext<'a, '_>,
         item_ptr: ItemPtr,
+        allow_identifiers: bool,
     ) -> Node<'a> {
         let mut err = None;
         let item_ptr = item_ptr.dereference();
@@ -143,12 +144,14 @@ impl Environment {
                 ..Default::default()
             };
         }
-        if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(self, item_ptr.dereference()) {
-            return Node {
-                phrase: "identifier",
-                children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],
-                ..Default::default()
-            };
+        if allow_identifiers {
+            if let Ok(Some(ident)) = ctx.scope.reverse_lookup_ident(self, item_ptr.dereference()) {
+                return Node {
+                    phrase: "identifier",
+                    children: vec![NodeChild::Text(ctx.code_arena.alloc(ident))],
+                    ..Default::default()
+                };
+            }
         }
         for (_, phrase) in &ctx.pc.phrases_sorted_by_vomit_priority {
             if phrase.precedence > max_precedence {

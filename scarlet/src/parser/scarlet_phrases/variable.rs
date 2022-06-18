@@ -83,12 +83,12 @@ fn uncreate<'a>(
         let invariants = var
             .get_invariants()
             .into_iter()
-            .map(|inv| env.vomit(255, ctx, inv.ptr_clone()))
+            .map(|inv| env.vomit(255, ctx, inv.ptr_clone(), true))
             .collect_vec();
         let dependencies = var
             .get_dependencies()
             .into_iter()
-            .map(|dep| env.vomit(255, ctx, dep.ptr_clone()))
+            .map(|dep| env.vomit(255, ctx, dep.ptr_clone(), true))
             .collect_vec();
         let mut body = invariants;
         if dependencies.len() > 0 {

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use itertools::Itertools;
 
 use crate::{
-    diagnostic::Diagnostic,
+    diagnostic::{self, Diagnostic},
     environment::Environment,
     file_tree::FileNode,
     item::{
@@ -60,22 +60,32 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) -> Result<(), Vec<Diagn
         }
     }
     let mut problems = Vec::new();
+    let mut dep_count = 0;
     root.for_self_and_deep_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
             let diagnostic = match err {
                 ResolveError::Unresolved(err) => {
-                    todo!("Nice error, it relies on {:#?}", err.0);
+                    dep_count += 1;
+                    None
                 }
                 ResolveError::InvariantDeadEnd(err) => todo!("Nice error, {}", err),
                 ResolveError::MaybeInvariantDoesNotExist => {
                     todo!("Nice error, Recursion limit exceeded while searching for invariants")
                 }
                 ResolveError::Placeholder => todo!("Nice error, placeholder"),
-                ResolveError::Diagnostic(diagnostic) => diagnostic,
+                ResolveError::Diagnostic(diagnostic) => Some(diagnostic),
             };
-            problems.push(diagnostic);
+            if let Some(diagnostic) = diagnostic {
+                problems.push(diagnostic);
+            }
         }
     });
+    if dep_count > 0 {
+        problems.push(Diagnostic::new().with_text_info(format!(
+            "{} other items could not be resolved due to some items containing errors.",
+            dep_count
+        )));
+    }
     if problems.len() == 0 {
         Ok(())
     } else {
