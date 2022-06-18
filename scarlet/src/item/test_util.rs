@@ -31,7 +31,9 @@ lazy_static! {
 }
 
 pub(super) fn env() -> Environment {
-    Environment::new()
+    let mut env = Environment::new();
+    add_language_items(&mut env, "");
+    env
 }
 
 pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, ItemPtr)) {
@@ -41,17 +43,29 @@ pub(super) fn with_env_from_code(code: &str, callback: impl FnOnce(Environment, 
     };
     let pc = ParseContext::new();
     let (mut env, root) = env_from_code(&node, &pc);
-    for lang_item_name in env.language_item_names() {
-        if code.contains(&format!("AS_LANGUAGE_ITEM({})", lang_item_name)) {
-            continue;
-        }
-        let def = unique();
-        def.set_name(lang_item_name.to_owned());
-        env.define_language_item(lang_item_name, def);
-    }
+    add_language_items(&mut env, code);
     resolve_all(&mut env, root.ptr_clone()).unwrap();
 
     callback(env, root)
+}
+
+fn add_language_items(env: &mut Environment, code_containing_definitions_to_skip: &str) {
+    for lang_item_name in env.language_item_names() {
+        if code_containing_definitions_to_skip
+            .contains(&format!("AS_LANGUAGE_ITEM({})", lang_item_name))
+        {
+            continue;
+        }
+        let def = if ["x", "y", "when_equal", "when_not_equal", "value_with_tail"]
+            .contains(&lang_item_name)
+        {
+            variable()
+        } else {
+            unique()
+        };
+        def.set_name(lang_item_name.to_owned());
+        env.define_language_item(lang_item_name, def);
+    }
 }
 
 fn env_from_code<'x>(code: &'x FileNode, pc: &'x ParseContext) -> (Environment, ItemPtr) {

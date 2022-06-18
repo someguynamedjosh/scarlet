@@ -1,7 +1,11 @@
 use crate::{
     diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::decision::DDecision, Item, ItemDefinition, ItemPtr},
+    item::{
+        definitions::builtin_function::{BuiltinFunction, DBuiltinFunction},
+        resolvable::DResolvable,
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -24,7 +28,18 @@ fn create(
     let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let truee = env.get_language_item("true").unwrap().ptr_clone();
     let falsee = env.get_language_item("false").unwrap().ptr_clone();
-    this.redefine(DDecision::new(left, right, truee, falsee).clone_into_box());
+    this.redefine(
+        DResolvable::new(DBuiltinFunction::decision(
+            env,
+            left,
+            right,
+            truee,
+            falsee,
+            Box::new(SPlain(this.ptr_clone())),
+            node.position,
+        ))
+        .clone_into_box(),
+    );
     Ok(this)
 }
 
@@ -34,26 +49,18 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     Ok(
-        if let Some(cite) = uncreate.downcast_definition::<DDecision>() {
-            let cite = cite.clone();
+        if let Some((BuiltinFunction::Decision, args)) = uncreate.downcast_builtin_function_call() {
             let truee = env.get_language_item("true").unwrap();
             let falsee = env.get_language_item("false").unwrap();
-            println!("{:#?}", cite.when_equal().get_trimmed_equality(&truee));
-            if cite
-                .when_equal()
-                .get_trimmed_equality(&truee)?
-                .is_trivial_yes()
-                && cite
-                    .when_not_equal()
-                    .get_trimmed_equality(&falsee)?
-                    .is_trivial_yes()
+            if args[2].get_trimmed_equality(&truee)?.is_trivial_yes()
+                && args[3].get_trimmed_equality(&falsee)?.is_trivial_yes()
             {
                 Some(Node {
                     phrase: "equal",
                     children: vec![
-                        NodeChild::Node(env.vomit(127, ctx, cite.left().ptr_clone())),
+                        NodeChild::Node(env.vomit(127, ctx, args[0].ptr_clone())),
                         NodeChild::Text("="),
-                        NodeChild::Node(env.vomit(127, ctx, cite.right().ptr_clone())),
+                        NodeChild::Node(env.vomit(127, ctx, args[1].ptr_clone())),
                     ],
                     ..Default::default()
                 })

@@ -1,7 +1,10 @@
 use crate::{
     diagnostic::Diagnostic,
     environment::{vomit::VomitContext, Environment},
-    item::{definitions::axiom::DAxiom, Item, ItemDefinition, ItemPtr},
+    item::{
+        definitions::{axiom::DAxiom, builtin_function::DBuiltinFunction},
+        Item, ItemDefinition, ItemPtr,
+    },
     parser::{
         phrase::{Phrase, UncreateResult},
         Node, NodeChild, ParseContext,
@@ -17,14 +20,14 @@ fn create(
     node: &Node,
 ) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 4);
-    assert_eq!(node.children[0], NodeChild::Text("AXIOM"));
+    assert_eq!(node.children[0], NodeChild::Text("BUILTIN_FUNCTION"));
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
     let name_node = node.children[2].as_node();
     let name = name_node.as_ident()?;
-    let con = DAxiom::from_name(env, name).ok_or_else(|| {
+    let con = DBuiltinFunction::from_name(env, name).ok_or_else(|| {
         Diagnostic::new()
-            .with_text_error(format!("{} is not a valid axiom:", name))
+            .with_text_error(format!("{} is not a valid builtin function:", name))
             .with_source_code_block_error(name_node.position)
     })?;
     Ok(Item::new_boxed(con.clone_into_box(), scope))
@@ -35,16 +38,15 @@ fn uncreate<'a>(
     _ctx: &mut VomitContext<'a, '_>,
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
-    if let Some(cax) = uncreate.downcast_definition::<DAxiom>() {
-        let cax = cax.clone();
-        let statement = cax.get_statement(env);
-        let statement = &statement[..statement.len() - "_statement".len()];
+    if let Some(cfn) = uncreate.downcast_definition::<DBuiltinFunction>() {
+        let cfn = cfn.clone();
+        let name = cfn.get_name();
         Ok(Some(Node {
             phrase: "axiom",
             children: vec![
-                NodeChild::Text("AXIOM"),
+                NodeChild::Text("BUILTIN_FUNCTION"),
                 NodeChild::Text("("),
-                NodeChild::Text(statement),
+                NodeChild::Text(name),
                 NodeChild::Text(")"),
             ],
             ..Default::default()
@@ -55,15 +57,15 @@ fn uncreate<'a>(
 }
 
 fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("AXIOM({})", src.children[2].as_text())
+    format!("BUILTIN_FUNCTION({})", src.children[2].as_text())
 }
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "axiom",
+        "builtin function",
         128, 128,
         Some((create, uncreate)),
         vomit,
-        4 => r"\bAXIOM\b", r"\(", 255, r"\)"
+        4 => r"\bBUILTIN_FUNCTION\b", r"\(", 255, r"\)"
     )
 }

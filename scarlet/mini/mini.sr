@@ -1,3 +1,28 @@
 true IS UNIQUE AS_LANGUAGE_ITEM(true)
 false IS UNIQUE AS_LANGUAGE_ITEM(false)
 void IS UNIQUE AS_LANGUAGE_ITEM(void)
+
+{
+    has_tail IS BUILTIN_FUNCTION(has_tail)
+    x IS VAR() AS_LANGUAGE_ITEM(x)
+    y IS VAR() AS_LANGUAGE_ITEM(y)
+
+    when_equal IS 
+    VAR() AS_LANGUAGE_ITEM(when_equal)
+
+    when_not_equal IS 
+    VAR() AS_LANGUAGE_ITEM(when_not_equal)
+
+    value_with_tail IS 
+    VAR(has_tail(SELF)) 
+    AS_LANGUAGE_ITEM(value_with_tail)
+}
+
+thing IS {
+    x IS VAR()
+    fx IS VAR(DEP x)
+}
+
+x IS VAR()
+
+thing.fx(fx IS x)

@@ -21,18 +21,21 @@ use super::{
     util::Stack,
 };
 use crate::{
+    diagnostic::Position,
     environment::Environment,
     item::{
         definitions::{
+            builtin_function::{BuiltinFunction, DBuiltinFunction},
             other::DOther,
             placeholder::DPlaceholder,
-            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
+            structt::DPopulatedStruct,
+            substitution::DSubstitution,
         },
         resolvable::{DResolvable, Resolvable, UnresolvedItemError},
         ContainmentType, ItemDefinition,
     },
     scope::{LookupIdentResult, SRoot, Scope},
-    util::PtrExtension, diagnostic::Position,
+    util::PtrExtension,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -130,6 +133,23 @@ impl ItemPtr {
             .ok()
     }
 
+    pub fn downcast_builtin_function_call(&self) -> Option<(BuiltinFunction, Vec<ItemPtr>)> {
+        if let Some(sub) = self.downcast_definition::<DSubstitution>() {
+            if let Some(bf) = sub.base().downcast_definition::<DBuiltinFunction>() {
+                let params = sub.base().get_dependencies();
+                let args = params
+                    .into_variables()
+                    .map(|var| sub.substitutions().get(&var.var).cloned())
+                    .collect::<Option<_>>()?;
+                Some((bf.get_function(), args))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn downcast_resolved_definition<D: ItemDefinition>(
         &self,
     ) -> Result<Option<OwningRef<Ref<'_, Item>, D>>, UnresolvedItemError> {
@@ -160,17 +180,18 @@ impl ItemPtr {
     pub fn dereference_once(&self) -> Option<ItemPtr> {
         if let Some(other) = self.downcast_definition::<DOther>() {
             Some(other.other().ptr_clone())
-        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
-            if let Some(structt) = asm
-                .base()
+        } else if let Some((bf, args)) = self.downcast_builtin_function_call() {
+            if let Some(structt) = args[0]
                 .dereference()
                 .downcast_definition::<DPopulatedStruct>()
             {
-                Some(match asm.member() {
-                    AtomicStructMember::Label => todo!(),
-                    AtomicStructMember::Value => structt.get_value().ptr_clone(),
-                    AtomicStructMember::Rest => structt.get_rest().ptr_clone(),
-                })
+                match bf {
+                    BuiltinFunction::Decision => None,
+                    BuiltinFunction::Body => Some(structt.get_rest().ptr_clone()),
+                    BuiltinFunction::TailLabel => todo!(),
+                    BuiltinFunction::TailValue => Some(structt.get_value().ptr_clone()),
+                    BuiltinFunction::HasTail => None,
+                }
             } else {
                 None
             }
@@ -235,7 +256,7 @@ impl ItemPtr {
         } else {
             drop(ptr);
             assert!(self.0.try_borrow_mut().is_ok());
-            create_from_dex(env, self.ptr_clone())
+            create_from_dex(env, self.ptr_clone(), Position::placeholder())
         }
     }
 

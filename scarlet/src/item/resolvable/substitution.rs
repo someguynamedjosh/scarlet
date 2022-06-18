@@ -73,13 +73,19 @@ impl Resolvable for RSubstitution {
         _scope: Box<dyn Scope>,
         limit: u32,
     ) -> ResolveResult {
-        let base = self.base.dereference();
+        let base = self.base.dereference_resolved()?;
         let base_scope = base.clone_scope();
         let mut subs = OrderedMap::new();
         let mut remaining_deps = self.base.get_dependencies();
         let total_dep_count = remaining_deps.num_variables();
 
-        self.resolve_named_subs(base_scope, env, &mut subs, &mut remaining_deps)?;
+        self.resolve_named_subs(
+            &base,
+            base_scope,
+            env,
+            &mut subs,
+            &mut remaining_deps,
+        )?;
         self.resolve_anonymous_subs(total_dep_count, remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs)?;
 
@@ -210,13 +216,27 @@ impl RSubstitution {
 
     fn resolve_named_subs(
         &self,
+        base: &ItemPtr,
         base_scope: Box<dyn Scope>,
         env: &mut Environment,
         subs: &mut Substitutions,
         remaining_deps: &mut Dependencies,
     ) -> Result<(), ResolveError> {
         for (position, name, value) in &self.named_subs {
-            let target = base_scope.lookup_ident(&name)?.unwrap();
+            let target = base_scope.lookup_ident(&name)?.ok_or_else(|| {
+                println!("ERRORROROROROROOROROROOROR");
+                Diagnostic::new()
+                    .with_text_error(format!(
+                        concat!(
+                            "The name \"{}\" does not refer to a variable ",
+                            "in the scope of the function being called:"
+                        ),
+                        name
+                    ))
+                    .with_source_code_block_error(*position)
+                    .with_text_info(format!("The function is defined here:"))
+                    .with_item_info(base, base, env)
+            })?;
             if let Some(var) = target
                 .dereference()
                 .downcast_resolved_definition::<DVariable>()?

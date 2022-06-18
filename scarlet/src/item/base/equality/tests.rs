@@ -54,18 +54,32 @@ fn var_sub_something_equals_something() {
 
 #[test]
 fn decision_equals_identical_decision() {
+    let mut env = env();
     let a = unique();
     let b = unique();
     let c = unique();
     let d = unique();
-    let dec1 = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
-    let dec2 = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
+    let dec1 = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
+    let dec2 = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
     assert_eq!(dec1.get_trimmed_equality(&dec2), Ok(Equal::yes()));
     assert_eq!(dec2.get_trimmed_equality(&dec1), Ok(Equal::yes()));
 }
 
 #[test]
 fn aabc_is_ddef() {
+    let mut env = env();
     let a = variable_full();
     let b = variable_full();
     let c = variable_full();
@@ -73,12 +87,15 @@ fn aabc_is_ddef() {
     let e = variable_full();
     let f = variable_full();
     let dec1 = decision(
+        &mut env,
         a.0.ptr_clone(),
         a.0.ptr_clone(),
         b.0.ptr_clone(),
         c.0.ptr_clone(),
     );
+    println!("{:#?}", dec1.borrow().definition);
     let dec2 = decision(
+        &mut env,
         d.0.ptr_clone(),
         d.0.ptr_clone(),
         e.0.ptr_clone(),
@@ -106,17 +123,25 @@ fn aabc_is_ddef() {
 
 #[test]
 fn xxbc_is_aabc() {
+    let mut env = env();
     let a = unique();
     let b = unique();
     let c = unique();
     let x = variable_full();
     let dec1 = decision(
+        &mut env,
         x.0.ptr_clone(),
         x.0.ptr_clone(),
         b.ptr_clone(),
         c.ptr_clone(),
     );
-    let dec2 = decision(a.ptr_clone(), a.ptr_clone(), b.ptr_clone(), c.ptr_clone());
+    let dec2 = decision(
+        &mut env,
+        a.ptr_clone(),
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+    );
     let left_subs = subs(vec![(x.1.ptr_clone(), a.ptr_clone())]);
     assert_eq!(
         dec1.get_trimmed_equality(&dec2),
@@ -126,6 +151,7 @@ fn xxbc_is_aabc() {
 
 #[test]
 fn aabc_eq_b_is_ddef_eq_e() {
+    let mut env = env();
     let truee = unique();
     let falsee = unique();
     let a = variable_full();
@@ -135,19 +161,27 @@ fn aabc_eq_b_is_ddef_eq_e() {
     let e = variable_full();
     let f = variable_full();
     let dec1 = decision(
+        &mut env,
         a.0.ptr_clone(),
         a.0.ptr_clone(),
         b.0.ptr_clone(),
         c.0.ptr_clone(),
     );
-    let dec1 = decision(dec1, b.0.ptr_clone(), truee.ptr_clone(), falsee.ptr_clone());
+    let dec1 = decision(
+        &mut env,
+        dec1,
+        b.0.ptr_clone(),
+        truee.ptr_clone(),
+        falsee.ptr_clone(),
+    );
     let dec2 = decision(
+        &mut env,
         d.0.ptr_clone(),
         d.0.ptr_clone(),
         e.0.ptr_clone(),
         f.0.ptr_clone(),
     );
-    let dec2 = decision(dec2, e.0.ptr_clone(), truee.ptr_clone(), falsee);
+    let dec2 = decision(&mut env, dec2, e.0.ptr_clone(), truee.ptr_clone(), falsee);
     let left_subs = subs(vec![
         (a.1.ptr_clone(), d.0.ptr_clone()),
         (b.1.ptr_clone(), e.0.ptr_clone()),
@@ -170,6 +204,7 @@ fn aabc_eq_b_is_ddef_eq_e() {
 
 #[test]
 fn decision_equals_decision_with_subs() {
+    let mut env = env();
     let a = variable_full();
     let b = variable_full();
     let c = variable_full();
@@ -179,12 +214,19 @@ fn decision_equals_decision_with_subs() {
     let y = unique();
     let z = unique();
     let dec1 = decision(
+        &mut env,
         a.0.ptr_clone(),
         b.0.ptr_clone(),
         c.0.ptr_clone(),
         d.0.ptr_clone(),
     );
-    let dec2 = decision(w.ptr_clone(), x.ptr_clone(), y.ptr_clone(), z.ptr_clone());
+    let dec2 = decision(
+        &mut env,
+        w.ptr_clone(),
+        x.ptr_clone(),
+        y.ptr_clone(),
+        z.ptr_clone(),
+    );
     let subs = subs(vec![
         (a.1.ptr_clone(), w.ptr_clone()),
         (b.1.ptr_clone(), x.ptr_clone()),
@@ -419,17 +461,31 @@ fn fx_sub_z_is_gy_sub_nothing() {
 
 #[test]
 fn fx_sub_decision_is_gy_sub_decision() {
+    let mut env = env();
+
     let a = unique();
     let b = unique();
     let c = unique();
     let d = unique();
 
-    let dec = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
+    let dec = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
     let x = variable_full();
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
     let f_dec = unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)]));
 
-    let dec = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
+    let dec = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
     let y = variable_full();
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
     let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)]));
@@ -458,6 +514,8 @@ fn fx_sub_decision_is_gy_sub_decision() {
 
 #[test]
 fn dex_sub_decision_is_gy_sub_decision() {
+    let mut env = env();
+
     let a = unique();
     let b = unique();
     let c = unique();
@@ -468,13 +526,26 @@ fn dex_sub_decision_is_gy_sub_decision() {
     let u = variable_full();
     let v = variable_full();
 
-    let dec_for_dex = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
+    let dec_for_dex = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
     let x = variable_full();
-    let dex = decision(x.0.ptr_clone(), d.ptr_clone(), c.ptr_clone(), b.ptr_clone());
+    let dex = decision(
+        &mut env,
+        x.0.ptr_clone(),
+        d.ptr_clone(),
+        c.ptr_clone(),
+        b.ptr_clone(),
+    );
     let dex_dec =
         unchecked_substitution(dex.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec_for_dex)]));
 
     let dec_for_g = decision(
+        &mut env,
         s.0.ptr_clone(),
         t.0.ptr_clone(),
         u.0.ptr_clone(),
@@ -510,6 +581,8 @@ fn dex_sub_decision_is_gy_sub_decision() {
 
 #[test]
 fn fx_sub_decision_with_var_is_gy_sub_decision() {
+    let mut env = env();
+
     let z = variable_full();
     z.0.set_name(format!("z"));
 
@@ -522,14 +595,26 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
     let d = unique();
     d.set_name(format!("d"));
 
-    let dec = decision(z.0.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
+    let dec = decision(
+        &mut env,
+        z.0.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
     let x = variable_full();
     x.0.set_name(format!("x"));
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
     f.0.set_name(format!("f"));
     let f_dec = unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)]));
 
-    let dec = decision(a.ptr_clone(), b.ptr_clone(), c.ptr_clone(), d.ptr_clone());
+    let dec = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        c.ptr_clone(),
+        d.ptr_clone(),
+    );
     let y = variable_full();
     y.0.set_name(format!("y"));
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
@@ -679,6 +764,8 @@ fn fx_sub_y_sub_gx_is_gy() {
 
 #[test]
 fn z_equal_z_is_x_eq_y_sub_true_true() {
+    let mut env = env();
+
     let truee = unique();
     truee.set_name("true".to_owned());
     let falsee = unique();
@@ -692,6 +779,7 @@ fn z_equal_z_is_x_eq_y_sub_true_true() {
     z.0.set_name("z".to_owned());
 
     let x_eq_y = decision(
+        &mut env,
         x.0.ptr_clone(),
         y.0.ptr_clone(),
         truee.ptr_clone(),
@@ -707,6 +795,7 @@ fn z_equal_z_is_x_eq_y_sub_true_true() {
     );
     true_eq_true.set_name("true=true".to_owned());
     let z_eq_z = decision(
+        &mut env,
         z.0.ptr_clone(),
         z.0.ptr_clone(),
         truee.ptr_clone(),
@@ -727,16 +816,42 @@ fn z_equal_z_is_x_eq_y_sub_true_true() {
 
 #[test]
 fn is_bool_sub_y_is_y_is_bool() {
+    let mut env = env();
+
     let x = variable_full();
     let y = variable_full();
     let t = unique();
     let f = unique();
 
-    let x_is_false = decision(x.0.ptr_clone(), f.ptr_clone(), t.ptr_clone(), f.ptr_clone());
-    let x_is_bool = decision(x.0.ptr_clone(), t.ptr_clone(), t.ptr_clone(), x_is_false);
+    let x_is_false = decision(
+        &mut env,
+        x.0.ptr_clone(),
+        f.ptr_clone(),
+        t.ptr_clone(),
+        f.ptr_clone(),
+    );
+    let x_is_bool = decision(
+        &mut env,
+        x.0.ptr_clone(),
+        t.ptr_clone(),
+        t.ptr_clone(),
+        x_is_false,
+    );
 
-    let y_is_false = decision(y.0.ptr_clone(), f.ptr_clone(), t.ptr_clone(), f.ptr_clone());
-    let y_is_bool = decision(y.0.ptr_clone(), t.ptr_clone(), t.ptr_clone(), y_is_false);
+    let y_is_false = decision(
+        &mut env,
+        y.0.ptr_clone(),
+        f.ptr_clone(),
+        t.ptr_clone(),
+        f.ptr_clone(),
+    );
+    let y_is_bool = decision(
+        &mut env,
+        y.0.ptr_clone(),
+        t.ptr_clone(),
+        t.ptr_clone(),
+        y_is_false,
+    );
 
     let x_sub_y_is_bool =
         unchecked_substitution(x_is_bool, &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]));
@@ -750,6 +865,8 @@ fn is_bool_sub_y_is_y_is_bool() {
 /// fz <=> DECISION[x y a b]
 #[test]
 fn multi_variable_dex_is_single_variable_dex() {
+    let mut env = env();
+
     let a = unique();
     let b = unique();
     let x = variable_full();
@@ -763,6 +880,7 @@ fn multi_variable_dex_is_single_variable_dex() {
     fz.0.ptr_clone().set_name("fz".to_owned());
 
     let multi_variable_dex = decision(
+        &mut env,
         x.0.ptr_clone(),
         y.0.ptr_clone(),
         a.ptr_clone(),
@@ -795,6 +913,8 @@ fn multi_variable_dex_is_single_variable_dex() {
 /// fz <=> DECISION[x y a b][a]
 #[test]
 fn multi_variable_dex_sub_something_is_single_variable_dex() {
+    let mut env = env();
+
     let a = unique();
     a.set_name("a".to_owned());
     let b = unique();
@@ -810,17 +930,18 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
     fz.0.ptr_clone().set_name("fz".to_owned());
 
     let multi_variable_dex = decision(
+        &mut env,
         x.0.ptr_clone(),
         y.0.ptr_clone(),
         a.ptr_clone(),
         b.ptr_clone(),
     );
-    multi_variable_dex.set_name("DECISION(x y a b)".to_owned());
+    multi_variable_dex.set_name("decision(&mut env,x y a b)".to_owned());
     let subbed_multi_variable_dex = unchecked_substitution(
         multi_variable_dex.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), a.ptr_clone())]),
     );
-    subbed_multi_variable_dex.set_name("DECISION(x y a b)(x IS a)".to_owned());
+    subbed_multi_variable_dex.set_name("decision(&mut env,x y a b)(x IS a)".to_owned());
 
     if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
@@ -868,6 +989,8 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
 /// fz <=> DECISION[x y a b][x2 y2]
 #[test]
 fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
+    let mut env = env();
+
     let a = unique();
     a.set_name("a".to_owned());
     let b = unique();
@@ -887,12 +1010,13 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
     fz.0.ptr_clone().set_name("fz".to_owned());
 
     let multi_variable_dex = decision(
+        &mut env,
         x.0.ptr_clone(),
         y.0.ptr_clone(),
         a.ptr_clone(),
         b.ptr_clone(),
     );
-    multi_variable_dex.set_name("DECISION(x y a b)".to_owned());
+    multi_variable_dex.set_name("decision(&mut env,x y a b)".to_owned());
     let subbed_multi_variable_dex = unchecked_substitution(
         multi_variable_dex.ptr_clone(),
         &subs(vec![
@@ -900,7 +1024,7 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
             (y.1.ptr_clone(), y2.0.ptr_clone()),
         ]),
     );
-    subbed_multi_variable_dex.set_name("DECISION(x y a b)(x2 y2)".to_owned());
+    subbed_multi_variable_dex.set_name("decision(&mut env,x y a b)(x2 y2)".to_owned());
 
     if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
@@ -947,6 +1071,8 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
 /// fz <=> DECISION[x y a b][a b]
 #[test]
 fn single_variable_dex_is_multi_variable_dex_sub_two_uniques() {
+    let mut env = env();
+
     let a = unique();
     a.set_name("a".to_owned());
     let b = unique();
@@ -962,6 +1088,7 @@ fn single_variable_dex_is_multi_variable_dex_sub_two_uniques() {
     fz.0.ptr_clone().set_name("fz".to_owned());
 
     let multi_variable_dex = decision(
+        &mut env,
         x.0.ptr_clone(),
         y.0.ptr_clone(),
         a.ptr_clone(),
@@ -1014,6 +1141,8 @@ fn single_variable_dex_is_multi_variable_dex_sub_two_uniques() {
 /// fx(fx IS x = y   x IS a   y IS b) <=/=> a = b
 #[test]
 fn sneaky_substitution() {
+    let mut env = env();
+
     let a = unique();
     let b = unique();
     let t = unique();
@@ -1026,12 +1155,19 @@ fn sneaky_substitution() {
     let fx = variable_full_with_deps(vec![x.0.ptr_clone()]);
     fx.0.set_name("fx".to_owned());
     let x_eq_y = decision(
+        &mut env,
         x.0.ptr_clone(),
         y.0.ptr_clone(),
         t.ptr_clone(),
         f.ptr_clone(),
     );
-    let _a_eq_b = decision(a.ptr_clone(), b.ptr_clone(), t.ptr_clone(), f.ptr_clone());
+    let _a_eq_b = decision(
+        &mut env,
+        a.ptr_clone(),
+        b.ptr_clone(),
+        t.ptr_clone(),
+        f.ptr_clone(),
+    );
 
     let this_subs = subs(vec![
         (fx.1.ptr_clone(), x_eq_y),
@@ -1208,6 +1344,8 @@ fn fx_sub_a_z_is_gy_sub_a_z() {
 
 #[test]
 fn equality_symmetry() {
+    let mut env = env();
+
     let t = unique();
     t.set_name("true".to_owned());
     let f = unique();
@@ -1236,12 +1374,19 @@ fn equality_symmetry() {
         &subs(vec![(x.1.ptr_clone(), z.0.ptr_clone())]),
     );
     fz.set_name("f(z)".to_owned());
-    let fz_eq_fy = decision(fz.ptr_clone(), fy.ptr_clone(), t.ptr_clone(), f.ptr_clone());
+    let fz_eq_fy = decision(
+        &mut env,
+        fz.ptr_clone(),
+        fy.ptr_clone(),
+        t.ptr_clone(),
+        f.ptr_clone(),
+    );
     let fz_eq_fy_sub_f_is_identity = unchecked_substitution(
         fz_eq_fy.ptr_clone(),
         &subs(vec![(fx.1.ptr_clone(), identity_x.ptr_clone())]),
     );
     let z_eq_y = decision(
+        &mut env,
         z.0.ptr_clone(),
         y.0.ptr_clone(),
         t.ptr_clone(),
@@ -1344,6 +1489,8 @@ fn advanced_equality_symmetry_env() {
 
 #[test]
 fn fx_eq_a_sub_y_is_self() {
+    let mut env = env();
+
     let a = unique();
     a.set_name("a".to_owned());
     let t = unique();
@@ -1357,6 +1504,7 @@ fn fx_eq_a_sub_y_is_self() {
     let fx = variable_full_with_deps(vec![x.0.ptr_clone()]);
     fx.0.set_name("f".to_owned());
     let fx_eq_a = decision(
+        &mut env,
         fx.0.ptr_clone(),
         a.ptr_clone(),
         t.ptr_clone(),
