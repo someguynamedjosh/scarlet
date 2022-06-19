@@ -191,9 +191,9 @@ impl ItemPtr {
             {
                 match bf {
                     BuiltinFunction::Decision => None,
-                    BuiltinFunction::Body => Some(structt.get_rest().ptr_clone()),
+                    BuiltinFunction::Body => Some(structt.get_body().ptr_clone()),
                     BuiltinFunction::TailLabel => todo!(),
-                    BuiltinFunction::TailValue => Some(structt.get_value().ptr_clone()),
+                    BuiltinFunction::TailValue => Some(structt.get_tail_value().ptr_clone()),
                     BuiltinFunction::HasTail => None,
                 }
             } else {

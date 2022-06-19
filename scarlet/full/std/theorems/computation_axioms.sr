@@ -2,15 +2,15 @@
 # Proves DECISION(y z u v) = u
 decision_eq_t IS
 { 
-   AXIOM(decision_eq_t)
-
-   just(DECISION(y z u v) = u)
-   AS_LANGUAGE_ITEM(decision_eq_t_statement)
-
    y IS VAR()
    z IS VAR(y = z)
    u IS VAR()
    v IS VAR()
+
+   just(DECISION(y z u v) = u)
+   AS_LANGUAGE_ITEM(decision_eq_t_statement)
+
+   AXIOM(decision_eq_t)
 }
 .VALUE
 
@@ -18,16 +18,16 @@ decision_eq_t IS
 # Proves DECISION(y z u v) = v
 decision_neq_t IS 
 {
-   AXIOM(decision_neq_t)
+   y IS VAR()
+   z IS VAR(DECISION(y z false true))
+   u IS VAR()
+   v IS VAR()
 
    just(DECISION(y z u v) = v)
    AS_LANGUAGE_ITEM(
       decision_neq_t_statement 
   )
 
-   y IS VAR()
-   z IS VAR(DECISION(y z false true))
-   u IS VAR()
-   v IS VAR()
+   AXIOM(decision_neq_t)
 }
 .VALUE

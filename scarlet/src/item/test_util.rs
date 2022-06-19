@@ -123,9 +123,12 @@ pub(super) fn structt(mut fields: Vec<(&str, ItemPtr)>, void: &ItemPtr) -> ItemP
     if fields.len() == 0 {
         void.ptr_clone()
     } else {
-        let top = fields.pop().unwrap();
-        let rest = structt(fields, void);
-        Item::new(DPopulatedStruct::new(top.0.to_owned(), top.1, rest), SRoot)
+        let tail = fields.pop().unwrap();
+        let body = structt(fields, void);
+        Item::new(
+            DPopulatedStruct::new(body, tail.0.to_owned(), tail.1),
+            SRoot,
+        )
     }
 }
 
@@ -136,7 +139,7 @@ pub(super) fn other(base: ItemPtr) -> ItemPtr {
 pub(super) fn get_member(root: &ItemPtr, name: &str) -> ItemPtr {
     root.downcast_definition::<DPopulatedStruct>()
         .unwrap()
-        .get_value()
+        .get_tail_value()
         .lookup_ident(name)
         .unwrap()
         .unwrap()

@@ -23,15 +23,15 @@ fn struct_from_fields(
     if fields.is_empty() {
         Ok(env.get_language_item("void").unwrap().ptr_clone())
     } else {
-        let (label, field) = fields.remove(0);
+        let (label, field) = fields.pop().unwrap();
         let label = label.unwrap_or("").to_owned();
         let this = crate::item::Item::placeholder_with_scope(scope);
         let field = field.as_item(pc, env, SFieldAndRest(this.ptr_clone()))?;
         if label.len() > 0 {
             field.set_name(label.clone());
         }
-        let rest = struct_from_fields(pc, env, fields, Box::new(SField(this.ptr_clone())))?;
-        let this_def = DPopulatedStruct::new(label, field, rest);
+        let body = struct_from_fields(pc, env, fields, Box::new(SField(this.ptr_clone())))?;
+        let this_def = DPopulatedStruct::new(body, label, field);
         this.redefine(this_def.clone_into_box());
         Ok(this)
     }
@@ -77,11 +77,11 @@ fn uncreate<'a>(
         } else {
             break;
         };
-        let label = ctx.code_arena.alloc(structt.get_label().to_owned());
-        let value = structt.get_value().ptr_clone();
+        let label = ctx.code_arena.alloc(structt.get_tail_label().to_owned());
+        let value = structt.get_tail_value().ptr_clone();
         let scope = SFieldAndRest(maybe_structt.ptr_clone());
         let ctx = &mut ctx.with_scope(&scope);
-        let rest = structt.get_rest().ptr_clone();
+        let rest = structt.get_body().ptr_clone();
         drop(structt);
         maybe_structt = rest;
         let value = env.vomit(255, ctx, value, true);

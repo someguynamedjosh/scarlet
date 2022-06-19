@@ -17,26 +17,26 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DPopulatedStruct {
+    body: ItemPtr,
     label: String,
     value: ItemPtr,
-    rest: ItemPtr,
 }
 
 impl DPopulatedStruct {
-    pub fn new(label: String, value: ItemPtr, rest: ItemPtr) -> Self {
-        Self { label, value, rest }
+    pub fn new(body: ItemPtr, label: String, value: ItemPtr) -> Self {
+        Self { body, label, value }
     }
 
-    pub fn get_label(&self) -> &str {
+    pub fn get_body(&self) -> &ItemPtr {
+        &self.body
+    }
+
+    pub fn get_tail_label(&self) -> &str {
         &self.label[..]
     }
 
-    pub fn get_value(&self) -> &ItemPtr {
+    pub fn get_tail_value(&self) -> &ItemPtr {
         &self.value
-    }
-
-    pub fn get_rest(&self) -> &ItemPtr {
-        &self.rest
     }
 }
 
@@ -49,8 +49,8 @@ impl ItemDefinition for DPopulatedStruct {
 
     fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         vec![
+            (ContainmentType::Computational, self.body.ptr_clone()),
             (ContainmentType::Computational, self.value.ptr_clone()),
-            (ContainmentType::Computational, self.rest.ptr_clone()),
         ]
     }
 }
@@ -66,8 +66,8 @@ impl DependenciesFeature for DPopulatedStruct {
         affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        let mut deps = ctx.get_dependencies(&self.value, affects_return_value);
-        deps.append(ctx.get_dependencies(&self.rest, affects_return_value));
+        let mut deps = ctx.get_dependencies(&self.body, affects_return_value);
+        deps.append(ctx.get_dependencies(&self.value, affects_return_value));
         deps
     }
 }
@@ -78,15 +78,15 @@ impl EqualityFeature for DPopulatedStruct {
             if self.label != other.label {
                 return Ok(Equal::No);
             }
-            Some([other.value.ptr_clone(), other.rest.ptr_clone()])
+            Some([other.body.ptr_clone(), other.value.ptr_clone()])
         } else {
             None
         };
-        let equal = if let Some([other_value, other_rest]) = others {
+        let equal = if let Some([other_body, other_value]) = others {
             Equal::and(vec![
-                ctx.with_primary_and_other(self.value.ptr_clone(), other_value)
+                ctx.with_primary_and_other(self.body.ptr_clone(), other_body)
                     .get_equality_left()?,
-                ctx.with_primary_and_other(self.rest.ptr_clone(), other_rest)
+                ctx.with_primary_and_other(self.value.ptr_clone(), other_value)
                     .get_equality_left()?,
             ])
         } else {
@@ -155,8 +155,8 @@ pub struct SFieldAndRest(pub ItemPtr);
 fn lookup_ident_in(ident: &str, inn: &DPopulatedStruct) -> LookupIdentResult {
     Ok(if inn.label == ident {
         Some(inn.value.ptr_clone())
-    } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        lookup_ident_in(ident, &rest)?
+    } else if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
+        lookup_ident_in(ident, &body)?
     } else {
         None
     })
@@ -170,8 +170,8 @@ fn reverse_lookup_ident_in(
     Ok(
         if inn.value.dereference().is_same_instance_as(&value) && inn.label.len() > 0 {
             Some(inn.label.clone())
-        } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-            reverse_lookup_ident_in(env, value, &rest)?
+        } else if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
+            reverse_lookup_ident_in(env, value, &body)?
         } else {
             None
         },
@@ -180,8 +180,8 @@ fn reverse_lookup_ident_in(
 
 fn get_invariant_sets_in(inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {
     let mut result = inn.value.get_invariants().into_iter().collect_vec();
-    if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        result.append(&mut get_invariant_sets_in(&*rest));
+    if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
+        result.append(&mut get_invariant_sets_in(&*body));
     }
     result
 }

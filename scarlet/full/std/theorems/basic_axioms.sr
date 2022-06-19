@@ -1,46 +1,46 @@
 trivial_t IS 
 {
-   AXIOM(trivial_t)
-
    true AS_LANGUAGE_ITEM(trivial_t_statement)
+
+   AXIOM(trivial_t)
 }
 .VALUE
 
 invariant_truth_t IS 
 {
-   AXIOM(invariant_truth_t)
+   y IS VAR(SELF)
 
    just(y = true)
    AS_LANGUAGE_ITEM(invariant_truth_t_statement)
 
-   y IS VAR(SELF)
+   AXIOM(invariant_truth_t)
 }
 .VALUE
 
 
 invariant_truth_rev_t IS 
 {
-   AXIOM(invariant_truth_rev_t)
+   y IS VAR(SELF = true)
 
    y
    AS_LANGUAGE_ITEM(
       invariant_truth_rev_t_statement 
    )
 
-   y IS VAR(SELF = true)
+   AXIOM(invariant_truth_rev_t)
 }
 .VALUE
  AS_AUTO_THEOREM
 
 eq_ext_rev_t IS 
 {
-   AXIOM(eq_ext_rev_t)
+   y IS VAR()
+   z IS VAR(y = SELF)
 
    just(f(z) = f(y))
    AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
-   y IS VAR()
-   z IS VAR(y = SELF)
+   AXIOM(eq_ext_rev_t)
 }
 .VALUE
 
@@ -48,22 +48,22 @@ eq_ext_rev_t IS
 # Proves z
 inv_eq_t IS 
 {
-   AXIOM(inv_eq_t)
+   y IS VAR(SELF)
+   z IS VAR(y = SELF)
 
    z AS_LANGUAGE_ITEM(inv_eq_t_statement)
 
-   y IS VAR(SELF)
-   z IS VAR(y = SELF)
+   AXIOM(inv_eq_t)
 }
 .VALUE
 
 refl_t IS
 {
-   AXIOM(refl_t)
+   y IS VAR()
 
    just(y = y)
    AS_LANGUAGE_ITEM(refl_t_statement)
 
-   y IS VAR()
+   AXIOM(refl_t)
 }
 .VALUE

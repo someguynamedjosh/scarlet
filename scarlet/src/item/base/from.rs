@@ -32,7 +32,7 @@ pub(super) fn create_from_dex(env: &Environment, from: ItemPtr, position: Positi
         let x_value = Item::new(DResolvable::new(x_value), scope());
         let value_from_value = RFrom {
             left: x_value,
-            right: structt.get_value().ptr_clone(),
+            right: structt.get_tail_value().ptr_clone(),
         };
         let value_from_value = Item::new(DResolvable::new(value_from_value), scope());
 
@@ -40,7 +40,7 @@ pub(super) fn create_from_dex(env: &Environment, from: ItemPtr, position: Positi
         let x_body = Item::new(DResolvable::new(x_body), scope());
         let rest_from_rest = RFrom {
             left: x_body,
-            right: structt.get_rest().ptr_clone(),
+            right: structt.get_body().ptr_clone(),
         };
         let rest_from_rest = Item::new(DResolvable::new(rest_from_rest), scope());
 

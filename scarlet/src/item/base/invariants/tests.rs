@@ -529,14 +529,14 @@ fn t_just_after_theorem() {
 
     eq_ext_rev_t IS 
     tail_value({
-        AXIOM(eq_ext_rev_t)
-
         a IS VAR()
         b IS VAR(a = SELF)
 
         statement IS 
         x(fx(b) = fx(a))
         AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
+
+        AXIOM(eq_ext_rev_t)
     })
 
     x IS VAR() AS_LANGUAGE_ITEM(x)
@@ -672,33 +672,34 @@ fn eq_ext_full_separated() {
 
     eq_ext_rev_t IS 
     tail_value({
-        AXIOM(eq_ext_rev_t)
+        y IS VAR()
+        z IS VAR(y = SELF)
 
         x(fx(z) = fx(y))
         AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
-        y IS VAR()
-        z IS VAR(y = SELF)
+        AXIOM(eq_ext_rev_t)
     })
 
     eq_symm_t IS 
     tail_value({
-        eq_ext_rev_t(identity u v)
-
         u IS VAR()
         v IS VAR(u = SELF)
         identity IS VAR()
+
+        eq_ext_rev_t(identity u v)
     })
 
     {
-        VAR(SELF)(fx(s) = fx(t))
-
-        eq_ext_rev_t(fx t s)
+        s IS VAR()
+        t IS VAR(s = SELF)
 
         eq_symm_t(s t)
 
-        s IS VAR()
-        t IS VAR(s = SELF)
+        eq_ext_rev_t(fx t s)
+
+        VAR(SELF)(fx(s) = fx(t))
+
     }
     ";
 

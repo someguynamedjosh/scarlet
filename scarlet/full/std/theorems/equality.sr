@@ -29,16 +29,16 @@ eq_ext_t IS
 # Proves f(z)
 inv_eq_ext_t IS 
 {
-   just_t(f(z))
-
-   inv_eq_t(f(y) f(z))
+   y IS VAR()
+   z IS VAR(y = SELF)
+   f IS VAR(SELF(y)  DEP x)
 
    # Proves f(y) = f(z)
    eq_ext_t(f y z)
 
-   y IS VAR()
-   z IS VAR(y = SELF)
-   f IS VAR(SELF(y)  DEP x)
+   inv_eq_t(f(y) f(z))
+
+   just_t(f(z))
 }
 .VALUE
 
@@ -46,15 +46,15 @@ inv_eq_ext_t IS
 # # Proves y = c
 eq_trans_t IS 
 {
-   just_t(y = c)
+   y IS VAR()
+   z IS VAR(y = SELF)
+   c IS VAR(z = SELF)
+
+   a_equals_x IS y = x
 
    inv_eq_t(y = z  y = c)
    eq_ext_t(a_equals_x z c)
 
-   a_equals_x IS y = x
-
-   y IS VAR()
-   z IS VAR(y = SELF)
-   c IS VAR(z = SELF)
+   just_t(y = c)
 }
 .VALUE

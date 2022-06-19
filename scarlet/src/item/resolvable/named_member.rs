@@ -36,10 +36,10 @@ fn extract_member(
         .dereference_resolved()?
         .downcast_resolved_definition::<DPopulatedStruct>()?
     {
-        if cstruct.get_label() == name {
-            Ok(Some(cstruct.get_value().ptr_clone()))
+        if cstruct.get_tail_label() == name {
+            Ok(Some(cstruct.get_tail_value().ptr_clone()))
         } else {
-            let rest = cstruct.get_rest().ptr_clone();
+            let rest = cstruct.get_body().ptr_clone();
             extract_member(env, rest, name)
         }
     } else {
@@ -56,10 +56,10 @@ fn find_member(
         .dereference_resolved()?
         .downcast_resolved_definition::<DPopulatedStruct>()?
     {
-        if cstruct.get_label() == name {
+        if cstruct.get_tail_label() == name {
             Ok(Some(0))
         } else {
-            let rest = cstruct.get_rest().ptr_clone();
+            let rest = cstruct.get_body().ptr_clone();
             Ok(find_member(env, rest, name)?.map(|x| x + 1))
         }
     } else {
