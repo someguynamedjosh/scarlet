@@ -1,34 +1,32 @@
 eq_symm_t IS 
-{
-   just_t(z = y)
+tail_value({
+   y IS VAR()
+   z IS VAR(y = SELF)
 
    eq_ext_rev_t(x y z)
 
-   y IS VAR()
-   z IS VAR(y = SELF)
-}
-.VALUE
+   just_t(z = y)
+})
 
 # From y = z
 # Proves f(y) = f(z)
 eq_ext_t IS 
-{
-   just_t(f(y) = f(z))
+tail_value({
+   y IS VAR()
+   z IS VAR(y = SELF)
 
    eq_ext_rev_t(f z y)
 
    # Proves z = y
    eq_symm_t(y z)
 
-   y IS VAR()
-   z IS VAR(y = SELF)
-}
-.VALUE
+   just_t(f(y) = f(z))
+})
 
 # From y=z  f(y)
 # Proves f(z)
 inv_eq_ext_t IS 
-{
+tail_value({
    y IS VAR()
    z IS VAR(y = SELF)
    f IS VAR(SELF(y)  DEP x)
@@ -39,13 +37,12 @@ inv_eq_ext_t IS
    inv_eq_t(f(y) f(z))
 
    just_t(f(z))
-}
-.VALUE
+})
 
 # # From y = z   z = c
 # # Proves y = c
 eq_trans_t IS 
-{
+tail_value({
    y IS VAR()
    z IS VAR(y = SELF)
    c IS VAR(z = SELF)
@@ -56,5 +53,4 @@ eq_trans_t IS
    eq_ext_t(a_equals_x z c)
 
    just_t(y = c)
-}
-.VALUE
+})

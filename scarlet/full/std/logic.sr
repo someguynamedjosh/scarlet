@@ -1,11 +1,13 @@
+decision IS basics.decision
+
 Bool IS 
-VAR(DECISION(SELF  true  true  SELF = false))
+VAR(decision(SELF  true  true  SELF = false))
 
 y IS VAR(SELF FROM Bool)
 z IS VAR(SELF FROM Bool)
 
 and IS 
-DECISION(y true z false)
+decision(y true z false)
 AS_LANGUAGE_ITEM(and)
 
-or IS DECISION(y true true z)
+or IS decision(y true true z)

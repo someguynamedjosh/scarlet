@@ -38,3 +38,4 @@ just IS std.basics.just
 
 x IS basics.x
 f IS basics.f
+tail_value IS basics.tail_value

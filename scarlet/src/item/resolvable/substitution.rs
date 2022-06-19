@@ -224,7 +224,6 @@ impl RSubstitution {
     ) -> Result<(), ResolveError> {
         for (position, name, value) in &self.named_subs {
             let target = base_scope.lookup_ident(&name)?.ok_or_else(|| {
-                println!("ERRORROROROROROOROROROOROR");
                 Diagnostic::new()
                     .with_text_error(format!(
                         concat!(

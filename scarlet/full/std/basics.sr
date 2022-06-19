@@ -8,6 +8,12 @@ VAR(ORD 32) AS_LANGUAGE_ITEM(when_equal)
 when_not_equal IS 
 VAR(ORD 32) AS_LANGUAGE_ITEM(when_not_equal)
 
+decision IS BUILTIN_FUNCTION(decision)
+body IS BUILTIN_FUNCTION(body)
+tail_label IS BUILTIN_FUNCTION(tail_label)
+tail_value IS BUILTIN_FUNCTION(tail_value)
+has_tail IS BUILTIN_FUNCTION(has_tail)
+
 true IS UNIQUE AS_LANGUAGE_ITEM(true)
 false IS UNIQUE AS_LANGUAGE_ITEM(false)
 void IS UNIQUE AS_LANGUAGE_ITEM(void)

@@ -2,153 +2,148 @@
 # Proves just_t
 just_t IS VAR(SELF)
 
-# From DECISION(y   z   t = u   t = v)
-# Proves t = DECISION(y z u v)
-extract_eq_from_decision_t IS 
-{
-   y IS VAR()
-   z IS VAR()
-   t IS VAR()
-   u IS VAR()
-   v IS VAR(hypothesis)
+# # From DECISION(y   z   t = u   t = v)
+# # Proves t = DECISION(y z u v)
+# extract_eq_from_decision_t IS 
+# tail_value({
+#    y IS VAR()
+#    z IS VAR()
+#    t IS VAR()
+#    u IS VAR()
+#    v IS VAR(hypothesis)
 
-   conclusion IS t = conclusion_right
-   conclusion_right IS DECISION(y z u v)
+#    conclusion IS t = conclusion_right
+#    conclusion_right IS DECISION(y z u v)
 
-   hypothesis IS 
-   DECISION(y   z   t = u   t = v)
+#    hypothesis IS 
+#    DECISION(y   z   t = u   t = v)
 
-   DECISION(
-      y z
+#    DECISION(
+#       y z
 
-      {
-         # Proves hypothesis = just(t = u)
-         decision_eq_t(y   z   t = u   t = v)
-         # Proves t = u
-         inv_eq_t(hypothesis   t = u)
-         # Proves conclusion_right = u
-         decision_eq_t(y z u v)
-         # Proves u = conclusion_right
-         eq_symm_t(conclusion_right u)
-         # Proves t = conclusion_right
-         eq_trans_t(t u conclusion_right)
-      }
-      .VALUE
+#       {
+#          # Proves hypothesis = just(t = u)
+#          decision_eq_t(y   z   t = u   t = v)
+#          # Proves t = u
+#          inv_eq_t(hypothesis   t = u)
+#          # Proves conclusion_right = u
+#          decision_eq_t(y z u v)
+#          # Proves u = conclusion_right
+#          eq_symm_t(conclusion_right u)
+#          # Proves t = conclusion_right
+#          eq_trans_t(t u conclusion_right)
+#       }
+#       .VALUE
 
-      {
-         # Proves hypothesis = just(t = v)
-         decision_neq_t(y   z   t = u   t = v)
-         # Proves t = v
-         inv_eq_t(hypothesis   t = v)
-         # Proves conclusion_right = v
-         decision_neq_t(y z u v)
-         # Proves v = conclusion_right
-         eq_symm_t(conclusion_right v)
-         # Proves t = conclusion_right
-         eq_trans_t(t v conclusion_right)
-      }
-      .VALUE
-   )
+#       {
+#          # Proves hypothesis = just(t = v)
+#          decision_neq_t(y   z   t = u   t = v)
+#          # Proves t = v
+#          inv_eq_t(hypothesis   t = v)
+#          # Proves conclusion_right = v
+#          decision_neq_t(y z u v)
+#          # Proves v = conclusion_right
+#          eq_symm_t(conclusion_right v)
+#          # Proves t = conclusion_right
+#          eq_trans_t(t v conclusion_right)
+#       }
+#       .VALUE
+#    )
 
-   just_t(t = conclusion_right)
-}
-.VALUE
+#    just_t(t = conclusion_right)
+# })
 
-# From y = z   u
-# Proves DECISION(y z u v)
-decision_eq_inv_t IS
-{
-   y IS VAR()
-   z IS VAR(y = SELF)
-   u IS VAR(SELF)
-   v IS VAR()
+# # From y = z   u
+# # Proves DECISION(y z u v)
+# decision_eq_inv_t IS
+# tail_value({
+#    y IS VAR()
+#    z IS VAR(y = SELF)
+#    u IS VAR(SELF)
+#    v IS VAR()
 
-   # Proves DECISION(y z u v) = u
-   decision_eq_t(y z u v)
-   # Proves u = DECISION(y z u v)
-   eq_symm_t(DECISION(y z u v)   u)
-   # Proves DECISION(y z u v)
-   inv_eq_t(u   DECISION(y z u v))
+#    # Proves DECISION(y z u v) = u
+#    decision_eq_t(y z u v)
+#    # Proves u = DECISION(y z u v)
+#    eq_symm_t(DECISION(y z u v)   u)
+#    # Proves DECISION(y z u v)
+#    inv_eq_t(u   DECISION(y z u v))
 
-   just_t(DECISION(y z u v))
-}
-.VALUE
+#    just_t(DECISION(y z u v))
+# })
 
-# From y =NOT z   v
-# Proves DECISION(y z u v)
-decision_neq_inv_t IS
-{
-   y IS VAR()
-   z IS VAR(DECISION(y SELF false true))
-   u IS VAR()
-   v IS VAR(SELF)
+# # From y =NOT z   v
+# # Proves DECISION(y z u v)
+# decision_neq_inv_t IS
+# tail_value({
+#    y IS VAR()
+#    z IS VAR(DECISION(y SELF false true))
+#    u IS VAR()
+#    v IS VAR(SELF)
 
-   # Proves DECISION(y z u v) = v
-   decision_neq_t(y z u v)
-   # Proves v = DECISION(y z u v)
-   eq_symm_t(DECISION(y z u v)   v)
-   # Proves DECISION(y z u v)
-   inv_eq_t(v   DECISION(y z u v))
+#    # Proves DECISION(y z u v) = v
+#    decision_neq_t(y z u v)
+#    # Proves v = DECISION(y z u v)
+#    eq_symm_t(DECISION(y z u v)   v)
+#    # Proves DECISION(y z u v)
+#    inv_eq_t(v   DECISION(y z u v))
 
-   just_t(DECISION(y z u v))
-}
-.VALUE
+#    just_t(DECISION(y z u v))
+# })
 
-# From f(u)   f(v)
-# Proves f(DECISION(y z u v))
-decision_by_parts_ext_t IS
-{
-   y IS VAR()
-   z IS VAR()
-   u IS VAR(f(u))
-   v IS VAR(f(v))
+# # From f(u)   f(v)
+# # Proves f(DECISION(y z u v))
+# decision_by_parts_ext_t IS
+# tail_value({
+#    y IS VAR()
+#    z IS VAR()
+#    u IS VAR(f(u))
+#    v IS VAR(f(v))
 
-   conclusion IS f(inner)
-   inner IS DECISION(y z u v)
+#    conclusion IS f(inner)
+#    inner IS DECISION(y z u v)
 
-   DECISION(
-      y z
+#    DECISION(
+#       y z
 
-      {
-         # Proves inner = u
-         decision_eq_t(y z u v)
-         # Proves u = inner
-         eq_symm_t(inner u)
-         # Proves f(u) = conclusion
-         eq_ext_t(f u inner)
-         # Proves conclusion
-         inv_eq_t(f(u) conclusion)
-      }
-      .VALUE
+#       {
+#          # Proves inner = u
+#          decision_eq_t(y z u v)
+#          # Proves u = inner
+#          eq_symm_t(inner u)
+#          # Proves f(u) = conclusion
+#          eq_ext_t(f u inner)
+#          # Proves conclusion
+#          inv_eq_t(f(u) conclusion)
+#       }
+#       .VALUE
 
-      {
-         # Proves inner = v
-         decision_neq_t(y z u v)
-         # Proves v = inner
-         eq_symm_t(inner v)
-         # Proves f(v) = conclusion
-         eq_ext_t(f v inner)
-         # Proves conclusion
-         inv_eq_t(f(v) conclusion)
-      }
-      .VALUE
-   )
+#       {
+#          # Proves inner = v
+#          decision_neq_t(y z u v)
+#          # Proves v = inner
+#          eq_symm_t(inner v)
+#          # Proves f(v) = conclusion
+#          eq_ext_t(f v inner)
+#          # Proves conclusion
+#          inv_eq_t(f(v) conclusion)
+#       }
+#       .VALUE
+#    )
 
-   just_t(conclusion)
-}
-.VALUE
+#    just_t(conclusion)
+# })
 
-decision_by_parts_t IS
-{
-   y IS VAR()
-   z IS VAR()
-   u IS VAR(u)
-   v IS VAR(v)
+# decision_by_parts_t IS
+# tail_value({
+#    y IS VAR()
+#    z IS VAR()
+#    u IS VAR(u)
+#    v IS VAR(v)
 
-   conclusion IS DECISION(y z u v)
+#    conclusion IS DECISION(y z u v)
 
-   decision_by_parts_ext_t(VAR() y z u v)
+#    decision_by_parts_ext_t(VAR() y z u v)
 
-   just_t(conclusion)
-}
-.VALUE
+#    just_t(conclusion)
+# })
