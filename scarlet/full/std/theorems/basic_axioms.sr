@@ -1,3 +1,6 @@
+decision IS basics.decision
+implies IS std.logic.implies
+
 trivial_t IS 
 tail_value({
    true AS_LANGUAGE_ITEM(trivial_t_statement)
@@ -59,4 +62,27 @@ tail_value({
    AS_LANGUAGE_ITEM(refl_t_statement)
 
    AXIOM(refl_t)
+})
+
+cases_t IS
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   equal IS VAR(y = z)
+   not_equal IS VAR(decision(y z false true))
+   statement_when_equal IS VAR(SELF DEP equal)
+
+   statement_when_not_equal IS 
+   VAR(SELF DEP not_equal)
+
+   statement IS 
+   decision(
+      y 
+      z 
+      statement_when_equal 
+      statement_when_not_equal
+   )
+   AS_LANGUAGE_ITEM(cases_t_statement)
+
+   AXIOM(cases_t SWALLOWING equal not_equal)
 })

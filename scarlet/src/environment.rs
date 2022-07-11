@@ -21,6 +21,7 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "eq_ext_rev_t_statement",
     "inv_eq_t_statement",
     "refl_t_statement",
+    "cases_t_statement",
     "decision_eq_t_statement",
     "decision_neq_t_statement",
 ];

@@ -3,11 +3,13 @@ decision IS basics.decision
 Bool IS 
 VAR(decision(SELF  true  true  SELF = false))
 
-y IS VAR(SELF FROM Bool)
-z IS VAR(SELF FROM Bool)
+y IS VAR()
+z IS VAR()
 
 and IS 
 decision(y true z false)
 AS_LANGUAGE_ITEM(and)
 
 or IS decision(y true true z)
+
+implies IS decision(y true z true)

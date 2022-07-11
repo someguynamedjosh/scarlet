@@ -15,17 +15,19 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DAxiom {
     statement: ItemPtr,
+    swallowing: Vec<ItemPtr>,
 }
 
 impl DAxiom {
-    fn new(env: &mut Environment, statement: &str) -> Option<Self> {
+    fn new(env: &mut Environment, statement: &str, swallowing: Vec<ItemPtr>) -> Option<Self> {
         Some(Self {
             statement: env.get_language_item(statement)?.ptr_clone(),
+            swallowing,
         })
     }
 
-    pub fn from_name(env: &mut Environment, name: &str) -> Option<Self> {
-        Self::new(env, &format!("{}_statement", name))
+    pub fn from_name(env: &mut Environment, name: &str, swallowing: Vec<ItemPtr>) -> Option<Self> {
+        Self::new(env, &format!("{}_statement", name), swallowing)
     }
 
     pub fn get_statement(&self, env: &mut Environment) -> &'static str {
@@ -64,10 +66,16 @@ impl DependenciesFeature for DAxiom {
         &self,
         _this: &ItemPtr,
         ctx: &mut Dcc,
-        affects_return_value: bool,
+        _affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        ctx.get_dependencies(&self.statement, affects_return_value)
+        let mut base = ctx.get_dependencies(&self.statement, false);
+        for swallowed_item in &self.swallowing {
+            for swallowed_dep in ctx.get_dependencies(swallowed_item, false).into_variables() {
+                base.remove(&swallowed_dep.var);
+            }
+        }
+        base
     }
 }
 

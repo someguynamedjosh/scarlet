@@ -88,13 +88,35 @@ impl Environment {
         result.push_str(&format!("{}", original_vomit));
 
         let inv_from = SWithParent(SVariableInvariants(item_id.ptr_clone()), from_item);
-        let inv_ctx = VomitContext {
+        let mut inv_ctx = VomitContext {
             pc: &pc,
             code_arena: &code_arena,
             scope: &inv_from,
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
+        let set_ptr = item_id.get_invariants().unwrap();
+        let set = set_ptr.borrow();
+        for invariant in set.statements() {
+            let vomited = self.vomit(255, &mut inv_ctx, invariant.ptr_clone(), true);
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("\n    {} ", indented(&vomited,),));
+        }
+        result.push_str(&format!("\nproof depend on: "));
+        for dep in set.dependencies() {
+            let vomited = self.vomit(255, &mut inv_ctx, dep.ptr_clone(), true);
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("{}   ", indented(&vomited)));
+        }
+        result.push_str(&format!("\ndepends on: "));
+        for dep in item_id.get_dependencies().into_variables() {
+            let vomited = self.vomit_var(&mut inv_ctx, dep.var.ptr_clone());
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            if !dep.affects_return_value {
+                result.push_str("*");
+            }
+            result.push_str(&format!("{}   ", indented(&vomited)));
+        }
 
         result.push_str(&Self::format_vomit_temp_names(&inv_ctx));
         result

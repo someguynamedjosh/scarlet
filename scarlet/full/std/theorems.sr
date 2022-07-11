@@ -2,6 +2,7 @@ trivial_t IS basic_axioms.trivial_t
 eq_ext_rev_t IS basic_axioms.eq_ext_rev_t
 inv_eq_t IS basic_axioms.inv_eq_t
 refl_t IS basic_axioms.refl_t
+cases_t IS basic_axioms.cases_t
 
 invariant_truth_t IS 
 basic_axioms.invariant_truth_t
