@@ -5,7 +5,7 @@ use super::{
         substitution::{DSubstitution, Substitutions},
     },
     resolvable::DResolvable,
-    Item, ItemPtr, resolve,
+    resolve, Item, ItemPtr,
 };
 use crate::{diagnostic::Position, environment::Environment, scope::SRoot};
 
@@ -71,6 +71,5 @@ pub fn is_bool(env: &mut Environment, item_to_test: ItemPtr) -> ItemPtr {
 }
 
 pub fn placeholder() -> ItemPtr {
-    let def = DPlaceholder;
-    Item::new(def, SRoot)
+    Item::placeholder_with_scope(format!("placeholder for test"), Box::new(SRoot))
 }

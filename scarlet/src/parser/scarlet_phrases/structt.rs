@@ -3,7 +3,7 @@ use crate::{
     environment::{vomit::VomitContext, Environment},
     item::{
         definitions::structt::{DPopulatedStruct, SField, SFieldAndRest},
-        ItemDefinition, ItemPtr,
+        Item, ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -25,7 +25,7 @@ fn struct_from_fields(
     } else {
         let (label, field) = fields.pop().unwrap();
         let label = label.unwrap_or("").to_owned();
-        let this = crate::item::Item::placeholder_with_scope(scope);
+        let this = Item::placeholder_with_scope(format!("struct"), scope);
         let field = field.as_item(pc, env, SFieldAndRest(this.ptr_clone()))?;
         if label.len() > 0 {
             field.set_name(label.clone());

@@ -56,9 +56,7 @@ fn add_language_items(env: &mut Environment, code_containing_definitions_to_skip
         {
             continue;
         }
-        let def = if ["x", "y", "when_equal", "when_not_equal", "value_with_tail"]
-            .contains(&lang_item_name)
-        {
+        let def = if ["x", "y", "when_equal", "when_not_equal"].contains(&lang_item_name) {
             variable()
         } else {
             unique()

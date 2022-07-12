@@ -13,7 +13,6 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "y",
     "when_equal",
     "when_not_equal",
-    "value_with_tail",
     "and",
     "trivial_t_statement",
     "invariant_truth_t_statement",
@@ -42,7 +41,7 @@ impl Environment {
             auto_theorems: Vec::new(),
         };
         for &name in LANGUAGE_ITEM_NAMES {
-            let id = Item::placeholder();
+            let id = Item::placeholder(format!("language item {}", name));
             this.language_items.insert(name, id);
         }
         this

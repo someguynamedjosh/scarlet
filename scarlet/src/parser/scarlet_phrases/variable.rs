@@ -37,7 +37,7 @@ fn create(
         node.position.range().start as _,
     );
     let mut mode = 0;
-    let this = crate::item::Item::placeholder_with_scope(scope.dyn_clone());
+    let this = Item::placeholder_with_scope(format!("variable"), scope.dyn_clone());
     for arg in util::collect_comma_list(&node.children[2]) {
         if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEP")] {
             mode = 1;

@@ -18,7 +18,7 @@ use crate::{
 /// value that could have been returned by `from_item`.
 pub(super) fn create_from_dex(env: &Environment, from: ItemPtr, position: Position) -> ItemPtr {
     let scope = || SPlain(from.ptr_clone());
-    let into = Item::placeholder_with_scope(Box::new(scope()));
+    let into = Item::placeholder_with_scope(format!("from"), Box::new(scope()));
     from.borrow_mut().from_dex = Some(into.ptr_clone());
     let x = env.get_language_item("x").unwrap();
 

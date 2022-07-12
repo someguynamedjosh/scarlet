@@ -314,12 +314,12 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn placeholder() -> ItemPtr {
-        Self::new_boxed(Box::new(DPlaceholder), Box::new(SRoot))
+    pub fn placeholder(name: String) -> ItemPtr {
+        Self::new_boxed(Box::new(DPlaceholder { name }), Box::new(SRoot))
     }
 
-    pub fn placeholder_with_scope(scope: Box<dyn Scope>) -> ItemPtr {
-        Self::new_boxed(Box::new(DPlaceholder), scope)
+    pub fn placeholder_with_scope(name: String, scope: Box<dyn Scope>) -> ItemPtr {
+        Self::new_boxed(Box::new(DPlaceholder { name }), scope)
     }
 
     pub fn new(definition: impl ItemDefinition, scope: impl Scope + 'static) -> ItemPtr {

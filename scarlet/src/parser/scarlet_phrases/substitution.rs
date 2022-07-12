@@ -7,7 +7,7 @@ use crate::{
         definitions::{substitution::DSubstitution, variable::VariablePtr},
         dependencies::Dependency,
         resolvable::{DResolvable, RSubstitution, UnresolvedItemError},
-        ItemDefinition, ItemPtr,
+        ItemDefinition, ItemPtr, Item,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -28,7 +28,7 @@ fn create(
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
     assert!(node.children.len() == 4);
-    let this = crate::item::Item::placeholder_with_scope(scope);
+    let this = Item::placeholder_with_scope(format!("substitution"), scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let mut named_subs = Vec::new();
     let mut anonymous_subs = Vec::new();

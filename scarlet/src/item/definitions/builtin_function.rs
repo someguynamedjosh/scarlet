@@ -88,31 +88,31 @@ impl DBuiltinFunction {
 
     pub fn body(
         env: &Environment,
-        value_with_tail: ItemPtr,
+        x: ItemPtr,
         scope: Box<dyn Scope>,
         position: Position,
     ) -> RSubstitution {
-        let args = vec![value_with_tail];
+        let args = vec![x];
         Self::with_args(env, "body", args, scope, position)
     }
 
     pub fn tail_label(
         env: &Environment,
-        value_with_tail: ItemPtr,
+        x: ItemPtr,
         scope: Box<dyn Scope>,
         position: Position,
     ) -> RSubstitution {
-        let args = vec![value_with_tail];
+        let args = vec![x];
         Self::with_args(env, "tail_label", args, scope, position)
     }
 
     pub fn tail_value(
         env: &Environment,
-        value_with_tail: ItemPtr,
+        x: ItemPtr,
         scope: Box<dyn Scope>,
         position: Position,
     ) -> RSubstitution {
-        let args = vec![value_with_tail];
+        let args = vec![x];
         Self::with_args(env, "tail_value", args, scope, position)
     }
 

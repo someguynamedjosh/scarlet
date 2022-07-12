@@ -10,7 +10,9 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DPlaceholder;
+pub struct DPlaceholder {
+    pub name: String,
+}
 
 impl_any_eq_from_regular_eq!(DPlaceholder);
 
@@ -30,13 +32,16 @@ impl DependenciesFeature for DPlaceholder {
         _affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        panic!("Attempted to get dependencies of placeholder.");
+        panic!(
+            "Attempted to get dependencies of placeholder '{}'.",
+            self.name
+        );
     }
 }
 
 impl EqualityFeature for DPlaceholder {
     fn get_equality_using_context(&self, _ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        panic!("Attempted to test equality of placeholder.");
+        panic!("Attempted to test equality of placeholder '{}'.", self.name);
     }
 }
 
@@ -47,6 +52,9 @@ impl InvariantsFeature for DPlaceholder {
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        panic!("Attempted to get invariants of placeholder.");
+        panic!(
+            "Attempted to get invariants of placeholder '{}'.",
+            self.name
+        );
     }
 }

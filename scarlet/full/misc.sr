@@ -12,4 +12,4 @@ x IS std.basics.x
 #    is_struct(x.REST)
 # )
 
-
+std.theorems.cases_t SHOWN

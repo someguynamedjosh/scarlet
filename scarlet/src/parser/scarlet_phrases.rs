@@ -8,7 +8,6 @@ mod identifier;
 mod is;
 mod member_access;
 mod multiple_items;
-mod add_tail;
 mod shown;
 mod structt;
 mod substitution;
@@ -45,7 +44,6 @@ pub fn phrases() -> Vec<Phrase> {
         axiom::phrase(),
         builtin_function::phrase(),
         variable::phrase(),
-        add_tail::phrase(),
         equal::phrase(),
         from::phrase(),
         member_access::phrase(),

@@ -144,7 +144,7 @@ impl DVariable {
         order: VariableOrder,
         scope: Box<dyn Scope>,
     ) -> ItemPtr {
-        let placeholder = Item::placeholder();
+        let placeholder = Item::placeholder(format!("variable item"));
         let variable = Variable {
             item: placeholder,
             invariants: invariants.clone(),
