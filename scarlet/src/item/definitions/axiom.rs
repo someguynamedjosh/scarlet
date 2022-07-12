@@ -1,5 +1,6 @@
 use maplit::hashset;
 
+use super::variable::DVariable;
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
@@ -55,7 +56,11 @@ impl ItemDefinition for DAxiom {
     }
 
     fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
-        vec![(ContainmentType::Definitional, self.statement.ptr_clone())]
+        let mut result = vec![(ContainmentType::Definitional, self.statement.ptr_clone())];
+        for swallowed_item in &self.swallowing {
+            result.push((ContainmentType::Definitional, swallowed_item.ptr_clone()))
+        }
+        result
     }
 }
 
@@ -70,10 +75,12 @@ impl DependenciesFeature for DAxiom {
         _: OnlyCalledByDcc,
     ) -> DepResult {
         let mut base = ctx.get_dependencies(&self.statement, false);
-        for swallowed_item in &self.swallowing {
-            for swallowed_dep in ctx.get_dependencies(swallowed_item, false).into_variables() {
-                base.remove(&swallowed_dep.var);
-            }
+        for swallowed_var in &self.swallowing {
+            let var = swallowed_var.dereference();
+            let var = var.downcast_definition::<DVariable>();
+            let var = var.unwrap();
+            let var = var.get_variable();
+            base.remove(var);
         }
         base
     }
