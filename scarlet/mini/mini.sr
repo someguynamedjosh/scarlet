@@ -2,6 +2,17 @@ true IS UNIQUE AS_LANGUAGE_ITEM(true)
 false IS UNIQUE AS_LANGUAGE_ITEM(false)
 void IS UNIQUE AS_LANGUAGE_ITEM(void)
 
+true AS_LANGUAGE_ITEM(and)
+true AS_LANGUAGE_ITEM(trivial_t_statement)
+true AS_LANGUAGE_ITEM(invariant_truth_t_statement)
+true AS_LANGUAGE_ITEM(invariant_truth_rev_t_statement)
+true AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
+true AS_LANGUAGE_ITEM(inv_eq_t_statement)
+# true AS_LANGUAGE_ITEM(refl_t_statement)
+# true AS_LANGUAGE_ITEM(decision_eq_t_statement)
+# true AS_LANGUAGE_ITEM(decision_neq_t_statement)
+# true AS_LANGUAGE_ITEM(decision_identity_t_statement)
+
 {
     has_tail IS BUILTIN_FUNCTION(has_tail)
     x IS VAR() AS_LANGUAGE_ITEM(x)
@@ -14,43 +25,33 @@ void IS UNIQUE AS_LANGUAGE_ITEM(void)
     VAR() AS_LANGUAGE_ITEM(when_not_equal)
 }
 
-tail_value IS BUILTIN_FUNCTION(tail_value)
+tail IS BUILTIN_FUNCTION(tail_value)
 
-std IS {
-    x IS VAR(ORD 32) AS_LANGUAGE_ITEM(x)
-    fx IS VAR(DEP x ORD 32)
-}
+predicate_t IS tail({
+   y IS VAR()
+   z IS VAR(y)
+   statement_when_equal IS VAR(SELF DEP z)
 
-x IS std.x
-fx IS std.fx
+   statement IS statement_when_equal
+   AS_LANGUAGE_ITEM(cases_t_statement)
 
-eq_ext_rev_t IS 
-tail_value({
-    y IS VAR()
-    z IS VAR(y = SELF)
-
-    x(fx(z) = fx(y))
-    AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
-
-    AXIOM(eq_ext_rev_t)
+   AXIOM(cases_t SWALLOWING z)
 })
 
-eq_symm_t IS 
-tail_value({
-    u IS VAR()
-    v IS VAR(u = SELF)
-    identity IS VAR()
+void_from_false_t IS tail({
+    assume_false IS VAR(false)
 
-    eq_ext_rev_t(identity u v)
+    statement IS tail({assume_false = void})
+    AS_LANGUAGE_ITEM(refl_t_statement)
+    
+    AXIOM(refl_t)
 })
 
-{
-    VAR(SELF)(fx(s) = fx(t))
+# predicate_t SHOWN
 
-    eq_ext_rev_t(fx t s)
+assumption IS VAR(false)
+conclusion IS false = void
+void_from_false_t SHOWN
+void_from_false_t(false)
 
-    eq_symm_t(s t)
-
-    s IS VAR()
-    t IS VAR(s = SELF)
-}
+predicate_t(false)

@@ -11,7 +11,7 @@ use crate::{
             variable::{DVariable, Variable},
         },
         dependencies::{Dcc, Dependencies},
-        invariants::{InvariantSet, InvariantsResult},
+        invariants::{InvariantSet, InvariantsResult, JustificationRequirement},
         util::unchecked_substitution,
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -123,7 +123,7 @@ fn create_invariants(
     this: ItemPtr,
     base: ItemPtr,
     subs: &Substitutions,
-    justifications: Vec<ItemPtr>,
+    justifications: Vec<JustificationRequirement>,
 ) -> InvariantsResult {
     let mut invs = Vec::new();
     let base_set = base.get_invariants()?;
@@ -141,7 +141,7 @@ fn create_invariants(
 fn make_justification_statements(
     subs: &Substitutions,
     _limit: u32,
-) -> Result<Vec<ItemPtr>, ResolveError> {
+) -> Result<Vec<JustificationRequirement>, ResolveError> {
     let mut justifications = Vec::new();
     let mut previous_subs = Substitutions::new();
     for (target, value) in subs {

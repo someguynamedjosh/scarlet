@@ -5,11 +5,17 @@ use std::{
     rc::Rc,
 };
 
-use crate::{item::ItemPtr, util::rcrc};
+use crate::{item::{ItemPtr, dependencies::Dependencies}, util::rcrc};
 
 pub type SetJustification = Vec<StatementJustifications>;
 pub type StatementJustifications = Vec<StatementJustification>;
 pub type StatementJustification = Vec<InvariantSetPtr>;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct JustificationRequirement {
+    pub statement: ItemPtr,
+    pub allowed_dependencies: Dependencies,
+}
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct InvariantSet {
@@ -17,7 +23,7 @@ pub struct InvariantSet {
     pub(super) statements: Vec<ItemPtr>,
     /// For the original statements to hold, all the statements in this list
     /// must also hold.
-    pub(super) justification_requirements: Vec<ItemPtr>,
+    pub(super) justification_requirements: Vec<JustificationRequirement>,
     pub(super) set_justification: Option<SetJustification>,
     pub(super) connected_to_root: bool,
     pub(super) required: bool,
@@ -50,7 +56,7 @@ impl InvariantSet {
     pub fn new(
         context: ItemPtr,
         statements: Vec<ItemPtr>,
-        justification_requirements: Vec<ItemPtr>,
+        justification_requirements: Vec<JustificationRequirement>,
         dependencies: HashSet<ItemPtr>,
     ) -> InvariantSetPtr {
         rcrc(Self {
@@ -67,7 +73,7 @@ impl InvariantSet {
     pub fn new_not_required(
         context: ItemPtr,
         statements: Vec<ItemPtr>,
-        justification_requirements: Vec<ItemPtr>,
+        justification_requirements: Vec<JustificationRequirement>,
         dependencies: HashSet<ItemPtr>,
     ) -> InvariantSetPtr {
         rcrc(Self {
@@ -136,7 +142,7 @@ impl InvariantSet {
 
     /// Get a reference to the invariant set's justification requirements.
     #[must_use]
-    pub fn justification_requirements(&self) -> &[ItemPtr] {
+    pub fn justification_requirements(&self) -> &[JustificationRequirement] {
         self.justification_requirements.as_ref()
     }
 

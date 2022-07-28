@@ -78,9 +78,10 @@ impl DependenciesFeature for DAxiom {
         for swallowed_var in &self.swallowing {
             let var = swallowed_var.dereference();
             let var = var.downcast_definition::<DVariable>();
-            let var = var.unwrap();
-            let var = var.get_variable();
-            base.remove(var);
+            if let Some(var) = var {
+                let var = var.get_variable();
+                base.remove(var);
+            }
         }
         base
     }

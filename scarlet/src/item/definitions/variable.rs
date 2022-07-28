@@ -19,7 +19,7 @@ use crate::{
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc,
+            OnlyCalledByIcc, JustificationRequirement,
         },
         util::unchecked_substitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
@@ -185,13 +185,16 @@ impl Variable {
         this: &VariablePtr,
         value: ItemPtr,
         other_subs: &Substitutions,
-    ) -> Vec<ItemPtr> {
+    ) -> Vec<JustificationRequirement> {
         let mut substitutions = other_subs.clone();
         let mut justifications = Vec::new();
         substitutions.insert_no_replace(this.ptr_clone(), value);
         for inv in &this.borrow().invariants {
             let subbed = unchecked_substitution(inv.ptr_clone(), &substitutions);
-            justifications.push(subbed);
+            justifications.push(JustificationRequirement {
+                statement: subbed,
+                allowed_dependencies: this.borrow().get_var_dependencies(),
+            });
         }
         justifications
     }

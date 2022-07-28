@@ -1,13 +1,16 @@
-use super::{InvariantSetPtr, SetJustification, StatementJustifications};
+use super::{InvariantSetPtr, JustificationRequirement, SetJustification, StatementJustifications};
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
-    item::{definitions::substitution::Substitutions, equality::Equal, ItemPtr},
+    item::{
+        definitions::substitution::Substitutions, dependencies::Dependencies, equality::Equal,
+        ItemPtr,
+    },
     scope::{LookupInvariantError, Scope},
     util::PtrExtension,
 };
 
-const TRACE: bool = false;
+const TRACE: bool = true;
 
 pub type JustifyInvariantResult = Result<Vec<InvariantSetPtr>, LookupInvariantError>;
 
@@ -107,7 +110,14 @@ impl Environment {
             sets: all_sets,
             env: self,
         }
-        .justify_statement(context, statement, limit)
+        .justify_requirement(
+            context,
+            &JustificationRequirement {
+                statement: statement.ptr_clone(),
+                allowed_dependencies: Dependencies::new(),
+            },
+            limit,
+        )
     }
 }
 
@@ -130,7 +140,7 @@ impl<'a> JustificationContext<'a> {
                         "Failed to find any justification for the following statements:"
                     ));
                     for requirement in &set.justification_requirements {
-                        d = d.with_item_error(requirement, &set.context, self.env);
+                        d = d.with_item_error(&requirement.statement, &set.context, self.env);
                     }
                     d = d.with_text_info("Required by this substitution:".to_owned());
                     d = d.with_item_info(&set.context, &set.context, self.env);
@@ -166,17 +176,17 @@ impl<'a> JustificationContext<'a> {
     ) -> Result<SetJustification, LookupInvariantError> {
         let mut justifications = Vec::new();
         for required in set.borrow().justification_requirements() {
-            let justified_by = self.justify_statement(&set.borrow().context, required, limit)?;
+            let justified_by = self.justify_requirement(&set.borrow().context, required, limit)?;
             justifications.push(justified_by);
         }
         set.borrow_mut().set_justification = Some(justifications.clone());
         Ok(justifications)
     }
 
-    fn justify_statement(
+    fn justify_requirement(
         &mut self,
         context: &ItemPtr,
-        statement: &ItemPtr,
+        requirement: &JustificationRequirement,
         limit: u32,
     ) -> Result<StatementJustifications, LookupInvariantError> {
         if TRACE {
@@ -184,7 +194,7 @@ impl<'a> JustificationContext<'a> {
             println!(
                 "{} {} {}",
                 context.debug_label(),
-                statement.debug_label(),
+                requirement.statement.debug_label(),
                 limit,
             );
         }
@@ -195,10 +205,10 @@ impl<'a> JustificationContext<'a> {
         for other_set in iterate_over {
             for other_statement in other_set.borrow().statements() {
                 if TRACE {
-                    println!("Trying to link {:#?}", statement);
+                    println!("Trying to link {:#?}", requirement);
                     println!("by {:#?}", other_statement);
                 }
-                let eq = statement.get_trimmed_equality(other_statement);
+                let eq = requirement.statement.get_trimmed_equality(other_statement);
                 if TRACE {
                     println!("{:#?}", eq);
                 }

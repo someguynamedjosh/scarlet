@@ -23,6 +23,7 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "cases_t_statement",
     "decision_eq_t_statement",
     "decision_neq_t_statement",
+    "decision_identity_t_statement",
 ];
 
 #[cfg(feature = "no_axioms")]

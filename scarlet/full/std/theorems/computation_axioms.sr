@@ -1,7 +1,7 @@
 decision IS basics.decision
 
 # From y = z
-# Proves DECISION(y z u v) = u
+# Proves decision(y z u v) = u
 decision_eq_t IS
 tail_value({ 
    y IS VAR()
@@ -16,7 +16,7 @@ tail_value({
 })
 
 # From y =NOT z
-# Proves DECISION(y z u v) = v
+# Proves decision(y z u v) = v
 decision_neq_t IS 
 tail_value({
    y IS VAR()
@@ -25,9 +25,20 @@ tail_value({
    v IS VAR()
 
    just(decision(y z u v) = v)
-   AS_LANGUAGE_ITEM(
-      decision_neq_t_statement 
-  )
+   AS_LANGUAGE_ITEM(decision_neq_t_statement)
 
    AXIOM(decision_neq_t)
+})
+
+decision_identity_t IS 
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   u IS VAR()
+   v IS VAR(y = z)
+
+   just(decision(y z u v) = u)
+   AS_LANGUAGE_ITEM(decision_identity_t_statement)
+
+   AXIOM(decision_identity_t)
 })
