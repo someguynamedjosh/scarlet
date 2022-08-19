@@ -15,6 +15,7 @@ use crate::{
         definitions::substitution::Substitutions,
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
+            Requirement,
         },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
@@ -225,12 +226,23 @@ impl Variable {
         let result = match deps.as_complete_variables() {
             Ok(swallowed) => {
                 let mut res = Dependencies::new();
-                res.push_eager(Dependency {
-                    var: this.ptr_clone(),
-                    swallow: swallowed.map(|x| x.var.ptr_clone()).collect(),
-                    order: this.borrow().order.clone(),
-                    affects_return_value,
-                });
+
+                if let Some(theorem) = this.borrow().kind.as_theorem() {
+                    res.push_requirement(Requirement {
+                        statement: theorem.ptr_clone(),
+                        swallow_dependencies: swallowed
+                            .filter_map(|x| x.var.borrow().kind.as_theorem().map(|x| x.ptr_clone()))
+                            .collect(),
+                        order: this.borrow().order.clone(),
+                    });
+                } else {
+                    res.push_value(Dependency {
+                        var: this.ptr_clone(),
+                        swallow: swallowed.map(|x| x.var.ptr_clone()).collect(),
+                        order: this.borrow().order.clone(),
+                        affects_return_value,
+                    });
+                }
                 res
             }
             Err(err) => Dependencies::new_error(err.clone()),

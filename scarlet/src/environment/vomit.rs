@@ -117,6 +117,12 @@ impl Environment {
             }
             result.push_str(&format!("{}   ", indented(&vomited)));
         }
+        result.push_str(&format!("\nrequires: "));
+        for req in item_id.get_dependencies().as_requirements() {
+            let vomited = self.vomit(255, &mut inv_ctx, req.statement.ptr_clone(), true);
+            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
+            result.push_str(&format!("{}   ", indented(&vomited)));
+        }
 
         result.push_str(&Self::format_vomit_temp_names(&inv_ctx));
         result

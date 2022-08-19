@@ -2,7 +2,7 @@ use std::collections::{BTreeSet, HashSet};
 
 use maplit::hashset;
 
-use super::Dependency;
+use super::{Dependency, requirement::Requirement};
 use crate::{
     item::{definitions::variable::VariablePtr, resolvable::UnresolvedItemError, ItemPtr},
     util::PtrExtension,
@@ -11,6 +11,7 @@ use crate::{
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Dependencies {
     pub(super) dependencies: BTreeSet<Dependency>,
+    pub(super) requirements: BTreeSet<Requirement>,
     pub(super) skipped_due_to_recursion: HashSet<ItemPtr>,
     pub(super) skipped_due_to_unresolved: Option<UnresolvedItemError>,
 }
@@ -19,6 +20,7 @@ impl Dependencies {
     pub fn new() -> Self {
         Self {
             dependencies: BTreeSet::new(),
+            requirements: BTreeSet::new(),
             skipped_due_to_recursion: HashSet::new(),
             skipped_due_to_unresolved: None,
         }
@@ -27,6 +29,7 @@ impl Dependencies {
     pub fn new_missing(item: ItemPtr) -> Self {
         Self {
             dependencies: BTreeSet::new(),
+            requirements: BTreeSet::new(),
             skipped_due_to_recursion: hashset![item],
             skipped_due_to_unresolved: None,
         }
@@ -35,12 +38,13 @@ impl Dependencies {
     pub fn new_error(error: UnresolvedItemError) -> Self {
         Self {
             dependencies: BTreeSet::new(),
+            requirements: BTreeSet::new(),
             skipped_due_to_recursion: HashSet::new(),
             skipped_due_to_unresolved: Some(error),
         }
     }
 
-    pub fn push_eager(&mut self, dep: Dependency) {
+    pub fn push_value(&mut self, dep: Dependency) {
         if self.skipped_due_to_unresolved.is_some() {
             return;
         }
@@ -54,9 +58,19 @@ impl Dependencies {
         self.dependencies.replace(dep);
     }
 
-    #[track_caller]
+    pub fn push_requirement(&mut self, req: Requirement) {
+        if self.skipped_due_to_unresolved.is_some() {
+            return;
+        }
+        self.requirements.replace(req);
+    }
+
     pub fn as_variables(&self) -> impl Iterator<Item = &Dependency> {
         self.dependencies.iter()
+    }
+
+    pub fn as_requirements(&self) -> impl Iterator<Item = &Requirement> {
+        self.requirements.iter()
     }
 
     #[track_caller]
@@ -83,8 +97,11 @@ impl Dependencies {
                 .insert(new_missing.ptr_clone());
         }
         self.skipped_due_to_unresolved = other.skipped_due_to_unresolved.clone();
-        for eager in other.into_variables() {
-            self.push_eager(eager);
+        for dep in other.as_variables() {
+            self.push_value(dep.clone());
+        }
+        for req in other.as_requirements() {
+            self.push_requirement(req.clone());
         }
     }
 

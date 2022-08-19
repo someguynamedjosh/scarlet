@@ -108,7 +108,7 @@ impl DSubstitution {
                         if TRACE {
                             println!("{:#?}", rdep);
                         }
-                        deps.push_eager(rdep);
+                        deps.push_value(rdep);
                     }
                 }
                 if let Some(err) = replaced_err {
@@ -118,7 +118,7 @@ impl DSubstitution {
                 if TRACE {
                     println!("UNCHANGED {:#?}", dep);
                 }
-                deps.push_eager(dep.clone());
+                deps.push_value(dep.clone());
             }
         }
         if let Some(err) = base_error {

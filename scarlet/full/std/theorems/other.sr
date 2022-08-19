@@ -20,7 +20,7 @@ tail_value({
    decision(y   z   t = u   t = v)
 
    # conclusion_when_equal_t IS tail_value({
-   #    equal IS VAR(y = z ORD 2)
+   #    equal IS ANY_PROOF_OF(y = z)
 
    #    # Proves hypothesis = just(t = u)
    #    decision_eq_t(y   z   t = u   t = v)
@@ -55,14 +55,11 @@ tail_value({
 
    # conclusion_when_equal_t SHOWN
 
-   conclusion SHOWN
-   assumption2 IS VAR()
-
-   cases_t(
-      y 
-      z 
-      conclusion
-   )
+   # cases_t(
+   #    y 
+   #    z 
+   #    conclusion
+   # )
 
    # just_t(true)
 })
