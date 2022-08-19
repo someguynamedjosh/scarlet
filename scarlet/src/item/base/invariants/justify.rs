@@ -10,7 +10,7 @@ use crate::{
     util::PtrExtension,
 };
 
-const TRACE: bool = true;
+const TRACE: bool = false;
 
 pub type JustifyInvariantResult = Result<Vec<InvariantSetPtr>, LookupInvariantError>;
 

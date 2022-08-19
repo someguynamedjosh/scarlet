@@ -29,13 +29,13 @@ tail IS BUILTIN_FUNCTION(tail_value)
 
 predicate_t IS tail({
    y IS VAR()
-   z IS VAR(y)
    statement_when_equal IS VAR(SELF DEP z)
+   z IS VAR(y)
 
    statement IS statement_when_equal
    AS_LANGUAGE_ITEM(cases_t_statement)
 
-   AXIOM(cases_t SWALLOWING z)
+   AXIOM(cases_t)
 })
 
 void_from_false_t IS tail({
@@ -51,7 +51,7 @@ void_from_false_t IS tail({
 
 assumption IS VAR(false)
 conclusion IS false = void
-void_from_false_t SHOWN
 void_from_false_t(false)
 
-predicate_t(false)
+predicate_t(false conclusion)
+SHOWN
