@@ -6,7 +6,7 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc, Dependency, Dependencies},
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
@@ -16,19 +16,19 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DAxiom {
     statement: ItemPtr,
-    swallowing: Vec<ItemPtr>,
+    relying_on: Vec<ItemPtr>,
 }
 
 impl DAxiom {
-    fn new(env: &mut Environment, statement: &str, swallowing: Vec<ItemPtr>) -> Option<Self> {
+    fn new(env: &mut Environment, statement: &str, relying_on: Vec<ItemPtr>) -> Option<Self> {
         Some(Self {
             statement: env.get_language_item(statement)?.ptr_clone(),
-            swallowing,
+            relying_on,
         })
     }
 
-    pub fn from_name(env: &mut Environment, name: &str, swallowing: Vec<ItemPtr>) -> Option<Self> {
-        Self::new(env, &format!("{}_statement", name), swallowing)
+    pub fn from_name(env: &mut Environment, name: &str, relying_on: Vec<ItemPtr>) -> Option<Self> {
+        Self::new(env, &format!("{}_statement", name), relying_on)
     }
 
     pub fn get_statement(&self, env: &mut Environment) -> &'static str {
@@ -57,8 +57,8 @@ impl ItemDefinition for DAxiom {
 
     fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         let mut result = vec![(ContainmentType::Definitional, self.statement.ptr_clone())];
-        for swallowed_item in &self.swallowing {
-            result.push((ContainmentType::Definitional, swallowed_item.ptr_clone()))
+        for relied_on in &self.relying_on {
+            result.push((ContainmentType::Definitional, relied_on.ptr_clone()))
         }
         result
     }
@@ -70,17 +70,16 @@ impl DependenciesFeature for DAxiom {
     fn get_dependencies_using_context(
         &self,
         _this: &ItemPtr,
-        ctx: &mut Dcc,
+        _ctx: &mut Dcc,
         _affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        let mut base = ctx.get_dependencies(&self.statement, false);
-        for swallowed_var in &self.swallowing {
-            let var = swallowed_var.dereference();
+        let mut base = Dependencies::new();
+        for relied_on_var in &self.relying_on {
+            let var = relied_on_var.dereference();
             let var = var.downcast_definition::<DVariable>();
             if let Some(var) = var {
-                let var = var.get_variable();
-                base.remove(var);
+                base.append(var.as_dependency(false));
             }
         }
         base

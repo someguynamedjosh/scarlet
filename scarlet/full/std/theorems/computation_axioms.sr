@@ -6,14 +6,22 @@ decision_eq_t IS
 tail_value({ 
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   y_equals_z_t IS ANY_PROOF_OF(y = z)
    u IS VAR()
    v IS VAR()
 
    just(decision(y z u v) = u)
    AS_LANGUAGE_ITEM(decision_eq_t_statement)
 
-   AXIOM(decision_eq_t)
+   AXIOM(
+      decision_eq_t
+      DEPENDING_ON
+      y
+      z
+      u
+      v
+      y_equals_z_t
+   )
 })
 
 # From y =NOT z
@@ -22,26 +30,45 @@ decision_neq_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
+
+   y_doesnt_equal_z_t IS 
    ANY_PROOF_OF(decision(y z false true))
+
    u IS VAR()
    v IS VAR()
 
    just(decision(y z u v) = v)
    AS_LANGUAGE_ITEM(decision_neq_t_statement)
 
-   AXIOM(decision_neq_t)
+   AXIOM(
+      decision_neq_t
+      DEPENDING_ON
+      y
+      z
+      u
+      v
+      y_doesnt_equal_z_t
+   )
 })
 
 decision_identity_t IS 
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   y_equals_z_t IS ANY_PROOF_OF(y = z)
    u IS VAR()
    v IS VAR()
 
    just(decision(y z u v) = u)
    AS_LANGUAGE_ITEM(decision_identity_t_statement)
 
-   AXIOM(decision_identity_t)
+   AXIOM(
+      decision_identity_t
+      DEPENDING_ON
+      y
+      z
+      u
+      v
+      y_equals_z_t
+   )
 })

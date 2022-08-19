@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{borrow::Borrow, collections::HashSet};
 
 use itertools::Itertools;
 
@@ -64,9 +64,26 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) -> Result<(), Vec<Diagn
     root.for_self_and_deep_contents(&mut |item| {
         if let Err(err) = resolve(env, item.ptr_clone(), limit) {
             let diagnostic = match err {
-                ResolveError::Unresolved(err) => {
+                ResolveError::Unresolved(err2) => {
                     dep_count += 1;
-                    None
+                    println!("{:#?}", item.borrow());
+                    println!("{:#?}", err2.0.borrow());
+                    if item.is_same_instance_as(&err2.0) {
+                        Some(
+                            Diagnostic::new()
+                                .with_text_error(format!("This item circularly depends on itself:"))
+                                .with_item_error(item, item, env),
+                        )
+                    } else {
+                        // None
+                        Some(
+                            Diagnostic::new()
+                                .with_text_error(format!("This item:"))
+                                .with_item_error(item, item, env)
+                                .with_text_error(format!("Depends on this item:"))
+                                .with_item_error(&err2.0, &err2.0, env),
+                        )
+                    }
                 }
                 ResolveError::InvariantDeadEnd(err) => todo!("Nice error, {}", err),
                 ResolveError::MaybeInvariantDoesNotExist => {

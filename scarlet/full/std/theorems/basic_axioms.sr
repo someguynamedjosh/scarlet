@@ -11,38 +11,55 @@ tail_value({
 invariant_truth_t IS 
 tail_value({
    y IS VAR()
-   ANY_PROOF_OF(y)
+   y_is_true_t IS ANY_PROOF_OF(y)
 
    just(y = true)
    AS_LANGUAGE_ITEM(invariant_truth_t_statement)
 
-   AXIOM(invariant_truth_t)
+   AXIOM(
+      invariant_truth_t 
+      DEPENDING_ON 
+      y
+      y_is_true_t
+   )
 })
 
 
 invariant_truth_rev_t IS 
 tail_value({
    y IS VAR()
-   ANY_PROOF_OF(y = true)
+   y_equals_true_t IS ANY_PROOF_OF(y = true)
 
    y
    AS_LANGUAGE_ITEM(
       invariant_truth_rev_t_statement 
    )
 
-   AXIOM(invariant_truth_rev_t)
+   AXIOM(
+      invariant_truth_rev_t
+      DEPENDING_ON
+      y
+      y_equals_true_t
+   )
 })
 
 eq_ext_rev_t IS 
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   y_equals_z_t IS ANY_PROOF_OF(y = z)
 
    just(f(z) = f(y))
    AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
-   AXIOM(eq_ext_rev_t)
+   AXIOM(
+      eq_ext_rev_t 
+      DEPENDING_ON 
+      f 
+      y 
+      z 
+      y_equals_z_t
+   )
 })
 
 # From y = z   y
@@ -50,13 +67,20 @@ tail_value({
 inv_eq_t IS 
 tail_value({
    y IS VAR()
-   ANY_PROOF_OF(y)
+   y_is_true_t IS ANY_PROOF_OF(y)
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   y_equals_z_t IS ANY_PROOF_OF(y = z)
 
    z AS_LANGUAGE_ITEM(inv_eq_t_statement)
 
-   AXIOM(inv_eq_t)
+   AXIOM(
+      inv_eq_t
+      DEPENDING_ON
+      y
+      z
+      y_is_true_t
+      y_equals_z_t
+   )
 })
 
 refl_t IS
@@ -66,7 +90,7 @@ tail_value({
    just(y = y)
    AS_LANGUAGE_ITEM(refl_t_statement)
 
-   AXIOM(refl_t)
+   AXIOM(refl_t DEPENDING_ON y)
 })
 
 cases_t IS
@@ -79,9 +103,13 @@ tail_value({
    ANY_PROOF_OF(decision(y z false true))
 
    statement_when_equal IS VAR()
+
+   swe_is_true_t IS 
    ANY_PROOF_OF(statement_when_equal DEP equal)
+
    statement_when_not_equal IS VAR()
 
+   swne_is_true_t IS
    ANY_PROOF_OF(
       statement_when_not_equal DEP not_equal
    )
@@ -95,5 +123,14 @@ tail_value({
    )
    AS_LANGUAGE_ITEM(cases_t_statement)
 
-   AXIOM(cases_t SWALLOWING equal not_equal)
+   AXIOM(
+      cases_t 
+      DEPENDING_ON 
+      y
+      z
+      statement_when_equal
+      statement_when_not_equal
+      swe_is_true_t 
+      swne_is_true_t
+   )
 })
