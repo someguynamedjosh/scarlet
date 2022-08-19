@@ -3,7 +3,6 @@ mod identifier;
 mod named_member;
 mod placeholder;
 mod substitution;
-mod variable;
 
 use std::{any::Any, convert::Infallible, fmt::Debug, ops::FromResidual};
 
@@ -12,7 +11,6 @@ use itertools::Itertools;
 pub use named_member::RNamedMember;
 pub use placeholder::RPlaceholder;
 pub use substitution::RSubstitution;
-pub use variable::RVariable;
 
 use super::{
     check::CheckFeature,

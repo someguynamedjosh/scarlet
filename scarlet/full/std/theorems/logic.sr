@@ -5,7 +5,7 @@ implies IS std.logic.implies
 intro_implies_t IS
 tail_value({
     a IS VAR()
-    a_is_true IS VAR(a)
+    a_is_true IS ANY_PROOF_OF(a)
     b IS VAR(DEP a_is_true)
 
 
@@ -17,8 +17,10 @@ tail_value({
 # Proves b
 reduce_implies_t IS 
 tail_value({
-    a IS VAR(SELF)
-    b IS VAR(implies(a b))
+    a IS VAR()
+    ANY_PROOF_OF(a)
+    b IS VAR()
+    ANY_PROOF_OF(implies(a b))
 
     # Proves a = true
     invariant_truth_t(a)

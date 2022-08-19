@@ -10,7 +10,8 @@ tail_value({
 
 invariant_truth_t IS 
 tail_value({
-   y IS VAR(SELF)
+   y IS VAR()
+   ANY_PROOF_OF(y)
 
    just(y = true)
    AS_LANGUAGE_ITEM(invariant_truth_t_statement)
@@ -21,7 +22,8 @@ tail_value({
 
 invariant_truth_rev_t IS 
 tail_value({
-   y IS VAR(SELF = true)
+   y IS VAR()
+   ANY_PROOF_OF(y = true)
 
    y
    AS_LANGUAGE_ITEM(
@@ -34,7 +36,8 @@ tail_value({
 eq_ext_rev_t IS 
 tail_value({
    y IS VAR()
-   z IS VAR(y = SELF)
+   z IS VAR()
+   ANY_PROOF_OF(y = z)
 
    just(f(z) = f(y))
    AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
@@ -46,8 +49,10 @@ tail_value({
 # Proves z
 inv_eq_t IS 
 tail_value({
-   y IS VAR(SELF)
-   z IS VAR(y = SELF)
+   y IS VAR()
+   ANY_PROOF_OF(y)
+   z IS VAR()
+   ANY_PROOF_OF(y = z)
 
    z AS_LANGUAGE_ITEM(inv_eq_t_statement)
 
@@ -68,12 +73,18 @@ cases_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   equal IS VAR(y = z)
-   not_equal IS VAR(decision(y z false true))
-   statement_when_equal IS VAR(SELF DEP equal)
+   equal IS ANY_PROOF_OF(y = z)
 
-   statement_when_not_equal IS 
-   VAR(SELF DEP not_equal)
+   not_equal IS 
+   ANY_PROOF_OF(decision(y z false true))
+
+   statement_when_equal IS VAR()
+   ANY_PROOF_OF(statement_when_equal DEP equal)
+   statement_when_not_equal IS VAR()
+
+   ANY_PROOF_OF(
+      statement_when_not_equal DEP not_equal
+   )
 
    statement IS 
    decision(

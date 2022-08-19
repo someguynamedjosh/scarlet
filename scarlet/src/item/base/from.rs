@@ -49,7 +49,7 @@ pub(super) fn create_from_dex(env: &Environment, from: ItemPtr, position: Positi
     } else if let Some(var) = from.downcast_definition::<DVariable>() {
         let var_ptr = var.get_variable();
         let var = var_ptr.borrow();
-        let invs = Vec::from(var.get_invariants());
+        let invs = Vec::<ItemPtr>::new();
         let deps = Vec::from(var.get_dependencies());
         if deps.len() > 0 {
             todo!();

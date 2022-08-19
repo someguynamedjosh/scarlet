@@ -19,7 +19,7 @@ use crate::{
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc, JustificationRequirement,
+            JustificationRequirement, OnlyCalledByIcc,
         },
         util::unchecked_substitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
@@ -58,10 +58,26 @@ impl VariableOrder {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum VariableKind {
+    Theorem(ItemPtr),
+    Value,
+}
+
+impl VariableKind {
+    pub fn as_theorem(&self) -> Option<&ItemPtr> {
+        if let Self::Theorem(v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Variable {
     item: ItemPtr,
-    invariants: Vec<ItemPtr>,
+    kind: VariableKind,
     dependencies: Vec<ItemPtr>,
     order: VariableOrder,
 }
@@ -70,9 +86,7 @@ impl Debug for Variable {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut base = f.debug_struct("Variable");
         base.field("item", &self.item.debug_label());
-        if self.invariants.len() > 0 {
-            base.field("invariants", &self.invariants);
-        }
+        base.field("kind", &self.kind);
         if self.dependencies.len() > 0 {
             base.field("dependencies", &self.dependencies);
         }
@@ -87,8 +101,8 @@ impl Variable {
         &self.item
     }
 
-    pub fn invariants(&self) -> &[ItemPtr] {
-        &self.invariants[..]
+    pub fn required_theorem(&self) -> Option<&ItemPtr> {
+        self.kind.as_theorem()
     }
 
     pub fn dependencies(&self) -> &[ItemPtr] {
@@ -99,15 +113,28 @@ impl Variable {
         &self.order
     }
 
-    pub fn new(
+    pub fn new_theorem(
+        statement: ItemPtr,
         dependencies: Vec<ItemPtr>,
-        invariants: Vec<ItemPtr>,
         item: ItemPtr,
         order: VariableOrder,
     ) -> Rc<RefCell<Variable>> {
         rcrc(Self {
             dependencies,
-            invariants,
+            kind: VariableKind::Theorem(statement),
+            item,
+            order,
+        })
+    }
+
+    pub fn new_value(
+        dependencies: Vec<ItemPtr>,
+        item: ItemPtr,
+        order: VariableOrder,
+    ) -> Rc<RefCell<Variable>> {
+        rcrc(Self {
+            dependencies,
+            kind: VariableKind::Value,
             item,
             order,
         })
@@ -138,26 +165,28 @@ impl DVariable {
         Variable::as_dependency(&self.0, affects_return_value)
     }
 
-    pub fn new(
-        invariants: Vec<ItemPtr>,
+    pub fn new_theorem(
+        statement: ItemPtr,
         dependencies: Vec<ItemPtr>,
         order: VariableOrder,
         scope: Box<dyn Scope>,
     ) -> ItemPtr {
         let placeholder = Item::placeholder(format!("variable item"));
-        let variable = Variable {
-            item: placeholder,
-            invariants: invariants.clone(),
-            dependencies: dependencies.clone(),
-            order,
-        };
-        let def = DVariable(
-            rcrc(variable),
-            invariants
-                .into_iter()
-                .chain(dependencies.into_iter())
-                .collect(),
-        );
+        let variable = Variable::new_theorem(statement, dependencies.clone(), placeholder, order);
+        let def = DVariable(variable, dependencies);
+        Item::new_self_referencing(def, scope, |ptr, this| {
+            this.0.borrow_mut().item = ptr;
+        })
+    }
+
+    pub fn new_value(
+        dependencies: Vec<ItemPtr>,
+        order: VariableOrder,
+        scope: Box<dyn Scope>,
+    ) -> ItemPtr {
+        let placeholder = Item::placeholder(format!("variable item"));
+        let variable = Variable::new_value(dependencies.clone(), placeholder, order);
+        let def = DVariable(variable, dependencies);
         Item::new_self_referencing(def, scope, |ptr, this| {
             this.0.borrow_mut().item = ptr;
         })
@@ -165,10 +194,6 @@ impl DVariable {
 }
 
 impl Variable {
-    pub(crate) fn get_invariants(&self) -> &[ItemPtr] {
-        &self.invariants[..]
-    }
-
     pub(crate) fn get_dependencies(&self) -> &[ItemPtr] {
         &self.dependencies
     }
@@ -179,24 +204,6 @@ impl Variable {
             result.append(dep.get_dependencies());
         }
         result
-    }
-
-    pub fn assignment_justifications(
-        this: &VariablePtr,
-        value: ItemPtr,
-        other_subs: &Substitutions,
-    ) -> Vec<JustificationRequirement> {
-        let mut substitutions = other_subs.clone();
-        let mut justifications = Vec::new();
-        substitutions.insert_no_replace(this.ptr_clone(), value);
-        for inv in &this.borrow().invariants {
-            let subbed = unchecked_substitution(inv.ptr_clone(), &substitutions);
-            justifications.push(JustificationRequirement {
-                statement: subbed,
-                allowed_dependencies: this.borrow().get_var_dependencies(),
-            });
-        }
-        justifications
     }
 
     pub fn as_dependency(this: &VariablePtr, affects_return_value: bool) -> Dependencies {
@@ -252,8 +259,8 @@ impl DependenciesFeature for DVariable {
             deps.append(ctx.get_dependencies(&dep, affects_return_value));
         }
         deps.append(Variable::as_dependency(&self.0, affects_return_value));
-        for inv in &self.0.borrow().invariants {
-            deps.append(ctx.get_dependencies(inv, false));
+        if let Some(statement) = self.0.borrow().required_theorem() {
+            deps.append(ctx.get_dependencies(statement, false));
         }
         deps
     }
@@ -369,7 +376,13 @@ impl InvariantsFeature for DVariable {
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        let statements = self.0.borrow().invariants.clone();
+        let statements = self
+            .0
+            .borrow()
+            .required_theorem()
+            .into_iter()
+            .map(ItemPtr::ptr_clone)
+            .collect_vec();
         let dependencies = hashset![this.ptr_clone()];
         Ok(InvariantSet::new_root_statements_depending_on(
             this.ptr_clone(),

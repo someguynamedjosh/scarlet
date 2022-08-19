@@ -1,3 +1,4 @@
+mod any_proof_of;
 mod as_auto_theorem;
 mod as_language_item;
 mod axiom;
@@ -44,6 +45,7 @@ pub fn phrases() -> Vec<Phrase> {
         axiom::phrase(),
         builtin_function::phrase(),
         variable::phrase(),
+        any_proof_of::phrase(),
         equal::phrase(),
         from::phrase(),
         member_access::phrase(),

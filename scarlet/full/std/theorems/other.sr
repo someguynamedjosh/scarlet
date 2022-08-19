@@ -1,6 +1,6 @@
-# From just_t
-# Proves just_t
-just_t IS VAR(SELF)
+# From x
+# Proves x
+just_t IS ANY_PROOF_OF(x)
 
 # From DECISION(y   z   t = u   t = v)
 # Proves t = DECISION(y z u v)
@@ -10,7 +10,8 @@ tail_value({
    z IS VAR()
    t IS VAR()
    u IS VAR()
-   v IS VAR(hypothesis)
+   v IS VAR()
+   ANY_PROOF_OF(hypothesis)
 
    conclusion IS t = conclusion_right
    conclusion_right IS decision(y z u v)
@@ -55,7 +56,7 @@ tail_value({
    # conclusion_when_equal_t SHOWN
 
    conclusion SHOWN
-   assumption2 IS VAR(conclusion)
+   assumption2 IS VAR()
 
    cases_t(
       y 

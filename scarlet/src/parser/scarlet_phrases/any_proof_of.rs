@@ -8,7 +8,6 @@ use crate::{
             unique::DUnique,
             variable::{DVariable, SVariableInvariants, VariableOrder},
         },
-        resolvable::DResolvable,
         Item, ItemDefinition, ItemPtr,
     },
     parser::{
@@ -30,6 +29,7 @@ fn create(
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
     let mut dependencies = Vec::new();
+    let mut statement = None;
     let mut order = VariableOrder::new(
         128,
         node.position.file_index() as _,
@@ -43,9 +43,13 @@ fn create(
         } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
             mode = 2;
         } else if mode == 0 {
-            return Err(Diagnostic::new()
-                .with_text_error(format!("Requirements are not yet supported."))
-                .with_source_code_block_error(arg.position));
+            if statement.is_none() {
+                statement = Some(arg.as_item(pc, env, SPlain(this.ptr_clone()))?);
+            } else {
+                return Err(Diagnostic::new()
+                    .with_text_error(format!("Only one theorem is allowed."))
+                    .with_source_code_block_error(arg.position));
+            }
         } else if mode == 1 {
             let con = arg.as_item(pc, env, SPlain(this.ptr_clone()))?;
             dependencies.push(con);
@@ -57,7 +61,12 @@ fn create(
             mode = 0
         }
     }
-    let item = DVariable::new_value(dependencies, order, scope);
+    let statement = if let Some(statement) = statement {
+        statement
+    } else {
+        todo!("nice error")
+    };
+    let item = DVariable::new_theorem(statement, dependencies, order, scope);
     Ok(item)
 }
 
@@ -113,15 +122,15 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("VAR({})", src.children[2].vomit(pc))
+    format!("ANY_PROOF_OF({})", src.children[2].vomit(pc))
 }
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "variable",
+        "any_proof_of",
         128, 128,
         Some((create, uncreate)),
         vomit,
-        0 => r"\b(VARIABLE|VAR|V)\b" , r"\(", 255, r"\)"
+        0 => r"\b(ANY_PROOF_OF|ANY_PROOF|ANPR)\b" , r"\(", 255, r"\)"
     )
 }

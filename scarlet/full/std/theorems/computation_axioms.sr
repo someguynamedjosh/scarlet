@@ -5,7 +5,8 @@ decision IS basics.decision
 decision_eq_t IS
 tail_value({ 
    y IS VAR()
-   z IS VAR(y = z)
+   z IS VAR()
+   ANY_PROOF_OF(y = z)
    u IS VAR()
    v IS VAR()
 
@@ -20,7 +21,8 @@ tail_value({
 decision_neq_t IS 
 tail_value({
    y IS VAR()
-   z IS VAR(decision(y z false true))
+   z IS VAR()
+   ANY_PROOF_OF(decision(y z false true))
    u IS VAR()
    v IS VAR()
 
@@ -34,8 +36,9 @@ decision_identity_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
+   ANY_PROOF_OF(y = z)
    u IS VAR()
-   v IS VAR(y = z)
+   v IS VAR()
 
    just(decision(y z u v) = u)
    AS_LANGUAGE_ITEM(decision_identity_t_statement)

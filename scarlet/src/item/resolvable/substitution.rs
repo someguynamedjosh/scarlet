@@ -143,15 +143,7 @@ fn make_justification_statements(
     _limit: u32,
 ) -> Result<Vec<JustificationRequirement>, ResolveError> {
     let mut justifications = Vec::new();
-    let mut previous_subs = Substitutions::new();
-    for (target, value) in subs {
-        justifications.append(&mut Variable::assignment_justifications(
-            target,
-            value.ptr_clone(),
-            &previous_subs,
-        ));
-        previous_subs.insert_no_replace(target.ptr_clone(), value.ptr_clone());
-    }
+    // todo!();
     Ok(justifications)
 }
 

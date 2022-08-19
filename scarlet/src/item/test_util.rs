@@ -93,7 +93,7 @@ fn next_variable_order() -> u32 {
 
 pub(super) fn variable() -> ItemPtr {
     let order = VariableOrder::new(0, 0, next_variable_order());
-    DVariable::new(vec![], vec![], order, Box::new(SRoot))
+    DVariable::new_value(vec![], order, Box::new(SRoot))
 }
 
 fn extract_var_ptr_from_item_ptr(item_ptr: &ItemPtr) -> VariablePtr {
@@ -112,7 +112,7 @@ pub(super) fn variable_full() -> (ItemPtr, VariablePtr) {
 
 pub(super) fn variable_full_with_deps(deps: Vec<ItemPtr>) -> (ItemPtr, VariablePtr) {
     let order = VariableOrder::new(0, 0, next_variable_order());
-    let item = DVariable::new(vec![], deps, order, Box::new(SRoot));
+    let item = DVariable::new_value(deps, order, Box::new(SRoot));
     let var = extract_var_ptr_from_item_ptr(&item);
     (item, var)
 }

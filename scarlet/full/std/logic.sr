@@ -1,7 +1,7 @@
 decision IS basics.decision
 
-Bool IS 
-VAR(decision(SELF  true  true  SELF = false))
+Bool IS VAR()
+ANY_PROOF_OF(decision(Bool   true  true  Bool = false))
 
 y IS VAR()
 z IS VAR()
