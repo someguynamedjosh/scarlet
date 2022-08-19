@@ -67,6 +67,9 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Some(cvar) = uncreate.downcast_definition::<DVariable>() {
+        if cvar.get_variable().borrow().required_theorem().is_some() {
+            return Ok(None);
+        }
         let cvar = cvar.clone();
         let scope_item = Item::new_boxed(DUnique::new().clone_into_box(), ctx.scope.dyn_clone());
         let scope_parent = uncreate.dereference();
@@ -75,13 +78,12 @@ fn uncreate<'a>(
 
         let cvar = cvar.clone();
         let var = cvar.get_variable().borrow();
-        let invariants = Vec::new();
         let dependencies = var
             .get_dependencies()
             .into_iter()
             .map(|dep| env.vomit(255, ctx, dep.ptr_clone(), true))
             .collect_vec();
-        let mut body = invariants;
+        let mut body = vec![];
         if dependencies.len() > 0 {
             body.push(Node {
                 phrase: "identifier",

@@ -76,46 +76,50 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Some(cvar) = uncreate.downcast_definition::<DVariable>() {
-        let cvar = cvar.clone();
-        let scope_item = Item::new_boxed(DUnique::new().clone_into_box(), ctx.scope.dyn_clone());
-        let scope_parent = uncreate.dereference();
-        let from = &SWithParent(SVariableInvariants(scope_parent), scope_item);
-        let ctx = &mut ctx.with_scope(from);
+        if let Some(statement) = cvar.get_variable().borrow().required_theorem() {
+            let cvar = cvar.clone();
+            let scope_item =
+                Item::new_boxed(DUnique::new().clone_into_box(), ctx.scope.dyn_clone());
+            let scope_parent = uncreate.dereference();
+            let from = &SWithParent(SVariableInvariants(scope_parent), scope_item);
+            let ctx = &mut ctx.with_scope(from);
 
-        let cvar = cvar.clone();
-        let var = cvar.get_variable().borrow();
-        let invariants = Vec::new();
-        let dependencies = var
-            .get_dependencies()
-            .into_iter()
-            .map(|dep| env.vomit(255, ctx, dep.ptr_clone(), true))
-            .collect_vec();
-        let mut body = invariants;
-        if dependencies.len() > 0 {
-            body.push(Node {
-                phrase: "identifier",
-                children: vec![NodeChild::Text("DEP")],
+            let cvar = cvar.clone();
+            let var = cvar.get_variable().borrow();
+            let dependencies = var
+                .get_dependencies()
+                .into_iter()
+                .map(|dep| env.vomit(255, ctx, dep.ptr_clone(), true))
+                .collect_vec();
+            let mut body = vec![env.vomit(255, ctx, statement.ptr_clone(), true)];
+            if dependencies.len() > 0 {
+                body.push(Node {
+                    phrase: "identifier",
+                    children: vec![NodeChild::Text("DEP")],
+                    ..Default::default()
+                });
+                let mut depends_on = dependencies;
+                body.append(&mut depends_on);
+            }
+            let node = Node {
+                phrase: "any_proof_of",
+                children: vec![
+                    NodeChild::Text("ANY_PROOF_OF"),
+                    NodeChild::Text("("),
+                    create_comma_list(body),
+                    NodeChild::Text(")"),
+                ],
                 ..Default::default()
-            });
-            let mut depends_on = dependencies;
-            body.append(&mut depends_on);
+            };
+            let name = ctx.get_name(env, uncreate.ptr_clone(), || node);
+            Ok(Some(Node {
+                phrase: "identifier",
+                children: vec![NodeChild::Text(name)],
+                ..Default::default()
+            }))
+        } else {
+            Ok(None)
         }
-        let node = Node {
-            phrase: "variable",
-            children: vec![
-                NodeChild::Text("VAR"),
-                NodeChild::Text("("),
-                create_comma_list(body),
-                NodeChild::Text(")"),
-            ],
-            ..Default::default()
-        };
-        let name = ctx.get_name(env, uncreate.ptr_clone(), || node);
-        Ok(Some(Node {
-            phrase: "identifier",
-            children: vec![NodeChild::Text(name)],
-            ..Default::default()
-        }))
     } else {
         Ok(None)
     }

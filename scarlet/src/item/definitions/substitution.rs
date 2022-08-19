@@ -9,12 +9,11 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
             OnlyCalledByDcc,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
-        util::unchecked_substitution,
         ContainmentType, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,

@@ -55,10 +55,10 @@ tail_value({
 
    a_equals_x IS y = x
 
-   inv_eq_t SHOWN
-
    inv_eq_t(y = z  y = c)
    eq_ext_t(a_equals_x z c)
 
-   just_t(y = c)
+   just_t SHOWN
+
+   just_t(y = c) SHOWN
 })

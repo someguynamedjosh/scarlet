@@ -65,6 +65,7 @@ impl Environment {
             }
         });
         for (item_id, from) in to_vomit {
+            println!();
             println!("{}", self.show(item_id, from));
         }
     }
@@ -95,6 +96,7 @@ impl Environment {
             temp_names: &mut temp_names,
             anon_name_counter: &mut 0,
         };
+        result.push_str("\nproves:");
         let set_ptr = item_id.get_invariants().unwrap();
         let set = set_ptr.borrow();
         for invariant in set.statements() {
@@ -102,7 +104,7 @@ impl Environment {
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("\n    {} ", indented(&vomited,),));
         }
-        result.push_str(&format!("\nproof depend on: "));
+        result.push_str(&format!("\nproof depends on: "));
         for dep in set.dependencies() {
             let vomited = self.vomit(255, &mut inv_ctx, dep.ptr_clone(), true);
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
