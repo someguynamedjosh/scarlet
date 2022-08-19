@@ -172,8 +172,19 @@ impl DVariable {
         scope: Box<dyn Scope>,
     ) -> ItemPtr {
         let placeholder = Item::placeholder(format!("variable item"));
-        let variable = Variable::new_theorem(statement, dependencies.clone(), placeholder, order);
-        let def = DVariable(variable, dependencies);
+        let variable = Variable::new_theorem(
+            statement.ptr_clone(),
+            dependencies.clone(),
+            placeholder,
+            order,
+        );
+        let def = DVariable(
+            variable,
+            dependencies
+                .into_iter()
+                .chain(std::iter::once(statement))
+                .collect_vec(),
+        );
         Item::new_self_referencing(def, scope, |ptr, this| {
             this.0.borrow_mut().item = ptr;
         })

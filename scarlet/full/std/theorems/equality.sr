@@ -2,7 +2,7 @@ eq_symm_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = SELF)
+   ANY_PROOF_OF(y = z)
 
    eq_ext_rev_t(x y z)
 
@@ -15,7 +15,7 @@ eq_ext_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = SELF)
+   ANY_PROOF_OF(y = z)
 
    eq_ext_rev_t(f z y)
 
@@ -31,7 +31,7 @@ inv_eq_ext_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = SELF)
+   ANY_PROOF_OF(y = z)
    f IS VAR(DEP x)
    ANY_PROOF_OF(f(y))
 
