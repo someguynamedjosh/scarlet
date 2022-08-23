@@ -11,7 +11,7 @@ use crate::{
             variable::{DVariable, Variable},
         },
         dependencies::{Dcc, Dependencies},
-        invariants::{InvariantSet, InvariantsResult, JustificationRequirement},
+        invariants::{InvariantSet, InvariantsResult},
         util::unchecked_substitution,
         ContainmentType, ItemDefinition, ItemPtr,
     },
@@ -79,18 +79,11 @@ impl Resolvable for RSubstitution {
         let mut remaining_deps = self.base.get_dependencies();
         let total_dep_count = remaining_deps.num_variables();
 
-        self.resolve_named_subs(
-            &base,
-            base_scope,
-            env,
-            &mut subs,
-            &mut remaining_deps,
-        )?;
+        self.resolve_named_subs(&base, base_scope, env, &mut subs, &mut remaining_deps)?;
         self.resolve_anonymous_subs(total_dep_count, remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs)?;
 
-        let justifications = make_justification_statements(&subs, limit)?;
-        let invs = create_invariants(env, this, base, &subs, justifications)?;
+        let invs = create_invariants(env, this, base, &subs)?;
         let csub = DSubstitution::new(self.base.ptr_clone(), subs, invs);
         ResolveResult::Ok(csub.clone_into_box())
     }
@@ -123,7 +116,6 @@ fn create_invariants(
     this: ItemPtr,
     base: ItemPtr,
     subs: &Substitutions,
-    justifications: Vec<JustificationRequirement>,
 ) -> InvariantsResult {
     let mut invs = Vec::new();
     let base_set = base.get_invariants()?;
@@ -132,19 +124,7 @@ fn create_invariants(
         let new_inv = unchecked_substitution(inv.ptr_clone(), subs);
         invs.push(new_inv);
     }
-    Ok(InvariantSet::new(this, invs, justifications, hashset![]))
-}
-
-/// Finds invariants that confirm the substitutions we're performing are legal.
-/// For example, an_int[an_int IS something] would need an invariant of the form
-/// `(an_int FROM I32)[an_int IS something]`.
-fn make_justification_statements(
-    subs: &Substitutions,
-    _limit: u32,
-) -> Result<Vec<JustificationRequirement>, ResolveError> {
-    let mut justifications = Vec::new();
-    // todo!();
-    Ok(justifications)
+    Ok(InvariantSet::new(this, invs))
 }
 
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the

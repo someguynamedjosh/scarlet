@@ -20,7 +20,7 @@ use crate::{
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            JustificationRequirement, OnlyCalledByIcc,
+            OnlyCalledByIcc,
         },
         util::unchecked_substitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
@@ -406,12 +406,7 @@ impl InvariantsFeature for DVariable {
             .into_iter()
             .map(ItemPtr::ptr_clone)
             .collect_vec();
-        let dependencies = hashset![this.ptr_clone()];
-        Ok(InvariantSet::new_root_statements_depending_on(
-            this.ptr_clone(),
-            statements,
-            dependencies,
-        ))
+        Ok(InvariantSet::new(this.ptr_clone(), statements))
     }
 }
 

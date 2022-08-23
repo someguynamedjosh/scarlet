@@ -6,7 +6,9 @@ use crate::{
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc, Dependency, Dependencies},
+        dependencies::{
+            Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
+        },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
@@ -115,8 +117,6 @@ impl InvariantsFeature for DAxiom {
         Ok(InvariantSet::new(
             this.ptr_clone(),
             vec![self.statement.ptr_clone()],
-            vec![],
-            hashset![],
         ))
     }
 }

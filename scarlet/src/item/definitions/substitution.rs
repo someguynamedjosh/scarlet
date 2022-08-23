@@ -7,13 +7,14 @@ use crate::{
         definitions::variable::{DVariable, VariablePtr},
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
-            OnlyCalledByDcc,
+            OnlyCalledByDcc, Requirement,
         },
         equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
+        util::unchecked_substitution,
         ContainmentType, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
@@ -55,11 +56,8 @@ impl DSubstitution {
     // Only allows access if self is an *unchecked* substitution. This ensures
     // soundness.
     pub fn base_mut(&mut self) -> Option<&mut ItemPtr> {
-        if self.invs.borrow().justification_requirements().len() == 0 {
-            Some(&mut self.base)
-        } else {
-            None
-        }
+        // todo!();
+        Some(&mut self.base)
     }
 
     pub fn substitutions(&self) -> &Substitutions {
@@ -69,18 +67,14 @@ impl DSubstitution {
     // Only allows access if self is an *unchecked* substitution. This ensures
     // soundness.
     pub fn substitutions_mut(&mut self) -> Option<&mut Substitutions> {
-        if self.invs.borrow().justification_requirements().len() == 0 {
-            Some(&mut self.subs)
-        } else {
-            None
-        }
+        // todo!();
+        Some(&mut self.subs)
     }
 
     pub fn sub_deps(
         ctx: &mut DependencyCalculationContext,
         base: Dependencies,
         subs: &Substitutions,
-        justifications: &HashSet<ItemPtr>,
         affects_return_value: bool,
     ) -> DepResult {
         const TRACE: bool = false;
@@ -120,15 +114,16 @@ impl DSubstitution {
                 deps.push_value(dep.clone());
             }
         }
+        for req in base.as_requirements() {
+            let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs);
+            deps.push_requirement(Requirement {
+                order: req.order.clone(),
+                statement: replaced_req,
+                swallow_dependencies: req.swallow_dependencies.clone(), // todo!()?
+            });
+        }
         if let Some(err) = base_error {
             deps.append(Dependencies::new_error(err.clone()));
-        }
-        for dep in justifications {
-            if let Some(var) = dep.downcast_definition::<DVariable>() {
-                deps.append(var.as_dependency(false));
-            } else {
-                deps.append(dep.get_dependencies());
-            }
         }
         deps
     }
@@ -164,8 +159,7 @@ impl DependenciesFeature for DSubstitution {
         _: OnlyCalledByDcc,
     ) -> DepResult {
         let base = ctx.get_dependencies(&self.base, affects_return_value);
-        let invs = self.invs.borrow().dependencies().clone();
-        Self::sub_deps(ctx, base, &self.subs, &invs, affects_return_value)
+        Self::sub_deps(ctx, base, &self.subs, affects_return_value)
     }
 }
 

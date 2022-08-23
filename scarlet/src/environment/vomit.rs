@@ -104,12 +104,6 @@ impl Environment {
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
             result.push_str(&format!("\n    {} ", indented(&vomited,),));
         }
-        result.push_str(&format!("\nproof depends on: "));
-        for dep in set.dependencies() {
-            let vomited = self.vomit(255, &mut inv_ctx, dep.ptr_clone(), true);
-            let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            result.push_str(&format!("{}   ", indented(&vomited)));
-        }
         result.push_str(&format!("\ndepends on: "));
         for dep in item_id.get_dependencies().into_variables() {
             let vomited = self.vomit_var(&mut inv_ctx, dep.var.ptr_clone());

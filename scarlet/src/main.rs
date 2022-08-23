@@ -62,13 +62,6 @@ fn entry() {
     println!("Resolved");
     root.check_all();
     println!("Checked!");
-    if let Err(diagnostics) = env.justify_all(&root) {
-        for diagnostic in diagnostics {
-            println!("{}", diagnostic.format_colorful(&file_tree));
-        }
-        return;
-    }
-    println!("Justified!");
     env.show_all_requested(&root);
 }
 
