@@ -2,7 +2,7 @@ use std::collections::{BTreeSet, HashSet};
 
 use maplit::hashset;
 
-use super::{Dependency, requirement::Requirement};
+use super::{requirement::Requirement, Dependency};
 use crate::{
     item::{definitions::variable::VariablePtr, resolvable::UnresolvedItemError, ItemPtr},
     util::PtrExtension,
@@ -111,6 +111,10 @@ impl Dependencies {
 
     pub fn remove(&mut self, var: &VariablePtr) {
         self.dependencies = std::mem::take(&mut self.dependencies)
+            .into_iter()
+            .filter(|x| !x.var.is_same_instance_as(var))
+            .collect();
+        self.requirements = std::mem::take(&mut self.requirements)
             .into_iter()
             .filter(|x| !x.var.is_same_instance_as(var))
             .collect();

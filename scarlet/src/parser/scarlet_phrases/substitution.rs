@@ -40,8 +40,15 @@ fn create(
             let value = sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
             if target.phrase == "ident" {
                 named_subs.push((pos, target.as_ident()?.to_owned(), value));
+            } else if target.phrase == "proof_target" {
+                named_proofs.push((pos, target.children[2].vomit(pc), value));
             } else {
-                named_proofs.push((pos, target.vomit(pc), value));
+                return Err(Diagnostic::new()
+                    .with_text_error(format!(
+                        "Expected an identifier or \"PROOF(statement)\", got a {} instead.",
+                        target.phrase
+                    ))
+                    .with_source_code_block_error(target.position));
             }
         } else {
             anonymous_subs.push(sub.as_item(pc, env, SPlain(this.ptr_clone()))?);

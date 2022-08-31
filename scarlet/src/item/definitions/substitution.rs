@@ -115,8 +115,16 @@ impl DSubstitution {
             }
         }
         for req in base.as_requirements() {
+            if let Some((_, replacement)) = subs
+                .iter()
+                .find(|(var, _)| var.borrow().required_theorem() == Some(&req.statement))
+            {
+                deps.append(replacement.get_dependencies());
+                continue;
+            }
             let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs);
             deps.push_requirement(Requirement {
+                var: req.var.ptr_clone(),
                 order: req.order.clone(),
                 statement: replaced_req,
                 statement_text: req.statement_text.clone(),

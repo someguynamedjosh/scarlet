@@ -1,7 +1,8 @@
-use crate::item::{definitions::variable::VariableOrder, ItemPtr};
+use crate::item::{definitions::variable::{VariableOrder, VariablePtr}, ItemPtr};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Requirement {
+    pub var: VariablePtr,
     pub statement: ItemPtr,
     pub statement_text: String,
     pub swallow_dependencies: Vec<ItemPtr>,

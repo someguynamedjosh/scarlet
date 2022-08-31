@@ -232,6 +232,7 @@ impl Variable {
 
                 if let VariableKind::Theorem(statement, statement_text) = &this.borrow().kind {
                     res.push_requirement(Requirement {
+                        var: this.ptr_clone(),
                         statement: statement.ptr_clone(),
                         statement_text: statement_text.clone(),
                         swallow_dependencies: swallowed
