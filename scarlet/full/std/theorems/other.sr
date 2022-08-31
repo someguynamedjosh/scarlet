@@ -1,6 +1,7 @@
-# From x
-# Proves x
-just_t IS ANY_PROOF(x)
+statement IS VAR()
+# From statement
+# Proves statement
+just_t IS ANY_PROOF(statement)
 
 # From DECISION(y   z   t = u   t = v)
 # Proves t = DECISION(y z u v)

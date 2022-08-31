@@ -58,7 +58,16 @@ impl<'x, 'y> VomitContext<'x, 'y> {
             name.0
         } else {
             let name = if let Some(name) = &of.borrow().name {
-                name.clone()
+                let base_name = name.clone();
+                let mut name = base_name.clone();
+                let mut index = 0;
+                while self.temp_names.iter().any(|x| x.1 .0 == name)
+                    || self.scope.lookup_ident(&name).map(|x| x.is_some()) == Ok(true)
+                {
+                    index += 1;
+                    name = format!("{}_{}", base_name, index);
+                }
+                name
             } else {
                 format!("anon_{}", self.anon_name_counter)
             };
