@@ -6,7 +6,7 @@ decision_eq_t IS
 tail_value({ 
    y IS VAR()
    z IS VAR()
-   y_equals_z_t IS ANY_PROOF_OF(y = z)
+   y_equals_z_t IS ANY_PROOF(y = z)
    u IS VAR()
    v IS VAR()
 
@@ -32,7 +32,7 @@ tail_value({
    z IS VAR()
 
    y_doesnt_equal_z_t IS 
-   ANY_PROOF_OF(decision(y z false true))
+   ANY_PROOF(decision(y z false true))
 
    u IS VAR()
    v IS VAR()
@@ -55,7 +55,7 @@ decision_identity_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   y_equals_z_t IS ANY_PROOF_OF(y = z)
+   y_equals_z_t IS ANY_PROOF(y = z)
    u IS VAR()
    v IS VAR()
 

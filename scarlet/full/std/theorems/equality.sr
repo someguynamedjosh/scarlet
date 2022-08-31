@@ -2,9 +2,9 @@ eq_symm_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   y_is_z_t IS ANY_PROOF(y = z)
 
-   eq_ext_rev_t(x y z)
+   eq_ext_rev_t(x y z) SHOWN
 
    just_t(z = y)
 })
@@ -15,7 +15,7 @@ eq_ext_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   ANY_PROOF(y = z)
 
    eq_ext_rev_t(f z y)
 
@@ -31,9 +31,9 @@ inv_eq_ext_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   ANY_PROOF(y = z)
    f IS VAR(DEP x)
-   ANY_PROOF_OF(f(y))
+   ANY_PROOF(f(y))
 
    # Proves f(y) = f(z)
    eq_ext_t(f y z)
@@ -49,16 +49,14 @@ eq_trans_t IS
 tail_value({
    y IS VAR()
    z IS VAR()
-   ANY_PROOF_OF(y = z)
+   ANY_PROOF(y = z)
    c IS VAR()
-   ANY_PROOF_OF(z = c)
+   ANY_PROOF(z = c)
 
    a_equals_x IS y = x
 
    inv_eq_t(y = z  y = c)
    eq_ext_t(a_equals_x z c)
 
-   just_t SHOWN
-
-   just_t(y = c) SHOWN
+   just_t(y = c)
 })

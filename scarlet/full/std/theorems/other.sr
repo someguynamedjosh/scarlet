@@ -1,6 +1,6 @@
 # From x
 # Proves x
-just_t IS ANY_PROOF_OF(x)
+just_t IS ANY_PROOF(x)
 
 # From DECISION(y   z   t = u   t = v)
 # Proves t = DECISION(y z u v)
@@ -11,7 +11,7 @@ tail_value({
    t IS VAR()
    u IS VAR()
    v IS VAR()
-   ANY_PROOF_OF(hypothesis)
+   ANY_PROOF(hypothesis)
 
    conclusion IS t = conclusion_right
    conclusion_right IS decision(y z u v)
@@ -20,7 +20,7 @@ tail_value({
    decision(y   z   t = u   t = v)
 
    # conclusion_when_equal_t IS tail_value({
-   #    equal IS ANY_PROOF_OF(y = z)
+   #    equal IS ANY_PROOF(y = z)
 
    #    # Proves hypothesis = just(t = u)
    #    decision_eq_t(y   z   t = u   t = v)

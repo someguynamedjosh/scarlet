@@ -104,7 +104,7 @@ fn uncreate<'a>(
             let node = Node {
                 phrase: "any_proof_of",
                 children: vec![
-                    NodeChild::Text("ANY_PROOF_OF"),
+                    NodeChild::Text("ANY_PROOF"),
                     NodeChild::Text("("),
                     create_comma_list(body),
                     NodeChild::Text(")"),
@@ -126,7 +126,7 @@ fn uncreate<'a>(
 }
 
 fn vomit(pc: &ParseContext, src: &Node) -> String {
-    format!("ANY_PROOF_OF({})", src.children[2].vomit(pc))
+    format!("ANY_PROOF({})", src.children[2].vomit(pc))
 }
 
 pub fn phrase() -> Phrase {
@@ -135,6 +135,6 @@ pub fn phrase() -> Phrase {
         128, 128,
         Some((create, uncreate)),
         vomit,
-        0 => r"\b(ANY_PROOF_OF|ANY_PROOF|ANPR)\b" , r"\(", 255, r"\)"
+        0 => r"\b(ANY_PROOF|ANY_PROOF|ANPR)\b" , r"\(", 255, r"\)"
     )
 }
