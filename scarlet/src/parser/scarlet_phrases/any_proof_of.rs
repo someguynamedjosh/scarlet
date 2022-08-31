@@ -44,7 +44,10 @@ fn create(
             mode = 2;
         } else if mode == 0 {
             if statement.is_none() {
-                statement = Some(arg.as_item(pc, env, SPlain(this.ptr_clone()))?);
+                statement = Some((
+                    arg.as_item(pc, env, SPlain(this.ptr_clone()))?,
+                    arg.vomit(pc),
+                ));
             } else {
                 return Err(Diagnostic::new()
                     .with_text_error(format!("Only one theorem is allowed."))
@@ -61,12 +64,12 @@ fn create(
             mode = 0
         }
     }
-    let statement = if let Some(statement) = statement {
+    let (statement, statement_text) = if let Some(statement) = statement {
         statement
     } else {
         todo!("nice error")
     };
-    let item = DVariable::new_theorem(statement, dependencies, order, scope);
+    let item = DVariable::new_theorem(statement, statement_text, dependencies, order, scope);
     Ok(item)
 }
 

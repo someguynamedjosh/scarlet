@@ -61,13 +61,13 @@ impl VariableOrder {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VariableKind {
-    Theorem(ItemPtr),
+    Theorem(ItemPtr, String),
     Value,
 }
 
 impl VariableKind {
     pub fn as_theorem(&self) -> Option<&ItemPtr> {
-        if let Self::Theorem(v) = self {
+        if let Self::Theorem(v, _) = self {
             Some(v)
         } else {
             None
@@ -116,13 +116,14 @@ impl Variable {
 
     pub fn new_theorem(
         statement: ItemPtr,
+        statement_text: String,
         dependencies: Vec<ItemPtr>,
         item: ItemPtr,
         order: VariableOrder,
     ) -> Rc<RefCell<Variable>> {
         rcrc(Self {
             dependencies,
-            kind: VariableKind::Theorem(statement),
+            kind: VariableKind::Theorem(statement, statement_text),
             item,
             order,
         })
@@ -168,6 +169,7 @@ impl DVariable {
 
     pub fn new_theorem(
         statement: ItemPtr,
+        statement_text: String,
         dependencies: Vec<ItemPtr>,
         order: VariableOrder,
         scope: Box<dyn Scope>,
@@ -175,6 +177,7 @@ impl DVariable {
         let placeholder = Item::placeholder(format!("variable item"));
         let variable = Variable::new_theorem(
             statement.ptr_clone(),
+            statement_text,
             dependencies.clone(),
             placeholder,
             order,
@@ -227,9 +230,10 @@ impl Variable {
             Ok(swallowed) => {
                 let mut res = Dependencies::new();
 
-                if let Some(theorem) = this.borrow().kind.as_theorem() {
+                if let VariableKind::Theorem(statement, statement_text) = &this.borrow().kind {
                     res.push_requirement(Requirement {
-                        statement: theorem.ptr_clone(),
+                        statement: statement.ptr_clone(),
+                        statement_text: statement_text.clone(),
                         swallow_dependencies: swallowed
                             .filter_map(|x| x.var.borrow().kind.as_theorem().map(|x| x.ptr_clone()))
                             .collect(),

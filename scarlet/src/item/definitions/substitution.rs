@@ -119,6 +119,7 @@ impl DSubstitution {
             deps.push_requirement(Requirement {
                 order: req.order.clone(),
                 statement: replaced_req,
+                statement_text: req.statement_text.clone(),
                 swallow_dependencies: req.swallow_dependencies.clone(), // todo!()?
             });
         }

@@ -21,6 +21,20 @@ pub struct VomitContext<'x, 'y> {
 }
 
 impl<'x, 'y> VomitContext<'x, 'y> {
+    pub fn with_new_self<T>(
+        pc: &ParseContext,
+        scope: &dyn Scope,
+        f: impl for<'xx, 'yy> FnOnce(VomitContext<'xx, 'yy>) -> T,
+    ) -> T {
+        f(VomitContext {
+            pc,
+            code_arena: &Arena::new(),
+            scope,
+            temp_names: &mut OrderedMap::new(),
+            anon_name_counter: &mut 0,
+        })
+    }
+
     pub fn with_scope<'yy>(&'yy mut self, scope: &'yy dyn Scope) -> VomitContext<'x, 'yy>
     where
         'y: 'yy,
@@ -117,7 +131,11 @@ impl Environment {
         for req in item_id.get_dependencies().as_requirements() {
             let vomited = self.vomit(255, &mut inv_ctx, req.statement.ptr_clone(), true);
             let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-            result.push_str(&format!("{}   ", indented(&vomited)));
+            result.push_str(&format!(
+                "\n    PROOF({}) (specifically, a proof of {})",
+                req.statement_text,
+                indented(&vomited)
+            ));
         }
 
         result.push_str(&Self::format_vomit_temp_names(&inv_ctx));
