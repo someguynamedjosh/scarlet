@@ -144,19 +144,29 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
         let mut dep_subs = Substitutions::new();
         let value_deps = value.get_dependencies();
         let mut value_deps_iter = value_deps.as_variables();
-        for dep in target.borrow().get_dependencies() {
-            let dep_args = dep.get_dependencies();
-            for desired_arg in dep_args.as_complete_variables()? {
-                // We want to convert a dependency in the value to the
-                // dependency required by the variable it is assigned to.
-                if let Some(existing_dep) = value_deps_iter.next() {
-                    if !existing_dep.is_same_variable_as(&desired_arg) {
-                        let desired_dep = desired_arg.var.borrow().item().ptr_clone();
-                        dep_subs.insert_no_replace(existing_dep.var.ptr_clone(), desired_dep);
-                    }
-                } else if let Some(err) = value_deps.error() {
-                    return Err(err.clone().into());
+        let mut value_reqs_iter = value_deps.as_requirements();
+        for target_dep in target.borrow().get_dependencies() {
+            let target_dep = target_dep.dereference();
+            let target_dep = target_dep
+                .downcast_resolved_definition::<DVariable>()?
+                .unwrap();
+            let existing_dep = if target_dep
+                .get_variable()
+                .borrow()
+                .required_theorem()
+                .is_some()
+            {
+                value_reqs_iter.next().map(|x| &x.var)
+            } else {
+                value_deps_iter.next().map(|x| &x.var)
+            };
+            if let Some(existing_dep) = existing_dep {
+                if !existing_dep.is_same_instance_as(target_dep.get_variable()) {
+                    let desired_dep = target_dep.get_variable().borrow().item().ptr_clone();
+                    dep_subs.insert_no_replace(existing_dep.ptr_clone(), desired_dep);
                 }
+            } else if let Some(err) = value_deps.error() {
+                return Err(err.clone().into());
             }
         }
         if dep_subs.len() > 0 {

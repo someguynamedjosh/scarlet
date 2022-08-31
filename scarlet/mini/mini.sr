@@ -33,10 +33,10 @@ precondition IS x = y
 precondition_t IS ANY_PROOF(precondition)
 postcondition IS x = x
 postcondition_t IS ANY_PROOF(postcondition DEP precondition_t)
-postcondition_t SHOWN
+postcondition_t
 
-proof IS ANY_PROOF(x = x DEP ANY_PROOF(x = y))
+proof IS ANY_PROOF(x = x DEP ANY_PROOF(x = y) ORD 200)
+proof(PROOF(x = y) IS precondition_t) SHOWN
 
-# postcondition_t SHOWN
 # proof SHOWN
-postcondition_t({} PROOF(postcondition) IS proof({})) SHOWN
+postcondition_t(PROOF(postcondition) IS proof) SHOWN
