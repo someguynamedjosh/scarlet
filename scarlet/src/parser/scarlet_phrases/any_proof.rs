@@ -105,7 +105,7 @@ fn uncreate<'a>(
                 body.append(&mut depends_on);
             }
             let node = Node {
-                phrase: "any_proof_of",
+                phrase: "any_proof",
                 children: vec![
                     NodeChild::Text("ANY_PROOF"),
                     NodeChild::Text("("),
@@ -134,7 +134,7 @@ fn vomit(pc: &ParseContext, src: &Node) -> String {
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "any_proof_of",
+        "any_proof",
         128, 128,
         Some((create, uncreate)),
         vomit,
