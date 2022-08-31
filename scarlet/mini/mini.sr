@@ -29,9 +29,11 @@ tail IS BUILTIN_FUNCTION(tail_value)
 
 statement IS VAR()
 just_t IS ANY_PROOF(statement)
+just IS VAR()
 
 thing IS tail({
     x IS VAR()
+    y IS VAR()
     just_t(x)
 })
 
