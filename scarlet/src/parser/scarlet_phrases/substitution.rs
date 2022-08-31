@@ -38,7 +38,7 @@ fn create(
             let target = sub.children[0].as_node();
             let pos = target.position;
             let value = sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
-            if target.phrase == "ident" {
+            if target.phrase == "identifier" {
                 named_subs.push((pos, target.as_ident()?.to_owned(), value));
             } else if target.phrase == "proof_target" {
                 named_proofs.push((pos, target.children[2].vomit(pc), value));

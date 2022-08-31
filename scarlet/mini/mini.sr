@@ -27,31 +27,12 @@ true AS_LANGUAGE_ITEM(inv_eq_t_statement)
 
 tail IS BUILTIN_FUNCTION(tail_value)
 
-predicate_t IS tail({
-   y IS VAR()
-   statement_when_equal IS VAR(SELF DEP z)
-   z IS VAR(y)
+statement IS VAR()
+just_t IS ANY_PROOF(statement)
 
-   statement IS statement_when_equal
-   AS_LANGUAGE_ITEM(cases_t_statement)
-
-   AXIOM(cases_t)
+thing IS tail({
+    x IS VAR()
+    just_t(x)
 })
 
-void_from_false_t IS tail({
-    assume_false IS VAR(false)
-
-    statement IS tail({assume_false = void})
-    AS_LANGUAGE_ITEM(refl_t_statement)
-    
-    AXIOM(refl_t)
-})
-
-# predicate_t SHOWN
-
-assumption IS VAR(false)
-conclusion IS false = void
-void_from_false_t(false)
-
-predicate_t(false conclusion)
-SHOWN
+thing SHOWN

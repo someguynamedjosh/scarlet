@@ -3,58 +3,99 @@ statement IS VAR()
 # Proves statement
 just_t IS ANY_PROOF(statement)
 
-# From DECISION(y   z   t = u   t = v)
-# Proves t = DECISION(y z u v)
-extract_eq_from_decision_t IS 
+# From decision(y   z   t = u   t = v)
+# Proves t = decision(y z u v)
+extract_equals_from_decision_t IS 
 tail_value({
    y IS VAR()
    z IS VAR()
    t IS VAR()
    u IS VAR()
    v IS VAR()
-   ANY_PROOF(hypothesis)
+   hypothesis_is_true IS ANY_PROOF(hypothesis)
 
    conclusion IS t = conclusion_right
    conclusion_right IS decision(y z u v)
 
    hypothesis IS 
-   decision(y   z   t = u   t = v)
+   decision(y z t = u t = v)
 
-   # conclusion_when_equal_t IS tail_value({
-   #    equal IS ANY_PROOF(y = z)
+   conclusion_when_equal_t IS tail_value({
+      equal IS ANY_PROOF(y = z)
 
-   #    # Proves hypothesis = just(t = u)
-   #    decision_eq_t(y   z   t = u   t = v)
-   #    # Proves t = u
-   #    inv_eq_t(hypothesis   t = u)
-   #    # Proves conclusion_right = u
-   #    decision_eq_t(y z u v)
-   #    # Proves u = conclusion_right
-   #    eq_symm_t(conclusion_right u)
-   #    # Proves t = conclusion_right
-   #    eq_trans_t(t u conclusion_right)
+      # Proves hypothesis = just(t = u)
+      t1 IS decision_eq_t(
+         y z t = u t = v
+         PROOF(y = z) IS equal
+      )
+      # Proves t = u
+      t2 IS inv_eq_t(
+         hypothesis t = u
+         PROOF(y) IS hypothesis_is_true
+         PROOF(y = z) IS t1
+      )
+      # Proves conclusion_right = u
+      t3 IS decision_eq_t(
+         y z u v
+         PROOF(y = z) IS equal
+      )
+      # Proves u = conclusion_right
+      t4 IS eq_symm_t(
+         conclusion_right u
+         PROOF(y = z) IS t3
+      )
+      # Proves t = conclusion_right
+      t5 IS eq_trans_t(
+         t u conclusion_right
+         PROOF(y = w) IS t2
+         PROOF(w = z) IS t4
+      )
 
-   #    just_t(conclusion)
-   # })
+      just_t(
+         conclusion
+         PROOF(statement) IS t5
+      )
+   })
 
-   # conclusion_when_not_equal_t IS tail_value({
-   #    not_equal IS VAR(decision(y z false true) ORD 2)
+   conclusion_when_not_equal_t IS tail_value({
+      not_equal IS ANY_PROOF(decision(y z false true))
 
-   #    # Proves hypothesis = just(t = v)
-   #    decision_neq_t(y   z   t = u   t = v)
-   #    # Proves t = v
-   #    inv_eq_t(hypothesis   t = v)
-   #    # Proves conclusion_right = v
-   #    decision_neq_t(y z u v)
-   #    # Proves v = conclusion_right
-   #    eq_symm_t(conclusion_right v)
-   #    # Proves t = conclusion_right
-   #    eq_trans_t(t v conclusion_right)
+      # Proves hypothesis = just(t = v)
+      t1 IS decision_neq_t(
+         y z t = u t = v
+         PROOF(decision(y z false true)) IS not_equal
+      )
+      # Proves t = v
+      t2 IS inv_eq_t(
+         hypothesis t = v
+         PROOF(y) IS hypothesis_is_true
+         PROOF(y = z) IS t1
+      )
+      # Proves conclusion_right = v
+      t3 IS decision_neq_t(
+         y z u v
+         PROOF(decision(y z false true)) IS not_equal
+      )
+      # Proves v = conclusion_right
+      t4 IS eq_symm_t(
+         conclusion_right v
+         PROOF(y = z) IS t3
+      )
+      # Proves t = conclusion_right
+      t5 IS eq_trans_t(
+         t v conclusion_right
+         PROOF(y = w) IS t2
+         PROOF(w = z) IS t4
+      )
 
-   #    just_t(conclusion)
-   # })
+      just_t(
+         conclusion
+         PROOF(statement) IS t5
+      )
+   })
 
-   # conclusion_when_equal_t SHOWN
+   conclusion_when_equal_t SHOWN
+   # just_t(conclusion) SHOWN
 
    # cases_t(
    #    y 
