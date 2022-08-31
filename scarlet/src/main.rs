@@ -54,12 +54,17 @@ fn entry() {
         }
     };
     if let Err(diagnostics) = resolve_all(&mut env, root.ptr_clone()) {
+        env.show_full_info_for_all_requested(&root);
         for diagnostic in diagnostics {
             println!("{}", diagnostic.format_colorful(&file_tree));
         }
         return;
     }
     println!("Resolved");
+
+    env.show_full_info_for_all_requested(&root);
+    println!();
+
     if let Err(diagnostics) = root.check_all(&mut env) {
         for diagnostic in diagnostics {
             println!("{}", diagnostic.format_colorful(&file_tree));
@@ -67,7 +72,6 @@ fn entry() {
         return;
     }
     println!("Checked!");
-    env.show_full_info_for_all_requested(&root);
 }
 
 fn main() {

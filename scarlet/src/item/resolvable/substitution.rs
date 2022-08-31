@@ -106,6 +106,9 @@ impl Resolvable for RSubstitution {
         for (_, _, value) in &self.named_subs {
             result.push((ContainmentType::Computational, value));
         }
+        for (_, _, proof) in &self.named_proofs {
+            result.push((ContainmentType::Definitional, proof));
+        }
         for value in &self.anonymous_subs {
             result.push((ContainmentType::Computational, value));
         }
