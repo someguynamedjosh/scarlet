@@ -14,6 +14,7 @@ mod structt;
 mod substitution;
 mod unique;
 mod variable;
+mod proof_target;
 
 use super::phrase::Phrase;
 
@@ -54,6 +55,7 @@ pub fn phrases() -> Vec<Phrase> {
         as_auto_theorem::phrase(),
         substitution::phrase(),
         structt::phrase(),
+        proof_target::phrase(),
         is::phrase(),
         multiple_items::phrase(),
         identifier::phrase(),

@@ -4,7 +4,10 @@ tail_value({
    z IS VAR()
    y_is_z_t IS ANY_PROOF(y = z)
 
-   eq_ext_rev_t(x y z) SHOWN
+   eq_ext_rev_t(
+      x y z
+      PROOF(y = z) IS y_is_z_t
+   ) SHOWN
 
    just_t(z = y)
 })

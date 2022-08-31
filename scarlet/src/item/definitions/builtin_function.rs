@@ -69,6 +69,7 @@ impl DBuiltinFunction {
             base,
             position,
             named_subs: Default::default(),
+            named_proofs: Default::default(),
             anonymous_subs: args,
         }
     }

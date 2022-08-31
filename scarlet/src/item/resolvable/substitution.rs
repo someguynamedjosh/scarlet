@@ -25,6 +25,7 @@ pub struct RSubstitution {
     pub base: ItemPtr,
     pub position: Position,
     pub named_subs: Vec<(Position, String, ItemPtr)>,
+    pub named_proofs: Vec<(Position, String, ItemPtr)>,
     pub anonymous_subs: Vec<ItemPtr>,
 }
 

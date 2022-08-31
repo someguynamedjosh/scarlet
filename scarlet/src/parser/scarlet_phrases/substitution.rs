@@ -7,7 +7,7 @@ use crate::{
         definitions::{substitution::DSubstitution, variable::VariablePtr},
         dependencies::Dependency,
         resolvable::{DResolvable, RSubstitution, UnresolvedItemError},
-        ItemDefinition, ItemPtr, Item,
+        Item, ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -31,15 +31,18 @@ fn create(
     let this = Item::placeholder_with_scope(format!("substitution"), scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let mut named_subs = Vec::new();
+    let mut named_proofs = Vec::new();
     let mut anonymous_subs = Vec::new();
     for sub in util::collect_comma_list(&node.children[2]) {
         if sub.phrase == "is" {
-            let name = sub.children[0].as_node();
-            named_subs.push((
-                name.position,
-                name.as_ident()?.to_owned(),
-                sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?,
-            ));
+            let target = sub.children[0].as_node();
+            let pos = target.position;
+            let value = sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+            if target.phrase == "ident" {
+                named_subs.push((pos, target.as_ident()?.to_owned(), value));
+            } else {
+                named_proofs.push((pos, target.vomit(pc), value));
+            }
         } else {
             anonymous_subs.push(sub.as_item(pc, env, SPlain(this.ptr_clone()))?);
         }
@@ -49,6 +52,7 @@ fn create(
             base,
             position: node.position,
             named_subs,
+            named_proofs,
             anonymous_subs,
         })
         .clone_into_box(),

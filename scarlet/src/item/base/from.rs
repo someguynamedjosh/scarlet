@@ -99,7 +99,8 @@ fn create_and(
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
             position: Position::placeholder(),
-            named_subs: vec![].into_iter().collect(),
+            named_subs: Default::default(),
+            named_proofs: Default::default(),
             anonymous_subs: vec![left, right],
         }),
         scope,
@@ -112,7 +113,8 @@ fn redefine_as_and(env: &Environment, original: ItemPtr, left: ItemPtr, right: I
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
             position: Position::placeholder(),
-            named_subs: vec![].into_iter().collect(),
+            named_subs: Default::default(),
+            named_proofs: Default::default(),
             anonymous_subs: vec![left, right],
         })
         .clone_into_box(),
