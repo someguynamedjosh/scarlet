@@ -180,8 +180,6 @@ impl CheckFeature for DSubstitution {
                         continue 'check_next_sub;
                     }
                 }
-                println!("{:#?}", value_subs);
-                println!("{:#?}", subbed_theorem.borrow());
                 failures.push((value.ptr_clone(), subbed_theorem.ptr_clone()));
             }
         }

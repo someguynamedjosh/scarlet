@@ -2,6 +2,7 @@ use typed_arena::Arena;
 
 use super::{Environment, ItemPtr};
 use crate::{
+    diagnostic::Position,
     item::{
         definitions::variable::{SVariableInvariants, VariablePtr},
         resolvable::DResolvable,
@@ -213,13 +214,30 @@ impl Environment {
             }
         }
         for (_, phrase) in &ctx.pc.phrases_sorted_by_vomit_priority {
-            if phrase.precedence > max_precedence {
-                continue;
-            }
             if let Some((_, uncreator)) = phrase.create_and_uncreate {
                 match uncreator(self, ctx, item_ptr.ptr_clone()) {
                     Err(new_err) => err = Some(new_err),
-                    Ok(Some(uncreated)) => return uncreated,
+                    Ok(Some(uncreated)) => {
+                        return if phrase.precedence > max_precedence {
+                            // TODO: Get actual "just" function.
+                            Node {
+                                phrase: "substitution",
+                                children: vec![
+                                    NodeChild::Node(Node {
+                                        phrase: "identifier",
+                                        children: vec![NodeChild::Text("just")],
+                                        position: Position::placeholder(),
+                                    }),
+                                    NodeChild::Text("("),
+                                    NodeChild::Node(uncreated),
+                                    NodeChild::Text(")"),
+                                ],
+                                position: Position::placeholder(),
+                            }
+                        } else {
+                            uncreated
+                        }
+                    }
                     _ => (),
                 }
             }
