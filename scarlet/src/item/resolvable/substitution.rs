@@ -121,9 +121,14 @@ fn create_invariants(
 ) -> InvariantsResult {
     let mut invs = Vec::new();
     let base_set = base.get_invariants()?;
+    let value_subs = subs
+        .iter()
+        .filter(|x| x.0.borrow().required_theorem().is_none())
+        .cloned()
+        .collect();
     for inv in base_set.borrow().statements() {
         // Apply the substitutions to the statement the invariant is making.
-        let new_inv = unchecked_substitution(inv.ptr_clone(), subs);
+        let new_inv = unchecked_substitution(inv.ptr_clone(), &value_subs);
         invs.push(new_inv);
     }
     Ok(InvariantSet::new(this, invs))

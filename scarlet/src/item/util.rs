@@ -14,7 +14,11 @@ pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
         return base;
     } else if subs.len() == 1 {
         let (target, value) = subs.iter().next().unwrap();
-        if target.borrow().item().is_same_instance_as(&base) {
+        if target
+            .borrow()
+            .item()
+            .is_same_instance_as(&base.dereference())
+        {
             return value.ptr_clone();
         }
     }
