@@ -21,20 +21,6 @@ pub struct VomitContext<'x, 'y> {
 }
 
 impl<'x, 'y> VomitContext<'x, 'y> {
-    pub fn with_new_self<T>(
-        pc: &ParseContext,
-        scope: &dyn Scope,
-        f: impl for<'xx, 'yy> FnOnce(VomitContext<'xx, 'yy>) -> T,
-    ) -> T {
-        f(VomitContext {
-            pc,
-            code_arena: &Arena::new(),
-            scope,
-            temp_names: &mut OrderedMap::new(),
-            anon_name_counter: &mut 0,
-        })
-    }
-
     pub fn with_scope<'yy>(&'yy mut self, scope: &'yy dyn Scope) -> VomitContext<'x, 'yy>
     where
         'y: 'yy,
@@ -80,7 +66,7 @@ impl<'x, 'y> VomitContext<'x, 'y> {
 }
 
 impl Environment {
-    pub fn show_all_requested(&mut self, root: &ItemPtr) {
+    pub fn show_full_info_for_all_requested(&mut self, root: &ItemPtr) {
         let mut to_vomit: Vec<(ItemPtr, ItemPtr)> = Vec::new();
         root.for_self_and_deep_contents(&mut |item| {
             if item.borrow().show && !to_vomit.iter().any(|x| x.0.is_same_instance_as(item)) {
@@ -89,11 +75,11 @@ impl Environment {
         });
         for (item_id, from) in to_vomit {
             println!();
-            println!("{}", self.show(item_id, from));
+            println!("{}", self.full_info(item_id, from));
         }
     }
 
-    pub fn show(&mut self, item_id: ItemPtr, from_item: ItemPtr) -> String {
+    pub fn full_info(&mut self, item_id: ItemPtr, from_item: ItemPtr) -> String {
         let mut result = String::new();
 
         let from = from_item.clone_scope();
@@ -151,6 +137,28 @@ impl Environment {
         result
     }
 
+    pub fn format(&mut self, item_id: ItemPtr, from_item: ItemPtr) -> String {
+        let mut result = String::new();
+
+        let from = from_item.clone_scope();
+        let code_arena = Arena::new();
+        let pc = ParseContext::new();
+        let mut temp_names = OrderedMap::new();
+        let mut ctx = VomitContext {
+            pc: &pc,
+            code_arena: &code_arena,
+            scope: &*from,
+            temp_names: &mut temp_names,
+            anon_name_counter: &mut 0,
+        };
+        let original_vomit = self.vomit(255, &mut ctx, item_id.ptr_clone(), false);
+        let original_vomit = Self::format_vomit_output(&ctx, original_vomit);
+        result.push_str(&format!("{}", original_vomit));
+
+        result.push_str(&Self::format_vomit_temp_names(&ctx));
+        result
+    }
+
     fn format_vomit_output(ctx: &VomitContext, output: Node) -> String {
         output.vomit(&ctx.pc)
     }
@@ -172,7 +180,7 @@ impl Environment {
     }
 
     pub fn show_var(&mut self, var: VariablePtr, from: ItemPtr) -> String {
-        self.show(var.borrow().item().ptr_clone(), from)
+        self.full_info(var.borrow().item().ptr_clone(), from)
     }
 
     pub fn vomit_var<'a>(&mut self, ctx: &mut VomitContext<'a, '_>, var: VariablePtr) -> Node<'a> {

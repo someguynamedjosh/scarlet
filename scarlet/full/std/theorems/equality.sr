@@ -6,10 +6,10 @@ tail_value({
 
    eq_ext_rev_t(
       x y z
-      PROOF(y = z) IS y_is_z_t
-   ) SHOWN
+      PROOF(y = z) IS y
+   )
 
-   just_t(z = y)
+   just_t(z = y) SHOWN
 })
 
 # From y = z

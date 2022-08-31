@@ -45,7 +45,7 @@ fn create(
             } else {
                 return Err(Diagnostic::new()
                     .with_text_error(format!(
-                        "Expected an identifier or \"PROOF(statement)\", got a {} instead.",
+                        "Expected an identifier or proof label phrase (PROOF(statement)), got a {} phrase instead.",
                         target.phrase
                     ))
                     .with_source_code_block_error(target.position));

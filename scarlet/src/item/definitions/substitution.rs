@@ -1,9 +1,11 @@
 use std::{collections::HashSet, fmt::Debug};
 
 use crate::{
+    diagnostic::Diagnostic,
+    environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
-        check::CheckFeature,
+        check::{CheckFeature, CheckResult},
         definitions::variable::{DVariable, VariablePtr},
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
@@ -157,7 +159,47 @@ impl ItemDefinition for DSubstitution {
     }
 }
 
-impl CheckFeature for DSubstitution {}
+impl CheckFeature for DSubstitution {
+    fn check_self(&self, this: &ItemPtr, env: &mut Environment) -> CheckResult {
+        let value_subs = self
+            .subs
+            .iter()
+            .filter(|x| x.0.borrow().required_theorem().is_none())
+            .cloned()
+            .collect();
+        let mut failures = Vec::new();
+        'check_next_sub: for (target, value) in &self.subs {
+            if let Some(theorem) = target.borrow().required_theorem() {
+                let subbed_theorem = unchecked_substitution(theorem.ptr_clone(), &value_subs);
+                for inv in value.get_invariants().unwrap().borrow().statements() {
+                    if inv
+                        .get_trimmed_equality(&subbed_theorem)
+                        .unwrap()
+                        .is_trivial_yes()
+                    {
+                        continue 'check_next_sub;
+                    }
+                }
+                println!("{:#?}", value_subs);
+                println!("{:#?}", subbed_theorem.borrow());
+                failures.push((value.ptr_clone(), subbed_theorem.ptr_clone()));
+            }
+        }
+        if failures.is_empty() {
+            Ok(())
+        } else {
+            let mut diag = Diagnostic::new();
+            for (value, statement) in failures {
+                diag = diag
+                    .with_text_error(format!("The following expression:"))
+                    .with_item_error(&value, this, env)
+                    .with_text_error(format!("Fails to prove the following statement:"))
+                    .with_item_error(&statement, this, env);
+            }
+            Err(diag)
+        }
+    }
+}
 
 impl DependenciesFeature for DSubstitution {
     fn get_dependencies_using_context(

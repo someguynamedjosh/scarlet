@@ -21,7 +21,7 @@ use super::{
     util::Stack,
 };
 use crate::{
-    diagnostic::Position,
+    diagnostic::{Diagnostic, Position},
     environment::Environment,
     item::{
         definitions::{
@@ -264,10 +264,22 @@ impl ItemPtr {
         }
     }
 
-    pub fn check_all(&self) {
+    pub fn check_all(&self, env: &mut Environment) -> Result<(), Vec<Diagnostic>> {
+        let mut diagnostics = Vec::new();
         self.for_self_and_deep_contents(&mut |item| {
-            item.borrow().definition.check_self(item).unwrap();
-        })
+            diagnostics.extend(
+                item.borrow()
+                    .definition
+                    .check_self(item, env)
+                    .err()
+                    .into_iter(),
+            );
+        });
+        if diagnostics.is_empty() {
+            Ok(())
+        } else {
+            Err(diagnostics)
+        }
     }
 
     pub fn for_self_and_deep_contents_impl(

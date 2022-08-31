@@ -60,9 +60,14 @@ fn entry() {
         return;
     }
     println!("Resolved");
-    root.check_all();
+    if let Err(diagnostics) = root.check_all(&mut env) {
+        for diagnostic in diagnostics {
+            println!("{}", diagnostic.format_colorful(&file_tree));
+        }
+        return;
+    }
     println!("Checked!");
-    env.show_all_requested(&root);
+    env.show_full_info_for_all_requested(&root);
 }
 
 fn main() {
