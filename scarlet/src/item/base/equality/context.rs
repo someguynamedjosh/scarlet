@@ -242,7 +242,7 @@ impl EqualityCalculationContext {
             EqualityTestSide::Right => &self.lhs_subs,
         };
         for subs in sub_list {
-            other = unchecked_substitution(other, subs);
+            other = unchecked_substitution(other, subs).unwrap();
         }
         other
     }

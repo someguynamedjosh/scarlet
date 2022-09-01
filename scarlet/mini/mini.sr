@@ -36,7 +36,7 @@ postcondition_t IS ANY_PROOF(postcondition DEP precondition_t)
 postcondition_t
 
 proof IS ANY_PROOF(x = x DEP ANY_PROOF(x = y) ORD 200)
-proof(PROOF(x = y) IS precondition_t) SHOWN
+proof(PROOF(x = y) IS precondition_t)
 
 # proof SHOWN
 postcondition_t(PROOF(postcondition) IS proof) SHOWN

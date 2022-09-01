@@ -4,14 +4,17 @@ use super::{
         placeholder::DPlaceholder,
         substitution::{DSubstitution, Substitutions},
     },
-    resolvable::DResolvable,
+    resolvable::{DResolvable, UnresolvedItemError},
     resolve, Item, ItemPtr,
 };
 use crate::{diagnostic::Position, environment::Environment, scope::SRoot};
 
-pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
+pub fn unchecked_substitution(
+    base: ItemPtr,
+    subs: &Substitutions,
+) -> Result<ItemPtr, UnresolvedItemError> {
     if subs.len() == 0 {
-        return base;
+        return Ok(base);
     } else if subs.len() == 1 {
         let (target, value) = subs.iter().next().unwrap();
         if target
@@ -19,7 +22,7 @@ pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
             .item()
             .is_same_instance_as(&base.dereference())
         {
-            return value.ptr_clone();
+            return Ok(value.ptr_clone());
         }
     }
     unchecked_substitution_without_shortcuts(base, subs)
@@ -27,10 +30,12 @@ pub fn unchecked_substitution(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
 
 /// Unlike unchecked_substitution, does not simplify cases like abc[] or def[def
 /// IS ghjkl]
-pub fn unchecked_substitution_without_shortcuts(base: ItemPtr, subs: &Substitutions) -> ItemPtr {
+pub fn unchecked_substitution_without_shortcuts(
+    base: ItemPtr,
+    subs: &Substitutions,
+) -> Result<ItemPtr, UnresolvedItemError> {
     let scope = base.clone_scope();
-    let def = DSubstitution::new_unchecked(base, subs.clone());
-    Item::new_boxed(Box::new(def), scope)
+    DSubstitution::new(base, subs.clone())
 }
 
 pub fn decision(

@@ -124,7 +124,7 @@ impl From<Diagnostic> for ResolveError {
 }
 
 pub enum ResolveResult {
-    Ok(Box<dyn ItemDefinition>),
+    Ok,
     Err(ResolveError),
 }
 

@@ -16,8 +16,9 @@ use crate::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
+        resolvable::UnresolvedItemError,
         util::unchecked_substitution,
-        ContainmentType, ItemDefinition, ItemPtr,
+        ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
     util::PtrExtension,
@@ -42,13 +43,44 @@ impl Debug for DSubstitution {
     }
 }
 
+fn create_invariants(
+    this: &ItemPtr,
+    base: &ItemPtr,
+    subs: &Substitutions,
+) -> Result<InvariantSetPtr, UnresolvedItemError> {
+    let mut invs = Vec::new();
+    let base_set = base.get_invariants()?;
+    let value_subs = subs
+        .iter()
+        .filter(|x| x.0.borrow().required_theorem().is_none())
+        .cloned()
+        .collect();
+    for inv in base_set.borrow().statements() {
+        // Apply the substitutions to the statement the invariant is making.
+        let new_inv = unchecked_substitution(inv.ptr_clone(), &value_subs)?;
+        invs.push(new_inv);
+    }
+    Ok(InvariantSet::new(this.ptr_clone(), invs))
+}
+
 impl DSubstitution {
-    pub fn new(base: ItemPtr, subs: Substitutions, invs: InvariantSetPtr) -> Self {
-        Self { base, subs, invs }
+    pub fn new(base: ItemPtr, subs: Substitutions) -> Result<ItemPtr, UnresolvedItemError> {
+        let this = Item::placeholder(format!("substitution"));
+        let invs = create_invariants(&this, &base, &subs)?;
+        let def = Self { base, subs, invs };
+        this.redefine(Box::new(def));
+        Ok(this)
     }
 
-    pub fn new_unchecked(base: ItemPtr, subs: Substitutions) -> Self {
-        Self::new(base.ptr_clone(), subs, InvariantSet::new_empty(base))
+    pub fn new_into(
+        this: &ItemPtr,
+        base: ItemPtr,
+        subs: Substitutions,
+    ) -> Result<(), UnresolvedItemError> {
+        let invs = create_invariants(&this, &base, &subs)?;
+        let def = Self { base, subs, invs };
+        this.redefine(Box::new(def));
+        Ok(())
     }
 
     pub fn base(&self) -> &ItemPtr {
@@ -125,13 +157,18 @@ impl DSubstitution {
                 continue;
             }
             let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs);
-            deps.push_requirement(Requirement {
-                var: req.var.ptr_clone(),
-                order: req.order.clone(),
-                statement: replaced_req,
-                statement_text: req.statement_text.clone(),
-                swallow_dependencies: req.swallow_dependencies.clone(), // todo!()?
-            });
+            match replaced_req {
+                Ok(replaced_req) => {
+                    deps.push_requirement(Requirement {
+                        var: req.var.ptr_clone(),
+                        order: req.order.clone(),
+                        statement: replaced_req,
+                        statement_text: req.statement_text.clone(),
+                        swallow_dependencies: req.swallow_dependencies.clone(), // todo!()?
+                    });
+                }
+                Err(err) => deps.append(Dependencies::new_error(err)),
+            }
         }
         if let Some(err) = base_error {
             deps.append(Dependencies::new_error(err.clone()));
@@ -170,7 +207,8 @@ impl CheckFeature for DSubstitution {
         let mut failures = Vec::new();
         'check_next_sub: for (target, value) in &self.subs {
             if let Some(theorem) = target.borrow().required_theorem() {
-                let subbed_theorem = unchecked_substitution(theorem.ptr_clone(), &value_subs);
+                let subbed_theorem =
+                    unchecked_substitution(theorem.ptr_clone(), &value_subs).unwrap();
                 for inv in value.get_invariants().unwrap().borrow().statements() {
                     if inv
                         .get_trimmed_equality(&subbed_theorem)

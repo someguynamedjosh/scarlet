@@ -100,7 +100,8 @@ impl Resolvable for RNamedMember {
             );
         };
         let def = DOther::new(member);
-        ResolveResult::Ok(def.clone_into_box())
+        this.redefine(def.clone_into_box());
+        ResolveResult::Ok
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {

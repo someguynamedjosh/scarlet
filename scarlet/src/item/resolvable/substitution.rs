@@ -85,9 +85,8 @@ impl Resolvable for RSubstitution {
         self.resolve_anonymous_subs(total_dep_count, remaining_deps, env, &mut subs)?;
         resolve_dep_subs(&mut subs)?;
 
-        let invs = create_invariants(env, this, base, &subs)?;
-        let csub = DSubstitution::new(self.base.ptr_clone(), subs, invs);
-        ResolveResult::Ok(csub.clone_into_box())
+        DSubstitution::new_into(&this, self.base.ptr_clone(), subs)?;
+        ResolveResult::Ok
     }
 
     fn estimate_dependencies(&self, ctx: &mut Dcc, affects_return_value: bool) -> Dependencies {
@@ -114,27 +113,6 @@ impl Resolvable for RSubstitution {
         }
         result
     }
-}
-
-fn create_invariants(
-    _env: &mut Environment,
-    this: ItemPtr,
-    base: ItemPtr,
-    subs: &Substitutions,
-) -> InvariantsResult {
-    let mut invs = Vec::new();
-    let base_set = base.get_invariants()?;
-    let value_subs = subs
-        .iter()
-        .filter(|x| x.0.borrow().required_theorem().is_none())
-        .cloned()
-        .collect();
-    for inv in base_set.borrow().statements() {
-        // Apply the substitutions to the statement the invariant is making.
-        let new_inv = unchecked_substitution(inv.ptr_clone(), &value_subs);
-        invs.push(new_inv);
-    }
-    Ok(InvariantSet::new(this, invs))
 }
 
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the
@@ -170,7 +148,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
             }
         }
         if dep_subs.len() > 0 {
-            *value = unchecked_substitution(value.ptr_clone(), &dep_subs);
+            *value = unchecked_substitution(value.ptr_clone(), &dep_subs)?;
         }
     }
     Ok(())

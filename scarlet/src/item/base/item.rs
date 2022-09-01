@@ -177,6 +177,10 @@ impl ItemPtr {
     pub fn is_unresolved(&self) -> bool {
         self.borrow().is_unresolved()
     }
+
+    pub fn is_resolved(&self) -> bool {
+        self.borrow().is_resolved()
+    }
 }
 
 /// Extensions.
@@ -377,6 +381,10 @@ impl Item {
 
     pub fn downcast_definition_mut<D: ItemDefinition>(&mut self) -> Option<&mut D> {
         (&mut *self.definition as &mut dyn Any).downcast_mut()
+    }
+
+    pub fn is_resolved(&self) -> bool {
+        self.downcast_definition::<DResolvable>().is_none()
     }
 
     pub fn is_unresolved(&self) -> bool {

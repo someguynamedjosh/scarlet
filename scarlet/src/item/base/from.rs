@@ -69,8 +69,7 @@ pub(super) fn create_from_dex(env: &Environment, from: ItemPtr, position: Positi
         let subs = vec![(var_ptr.ptr_clone(), x.ptr_clone())]
             .into_iter()
             .collect();
-        let con = DSubstitution::new_unchecked(statement, subs);
-        into.redefine(con.clone_into_box());
+        DSubstitution::new_into(&into, statement, subs);
     } else {
         let truee = env.get_true();
         let falsee = env.get_false();

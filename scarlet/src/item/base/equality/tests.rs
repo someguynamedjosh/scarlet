@@ -44,7 +44,8 @@ fn var_sub_something_equals_something() {
     another.set_name("another".to_owned());
     let (var_con, var_id) = variable_full();
     var_con.set_name("var".to_owned());
-    let var_sub_thing = unchecked_substitution(var_con, &subs(vec![(var_id, thing.ptr_clone())]));
+    let var_sub_thing =
+        unchecked_substitution(var_con, &subs(vec![(var_id, thing.ptr_clone())])).unwrap();
     var_sub_thing.set_name("var_sub_thing".to_owned());
     assert_eq!(var_sub_thing.get_trimmed_equality(&thing), Ok(Equal::yes()));
     assert_eq!(thing.get_trimmed_equality(&var_sub_thing), Ok(Equal::yes()));
@@ -277,7 +278,8 @@ fn a_is_y_sub_a() {
     let y_sub_a = unchecked_substitution_without_shortcuts(
         y.0,
         &subs(vec![(y.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
 
     assert_eq!(a.get_equality_left(&y_sub_a), Ok(Equal::yes()));
     assert_eq!(a.get_trimmed_equality(&y_sub_a), Ok(Equal::yes()));
@@ -298,7 +300,8 @@ fn fx_is_gy_sub_a() {
     let g_sub_a = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
     g_sub_a.set_name("g(a)".to_owned());
     assert_matches!(f.0.get_trimmed_equality(&g_sub_a), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = f.0.get_equality_left(&g_sub_a) {
@@ -339,12 +342,14 @@ fn fx_sub_a_is_gy_sub_a() {
     let f_sub_a = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
     f_sub_a.set_name("f(a)".to_owned());
     let g_sub_a = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
     g_sub_a.set_name("g(a)".to_owned());
     assert_matches!(f_sub_a.get_trimmed_equality(&g_sub_a), Ok(Equal::Yes(..)));
     assert_matches!(g_sub_a.get_trimmed_equality(&f_sub_a), Ok(Equal::Yes(..)));
@@ -382,12 +387,14 @@ fn fx_sub_gy_is_gy_sub_x() {
     let gx = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     gx.set_name(format!("g[x]"));
     let fx_sub_gy = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(f.1.ptr_clone(), gx.ptr_clone())]),
-    );
+    )
+    .unwrap();
     fx_sub_gy.set_name(format!("f[g[x]]"));
 
     assert_eq!(gx.get_trimmed_equality(&fx_sub_gy), Ok(Equal::yes()));
@@ -399,9 +406,9 @@ fn fx_sub_nothing_is_gy_sub_nothing() {
     let x = variable_full();
     let y = variable_full();
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
-    let f_sub = unchecked_substitution(f.0.ptr_clone(), &Default::default());
+    let f_sub = unchecked_substitution(f.0.ptr_clone(), &Default::default()).unwrap();
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
-    let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default());
+    let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default()).unwrap();
     assert_matches!(f_sub.get_trimmed_equality(&g_sub), Ok(Equal::Yes(..)));
     assert_matches!(g_sub.get_trimmed_equality(&f_sub), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = f_sub.get_trimmed_equality(&g_sub) {
@@ -434,9 +441,10 @@ fn fx_sub_z_is_gy_sub_nothing() {
     let f_sub = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), z.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
-    let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default());
+    let g_sub = unchecked_substitution(g.0.ptr_clone(), &Default::default()).unwrap();
     assert_matches!(f_sub.get_trimmed_equality(&g_sub), Ok(Equal::Yes(..)));
     assert_matches!(g_sub.get_trimmed_equality(&f_sub), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = f_sub.get_trimmed_equality(&g_sub) {
@@ -477,7 +485,8 @@ fn fx_sub_decision_is_gy_sub_decision() {
     );
     let x = variable_full();
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
-    let f_dec = unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)]));
+    let f_dec =
+        unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)])).unwrap();
 
     let dec = decision(
         &mut env,
@@ -488,7 +497,8 @@ fn fx_sub_decision_is_gy_sub_decision() {
     );
     let y = variable_full();
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
-    let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)]));
+    let g_dec =
+        unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)])).unwrap();
 
     assert_matches!(f_dec.get_trimmed_equality(&g_dec), Ok(Equal::Yes(..)));
     assert_matches!(g_dec.get_trimmed_equality(&f_dec), Ok(Equal::Yes(..)));
@@ -542,7 +552,8 @@ fn dex_sub_decision_is_gy_sub_decision() {
         b.ptr_clone(),
     );
     let dex_dec =
-        unchecked_substitution(dex.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec_for_dex)]));
+        unchecked_substitution(dex.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec_for_dex)]))
+            .unwrap();
 
     let dec_for_g = decision(
         &mut env,
@@ -553,7 +564,8 @@ fn dex_sub_decision_is_gy_sub_decision() {
     );
     let y = variable_full();
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
-    let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec_for_g)]));
+    let g_dec =
+        unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec_for_g)])).unwrap();
 
     assert_matches!(g_dec.get_trimmed_equality(&dex_dec), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = g_dec.get_trimmed_equality(&dex_dec) {
@@ -606,7 +618,8 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
     x.0.set_name(format!("x"));
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
     f.0.set_name(format!("f"));
-    let f_dec = unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)]));
+    let f_dec =
+        unchecked_substitution(f.0.ptr_clone(), &subs(vec![(x.1.ptr_clone(), dec)])).unwrap();
 
     let dec = decision(
         &mut env,
@@ -619,7 +632,8 @@ fn fx_sub_decision_with_var_is_gy_sub_decision() {
     y.0.set_name(format!("y"));
     let g = variable_full_with_deps(vec![y.0.ptr_clone()]);
     g.0.set_name(format!("g"));
-    let g_dec = unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)]));
+    let g_dec =
+        unchecked_substitution(g.0.ptr_clone(), &subs(vec![(y.1.ptr_clone(), dec)])).unwrap();
 
     assert_matches!(f_dec.get_trimmed_equality(&g_dec), Ok(Equal::Yes(..)));
     if let Ok(Equal::Yes(lsubs, _)) = f_dec.get_trimmed_equality(&g_dec) {
@@ -656,20 +670,23 @@ fn fx_sub_gy_sub_a_is_gy_sub_a() {
     let gx = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
 
     // 18
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
     // 19
-    let f_sub_gx = unchecked_substitution(f.0.ptr_clone(), &subs(vec![(f.1.ptr_clone(), gx)])); // 20
+    let f_sub_gx =
+        unchecked_substitution(f.0.ptr_clone(), &subs(vec![(f.1.ptr_clone(), gx)])).unwrap(); // 20
     let f_sub_gx_sub_a =
-        unchecked_substitution(f_sub_gx, &subs(vec![(x.1.ptr_clone(), a.ptr_clone())]));
+        unchecked_substitution(f_sub_gx, &subs(vec![(x.1.ptr_clone(), a.ptr_clone())])).unwrap();
 
     // 21
     let gy_sub_a = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
 
     assert_eq!(
         f_sub_gx_sub_a.get_trimmed_equality(&gy_sub_a),
@@ -695,7 +712,8 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
     let gx = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     gx.set_name("gy(x)".to_owned());
 
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
@@ -703,15 +721,18 @@ fn fx_sub_a_sub_gy_is_gy_sub_a() {
     let f_sub_a = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
     f_sub_a.set_name("fx(a)".to_owned());
-    let f_sub_a_sub_gy = unchecked_substitution(f_sub_a, &subs(vec![(f.1.ptr_clone(), gx)]));
+    let f_sub_a_sub_gy =
+        unchecked_substitution(f_sub_a, &subs(vec![(f.1.ptr_clone(), gx)])).unwrap();
     f_sub_a_sub_gy.set_name("fx(a)(fx IS gy(x))".to_owned());
 
     let gy_sub_a = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
     gy_sub_a.set_name("gy(a)".to_owned());
 
     // assert_eq!(
@@ -745,7 +766,8 @@ fn fx_sub_y_sub_gx_is_gy() {
     let gx = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), x.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     gx.set_name("gy(x)".to_owned());
 
     let f = variable_full_with_deps(vec![x.0.ptr_clone()]);
@@ -753,9 +775,11 @@ fn fx_sub_y_sub_gx_is_gy() {
     let f_sub_y = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     f_sub_y.set_name("fx(y)".to_owned());
-    let f_sub_y_sub_gx = unchecked_substitution(f_sub_y, &subs(vec![(f.1.ptr_clone(), gx)]));
+    let f_sub_y_sub_gx =
+        unchecked_substitution(f_sub_y, &subs(vec![(f.1.ptr_clone(), gx)])).unwrap();
     f_sub_y_sub_gx.set_name("fx(y)(fx IS gy(x))".to_owned());
 
     println!("{:#?}", f_sub_y_sub_gx.get_equality_left(&g.0));
@@ -792,7 +816,8 @@ fn z_equal_z_is_x_eq_y_sub_true_true() {
             (x.1.ptr_clone(), truee.ptr_clone()),
             (y.1.ptr_clone(), truee.ptr_clone()),
         ]),
-    );
+    )
+    .unwrap();
     true_eq_true.set_name("true=true".to_owned());
     let z_eq_z = decision(
         &mut env,
@@ -854,7 +879,7 @@ fn is_bool_sub_y_is_y_is_bool() {
     );
 
     let x_sub_y_is_bool =
-        unchecked_substitution(x_is_bool, &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]));
+        unchecked_substitution(x_is_bool, &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())])).unwrap();
 
     assert_eq!(
         y_is_bool.get_trimmed_equality(&x_sub_y_is_bool),
@@ -940,7 +965,8 @@ fn multi_variable_dex_sub_something_is_single_variable_dex() {
     let subbed_multi_variable_dex = unchecked_substitution(
         multi_variable_dex.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), a.ptr_clone())]),
-    );
+    )
+    .unwrap();
     subbed_multi_variable_dex.set_name("decision(&mut env,x y a b)(x IS a)".to_owned());
 
     if let Equal::Yes(lsubs, _) =
@@ -1023,7 +1049,8 @@ fn multi_variable_dex_sub_two_vars_is_single_variable_dex() {
             (x.1.ptr_clone(), x2.0.ptr_clone()),
             (y.1.ptr_clone(), y2.0.ptr_clone()),
         ]),
-    );
+    )
+    .unwrap();
     subbed_multi_variable_dex.set_name("decision(&mut env,x y a b)(x2 y2)".to_owned());
 
     if let Equal::Yes(lsubs, _) =
@@ -1100,7 +1127,8 @@ fn single_variable_dex_is_multi_variable_dex_sub_two_uniques() {
             (x.1.ptr_clone(), a.ptr_clone()),
             (y.1.ptr_clone(), b.ptr_clone()),
         ]),
-    );
+    )
+    .unwrap();
 
     if let Equal::Yes(lsubs, _) =
         fz.0.ptr_clone()
@@ -1174,7 +1202,7 @@ fn sneaky_substitution() {
         (x.1.ptr_clone(), a.ptr_clone()),
         (y.1.ptr_clone(), b.ptr_clone()),
     ]);
-    let _tricky_sub = unchecked_substitution(fx.0.ptr_clone(), &this_subs);
+    let _tricky_sub = unchecked_substitution(fx.0.ptr_clone(), &this_subs).unwrap();
 
     // Currently we can't determine that (x IS a   y IS b) solves this
     // equality.     assert_eq!(tricky_sub.get_trimmed_equality(&a_eq_b),
@@ -1242,7 +1270,8 @@ fn fx_y_is_self() {
     let fy = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     let other = other(fy.ptr_clone());
     assert_eq!(fy.get_trimmed_equality(&other), Ok(Equal::yes()));
 }
@@ -1255,7 +1284,8 @@ fn tricky_fx_y_is_self() {
     let fa = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     let other = other(fa.ptr_clone());
     assert_eq!(fa.get_trimmed_equality(&other), Ok(Equal::yes()));
 }
@@ -1268,7 +1298,8 @@ fn other_fx_y_is_self() {
     let fa = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     let other_base = other(fa.ptr_clone());
     let other_0 = other(other_base.ptr_clone());
     let other_1 = other(other_base.ptr_clone());
@@ -1305,12 +1336,14 @@ fn fx_sub_a_z_is_gy_sub_a_z() {
     let f_sub_a_z = unchecked_substitution(
         f.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), a_z.ptr_clone())]),
-    );
+    )
+    .unwrap();
     f_sub_a_z.set_name("f({a z})".to_owned());
     let g_sub_a_z = unchecked_substitution(
         g.0.ptr_clone(),
         &subs(vec![(y.1.ptr_clone(), a_z.ptr_clone())]),
-    );
+    )
+    .unwrap();
     g_sub_a_z.set_name("g({a z})".to_owned());
     assert_matches!(
         f_sub_a_z.get_trimmed_equality(&g_sub_a_z),
@@ -1363,16 +1396,19 @@ fn equality_symmetry() {
     let identity_x = unchecked_substitution_without_shortcuts(
         identity.0.ptr_clone(),
         &subs(vec![(identity.1.ptr_clone(), x.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     let fy = unchecked_substitution(
         fx.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     fy.set_name("f(y)".to_owned());
     let fz = unchecked_substitution(
         fx.0.ptr_clone(),
         &subs(vec![(x.1.ptr_clone(), z.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     fz.set_name("f(z)".to_owned());
     let fz_eq_fy = decision(
         &mut env,
@@ -1384,7 +1420,8 @@ fn equality_symmetry() {
     let fz_eq_fy_sub_f_is_identity = unchecked_substitution(
         fz_eq_fy.ptr_clone(),
         &subs(vec![(fx.1.ptr_clone(), identity_x.ptr_clone())]),
-    );
+    )
+    .unwrap();
     let z_eq_y = decision(
         &mut env,
         z.0.ptr_clone(),
@@ -1512,12 +1549,14 @@ fn fx_eq_a_sub_y_is_self() {
     let fx_eq_a_sub_y_1 = unchecked_substitution(
         other(fx_eq_a.ptr_clone()),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     fx_eq_a_sub_y_1.set_name("(f = a)(x IS y) 1".to_owned());
     let fx_eq_a_sub_y_2 = unchecked_substitution(
         other(fx_eq_a.ptr_clone()),
         &subs(vec![(x.1.ptr_clone(), y.0.ptr_clone())]),
-    );
+    )
+    .unwrap();
     fx_eq_a_sub_y_2.set_name("(f = a)(x IS y) 2".to_owned());
 
     assert_eq!(

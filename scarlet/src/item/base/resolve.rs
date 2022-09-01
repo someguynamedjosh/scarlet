@@ -115,13 +115,12 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) -> Result<(), Vec<Diagn
 fn resolve(env: &mut Environment, item: ItemPtr, limit: u32) -> Result<bool, ResolveError> {
     if let Some(wrapper) = item.downcast_definition::<DResolvable>() {
         let scope = item.clone_scope();
-        let new_def = wrapper
-            .resolvable()
-            .resolve(env, item.ptr_clone(), scope, limit);
+        let resolvable = wrapper.resolvable().dyn_clone();
         drop(wrapper);
-        match new_def {
-            ResolveResult::Ok(new_def) => {
-                item.redefine(new_def);
+        let result = resolvable.resolve(env, item.ptr_clone(), scope, limit);
+        match result {
+            ResolveResult::Ok => {
+                assert!(item.is_resolved());
                 Ok(true)
             }
             ResolveResult::Err(err) => Err(err),
