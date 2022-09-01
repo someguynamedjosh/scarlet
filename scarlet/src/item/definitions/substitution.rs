@@ -186,7 +186,9 @@ impl CheckFeature for DSubstitution {
         if failures.is_empty() {
             Ok(())
         } else {
-            let mut diag = Diagnostic::new();
+            let mut diag = Diagnostic::new()
+                .with_text_error(format!("In the following substitution:"))
+                .with_item_error(this, this, env);
             for (value, statement) in failures {
                 diag = diag
                     .with_text_error(format!("The following expression:"))
