@@ -118,6 +118,11 @@ impl Resolvable for RSubstitution {
 /// Turns things like fx[fx IS gy] to fx[fx IS gy[y IS x]] so that the
 /// dependencies match.
 fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
+    let value_subs: Substitutions = subs
+        .iter()
+        .filter(|(target, _)| target.borrow().required_theorem().is_none())
+        .cloned()
+        .collect();
     for (target, value) in subs {
         let mut dep_subs = Substitutions::new();
         let value_deps = value.get_dependencies();
@@ -140,7 +145,16 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
             };
             if let Some(existing_dep) = existing_dep {
                 if !existing_dep.is_same_instance_as(target_dep.get_variable()) {
-                    let desired_dep = target_dep.get_variable().borrow().item().ptr_clone();
+                    let mut desired_dep = target_dep.get_variable().borrow().item().ptr_clone();
+                    if target_dep
+                        .get_variable()
+                        .borrow()
+                        .required_theorem()
+                        .is_some()
+                    {
+                        drop(target_dep);
+                        desired_dep = unchecked_substitution(desired_dep, &value_subs)?;
+                    }
                     dep_subs.insert_no_replace(existing_dep.ptr_clone(), desired_dep);
                 }
             } else if let Some(err) = value_deps.error() {

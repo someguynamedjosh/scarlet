@@ -66,8 +66,6 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) -> Result<(), Vec<Diagn
             let diagnostic = match err {
                 ResolveError::Unresolved(err2) => {
                     dep_count += 1;
-                    println!("{:#?}", item.borrow());
-                    println!("{:#?}", err2.0.borrow());
                     if item.is_same_instance_as(&err2.0) {
                         Some(
                             Diagnostic::new()

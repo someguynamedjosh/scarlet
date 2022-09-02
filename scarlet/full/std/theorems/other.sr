@@ -21,7 +21,7 @@ tail_value({
    decision(y z t = u t = v)
 
    conclusion_when_equal_t IS tail_value({
-      equal IS ANY_PROOF(y = z)
+      equal IS ANY_PROOF(y = z ORD 2)
 
       # Proves hypothesis = just(t = u)
       t1 IS decision_eq_t(
@@ -58,7 +58,7 @@ tail_value({
    })
 
    conclusion_when_not_equal_t IS tail_value({
-      not_equal IS ANY_PROOF(decision(y z false true))
+      not_equal IS ANY_PROOF(decision(y z false true) ORD 2)
 
       # Proves hypothesis = just(t = v)
       t1 IS decision_neq_t(
@@ -98,9 +98,8 @@ tail_value({
       y 
       z 
       conclusion
-      conclusion
-      PROOF(statement_when_equal) IS conclusion_when_equal_t
-      PROOF(statement_when_not_equal) IS conclusion_when_not_equal_t
+      PROOF(statement) IS conclusion_when_equal_t
+      # PROOF(statement_when_not_equal) IS conclusion_when_not_equal_t
    ) SHOWN
 
    # just_t(true)
