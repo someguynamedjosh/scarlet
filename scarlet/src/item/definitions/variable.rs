@@ -366,12 +366,11 @@ impl EqualityFeature for DVariable {
                     other_subs.insert_no_replace(other_dep, self_dep_item);
                 }
 
-                let mut subbed_right =
-                    unchecked_substitution(ctx.other().ptr_clone(), &other_subs)?;
                 let mut deps = ctx.other().get_dependencies();
                 for (target, _) in &other_subs {
                     deps.remove(target);
                 }
+                let mut subbed_right = unchecked_substitution(ctx.other().ptr_clone(), other_subs)?;
                 for subs in ctx.other_subs() {
                     let mut new_subs = Substitutions::new();
                     let mut new_deps = Dependencies::new();
@@ -383,7 +382,7 @@ impl EqualityFeature for DVariable {
                         }
                     }
                     if new_subs.len() > 0 {
-                        subbed_right = unchecked_substitution(subbed_right, &new_subs)?;
+                        subbed_right = unchecked_substitution(subbed_right, new_subs)?;
                     }
                 }
                 if let Equal::Yes(mut lhs, mut rhs) = Equal::and(results) {

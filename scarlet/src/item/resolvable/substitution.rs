@@ -153,7 +153,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
                         .is_some()
                     {
                         drop(target_dep);
-                        desired_dep = unchecked_substitution(desired_dep, &value_subs)?;
+                        desired_dep = unchecked_substitution(desired_dep, value_subs.clone())?;
                     }
                     dep_subs.insert_no_replace(existing_dep.ptr_clone(), desired_dep);
                 }
@@ -162,7 +162,7 @@ fn resolve_dep_subs(subs: &mut Substitutions) -> Result<(), ResolveError> {
             }
         }
         if dep_subs.len() > 0 {
-            *value = unchecked_substitution(value.ptr_clone(), &dep_subs)?;
+            *value = unchecked_substitution(value.ptr_clone(), dep_subs)?;
         }
     }
     Ok(())

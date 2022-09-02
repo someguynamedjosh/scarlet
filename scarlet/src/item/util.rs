@@ -9,21 +9,30 @@ use super::{
 };
 use crate::{diagnostic::Position, environment::Environment, scope::SRoot};
 
+fn filter_subs(base: &ItemPtr, subs: Substitutions) -> Substitutions {
+    let base_deps = base.get_dependencies();
+    if base_deps.as_complete_variables().is_err() {
+        return subs;
+    }
+    subs.into_iter().filter(|(target, _)| base_deps.contains_var(target)).collect()
+}
+
 pub fn unchecked_substitution(
     base: ItemPtr,
-    subs: &Substitutions,
+    subs: Substitutions,
 ) -> Result<ItemPtr, UnresolvedItemError> {
+    let subs = filter_subs(&base, subs);
     if subs.len() == 0 {
         return Ok(base);
     } else if subs.len() == 1 {
         let (target, value) = subs.iter().next().unwrap();
-        if target
-            .borrow()
-            .item()
-            .is_same_instance_as(&base.dereference())
-        {
-            return Ok(value.ptr_clone());
-        }
+        // if target
+        //     .borrow()
+        //     .item()
+        //     .is_same_instance_as(&base.dereference())
+        // {
+        //     return Ok(value.ptr_clone());
+        // }
     }
     unchecked_substitution_without_shortcuts(base, subs)
 }
@@ -32,10 +41,10 @@ pub fn unchecked_substitution(
 /// IS ghjkl]
 pub fn unchecked_substitution_without_shortcuts(
     base: ItemPtr,
-    subs: &Substitutions,
+    subs: Substitutions,
 ) -> Result<ItemPtr, UnresolvedItemError> {
     let scope = base.clone_scope();
-    DSubstitution::new(base, subs.clone())
+    DSubstitution::new(base, subs)
 }
 
 pub fn decision(

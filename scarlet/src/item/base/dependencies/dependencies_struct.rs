@@ -145,6 +145,11 @@ impl Dependencies {
                 return true;
             }
         }
+        for target in &self.requirements {
+            if target.var.is_same_instance_as(dep) {
+                return true;
+            }
+        }
         false
     }
 

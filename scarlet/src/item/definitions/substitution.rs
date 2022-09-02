@@ -50,14 +50,14 @@ fn create_invariants(
 ) -> Result<InvariantSetPtr, UnresolvedItemError> {
     let mut invs = Vec::new();
     let base_set = base.get_invariants()?;
-    let value_subs = subs
+    let value_subs: Substitutions = subs
         .iter()
         .filter(|x| x.0.borrow().required_theorem().is_none())
         .cloned()
         .collect();
     for inv in base_set.borrow().statements() {
         // Apply the substitutions to the statement the invariant is making.
-        let new_inv = unchecked_substitution(inv.ptr_clone(), &value_subs)?;
+        let new_inv = unchecked_substitution(inv.ptr_clone(), value_subs.clone())?;
         invs.push(new_inv);
     }
     Ok(InvariantSet::new(this.ptr_clone(), invs))
@@ -160,7 +160,7 @@ impl DSubstitution {
                 deps.append(new_deps);
                 continue;
             }
-            let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs);
+            let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs.clone());
             match replaced_req {
                 Ok(replaced_req) => {
                     deps.push_requirement(Requirement {
@@ -202,7 +202,7 @@ impl ItemDefinition for DSubstitution {
 
 impl CheckFeature for DSubstitution {
     fn check_self(&self, this: &ItemPtr, env: &mut Environment) -> CheckResult {
-        let value_subs = self
+        let value_subs: Substitutions = self
             .subs
             .iter()
             .filter(|x| x.0.borrow().required_theorem().is_none())
@@ -212,7 +212,7 @@ impl CheckFeature for DSubstitution {
         'check_next_sub: for (target, value) in &self.subs {
             if let Some(theorem) = target.borrow().required_theorem() {
                 let subbed_theorem =
-                    unchecked_substitution(theorem.ptr_clone(), &value_subs).unwrap();
+                    unchecked_substitution(theorem.ptr_clone(), value_subs.clone()).unwrap();
                 for inv in value.get_invariants().unwrap().borrow().statements() {
                     if inv
                         .get_trimmed_equality(&subbed_theorem)
