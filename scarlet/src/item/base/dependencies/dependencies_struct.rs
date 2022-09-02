@@ -76,11 +76,17 @@ impl Dependencies {
     #[track_caller]
     pub fn as_complete_variables(
         &self,
-    ) -> Result<impl Iterator<Item = &Dependency>, UnresolvedItemError> {
+    ) -> Result<
+        (
+            impl Iterator<Item = &Dependency>,
+            impl Iterator<Item = &Requirement>,
+        ),
+        UnresolvedItemError,
+    > {
         if let Some(err) = self.error() {
             Err(err.clone())
         } else {
-            Ok(self.dependencies.iter())
+            Ok((self.dependencies.iter(), self.requirements.iter()))
         }
     }
 

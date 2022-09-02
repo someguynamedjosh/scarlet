@@ -153,7 +153,11 @@ impl DSubstitution {
                 .iter()
                 .find(|(var, _)| var.borrow().required_theorem() == Some(&req.statement))
             {
-                deps.append(replacement.get_dependencies());
+                let mut new_deps = replacement.get_dependencies();
+                for swallow in &req.swallow_dependencies {
+                    new_deps.remove(swallow);
+                }
+                deps.append(new_deps);
                 continue;
             }
             let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs);

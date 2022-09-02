@@ -4,7 +4,7 @@ use super::{Environment, ItemPtr};
 use crate::{
     diagnostic::Position,
     item::{
-        definitions::variable::{SVariableInvariants, VariablePtr},
+        definitions::variable::{DVariable, SVariableInvariants, VariablePtr},
         resolvable::DResolvable,
     },
     parser::{Node, NodeChild, ParseContext},
@@ -132,6 +132,13 @@ impl Environment {
                 req.statement_text,
                 indented(&vomited)
             ));
+            if !req.swallow_dependencies.is_empty() {
+                result.push_str("\n        which can depend on: ");
+                for swallowed in &req.swallow_dependencies {
+                    let label = swallowed.borrow().required_theorem_text().unwrap().clone();
+                    result.push_str(&format!("PROOF({}) ", label));
+                }
+            }
         }
 
         result.push_str(&Self::format_vomit_temp_names(&inv_ctx));
@@ -236,7 +243,7 @@ impl Environment {
                             }
                         } else {
                             uncreated
-                        }
+                        };
                     }
                     _ => (),
                 }

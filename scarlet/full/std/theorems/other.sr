@@ -94,12 +94,14 @@ tail_value({
       )
    })
 
+   # conclusion_when_equal_t SHOWN
+
    cases_t(
       y 
       z 
       conclusion
       PROOF(statement) IS conclusion_when_equal_t
-      # PROOF(statement_when_not_equal) IS conclusion_when_not_equal_t
+      PROOF(statement) IS conclusion_when_not_equal_t
    ) SHOWN
 
    # just_t(true)

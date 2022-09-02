@@ -5,7 +5,7 @@ pub struct Requirement {
     pub var: VariablePtr,
     pub statement: ItemPtr,
     pub statement_text: String,
-    pub swallow_dependencies: Vec<ItemPtr>,
+    pub swallow_dependencies: Vec<VariablePtr>,
     pub order: VariableOrder,
 }
 

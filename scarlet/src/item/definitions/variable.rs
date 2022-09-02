@@ -106,6 +106,14 @@ impl Variable {
         self.kind.as_theorem()
     }
 
+    pub fn required_theorem_text(&self) -> Option<&String> {
+        if let VariableKind::Theorem(_, t) = &self.kind {
+            Some(t)
+        } else {
+            None
+        }
+    }
+
     pub fn dependencies(&self) -> &[ItemPtr] {
         &self.dependencies[..]
     }
@@ -227,7 +235,7 @@ impl Variable {
             deps.append(dep.get_dependencies());
         }
         let result = match deps.as_complete_variables() {
-            Ok(swallowed) => {
+            Ok((swallowed_deps, swallowed_recs)) => {
                 let mut res = Dependencies::new();
 
                 if let VariableKind::Theorem(statement, statement_text) = &this.borrow().kind {
@@ -235,15 +243,13 @@ impl Variable {
                         var: this.ptr_clone(),
                         statement: statement.ptr_clone(),
                         statement_text: statement_text.clone(),
-                        swallow_dependencies: swallowed
-                            .filter_map(|x| x.var.borrow().kind.as_theorem().map(|x| x.ptr_clone()))
-                            .collect(),
+                        swallow_dependencies: swallowed_recs.map(|x| x.var.ptr_clone()).collect(),
                         order: this.borrow().order.clone(),
                     });
                 } else {
                     res.push_value(Dependency {
                         var: this.ptr_clone(),
-                        swallow: swallowed.map(|x| x.var.ptr_clone()).collect(),
+                        swallow: swallowed_deps.map(|x| x.var.ptr_clone()).collect(),
                         order: this.borrow().order.clone(),
                         affects_return_value,
                     });
@@ -360,7 +366,8 @@ impl EqualityFeature for DVariable {
                     other_subs.insert_no_replace(other_dep, self_dep_item);
                 }
 
-                let mut subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs)?;
+                let mut subbed_right =
+                    unchecked_substitution(ctx.other().ptr_clone(), &other_subs)?;
                 let mut deps = ctx.other().get_dependencies();
                 for (target, _) in &other_subs {
                     deps.remove(target);
