@@ -1,6 +1,5 @@
 trivial_t IS basic_axioms.trivial_t
 eq_ext_rev_t IS basic_axioms.eq_ext_rev_t
-inv_eq_t IS basic_axioms.inv_eq_t
 refl_t IS basic_axioms.refl_t
 cases_t IS basic_axioms.cases_t
 
@@ -20,6 +19,7 @@ computation_axioms.decision_neq_t
 
 eq_symm_t IS equality.eq_symm_t
 eq_ext_t IS equality.eq_ext_t
+inv_eq_t IS equality.inv_eq_t
 inv_eq_ext_t IS equality.inv_eq_ext_t
 eq_trans_t IS equality.eq_trans_t
 

@@ -1,3 +1,23 @@
+# From y AND y = z
+# Proves z
+inv_eq_t IS
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   y_is_true_t IS ANY_PROOF(y)
+   y_eq_z_t IS ANY_PROOF(y = z)
+
+   t1 IS invariant_truth_t(
+      y
+      PROOF(y) IS y_is_true_t
+   ) SHOWN
+
+   # just_t(
+   #    z
+   #    PROOF(statement) IS t
+   # )
+})
+
 # From y = z
 # Proves z = y
 eq_symm_t IS 
@@ -45,25 +65,25 @@ tail_value({
 inv_eq_ext_t IS 
 tail_value({
    y IS VAR()
-   z IS VAR()
-   f IS VAR(DEP x)
-   y_eq_z_t IS ANY_PROOF(y = z)
-   fy_t IS ANY_PROOF(f(y))
+   # z IS VAR()
+   # f IS VAR(DEP x)
+   # y_eq_z_t IS ANY_PROOF(y = z)
+   # fy_t IS ANY_PROOF(f(y))
 
-   t1 IS eq_ext_t(
-      f y z
-      PROOF(y = z) IS y_eq_z_t
-   )
-   t2 IS inv_eq_t(
-      f(y) f(z)
-      PROOF(y) IS fy_t
-      PROOF(y = z) IS t1
-   )
+   # t1 IS eq_ext_t(
+   #    f y z
+   #    PROOF(y = z) IS y_eq_z_t
+   # )
+   # t2 IS inv_eq_t(
+   #    f(y) f(z)
+   #    PROOF(y) IS fy_t
+   #    PROOF(y = z) IS t1
+   # )
 
-   just_t(
-      f(z)
-      PROOF(statement) IS t2
-   )
+   # just_t(
+   #    f(z)
+   #    PROOF(statement) IS t2
+   # )
 })
 
 # From y = w AND w = z

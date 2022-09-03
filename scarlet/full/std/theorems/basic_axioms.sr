@@ -62,27 +62,7 @@ tail_value({
    )
 })
 
-# From y = z   y
-# Proves z
-inv_eq_t IS 
-tail_value({
-   y IS VAR()
-   y_is_true_t IS ANY_PROOF(y)
-   z IS VAR()
-   y_equals_z_t IS ANY_PROOF(y = z)
-
-   z AS_LANGUAGE_ITEM(inv_eq_t_statement)
-
-   AXIOM(
-      inv_eq_t
-      DEPENDING_ON
-      y
-      z
-      y_is_true_t
-      y_equals_z_t
-   )
-})
-
+# Proves y = y
 refl_t IS
 tail_value({
    y IS VAR()

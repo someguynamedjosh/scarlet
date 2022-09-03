@@ -73,14 +73,15 @@ pub fn resolve_all(env: &mut Environment, root: ItemPtr) -> Result<(), Vec<Diagn
                                 .with_item_error(item, item, env),
                         )
                     } else {
-                        // None
-                        Some(
-                            Diagnostic::new()
-                                .with_text_error(format!("This item:"))
-                                .with_item_error(item, item, env)
-                                .with_text_error(format!("Depends on this item:"))
-                                .with_item_error(&err2.0, &err2.0, env),
-                        )
+                        None
+                        // Some(
+                        //     Diagnostic::new()
+                        //         .with_text_error(format!("This item:"))
+                        //         .with_item_error(item, item, env)
+                        //         .with_text_error(format!("Depends on this
+                        // item:"))
+                        //         .with_item_error(&err2.0, &err2.0, env),
+                        // )
                     }
                 }
                 ResolveError::InvariantDeadEnd(err) => todo!("Nice error, {}", err),
