@@ -1,69 +1,104 @@
-trivial_t IS 
-{
-   AXIOM(trivial_t)
+decision IS basics.decision
+implies IS std.logic.implies
 
+trivial_t IS 
+tail_value({
    true AS_LANGUAGE_ITEM(trivial_t_statement)
-}
-.VALUE
+
+   AXIOM(trivial_t)
+})
 
 invariant_truth_t IS 
-{
-   AXIOM(invariant_truth_t)
+tail_value({
+   y IS VAR()
+   y_is_true_t IS ANY_PROOF(y)
 
    just(y = true)
    AS_LANGUAGE_ITEM(invariant_truth_t_statement)
 
-   y IS VAR(SELF)
-}
-.VALUE
+   AXIOM(
+      invariant_truth_t 
+      DEPENDING_ON 
+      y
+      y_is_true_t
+   )
+})
 
 
 invariant_truth_rev_t IS 
-{
-   AXIOM(invariant_truth_rev_t)
+tail_value({
+   y IS VAR()
+   y_equals_true_t IS ANY_PROOF(y = true)
 
    y
    AS_LANGUAGE_ITEM(
       invariant_truth_rev_t_statement 
    )
 
-   y IS VAR(SELF = true)
-}
-.VALUE
- AS_AUTO_THEOREM
+   AXIOM(
+      invariant_truth_rev_t
+      DEPENDING_ON
+      y
+      y_equals_true_t
+   )
+})
 
 eq_ext_rev_t IS 
-{
-   AXIOM(eq_ext_rev_t)
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   y_equals_z_t IS ANY_PROOF(y = z)
 
    just(f(z) = f(y))
    AS_LANGUAGE_ITEM(eq_ext_rev_t_statement)
 
-   y IS VAR()
-   z IS VAR(y = SELF)
-}
-.VALUE
+   AXIOM(
+      eq_ext_rev_t 
+      DEPENDING_ON 
+      f 
+      y 
+      z 
+      y_equals_z_t
+   )
+})
 
-# From y = z   y
-# Proves z
-inv_eq_t IS 
-{
-   AXIOM(inv_eq_t)
-
-   z AS_LANGUAGE_ITEM(inv_eq_t_statement)
-
-   y IS VAR(SELF)
-   z IS VAR(y = SELF)
-}
-.VALUE
-
+# Proves y = y
 refl_t IS
-{
-   AXIOM(refl_t)
+tail_value({
+   y IS VAR()
 
    just(y = y)
    AS_LANGUAGE_ITEM(refl_t_statement)
 
+   AXIOM(refl_t DEPENDING_ON y)
+})
+
+cases_t IS
+tail_value({
    y IS VAR()
-}
-.VALUE
+   z IS VAR()
+   statement IS VAR()
+
+   equal IS ANY_PROOF(y = z)
+
+   not_equal IS 
+   ANY_PROOF(decision(y z false true))
+
+   statement_true_when_equal_t IS 
+   ANY_PROOF(statement DEP equal)
+
+   statement_true_when_not_equal_t IS 
+   ANY_PROOF(statement DEP not_equal)
+
+   statement AS_LANGUAGE_ITEM(cases_t_statement)
+
+   AXIOM(
+      cases_t 
+      DEPENDING_ON 
+      y
+      z
+      statement
+      statement_true_when_equal_t
+      statement_true_when_not_equal_t
+   )
+})

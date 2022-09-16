@@ -1,160 +1,226 @@
-# From DECISION(y   z   t = u   t = v)
-# Proves t = DECISION(y z u v)
-extract_eq_from_decision_t IS 
-{
-   just_t(t = conclusion_right)
+statement IS VAR()
+# From statement
+# Proves statement
+just_t IS ANY_PROOF(statement)
 
-   DECISION(
-      y z
-
-      {
-         # Proves t = conclusion_right
-         eq_trans_t(t u conclusion_right)
-         # Proves u = conclusion_right
-         eq_symm_t(conclusion_right u)
-         # Proves conclusion_right = u
-         decision_eq_t(y z u v)
-         # Proves t = u
-         inv_eq_t(hypothesis   t = u)
-         # Proves hypothesis = just(t = u)
-         decision_eq_t(y   z   t = u   t = v)
-      }
-      .VALUE
-
-      {
-         # Proves t = conclusion_right
-         eq_trans_t(t v conclusion_right)
-         # Proves v = conclusion_right
-         eq_symm_t(conclusion_right v)
-         # Proves conclusion_right = v
-         decision_neq_t(y z u v)
-         # Proves t = v
-         inv_eq_t(hypothesis   t = v)
-         # Proves hypothesis = just(t = v)
-         decision_neq_t(
-            y   z   t = u   t = v
-         )
-      }
-      .VALUE
-   )
-
-   hypothesis IS 
-   DECISION(y   z   t = u   t = v)
-
-   conclusion IS t = conclusion_right
-   conclusion_right IS DECISION(y z u v)
-
+# From decision(y   z   t = u   t = v)
+# Proves t = decision(y z u v)
+extract_equals_from_decision_t IS 
+tail_value({
    y IS VAR()
    z IS VAR()
    t IS VAR()
    u IS VAR()
-   v IS VAR(hypothesis)
-}
-.VALUE
-
-# From y = z   u
-# Proves DECISION(y z u v)
-decision_eq_inv_t IS
-{
-   just_t(DECISION(y z u v))
-
-   # Proves DECISION(y z u v)
-   inv_eq_t(u   DECISION(y z u v))
-   # Proves u = DECISION(y z u v)
-   eq_symm_t(DECISION(y z u v)   u)
-   # Proves DECISION(y z u v) = u
-   decision_eq_t(y z u v)
-
-   y IS VAR()
-   z IS VAR(y = SELF)
-   u IS VAR(SELF)
    v IS VAR()
-}
-.VALUE
+   hypothesis_is_true IS ANY_PROOF(hypothesis)
 
-# From y =NOT z   v
-# Proves DECISION(y z u v)
-decision_neq_inv_t IS
-{
-   just_t(DECISION(y z u v))
+   conclusion IS t = conclusion_right
+   conclusion_right IS decision(y z u v)
 
-   # Proves DECISION(y z u v)
-   inv_eq_t(v   DECISION(y z u v))
-   # Proves v = DECISION(y z u v)
-   eq_symm_t(DECISION(y z u v)   v)
-   # Proves DECISION(y z u v) = v
-   decision_neq_t(y z u v)
+   hypothesis IS 
+   decision(y z t = u t = v)
 
-   y IS VAR()
-   z IS VAR(DECISION(y SELF false true))
-   u IS VAR()
-   v IS VAR(SELF)
-}
-.VALUE
+   conclusion_when_equal_t IS tail_value({
+      equal IS ANY_PROOF(y = z ORD 2)
 
-# From f(u)   f(v)
-# Proves f(DECISION(y z u v))
-decision_by_parts_ext_t IS
-{
-   just_t(conclusion)
+      # Proves hypothesis = just(t = u)
+      t1 IS decision_eq_t(
+         y z t = u t = v
+         PROOF(y = z) IS equal
+      )
+      # Proves t = u
+      t2 IS inv_eq_t(
+         hypothesis t = u
+         PROOF(y) IS hypothesis_is_true
+         PROOF(y = z) IS t1
+      )
+      # Proves conclusion_right = u
+      t3 IS decision_eq_t(
+         y z u v
+         PROOF(y = z) IS equal
+      )
+      # Proves u = conclusion_right
+      t4 IS eq_symm_t(
+         conclusion_right u
+         PROOF(y = z) IS t3
+      )
+      # Proves t = conclusion_right
+      t5 IS eq_trans_t(
+         t u conclusion_right
+         PROOF(y = w) IS t2
+         PROOF(w = z) IS t4
+      )
 
-   DECISION(
-      y z
+      just_t(
+         conclusion
+         PROOF(statement) IS t5
+      )
+   })
 
-      {
-         just_t(conclusion)
-         # Proves conclusion
-         inv_eq_t(f(u) conclusion)
-         # Proves f(u) = conclusion
-         eq_ext_t(f u inner)
-         # Proves u = inner
-         eq_symm_t(inner u)
-         # Proves inner = u
-         decision_eq_t(y z u v)
-      }
-      .VALUE
+   conclusion_when_not_equal_t IS tail_value({
+      not_equal IS ANY_PROOF(decision(y z false true) ORD 2)
 
-      {
-         just_t(conclusion)
-         # Proves conclusion
-         inv_eq_t(f(v) conclusion)
-         # Proves f(v) = conclusion
-         eq_ext_t(f v inner)
-         # Proves v = inner
-         eq_symm_t(inner v)
-         # Proves inner = v
-         decision_neq_t(y z u v)
-      }
-      .VALUE
+      # Proves hypothesis = just(t = v)
+      t1 IS decision_neq_t(
+         y z t = u t = v
+         PROOF(decision(y z false true)) IS not_equal
+      )
+      # Proves t = v
+      t2 IS inv_eq_t(
+         hypothesis t = v
+         PROOF(y) IS hypothesis_is_true
+         PROOF(y = z) IS t1
+      )
+      # Proves conclusion_right = v
+      t3 IS decision_neq_t(
+         y z u v
+         PROOF(decision(y z false true)) IS not_equal
+      )
+      # Proves v = conclusion_right
+      t4 IS eq_symm_t(
+         conclusion_right v
+         PROOF(y = z) IS t3
+      )
+      # Proves t = conclusion_right
+      t5 IS eq_trans_t(
+         t v conclusion_right
+         PROOF(y = w) IS t2
+         PROOF(w = z) IS t4
+      )
+
+      just_t(
+         conclusion
+         PROOF(statement) IS t5
+      )
+   })
+
+   t1 IS cases_t(
+      y 
+      z 
+      conclusion
+      PROOF(statement) IS conclusion_when_equal_t
+      PROOF(statement) IS conclusion_when_not_equal_t
    )
 
+   just_t(
+      conclusion
+      PROOF(statement) IS t1
+   )
+})
+
+# From y = z   u
+# Proves decision(y z u v)
+decision_eq_inv_t IS
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   u IS VAR()
+   v IS VAR()
+
+   # Proves decision(y z u v) = u
+   t1 IS decision_eq_t(y z u v)
+   # Proves u = decision(y z u v)
+   t2 IS eq_symm_t(
+      decision(y z u v) u
+      PROOF(y = z) IS t1
+   )
+   # Proves decision(y z u v)
+   t3 IS inv_eq_t(
+      u decision(y z u v)
+      PROOF(y = z) IS t2
+   )
+
+   just_t(
+      decision(y z u v)
+      PROOF(statement) IS t3
+   )
+})
+
+# From y =NOT z   v
+# Proves decision(y z u v)
+decision_neq_inv_t IS
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   u IS VAR()
+   v IS VAR()
+
+   # Proves decision(y z u v) = v
+   t1 IS decision_neq_t(y z u v)
+   # Proves v = decision(y z u v)
+   t2 IS eq_symm_t(
+      decision(y z u v) v
+      PROOF(y = z) IS t1
+   )
+   # Proves decision(y z u v)
+   t3 IS inv_eq_t(
+      v decision(y z u v)
+      PROOF(y = z) IS t2
+   )
+
+   just_t(
+      decision(y z u v)
+      PROOF(statement) IS t3
+   )
+})
+
+# From f(u)   f(v)
+# Proves f(decision(y z u v))
+decision_by_parts_ext_t IS
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   u IS VAR()
+   v IS VAR()
+
    conclusion IS f(inner)
-   inner IS DECISION(y z u v)
+   inner IS decision(y z u v)
 
-   y IS VAR()
-   z IS VAR()
-   u IS VAR(f(u))
-   v IS VAR(f(v))
-}
-.VALUE
+   conclusion_when_y_eq_z_t IS tail_value({
+      # Proves inner = u
+      t1 IS decision_eq_t(y z u v)
+      # Proves u = inner
+      t2 IS eq_symm_t(
+         inner u
+         PROOF(y = z) IS t1
+      )
+      # Proves f(u) = conclusion
+      t3 IS eq_ext_t(
+         f u inner
+         PROOF(y = z) IS t2
+      )
+      # Proves conclusion
+      t4 IS inv_eq_t(
+         f(u) conclusion
+         PROOF(y = z) IS t3
+      )
+   })
+   SHOWN
 
-decision_by_parts_t IS
-{
-   just_t(conclusion)
+   # conclusion_when_y_neq_z_t IS tail_value({
+   #    # Proves inner = v
+   #    decision_neq_t(y z u v)
+   #    # Proves v = inner
+   #    eq_symm_t(inner v)
+   #    # Proves f(v) = conclusion
+   #    eq_ext_t(f v inner)
+   #    # Proves conclusion
+   #    inv_eq_t(f(v) conclusion)
+   # })
 
-   decision_by_parts_ext_t(VAR() y z u v)
+   # just_t(conclusion)
+})
 
-   conclusion IS DECISION(y z u v)
+# decision_by_parts_t IS
+# tail_value({
+#    y IS VAR()
+#    z IS VAR()
+#    u IS VAR(u)
+#    v IS VAR(v)
 
-   y IS VAR()
-   z IS VAR()
-   u IS VAR(u)
-   v IS VAR(v)
-}
-.VALUE
+#    conclusion IS decision(y z u v)
 
-just_t IS 
-{
-   VAR(SELF)
-}
-.VALUE
+#    decision_by_parts_ext_t(VAR() y z u v)
+
+#    just_t(conclusion)
+# })

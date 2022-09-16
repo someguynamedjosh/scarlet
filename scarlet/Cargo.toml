@@ -27,3 +27,6 @@ typed-arena = "2.0.1"
 [features]
 no_axioms = []
 trace_borrows = []
+
+[profile.dev.package."*"]
+opt-level = 3

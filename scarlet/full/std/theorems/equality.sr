@@ -1,60 +1,116 @@
-eq_symm_t IS 
-{
-   just_t(z = y)
-
-   eq_ext_rev_t(x y z)
-
+# From y AND y = z
+# Proves z
+inv_eq_t IS
+tail_value({
    y IS VAR()
-   z IS VAR(y = SELF)
-}
-.VALUE
+   z IS VAR()
+   y_is_true_t IS ANY_PROOF(y)
+   y_eq_z_t IS ANY_PROOF(y = z)
+
+   t1 IS invariant_truth_t(
+      y
+      PROOF(y) IS y_is_true_t
+   ) SHOWN
+
+   # just_t(
+   #    z
+   #    PROOF(statement) IS t
+   # )
+})
+
+# From y = z
+# Proves z = y
+eq_symm_t IS 
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   y_eq_z_t IS ANY_PROOF(y = z)
+
+   t1 IS eq_ext_rev_t(
+      x y z
+      PROOF(y = z) IS y_eq_z_t
+   )
+
+   just_t(
+      z = y   
+      PROOF(statement) IS t1
+   )
+})
 
 # From y = z
 # Proves f(y) = f(z)
 eq_ext_t IS 
-{
-   just_t(f(y) = f(z))
-
-   eq_ext_rev_t(f z y)
-
-   # Proves z = y
-   eq_symm_t(y z)
-
+tail_value({
    y IS VAR()
-   z IS VAR(y = SELF)
-}
-.VALUE
+   z IS VAR()
+   y_eq_z_t IS ANY_PROOF(y = z)
 
-# From y=z  f(y)
+   t1 IS eq_symm_t(
+      y z
+      PROOF(y = z) IS y_eq_z_t
+   )
+   t2 IS eq_ext_rev_t(
+      f z y
+      PROOF(y = z) IS t1
+   )
+
+   just_t(
+      f(y) = f(z)
+      PROOF(statement) IS t2
+   )
+})
+
+# From y = z AND f(y)
 # Proves f(z)
 inv_eq_ext_t IS 
-{
-   just_t(f(z))
-
-   inv_eq_t(f(y) f(z))
-
-   # Proves f(y) = f(z)
-   eq_ext_t(f y z)
-
+tail_value({
    y IS VAR()
-   z IS VAR(y = SELF)
-   f IS VAR(SELF(y)  DEP x)
-}
-.VALUE
+   # z IS VAR()
+   # f IS VAR(DEP x)
+   # y_eq_z_t IS ANY_PROOF(y = z)
+   # fy_t IS ANY_PROOF(f(y))
 
-# # From y = z   z = c
-# # Proves y = c
+   # t1 IS eq_ext_t(
+   #    f y z
+   #    PROOF(y = z) IS y_eq_z_t
+   # )
+   # t2 IS inv_eq_t(
+   #    f(y) f(z)
+   #    PROOF(y) IS fy_t
+   #    PROOF(y = z) IS t1
+   # )
+
+   # just_t(
+   #    f(z)
+   #    PROOF(statement) IS t2
+   # )
+})
+
+# From y = w AND w = z
+# Proves y = z
 eq_trans_t IS 
-{
-   just_t(y = c)
-
-   inv_eq_t(y = z  y = c)
-   eq_ext_t(a_equals_x z c)
-
-   a_equals_x IS y = x
-
+tail_value({
    y IS VAR()
-   z IS VAR(y = SELF)
-   c IS VAR(z = SELF)
-}
-.VALUE
+   w IS VAR()
+   z IS VAR()
+   y_eq_w_t IS ANY_PROOF(y = w)
+   w_eq_z_t IS ANY_PROOF(w = z)
+
+   t1 IS eq_ext_t(
+      y = x   
+      w
+      z
+      PROOF(y = z) IS w_eq_z_t
+   )
+   t2 IS inv_eq_t(
+      y = w   
+      y = z
+      PROOF(y) IS y_eq_w_t
+      PROOF(y = z) IS t1
+   )
+
+   just_t(
+      y = z
+      PROOF(statement) IS t2
+   )
+})

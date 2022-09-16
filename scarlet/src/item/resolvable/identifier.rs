@@ -20,7 +20,7 @@ impl Resolvable for RIdentifier {
     fn resolve(
         &self,
         _env: &mut Environment,
-        _this: ItemPtr,
+        this: ItemPtr,
         scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {
@@ -31,7 +31,8 @@ impl Resolvable for RIdentifier {
             }
             .with_source_code_block_error(self.1)
         })?;
-        ResolveResult::Ok(DOther::new(identified).clone_into_box())
+        this.redefine(DOther::new(identified).clone_into_box());
+        ResolveResult::Ok
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {

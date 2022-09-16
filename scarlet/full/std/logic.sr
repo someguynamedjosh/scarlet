@@ -1,11 +1,15 @@
+decision IS basics.decision
+
+Bool IS VAR()
+ANY_PROOF(decision(Bool   true  true  Bool = false))
+
+y IS VAR()
+z IS VAR()
+
 and IS 
-DECISION(y true z false)
+decision(y true z false)
 AS_LANGUAGE_ITEM(and)
 
-or IS DECISION(y true true z)
+or IS decision(y true true z)
 
-y IS VAR(SELF FROM Bool)
-z IS VAR(SELF FROM Bool)
-
-Bool IS 
-VAR(DECISION(SELF  true  true  SELF = false))
+implies IS decision(y true z true)

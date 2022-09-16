@@ -1,33 +1,52 @@
-# From y = z
-# Proves DECISION(y z u v) = u
-decision_eq_t IS
-{ 
-   AXIOM(decision_eq_t)
+decision IS basics.decision
 
-   just(DECISION(y z u v) = u)
+# From y = z
+# Proves decision(y z u v) = u
+decision_eq_t IS
+tail_value({ 
+   y IS VAR()
+   z IS VAR()
+   y_equals_z_t IS ANY_PROOF(y = z)
+   u IS VAR()
+   v IS VAR()
+
+   just(decision(y z u v) = u)
    AS_LANGUAGE_ITEM(decision_eq_t_statement)
 
-   y IS VAR()
-   z IS VAR(y = z)
-   u IS VAR()
-   v IS VAR()
-}
-.VALUE
+   AXIOM(
+      decision_eq_t
+      DEPENDING_ON
+      y
+      z
+      u
+      v
+      y_equals_z_t
+   )
+})
 
 # From y =NOT z
-# Proves DECISION(y z u v) = v
+# Proves decision(y z u v) = v
 decision_neq_t IS 
-{
-   AXIOM(decision_neq_t)
-
-   just(DECISION(y z u v) = v)
-   AS_LANGUAGE_ITEM(
-      decision_neq_t_statement 
-  )
-
+tail_value({
    y IS VAR()
-   z IS VAR(DECISION(y z false true))
+   z IS VAR()
+
+   y_doesnt_equal_z_t IS 
+   ANY_PROOF(decision(y z false true))
+
    u IS VAR()
    v IS VAR()
-}
-.VALUE
+
+   just(decision(y z u v) = v)
+   AS_LANGUAGE_ITEM(decision_neq_t_statement)
+
+   AXIOM(
+      decision_neq_t
+      DEPENDING_ON
+      y
+      z
+      u
+      v
+      y_doesnt_equal_z_t
+   )
+})

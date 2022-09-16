@@ -1,56 +1,55 @@
 use crate::{
+    diagnostic::Position,
     environment::Environment,
     item::{
         definitions::{
-            decision::DDecision,
-            is_populated_struct::DIsPopulatedStruct,
-            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
-            substitution::DSubstitution,
-            variable::DVariable,
+            builtin_function::DBuiltinFunction, structt::DPopulatedStruct,
+            substitution::DSubstitution, variable::DVariable,
         },
         item::ItemPtr,
         resolvable::{from::RFrom, DResolvable, RSubstitution},
         Item, ItemDefinition,
     },
     scope::{SPlain, Scope},
-    util::PtrExtension, diagnostic::Position,
+    util::PtrExtension,
 };
 
 /// Makes a dex that returns true if the dependency "x" is substituted with a
 /// value that could have been returned by `from_item`.
-pub(super) fn create_from_dex(env: &Environment, from: ItemPtr) -> ItemPtr {
+pub(super) fn create_from_dex(env: &Environment, from: ItemPtr, position: Position) -> ItemPtr {
     let scope = || SPlain(from.ptr_clone());
-    let into = Item::placeholder_with_scope(Box::new(scope()));
+    let into = Item::placeholder_with_scope(format!("from"), Box::new(scope()));
     from.borrow_mut().from_dex = Some(into.ptr_clone());
     let x = env.get_language_item("x").unwrap();
 
     if let Some(structt) = from.downcast_definition::<DPopulatedStruct>() {
         let structt = structt.clone();
 
-        let is_populated_struct = DIsPopulatedStruct::new(env, x.ptr_clone(), Box::new(scope()));
+        let has_tail = DBuiltinFunction::has_tail(env, x.ptr_clone(), Box::new(scope()), position);
+        let has_tail = Item::new(DResolvable::new(has_tail), scope());
 
-        let x_value = DAtomicStructMember::new(x.ptr_clone(), AtomicStructMember::Value);
-        let x_value = Item::new(x_value, scope());
+        let x_value = DBuiltinFunction::tail_value(env, x.ptr_clone(), Box::new(scope()), position);
+        let x_value = Item::new(DResolvable::new(x_value), scope());
         let value_from_value = RFrom {
             left: x_value,
-            right: structt.get_value().ptr_clone(),
+            right: structt.get_tail_value().ptr_clone(),
         };
         let value_from_value = Item::new(DResolvable::new(value_from_value), scope());
 
-        let x_rest = DAtomicStructMember::new(x.ptr_clone(), AtomicStructMember::Rest);
-        let x_rest = Item::new(x_rest, scope());
+        let x_body = DBuiltinFunction::body(env, x.ptr_clone(), Box::new(scope()), position);
+        let x_body = Item::new(DResolvable::new(x_body), scope());
         let rest_from_rest = RFrom {
-            left: x_rest,
-            right: structt.get_rest().ptr_clone(),
+            left: x_body,
+            right: structt.get_body().ptr_clone(),
         };
         let rest_from_rest = Item::new(DResolvable::new(rest_from_rest), scope());
 
-        let first_two = create_and(env, is_populated_struct, value_from_value, scope());
+        let first_two = create_and(env, has_tail, value_from_value, scope());
         redefine_as_and(env, into.ptr_clone(), first_two, rest_from_rest);
     } else if let Some(var) = from.downcast_definition::<DVariable>() {
         let var_ptr = var.get_variable();
         let var = var_ptr.borrow();
-        let invs = Vec::from(var.get_invariants());
+        let invs = Vec::<ItemPtr>::new();
         let deps = Vec::from(var.get_dependencies());
         if deps.len() > 0 {
             todo!();
@@ -70,18 +69,20 @@ pub(super) fn create_from_dex(env: &Environment, from: ItemPtr) -> ItemPtr {
         let subs = vec![(var_ptr.ptr_clone(), x.ptr_clone())]
             .into_iter()
             .collect();
-        let con = DSubstitution::new_unchecked(statement, subs);
-        into.redefine(con.clone_into_box());
+        DSubstitution::new_into(&into, statement, subs);
     } else {
         let truee = env.get_true();
         let falsee = env.get_false();
-        let equal = DDecision::new(
+        let equal = DBuiltinFunction::decision(
+            env,
             x.ptr_clone(),
             from.ptr_clone(),
             truee.ptr_clone(),
             falsee.ptr_clone(),
+            Box::new(scope()),
+            position,
         );
-        into.redefine(equal.clone_into_box());
+        into.redefine(Box::new(DResolvable::new(equal)));
     }
     into
 }
@@ -97,7 +98,8 @@ fn create_and(
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
             position: Position::placeholder(),
-            named_subs: vec![].into_iter().collect(),
+            named_subs: Default::default(),
+            named_proofs: Default::default(),
             anonymous_subs: vec![left, right],
         }),
         scope,
@@ -110,7 +112,8 @@ fn redefine_as_and(env: &Environment, original: ItemPtr, left: ItemPtr, right: I
         DResolvable::new(RSubstitution {
             base: and.ptr_clone(),
             position: Position::placeholder(),
-            named_subs: vec![].into_iter().collect(),
+            named_subs: Default::default(),
+            named_proofs: Default::default(),
             anonymous_subs: vec![left, right],
         })
         .clone_into_box(),

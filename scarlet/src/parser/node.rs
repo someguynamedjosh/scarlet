@@ -150,7 +150,7 @@ impl<'x> Node<'x> {
         } else {
             Err(Diagnostic::new()
                 .with_text_error(format!(
-                    "Expected an identifier, got a \"{}\" phrase instead:",
+                    "Expected an identifier, got a {} phrase instead:",
                     self.phrase
                 ))
                 .with_source_code_block_error(self.position))

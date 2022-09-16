@@ -15,6 +15,7 @@ use crate::{
         definitions::substitution::Substitutions,
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
+            Requirement,
         },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
@@ -58,10 +59,26 @@ impl VariableOrder {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum VariableKind {
+    Theorem(ItemPtr, String),
+    Value,
+}
+
+impl VariableKind {
+    pub fn as_theorem(&self) -> Option<&ItemPtr> {
+        if let Self::Theorem(v, _) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Variable {
     item: ItemPtr,
-    invariants: Vec<ItemPtr>,
+    kind: VariableKind,
     dependencies: Vec<ItemPtr>,
     order: VariableOrder,
 }
@@ -70,9 +87,7 @@ impl Debug for Variable {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut base = f.debug_struct("Variable");
         base.field("item", &self.item.debug_label());
-        if self.invariants.len() > 0 {
-            base.field("invariants", &self.invariants);
-        }
+        base.field("kind", &self.kind);
         if self.dependencies.len() > 0 {
             base.field("dependencies", &self.dependencies);
         }
@@ -87,8 +102,16 @@ impl Variable {
         &self.item
     }
 
-    pub fn invariants(&self) -> &[ItemPtr] {
-        &self.invariants[..]
+    pub fn required_theorem(&self) -> Option<&ItemPtr> {
+        self.kind.as_theorem()
+    }
+
+    pub fn required_theorem_text(&self) -> Option<&String> {
+        if let VariableKind::Theorem(_, t) = &self.kind {
+            Some(t)
+        } else {
+            None
+        }
     }
 
     pub fn dependencies(&self) -> &[ItemPtr] {
@@ -99,15 +122,29 @@ impl Variable {
         &self.order
     }
 
-    pub fn new(
+    pub fn new_theorem(
+        statement: ItemPtr,
+        statement_text: String,
         dependencies: Vec<ItemPtr>,
-        invariants: Vec<ItemPtr>,
         item: ItemPtr,
         order: VariableOrder,
     ) -> Rc<RefCell<Variable>> {
         rcrc(Self {
             dependencies,
-            invariants,
+            kind: VariableKind::Theorem(statement, statement_text),
+            item,
+            order,
+        })
+    }
+
+    pub fn new_value(
+        dependencies: Vec<ItemPtr>,
+        item: ItemPtr,
+        order: VariableOrder,
+    ) -> Rc<RefCell<Variable>> {
+        rcrc(Self {
+            dependencies,
+            kind: VariableKind::Value,
             item,
             order,
         })
@@ -138,26 +175,41 @@ impl DVariable {
         Variable::as_dependency(&self.0, affects_return_value)
     }
 
-    pub fn new(
-        invariants: Vec<ItemPtr>,
+    pub fn new_theorem(
+        statement: ItemPtr,
+        statement_text: String,
         dependencies: Vec<ItemPtr>,
         order: VariableOrder,
         scope: Box<dyn Scope>,
     ) -> ItemPtr {
-        let placeholder = Item::placeholder();
-        let variable = Variable {
-            item: placeholder,
-            invariants: invariants.clone(),
-            dependencies: dependencies.clone(),
+        let placeholder = Item::placeholder(format!("variable item"));
+        let variable = Variable::new_theorem(
+            statement.ptr_clone(),
+            statement_text,
+            dependencies.clone(),
+            placeholder,
             order,
-        };
-        let def = DVariable(
-            rcrc(variable),
-            invariants
-                .into_iter()
-                .chain(dependencies.into_iter())
-                .collect(),
         );
+        let def = DVariable(
+            variable,
+            dependencies
+                .into_iter()
+                .chain(std::iter::once(statement))
+                .collect_vec(),
+        );
+        Item::new_self_referencing(def, scope, |ptr, this| {
+            this.0.borrow_mut().item = ptr;
+        })
+    }
+
+    pub fn new_value(
+        dependencies: Vec<ItemPtr>,
+        order: VariableOrder,
+        scope: Box<dyn Scope>,
+    ) -> ItemPtr {
+        let placeholder = Item::placeholder(format!("variable item"));
+        let variable = Variable::new_value(dependencies.clone(), placeholder, order);
+        let def = DVariable(variable, dependencies);
         Item::new_self_referencing(def, scope, |ptr, this| {
             this.0.borrow_mut().item = ptr;
         })
@@ -165,10 +217,6 @@ impl DVariable {
 }
 
 impl Variable {
-    pub(crate) fn get_invariants(&self) -> &[ItemPtr] {
-        &self.invariants[..]
-    }
-
     pub(crate) fn get_dependencies(&self) -> &[ItemPtr] {
         &self.dependencies
     }
@@ -181,35 +229,31 @@ impl Variable {
         result
     }
 
-    pub fn assignment_justifications(
-        this: &VariablePtr,
-        value: ItemPtr,
-        other_subs: &Substitutions,
-    ) -> Vec<ItemPtr> {
-        let mut substitutions = other_subs.clone();
-        let mut justifications = Vec::new();
-        substitutions.insert_no_replace(this.ptr_clone(), value);
-        for inv in &this.borrow().invariants {
-            let subbed = unchecked_substitution(inv.ptr_clone(), &substitutions);
-            justifications.push(subbed);
-        }
-        justifications
-    }
-
     pub fn as_dependency(this: &VariablePtr, affects_return_value: bool) -> Dependencies {
         let mut deps = Dependencies::new();
         for dep in &this.borrow().dependencies {
             deps.append(dep.get_dependencies());
         }
         let result = match deps.as_complete_variables() {
-            Ok(swallowed) => {
+            Ok((swallowed_deps, swallowed_recs)) => {
                 let mut res = Dependencies::new();
-                res.push_eager(Dependency {
-                    var: this.ptr_clone(),
-                    swallow: swallowed.map(|x| x.var.ptr_clone()).collect(),
-                    order: this.borrow().order.clone(),
-                    affects_return_value,
-                });
+
+                if let VariableKind::Theorem(statement, statement_text) = &this.borrow().kind {
+                    res.push_requirement(Requirement {
+                        var: this.ptr_clone(),
+                        statement: statement.ptr_clone(),
+                        statement_text: statement_text.clone(),
+                        swallow_dependencies: swallowed_recs.map(|x| x.var.ptr_clone()).collect(),
+                        order: this.borrow().order.clone(),
+                    });
+                } else {
+                    res.push_value(Dependency {
+                        var: this.ptr_clone(),
+                        swallow: swallowed_deps.map(|x| x.var.ptr_clone()).collect(),
+                        order: this.borrow().order.clone(),
+                        affects_return_value,
+                    });
+                }
                 res
             }
             Err(err) => Dependencies::new_error(err.clone()),
@@ -249,8 +293,8 @@ impl DependenciesFeature for DVariable {
             deps.append(ctx.get_dependencies(&dep, affects_return_value));
         }
         deps.append(Variable::as_dependency(&self.0, affects_return_value));
-        for inv in &self.0.borrow().invariants {
-            deps.append(ctx.get_dependencies(inv, false));
+        if let Some(statement) = self.0.borrow().required_theorem() {
+            deps.append(ctx.get_dependencies(statement, false));
         }
         deps
     }
@@ -322,11 +366,11 @@ impl EqualityFeature for DVariable {
                     other_subs.insert_no_replace(other_dep, self_dep_item);
                 }
 
-                let mut subbed_right = unchecked_substitution(ctx.other().ptr_clone(), &other_subs);
                 let mut deps = ctx.other().get_dependencies();
                 for (target, _) in &other_subs {
                     deps.remove(target);
                 }
+                let mut subbed_right = unchecked_substitution(ctx.other().ptr_clone(), other_subs)?;
                 for subs in ctx.other_subs() {
                     let mut new_subs = Substitutions::new();
                     let mut new_deps = Dependencies::new();
@@ -338,7 +382,7 @@ impl EqualityFeature for DVariable {
                         }
                     }
                     if new_subs.len() > 0 {
-                        subbed_right = unchecked_substitution(subbed_right, &new_subs);
+                        subbed_right = unchecked_substitution(subbed_right, new_subs)?;
                     }
                 }
                 if let Equal::Yes(mut lhs, mut rhs) = Equal::and(results) {
@@ -366,13 +410,14 @@ impl InvariantsFeature for DVariable {
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        let statements = self.0.borrow().invariants.clone();
-        let dependencies = hashset![this.ptr_clone()];
-        Ok(InvariantSet::new_root_statements_depending_on(
-            this.ptr_clone(),
-            statements,
-            dependencies,
-        ))
+        let statements = self
+            .0
+            .borrow()
+            .required_theorem()
+            .into_iter()
+            .map(ItemPtr::ptr_clone)
+            .collect_vec();
+        Ok(InvariantSet::new(this.ptr_clone(), statements))
     }
 }
 

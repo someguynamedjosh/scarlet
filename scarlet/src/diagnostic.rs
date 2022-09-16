@@ -2,7 +2,12 @@ use std::ops::Range;
 
 use colored::{ColoredString, Colorize};
 
-use crate::{environment::Environment, file_tree::FileNode, item::ItemPtr};
+use crate::{
+    environment::{vomit::VomitContext, Environment},
+    file_tree::FileNode,
+    item::ItemPtr,
+    parser::ParseContext,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Level {
@@ -241,7 +246,7 @@ impl Diagnostic {
             self.with_source_code_block(level, pos)
         } else {
             drop(item_borrow);
-            self.with_generated_code_block(level, env.show(item.ptr_clone(), ctx.ptr_clone()))
+            self.with_generated_code_block(level, env.format(item.ptr_clone(), ctx.ptr_clone()))
         }
     }
 

@@ -21,7 +21,7 @@ fn create(
 ) -> Result<ItemPtr, Diagnostic> {
     assert_eq!(node.children.len(), 3);
     assert_eq!(node.children[1], NodeChild::Text("FROM"));
-    let this = Item::placeholder_with_scope(scope);
+    let this = Item::placeholder_with_scope(format!("from invocation"), scope);
 
     let left = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let right = node.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;

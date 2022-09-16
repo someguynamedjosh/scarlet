@@ -14,7 +14,7 @@ impl FileNode {
             *index -= 1;
             for child in &self.children {
                 if let Some((path, content)) = child.1.get_file_impl(index) {
-                    return Some((format!("/{}{}", child.0, path), content))
+                    return Some((format!("/{}{}", child.0, path), content));
                 }
             }
             None
@@ -22,7 +22,11 @@ impl FileNode {
     }
 
     pub fn get_file(&self, index: usize) -> (String, &str) {
-        self.get_file_impl(&mut (index - 1)).unwrap()
+        if index == 0 {
+            (format!("PLACEHOLDER"), "")
+        } else {
+            self.get_file_impl(&mut (index - 1)).unwrap()
+        }
     }
 }
 

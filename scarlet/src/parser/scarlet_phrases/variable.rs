@@ -8,7 +8,7 @@ use crate::{
             unique::DUnique,
             variable::{DVariable, SVariableInvariants, VariableOrder},
         },
-        resolvable::{DResolvable, RVariable},
+        resolvable::DResolvable,
         Item, ItemDefinition, ItemPtr,
     },
     parser::{
@@ -29,7 +29,6 @@ fn create(
     assert_eq!(node.children.len(), 4);
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
-    let mut invariants = Vec::new();
     let mut dependencies = Vec::new();
     let mut order = VariableOrder::new(
         128,
@@ -37,15 +36,16 @@ fn create(
         node.position.range().start as _,
     );
     let mut mode = 0;
-    let this = crate::item::Item::placeholder_with_scope(scope.dyn_clone());
+    let this = Item::placeholder_with_scope(format!("variable"), scope.dyn_clone());
     for arg in util::collect_comma_list(&node.children[2]) {
         if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("DEP")] {
             mode = 1;
         } else if arg.phrase == "identifier" && arg.children == &[NodeChild::Text("ORD")] {
             mode = 2;
         } else if mode == 0 {
-            let con = arg.as_item(pc, env, SVariableInvariants(this.ptr_clone()))?;
-            invariants.push(con);
+            return Err(Diagnostic::new()
+                .with_text_error(format!("Requirements are not yet supported."))
+                .with_source_code_block_error(arg.position));
         } else if mode == 1 {
             let con = arg.as_item(pc, env, SPlain(this.ptr_clone()))?;
             dependencies.push(con);
@@ -57,13 +57,8 @@ fn create(
             mode = 0
         }
     }
-    let def = RVariable {
-        invariants,
-        dependencies,
-        order,
-    };
-    this.redefine(DResolvable::new(def).clone_into_box());
-    Ok(this)
+    let item = DVariable::new_value(dependencies, order, scope);
+    Ok(item)
 }
 
 fn uncreate<'a>(
@@ -72,6 +67,9 @@ fn uncreate<'a>(
     uncreate: ItemPtr,
 ) -> UncreateResult<'a> {
     if let Some(cvar) = uncreate.downcast_definition::<DVariable>() {
+        if cvar.get_variable().borrow().required_theorem().is_some() {
+            return Ok(None);
+        }
         let cvar = cvar.clone();
         let scope_item = Item::new_boxed(DUnique::new().clone_into_box(), ctx.scope.dyn_clone());
         let scope_parent = uncreate.dereference();
@@ -80,17 +78,12 @@ fn uncreate<'a>(
 
         let cvar = cvar.clone();
         let var = cvar.get_variable().borrow();
-        let invariants = var
-            .get_invariants()
-            .into_iter()
-            .map(|inv| env.vomit(255, ctx, inv.ptr_clone()))
-            .collect_vec();
         let dependencies = var
             .get_dependencies()
             .into_iter()
-            .map(|dep| env.vomit(255, ctx, dep.ptr_clone()))
+            .map(|dep| env.vomit(255, ctx, dep.ptr_clone(), true))
             .collect_vec();
-        let mut body = invariants;
+        let mut body = vec![];
         if dependencies.len() > 0 {
             body.push(Node {
                 phrase: "identifier",

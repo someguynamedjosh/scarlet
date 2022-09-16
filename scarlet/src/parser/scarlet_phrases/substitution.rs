@@ -7,7 +7,7 @@ use crate::{
         definitions::{substitution::DSubstitution, variable::VariablePtr},
         dependencies::Dependency,
         resolvable::{DResolvable, RSubstitution, UnresolvedItemError},
-        ItemDefinition, ItemPtr,
+        Item, ItemDefinition, ItemPtr,
     },
     parser::{
         phrase::{Phrase, UncreateResult},
@@ -28,18 +28,28 @@ fn create(
     assert_eq!(node.children[1], NodeChild::Text("("));
     assert_eq!(node.children[3], NodeChild::Text(")"));
     assert!(node.children.len() == 4);
-    let this = crate::item::Item::placeholder_with_scope(scope);
+    let this = Item::placeholder_with_scope(format!("substitution"), scope);
     let base = node.children[0].as_construct(pc, env, SPlain(this.ptr_clone()))?;
     let mut named_subs = Vec::new();
+    let mut named_proofs = Vec::new();
     let mut anonymous_subs = Vec::new();
     for sub in util::collect_comma_list(&node.children[2]) {
         if sub.phrase == "is" {
-            let name = sub.children[0].as_node();
-            named_subs.push((
-                name.position,
-                name.as_ident()?.to_owned(),
-                sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?,
-            ));
+            let target = sub.children[0].as_node();
+            let pos = target.position;
+            let value = sub.children[2].as_construct(pc, env, SPlain(this.ptr_clone()))?;
+            if target.phrase == "identifier" {
+                named_subs.push((pos, target.as_ident()?.to_owned(), value));
+            } else if target.phrase == "proof_target" {
+                named_proofs.push((pos, target.children[2].vomit(pc), value));
+            } else {
+                return Err(Diagnostic::new()
+                    .with_text_error(format!(
+                        "Expected an identifier or proof label phrase (PROOF(statement)), got a {} phrase instead.",
+                        target.phrase
+                    ))
+                    .with_source_code_block_error(target.position));
+            }
         } else {
             anonymous_subs.push(sub.as_item(pc, env, SPlain(this.ptr_clone()))?);
         }
@@ -49,6 +59,7 @@ fn create(
             base,
             position: node.position,
             named_subs,
+            named_proofs,
             anonymous_subs,
         })
         .clone_into_box(),
@@ -63,7 +74,7 @@ fn uncreate_substitution<'a>(
     value: ItemPtr,
     deps: &mut Vec<Dependency>,
 ) -> Result<Node<'a>, UnresolvedItemError> {
-    let value = env.vomit(254, ctx, value);
+    let value = env.vomit(254, ctx, value, true);
     Ok(if deps.get(0).map(|v| v.var == target) == Some(true) {
         deps.remove(0);
         value
@@ -109,7 +120,7 @@ fn uncreate<'a>(
         Ok(Some(Node {
             phrase: "substitution",
             children: vec![
-                NodeChild::Node(env.vomit(4, ctx, csub.base().ptr_clone())),
+                NodeChild::Node(env.vomit(4, ctx, csub.base().ptr_clone(), true)),
                 NodeChild::Text("("),
                 subs,
                 NodeChild::Text(")"),

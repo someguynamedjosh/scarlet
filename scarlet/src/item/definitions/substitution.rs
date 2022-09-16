@@ -1,21 +1,24 @@
 use std::{collections::HashSet, fmt::Debug};
 
 use crate::{
+    diagnostic::Diagnostic,
+    environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
-        check::CheckFeature,
+        check::{CheckFeature, CheckResult},
         definitions::variable::{DVariable, VariablePtr},
         dependencies::{
             Dcc, DepResult, Dependencies, DependenciesFeature, DependencyCalculationContext,
-            OnlyCalledByDcc,
+            OnlyCalledByDcc, Requirement,
         },
-        equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
+        equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
             Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
+        resolvable::UnresolvedItemError,
         util::unchecked_substitution,
-        ContainmentType, ItemDefinition, ItemPtr,
+        ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
     util::PtrExtension,
@@ -40,13 +43,44 @@ impl Debug for DSubstitution {
     }
 }
 
+fn create_invariants(
+    this: &ItemPtr,
+    base: &ItemPtr,
+    subs: &Substitutions,
+) -> Result<InvariantSetPtr, UnresolvedItemError> {
+    let mut invs = Vec::new();
+    let base_set = base.get_invariants()?;
+    let value_subs: Substitutions = subs
+        .iter()
+        .filter(|x| x.0.borrow().required_theorem().is_none())
+        .cloned()
+        .collect();
+    for inv in base_set.borrow().statements() {
+        // Apply the substitutions to the statement the invariant is making.
+        let new_inv = unchecked_substitution(inv.ptr_clone(), value_subs.clone())?;
+        invs.push(new_inv);
+    }
+    Ok(InvariantSet::new(this.ptr_clone(), invs))
+}
+
 impl DSubstitution {
-    pub fn new(base: ItemPtr, subs: Substitutions, invs: InvariantSetPtr) -> Self {
-        Self { base, subs, invs }
+    pub fn new(base: ItemPtr, subs: Substitutions) -> Result<ItemPtr, UnresolvedItemError> {
+        let this = Item::placeholder(format!("substitution"));
+        let invs = create_invariants(&this, &base, &subs)?;
+        let def = Self { base, subs, invs };
+        this.redefine(Box::new(def));
+        Ok(this)
     }
 
-    pub fn new_unchecked(base: ItemPtr, subs: Substitutions) -> Self {
-        Self::new(base.ptr_clone(), subs, InvariantSet::new_empty(base))
+    pub fn new_into(
+        this: &ItemPtr,
+        base: ItemPtr,
+        subs: Substitutions,
+    ) -> Result<(), UnresolvedItemError> {
+        let invs = create_invariants(&this, &base, &subs)?;
+        let def = Self { base, subs, invs };
+        this.redefine(Box::new(def));
+        Ok(())
     }
 
     pub fn base(&self) -> &ItemPtr {
@@ -56,11 +90,8 @@ impl DSubstitution {
     // Only allows access if self is an *unchecked* substitution. This ensures
     // soundness.
     pub fn base_mut(&mut self) -> Option<&mut ItemPtr> {
-        if self.invs.borrow().justification_requirements().len() == 0 {
-            Some(&mut self.base)
-        } else {
-            None
-        }
+        // todo!();
+        Some(&mut self.base)
     }
 
     pub fn substitutions(&self) -> &Substitutions {
@@ -70,18 +101,14 @@ impl DSubstitution {
     // Only allows access if self is an *unchecked* substitution. This ensures
     // soundness.
     pub fn substitutions_mut(&mut self) -> Option<&mut Substitutions> {
-        if self.invs.borrow().justification_requirements().len() == 0 {
-            Some(&mut self.subs)
-        } else {
-            None
-        }
+        // todo!();
+        Some(&mut self.subs)
     }
 
     pub fn sub_deps(
         ctx: &mut DependencyCalculationContext,
         base: Dependencies,
         subs: &Substitutions,
-        justifications: &HashSet<ItemPtr>,
         affects_return_value: bool,
     ) -> DepResult {
         const TRACE: bool = false;
@@ -108,7 +135,7 @@ impl DSubstitution {
                         if TRACE {
                             println!("{:#?}", rdep);
                         }
-                        deps.push_eager(rdep);
+                        deps.push_value(rdep);
                     }
                 }
                 if let Some(err) = replaced_err {
@@ -118,18 +145,37 @@ impl DSubstitution {
                 if TRACE {
                     println!("UNCHANGED {:#?}", dep);
                 }
-                deps.push_eager(dep.clone());
+                deps.push_value(dep.clone());
+            }
+        }
+        for req in base.as_requirements() {
+            if let Some((_, replacement)) = subs
+                .iter()
+                .find(|(var, _)| var.borrow().required_theorem() == Some(&req.statement))
+            {
+                let mut new_deps = replacement.get_dependencies();
+                for swallow in &req.swallow_dependencies {
+                    new_deps.remove(swallow);
+                }
+                deps.append(new_deps);
+                continue;
+            }
+            let replaced_req = unchecked_substitution(req.statement.ptr_clone(), subs.clone());
+            match replaced_req {
+                Ok(replaced_req) => {
+                    deps.push_requirement(Requirement {
+                        var: req.var.ptr_clone(),
+                        order: req.order.clone(),
+                        statement: replaced_req,
+                        statement_text: req.statement_text.clone(),
+                        swallow_dependencies: req.swallow_dependencies.clone(), // todo!()?
+                    });
+                }
+                Err(err) => deps.append(Dependencies::new_error(err)),
             }
         }
         if let Some(err) = base_error {
             deps.append(Dependencies::new_error(err.clone()));
-        }
-        for dep in justifications {
-            if let Some(var) = dep.downcast_definition::<DVariable>() {
-                deps.append(var.as_dependency(false));
-            } else {
-                deps.append(dep.get_dependencies());
-            }
         }
         deps
     }
@@ -154,7 +200,48 @@ impl ItemDefinition for DSubstitution {
     }
 }
 
-impl CheckFeature for DSubstitution {}
+impl CheckFeature for DSubstitution {
+    fn check_self(&self, this: &ItemPtr, env: &mut Environment) -> CheckResult {
+        let value_subs: Substitutions = self
+            .subs
+            .iter()
+            .filter(|x| x.0.borrow().required_theorem().is_none())
+            .cloned()
+            .collect();
+        let mut failures = Vec::new();
+        'check_next_sub: for (target, value) in &self.subs {
+            if let Some(theorem) = target.borrow().required_theorem() {
+                let subbed_theorem =
+                    unchecked_substitution(theorem.ptr_clone(), value_subs.clone()).unwrap();
+                for inv in value.get_invariants().unwrap().borrow().statements() {
+                    if inv
+                        .get_trimmed_equality(&subbed_theorem)
+                        .unwrap()
+                        .is_trivial_yes()
+                    {
+                        continue 'check_next_sub;
+                    }
+                }
+                failures.push((value.ptr_clone(), subbed_theorem.ptr_clone()));
+            }
+        }
+        if failures.is_empty() {
+            Ok(())
+        } else {
+            let mut diag = Diagnostic::new()
+                .with_text_error(format!("In the following substitution:"))
+                .with_item_error(this, this, env);
+            for (value, statement) in failures {
+                diag = diag
+                    .with_text_error(format!("The following expression:"))
+                    .with_item_error(&value, this, env)
+                    .with_text_error(format!("Fails to prove the following statement:"))
+                    .with_item_error(&statement, this, env);
+            }
+            Err(diag)
+        }
+    }
+}
 
 impl DependenciesFeature for DSubstitution {
     fn get_dependencies_using_context(
@@ -165,8 +252,7 @@ impl DependenciesFeature for DSubstitution {
         _: OnlyCalledByDcc,
     ) -> DepResult {
         let base = ctx.get_dependencies(&self.base, affects_return_value);
-        let invs = self.invs.borrow().dependencies().clone();
-        Self::sub_deps(ctx, base, &self.subs, &invs, affects_return_value)
+        Self::sub_deps(ctx, base, &self.subs, affects_return_value)
     }
 }
 

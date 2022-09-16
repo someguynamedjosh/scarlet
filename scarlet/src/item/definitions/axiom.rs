@@ -1,11 +1,14 @@
 use maplit::hashset;
 
+use super::variable::DVariable;
 use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
         check::CheckFeature,
-        dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
+        dependencies::{
+            Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
+        },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
@@ -15,17 +18,19 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DAxiom {
     statement: ItemPtr,
+    relying_on: Vec<ItemPtr>,
 }
 
 impl DAxiom {
-    fn new(env: &mut Environment, statement: &str) -> Option<Self> {
+    fn new(env: &mut Environment, statement: &str, relying_on: Vec<ItemPtr>) -> Option<Self> {
         Some(Self {
             statement: env.get_language_item(statement)?.ptr_clone(),
+            relying_on,
         })
     }
 
-    pub fn from_name(env: &mut Environment, name: &str) -> Option<Self> {
-        Self::new(env, &format!("{}_statement", name))
+    pub fn from_name(env: &mut Environment, name: &str, relying_on: Vec<ItemPtr>) -> Option<Self> {
+        Self::new(env, &format!("{}_statement", name), relying_on)
     }
 
     pub fn get_statement(&self, env: &mut Environment) -> &'static str {
@@ -53,7 +58,11 @@ impl ItemDefinition for DAxiom {
     }
 
     fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
-        vec![(ContainmentType::Definitional, self.statement.ptr_clone())]
+        let mut result = vec![(ContainmentType::Definitional, self.statement.ptr_clone())];
+        for relied_on in &self.relying_on {
+            result.push((ContainmentType::Definitional, relied_on.ptr_clone()))
+        }
+        result
     }
 }
 
@@ -63,11 +72,19 @@ impl DependenciesFeature for DAxiom {
     fn get_dependencies_using_context(
         &self,
         _this: &ItemPtr,
-        ctx: &mut Dcc,
-        affects_return_value: bool,
+        _ctx: &mut Dcc,
+        _affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        ctx.get_dependencies(&self.statement, affects_return_value)
+        let mut base = Dependencies::new();
+        for relied_on_var in &self.relying_on {
+            let var = relied_on_var.dereference();
+            let var = var.downcast_definition::<DVariable>();
+            if let Some(var) = var {
+                base.append(var.as_dependency(false));
+            }
+        }
+        base
     }
 }
 
@@ -100,8 +117,6 @@ impl InvariantsFeature for DAxiom {
         Ok(InvariantSet::new(
             this.ptr_clone(),
             vec![self.statement.ptr_clone()],
-            vec![],
-            hashset![],
         ))
     }
 }

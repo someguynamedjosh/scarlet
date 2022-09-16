@@ -1,23 +1,20 @@
+mod any_proof;
 mod as_auto_theorem;
 mod as_language_item;
 mod axiom;
-mod decision;
+mod builtin_function;
 mod equal;
 mod from;
 mod identifier;
 mod is;
-mod is_populated_struct;
-mod label_access;
 mod member_access;
 mod multiple_items;
-mod populated_struct;
-mod rest_access;
 mod shown;
 mod structt;
 mod substitution;
 mod unique;
-mod value_access;
 mod variable;
+mod proof_target;
 
 use super::phrase::Phrase;
 
@@ -47,21 +44,18 @@ pub fn phrases() -> Vec<Phrase> {
     vec![
         unique::phrase(),
         axiom::phrase(),
+        builtin_function::phrase(),
         variable::phrase(),
-        populated_struct::phrase(),
+        any_proof::phrase(),
         equal::phrase(),
         from::phrase(),
-        decision::phrase(),
-        label_access::phrase(),
-        value_access::phrase(),
-        rest_access::phrase(),
-        is_populated_struct::phrase(),
+        member_access::phrase(),
         shown::phrase(),
         as_language_item::phrase(),
         as_auto_theorem::phrase(),
-        member_access::phrase(),
         substitution::phrase(),
         structt::phrase(),
+        proof_target::phrase(),
         is::phrase(),
         multiple_items::phrase(),
         identifier::phrase(),

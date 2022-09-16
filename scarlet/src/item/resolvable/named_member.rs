@@ -1,10 +1,12 @@
-use super::{BoxedResolvable, Resolvable, ResolveResult, UnresolvedItemError};
+use super::{BoxedResolvable, DResolvable, Resolvable, ResolveResult, UnresolvedItemError};
 use crate::{
     diagnostic::{Diagnostic, Position},
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
-        definitions::structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
+        definitions::{
+            builtin_function::DBuiltinFunction, other::DOther, structt::DPopulatedStruct,
+        },
         ContainmentType, Item, ItemDefinition, ItemPtr,
     },
     scope::Scope,
@@ -25,6 +27,26 @@ impl PartialEq for RNamedMember {
 
 impl_any_eq_from_regular_eq!(RNamedMember);
 
+fn extract_member(
+    env: &mut Environment,
+    inn: ItemPtr,
+    name: &str,
+) -> Result<Option<ItemPtr>, UnresolvedItemError> {
+    if let Some(cstruct) = inn
+        .dereference_resolved()?
+        .downcast_resolved_definition::<DPopulatedStruct>()?
+    {
+        if cstruct.get_tail_label() == name {
+            Ok(Some(cstruct.get_tail_value().ptr_clone()))
+        } else {
+            let rest = cstruct.get_body().ptr_clone();
+            extract_member(env, rest, name)
+        }
+    } else {
+        Ok(None)
+    }
+}
+
 fn find_member(
     env: &mut Environment,
     inn: ItemPtr,
@@ -34,10 +56,10 @@ fn find_member(
         .dereference_resolved()?
         .downcast_resolved_definition::<DPopulatedStruct>()?
     {
-        if cstruct.get_label() == name {
+        if cstruct.get_tail_label() == name {
             Ok(Some(0))
         } else {
-            let rest = cstruct.get_rest().ptr_clone();
+            let rest = cstruct.get_body().ptr_clone();
             Ok(find_member(env, rest, name)?.map(|x| x + 1))
         }
     } else {
@@ -54,12 +76,12 @@ impl Resolvable for RNamedMember {
         &self,
         env: &mut Environment,
         this: ItemPtr,
-        scope: Box<dyn Scope>,
+        _scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {
-        let access_depth = find_member(env, self.base.ptr_clone(), &self.member_name)?;
-        let access_depth = if let Some(ad) = access_depth {
-            ad
+        let member = extract_member(env, self.base.ptr_clone(), &self.member_name)?;
+        let member = if let Some(member) = member {
+            member
         } else {
             return ResolveResult::Err(
                 Diagnostic::new()
@@ -77,15 +99,9 @@ impl Resolvable for RNamedMember {
                     .into(),
             );
         };
-        let mut base = self.base.ptr_clone();
-        for _ in 0..access_depth {
-            base = Item::new_boxed(
-                Box::new(DAtomicStructMember::new(base, AtomicStructMember::Rest)),
-                scope.dyn_clone(),
-            );
-        }
-        let def = DAtomicStructMember::new(base, AtomicStructMember::Value);
-        ResolveResult::Ok(def.clone_into_box())
+        let def = DOther::new(member);
+        this.redefine(def.clone_into_box());
+        ResolveResult::Ok
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {

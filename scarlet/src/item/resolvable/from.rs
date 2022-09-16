@@ -3,7 +3,7 @@ use crate::{
     environment::Environment,
     impl_any_eq_from_regular_eq,
     item::{
-        definitions::{substitution::DSubstitution, variable::DVariable},
+        definitions::{other::DOther, substitution::DSubstitution, variable::DVariable},
         ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::Scope,
@@ -32,7 +32,7 @@ impl Resolvable for RFrom {
     fn resolve(
         &self,
         env: &mut Environment,
-        _this: ItemPtr,
+        this: ItemPtr,
         _scope: Box<dyn Scope>,
         _limit: u32,
     ) -> ResolveResult {
@@ -41,8 +41,8 @@ impl Resolvable for RFrom {
         let x = x.downcast_resolved_definition::<DVariable>()?;
         let x_id = x.unwrap().get_variable().ptr_clone();
         let subs = vec![(x_id, self.left.ptr_clone())].into_iter().collect();
-        let subbed = DSubstitution::new_unchecked(base.ptr_clone(), subs);
-        ResolveResult::Ok(subbed.clone_into_box())
+        DSubstitution::new_into(&this, base.ptr_clone(), subs)?;
+        ResolveResult::Ok
     }
 
     fn contents(&self) -> Vec<(ContainmentType, &ItemPtr)> {

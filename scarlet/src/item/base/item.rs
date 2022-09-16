@@ -21,18 +21,21 @@ use super::{
     util::Stack,
 };
 use crate::{
+    diagnostic::{Diagnostic, Position},
     environment::Environment,
     item::{
         definitions::{
+            builtin_function::{BuiltinFunction, DBuiltinFunction},
             other::DOther,
             placeholder::DPlaceholder,
-            structt::{AtomicStructMember, DAtomicStructMember, DPopulatedStruct},
+            structt::DPopulatedStruct,
+            substitution::DSubstitution,
         },
         resolvable::{DResolvable, Resolvable, UnresolvedItemError},
         ContainmentType, ItemDefinition,
     },
     scope::{LookupIdentResult, SRoot, Scope},
-    util::PtrExtension, diagnostic::Position,
+    util::PtrExtension,
 };
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -130,6 +133,27 @@ impl ItemPtr {
             .ok()
     }
 
+    pub fn downcast_builtin_function_call(&self) -> Option<(BuiltinFunction, Vec<ItemPtr>)> {
+        if let Some(sub) = self.downcast_definition::<DSubstitution>() {
+            if let Some(bf) = sub
+                .base()
+                .dereference()
+                .downcast_definition::<DBuiltinFunction>()
+            {
+                let params = sub.base().get_dependencies();
+                let args = params
+                    .into_variables()
+                    .map(|var| sub.substitutions().get(&var.var).cloned())
+                    .collect::<Option<_>>()?;
+                Some((bf.get_function(), args))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn downcast_resolved_definition<D: ItemDefinition>(
         &self,
     ) -> Result<Option<OwningRef<Ref<'_, Item>, D>>, UnresolvedItemError> {
@@ -153,6 +177,10 @@ impl ItemPtr {
     pub fn is_unresolved(&self) -> bool {
         self.borrow().is_unresolved()
     }
+
+    pub fn is_resolved(&self) -> bool {
+        self.borrow().is_resolved()
+    }
 }
 
 /// Extensions.
@@ -160,17 +188,18 @@ impl ItemPtr {
     pub fn dereference_once(&self) -> Option<ItemPtr> {
         if let Some(other) = self.downcast_definition::<DOther>() {
             Some(other.other().ptr_clone())
-        } else if let Some(asm) = self.downcast_definition::<DAtomicStructMember>() {
-            if let Some(structt) = asm
-                .base()
+        } else if let Some((bf, args)) = self.downcast_builtin_function_call() {
+            if let Some(structt) = args[0]
                 .dereference()
                 .downcast_definition::<DPopulatedStruct>()
             {
-                Some(match asm.member() {
-                    AtomicStructMember::Label => todo!(),
-                    AtomicStructMember::Value => structt.get_value().ptr_clone(),
-                    AtomicStructMember::Rest => structt.get_rest().ptr_clone(),
-                })
+                match bf {
+                    BuiltinFunction::Decision => None,
+                    BuiltinFunction::Body => Some(structt.get_body().ptr_clone()),
+                    BuiltinFunction::TailLabel => todo!(),
+                    BuiltinFunction::TailValue => Some(structt.get_tail_value().ptr_clone()),
+                    BuiltinFunction::HasTail => None,
+                }
             } else {
                 None
             }
@@ -235,14 +264,26 @@ impl ItemPtr {
         } else {
             drop(ptr);
             assert!(self.0.try_borrow_mut().is_ok());
-            create_from_dex(env, self.ptr_clone())
+            create_from_dex(env, self.ptr_clone(), Position::placeholder())
         }
     }
 
-    pub fn check_all(&self) {
+    pub fn check_all(&self, env: &mut Environment) -> Result<(), Vec<Diagnostic>> {
+        let mut diagnostics = Vec::new();
         self.for_self_and_deep_contents(&mut |item| {
-            item.borrow().definition.check_self(item).unwrap();
-        })
+            diagnostics.extend(
+                item.borrow()
+                    .definition
+                    .check_self(item, env)
+                    .err()
+                    .into_iter(),
+            );
+        });
+        if diagnostics.is_empty() {
+            Ok(())
+        } else {
+            Err(diagnostics)
+        }
     }
 
     pub fn for_self_and_deep_contents_impl(
@@ -289,12 +330,12 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn placeholder() -> ItemPtr {
-        Self::new_boxed(Box::new(DPlaceholder), Box::new(SRoot))
+    pub fn placeholder(name: String) -> ItemPtr {
+        Self::new_boxed(Box::new(DPlaceholder { name }), Box::new(SRoot))
     }
 
-    pub fn placeholder_with_scope(scope: Box<dyn Scope>) -> ItemPtr {
-        Self::new_boxed(Box::new(DPlaceholder), scope)
+    pub fn placeholder_with_scope(name: String, scope: Box<dyn Scope>) -> ItemPtr {
+        Self::new_boxed(Box::new(DPlaceholder { name }), scope)
     }
 
     pub fn new(definition: impl ItemDefinition, scope: impl Scope + 'static) -> ItemPtr {
@@ -340,6 +381,10 @@ impl Item {
 
     pub fn downcast_definition_mut<D: ItemDefinition>(&mut self) -> Option<&mut D> {
         (&mut *self.definition as &mut dyn Any).downcast_mut()
+    }
+
+    pub fn is_resolved(&self) -> bool {
+        self.downcast_definition::<DResolvable>().is_none()
     }
 
     pub fn is_unresolved(&self) -> bool {

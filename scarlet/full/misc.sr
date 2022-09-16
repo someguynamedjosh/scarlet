@@ -11,4 +11,3 @@ x IS std.basics.x
 #    x.IS_POPULATED_STRUCT
 #    is_struct(x.REST)
 # )
-

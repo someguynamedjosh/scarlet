@@ -10,6 +10,9 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "false",
     "void",
     "x",
+    "y",
+    "when_equal",
+    "when_not_equal",
     "and",
     "trivial_t_statement",
     "invariant_truth_t_statement",
@@ -17,8 +20,10 @@ pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
     "eq_ext_rev_t_statement",
     "inv_eq_t_statement",
     "refl_t_statement",
+    "cases_t_statement",
     "decision_eq_t_statement",
     "decision_neq_t_statement",
+    "decision_identity_t_statement",
 ];
 
 #[cfg(feature = "no_axioms")]
@@ -37,7 +42,7 @@ impl Environment {
             auto_theorems: Vec::new(),
         };
         for &name in LANGUAGE_ITEM_NAMES {
-            let id = Item::placeholder();
+            let id = Item::placeholder(format!("language item {}", name));
             this.language_items.insert(name, id);
         }
         this

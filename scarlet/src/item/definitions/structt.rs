@@ -17,26 +17,26 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DPopulatedStruct {
+    body: ItemPtr,
     label: String,
     value: ItemPtr,
-    rest: ItemPtr,
 }
 
 impl DPopulatedStruct {
-    pub fn new(label: String, value: ItemPtr, rest: ItemPtr) -> Self {
-        Self { label, value, rest }
+    pub fn new(body: ItemPtr, label: String, value: ItemPtr) -> Self {
+        Self { body, label, value }
     }
 
-    pub fn get_label(&self) -> &str {
+    pub fn get_body(&self) -> &ItemPtr {
+        &self.body
+    }
+
+    pub fn get_tail_label(&self) -> &str {
         &self.label[..]
     }
 
-    pub fn get_value(&self) -> &ItemPtr {
+    pub fn get_tail_value(&self) -> &ItemPtr {
         &self.value
-    }
-
-    pub fn get_rest(&self) -> &ItemPtr {
-        &self.rest
     }
 }
 
@@ -49,8 +49,8 @@ impl ItemDefinition for DPopulatedStruct {
 
     fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
         vec![
+            (ContainmentType::Computational, self.body.ptr_clone()),
             (ContainmentType::Computational, self.value.ptr_clone()),
-            (ContainmentType::Computational, self.rest.ptr_clone()),
         ]
     }
 }
@@ -66,8 +66,8 @@ impl DependenciesFeature for DPopulatedStruct {
         affects_return_value: bool,
         _: OnlyCalledByDcc,
     ) -> DepResult {
-        let mut deps = ctx.get_dependencies(&self.value, affects_return_value);
-        deps.append(ctx.get_dependencies(&self.rest, affects_return_value));
+        let mut deps = ctx.get_dependencies(&self.body, affects_return_value);
+        deps.append(ctx.get_dependencies(&self.value, affects_return_value));
         deps
     }
 }
@@ -78,160 +78,21 @@ impl EqualityFeature for DPopulatedStruct {
             if self.label != other.label {
                 return Ok(Equal::No);
             }
-            Some([other.value.ptr_clone(), other.rest.ptr_clone()])
+            Some([other.body.ptr_clone(), other.value.ptr_clone()])
         } else {
             None
         };
-        let equal = if let Some([other_value, other_rest]) = others {
+        let equal = if let Some([other_body, other_value]) = others {
             Equal::and(vec![
-                ctx.with_primary_and_other(self.value.ptr_clone(), other_value)
+                ctx.with_primary_and_other(self.body.ptr_clone(), other_body)
                     .get_equality_left()?,
-                ctx.with_primary_and_other(self.rest.ptr_clone(), other_rest)
+                ctx.with_primary_and_other(self.value.ptr_clone(), other_value)
                     .get_equality_left()?,
             ])
         } else {
             Equal::Unknown
         };
         Ok(equal)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AtomicStructMember {
-    Label,
-    Value,
-    Rest,
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub struct DAtomicStructMember(ItemPtr, AtomicStructMember);
-
-impl Debug for DAtomicStructMember {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "DAtomicStructMember({:?})", self.1)
-    }
-}
-
-impl DAtomicStructMember {
-    pub fn new(base: ItemPtr, member: AtomicStructMember) -> Self {
-        Self(base, member)
-    }
-
-    pub fn base(&self) -> &ItemPtr {
-        &self.0
-    }
-
-    pub fn member(&self) -> AtomicStructMember {
-        self.1
-    }
-}
-
-impl_any_eq_from_regular_eq!(DAtomicStructMember);
-
-impl ItemDefinition for DAtomicStructMember {
-    fn clone_into_box(&self) -> Box<dyn ItemDefinition> {
-        Box::new(self.clone())
-    }
-
-    fn contents(&self) -> Vec<(ContainmentType, ItemPtr)> {
-        // return vec![(ContainmentType::Computational, self.0.ptr_clone())];
-        if let Some(structt) = self
-            .0
-            .dereference()
-            .downcast_definition::<DPopulatedStruct>()
-        {
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => {
-                    vec![
-                        (ContainmentType::Definitional, self.0.ptr_clone()),
-                        (ContainmentType::Computational, structt.value.ptr_clone()),
-                    ]
-                }
-                AtomicStructMember::Rest => {
-                    vec![
-                        (ContainmentType::Definitional, self.0.ptr_clone()),
-                        (ContainmentType::Computational, structt.rest.ptr_clone()),
-                    ]
-                }
-            }
-        } else {
-            vec![(ContainmentType::Computational, self.0.ptr_clone())]
-        }
-    }
-}
-
-impl CheckFeature for DAtomicStructMember {}
-impl EqualityFeature for DAtomicStructMember {
-    fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {
-        if let Some(structt) = self
-            .0
-            .dereference()
-            .downcast_definition::<DPopulatedStruct>()
-        {
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => ctx
-                    .with_primary(structt.value.ptr_clone())
-                    .get_equality_left(),
-                AtomicStructMember::Rest => ctx
-                    .with_primary(structt.rest.ptr_clone())
-                    .get_equality_left(),
-            }
-        } else {
-            Ok(Equal::Unknown)
-        }
-    }
-}
-
-impl DependenciesFeature for DAtomicStructMember {
-    fn get_dependencies_using_context(
-        &self,
-        _this: &ItemPtr,
-        ctx: &mut Dcc,
-        affects_return_value: bool,
-        _: OnlyCalledByDcc,
-    ) -> DepResult {
-        if let Some(structt) = self
-            .0
-            .dereference()
-            .downcast_definition::<DPopulatedStruct>()
-        {
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => {
-                    ctx.get_dependencies(&structt.value, affects_return_value)
-                }
-                AtomicStructMember::Rest => {
-                    ctx.get_dependencies(&structt.rest, affects_return_value)
-                }
-            }
-        } else {
-            ctx.get_dependencies(&self.0, affects_return_value)
-        }
-    }
-}
-
-impl InvariantsFeature for DAtomicStructMember {
-    fn get_invariants_using_context(
-        &self,
-        _this: &ItemPtr,
-        _ctx: &mut Icc,
-        _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        if let Some(structt) = self
-            .0
-            .dereference()
-            .downcast_definition::<DPopulatedStruct>()
-        {
-            match self.1 {
-                AtomicStructMember::Label => todo!(),
-                AtomicStructMember::Value => structt.value.get_invariants(),
-                AtomicStructMember::Rest => structt.rest.get_invariants(),
-            }
-        } else {
-            self.0.get_invariants()
-        }
     }
 }
 
@@ -294,8 +155,8 @@ pub struct SFieldAndRest(pub ItemPtr);
 fn lookup_ident_in(ident: &str, inn: &DPopulatedStruct) -> LookupIdentResult {
     Ok(if inn.label == ident {
         Some(inn.value.ptr_clone())
-    } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        lookup_ident_in(ident, &rest)?
+    } else if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
+        lookup_ident_in(ident, &body)?
     } else {
         None
     })
@@ -309,8 +170,8 @@ fn reverse_lookup_ident_in(
     Ok(
         if inn.value.dereference().is_same_instance_as(&value) && inn.label.len() > 0 {
             Some(inn.label.clone())
-        } else if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-            reverse_lookup_ident_in(env, value, &rest)?
+        } else if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
+            reverse_lookup_ident_in(env, value, &body)?
         } else {
             None
         },
@@ -319,8 +180,8 @@ fn reverse_lookup_ident_in(
 
 fn get_invariant_sets_in(inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {
     let mut result = inn.value.get_invariants().into_iter().collect_vec();
-    if let Some(rest) = inn.rest.downcast_definition::<DPopulatedStruct>() {
-        result.append(&mut get_invariant_sets_in(&*rest));
+    if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
+        result.append(&mut get_invariant_sets_in(&*body));
     }
     result
 }
