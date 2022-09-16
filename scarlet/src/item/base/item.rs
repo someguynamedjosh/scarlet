@@ -76,6 +76,10 @@ impl ItemPtr {
         )
     }
 
+    pub fn as_ptr(&self) -> *const ItemPtr {
+        self.as_ptr()
+    }
+
     pub fn is_same_instance_as(&self, other: &Self) -> bool {
         Rc::as_ptr(&self.0) == Rc::as_ptr(&other.0)
     }
