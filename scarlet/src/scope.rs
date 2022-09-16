@@ -2,12 +2,12 @@ use std::fmt::Debug;
 
 use crate::{
     environment::Environment,
-    item::{invariants::InvariantSetPtr, resolvable::UnresolvedItemError, ItemPtr},
+    item::{invariants::PredicateSet, resolvable::UnresolvedItemError, ItemPtr},
 };
 
 pub type LookupIdentResult = Result<Option<ItemPtr>, UnresolvedItemError>;
 pub type ReverseLookupIdentResult = Result<Option<String>, UnresolvedItemError>;
-pub type LookupInvariantResult = Result<InvariantSetPtr, LookupInvariantError>;
+pub type LookupInvariantResult = Result<PredicateSet, LookupInvariantError>;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum LookupInvariantError {
@@ -35,7 +35,7 @@ pub trait Scope: Debug {
         env: &mut Environment,
         value: ItemPtr,
     ) -> ReverseLookupIdentResult;
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr>;
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet>;
     fn parent(&self) -> Option<ItemPtr>;
 
     fn lookup_ident(&self, ident: &str) -> LookupIdentResult {
@@ -68,7 +68,7 @@ pub trait Scope: Debug {
         }
     }
 
-    fn get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn get_invariant_sets(&self) -> Vec<PredicateSet> {
         let mut result = self.local_get_invariant_sets();
         if let Some(parent) = self.parent() {
             let parent_scope = &parent.borrow().scope;
@@ -98,7 +98,7 @@ impl Scope for SPlain {
         Ok(None)
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         vec![]
     }
 
@@ -127,7 +127,7 @@ impl Scope for SRoot {
         Ok(None)
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         vec![]
     }
 
@@ -160,7 +160,7 @@ impl Scope for SPlaceholder {
         unreachable!()
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         unreachable!()
     }
 
@@ -193,7 +193,7 @@ impl<Base: Scope + Clone + 'static> Scope for SWithParent<Base> {
         self.0.local_reverse_lookup_ident(env, value)
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         self.0.local_get_invariant_sets()
     }
 

@@ -1,16 +1,16 @@
-use super::{Icc, PredicateSet, InvariantSetPtr, OnlyCalledByIcc};
+use super::{Icc, PredicateSet, OnlyCalledByIcc};
 use crate::item::{resolvable::UnresolvedItemError, ItemPtr};
 
-pub type InvariantsResult = Result<InvariantSetPtr, UnresolvedItemError>;
+pub type PredicatesResult = Result<PredicateSet, UnresolvedItemError>;
 
-pub trait InvariantsFeature {
+pub trait PredicatesFeature {
     #[allow(unused_variables)]
-    fn get_invariants_using_context(
+    fn get_predicates_using_context(
         &self,
         this: &ItemPtr,
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        Ok(PredicateSet::new_empty(this.ptr_clone()))
+    ) -> PredicatesResult {
+        Ok(PredicateSet::new_empty())
     }
 }

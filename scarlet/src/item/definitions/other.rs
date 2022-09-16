@@ -6,7 +6,7 @@ use crate::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
         equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicatesFeature, PredicatesResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
 };
@@ -68,13 +68,13 @@ impl EqualityFeature for DOther {
     }
 }
 
-impl InvariantsFeature for DOther {
-    fn get_invariants_using_context(
+impl PredicatesFeature for DOther {
+    fn get_predicates_using_context(
         &self,
         _this: &ItemPtr,
         ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
+    ) -> PredicatesResult {
         ctx.get_invariants(&self.other)
     }
 }

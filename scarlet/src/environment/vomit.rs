@@ -108,12 +108,7 @@ impl Environment {
         };
         if let Ok(set_ptr) = item_id.get_invariants() {
             result.push_str("\nproves:");
-            let set = set_ptr.borrow();
-            for invariant in set.statements() {
-                let vomited = self.vomit(255, &mut inv_ctx, invariant.ptr_clone(), true);
-                let vomited = Self::format_vomit_output(&inv_ctx, vomited);
-                result.push_str(&format!("\n    {} ", indented(&vomited,),));
-            }
+            todo!();
         }
         result.push_str(&format!("\ndepends on: "));
         for dep in item_id.get_dependencies().into_variables() {

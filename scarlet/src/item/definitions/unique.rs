@@ -6,7 +6,7 @@ use crate::{
         check::CheckFeature,
         dependencies::DependenciesFeature,
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::InvariantsFeature,
+        invariants::PredicatesFeature,
         ItemDefinition,
     },
     util::PtrExtension,
@@ -35,7 +35,7 @@ impl ItemDefinition for DUnique {
 
 impl CheckFeature for DUnique {}
 impl DependenciesFeature for DUnique {}
-impl InvariantsFeature for DUnique {}
+impl PredicatesFeature for DUnique {}
 
 impl EqualityFeature for DUnique {
     fn get_equality_using_context(&self, ctx: &mut Ecc, _: OnlyCalledByEcc) -> EqualResult {

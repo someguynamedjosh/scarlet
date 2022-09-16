@@ -9,7 +9,7 @@ use crate::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, InvariantSetPtr, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicateSet, PredicatesFeature, PredicatesResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
     scope::{LookupIdentResult, ReverseLookupIdentResult, Scope},
@@ -56,7 +56,7 @@ impl ItemDefinition for DPopulatedStruct {
 }
 
 impl CheckFeature for DPopulatedStruct {}
-impl InvariantsFeature for DPopulatedStruct {}
+impl PredicatesFeature for DPopulatedStruct {}
 
 impl DependenciesFeature for DPopulatedStruct {
     fn get_dependencies_using_context(
@@ -136,7 +136,7 @@ impl Scope for SField {
         }
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         if let Some(structt) = self.0.downcast_definition::<DPopulatedStruct>() {
             structt.value.get_invariants().into_iter().collect()
         } else {
@@ -178,7 +178,7 @@ fn reverse_lookup_ident_in(
     )
 }
 
-fn get_invariant_sets_in(inn: &DPopulatedStruct) -> Vec<InvariantSetPtr> {
+fn get_invariant_sets_in(inn: &DPopulatedStruct) -> Vec<PredicateSet> {
     let mut result = inn.value.get_invariants().into_iter().collect_vec();
     if let Some(body) = inn.body.downcast_definition::<DPopulatedStruct>() {
         result.append(&mut get_invariant_sets_in(&*body));
@@ -211,7 +211,7 @@ impl Scope for SFieldAndRest {
         }
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         if let Some(structt) = self.0.downcast_definition() {
             get_invariant_sets_in(&structt)
         } else {

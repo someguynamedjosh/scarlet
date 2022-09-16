@@ -4,7 +4,7 @@ use crate::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, DependenciesFeature, OnlyCalledByDcc},
         equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicatesFeature, PredicatesResult, OnlyCalledByIcc},
         ItemDefinition, ItemPtr,
     },
 };
@@ -45,13 +45,13 @@ impl EqualityFeature for DPlaceholder {
     }
 }
 
-impl InvariantsFeature for DPlaceholder {
-    fn get_invariants_using_context(
+impl PredicatesFeature for DPlaceholder {
+    fn get_predicates_using_context(
         &self,
         _this: &ItemPtr,
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
+    ) -> PredicatesResult {
         panic!(
             "Attempted to get invariants of placeholder '{}'.",
             self.name

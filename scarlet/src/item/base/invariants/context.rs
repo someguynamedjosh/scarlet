@@ -1,4 +1,4 @@
-use super::{feature::InvariantsResult, PredicateSet};
+use super::{feature::PredicatesResult, PredicateSet};
 use crate::item::{base::util::RecursionPreventionStack, ItemPtr};
 
 /// Using this in a function signature guarantees that only
@@ -13,7 +13,7 @@ pub struct InvariantCalculationContext {
 pub type Icc = InvariantCalculationContext;
 
 impl InvariantCalculationContext {
-    pub fn get_invariants(&mut self, of_item: &ItemPtr) -> InvariantsResult {
+    pub fn get_invariants(&mut self, of_item: &ItemPtr) -> PredicatesResult {
         let of_item = of_item.dereference();
         RecursionPreventionStack::skip_recursion_or_execute_with_mutable_access(
             self,
@@ -21,10 +21,10 @@ impl InvariantCalculationContext {
             |s| &mut s.stack,
             |this| {
                 let def = &of_item.borrow().definition;
-                def.get_invariants_using_context(&of_item, this, OnlyCalledByIcc(()))
+                def.get_predicates_using_context(&of_item, this, OnlyCalledByIcc(()))
             },
         )
-        .unwrap_or_else(|| Ok(PredicateSet::new_empty(of_item.ptr_clone())))
+        .unwrap_or_else(|| Ok(PredicateSet::new_empty()))
     }
 
     pub fn new() -> Self {

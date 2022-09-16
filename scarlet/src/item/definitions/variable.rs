@@ -19,7 +19,7 @@ use crate::{
         },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
-            Icc, PredicateSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            Icc, PredicateSet, PredicatesFeature, PredicatesResult,
             OnlyCalledByIcc,
         },
         util::unchecked_substitution,
@@ -403,13 +403,13 @@ impl EqualityFeature for DVariable {
     }
 }
 
-impl InvariantsFeature for DVariable {
-    fn get_invariants_using_context(
+impl PredicatesFeature for DVariable {
+    fn get_predicates_using_context(
         &self,
         this: &ItemPtr,
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
+    ) -> PredicatesResult {
         let statements = self
             .0
             .borrow()
@@ -449,7 +449,7 @@ impl Scope for SVariableInvariants {
         })
     }
 
-    fn local_get_invariant_sets(&self) -> Vec<InvariantSetPtr> {
+    fn local_get_invariant_sets(&self) -> Vec<PredicateSet> {
         vec![]
     }
 

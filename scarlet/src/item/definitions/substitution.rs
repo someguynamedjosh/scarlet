@@ -12,10 +12,7 @@ use crate::{
             OnlyCalledByDcc, Requirement,
         },
         equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{
-            Icc, PredicateSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
-            OnlyCalledByIcc,
-        },
+        invariants::{Icc, OnlyCalledByIcc, PredicateSet, PredicatesFeature, PredicatesResult},
         resolvable::UnresolvedItemError,
         util::unchecked_substitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
@@ -30,7 +27,7 @@ pub type Substitutions = OrderedMap<VariablePtr, ItemPtr>;
 pub struct DSubstitution {
     base: ItemPtr,
     subs: Substitutions,
-    invs: InvariantSetPtr,
+    invs: PredicateSet,
 }
 
 impl Debug for DSubstitution {
@@ -47,20 +44,14 @@ fn create_invariants(
     this: &ItemPtr,
     base: &ItemPtr,
     subs: &Substitutions,
-) -> Result<InvariantSetPtr, UnresolvedItemError> {
-    let mut invs = Vec::new();
+) -> Result<PredicateSet, UnresolvedItemError> {
     let base_set = base.get_invariants()?;
     let value_subs: Substitutions = subs
         .iter()
         .filter(|x| x.0.borrow().required_theorem().is_none())
         .cloned()
         .collect();
-    for inv in base_set.borrow().statements() {
-        // Apply the substitutions to the statement the invariant is making.
-        let new_inv = unchecked_substitution(inv.ptr_clone(), value_subs.clone())?;
-        invs.push(new_inv);
-    }
-    Ok(PredicateSet::new(this.ptr_clone(), invs))
+    todo!()
 }
 
 impl DSubstitution {
@@ -213,16 +204,17 @@ impl CheckFeature for DSubstitution {
             if let Some(theorem) = target.borrow().required_theorem() {
                 let subbed_theorem =
                     unchecked_substitution(theorem.ptr_clone(), value_subs.clone()).unwrap();
-                for inv in value.get_invariants().unwrap().borrow().statements() {
-                    if inv
-                        .get_trimmed_equality(&subbed_theorem)
-                        .unwrap()
-                        .is_trivial_yes()
-                    {
-                        continue 'check_next_sub;
-                    }
-                }
-                failures.push((value.ptr_clone(), subbed_theorem.ptr_clone()));
+                // for inv in value.get_invariants().unwrap().borrow().statements() {
+                //     if inv
+                //         .get_trimmed_equality(&subbed_theorem)
+                //         .unwrap()
+                //         .is_trivial_yes()
+                //     {
+                //         continue 'check_next_sub;
+                //     }
+                // }
+                // failures.push((value.ptr_clone(), subbed_theorem.ptr_clone()));
+                todo!()
             }
         }
         if failures.is_empty() {
@@ -263,13 +255,13 @@ impl EqualityFeature for DSubstitution {
     }
 }
 
-impl InvariantsFeature for DSubstitution {
-    fn get_invariants_using_context(
+impl PredicatesFeature for DSubstitution {
+    fn get_predicates_using_context(
         &self,
         _this: &ItemPtr,
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        Ok(self.invs.ptr_clone())
+    ) -> PredicatesResult {
+        Ok(self.invs.clone())
     }
 }

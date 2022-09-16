@@ -9,7 +9,7 @@ use crate::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, PredicateSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicateSet, PredicatesFeature, PredicatesResult, OnlyCalledByIcc},
         resolvable::RSubstitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
     },
@@ -199,4 +199,4 @@ impl EqualityFeature for DBuiltinFunction {
     }
 }
 
-impl InvariantsFeature for DBuiltinFunction {}
+impl PredicatesFeature for DBuiltinFunction {}

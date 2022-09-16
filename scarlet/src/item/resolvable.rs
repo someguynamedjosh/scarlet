@@ -16,7 +16,7 @@ use super::{
     check::CheckFeature,
     dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
     equality::EqualityFeature,
-    invariants::{Icc, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+    invariants::{Icc, PredicatesFeature, PredicatesResult, OnlyCalledByIcc},
     ContainmentType,
 };
 use crate::{
@@ -76,13 +76,13 @@ impl DependenciesFeature for DResolvable {
     }
 }
 impl EqualityFeature for DResolvable {}
-impl InvariantsFeature for DResolvable {
-    fn get_invariants_using_context(
+impl PredicatesFeature for DResolvable {
+    fn get_predicates_using_context(
         &self,
         this: &ItemPtr,
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
+    ) -> PredicatesResult {
         Err(UnresolvedItemError(this.ptr_clone()))
     }
 }

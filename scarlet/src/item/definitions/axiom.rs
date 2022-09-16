@@ -10,7 +10,7 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, PredicateSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicateSet, PredicatesFeature, PredicatesResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
 };
@@ -107,16 +107,15 @@ impl EqualityFeature for DAxiom {
     }
 }
 
-impl InvariantsFeature for DAxiom {
-    fn get_invariants_using_context(
+impl PredicatesFeature for DAxiom {
+    fn get_predicates_using_context(
         &self,
         this: &ItemPtr,
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
-    ) -> InvariantsResult {
-        Ok(PredicateSet::new(
-            this.ptr_clone(),
-            vec![self.statement.ptr_clone()],
-        ))
+    ) -> PredicatesResult {
+        let mut set = PredicateSet::new_empty();
+        set.push_or(self.statement.ptr_clone());
+        Ok(set)
     }
 }

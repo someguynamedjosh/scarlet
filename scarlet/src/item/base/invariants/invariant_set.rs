@@ -88,7 +88,16 @@ impl Debug for PredicateSet {
 impl PredicateSet {
     pub fn new_empty() -> PredicateSet {
         Self {
-            predicates: Default::default(),
+            predicates: PredicateIntersectionUnion {
+                base: vec![(
+                    PredicateIntersection {
+                        base: HashSet::new(),
+                    },
+                    (),
+                )]
+                .into_iter()
+                .collect(),
+            },
         }
     }
 

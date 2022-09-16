@@ -2,7 +2,7 @@ use std::{any::Any, fmt::Debug};
 
 use super::{
     check::CheckFeature, dependencies::DependenciesFeature, equality::EqualityFeature,
-    invariants::InvariantsFeature,
+    invariants::PredicatesFeature,
 };
 use crate::{item::ItemPtr, shared::AnyEq};
 
@@ -16,7 +16,7 @@ pub enum ContainmentType {
 }
 
 pub trait ItemDefinition:
-    Any + Debug + AnyEq + CheckFeature + DependenciesFeature + EqualityFeature + InvariantsFeature
+    Any + Debug + AnyEq + CheckFeature + DependenciesFeature + EqualityFeature + PredicatesFeature
 {
     fn clone_into_box(&self) -> Box<dyn ItemDefinition>;
 
