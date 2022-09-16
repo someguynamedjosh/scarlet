@@ -13,7 +13,7 @@ use crate::{
         },
         equality::{Ecc, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            Icc, PredicateSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
         resolvable::UnresolvedItemError,
@@ -60,7 +60,7 @@ fn create_invariants(
         let new_inv = unchecked_substitution(inv.ptr_clone(), value_subs.clone())?;
         invs.push(new_inv);
     }
-    Ok(InvariantSet::new(this.ptr_clone(), invs))
+    Ok(PredicateSet::new(this.ptr_clone(), invs))
 }
 
 impl DSubstitution {

@@ -11,7 +11,7 @@ use crate::{
             variable::{DVariable, Variable},
         },
         dependencies::{Dcc, Dependencies},
-        invariants::{InvariantSet, InvariantsResult},
+        invariants::{PredicateSet, InvariantsResult},
         util::unchecked_substitution,
         ContainmentType, ItemDefinition, ItemPtr,
     },

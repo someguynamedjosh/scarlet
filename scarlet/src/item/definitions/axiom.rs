@@ -10,7 +10,7 @@ use crate::{
             Dcc, DepResult, Dependencies, DependenciesFeature, Dependency, OnlyCalledByDcc,
         },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicateSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         ContainmentType, ItemDefinition, ItemPtr,
     },
 };
@@ -114,7 +114,7 @@ impl InvariantsFeature for DAxiom {
         _ctx: &mut Icc,
         _: OnlyCalledByIcc,
     ) -> InvariantsResult {
-        Ok(InvariantSet::new(
+        Ok(PredicateSet::new(
             this.ptr_clone(),
             vec![self.statement.ptr_clone()],
         ))

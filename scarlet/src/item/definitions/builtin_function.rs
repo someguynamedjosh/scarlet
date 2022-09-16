@@ -9,7 +9,7 @@ use crate::{
         check::CheckFeature,
         dependencies::{Dcc, DepResult, Dependencies, DependenciesFeature, OnlyCalledByDcc},
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
-        invariants::{Icc, InvariantSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
+        invariants::{Icc, PredicateSet, InvariantsFeature, InvariantsResult, OnlyCalledByIcc},
         resolvable::RSubstitution,
         ContainmentType, Item, ItemDefinition, ItemPtr,
     },

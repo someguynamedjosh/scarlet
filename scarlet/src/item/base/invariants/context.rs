@@ -1,4 +1,4 @@
-use super::{feature::InvariantsResult, InvariantSet};
+use super::{feature::InvariantsResult, PredicateSet};
 use crate::item::{base::util::RecursionPreventionStack, ItemPtr};
 
 /// Using this in a function signature guarantees that only
@@ -24,7 +24,7 @@ impl InvariantCalculationContext {
                 def.get_invariants_using_context(&of_item, this, OnlyCalledByIcc(()))
             },
         )
-        .unwrap_or_else(|| Ok(InvariantSet::new_empty(of_item.ptr_clone())))
+        .unwrap_or_else(|| Ok(PredicateSet::new_empty(of_item.ptr_clone())))
     }
 
     pub fn new() -> Self {

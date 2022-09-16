@@ -19,7 +19,7 @@ use crate::{
         },
         equality::{Ecc, Equal, EqualResult, EqualityFeature, OnlyCalledByEcc},
         invariants::{
-            Icc, InvariantSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
+            Icc, PredicateSet, InvariantSetPtr, InvariantsFeature, InvariantsResult,
             OnlyCalledByIcc,
         },
         util::unchecked_substitution,
@@ -417,7 +417,7 @@ impl InvariantsFeature for DVariable {
             .into_iter()
             .map(ItemPtr::ptr_clone)
             .collect_vec();
-        Ok(InvariantSet::new(this.ptr_clone(), statements))
+        Ok(PredicateSet::new(this.ptr_clone(), statements))
     }
 }
 

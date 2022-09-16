@@ -72,39 +72,24 @@ impl PredicateIntersectionUnion {
     }
 }
 
-#[derive(Clone)]
-pub struct InvariantSet {
-    pub(super) target: ItemPtr,
+#[derive(Clone, PartialEq, Eq)]
+pub struct PredicateSet {
     pub(super) predicates: PredicateIntersectionUnion,
 }
 
-impl PartialEq for InvariantSet {
-    fn eq(&self, other: &Self) -> bool {
-        self.target == other.target
-    }
-}
-
-impl Debug for InvariantSet {
+impl Debug for PredicateSet {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("InvariantSet")
-            .field("context", &self.target.debug_label())
-            .field("statements", &self.predicates)
+        f.debug_struct("PredicateSet")
+            .field("predicates", &self.predicates)
             .finish_non_exhaustive()
     }
 }
 
-pub type InvariantSetPtr = Rc<RefCell<InvariantSet>>;
-
-impl InvariantSet {
-    pub fn new_empty(target: ItemPtr) -> InvariantSet {
+impl PredicateSet {
+    pub fn new_empty() -> PredicateSet {
         Self {
-            target,
             predicates: Default::default(),
         }
-    }
-
-    pub fn target(&self) -> &ItemPtr {
-        &self.target
     }
 
     pub fn push_and(&mut self, additional_predicate: ItemPtr) {
@@ -116,14 +101,12 @@ impl InvariantSet {
     }
 
     pub fn union_with(&mut self, other: Self) {
-        assert!(self.target.is_same_instance_as(&other.target));
         for (intersection, _) in other.predicates.base.into_iter() {
             self.predicates.push_or_intersection(intersection);
         }
     }
 
     pub fn intersection_with(&mut self, other: Self) {
-        assert!(self.target.is_same_instance_as(&other.target));
         let self_intersections = self.predicates.base.take();
         let other_intersections = other.predicates.base.take();
         for (a, _) in &self_intersections {
