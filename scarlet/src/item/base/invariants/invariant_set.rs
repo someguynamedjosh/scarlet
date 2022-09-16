@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{BTreeSet, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     fmt::{self, Debug, Formatter},
     hash::Hash,
     rc::Rc,
@@ -119,6 +119,20 @@ impl InvariantSet {
         assert!(self.target.is_same_instance_as(&other.target));
         for (intersection, _) in other.predicates.base.into_iter() {
             self.predicates.push_or_intersection(intersection);
+        }
+    }
+
+    pub fn intersection_with(&mut self, other: Self) {
+        assert!(self.target.is_same_instance_as(&other.target));
+        let self_intersections = self.predicates.base.take();
+        let other_intersections = other.predicates.base.take();
+        for (a, _) in &self_intersections {
+            for (b, _) in &other_intersections {
+                let a_b_intersection = a.base.union(&b.base);
+                self.predicates.push_or_intersection(PredicateIntersection {
+                    base: a_b_intersection.map(|x| x.ptr_clone()).collect(),
+                });
+            }
         }
     }
 }
