@@ -30,6 +30,17 @@ eq_symm_t IS
     conclusion IS y NOTING is_equal_to(z) BECAUSE t1
 }.conclusion
 
+# Trying to make dependent types which would invoke Girard's paradox I think?
+condition IS ANY Bool
+Proof IS IF condition THEN Unit ELSE Never
+# To invoke it, we would need to go from Proof to a refinement type thing.
+# Basically, something of the type Proof(condition) -> Bool THAT is_equal_to(condition)
+# Actually, I'm not sure we need that. Because GP lets us make a term of type
+# (T: Type) -> T, which would be bad even if we don't allow you to prove things
+# with it.
+# The basic piece of machinery listed in Wikipedia is this:
+
+
 # With Proof type:
 eq_symm IS
 {
