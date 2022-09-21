@@ -1,132 +1,46 @@
-# Constructs
+```py
+# From y = z
+# Proves z = y
+eq_symm_t IS 
+tail_value({
+   y IS VAR()
+   z IS VAR()
+   y_eq_z_t IS ANY_PROOF(y = z)
 
-## Root
-- any
-  - Produces `Any` value, `Empty` namespace.
-- builtin_item
-  - Produces `BuiltinValue` or `BuiltinOperator` value, `Empty` namespace.
-- identifier
-  - Produces `Identifier` value and namespace.
-- u8
-  - Produces `BuiltinValue` value, `Empty` namespace.
-- variant
-  - Produces `Variant` value, `Empty` namespace.
-  
-## Postfix
-- defining
-  - Value: identity
-  - Namespace: 
-    ```rust
-    let id = next_ns_id();
-    Defining { 
-      child: base.namespace_id, 
-      definitions: body.map(
-        todo!()
-        parent: next_ns_id
-      ),
-      parent: context.containing_namespace 
-    }
-    ```
-- FromValues
-- member
-- replacing
-- type_is (M2)
+   t1 IS eq_ext_rev_t(
+      x y z
+      PROOF(y = z) IS y_eq_z_t
+   )
 
-# Stage 2
+   just_t(
+      z = y   
+      PROOF(statement) IS t1
+   )
+})
 
-## Item
-- Fields:
-  - namespace_id: `NamespaceId`
-  - value_id: `ValueId`
+# With refinement types:
+eq_symm_t IS 
+{
+    T IS ANY Type
+    y IS ANY T
+    z IS ANY T THAT is_equal_to(y)
 
-## Namespace/NamespaceId
+    t1 IS eq_ext_rev_t(x y z)
 
-### Defining
-- Fields:
-  - child: `NamespaceId`
-  - definitions: `Definitions` aka `OrderedMap<String, Item>`
-  - parent: `NamespaceId`
+    conclusion IS y NOTING is_equal_to(z) BECAUSE t1
+}.conclusion
 
-### Empty
-- No fields
+# With Proof type:
+eq_symm IS
+{
+    T IS ANY Type
+    y IS ANY T
+    z IS ANY T
+    y_eq_z IS ANY Proof(y = z)
 
-### Identifier
-- Fields:
-  - name: String
+    t1 IS eq_ext_rev_t(x y z)
 
-### Replacing
-- Fields:
-  - replacements: `VariableReplacements` aka `OrderedMap<VariableId, ValueId>`
-  - source: `NamespaceId`
-
-## Value/ValueId
-
-- Any
-  - variable: `VariableId`
-- BuiltinOperation
-  - operation: `BuiltinOperation`
-- BuiltinValue
-  - value: `BuiltinValue`
-- FromValues
-  - base: `ValueId`
-  - items: `Vec<ValueId>`
-- Identifier
-  - name: `String`
-  - in_namespace: `NamespaceId`
-- Item
-  - item: `ValueId`
-- Member
-  - base: `NamespaceId`
-  - member: `String`
-- Replacing
-  - base: `ValueId`
-  - replacements: `Vec<(ValueId, ValueId)>`
-- TypeIs (M2)
-  - base_type_only: `bool`
-  - base: `ValueId`
-  - typee: `ValueId`
-- Variant
-  - variant: `VariantId`
-
-## Variable/VariableId
-- Fields:
-  - definition: `ValueId`
-  - original_type: `ValueId`
-
-## Variant/VariantId
-- Fields:
-  - definition: `ValueId`
-  - original_type: `ValueId`
-
-# Stage 3
-
-## Value/ValueId
-
-- Any
-  - variable: `VariableId`
-- BuiltinOperation
-  - operation: `BuiltinOperation`
-- BuiltinValue
-  - value: `BuiltinValue`
-- From
-  - base: `ValueId`
-  - variables: `OrderedSet<VariableId>`
-- Replacing
-  - base: `ValueId` 
-  - replacements: `Vec<(ValueId, ValueId)>`
-- TypeIs (M2)
-  - base_type_only: `bool`
-  - base: `ValueId`
-  - typee: `ValueId`
-- Variant
-  - variant: `VariantId`
-
-## Variable/VariableId
-- Fields:
-  - definition: `ValueId`
-  - original_type: `ValueId`
-
-## Variant/VariantId
-- Fields:
-  - definition: `ValueId`
-  - original_type: `ValueId`
+    conclusion IS t1 AS Proof(z = y)
+}
+.conclusion
+```

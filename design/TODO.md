@@ -1,1 +1,0 @@
-- Make name assignment drill down through others that don't have a name.
