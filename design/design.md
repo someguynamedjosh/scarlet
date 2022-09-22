@@ -38,8 +38,16 @@ Proof IS IF condition THEN Unit ELSE Never
 # Actually, I'm not sure we need that. Because GP lets us make a term of type
 # (T: Type) -> T, which would be bad even if we don't allow you to prove things
 # with it.
-# The basic piece of machinery listed in Wikipedia is this:
+# But it looks like, if I understand correctly, this is caused by an infinite
+# loop, which brings us back to needing to keep track of computational
+# requirements of proofs.
+# A fixed point combinator looks like this:
+x IS ANYTHING
+n IS ANYTHING DEPENDING_ON x
+s IS ANYTHING DEPENDING_ON x
 
+pre IS n(x IS s(x IS s))
+fpc IS pre(s IS n(x IS s(x IS s)))
 
 # With Proof type:
 eq_symm IS
