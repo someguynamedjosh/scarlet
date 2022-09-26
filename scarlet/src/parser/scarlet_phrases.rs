@@ -1,20 +1,3 @@
-mod any_proof;
-mod as_auto_theorem;
-mod as_language_item;
-mod axiom;
-mod builtin_function;
-mod equal;
-mod from;
-mod identifier;
-mod is;
-mod member_access;
-mod multiple_items;
-mod shown;
-mod structt;
-mod substitution;
-mod unique;
-mod variable;
-mod proof_target;
 
 use super::phrase::Phrase;
 
@@ -42,22 +25,5 @@ macro_rules! phrase {
 
 pub fn phrases() -> Vec<Phrase> {
     vec![
-        unique::phrase(),
-        axiom::phrase(),
-        builtin_function::phrase(),
-        variable::phrase(),
-        any_proof::phrase(),
-        equal::phrase(),
-        from::phrase(),
-        member_access::phrase(),
-        shown::phrase(),
-        as_language_item::phrase(),
-        as_auto_theorem::phrase(),
-        substitution::phrase(),
-        structt::phrase(),
-        proof_target::phrase(),
-        is::phrase(),
-        multiple_items::phrase(),
-        identifier::phrase(),
     ]
 }

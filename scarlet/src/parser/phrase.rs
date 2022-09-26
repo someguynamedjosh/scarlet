@@ -2,11 +2,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 
 use super::{Node, ParseContext};
-use crate::{
-    environment::{vomit::VomitContext, Environment},
-    item::{resolvable::UnresolvedItemError, ItemPtr},
-    scope::Scope, diagnostic::Diagnostic,
-};
+use crate::diagnostic::Diagnostic;
 
 pub type Precedence = u8;
 pub type Priority = u8;
@@ -55,18 +51,11 @@ impl PhraseComponent {
     }
 }
 
-pub type CreateFn = fn(&ParseContext, &mut Environment, Box<dyn Scope>, &Node) -> Result<ItemPtr, Diagnostic>;
-
-pub type UncreateFn =
-    for<'a> fn(&mut Environment, &mut VomitContext<'a, '_>, ItemPtr) -> UncreateResult<'a>;
-pub type UncreateResult<'a> = Result<Option<Node<'a>>, UnresolvedItemError>;
-
 pub type VomitFn = fn(&ParseContext, &Node) -> String;
 
 pub struct Phrase {
     pub name: &'static str,
     pub components: Vec<PhraseComponent>,
-    pub create_and_uncreate: Option<(CreateFn, UncreateFn)>,
     pub vomit: VomitFn,
     pub precedence: Precedence,
     pub priority: Priority,

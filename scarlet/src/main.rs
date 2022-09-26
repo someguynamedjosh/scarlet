@@ -11,16 +11,13 @@
 #![feature(ptr_to_from_bits)]
 #![feature(core_intrinsics)]
 
-use crate::{
-    environment::Environment, item::resolve::resolve_all, parser::ParseContext, scope::SRoot,
-};
+use std::time::Instant;
+
+use crate::parser::ParseContext;
 
 pub mod diagnostic;
-mod environment;
 mod file_tree;
-mod item;
 pub mod parser;
-pub mod scope;
 mod shared;
 mod util;
 
@@ -28,8 +25,11 @@ fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
     println!("Reading source from {}", path);
 
+    let time = Instant::now();
     let file_tree = file_tree::read_root(&path).unwrap();
+    println!("Read source in {:#?}", time.elapsed());
 
+    let time = Instant::now();
     let parse_context = ParseContext::new();
     let mut file_counter = 0;
     let root = parser::parse_tree(&file_tree, &parse_context, &mut file_counter);
@@ -42,36 +42,8 @@ fn entry() {
             return;
         }
     };
-    println!("Parsed");
+    println!("Parsed in {:#?}", time.elapsed());
 
-    let mut env = Environment::new();
-    let root = root.as_item(&parse_context, &mut env, SRoot);
-    let root = match root {
-        Ok(root) => root,
-        Err(diagnostic) => {
-            println!("{}", diagnostic.format_colorful(&file_tree));
-            return;
-        }
-    };
-    if let Err(diagnostics) = resolve_all(&mut env, root.ptr_clone()) {
-        env.show_full_info_for_all_requested(&root);
-        for diagnostic in diagnostics {
-            println!("{}", diagnostic.format_colorful(&file_tree));
-        }
-        return;
-    }
-    println!("Resolved");
-
-    env.show_full_info_for_all_requested(&root);
-    println!();
-
-    if let Err(diagnostics) = root.check_all(&mut env) {
-        for diagnostic in diagnostics {
-            println!("{}", diagnostic.format_colorful(&file_tree));
-        }
-        return;
-    }
-    println!("Checked!");
 }
 
 fn main() {

@@ -2,12 +2,7 @@ use std::ops::Range;
 
 use colored::{ColoredString, Colorize};
 
-use crate::{
-    environment::{vomit::VomitContext, Environment},
-    file_tree::FileNode,
-    item::ItemPtr,
-    parser::ParseContext,
-};
+use crate::file_tree::FileNode;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Level {
@@ -232,34 +227,6 @@ impl Diagnostic {
 
     pub fn with_source_code_block_error(self, source_code_block: impl Into<Position>) -> Self {
         self.with_source_code_block(Level::Error, source_code_block)
-    }
-
-    pub fn with_item(
-        self,
-        level: Level,
-        item: &ItemPtr,
-        ctx: &ItemPtr,
-        env: &mut Environment,
-    ) -> Self {
-        let item_borrow = item.borrow();
-        if let Some(pos) = item_borrow.position {
-            self.with_source_code_block(level, pos)
-        } else {
-            drop(item_borrow);
-            self.with_generated_code_block(level, env.format(item.ptr_clone(), ctx.ptr_clone()))
-        }
-    }
-
-    pub fn with_item_error(self, item: &ItemPtr, ctx: &ItemPtr, env: &mut Environment) -> Self {
-        self.with_item(Level::Error, item, ctx, env)
-    }
-
-    pub fn with_item_warning(self, item: &ItemPtr, ctx: &ItemPtr, env: &mut Environment) -> Self {
-        self.with_item(Level::Warning, item, ctx, env)
-    }
-
-    pub fn with_item_info(self, item: &ItemPtr, ctx: &ItemPtr, env: &mut Environment) -> Self {
-        self.with_item(Level::Info, item, ctx, env)
     }
 }
 

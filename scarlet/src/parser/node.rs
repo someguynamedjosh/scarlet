@@ -3,9 +3,6 @@ use std::fmt::{self, Debug, Formatter};
 use super::{phrase::PhraseTable, ParseContext};
 use crate::{
     diagnostic::{Diagnostic, Position},
-    environment::Environment,
-    item::ItemPtr,
-    scope::Scope,
     shared::indented,
 };
 
@@ -31,24 +28,6 @@ impl<'a> NodeChild<'a> {
             NodeChild::Text(text) => text,
             NodeChild::Missing => panic!("Expected text, got missing instead"),
         }
-    }
-
-    pub(crate) fn as_construct(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: impl Scope + 'static,
-    ) -> Result<ItemPtr, Diagnostic> {
-        self.as_node().as_item(pc, env, scope)
-    }
-
-    pub(crate) fn as_construct_dyn_scope(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: Box<dyn Scope>,
-    ) -> Result<ItemPtr, Diagnostic> {
-        self.as_node().as_item_dyn_scope(pc, env, scope)
     }
 
     pub fn vomit(&self, pc: &ParseContext) -> String {
@@ -113,32 +92,6 @@ impl<'x> Node<'x> {
 
     pub fn is_complete(&self, pt: &PhraseTable) -> bool {
         pt.get(self.phrase).unwrap().components.len() == self.children.len()
-    }
-
-    pub fn as_item(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: impl Scope + 'static,
-    ) -> Result<ItemPtr, Diagnostic> {
-        self.as_item_dyn_scope(pc, env, Box::new(scope))
-    }
-
-    pub fn as_item_dyn_scope(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: Box<dyn Scope>,
-    ) -> Result<ItemPtr, Diagnostic> {
-        let item = pc
-            .phrases_sorted_by_priority
-            .get(self.phrase)
-            .unwrap()
-            .create_and_uncreate
-            .expect(&format!("{} is not a construct", self.phrase))
-            .0(pc, env, scope, self)?;
-        item.set_position(self.position);
-        Ok(item)
     }
 
     pub fn as_ident(&self) -> Result<&'x str, Diagnostic> {
