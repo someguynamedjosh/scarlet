@@ -29,14 +29,6 @@ impl<'a> NodeChild<'a> {
             NodeChild::Missing => panic!("Expected text, got missing instead"),
         }
     }
-
-    pub fn vomit(&self, pc: &ParseContext) -> String {
-        match self {
-            NodeChild::Node(node) => node.vomit(pc),
-            &NodeChild::Text(text) => text.to_owned(),
-            NodeChild::Missing => "".into(),
-        }
-    }
 }
 
 impl<'a> Debug for NodeChild<'a> {
@@ -67,13 +59,6 @@ impl<'x> Debug for Node<'x> {
 }
 
 impl<'x> Node<'x> {
-    pub fn vomit(&self, pc: &ParseContext) -> String {
-        (pc.phrases_sorted_by_vomit_priority
-            .get(self.phrase)
-            .unwrap()
-            .vomit)(pc, self)
-    }
-
     pub fn will_wait_for_text(&self, pt: &PhraseTable) -> bool {
         let phrase = pt.get(self.phrase).unwrap();
         for component in &phrase.components[self.children.len()..] {

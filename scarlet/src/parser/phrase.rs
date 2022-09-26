@@ -51,15 +51,11 @@ impl PhraseComponent {
     }
 }
 
-pub type VomitFn = fn(&ParseContext, &Node) -> String;
-
 pub struct Phrase {
     pub name: &'static str,
     pub components: Vec<PhraseComponent>,
-    pub vomit: VomitFn,
     pub precedence: Precedence,
     pub priority: Priority,
-    pub vomit_priority: Priority,
 }
 
 impl Phrase {

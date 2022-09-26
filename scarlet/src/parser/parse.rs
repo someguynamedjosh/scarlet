@@ -15,7 +15,6 @@ use crate::{
 
 pub struct ParseContext {
     pub(crate) phrases_sorted_by_priority: PhraseTable,
-    pub(crate) phrases_sorted_by_vomit_priority: PhraseTable,
 }
 
 impl ParseContext {
@@ -27,16 +26,8 @@ impl ParseContext {
             phrases_sorted_by_priority.insert(phrase.name.to_owned(), phrase);
         }
 
-        let mut phrases_sorted_by_vomit_priority = PhraseTable::new();
-        let mut source = scarlet_phrases::phrases();
-        source.sort_by_key(|p| p.vomit_priority);
-        for phrase in source {
-            phrases_sorted_by_vomit_priority.insert(phrase.name.to_owned(), phrase);
-        }
-
         Self {
             phrases_sorted_by_priority,
-            phrases_sorted_by_vomit_priority,
         }
     }
 }

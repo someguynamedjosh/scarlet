@@ -43,6 +43,7 @@ fn entry() {
         }
     };
     println!("Parsed in {:#?}", time.elapsed());
+    println!("{:#?}", root);
 
 }
 
