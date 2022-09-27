@@ -2,9 +2,9 @@ use crate::{parser::phrase::Phrase, phrase};
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "identifier",
-        255,
+        "is",
+        128,
         None,
-        4 => r"[a-zA-Z0-9_]+"
+        248 => 248, "IS", 248
     )
 }

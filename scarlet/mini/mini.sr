@@ -1,1 +1,7 @@
-BUILTIN(asdf)
+True IS NEW_TYPE()
+False IS NEW_TYPE()
+
+Type IS BUILTIN(Type)
+type0 IS ANY Type AS_LANGUAGE_ITEM(type0)
+type1 IS ANY Type AS_LANGUAGE_ITEM(type1)
+type_or IS BUILTIN(type_or)

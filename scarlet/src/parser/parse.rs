@@ -1,3 +1,4 @@
+use nom::AsChar;
 use regex::Regex;
 
 use super::{
@@ -39,6 +40,15 @@ fn push_match<'a>(
     position: Position,
 ) -> Result<(), Diagnostic> {
     let mut append = Vec::new();
+    if matchh.phrase == "identifier"
+        && !matchh
+            .text
+            .contains(|x: char| x.is_lowercase() || x.is_dec_digit())
+    {
+        return Err(Diagnostic::new()
+            .with_text_error(format!("Unrecognized keyword"))
+            .with_source_code_block_error(position));
+    }
     if let StackAction::PopNode(prec) = matchh.action {
         to.collapse_to_precedence(pt, prec)?;
         if Some(to.0.len() - 1) == matchh.continuation_of {
@@ -195,11 +205,11 @@ pub fn parse_tree<'x>(
         Err(diagnostics)
     } else {
         Ok(Node {
-            phrase: "struct",
+            phrase: "structure",
             children: vec![
-                NodeChild::Text("{"),
+                NodeChild::Text("["),
                 util::create_comma_list(children),
-                NodeChild::Text("}"),
+                NodeChild::Text("]"),
             ],
             ..Default::default()
         })
