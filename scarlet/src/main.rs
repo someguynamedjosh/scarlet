@@ -20,6 +20,9 @@ mod file_tree;
 pub mod parser;
 mod shared;
 mod util;
+pub mod environment;
+pub mod item;
+pub mod scope;
 
 fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
