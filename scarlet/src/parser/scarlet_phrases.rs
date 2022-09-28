@@ -22,6 +22,7 @@ macro_rules! phrase {
             components: vec![$($component.into()),*],
             precedence: $prec,
             priority: $priority,
+            create_and_uncreate: $create_and_uncreate,
         }
     }
 }

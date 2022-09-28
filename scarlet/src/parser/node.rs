@@ -1,8 +1,12 @@
 use std::fmt::{self, Debug, Formatter};
 
-use super::{phrase::PhraseTable, ParseContext};
+use super::{
+    phrase::{CreateContext, CreateResult, PhraseTable},
+    ParseContext,
+};
 use crate::{
     diagnostic::{Diagnostic, Position},
+    scope::Scope,
     shared::indented,
 };
 
@@ -28,6 +32,22 @@ impl<'a> NodeChild<'a> {
             NodeChild::Text(text) => text,
             NodeChild::Missing => panic!("Expected text, got missing instead"),
         }
+    }
+
+    pub(crate) fn as_item(
+        &self,
+        ctx: &mut CreateContext,
+        scope: impl Scope + 'static,
+    ) -> CreateResult {
+        self.as_node().as_item(ctx, scope)
+    }
+
+    pub(crate) fn as_item_dyn_scope(
+        &self,
+        ctx: &mut CreateContext,
+        scope: Box<dyn Scope>,
+    ) -> CreateResult {
+        self.as_node().as_item_dyn_scope(ctx, scope)
     }
 }
 
@@ -93,5 +113,26 @@ impl<'x> Node<'x> {
                 ))
                 .with_source_code_block_error(self.position))
         }
+    }
+
+    pub fn as_item(&self, ctx: &mut CreateContext, scope: impl Scope + 'static) -> CreateResult {
+        self.as_item_dyn_scope(ctx, Box::new(scope))
+    }
+
+    pub fn as_item_dyn_scope(
+        &self,
+        ctx: &mut CreateContext,
+        scope: Box<dyn Scope>,
+    ) -> CreateResult {
+        let item = ctx
+            .pc
+            .phrases_sorted_by_priority
+            .get(self.phrase)
+            .unwrap()
+            .create_and_uncreate
+            .expect(&format!("{} is not a construct", self.phrase))
+            .0(ctx, scope, self)?;
+        item.set_position(self.position);
+        Ok(item)
     }
 }

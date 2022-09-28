@@ -8,6 +8,8 @@ use std::{
 #[cfg(feature = "trace_borrows")]
 use debug_cell::RefCell;
 
+use crate::diagnostic::Position;
+
 pub trait CycleDetectingDebug {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
 }
@@ -16,6 +18,7 @@ pub trait ItemDefinition: CycleDetectingDebug {}
 
 pub struct Item {
     definition: Box<dyn ItemDefinition>,
+    position: Option<Position>,
 }
 
 pub struct ItemPtr(Rc<RefCell<Item>>);
@@ -44,6 +47,11 @@ impl ItemPtr {
     pub fn from_definition(def: impl ItemDefinition + 'static) -> Self {
         Self(Rc::new(RefCell::new(Item {
             definition: Box::new(def),
+            position: None,
         })))
+    }
+
+    pub(crate) fn set_position(&self, position: Position) {
+        self.0.borrow_mut().position = Some(position);
     }
 }

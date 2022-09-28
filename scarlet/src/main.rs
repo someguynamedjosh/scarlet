@@ -23,6 +23,7 @@ mod util;
 pub mod environment;
 pub mod item;
 pub mod scope;
+pub mod definitions;
 
 fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));

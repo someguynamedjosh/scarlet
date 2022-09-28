@@ -52,8 +52,8 @@ impl PhraseComponent {
 }
 
 pub struct CreateContext<'p, 'e> {
-    pc: &'p ParseContext,
-    env: &'e mut Environment,
+    pub pc: &'p ParseContext,
+    pub env: &'e mut Environment,
 }
 
 pub type CreateResult = Result<ItemPtr, Diagnostic>;
@@ -64,6 +64,7 @@ pub struct Phrase {
     pub components: Vec<PhraseComponent>,
     pub precedence: Precedence,
     pub priority: Priority,
+    pub create_and_uncreate: Option<(CreateFn,)>,
 }
 
 impl Phrase {
