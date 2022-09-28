@@ -34,7 +34,7 @@ impl<'a> NodeChild<'a> {
         }
     }
 
-    pub(crate) fn as_item(
+    pub fn as_item(
         &self,
         ctx: &mut CreateContext,
         scope: impl Scope + 'static,
@@ -42,12 +42,16 @@ impl<'a> NodeChild<'a> {
         self.as_node().as_item(ctx, scope)
     }
 
-    pub(crate) fn as_item_dyn_scope(
+    pub fn as_item_dyn_scope(
         &self,
         ctx: &mut CreateContext,
         scope: Box<dyn Scope>,
     ) -> CreateResult {
         self.as_node().as_item_dyn_scope(ctx, scope)
+    }
+
+    pub fn as_ident(&self) -> Result<&str, Diagnostic> {
+        self.as_node().as_ident()
     }
 }
 

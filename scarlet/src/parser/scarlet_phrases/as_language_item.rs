@@ -8,7 +8,13 @@ use crate::{
 };
 
 pub fn create(ctx: &mut CreateContext, scope: Box<dyn Scope>, node: &Node) -> CreateResult {
-    todo!()
+    assert_eq!(node.children.len(), 5);
+    let definition = node.children[0].as_item_dyn_scope(ctx, scope.dyn_clone())?;
+    let name = node.children[3].as_ident()?;
+    ctx.env
+        .define_language_item(name, definition.ptr_clone())
+        .map_err(|err| err.with_source_code_block_error(node.position))?;
+    Ok(definition)
 }
 
 pub fn phrase() -> Phrase {

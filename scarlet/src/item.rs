@@ -8,7 +8,7 @@ use std::{
 #[cfg(feature = "trace_borrows")]
 use debug_cell::RefCell;
 
-use crate::diagnostic::Position;
+use crate::{diagnostic::Position, util::PtrExtension};
 
 pub trait CycleDetectingDebug {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
@@ -51,7 +51,11 @@ impl ItemPtr {
         })))
     }
 
-    pub(crate) fn set_position(&self, position: Position) {
+    pub fn set_position(&self, position: Position) {
         self.0.borrow_mut().position = Some(position);
+    }
+
+    pub fn ptr_clone(&self) -> ItemPtr {
+        Self(self.0.ptr_clone())
     }
 }

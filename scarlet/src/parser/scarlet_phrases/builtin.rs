@@ -1,4 +1,7 @@
 use crate::{
+    definitions::builtin::{Builtin, DBuiltin},
+    diagnostic::Diagnostic,
+    item::ItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
@@ -7,8 +10,22 @@ use crate::{
     scope::Scope,
 };
 
-pub fn create(ctx: &mut CreateContext, scope: Box<dyn Scope>, node: &Node) -> CreateResult {
-    todo!()
+pub fn create(_ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> CreateResult {
+    assert_eq!(node.children.len(), 4);
+    let name = node.children[2].as_ident()?;
+    let builtin = match name {
+        "is_exactly" => Builtin::IsExactly,
+        "if_then_else" => Builtin::IfThenElse,
+        "Type" => Builtin::Type,
+        "Union" => Builtin::Union,
+        _ => {
+            return Err(Diagnostic::new()
+                .with_text_error(format!("{} is not the name of any builtin function.", name))
+                .with_source_code_block_error(node.position))
+        }
+    };
+    let definition = DBuiltin::new(builtin);
+    Ok(ItemPtr::from_definition(definition))
 }
 
 pub fn phrase() -> Phrase {
