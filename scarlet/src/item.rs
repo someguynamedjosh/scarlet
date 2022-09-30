@@ -12,6 +12,23 @@ use crate::{diagnostic::Position, util::PtrExtension};
 
 pub trait CycleDetectingDebug {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
+
+    fn to_string(&self, stack: &[*const Item]) -> String {
+        let mut string = String::new();
+        self.fmt(&mut Formatter::new(&mut string), stack).unwrap();
+        string
+    }
+
+    fn to_indented_string(&self, stack: &[*const Item], indent_size: u8) -> String {
+        let indent = match indent_size {
+            0 => "\n",
+            1 => "\n   ",
+            2 => "\n      ",
+            3 => "\n         ",
+            _ => panic!("The problem is not with my code, it's with what you're doing with it."),
+        };
+        self.to_string(stack).replace("\n", indent)
+    }
 }
 
 pub trait ItemDefinition: CycleDetectingDebug {}

@@ -8,11 +8,10 @@ pub struct DNewType {
 
 impl CycleDetectingDebug for DNewType {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
-        write!(f, "NEW_TYPE(")?;
+        write!(f, "NEW_TYPE(\n")?;
         for field in &self.fields {
-            write!(f, "{} IS ", field.0)?;
-            field.1.fmt(f, stack)?;
-            write!(f, ",")?;
+            write!(f, "   {} IS {}", field.0, field.1.to_indented_string(stack, 2))?;
+            write!(f, ",\n")?;
         }
         write!(f, ")")
     }

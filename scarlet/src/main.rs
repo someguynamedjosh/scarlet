@@ -10,6 +10,7 @@
 #![feature(map_first_last)]
 #![feature(ptr_to_from_bits)]
 #![feature(core_intrinsics)]
+#![feature(fmt_internals)]
 
 use std::time::Instant;
 
