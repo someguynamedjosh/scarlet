@@ -13,17 +13,20 @@
 
 use std::time::Instant;
 
-use crate::parser::ParseContext;
+use crate::{
+    environment::Environment,
+    parser::{create_root, ParseContext},
+};
 
+pub mod definitions;
 pub mod diagnostic;
+pub mod environment;
 mod file_tree;
+pub mod item;
 pub mod parser;
+pub mod scope;
 mod shared;
 mod util;
-pub mod environment;
-pub mod item;
-pub mod scope;
-pub mod definitions;
 
 fn entry() {
     let path = std::env::args().skip(1).next().unwrap_or(String::from("."));
@@ -47,8 +50,19 @@ fn entry() {
         }
     };
     println!("Parsed in {:#?}", time.elapsed());
-    println!("{:#?}", root);
 
+    let time = Instant::now();
+    let mut env = Environment::new();
+    let root = create_root(&root, &parse_context, &mut env);
+    let root = match root {
+        Ok(root) => root,
+        Err(diagnostic) => {
+            println!("{}", diagnostic.format_colorful(&file_tree));
+            return;
+        }
+    };
+    println!("Created in {:#?}", time.elapsed());
+    println!("{:#?}", root);
 }
 
 fn main() {

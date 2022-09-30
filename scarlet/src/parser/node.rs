@@ -34,11 +34,7 @@ impl<'a> NodeChild<'a> {
         }
     }
 
-    pub fn as_item(
-        &self,
-        ctx: &mut CreateContext,
-        scope: impl Scope + 'static,
-    ) -> CreateResult {
+    pub fn as_item(&self, ctx: &mut CreateContext, scope: impl Scope + 'static) -> CreateResult {
         self.as_node().as_item(ctx, scope)
     }
 
@@ -138,5 +134,18 @@ impl<'x> Node<'x> {
             .0(ctx, scope, self)?;
         item.set_position(self.position);
         Ok(item)
+    }
+
+    pub fn as_is(&self) -> Option<Result<(&str, &Node), Diagnostic>> {
+        if self.phrase == "is" {
+            assert_eq!(self.children.len(), 3);
+            Some(
+                self.children[0]
+                    .as_ident()
+                    .map(|id| (id, self.children[2].as_node())),
+            )
+        } else {
+            None
+        }
     }
 }

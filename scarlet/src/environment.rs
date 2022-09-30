@@ -9,6 +9,12 @@ pub struct Environment {
 }
 
 impl Environment {
+    pub(crate) fn new() -> Self {
+        Self {
+            language_items: HashMap::new()
+        }
+    }
+
     pub fn define_language_item(
         &mut self,
         name: &str,

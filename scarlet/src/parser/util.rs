@@ -13,8 +13,10 @@ pub fn collect_comma_list<'a, 'n>(list: &'a NodeChild<'n>) -> Vec<&'a Node<'n>> 
         } else {
             vec![list]
         }
-    } else {
+    } else if let NodeChild::Missing = list {
         vec![]
+    } else {
+        panic!("Text node is not a list!");
     }
 }
 

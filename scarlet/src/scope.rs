@@ -9,3 +9,8 @@ impl dyn Scope {
         dyn_clone::clone_box(self)
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct SRoot;
+
+impl Scope for SRoot {}
