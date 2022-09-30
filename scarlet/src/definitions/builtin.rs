@@ -1,6 +1,9 @@
 use std::fmt::{self, Formatter};
 
-use crate::item::{CycleDetectingDebug, Item, ItemDefinition};
+use crate::item::{
+    query::{Query, QueryContext, TypeQuery},
+    CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+};
 
 pub enum Builtin {
     IsExactly,
@@ -15,7 +18,7 @@ impl Builtin {
             Self::IsExactly => "is_exactly",
             Self::IfThenElse => "if_then_else",
             Self::Type => "Type",
-            Self::Union => "Union"
+            Self::Union => "Union",
         }
     }
 }
@@ -30,10 +33,18 @@ impl CycleDetectingDebug for DBuiltin {
     }
 }
 
-impl ItemDefinition for DBuiltin {}
+impl ItemDefinition for DBuiltin {
+    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
+        Some(Self::r#type().into_ptr())
+    }
+}
 
 impl DBuiltin {
     pub fn new(builtin: Builtin) -> Self {
         DBuiltin { builtin }
+    }
+
+    pub(crate) fn r#type() -> Self {
+        Self::new(Builtin::Type)
     }
 }

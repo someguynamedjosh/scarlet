@@ -1,6 +1,9 @@
 use std::fmt;
 
-use crate::item::{CycleDetectingDebug, Item, ItemDefinition};
+use crate::item::{
+    query::{Query, QueryContext, TypeQuery},
+    CycleDetectingDebug, Item, ItemDefinition,
+};
 
 pub struct DIdentifier {
     identifier: String,
@@ -12,7 +15,11 @@ impl CycleDetectingDebug for DIdentifier {
     }
 }
 
-impl ItemDefinition for DIdentifier {}
+impl ItemDefinition for DIdentifier {
+    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
+        None
+    }
+}
 
 impl DIdentifier {
     pub fn new(identifier: String) -> Self {

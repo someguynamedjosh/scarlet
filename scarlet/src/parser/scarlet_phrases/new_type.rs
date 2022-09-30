@@ -1,6 +1,6 @@
 use crate::{
     definitions::new_type::DNewType,
-    item::ItemPtr,
+    item::{IntoItemPtr, ItemPtr},
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
@@ -27,7 +27,7 @@ pub fn create(ctx: &mut CreateContext, scope: Box<dyn Scope>, node: &Node) -> Cr
             ));
         }
     }
-    Ok(ItemPtr::from_definition(DNewType::new(fields)))
+    Ok(DNewType::new(fields).into_ptr())
 }
 
 pub fn phrase() -> Phrase {

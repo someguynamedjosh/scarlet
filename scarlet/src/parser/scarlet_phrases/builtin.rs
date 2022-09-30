@@ -1,7 +1,7 @@
 use crate::{
     definitions::builtin::{Builtin, DBuiltin},
     diagnostic::Diagnostic,
-    item::ItemPtr,
+    item::{IntoItemPtr, ItemPtr},
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
@@ -25,7 +25,7 @@ pub fn create(_ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> 
         }
     };
     let definition = DBuiltin::new(builtin);
-    Ok(ItemPtr::from_definition(definition))
+    Ok(definition.into_ptr())
 }
 
 pub fn phrase() -> Phrase {
