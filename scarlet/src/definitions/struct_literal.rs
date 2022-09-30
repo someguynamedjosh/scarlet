@@ -1,6 +1,6 @@
 use std::fmt::{self, Formatter};
 
-use super::{builtin::DBuiltin, hole::DHole, new_type::DNewType};
+use super::{builtin::DBuiltin, hole::DHole, new_type::DNewType, parameter::DParameter};
 use crate::item::{
     query::{Query, QueryContext, TypeQuery},
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
@@ -34,7 +34,8 @@ impl ItemDefinition for DStructLiteral {
         if self.is_module {
             let mut fields = Vec::new();
             for (name, value) in &self.fields {
-                fields.push((name.clone(), value.query_type(ctx)?));
+                let r#type = value.query_type(ctx)?;
+                fields.push((name.clone(), DParameter::new(r#type).into_ptr()));
             }
             Some(DNewType::new(fields).into_ptr())
         } else {

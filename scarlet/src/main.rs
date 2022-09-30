@@ -16,6 +16,7 @@ use std::time::Instant;
 
 use crate::{
     environment::Environment,
+    item::query::QueryContext,
     parser::{create_root, ParseContext},
 };
 
@@ -63,7 +64,7 @@ fn entry() {
         }
     };
     println!("Created in {:#?}", time.elapsed());
-    println!("{:#?}", root);
+    println!("{:#?}", root.query_type(&mut QueryContext::new()));
 }
 
 fn main() {

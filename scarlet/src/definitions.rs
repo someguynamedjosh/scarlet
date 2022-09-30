@@ -1,4 +1,4 @@
-pub mod variable;
+pub mod parameter;
 pub mod builtin;
 pub mod identifier;
 pub mod new_type;

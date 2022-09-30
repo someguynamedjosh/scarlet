@@ -43,7 +43,7 @@ pub trait IntoItemPtr: ItemDefinition {
 
 impl<T: ItemDefinition + 'static> IntoItemPtr for T {
     fn into_ptr(self) -> ItemPtr {
-        self.into_ptr()
+        ItemPtr::from_definition(self)
     }
 }
 

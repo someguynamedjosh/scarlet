@@ -1,5 +1,5 @@
 use crate::{
-    definitions::variable::DVariable,
+    definitions::parameter::DParameter,
     item::{IntoItemPtr, ItemPtr},
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
@@ -12,7 +12,7 @@ use crate::{
 pub fn create(ctx: &mut CreateContext, scope: Box<dyn Scope>, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 2);
     let r#type = node.children[1].as_item_dyn_scope(ctx, scope.dyn_clone())?;
-    Ok(DVariable::new(r#type).into_ptr())
+    Ok(DParameter::new(r#type).into_ptr())
 }
 
 pub fn phrase() -> Phrase {
