@@ -9,7 +9,9 @@ use std::{
 #[cfg(feature = "trace_borrows")]
 use debug_cell::{RefCell, RefMut};
 
-use super::query::{Query, QueryContext, QueryResultCache, TypeQuery};
+use super::query::{
+    AllowsChildQuery, Query, QueryContext, QueryResultCache, TypeCheckQuery, TypeQuery,
+};
 use crate::{diagnostic::Position, util::PtrExtension};
 
 pub trait CycleDetectingDebug {
@@ -35,6 +37,10 @@ pub trait CycleDetectingDebug {
 
 pub trait ItemDefinition: CycleDetectingDebug {
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result;
+    fn recompute_type_check(
+        &self,
+        ctx: &mut QueryContext<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result;
 }
 
 pub trait IntoItemPtr: ItemDefinition {
@@ -54,6 +60,16 @@ pub struct UniversalItemInfo {
 
 pub struct ItemQueryResultCaches {
     r#type: QueryResultCache<TypeQuery>,
+    type_check: QueryResultCache<TypeCheckQuery>,
+}
+
+impl ItemQueryResultCaches {
+    fn new() -> Self {
+        Self {
+            r#type: QueryResultCache::new(),
+            type_check: QueryResultCache::new(),
+        }
+    }
 }
 
 pub struct Item {
@@ -109,9 +125,7 @@ impl ItemPtr {
         Self(Rc::new(RefCell::new(Item {
             definition: Box::new(def),
             universal_info: UniversalItemInfo { position: None },
-            query_result_caches: ItemQueryResultCaches {
-                r#type: QueryResultCache::new(),
-            },
+            query_result_caches: ItemQueryResultCaches::new(),
         })))
     }
 
@@ -123,17 +137,46 @@ impl ItemPtr {
         Self(self.0.ptr_clone())
     }
 
-    pub fn query_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
+    fn query<Q: Query>(
+        &self,
+        ctx: &mut impl AllowsChildQuery<Q>,
+        get_cache: impl FnOnce(&mut ItemQueryResultCaches) -> &mut QueryResultCache<Q>,
+        recompute_result: impl FnOnce(&mut QueryContext<Q>, &mut Box<dyn ItemDefinition>) -> Q::Result,
+    ) -> Q::Result {
         let mut this = self.0.borrow_mut();
         let Item {
             definition,
             query_result_caches,
             ..
         } = &mut *this;
-        ctx.get_query_result(
-            self,
-            |ctx| definition.recompute_type(ctx),
-            &mut query_result_caches.r#type,
+        ctx.with_child_context(|ctx| {
+            ctx.get_query_result(
+                self,
+                |ctx| recompute_result(ctx, definition),
+                get_cache(query_result_caches),
+            )
+        })
+    }
+
+    pub fn query_type(
+        &self,
+        ctx: &mut impl AllowsChildQuery<TypeQuery>,
+    ) -> <TypeQuery as Query>::Result {
+        self.query(
+            ctx,
+            |caches| &mut caches.r#type,
+            |ctx, definition| definition.recompute_type(ctx),
+        )
+    }
+
+    pub fn query_type_check(
+        &self,
+        ctx: &mut impl AllowsChildQuery<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result {
+        self.query(
+            ctx,
+            |caches| &mut caches.type_check,
+            |ctx, definition| definition.recompute_type_check(ctx),
         )
     }
 }

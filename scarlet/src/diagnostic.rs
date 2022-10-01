@@ -4,7 +4,7 @@ use colored::{ColoredString, Colorize};
 
 use crate::file_tree::FileNode;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Level {
     Error,
     Warning,
@@ -59,7 +59,7 @@ impl Position {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub enum Element {
     Text(String),
     GeneratedCodeBlock(String),
@@ -157,7 +157,7 @@ impl Element {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Diagnostic {
     elements: Vec<(Level, Element)>,
 }

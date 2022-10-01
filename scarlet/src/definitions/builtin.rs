@@ -1,7 +1,7 @@
 use std::fmt::{self, Formatter};
 
 use crate::item::{
-    query::{Query, QueryContext, TypeQuery},
+    query::{Query, QueryContext, TypeCheckQuery, TypeQuery},
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
@@ -36,6 +36,13 @@ impl CycleDetectingDebug for DBuiltin {
 impl ItemDefinition for DBuiltin {
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         Some(Self::r#type().into_ptr())
+    }
+
+    fn recompute_type_check(
+        &self,
+        ctx: &mut QueryContext<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result {
+        no_type_check_errors()
     }
 }
 
