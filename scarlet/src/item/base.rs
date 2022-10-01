@@ -24,14 +24,11 @@ pub trait CycleDetectingDebug {
     }
 
     fn to_indented_string(&self, stack: &[*const Item], indent_size: u8) -> String {
-        let indent = match indent_size {
-            0 => "\n",
-            1 => "\n   ",
-            2 => "\n      ",
-            3 => "\n         ",
-            _ => panic!("The problem is not with my code, it's with what you're doing with it."),
-        };
-        self.to_string(stack).replace("\n", indent)
+        let mut result = self.to_string(stack);
+        for _ in 0..indent_size {
+            result = result.replace("\n", "\n   ");
+        }
+        result
     }
 }
 

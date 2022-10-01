@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::item::{
-    query::{Query, QueryContext, TypeQuery},
+    query::{no_type_check_errors, Query, QueryContext, TypeCheckQuery, TypeQuery},
     CycleDetectingDebug, Item, ItemDefinition,
 };
 
@@ -18,6 +18,13 @@ impl CycleDetectingDebug for DIdentifier {
 impl ItemDefinition for DIdentifier {
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         None
+    }
+
+    fn recompute_type_check(
+        &self,
+        ctx: &mut QueryContext<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result {
+        no_type_check_errors()
     }
 }
 

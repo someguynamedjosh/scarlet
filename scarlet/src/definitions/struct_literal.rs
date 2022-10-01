@@ -2,7 +2,7 @@ use std::fmt::{self, Formatter};
 
 use super::{builtin::DBuiltin, hole::DHole, new_type::DNewType, parameter::DParameter};
 use crate::item::{
-    query::{Query, QueryContext, TypeQuery},
+    query::{Query, QueryContext, TypeQuery, TypeCheckQuery, no_type_check_errors},
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
@@ -40,6 +40,17 @@ impl ItemDefinition for DStructLiteral {
             Some(DNewType::new(fields).into_ptr())
         } else {
             Some(DHole::new(DBuiltin::r#type().into_ptr()).into_ptr())
+        }
+    }
+
+    fn recompute_type_check(
+        &self,
+        ctx: &mut QueryContext<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result {
+        if self.is_module {
+            no_type_check_errors()
+        } else {
+            todo!()
         }
     }
 }

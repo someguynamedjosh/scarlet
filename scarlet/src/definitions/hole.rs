@@ -1,7 +1,7 @@
 use std::fmt::{self, Formatter};
 
 use crate::item::{
-    query::{Query, QueryContext, TypeQuery},
+    query::{no_type_check_errors, Query, QueryContext, TypeCheckQuery, TypeQuery},
     CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
 };
 
@@ -18,6 +18,13 @@ impl CycleDetectingDebug for DHole {
 impl ItemDefinition for DHole {
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         Some(self.r#type.ptr_clone())
+    }
+
+    fn recompute_type_check(
+        &self,
+        ctx: &mut QueryContext<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result {
+        no_type_check_errors()
     }
 }
 

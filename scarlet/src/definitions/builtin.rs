@@ -1,7 +1,7 @@
 use std::fmt::{self, Formatter};
 
 use crate::item::{
-    query::{Query, QueryContext, TypeCheckQuery, TypeQuery},
+    query::{no_type_check_errors, Query, QueryContext, TypeCheckQuery, TypeQuery},
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
