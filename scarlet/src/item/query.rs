@@ -5,7 +5,9 @@ use std::{
 };
 
 use super::ItemPtr;
-use crate::{diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment};
+use crate::{
+    diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment, shared::OrderedMap,
+};
 
 pub trait QueryResult: Clone + Hash + Eq {
     /// Returns true when the query result will not change on future calls.
