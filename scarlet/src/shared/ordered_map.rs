@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     fmt::{self, Debug},
     iter::FromIterator,
 };
@@ -44,6 +45,10 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         self.insert_impl(key, value, true)
     }
 
+    pub fn insert(&mut self, key: K, value: V) {
+        self.insert_or_replace(key, value)
+    }
+
     #[track_caller]
     pub fn insert_no_replace(&mut self, key: K, value: V) {
         self.insert_impl(key, value, false)
@@ -58,9 +63,12 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         None
     }
 
-    pub fn contains_key(&self, key: &K) -> bool {
+    pub fn contains_key<R: Eq>(&self, key: &R) -> bool
+    where
+        K: Borrow<R>,
+    {
         for (candidate, _) in self {
-            if candidate == key {
+            if candidate.borrow() == key {
                 return true;
             }
         }

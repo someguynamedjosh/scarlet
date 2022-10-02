@@ -1,7 +1,9 @@
 use std::fmt;
 
 use crate::item::{
-    query::{no_type_check_errors, Query, QueryContext, TypeCheckQuery, TypeQuery},
+    query::{
+        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+    },
     CycleDetectingDebug, Item, ItemDefinition,
 };
 
@@ -16,6 +18,13 @@ impl CycleDetectingDebug for DIdentifier {
 }
 
 impl ItemDefinition for DIdentifier {
+    fn recompute_parameters(
+        &self,
+        ctx: &mut QueryContext<ParametersQuery>,
+    ) -> <ParametersQuery as Query>::Result {
+        todo!()
+    }
+
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         None
     }

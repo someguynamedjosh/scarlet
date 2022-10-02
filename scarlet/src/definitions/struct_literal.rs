@@ -1,9 +1,14 @@
 use std::fmt::{self, Formatter};
 
 use super::{builtin::DBuiltin, hole::DHole, new_type::DNewType, parameter::DParameter};
-use crate::item::{
-    query::{Query, QueryContext, TypeQuery, TypeCheckQuery, no_type_check_errors},
-    CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+use crate::{
+    diagnostic::Position,
+    item::{
+        query::{
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+        },
+        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+    },
 };
 
 pub struct DStructLiteral {
@@ -30,12 +35,22 @@ impl CycleDetectingDebug for DStructLiteral {
 }
 
 impl ItemDefinition for DStructLiteral {
+    fn recompute_parameters(
+        &self,
+        ctx: &mut QueryContext<ParametersQuery>,
+    ) -> <ParametersQuery as Query>::Result {
+        todo!()
+    }
+
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         if self.is_module {
             let mut fields = Vec::new();
             for (name, value) in &self.fields {
                 let r#type = value.query_type(ctx)?;
-                fields.push((name.clone(), DParameter::new(r#type).into_ptr()));
+                fields.push((
+                    name.clone(),
+                    DParameter::new(128, Position::placeholder(), r#type).into_ptr(),
+                ));
             }
             Some(DNewType::new(fields).into_ptr())
         } else {

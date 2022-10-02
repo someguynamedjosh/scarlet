@@ -12,7 +12,7 @@ use crate::{
 pub fn create(ctx: &mut CreateContext, scope: Box<dyn Scope>, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 2);
     let r#type = node.children[1].as_item_dyn_scope(ctx, scope.dyn_clone())?;
-    Ok(DParameter::new(r#type).into_ptr())
+    Ok(DParameter::new(128, node.position, r#type).into_ptr())
 }
 
 pub fn phrase() -> Phrase {

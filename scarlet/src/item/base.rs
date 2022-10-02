@@ -10,7 +10,8 @@ use std::{
 use debug_cell::{RefCell, RefMut};
 
 use super::query::{
-    AllowsChildQuery, Query, QueryContext, QueryResultCache, TypeCheckQuery, TypeQuery,
+    AllowsChildQuery, ParametersQuery, Query, QueryContext, QueryResultCache, TypeCheckQuery,
+    TypeQuery,
 };
 use crate::{diagnostic::Position, util::PtrExtension};
 
@@ -33,6 +34,10 @@ pub trait CycleDetectingDebug {
 }
 
 pub trait ItemDefinition: CycleDetectingDebug {
+    fn recompute_parameters(
+        &self,
+        ctx: &mut QueryContext<ParametersQuery>,
+    ) -> <ParametersQuery as Query>::Result;
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result;
     fn recompute_type_check(
         &self,

@@ -4,7 +4,7 @@ use std::{
     marker::PhantomData,
 };
 
-use super::ItemPtr;
+use super::{parameters::Parameters, ItemPtr};
 use crate::{
     diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment, shared::OrderedMap,
 };
@@ -123,6 +123,17 @@ impl QueryResult for ! {
     }
 }
 
+pub struct ParametersQuery;
+
+impl Query for ParametersQuery {
+    type Result = Parameters;
+    type Target = ItemPtr;
+
+    fn result_when_cycle_encountered() -> Self::Result {
+        todo!()
+    }
+}
+
 /// This only exists to describe what queries can be dispatched by Environment.
 pub struct RootQuery;
 
@@ -191,6 +202,7 @@ macro_rules! allow_child_query {
     };
 }
 
+allow_child_query!(RootQuery => ParametersQuery);
 allow_child_query!(RootQuery => TypeCheckQuery);
 allow_child_query!(RootQuery => TypeQuery);
 allow_child_query!(TypeCheckQuery => TypeQuery);
