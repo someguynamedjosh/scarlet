@@ -123,6 +123,97 @@ impl QueryResult for ! {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct MaybeTemporary<T> {
+    value: T,
+    temporary: bool,
+}
+
+impl<T> MaybeTemporary<T> {
+    pub fn new_final(value: T) -> Self {
+        Self {
+            value,
+            temporary: false,
+        }
+    }
+
+    pub fn new_temporary(value: T) -> Self {
+        Self {
+            value,
+            temporary: true,
+        }
+    }
+
+    pub fn is_final(&self) -> bool {
+        !self.temporary
+    }
+
+    pub fn is_temporary(&self) -> bool {
+        self.temporary
+    }
+
+    pub fn into_final(self) -> Option<T> {
+        if self.is_final() {
+            Some(self.value)
+        } else {
+            None
+        }
+    }
+
+    pub fn into_temporary(self) -> Option<T> {
+        if self.is_temporary() {
+            Some(self.value)
+        } else {
+            None
+        }
+    }
+
+    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> MaybeTemporary<U> {
+        MaybeTemporary {
+            value: f(self.value),
+            temporary: self.temporary,
+        }
+    }
+}
+
+impl<A, B> MaybeTemporary<(A, B)> {
+    pub fn and2(a: MaybeTemporary<A>, b: MaybeTemporary<B>) -> Self {
+        Self {
+            value: (a.value, b.value),
+            temporary: a.temporary || b.temporary,
+        }
+    }
+}
+
+impl<A, B, C> MaybeTemporary<(A, B, C)> {
+    pub fn and3(a: MaybeTemporary<A>, b: MaybeTemporary<B>, c: MaybeTemporary<C>) -> Self {
+        Self {
+            value: (a.value, b.value, c.value),
+            temporary: a.temporary || b.temporary || c.temporary,
+        }
+    }
+}
+
+impl<A, B, C, D> MaybeTemporary<(A, B, C, D)> {
+    pub fn and4(
+        a: MaybeTemporary<A>,
+        b: MaybeTemporary<B>,
+        c: MaybeTemporary<C>,
+        d: MaybeTemporary<D>,
+    ) -> Self {
+        Self {
+            value: (a.value, b.value, c.value, d.value),
+            temporary: a.temporary || b.temporary || c.temporary || d.temporary,
+        }
+    }
+}
+
+impl<T: Clone + PartialEq + Eq + Hash> QueryResult for MaybeTemporary<T> {
+    fn is_final(&self) -> bool {
+        self.is_final()
+    }
+}
+
 pub struct ParametersQuery;
 
 impl Query for ParametersQuery {

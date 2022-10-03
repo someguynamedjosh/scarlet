@@ -7,6 +7,7 @@ use crate::item::{
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
+#[derive(Clone, Copy)]
 pub enum Builtin {
     IsExactly,
     IfThenElse,
