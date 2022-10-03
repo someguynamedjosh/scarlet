@@ -25,6 +25,7 @@ impl Builtin {
     }
 }
 
+#[derive(Clone)]
 pub struct DBuiltin {
     builtin: Builtin,
 }

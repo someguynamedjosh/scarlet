@@ -7,6 +7,7 @@ use crate::item::{
     CycleDetectingDebug, Item, ItemDefinition,
 };
 
+#[derive(Clone)]
 pub struct DIdentifier {
     identifier: String,
 }

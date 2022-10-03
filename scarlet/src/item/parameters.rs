@@ -3,11 +3,14 @@ use std::{collections::HashSet, iter::FromIterator, rc::Rc};
 use maplit::hashset;
 
 use super::query::QueryResult;
-use crate::{definitions::parameter::Parameter, shared::OrderedSet};
+use crate::{
+    definitions::parameter::{Parameter, ParameterPtr},
+    shared::OrderedSet,
+};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Parameters {
-    parameters: OrderedSet<Rc<Parameter>>,
+    parameters: OrderedSet<ParameterPtr>,
 }
 
 impl QueryResult for Parameters {
@@ -23,7 +26,7 @@ impl Parameters {
         }
     }
 
-    pub fn insert(&mut self, param: Rc<Parameter>) {
+    pub fn insert(&mut self, param: ParameterPtr) {
         self.parameters.insert(param, ());
     }
 
@@ -41,5 +44,9 @@ impl Parameters {
         for (param, _) in std::mem::take(&mut other.parameters) {
             self.insert(param);
         }
+    }
+
+    pub fn remove(&self, param: &Parameter) -> Option<ParameterPtr> {
+        self.parameters.remove(param).map(|x| x.0)
     }
 }

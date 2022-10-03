@@ -44,7 +44,10 @@ impl CycleDetectingDebug for Parameter {
     }
 }
 
-pub struct DParameter(Rc<Parameter>);
+pub type ParameterPtr = Rc<Parameter>;
+
+#[derive(Clone)]
+pub struct DParameter(ParameterPtr);
 
 impl CycleDetectingDebug for DParameter {
     fn fmt(&self, f: &mut fmt::Formatter, stack: &[*const Item]) -> fmt::Result {

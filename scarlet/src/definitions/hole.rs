@@ -7,6 +7,7 @@ use crate::item::{
     CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
 };
 
+#[derive(Clone)]
 pub struct DHole {
     r#type: ItemPtr,
 }

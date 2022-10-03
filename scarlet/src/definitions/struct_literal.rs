@@ -11,6 +11,7 @@ use crate::{
     },
 };
 
+#[derive(Clone)]
 pub struct DStructLiteral {
     fields: Vec<(String, ItemPtr)>,
     /// If true, a type is automatically generated based on the contents. If

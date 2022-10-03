@@ -8,6 +8,7 @@ use crate::item::{
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
+#[derive(Clone)]
 pub struct DNewType {
     fields: Vec<(String, ItemPtr)>,
 }

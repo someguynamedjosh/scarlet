@@ -8,6 +8,7 @@ use std::{
 
 #[cfg(feature = "trace_borrows")]
 use debug_cell::{RefCell, RefMut};
+use dyn_clone::DynClone;
 
 use super::query::{
     AllowsChildQuery, ParametersQuery, Query, QueryContext, QueryResultCache, TypeCheckQuery,
@@ -33,7 +34,7 @@ pub trait CycleDetectingDebug {
     }
 }
 
-pub trait ItemDefinition: CycleDetectingDebug {
+pub trait ItemDefinition: CycleDetectingDebug + DynClone {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
@@ -43,6 +44,12 @@ pub trait ItemDefinition: CycleDetectingDebug {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
+}
+
+impl dyn ItemDefinition {
+    pub fn dyn_clone(&self) -> Box<Self> {
+        dyn_clone::clone_box(self)
+    }
 }
 
 pub trait IntoItemPtr: ItemDefinition {
@@ -137,6 +144,10 @@ impl ItemPtr {
 
     pub fn ptr_clone(&self) -> ItemPtr {
         Self(self.0.ptr_clone())
+    }
+
+    pub fn clone_definition(&self) -> Box<dyn ItemDefinition> {
+        self.0.borrow().definition.dyn_clone()
     }
 
     fn query<Q: Query>(

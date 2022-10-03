@@ -54,9 +54,12 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         self.insert_impl(key, value, false)
     }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
+    pub fn get<R: Eq>(&self, key: &R) -> Option<&V>
+    where
+        K: Borrow<R>,
+    {
         for (candidate, value) in self {
-            if candidate == key {
+            if candidate.borrow() == key {
                 return Some(value);
             }
         }
@@ -95,9 +98,12 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         std::mem::take(self)
     }
 
-    pub fn remove(&mut self, key_to_remove: &K) -> Option<(K, V)> {
+    pub fn remove<R: Eq>(&mut self, key_to_remove: &R) -> Option<(K, V)>
+    where
+        K: Borrow<R>,
+    {
         for idx in (0..self.entries.len()).rev() {
-            if &self.entries[idx].0 == key_to_remove {
+            if self.entries[idx].0.borrow() == key_to_remove {
                 return Some(self.entries.remove(idx));
             }
         }
