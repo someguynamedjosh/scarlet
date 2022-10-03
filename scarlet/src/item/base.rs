@@ -11,8 +11,8 @@ use debug_cell::{RefCell, RefMut};
 use dyn_clone::DynClone;
 
 use super::query::{
-    AllowsChildQuery, ParametersQuery, Query, QueryContext, QueryResultCache, TypeCheckQuery,
-    TypeQuery,
+    AllowsChildQuery, FlattenQuery, ParametersQuery, Query, QueryContext, QueryResultCache,
+    TypeCheckQuery, TypeQuery,
 };
 use crate::{diagnostic::Position, util::PtrExtension};
 
@@ -35,6 +35,12 @@ pub trait CycleDetectingDebug {
 }
 
 pub trait ItemDefinition: CycleDetectingDebug + DynClone {
+    fn recompute_flattened(
+        &self,
+        ctx: &mut QueryContext<FlattenQuery>,
+    ) -> <FlattenQuery as Query>::Result {
+        None
+    }
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
@@ -68,6 +74,7 @@ pub struct UniversalItemInfo {
 }
 
 pub struct ItemQueryResultCaches {
+    flattened: QueryResultCache<FlattenQuery>,
     r#type: QueryResultCache<TypeQuery>,
     type_check: QueryResultCache<TypeCheckQuery>,
 }
@@ -75,6 +82,7 @@ pub struct ItemQueryResultCaches {
 impl ItemQueryResultCaches {
     fn new() -> Self {
         Self {
+            flattened: QueryResultCache::new(),
             r#type: QueryResultCache::new(),
             type_check: QueryResultCache::new(),
         }
@@ -169,6 +177,17 @@ impl ItemPtr {
                 get_cache(query_result_caches),
             )
         })
+    }
+
+    pub fn query_flattened(
+        &self,
+        ctx: &mut impl AllowsChildQuery<FlattenQuery>,
+    ) -> <FlattenQuery as Query>::Result {
+        self.query(
+            ctx,
+            |caches| &mut caches.flattened,
+            |ctx, definition| definition.recompute_flattened(ctx),
+        )
     }
 
     pub fn query_type(

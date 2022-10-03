@@ -46,7 +46,7 @@ impl Parameters {
         }
     }
 
-    pub fn remove(&self, param: &Parameter) -> Option<ParameterPtr> {
+    pub fn remove(&mut self, param: &Parameter) -> Option<ParameterPtr> {
         self.parameters.remove(param).map(|x| x.0)
     }
 }

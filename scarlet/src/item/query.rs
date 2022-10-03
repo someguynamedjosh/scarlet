@@ -266,6 +266,17 @@ pub fn no_type_check_errors() -> <TypeCheckQuery as Query>::Result {
     vec![].into()
 }
 
+pub struct FlattenQuery;
+
+impl Query for FlattenQuery {
+    type Result = Option<ItemPtr>;
+    type Target = ItemPtr;
+
+    fn result_when_cycle_encountered() -> Self::Result {
+        None
+    }
+}
+
 pub trait AllowsChildQuery<ChildQuery: Query> {
     fn with_child_context<T>(
         &mut self,
