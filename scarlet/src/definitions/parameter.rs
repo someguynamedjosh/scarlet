@@ -88,7 +88,11 @@ impl ItemDefinition for DParameter {
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
-        Some(this.ptr_clone())
+        if let Some(value) = args.get(&self.0) {
+            Some(value.ptr_clone())
+        } else {
+            Some(this.ptr_clone())
+        }
     }
 }
 

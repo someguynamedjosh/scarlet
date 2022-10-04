@@ -18,7 +18,7 @@ use super::{
     },
     type_hints::TypeHint,
 };
-use crate::{definitions::parameter::ParameterPtr, diagnostic::Position, util::PtrExtension};
+use crate::{definitions::parameter::{ParameterPtr, Parameter}, diagnostic::Position, util::PtrExtension};
 
 pub trait CycleDetectingDebug {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
@@ -234,5 +234,9 @@ impl ItemPtr {
 
     pub fn collect_type_hints(&self) -> Vec<(ItemPtr, TypeHint)> {
         self.0.borrow().definition.collect_type_hints(self)
+    }
+
+    pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+        self.0.borrow().definition.reduce(self, args)
     }
 }

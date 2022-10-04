@@ -104,7 +104,22 @@ impl ItemDefinition for DStructLiteral {
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
-        Some(this.ptr_clone())
+        let fields = self
+            .fields
+            .iter()
+            .map(|(name, value)| value.reduce(args).map(|v| (name.clone(), v)))
+            .collect::<Option<_>>()?;
+        if fields == self.fields {
+            Some(this.ptr_clone())
+        } else {
+            Some(
+                Self {
+                    fields,
+                    is_module: self.is_module,
+                }
+                .into_ptr(),
+            )
+        }
     }
 }
 
