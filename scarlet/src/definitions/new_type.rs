@@ -1,9 +1,12 @@
 use std::fmt::{self, Formatter};
 
+use itertools::Itertools;
+
 use super::builtin::DBuiltin;
 use crate::item::{
     query::{
-        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+        no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
+        TypeQuery,
     },
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
@@ -30,6 +33,12 @@ impl CycleDetectingDebug for DNewType {
 }
 
 impl ItemDefinition for DNewType {
+    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
+        for (_, ty) in &self.fields {
+            ty.collect_self_and_children(into);
+        }
+    }
+
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,

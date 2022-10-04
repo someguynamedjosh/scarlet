@@ -11,8 +11,8 @@ use debug_cell::{RefCell, RefMut};
 use dyn_clone::DynClone;
 
 use super::query::{
-    AllowsChildQuery, FlattenQuery, ParametersQuery, Query, QueryContext, QueryResultCache,
-    TypeCheckQuery, TypeQuery,
+    AllowsChildQuery, ChildrenQuery, FlattenQuery, ParametersQuery, Query, QueryContext,
+    QueryResultCache, TypeCheckQuery, TypeQuery,
 };
 use crate::{diagnostic::Position, util::PtrExtension};
 
@@ -35,6 +35,7 @@ pub trait CycleDetectingDebug {
 }
 
 pub trait ItemDefinition: CycleDetectingDebug + DynClone {
+    fn collect_children(&self, into: &mut Vec<ItemPtr>);
     fn recompute_flattened(
         &self,
         ctx: &mut QueryContext<FlattenQuery>,
@@ -177,6 +178,19 @@ impl ItemPtr {
                 get_cache(query_result_caches),
             )
         })
+    }
+
+    pub fn collect_self_and_children(&self, into: &mut Vec<ItemPtr>) {
+        into.push(self.ptr_clone());
+        self.0.borrow().definition.collect_children(into);
+        debug_assert_eq!(
+            {
+                let mut dd = into.clone();
+                dd.dedup();
+                dd
+            },
+            *into
+        );
     }
 
     pub fn query_flattened(

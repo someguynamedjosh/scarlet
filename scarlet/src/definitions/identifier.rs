@@ -2,9 +2,10 @@ use std::fmt;
 
 use crate::item::{
     query::{
-        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+        no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
+        TypeQuery,
     },
-    CycleDetectingDebug, Item, ItemDefinition,
+    CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -19,6 +20,8 @@ impl CycleDetectingDebug for DIdentifier {
 }
 
 impl ItemDefinition for DIdentifier {
+    fn collect_children(&self, into: &mut Vec<ItemPtr>) {}
+
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,

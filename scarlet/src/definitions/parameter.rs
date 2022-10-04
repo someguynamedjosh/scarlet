@@ -6,7 +6,7 @@ use std::{
 use crate::{
     diagnostic::Position,
     item::{
-        query::{ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
+        query::{ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
         CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
     },
 };
@@ -56,6 +56,10 @@ impl CycleDetectingDebug for DParameter {
 }
 
 impl ItemDefinition for DParameter {
+    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
+        self.0.r#type.collect_self_and_children(into)
+    }
+
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,

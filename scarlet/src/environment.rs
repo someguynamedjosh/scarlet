@@ -19,6 +19,7 @@ pub(crate) struct OnlyConstructedByEnvironment(());
 pub struct Environment {
     language_items: HashMap<&'static str, ItemPtr>,
     root: ItemPtr,
+    all_items: Vec<ItemPtr>,
 }
 
 impl Environment {
@@ -26,6 +27,7 @@ impl Environment {
         Self {
             language_items: HashMap::new(),
             root: DStructLiteral::new_module(vec![]).into_ptr(),
+            all_items: vec![],
         }
     }
 
@@ -51,6 +53,8 @@ impl Environment {
     }
 
     pub(crate) fn set_root(&mut self, root: ItemPtr) {
+        self.all_items.clear();
+        root.collect_self_and_children(&mut self.all_items);
         self.root = root;
     }
 

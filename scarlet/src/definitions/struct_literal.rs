@@ -1,11 +1,14 @@
 use std::fmt::{self, Formatter};
 
+use itertools::Itertools;
+
 use super::{builtin::DBuiltin, hole::DHole, new_type::DNewType, parameter::DParameter};
 use crate::{
     diagnostic::Position,
     item::{
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
+            TypeCheckQuery, TypeQuery,
         },
         CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
@@ -36,6 +39,12 @@ impl CycleDetectingDebug for DStructLiteral {
 }
 
 impl ItemDefinition for DStructLiteral {
+    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
+        for (_, val) in &self.fields {
+            val.collect_self_and_children(into);
+        }
+    }
+
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,

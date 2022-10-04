@@ -2,7 +2,8 @@ use std::fmt::{self, Formatter};
 
 use crate::item::{
     query::{
-        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+        no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
+        TypeQuery,
     },
     CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
 };
@@ -19,6 +20,10 @@ impl CycleDetectingDebug for DHole {
 }
 
 impl ItemDefinition for DHole {
+    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
+        self.r#type.collect_self_and_children(into)
+    }
+
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,

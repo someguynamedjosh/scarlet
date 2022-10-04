@@ -214,6 +214,17 @@ impl<T: Clone + PartialEq + Eq + Hash> QueryResult for MaybeTemporary<T> {
     }
 }
 
+pub struct ChildrenQuery;
+
+impl Query for ChildrenQuery {
+    type Result = InfallibleQueryResult<Vec<ItemPtr>>;
+    type Target = ItemPtr;
+
+    fn result_when_cycle_encountered() -> Self::Result {
+        panic!("Child query should not cause cycles!")
+    }
+}
+
 pub struct ParametersQuery;
 
 impl Query for ParametersQuery {
