@@ -1,11 +1,13 @@
 use std::fmt::{self, Formatter};
 
+use super::builtin::DBuiltin;
 use crate::item::{
     query::{
         no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
         TypeQuery,
     },
-    CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
+    type_hints::TypeHint,
+    CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -22,6 +24,13 @@ impl CycleDetectingDebug for DHole {
 impl ItemDefinition for DHole {
     fn collect_children(&self, into: &mut Vec<ItemPtr>) {
         self.r#type.collect_self_and_children(into)
+    }
+
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+        vec![(
+            self.r#type.ptr_clone(),
+            TypeHint::MustBeContainedIn(DBuiltin::r#type().into_ptr()),
+        )]
     }
 
     fn recompute_parameters(

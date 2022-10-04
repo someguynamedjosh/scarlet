@@ -10,9 +10,12 @@ use std::{
 use debug_cell::{RefCell, RefMut};
 use dyn_clone::DynClone;
 
-use super::query::{
-    AllowsChildQuery, ChildrenQuery, FlattenQuery, ParametersQuery, Query, QueryContext,
-    QueryResultCache, TypeCheckQuery, TypeQuery,
+use super::{
+    query::{
+        AllowsChildQuery, ChildrenQuery, FlattenQuery, ParametersQuery, Query, QueryContext,
+        QueryResultCache, TypeCheckQuery, TypeQuery,
+    },
+    type_hints::TypeHint,
 };
 use crate::{diagnostic::Position, util::PtrExtension};
 
@@ -36,6 +39,7 @@ pub trait CycleDetectingDebug {
 
 pub trait ItemDefinition: CycleDetectingDebug + DynClone {
     fn collect_children(&self, into: &mut Vec<ItemPtr>);
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)>;
     fn recompute_flattened(
         &self,
         ctx: &mut QueryContext<FlattenQuery>,
@@ -224,5 +228,9 @@ impl ItemPtr {
             |caches| &mut caches.type_check,
             |ctx, definition| definition.recompute_type_check(ctx),
         )
+    }
+
+    pub fn collect_type_hints(&self) -> Vec<(ItemPtr, TypeHint)> {
+        self.0.borrow().definition.collect_type_hints(self)
     }
 }

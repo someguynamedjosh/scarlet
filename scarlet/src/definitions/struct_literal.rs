@@ -10,6 +10,7 @@ use crate::{
             no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
             TypeCheckQuery, TypeQuery,
         },
+        type_hints::TypeHint,
         CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
@@ -43,6 +44,21 @@ impl ItemDefinition for DStructLiteral {
         for (_, val) in &self.fields {
             val.collect_self_and_children(into);
         }
+    }
+
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+        self.fields
+            .iter()
+            .map(|(name, value)| {
+                (
+                    this.ptr_clone(),
+                    TypeHint::MustHaveField {
+                        name: name.clone(),
+                        value: value.ptr_clone(),
+                    },
+                )
+            })
+            .collect_vec()
     }
 
     fn recompute_parameters(

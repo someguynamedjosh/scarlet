@@ -8,6 +8,7 @@ use crate::item::{
         no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
         TypeQuery,
     },
+    type_hints::TypeHint,
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
@@ -37,6 +38,13 @@ impl ItemDefinition for DNewType {
         for (_, ty) in &self.fields {
             ty.collect_self_and_children(into);
         }
+    }
+
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+        vec![(
+            this.ptr_clone(),
+            TypeHint::MustBeContainedIn(DBuiltin::r#type().into_ptr()),
+        )]
     }
 
     fn recompute_parameters(

@@ -7,6 +7,7 @@ use crate::{
     diagnostic::Position,
     item::{
         query::{ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
+        type_hints::TypeHint,
         CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
     },
 };
@@ -58,6 +59,13 @@ impl CycleDetectingDebug for DParameter {
 impl ItemDefinition for DParameter {
     fn collect_children(&self, into: &mut Vec<ItemPtr>) {
         self.0.r#type.collect_self_and_children(into)
+    }
+
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+        vec![(
+            this.ptr_clone(),
+            TypeHint::MustBeContainedIn(self.0.r#type.ptr_clone()),
+        )]
     }
 
     fn recompute_parameters(

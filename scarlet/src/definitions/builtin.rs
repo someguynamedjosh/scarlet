@@ -5,6 +5,7 @@ use crate::item::{
         no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
         TypeQuery,
     },
+    type_hints::TypeHint,
     CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
@@ -40,6 +41,10 @@ impl CycleDetectingDebug for DBuiltin {
 
 impl ItemDefinition for DBuiltin {
     fn collect_children(&self, into: &mut Vec<ItemPtr>) {}
+
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+        vec![]
+    }
 
     fn recompute_parameters(
         &self,

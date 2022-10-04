@@ -5,6 +5,7 @@ use crate::item::{
         no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
         TypeQuery,
     },
+    type_hints::TypeHint,
     CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
 };
 
@@ -15,12 +16,16 @@ pub struct DIdentifier {
 
 impl CycleDetectingDebug for DIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter, _stack: &[*const Item]) -> fmt::Result {
-        write!(f, "{}", self.identifier)
+        write!(f, "ident\"{}\"", self.identifier)
     }
 }
 
 impl ItemDefinition for DIdentifier {
     fn collect_children(&self, into: &mut Vec<ItemPtr>) {}
+
+    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+        vec![]
+    }
 
     fn recompute_parameters(
         &self,

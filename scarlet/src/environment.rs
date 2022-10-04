@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     definitions::{builtin::DBuiltin, struct_literal::DStructLiteral},
     diagnostic::Diagnostic,
     entry::OnlyConstructedByEntry,
     item::{
-        query::{Query, QueryContext, RootQuery, TypeQuery, TypeCheckQuery},
+        query::{Query, QueryContext, RootQuery, TypeCheckQuery, TypeQuery},
         IntoItemPtr, ItemPtr,
     },
 };
@@ -55,6 +55,13 @@ impl Environment {
     pub(crate) fn set_root(&mut self, root: ItemPtr) {
         self.all_items.clear();
         root.collect_self_and_children(&mut self.all_items);
+        let mut type_hints = HashMap::new();
+        for item in &self.all_items {
+            for (target, hint) in item.collect_type_hints() {
+                type_hints.entry(target).or_insert_with(Vec::new).push(hint);
+            }
+        }
+        println!("{:#?}", type_hints);
         self.root = root;
     }
 
