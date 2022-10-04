@@ -1,8 +1,16 @@
-use std::fmt::{self, Formatter};
+use std::{
+    collections::HashMap,
+    fmt::{self, Formatter},
+};
 
 use itertools::Itertools;
 
-use super::{builtin::DBuiltin, hole::DHole, new_type::DNewType, parameter::DParameter};
+use super::{
+    builtin::DBuiltin,
+    hole::DHole,
+    new_type::DNewType,
+    parameter::{DParameter, ParameterPtr},
+};
 use crate::{
     diagnostic::Position,
     item::{
@@ -93,6 +101,10 @@ impl ItemDefinition for DStructLiteral {
         } else {
             todo!()
         }
+    }
+
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+        Some(this.ptr_clone())
     }
 }
 

@@ -1,5 +1,6 @@
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
+use super::parameter::ParameterPtr;
 use crate::item::{
     query::{
         no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
@@ -43,6 +44,10 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
+    }
+
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+        Some(this.ptr_clone())
     }
 }
 

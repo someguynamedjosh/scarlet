@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fmt::{self, Formatter},
     rc::Rc,
 };
@@ -84,6 +85,10 @@ impl ItemDefinition for DParameter {
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         todo!()
+    }
+
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+        Some(this.ptr_clone())
     }
 }
 

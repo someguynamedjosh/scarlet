@@ -1,6 +1,7 @@
 #[cfg(not(feature = "trace_borrows"))]
 use std::cell::RefCell;
 use std::{
+    collections::HashMap,
     fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
     rc::Rc,
@@ -17,7 +18,7 @@ use super::{
     },
     type_hints::TypeHint,
 };
-use crate::{diagnostic::Position, util::PtrExtension};
+use crate::{definitions::parameter::ParameterPtr, diagnostic::Position, util::PtrExtension};
 
 pub trait CycleDetectingDebug {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
@@ -55,6 +56,7 @@ pub trait ItemDefinition: CycleDetectingDebug + DynClone {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr>;
 }
 
 impl dyn ItemDefinition {
