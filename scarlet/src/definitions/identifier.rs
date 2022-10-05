@@ -9,7 +9,7 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         type_hints::TypeHint,
-        CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -20,9 +20,9 @@ pub struct DIdentifier {
 }
 
 impl CycleDetectingDebug for DIdentifier {
-    fn fmt(&self, f: &mut fmt::Formatter, stack: &[*const Item]) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
         if let Some(item) = &self.item {
-            item.fmt(f, stack)
+            item.fmt(f, ctx)
         } else {
             write!(f, "IDENTIFIER({})", self.identifier)
         }

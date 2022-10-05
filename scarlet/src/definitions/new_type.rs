@@ -12,7 +12,7 @@ use crate::item::{
         TypeQuery,
     },
     type_hints::TypeHint,
-    CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+    CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -21,14 +21,14 @@ pub struct DNewType {
 }
 
 impl CycleDetectingDebug for DNewType {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "NEW_TYPE(\n")?;
         for field in &self.fields {
             write!(
                 f,
                 "   {} IS {}",
                 field.0,
-                field.1.to_indented_string(stack, 2)
+                field.1.to_indented_string(ctx, 2)
             )?;
             write!(f, ",\n")?;
         }

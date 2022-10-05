@@ -12,7 +12,7 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         type_hints::TypeHint,
-        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -22,7 +22,7 @@ pub struct DHole {
 }
 
 impl CycleDetectingDebug for DHole {
-    fn fmt(&self, f: &mut Formatter, _stack: &[*const Item]) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter, _ctx: &mut CddContext) -> fmt::Result {
         write!(f, "_")
     }
 }

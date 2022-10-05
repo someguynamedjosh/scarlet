@@ -12,7 +12,7 @@ use crate::item::{
         TypeQuery,
     },
     type_hints::TypeHint,
-    CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+    CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -22,8 +22,8 @@ pub struct DMemberAccess {
 }
 
 impl CycleDetectingDebug for DMemberAccess {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
-        self.base.fmt(f, stack)?;
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        self.base.fmt(f, ctx)?;
         write!(f, ".{}", self.member_name)
     }
 }

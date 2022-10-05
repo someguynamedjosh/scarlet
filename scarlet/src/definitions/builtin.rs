@@ -13,7 +13,7 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         type_hints::TypeHint,
-        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -55,8 +55,12 @@ pub struct DBuiltin {
 }
 
 impl CycleDetectingDebug for DBuiltin {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
-        write!(f, "BUILTIN({})(\n", self.builtin.name())?;
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        write!(f, "BUILTIN({})", self.builtin.name())?;
+        if self.args.len() == 0 {
+            return Ok(());
+        }
+        write!(f, "(\n")?;
         for (param_name, arg) in self
             .builtin
             .default_arg_names()
@@ -67,7 +71,7 @@ impl CycleDetectingDebug for DBuiltin {
                 f,
                 "   {} IS {}",
                 param_name,
-                arg.to_indented_string(stack, 2)
+                arg.to_indented_string(ctx, 2)
             )?;
             write!(f, ",\n")?;
         }

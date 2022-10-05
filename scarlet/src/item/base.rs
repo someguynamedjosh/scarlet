@@ -2,7 +2,7 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::{
     any::{self, Any},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
     rc::Rc,
@@ -29,17 +29,22 @@ use crate::{
     util::PtrExtension,
 };
 
-pub trait CycleDetectingDebug {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
+pub struct CddContext<'a, 'b> {
+    stack: &'a [*const Item],
+    recursed_on: &'b mut HashSet<*const Item>,
+}
 
-    fn to_string(&self, stack: &[*const Item]) -> String {
+pub trait CycleDetectingDebug {
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result;
+
+    fn to_string(&self, ctx: &mut CddContext) -> String {
         let mut string = String::new();
-        self.fmt(&mut Formatter::new(&mut string), stack).unwrap();
+        self.fmt(&mut Formatter::new(&mut string), ctx).unwrap();
         string
     }
 
-    fn to_indented_string(&self, stack: &[*const Item], indent_size: u8) -> String {
-        let mut result = self.to_string(stack);
+    fn to_indented_string(&self, ctx: &mut CddContext, indent_size: u8) -> String {
+        let mut result = self.to_string(ctx);
         for _ in 0..indent_size {
             result = result.replace("\n", "\n   ");
         }
@@ -142,22 +147,39 @@ impl Hash for ItemPtr {
 }
 
 impl CycleDetectingDebug for ItemPtr {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         let ptr = self.0.as_ptr() as *const _;
-        if stack.contains(&ptr) {
+        if ctx.stack.contains(&ptr) {
+            ctx.recursed_on.insert(ptr);
             write!(f, "@{:?}", ptr)
         } else {
-            writeln!(f, "@{:?}", ptr)?;
-            let mut new_stack = Vec::from(stack);
+            let mut new_stack = Vec::from(ctx.stack);
             new_stack.push(ptr);
-            self.0.borrow().definition.fmt(f, &new_stack)
+            self.0.borrow().definition.fmt(
+                f,
+                &mut CddContext {
+                    stack: &mut new_stack,
+                    recursed_on: ctx.recursed_on,
+                },
+            )?;
+            if ctx.recursed_on.remove(&ptr) {
+                writeln!(f, "\n@{:?}", ptr)?;
+            }
+            Ok(())
         }
     }
 }
 
 impl Debug for ItemPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        CycleDetectingDebug::fmt(self, f, &[])
+        CycleDetectingDebug::fmt(
+            self,
+            f,
+            &mut CddContext {
+                stack: &[],
+                recursed_on: &mut HashSet::new(),
+            },
+        )
     }
 }
 

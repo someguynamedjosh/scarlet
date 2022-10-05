@@ -10,7 +10,7 @@ use crate::{
     item::{
         query::{ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
         type_hints::TypeHint,
-        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -41,9 +41,9 @@ impl Parameter {
 }
 
 impl CycleDetectingDebug for Parameter {
-    fn fmt(&self, f: &mut Formatter<'_>, stack: &[*const Item]) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "ANY ")?;
-        self.r#type.fmt(f, stack)
+        self.r#type.fmt(f, ctx)
     }
 }
 
@@ -53,8 +53,8 @@ pub type ParameterPtr = Rc<Parameter>;
 pub struct DParameter(ParameterPtr);
 
 impl CycleDetectingDebug for DParameter {
-    fn fmt(&self, f: &mut fmt::Formatter, stack: &[*const Item]) -> fmt::Result {
-        self.0.fmt(f, stack)
+    fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
+        self.0.fmt(f, ctx)
     }
 }
 

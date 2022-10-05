@@ -13,7 +13,7 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         type_hints::TypeHint,
-        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
     util::PtrExtension,
@@ -28,8 +28,8 @@ pub struct DSubstitution {
 }
 
 impl CycleDetectingDebug for DSubstitution {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
-        self.base.fmt(f, stack)?;
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        self.base.fmt(f, ctx)?;
         write!(f, "(")?;
         let mut first = true;
         for (target, value) in &self.substitutions {
@@ -38,7 +38,7 @@ impl CycleDetectingDebug for DSubstitution {
             }
             first = false;
             write!(f, "{:?} IS ", target)?;
-            value.fmt(f, stack)?;
+            value.fmt(f, ctx)?;
         }
         write!(f, ")")
     }

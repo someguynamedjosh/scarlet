@@ -15,7 +15,7 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         type_hints::TypeHint,
-        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -26,12 +26,12 @@ pub struct DNewValue {
 }
 
 impl CycleDetectingDebug for DNewValue {
-    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
-        self.r#type.fmt(f, stack);
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        self.r#type.fmt(f, ctx);
         write!(f, ".new(\n")?;
         for field in &self.fields {
             write!(f, "   ",)?;
-            field.fmt(f, stack)?;
+            field.fmt(f, ctx)?;
             write!(f, ",\n")?;
         }
         write!(f, ")")
