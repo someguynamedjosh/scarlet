@@ -21,7 +21,10 @@ use super::{
     type_hints::TypeHint,
 };
 use crate::{
-    definitions::parameter::{Parameter, ParameterPtr},
+    definitions::{
+        new_value::DNewValue,
+        parameter::{Parameter, ParameterPtr},
+    },
     diagnostic::{Diagnostic, Position},
     util::PtrExtension,
 };
@@ -175,6 +178,10 @@ impl ItemPtr {
         Self(self.0.ptr_clone())
     }
 
+    pub fn is_same_instance_as(&self, other: &ItemPtr) -> bool {
+        self.0.is_same_instance_as(&other.0)
+    }
+
     pub fn clone_definition(&self) -> Box<dyn ItemDefinition> {
         self.0.borrow().definition.dyn_clone()
     }
@@ -183,6 +190,14 @@ impl ItemPtr {
         let r = OwningRef::new(self.0.borrow());
         r.try_map(|x| (&x.definition as &dyn Any).downcast_ref().ok_or(()))
             .ok()
+    }
+
+    pub fn is_literal_instance_of(&self, ty: &ItemPtr) -> bool {
+        if let Some(value) = self.downcast_definition::<DNewValue>() {
+            value.get_type().is_same_instance_as(ty)
+        } else {
+            false
+        }
     }
 
     fn query<Q: Query>(

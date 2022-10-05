@@ -6,3 +6,4 @@ pub mod struct_literal;
 pub mod hole;
 pub mod member_access;
 pub mod substitution;
+pub mod new_value;

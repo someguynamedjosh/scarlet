@@ -57,7 +57,29 @@ impl Environment {
         self.all_items.clear();
         root.collect_self_and_children(&mut self.all_items);
         self.root = root;
-        vec![]
+        let mut constraints = Vec::new();
+        for item in &self.all_items {
+            constraints.append(&mut item.collect_constraints());
+        }
+        let true_type = match self.get_language_item("True") {
+            Ok(ty) => ty,
+            Err(err) => return vec![err],
+        };
+        let mut errors = vec![];
+        for (subject, constraint) in constraints {
+            let constraint = constraint.reduce(&HashMap::new());
+            let success = constraint.is_literal_instance_of(&true_type);
+            if !success {
+                errors.push(
+                    Diagnostic::new()
+                        .with_text_error(format!("Unsatisfied constraint:"))
+                        .with_item_error(&constraint)
+                        .with_text_info(format!("Required by the following expression:"))
+                        .with_item_info(&subject),
+                )
+            }
+        }
+        errors
     }
 
     fn root_query() -> QueryContext<RootQuery> {

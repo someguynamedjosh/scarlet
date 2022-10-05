@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use colored::{ColoredString, Colorize};
 
-use crate::file_tree::FileNode;
+use crate::{file_tree::FileNode, item::ItemPtr};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Level {
@@ -227,6 +227,27 @@ impl Diagnostic {
 
     pub fn with_source_code_block_error(self, source_code_block: impl Into<Position>) -> Self {
         self.with_source_code_block(Level::Error, source_code_block)
+    }
+
+    pub fn with_item(self, level: Level, item: &ItemPtr) -> Self {
+        let pos = item.get_position();
+        if pos == Position::placeholder() {
+            self.with_generated_code_block(level, format!("{:#?}", item))
+        } else {
+            self.with_source_code_block(level, pos)
+        }
+    }
+
+    pub fn with_item_info(self, item: &ItemPtr) -> Self {
+        Self::with_item(self, Level::Info, item)
+    }
+
+    pub fn with_item_warning(self, item: &ItemPtr) -> Self {
+        Self::with_item(self, Level::Warning, item)
+    }
+
+    pub fn with_item_error(self, item: &ItemPtr) -> Self {
+        Self::with_item(self, Level::Error, item)
     }
 }
 

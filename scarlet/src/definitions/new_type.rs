@@ -5,7 +5,7 @@ use std::{
 
 use itertools::Itertools;
 
-use super::{builtin::DBuiltin, parameter::ParameterPtr};
+use super::{builtin::DBuiltin, new_value::DNewValue, parameter::ParameterPtr};
 use crate::item::{
     query::{
         no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
@@ -38,8 +38,8 @@ impl CycleDetectingDebug for DNewType {
 
 impl ItemDefinition for DNewType {
     fn collect_children(&self, into: &mut Vec<ItemPtr>) {
-        for (_, ty) in &self.fields {
-            ty.collect_self_and_children(into);
+        for (_, field) in &self.fields {
+            field.collect_self_and_children(into);
         }
     }
 
@@ -73,5 +73,17 @@ impl ItemDefinition for DNewType {
 impl DNewType {
     pub fn new(fields: Vec<(String, ItemPtr)>) -> Self {
         Self { fields }
+    }
+
+    pub fn get_fields(&self) -> &[(String, ItemPtr)] {
+        &self.fields
+    }
+
+    pub fn constructor(&self, this: &ItemPtr) -> ItemPtr {
+        DNewValue::new(
+            this.ptr_clone(),
+            self.fields.iter().map(|f| f.1.ptr_clone()).collect(),
+        )
+        .into_ptr()
     }
 }
