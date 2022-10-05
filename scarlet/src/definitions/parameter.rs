@@ -28,11 +28,16 @@ pub struct Order {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Parameter {
     order: Order,
+    original_type: ItemPtr,
 }
 
 impl Parameter {
     pub fn order(&self) -> &Order {
         &self.order
+    }
+
+    pub fn original_type(&self) -> &ItemPtr {
+        &self.original_type
     }
 }
 
@@ -41,30 +46,30 @@ pub type ParameterPtr = Rc<Parameter>;
 #[derive(Clone)]
 pub struct DParameter {
     parameter: ParameterPtr,
-    r#type: ItemPtr,
+    reduced_type: ItemPtr,
 }
 
 impl CycleDetectingDebug for DParameter {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "ANY ")?;
-        self.r#type.fmt(f, ctx)
+        self.reduced_type.fmt(f, ctx)
     }
 }
 
 impl ItemDefinition for DParameter {
     fn children(&self) -> Vec<ItemPtr> {
-        vec![self.r#type.ptr_clone()]
+        vec![self.reduced_type.ptr_clone()]
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![
             (
                 this.ptr_clone(),
-                DBuiltin::is_subtype_of(this.ptr_clone(), self.r#type.ptr_clone()).into_ptr(),
+                DBuiltin::is_subtype_of(this.ptr_clone(), self.reduced_type.ptr_clone()).into_ptr(),
             ),
             (
                 this.ptr_clone(),
-                DBuiltin::is_type(self.r#type.ptr_clone()).into_ptr(),
+                DBuiltin::is_type(self.reduced_type.ptr_clone()).into_ptr(),
             ),
         ]
     }
@@ -77,7 +82,7 @@ impl ItemDefinition for DParameter {
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(self.r#type.ptr_clone())
+        Some(self.reduced_type.ptr_clone())
     }
 
     fn recompute_type_check(
@@ -96,13 +101,13 @@ impl ItemDefinition for DParameter {
         if let Some(value) = args.get(&self.parameter) {
             value.ptr_clone()
         } else {
-            let r#type = self.r#type.reduce(args, env);
-            if r#type.is_same_instance_as(&self.r#type) {
+            let r#type = self.reduced_type.reduce(args, env);
+            if r#type.is_same_instance_as(&self.reduced_type) {
                 this.ptr_clone()
             } else {
                 DParameter {
                     parameter: Rc::clone(&self.parameter),
-                    r#type,
+                    reduced_type: r#type,
                 }
                 .into_ptr()
             }
@@ -117,8 +122,18 @@ impl DParameter {
             file_order: position.file_index() as _,
             minor_order: position.range().start as _,
         };
-        let parameter = Rc::new(Parameter { order });
-        Self { parameter, r#type }
+        let parameter = Rc::new(Parameter {
+            order,
+            original_type: r#type.ptr_clone(),
+        });
+        Self {
+            parameter,
+            reduced_type: r#type,
+        }
+    }
+
+    pub fn get_parameter_ptr(&self) -> ParameterPtr {
+        Rc::clone(&self.parameter)
     }
 
     pub fn get_parameter(&self) -> &Parameter {
@@ -126,6 +141,6 @@ impl DParameter {
     }
 
     pub fn get_type(&self) -> &ItemPtr {
-        &self.r#type
+        &self.reduced_type
     }
 }

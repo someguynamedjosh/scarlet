@@ -42,8 +42,8 @@ impl ItemDefinition for DIdentifier {
         todo!()
     }
 
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        None
+    fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
+        self.item.as_ref()?.query_type(ctx)
     }
 
     fn recompute_type_check(

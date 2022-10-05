@@ -6,6 +6,7 @@ mod is;
 mod multiple_items;
 mod new_type;
 mod structure;
+mod substitution;
 
 use super::phrase::Phrase;
 
@@ -37,5 +38,6 @@ pub fn phrases() -> Vec<Phrase> {
         multiple_items::phrase(),
         new_type::phrase(),
         structure::phrase(),
+        substitution::phrase(),
     ]
 }

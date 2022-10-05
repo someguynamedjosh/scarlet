@@ -2,7 +2,7 @@ use std::{collections::HashSet, iter::FromIterator, rc::Rc};
 
 use maplit::hashset;
 
-use super::query::QueryResult;
+use super::{query::QueryResult, ItemPtr};
 use crate::{
     definitions::parameter::{Parameter, ParameterPtr},
     shared::OrderedSet,
@@ -11,11 +11,12 @@ use crate::{
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Parameters {
     parameters: OrderedSet<ParameterPtr>,
+    excludes_parameters_from: OrderedSet<ItemPtr>,
 }
 
 impl QueryResult for Parameters {
     fn is_final(&self) -> bool {
-        true
+        !self.excludes_any_parameters()
     }
 }
 
@@ -23,7 +24,20 @@ impl Parameters {
     pub fn new_empty() -> Self {
         Self {
             parameters: vec![].into_iter().collect(),
+            excludes_parameters_from: vec![].into_iter().collect(),
         }
+    }
+
+    pub fn mark_excluding(&mut self, excluding_from: ItemPtr) {
+        self.excludes_parameters_from.insert(excluding_from, ());
+    }
+
+    pub fn unmark_excluding(&mut self, no_longer_excluding_from: &ItemPtr) {
+        self.excludes_parameters_from.remove(no_longer_excluding_from);
+    }
+
+    pub fn excludes_any_parameters(&self) -> bool {
+        self.excludes_parameters_from.len() > 0
     }
 
     pub fn insert(&mut self, param: ParameterPtr) {

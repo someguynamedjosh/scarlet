@@ -104,7 +104,7 @@ impl Environment {
         errors
     }
 
-    fn root_query() -> QueryContext<RootQuery> {
+    pub fn root_query() -> QueryContext<RootQuery> {
         QueryContext::root(OnlyConstructedByEnvironment(()))
     }
 
