@@ -62,16 +62,10 @@ impl ItemDefinition for DParameter {
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
-        vec![
-            (
-                this.ptr_clone(),
-                DBuiltin::is_subtype_of(this.ptr_clone(), self.reduced_type.ptr_clone()).into_ptr(),
-            ),
-            (
-                this.ptr_clone(),
-                DBuiltin::is_type(self.reduced_type.ptr_clone()).into_ptr(),
-            ),
-        ]
+        vec![(
+            this.ptr_clone(),
+            DBuiltin::is_type(self.reduced_type.ptr_clone()).into_ptr(),
+        )]
     }
 
     fn recompute_parameters(

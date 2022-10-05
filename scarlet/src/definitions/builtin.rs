@@ -5,8 +5,9 @@ use std::{
 
 use itertools::Itertools;
 
-use super::{new_value::DNewValue, parameter::ParameterPtr};
+use super::{new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr};
 use crate::{
+    definitions::parameter::DParameter,
     diagnostic::Diagnostic,
     environment::Environment,
     item::{
@@ -16,7 +17,7 @@ use crate::{
         },
         type_hints::TypeHint,
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
-    }, definitions::parameter::DParameter,
+    },
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -123,10 +124,12 @@ impl ItemDefinition for DBuiltin {
             Builtin::IsSubtypeOf => {
                 let subtype = &rargs[0];
                 let supertype = &rargs[1];
-                if supertype.get_args_if_builtin(Builtin::Type).is_some() {
-                    if subtype.is_a_type() {
-                        return env.r#true();
-                    }
+                if supertype.is_same_instance_as(subtype) {
+                    return env.r#true();
+                } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
+                    return env.r#true();
+                } else if let Some(supertype) = supertype.downcast_definition::<DNewType>() {
+                    // todo!()
                 }
             }
             Builtin::IfThenElse => todo!(),
@@ -162,8 +165,13 @@ impl DBuiltin {
         }
     }
 
-    pub fn is_type(subtype: ItemPtr) -> Self {
-        Self::is_subtype_of(subtype, Self::r#type().into_ptr())
+    pub fn is_type(candidate: ItemPtr) -> Self {
+        Self::is_subtype_of(
+            candidate
+                .query_type(&mut Environment::root_query())
+                .unwrap(),
+            Self::r#type().into_ptr(),
+        )
     }
 
     pub fn is_subtype_of(subtype: ItemPtr, supertype: ItemPtr) -> Self {
