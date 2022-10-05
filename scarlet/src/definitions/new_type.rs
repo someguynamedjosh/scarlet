@@ -43,11 +43,8 @@ impl ItemDefinition for DNewType {
         }
     }
 
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
-        vec![(
-            this.ptr_clone(),
-            TypeHint::MustBeContainedIn(DBuiltin::r#type().into_ptr()),
-        )]
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+        vec![]
     }
 
     fn recompute_parameters(
@@ -68,8 +65,8 @@ impl ItemDefinition for DNewType {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
-        Some(this.ptr_clone())
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        this.ptr_clone()
     }
 }
 

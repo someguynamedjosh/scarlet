@@ -24,7 +24,7 @@ impl CycleDetectingDebug for DIdentifier {
 impl ItemDefinition for DIdentifier {
     fn collect_children(&self, into: &mut Vec<ItemPtr>) {}
 
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -46,8 +46,8 @@ impl ItemDefinition for DIdentifier {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
-        Some(this.ptr_clone())
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        this.ptr_clone()
     }
 }
 

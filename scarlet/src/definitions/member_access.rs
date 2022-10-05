@@ -33,14 +33,8 @@ impl ItemDefinition for DMemberAccess {
         into.push(self.base.ptr_clone())
     }
 
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
-        vec![(
-            self.base.ptr_clone(),
-            TypeHint::MustHaveField {
-                name: self.member_name.clone(),
-                value: this.ptr_clone(),
-            },
-        )]
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+        todo!()
     }
 
     fn recompute_parameters(
@@ -61,9 +55,8 @@ impl ItemDefinition for DMemberAccess {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
-        let base = self.base.reduce(args)?;
-        Some(this.ptr_clone())
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        this.ptr_clone()
     }
 }
 

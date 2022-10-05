@@ -54,19 +54,12 @@ impl ItemDefinition for DStructLiteral {
         }
     }
 
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
-        self.fields
-            .iter()
-            .map(|(name, value)| {
-                (
-                    this.ptr_clone(),
-                    TypeHint::MustHaveField {
-                        name: name.clone(),
-                        value: value.ptr_clone(),
-                    },
-                )
-            })
-            .collect_vec()
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+        if self.is_module {
+            vec![]
+        } else {
+            todo!()
+        }
     }
 
     fn recompute_parameters(
@@ -103,22 +96,20 @@ impl ItemDefinition for DStructLiteral {
         }
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| value.reduce(args).map(|v| (name.clone(), v)))
-            .collect::<Option<_>>()?;
+            .map(|(name, value)| (name.clone(), value.reduce(args)))
+            .collect();
         if fields == self.fields {
-            Some(this.ptr_clone())
+            this.ptr_clone()
         } else {
-            Some(
-                Self {
-                    fields,
-                    is_module: self.is_module,
-                }
-                .into_ptr(),
-            )
+            Self {
+                fields,
+                is_module: self.is_module,
+            }
+            .into_ptr()
         }
     }
 }

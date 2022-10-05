@@ -1,6 +1,7 @@
 #[cfg(not(feature = "trace_borrows"))]
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell, RefMut};
 use std::{
+    any::{self, Any},
     collections::HashMap,
     fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
@@ -8,8 +9,9 @@ use std::{
 };
 
 #[cfg(feature = "trace_borrows")]
-use debug_cell::{RefCell, RefMut};
+use debug_cell::{Ref, RefCell, RefMut};
 use dyn_clone::DynClone;
+use owning_ref::OwningRef;
 
 use super::{
     query::{
@@ -18,7 +20,11 @@ use super::{
     },
     type_hints::TypeHint,
 };
-use crate::{definitions::parameter::{ParameterPtr, Parameter}, diagnostic::Position, util::PtrExtension};
+use crate::{
+    definitions::parameter::{Parameter, ParameterPtr},
+    diagnostic::{Diagnostic, Position},
+    util::PtrExtension,
+};
 
 pub trait CycleDetectingDebug {
     fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result;
@@ -38,9 +44,9 @@ pub trait CycleDetectingDebug {
     }
 }
 
-pub trait ItemDefinition: CycleDetectingDebug + DynClone {
+pub trait ItemDefinition: Any + CycleDetectingDebug + DynClone {
     fn collect_children(&self, into: &mut Vec<ItemPtr>);
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)>;
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)>;
     fn recompute_flattened(
         &self,
         ctx: &mut QueryContext<FlattenQuery>,
@@ -56,7 +62,7 @@ pub trait ItemDefinition: CycleDetectingDebug + DynClone {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr>;
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
 }
 
 impl dyn ItemDefinition {
@@ -157,12 +163,26 @@ impl ItemPtr {
         self.0.borrow_mut().universal_info.position = Some(position);
     }
 
+    pub fn get_position(&self) -> Position {
+        self.0
+            .borrow()
+            .universal_info
+            .position
+            .unwrap_or(Position::placeholder())
+    }
+
     pub fn ptr_clone(&self) -> ItemPtr {
         Self(self.0.ptr_clone())
     }
 
     pub fn clone_definition(&self) -> Box<dyn ItemDefinition> {
         self.0.borrow().definition.dyn_clone()
+    }
+
+    pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<Item>, D>> {
+        let r = OwningRef::new(self.0.borrow());
+        r.try_map(|x| (&x.definition as &dyn Any).downcast_ref().ok_or(()))
+            .ok()
     }
 
     fn query<Q: Query>(
@@ -232,11 +252,11 @@ impl ItemPtr {
         )
     }
 
-    pub fn collect_type_hints(&self) -> Vec<(ItemPtr, TypeHint)> {
-        self.0.borrow().definition.collect_type_hints(self)
+    pub fn collect_constraints(&self) -> Vec<(ItemPtr, ItemPtr)> {
+        self.0.borrow().definition.collect_constraints(self)
     }
 
-    pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+    pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         self.0.borrow().definition.reduce(self, args)
     }
 }

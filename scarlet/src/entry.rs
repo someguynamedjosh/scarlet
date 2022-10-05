@@ -47,6 +47,12 @@ pub(crate) fn entry() {
     };
     println!("Created in {:#?}", time.elapsed());
 
-    env.set_root(root);
-    println!("{:#?}", env.query_root_type());
+    let errors = env.set_root(root);
+    if errors.len() > 0 {
+        for error in errors {
+            println!("{}", error.format_colorful(&file_tree));
+        }
+        return;
+    }
+    println!("Processed in {:#?}", time.elapsed());
 }

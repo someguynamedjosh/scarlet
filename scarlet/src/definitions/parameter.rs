@@ -4,12 +4,13 @@ use std::{
     rc::Rc,
 };
 
+use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
     item::{
         query::{ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
         type_hints::TypeHint,
-        CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
+        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -62,11 +63,17 @@ impl ItemDefinition for DParameter {
         self.0.r#type.collect_self_and_children(into)
     }
 
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
-        vec![(
-            this.ptr_clone(),
-            TypeHint::MustBeContainedIn(self.0.r#type.ptr_clone()),
-        )]
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+        vec![
+            (
+                this.ptr_clone(),
+                DBuiltin::is_subtype_of(this.ptr_clone(), self.0.r#type.ptr_clone()).into_ptr(),
+            ),
+            (
+                this.ptr_clone(),
+                DBuiltin::is_type(self.0.r#type.ptr_clone()).into_ptr(),
+            ),
+        ]
     }
 
     fn recompute_parameters(
@@ -87,11 +94,11 @@ impl ItemDefinition for DParameter {
         todo!()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         if let Some(value) = args.get(&self.0) {
-            Some(value.ptr_clone())
+            value.ptr_clone()
         } else {
-            Some(this.ptr_clone())
+            this.ptr_clone()
         }
     }
 }

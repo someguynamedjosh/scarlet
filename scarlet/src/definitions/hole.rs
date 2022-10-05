@@ -1,13 +1,19 @@
-use std::{fmt::{self, Formatter}, collections::HashMap};
+use std::{
+    collections::HashMap,
+    fmt::{self, Formatter},
+};
 
 use super::{builtin::DBuiltin, parameter::ParameterPtr};
-use crate::item::{
-    query::{
-        no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
-        TypeQuery,
+use crate::{
+    environment::Environment,
+    item::{
+        query::{
+            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
+            TypeCheckQuery, TypeQuery,
+        },
+        type_hints::TypeHint,
+        CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
-    type_hints::TypeHint,
-    CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -26,10 +32,11 @@ impl ItemDefinition for DHole {
         self.r#type.collect_self_and_children(into)
     }
 
-    fn collect_type_hints(&self, this: &ItemPtr) -> Vec<(ItemPtr, TypeHint)> {
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![(
             self.r#type.ptr_clone(),
-            TypeHint::MustBeContainedIn(DBuiltin::r#type().into_ptr()),
+            DBuiltin::is_subtype_of(self.r#type.ptr_clone(), DBuiltin::r#type().into_ptr())
+                .into_ptr(),
         )]
     }
 
@@ -51,8 +58,8 @@ impl ItemDefinition for DHole {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> Option<ItemPtr> {
-        Some(this.ptr_clone())
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        this.ptr_clone()
     }
 }
 

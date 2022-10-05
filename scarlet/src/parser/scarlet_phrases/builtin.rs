@@ -10,7 +10,7 @@ use crate::{
     scope::Scope,
 };
 
-pub fn create(_ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> CreateResult {
+pub fn create(ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 4);
     let name = node.children[2].as_ident()?;
     let builtin = match name {
@@ -24,7 +24,7 @@ pub fn create(_ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> 
                 .with_source_code_block_error(node.position))
         }
     };
-    let definition = DBuiltin::new(builtin);
+    let definition = DBuiltin::new_user_facing(builtin, ctx.env)?;
     Ok(definition.into_ptr())
 }
 

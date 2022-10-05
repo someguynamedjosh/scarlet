@@ -5,5 +5,3 @@
 use crate::shared::OrderedMap;
 
 use super::ItemPtr;
-
-pub type Substitutions = OrderedMap<ItemPtr, ItemPtr>;

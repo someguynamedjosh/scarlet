@@ -5,3 +5,4 @@ pub mod new_type;
 pub mod struct_literal;
 pub mod hole;
 pub mod member_access;
+pub mod substitution;
