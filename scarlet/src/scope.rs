@@ -2,7 +2,11 @@ use std::fmt::Debug;
 
 use dyn_clone::DynClone;
 
-pub trait Scope: Debug + DynClone {}
+use crate::item::ItemPtr;
+
+pub trait Scope: Debug + DynClone {
+    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr>;
+}
 
 impl dyn Scope {
     pub fn dyn_clone(&self) -> Box<dyn Scope> {
@@ -11,6 +15,10 @@ impl dyn Scope {
 }
 
 #[derive(Clone, Debug)]
-pub struct SRoot;
+pub struct SPlain;
 
-impl Scope for SRoot {}
+impl Scope for SPlain {
+    fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
+        None
+    }
+}

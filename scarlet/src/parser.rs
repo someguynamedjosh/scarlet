@@ -11,7 +11,7 @@ pub use node::{Node, NodeChild};
 pub use parse::{parse_tree, ParseContext};
 
 use self::phrase::CreateContext;
-use crate::{diagnostic::Diagnostic, environment::Environment, item::ItemPtr, scope::SRoot};
+use crate::{diagnostic::Diagnostic, environment::Environment, item::ItemPtr, scope::SPlain};
 
 pub fn create_root(
     node: &Node,
@@ -19,5 +19,5 @@ pub fn create_root(
     env: &mut Environment,
 ) -> Result<ItemPtr, Diagnostic> {
     let mut ctx = CreateContext { pc, env };
-    node.as_item_dyn_scope(&mut ctx, Box::new(SRoot))
+    node.as_item(&mut ctx)
 }

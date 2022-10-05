@@ -1,28 +1,38 @@
 use std::{collections::HashMap, fmt};
 
 use super::parameter::ParameterPtr;
-use crate::item::{
-    query::{
-        no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
-        TypeQuery,
+use crate::{
+    diagnostic::Diagnostic,
+    item::{
+        query::{
+            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
+            TypeCheckQuery, TypeQuery,
+        },
+        type_hints::TypeHint,
+        CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
     },
-    type_hints::TypeHint,
-    CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
 pub struct DIdentifier {
     identifier: String,
+    item: Option<ItemPtr>,
 }
 
 impl CycleDetectingDebug for DIdentifier {
-    fn fmt(&self, f: &mut fmt::Formatter, _stack: &[*const Item]) -> fmt::Result {
-        write!(f, "ident\"{}\"", self.identifier)
+    fn fmt(&self, f: &mut fmt::Formatter, stack: &[*const Item]) -> fmt::Result {
+        if let Some(item) = &self.item {
+            item.fmt(f, stack)
+        } else {
+            write!(f, "IDENTIFIER({})", self.identifier)
+        }
     }
 }
 
 impl ItemDefinition for DIdentifier {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {}
+    fn children(&self) -> Vec<ItemPtr> {
+        vec![]
+    }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
@@ -49,10 +59,24 @@ impl ItemDefinition for DIdentifier {
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
+
+    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
+        if let Some(item) = this.lookup_identifier(&self.identifier) {
+            self.item = Some(item);
+            Ok(())
+        } else {
+            Err(Diagnostic::new()
+                .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))
+                .with_item_error(this))
+        }
+    }
 }
 
 impl DIdentifier {
     pub fn new(identifier: String) -> Self {
-        Self { identifier }
+        Self {
+            identifier,
+            item: None,
+        }
     }
 }

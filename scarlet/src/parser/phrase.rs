@@ -57,7 +57,7 @@ pub struct CreateContext<'p, 'e> {
 }
 
 pub type CreateResult = Result<ItemPtr, Diagnostic>;
-pub type CreateFn = fn(&mut CreateContext, Box<dyn Scope>, &Node) -> CreateResult;
+pub type CreateFn = fn(&mut CreateContext, &Node) -> CreateResult;
 
 pub struct Phrase {
     pub name: &'static str,

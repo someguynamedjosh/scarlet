@@ -21,6 +21,7 @@ use crate::{
         type_hints::TypeHint,
         CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
+    scope::Scope,
 };
 
 #[derive(Clone)]
@@ -48,10 +49,8 @@ impl CycleDetectingDebug for DStructLiteral {
 }
 
 impl ItemDefinition for DStructLiteral {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
-        for (_, val) in &self.fields {
-            val.collect_self_and_children(into);
-        }
+    fn children(&self) -> Vec<ItemPtr> {
+        self.fields.iter().map(|(_, f)| f.ptr_clone()).collect_vec()
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
@@ -60,6 +59,15 @@ impl ItemDefinition for DStructLiteral {
         } else {
             todo!()
         }
+    }
+
+    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
+        for (field, value) in &self.fields {
+            if field == identifier {
+                return Some(value.ptr_clone());
+            }
+        }
+        None
     }
 
     fn recompute_parameters(

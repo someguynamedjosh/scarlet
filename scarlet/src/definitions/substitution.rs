@@ -45,11 +45,10 @@ impl CycleDetectingDebug for DSubstitution {
 }
 
 impl ItemDefinition for DSubstitution {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
-        into.push(self.base.ptr_clone());
-        for (_, value) in &self.substitutions {
-            into.push(value.ptr_clone());
-        }
+    fn children(&self) -> Vec<ItemPtr> {
+        std::iter::once(self.base.ptr_clone())
+            .chain(self.substitutions.iter().map(|(_, v)| v.ptr_clone()))
+            .collect()
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {

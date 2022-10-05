@@ -48,8 +48,11 @@ pub trait CycleDetectingDebug {
 }
 
 pub trait ItemDefinition: Any + CycleDetectingDebug + DynClone {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>);
+    fn children(&self) -> Vec<ItemPtr>;
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)>;
+    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
+        None
+    }
     fn recompute_flattened(
         &self,
         ctx: &mut QueryContext<FlattenQuery>,
@@ -66,6 +69,10 @@ pub trait ItemDefinition: Any + CycleDetectingDebug + DynClone {
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
+    #[allow(unused_variables)]
+    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
+        Ok(())
+    }
 }
 
 impl dyn ItemDefinition {
@@ -86,6 +93,7 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
 
 /// Data that is stored for all items, regardless of definition.
 pub struct UniversalItemInfo {
+    parent: Option<ItemPtr>,
     position: Option<Position>,
 }
 
@@ -157,7 +165,10 @@ impl ItemPtr {
     pub fn from_definition(def: impl ItemDefinition + 'static) -> Self {
         Self(Rc::new(RefCell::new(Item {
             definition: Box::new(def),
-            universal_info: UniversalItemInfo { position: None },
+            universal_info: UniversalItemInfo {
+                parent: None,
+                position: None,
+            },
             query_result_caches: ItemQueryResultCaches::new(),
         })))
     }
@@ -172,6 +183,14 @@ impl ItemPtr {
             .universal_info
             .position
             .unwrap_or(Position::placeholder())
+    }
+
+    pub fn set_parent(&self, parent: ItemPtr) {
+        self.0.borrow_mut().universal_info.parent = Some(parent);
+    }
+
+    pub fn get_parent(&self) -> Option<ItemPtr> {
+        self.0.borrow().universal_info.parent.clone()
     }
 
     pub fn ptr_clone(&self) -> ItemPtr {
@@ -200,6 +219,17 @@ impl ItemPtr {
         }
     }
 
+    pub fn lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
+        let this = self.0.borrow();
+        if let Some(item) = this.definition.local_lookup_identifier(identifier) {
+            Some(item)
+        } else if let Some(parent) = &this.universal_info.parent {
+            parent.lookup_identifier(identifier)
+        } else {
+            None
+        }
+    }
+
     fn query<Q: Query>(
         &self,
         ctx: &mut impl AllowsChildQuery<Q>,
@@ -221,9 +251,20 @@ impl ItemPtr {
         })
     }
 
+    pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
+        self.0.borrow_mut().universal_info.parent = parent;
+        let parent = Some(self.ptr_clone());
+        for child in &self.0.borrow().definition.children() {
+            child.set_parent_recursive(parent.clone());
+        }
+    }
+
     pub fn collect_self_and_children(&self, into: &mut Vec<ItemPtr>) {
         into.push(self.ptr_clone());
-        self.0.borrow().definition.collect_children(into);
+        let children = self.0.borrow().definition.children();
+        for child in &children {
+            child.collect_self_and_children(into);
+        }
         debug_assert_eq!(
             {
                 let mut dd = into.clone();
@@ -273,5 +314,14 @@ impl ItemPtr {
 
     pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         self.0.borrow().definition.reduce(self, args)
+    }
+
+    pub(crate) fn resolve(&self) -> Result<(), Diagnostic> {
+        let borrow = self.0.borrow_mut();
+        let mut def = borrow.definition.dyn_clone();
+        drop(borrow);
+        let result = def.resolve(self);
+        self.0.borrow_mut().definition = def;
+        result
     }
 }

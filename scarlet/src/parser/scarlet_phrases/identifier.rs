@@ -9,7 +9,7 @@ use crate::{
     scope::Scope,
 };
 
-pub fn create(_ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> CreateResult {
+pub fn create(_ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 1);
     Ok(DIdentifier::new(node.children[0].as_text().to_owned()).into_ptr())
 }

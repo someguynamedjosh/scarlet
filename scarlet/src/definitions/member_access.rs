@@ -29,8 +29,8 @@ impl CycleDetectingDebug for DMemberAccess {
 }
 
 impl ItemDefinition for DMemberAccess {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
-        into.push(self.base.ptr_clone())
+    fn children(&self) -> Vec<ItemPtr> {
+        vec![self.base.ptr_clone()]
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {

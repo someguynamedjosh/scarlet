@@ -76,7 +76,9 @@ impl CycleDetectingDebug for DBuiltin {
 }
 
 impl ItemDefinition for DBuiltin {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {}
+    fn children(&self) -> Vec<ItemPtr> {
+        vec![]
+    }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]

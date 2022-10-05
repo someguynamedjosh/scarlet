@@ -10,7 +10,7 @@ use crate::{
     scope::Scope,
 };
 
-pub fn create(ctx: &mut CreateContext, _scope: Box<dyn Scope>, node: &Node) -> CreateResult {
+pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 4);
     let name = node.children[2].as_ident()?;
     let builtin = match name {

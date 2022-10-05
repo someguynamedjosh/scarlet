@@ -7,9 +7,9 @@ use crate::{
     scope::Scope,
 };
 
-pub fn create(ctx: &mut CreateContext, scope: Box<dyn Scope>, node: &Node) -> CreateResult {
+pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 5);
-    let definition = node.children[0].as_item_dyn_scope(ctx, scope.dyn_clone())?;
+    let definition = node.children[0].as_item(ctx)?;
     let name = node.children[3].as_ident()?;
     ctx.env
         .define_language_item(name, definition.ptr_clone())

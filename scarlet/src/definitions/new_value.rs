@@ -39,10 +39,8 @@ impl CycleDetectingDebug for DNewValue {
 }
 
 impl ItemDefinition for DNewValue {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
-        for field in &self.fields {
-            field.collect_self_and_children(into);
-        }
+    fn children(&self) -> Vec<ItemPtr> {
+        self.fields.iter().map(|f| f.ptr_clone()).collect_vec()
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {

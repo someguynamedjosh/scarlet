@@ -34,16 +34,8 @@ impl<'a> NodeChild<'a> {
         }
     }
 
-    pub fn as_item(&self, ctx: &mut CreateContext, scope: impl Scope + 'static) -> CreateResult {
-        self.as_node().as_item(ctx, scope)
-    }
-
-    pub fn as_item_dyn_scope(
-        &self,
-        ctx: &mut CreateContext,
-        scope: Box<dyn Scope>,
-    ) -> CreateResult {
-        self.as_node().as_item_dyn_scope(ctx, scope)
+    pub fn as_item(&self, ctx: &mut CreateContext) -> CreateResult {
+        self.as_node().as_item(ctx)
     }
 
     pub fn as_ident(&self) -> Result<&str, Diagnostic> {
@@ -115,15 +107,7 @@ impl<'x> Node<'x> {
         }
     }
 
-    pub fn as_item(&self, ctx: &mut CreateContext, scope: impl Scope + 'static) -> CreateResult {
-        self.as_item_dyn_scope(ctx, Box::new(scope))
-    }
-
-    pub fn as_item_dyn_scope(
-        &self,
-        ctx: &mut CreateContext,
-        scope: Box<dyn Scope>,
-    ) -> CreateResult {
+    pub fn as_item(&self, ctx: &mut CreateContext) -> CreateResult {
         let item = ctx
             .pc
             .phrases_sorted_by_priority
@@ -131,7 +115,7 @@ impl<'x> Node<'x> {
             .unwrap()
             .create_and_uncreate
             .expect(&format!("{} is not a construct", self.phrase))
-            .0(ctx, scope, self)?;
+            .0(ctx, self)?;
         item.set_position(self.position);
         Ok(item)
     }

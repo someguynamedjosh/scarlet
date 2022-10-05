@@ -28,8 +28,8 @@ impl CycleDetectingDebug for DHole {
 }
 
 impl ItemDefinition for DHole {
-    fn collect_children(&self, into: &mut Vec<ItemPtr>) {
-        self.r#type.collect_self_and_children(into)
+    fn children(&self) -> Vec<ItemPtr> {
+        vec![self.r#type.ptr_clone()]
     }
 
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
