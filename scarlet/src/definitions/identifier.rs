@@ -3,6 +3,7 @@ use std::{collections::HashMap, fmt};
 use super::parameter::ParameterPtr;
 use crate::{
     diagnostic::Diagnostic,
+    environment::Environment,
     item::{
         query::{
             no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
@@ -21,11 +22,7 @@ pub struct DIdentifier {
 
 impl CycleDetectingDebug for DIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
-        if let Some(item) = &self.item {
-            item.fmt(f, ctx)
-        } else {
-            write!(f, "IDENTIFIER({})", self.identifier)
-        }
+        write!(f, "IDENTIFIER({})", self.identifier)
     }
 }
 
@@ -56,8 +53,17 @@ impl ItemDefinition for DIdentifier {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        this.ptr_clone()
+    fn reduce(
+        &self,
+        this: &ItemPtr,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr {
+        if let Some(item) = &self.item {
+            item.reduce(args, env)
+        } else {
+            this.ptr_clone()
+        }
     }
 
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {

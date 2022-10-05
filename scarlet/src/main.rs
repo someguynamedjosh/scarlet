@@ -10,6 +10,7 @@
 #![feature(ptr_to_from_bits)]
 #![feature(core_intrinsics)]
 #![feature(fmt_internals)]
+#![feature(type_name_of_val)]
 
 pub mod definitions;
 pub mod diagnostic;

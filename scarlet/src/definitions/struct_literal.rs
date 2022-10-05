@@ -13,6 +13,7 @@ use super::{
 };
 use crate::{
     diagnostic::Position,
+    environment::Environment,
     item::{
         query::{
             no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
@@ -104,11 +105,16 @@ impl ItemDefinition for DStructLiteral {
         }
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(
+        &self,
+        this: &ItemPtr,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| (name.clone(), value.reduce(args)))
+            .map(|(name, value)| (name.clone(), value.reduce(args, env)))
             .collect();
         if fields == self.fields {
             this.ptr_clone()

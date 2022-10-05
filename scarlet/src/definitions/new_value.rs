@@ -27,7 +27,7 @@ pub struct DNewValue {
 
 impl CycleDetectingDebug for DNewValue {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
-        self.r#type.fmt(f, ctx);
+        self.r#type.fmt(f, ctx)?;
         write!(f, ".new(\n")?;
         for field in &self.fields {
             write!(f, "   ",)?;
@@ -65,7 +65,7 @@ impl ItemDefinition for DNewValue {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>, env: &Environment) -> ItemPtr {
         this.ptr_clone()
     }
 }

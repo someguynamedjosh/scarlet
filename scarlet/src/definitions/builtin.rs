@@ -3,7 +3,9 @@ use std::{
     fmt::{self, Formatter},
 };
 
-use super::parameter::ParameterPtr;
+use itertools::Itertools;
+
+use super::{new_value::DNewValue, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
@@ -14,7 +16,7 @@ use crate::{
         },
         type_hints::TypeHint,
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
-    },
+    }, definitions::parameter::DParameter,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -67,12 +69,7 @@ impl CycleDetectingDebug for DBuiltin {
             .iter()
             .zip(self.args.iter())
         {
-            write!(
-                f,
-                "   {} IS {}",
-                param_name,
-                arg.to_indented_string(ctx, 2)
-            )?;
+            write!(f, "   {} IS {}", param_name, arg.to_indented_string(ctx, 2))?;
             write!(f, ",\n")?;
         }
         write!(f, ")")
@@ -106,8 +103,45 @@ impl ItemDefinition for DBuiltin {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        this.ptr_clone()
+    fn reduce(
+        &self,
+        this: &ItemPtr,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr {
+        let rargs = self
+            .args
+            .iter()
+            .map(|arg| arg.reduce(args, env))
+            .collect_vec();
+        match self.builtin {
+            Builtin::IsExactly => {
+                if rargs[0].is_same_instance_as(&rargs[1]) {
+                    return env.r#true();
+                }
+            }
+            Builtin::IsSubtypeOf => {
+                let subtype = &rargs[0];
+                let supertype = &rargs[1];
+                if supertype.get_args_if_builtin(Builtin::Type).is_some() {
+                    if subtype.is_a_type() {
+                        return env.r#true();
+                    }
+                }
+            }
+            Builtin::IfThenElse => todo!(),
+            Builtin::Union => todo!(),
+            _ => (),
+        }
+        if rargs == self.args {
+            this.ptr_clone()
+        } else {
+            Self {
+                args: rargs,
+                builtin: self.builtin,
+            }
+            .into_ptr()
+        }
     }
 }
 
@@ -144,5 +178,13 @@ impl DBuiltin {
             builtin: Builtin::Union,
             args: vec![subtype_0, subtype_1],
         }
+    }
+
+    pub fn get_builtin(&self) -> Builtin {
+        self.builtin
+    }
+
+    pub fn get_args(&self) -> &Vec<ItemPtr> {
+        &self.args
     }
 }

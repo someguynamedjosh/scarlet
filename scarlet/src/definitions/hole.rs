@@ -58,7 +58,12 @@ impl ItemDefinition for DHole {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(
+        &self,
+        this: &ItemPtr,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr {
         this.ptr_clone()
     }
 }

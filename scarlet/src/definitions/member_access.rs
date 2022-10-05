@@ -6,13 +6,16 @@ use std::{
 use itertools::Itertools;
 
 use super::{builtin::DBuiltin, parameter::ParameterPtr};
-use crate::item::{
-    query::{
-        no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery,
-        TypeQuery,
+use crate::{
+    environment::Environment,
+    item::{
+        query::{
+            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
+            TypeCheckQuery, TypeQuery,
+        },
+        type_hints::TypeHint,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
-    type_hints::TypeHint,
-    CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -55,7 +58,12 @@ impl ItemDefinition for DMemberAccess {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(
+        &self,
+        this: &ItemPtr,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr {
         this.ptr_clone()
     }
 }

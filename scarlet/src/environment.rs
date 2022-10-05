@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::{
-    definitions::{builtin::DBuiltin, struct_literal::DStructLiteral},
+    definitions::{builtin::DBuiltin, new_value::DNewValue, struct_literal::DStructLiteral},
     diagnostic::Diagnostic,
     entry::OnlyConstructedByEntry,
     item::{
@@ -81,19 +81,26 @@ impl Environment {
             Err(err) => return vec![err],
         };
         let mut errors = vec![];
+        let total = constraints.len();
         for (subject, constraint) in constraints {
-            let constraint = constraint.reduce(&HashMap::new());
+            let original = constraint;
+            let constraint = original.reduce(&HashMap::new(), self);
             let success = constraint.is_literal_instance_of(&true_type);
             if !success {
                 errors.push(
                     Diagnostic::new()
                         .with_text_error(format!("Unsatisfied constraint:"))
-                        .with_item_error(&constraint)
+                        .with_item_error(&original)
                         .with_text_info(format!("Required by the following expression:"))
                         .with_item_info(&subject),
                 )
             }
         }
+        println!(
+            "{} successes, {} errors",
+            total - errors.len(),
+            errors.len()
+        );
         errors
     }
 
@@ -107,5 +114,9 @@ impl Environment {
 
     pub fn query_root_type_check(&self) -> <TypeCheckQuery as Query>::Result {
         self.root.query_type_check(&mut Self::root_query())
+    }
+
+    pub fn r#true(&self) -> ItemPtr {
+        DNewValue::r#true(self).unwrap().into_ptr()
     }
 }

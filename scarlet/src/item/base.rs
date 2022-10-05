@@ -22,10 +22,13 @@ use super::{
 };
 use crate::{
     definitions::{
+        builtin::{Builtin, DBuiltin},
+        new_type::DNewType,
         new_value::DNewValue,
-        parameter::{Parameter, ParameterPtr},
+        parameter::{DParameter, Parameter, ParameterPtr},
     },
     diagnostic::{Diagnostic, Position},
+    environment::Environment,
     util::PtrExtension,
 };
 
@@ -52,7 +55,17 @@ pub trait CycleDetectingDebug {
     }
 }
 
-pub trait ItemDefinition: Any + CycleDetectingDebug + DynClone {
+pub trait NamedAny: Any {
+    fn type_name(&self) -> &'static str;
+}
+
+impl<T: Any> NamedAny for T {
+    fn type_name(&self) -> &'static str {
+        std::any::type_name::<T>()
+    }
+}
+
+pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
     fn children(&self) -> Vec<ItemPtr>;
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)>;
     fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
@@ -73,7 +86,12 @@ pub trait ItemDefinition: Any + CycleDetectingDebug + DynClone {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
+    fn reduce(
+        &self,
+        this: &ItemPtr,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr;
     #[allow(unused_variables)]
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
         Ok(())
@@ -83,6 +101,12 @@ pub trait ItemDefinition: Any + CycleDetectingDebug + DynClone {
 impl dyn ItemDefinition {
     pub fn dyn_clone(&self) -> Box<Self> {
         dyn_clone::clone_box(self)
+    }
+}
+
+impl Debug for dyn ItemDefinition {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?} instance", self.type_name())
     }
 }
 
@@ -155,7 +179,8 @@ impl CycleDetectingDebug for ItemPtr {
         } else {
             let mut new_stack = Vec::from(ctx.stack);
             new_stack.push(ptr);
-            self.0.borrow().definition.fmt(
+            CycleDetectingDebug::fmt(
+                &*self.0.borrow().definition,
                 f,
                 &mut CddContext {
                     stack: &mut new_stack,
@@ -229,8 +254,20 @@ impl ItemPtr {
 
     pub fn downcast_definition<D: ItemDefinition>(&self) -> Option<OwningRef<Ref<Item>, D>> {
         let r = OwningRef::new(self.0.borrow());
-        r.try_map(|x| (&x.definition as &dyn Any).downcast_ref().ok_or(()))
+        r.try_map(|x| (&*x.definition as &dyn Any).downcast_ref().ok_or(()))
             .ok()
+    }
+
+    pub fn get_args_if_builtin(&self, builtin: Builtin) -> Option<Vec<ItemPtr>> {
+        self.downcast_definition::<DBuiltin>()
+            .map(|x| {
+                if x.get_builtin() == builtin {
+                    Some(x.get_args().clone())
+                } else {
+                    None
+                }
+            })
+            .flatten()
     }
 
     pub fn is_literal_instance_of(&self, ty: &ItemPtr) -> bool {
@@ -334,8 +371,12 @@ impl ItemPtr {
         self.0.borrow().definition.collect_constraints(self)
     }
 
-    pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        self.0.borrow().definition.reduce(self, args)
+    pub(crate) fn reduce(
+        &self,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        env: &Environment,
+    ) -> ItemPtr {
+        self.0.borrow().definition.reduce(self, args, env)
     }
 
     pub(crate) fn resolve(&self) -> Result<(), Diagnostic> {
@@ -345,5 +386,24 @@ impl ItemPtr {
         let result = def.resolve(self);
         self.0.borrow_mut().definition = def;
         result
+    }
+
+    /// True if this item is Type.
+    pub fn is_exactly_type(&self) -> bool {
+        self.get_args_if_builtin(Builtin::Type).is_some()
+    }
+
+    pub fn is_type_parameter(&self) -> bool {
+        self.downcast_definition::<DParameter>().map(|param| {
+            param.get_type().is_exactly_type()
+        }) == Some(true)
+    }
+
+    /// True if this item is any type. E.G. True, Type, Int OR Null, Int WHERE
+    /// IT.is_greater_than(10)
+    pub fn is_a_type(&self) -> bool {
+        self.downcast_definition::<DNewType>().is_some()
+            || self.is_exactly_type()
+            || self.is_type_parameter()
     }
 }
