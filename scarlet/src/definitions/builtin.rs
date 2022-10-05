@@ -36,6 +36,16 @@ impl Builtin {
             Self::Union => "Union",
         }
     }
+
+    pub fn default_arg_names(&self) -> &'static [&'static str] {
+        match self {
+            Builtin::IsExactly => &["comparee", "comparand"][..],
+            Builtin::IsSubtypeOf => &["Subtype", "Supertype"][..],
+            Builtin::IfThenElse => &["condition", "result_when_true", "result_when_false"],
+            Builtin::Type => &[],
+            Builtin::Union => &["Subtype0", "Subtype1"],
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -45,8 +55,23 @@ pub struct DBuiltin {
 }
 
 impl CycleDetectingDebug for DBuiltin {
-    fn fmt(&self, f: &mut Formatter, _stack: &[*const Item]) -> fmt::Result {
-        write!(f, "BUILTIN({})", self.builtin.name())
+    fn fmt(&self, f: &mut Formatter, stack: &[*const Item]) -> fmt::Result {
+        write!(f, "BUILTIN({})(\n", self.builtin.name())?;
+        for (param_name, arg) in self
+            .builtin
+            .default_arg_names()
+            .iter()
+            .zip(self.args.iter())
+        {
+            write!(
+                f,
+                "   {} IS {}",
+                param_name,
+                arg.to_indented_string(stack, 2)
+            )?;
+            write!(f, ",\n")?;
+        }
+        write!(f, ")")
     }
 }
 
@@ -82,14 +107,8 @@ impl ItemDefinition for DBuiltin {
 
 impl DBuiltin {
     pub fn new_user_facing(builtin: Builtin, env: &Environment) -> Result<Self, Diagnostic> {
-        let arg_names = match builtin {
-            Builtin::IsExactly => &["comparee", "comparand"][..],
-            Builtin::IsSubtypeOf => &["Subtype", "Supertype"][..],
-            Builtin::IfThenElse => &["condition", "result_when_true", "result_when_false"],
-            Builtin::Type => &[],
-            Builtin::Union => &["Subtype0", "Subtype1"],
-        };
-        let args = arg_names
+        let args = builtin
+            .default_arg_names()
             .iter()
             .map(|name| env.get_language_item(name).map(ItemPtr::ptr_clone))
             .collect::<Result<_, _>>()?;
@@ -109,7 +128,7 @@ impl DBuiltin {
 
     pub fn is_subtype_of(subtype: ItemPtr, supertype: ItemPtr) -> Self {
         Self {
-            builtin: Builtin::Union,
+            builtin: Builtin::IsSubtypeOf,
             args: vec![subtype, supertype],
         }
     }
