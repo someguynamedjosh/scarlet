@@ -13,4 +13,5 @@ bool2 IS ANY Bool
 true IS True.new
 false IS False.new
 
-main IS true
+main IS bool1(bool1 IS true)
+# main IS true
