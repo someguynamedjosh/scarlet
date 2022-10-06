@@ -23,6 +23,7 @@ use super::{
 use crate::{
     definitions::{
         builtin::{Builtin, DBuiltin},
+        compound_type::DCompoundType,
         new_type::DNewType,
         new_value::DNewValue,
         parameter::{DParameter, Parameter, ParameterPtr},
@@ -382,6 +383,10 @@ impl ItemPtr {
     /// True if this item is Type.
     pub fn is_exactly_type(&self) -> bool {
         self.get_args_if_builtin(Builtin::Type).is_some()
+            || self
+                .downcast_definition::<DCompoundType>()
+                .map(|ct| ct.is_exactly_type())
+                == Some(true)
     }
 
     pub fn is_type_parameter(&self) -> bool {

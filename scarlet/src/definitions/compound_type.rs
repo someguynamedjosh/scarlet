@@ -103,4 +103,18 @@ impl DCompoundType {
         );
         Self { component_types }
     }
+
+    pub fn is_exactly_type(&self) -> bool {
+        self.component_types.len() == 1 && self.component_types.contains_key(&0)
+    }
+
+    /// False is non-definitive here.
+    pub fn is_subtype_of(&self, other: &Self) -> bool {
+        for (key, _) in &self.component_types {
+            if !other.component_types.contains_key(key) {
+                return false;
+            }
+        }
+        true
+    }
 }

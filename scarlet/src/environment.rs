@@ -106,6 +106,8 @@ impl Environment {
                     Diagnostic::new()
                         .with_text_error(format!("Unsatisfied constraint:"))
                         .with_item_error(&original)
+                        .with_text_info(format!("Constraint reduced to:"))
+                        .with_item_info(&constraint)
                         .with_text_info(format!("Required by the following expression:"))
                         .with_item_info(&subject),
                 )

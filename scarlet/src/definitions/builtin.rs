@@ -1,10 +1,12 @@
 use std::{
+    cell::Ref,
     collections::HashMap,
     fmt::{self, Formatter},
 };
 
 use itertools::Itertools;
 use maplit::hashset;
+use owning_ref::OwningRef;
 
 use super::{
     compound_type::DCompoundType, new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr,
@@ -80,6 +82,21 @@ impl CycleDetectingDebug for DBuiltin {
     }
 }
 
+fn both_compound_types<'a>(
+    a: &'a ItemPtr,
+    b: &'a ItemPtr,
+) -> Option<(
+    OwningRef<Ref<'a, Item>, DCompoundType>,
+    OwningRef<Ref<'a, Item>, DCompoundType>,
+)> {
+    a.downcast_definition::<DCompoundType>()
+        .map(|def_a| {
+            b.downcast_definition::<DCompoundType>()
+                .map(|def_b| (def_a, def_b))
+        })
+        .flatten()
+}
+
 impl ItemDefinition for DBuiltin {
     fn children(&self) -> Vec<ItemPtr> {
         vec![]
@@ -122,17 +139,16 @@ impl ItemDefinition for DBuiltin {
                     return r#true();
                 } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
                     return r#true();
-                } else if let Some(supertype) = supertype.downcast_definition::<DNewType>() {
-                    // todo!()
+                } else if let Some((supertype, subtype)) = both_compound_types(supertype, subtype) {
+                    if subtype.is_subtype_of(&*supertype) {
+                        return r#true();
+                    }
                 }
             }
             Builtin::IfThenElse => (),
             Builtin::Type => return DCompoundType::new(this.ptr_clone(), 0).into_ptr(),
             Builtin::Union => {
-                if let (Some(subtype_0), Some(subtype_1)) = (
-                    rargs[0].downcast_definition::<DCompoundType>(),
-                    rargs[1].downcast_definition::<DCompoundType>(),
-                ) {
+                if let Some((subtype_0, subtype_1)) = both_compound_types(&rargs[0], &rargs[1]) {
                     return subtype_0.union(&subtype_1).into_ptr();
                 }
             }
