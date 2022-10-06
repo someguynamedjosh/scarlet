@@ -62,7 +62,6 @@ impl ItemDefinition for DMemberAccess {
         &self,
         this: &ItemPtr,
         args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
     ) -> ItemPtr {
         this.ptr_clone()
     }

@@ -1,11 +1,15 @@
 use std::{
     collections::HashMap,
     fmt::{self, Formatter},
+    rc::Rc,
 };
 
 use itertools::Itertools;
+use maplit::hashset;
 
-use super::{builtin::DBuiltin, new_value::DNewValue, parameter::ParameterPtr};
+use super::{
+    builtin::DBuiltin, compound_type::DCompoundType, new_value::DNewValue, parameter::ParameterPtr,
+};
 use crate::{
     environment::Environment,
     item::{
@@ -16,10 +20,14 @@ use crate::{
         type_hints::TypeHint,
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
+    util::PtrExtension,
 };
+
+pub type TypeId = Rc<()>;
 
 #[derive(Clone)]
 pub struct DNewType {
+    type_id: TypeId,
     fields: Vec<(String, ItemPtr)>,
 }
 
@@ -66,23 +74,29 @@ impl ItemDefinition for DNewType {
         no_type_check_errors()
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
-        this.ptr_clone()
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        DCompoundType::new(this.ptr_clone(), TypeId::as_ptr(&self.type_id).to_bits()).into_ptr()
     }
 }
 
 impl DNewType {
     pub fn new(fields: Vec<(String, ItemPtr)>) -> Self {
-        Self { fields }
+        Self {
+            fields,
+            type_id: TypeId::new(()),
+        }
+    }
+
+    pub fn is_same_type_as(&self, other: &Self) -> bool {
+        self.type_id.is_same_instance_as(&other.type_id)
     }
 
     pub fn get_fields(&self) -> &[(String, ItemPtr)] {
         &self.fields
+    }
+
+    pub fn get_type_id(&self) -> TypeId {
+        TypeId::clone(&self.type_id)
     }
 
     pub fn constructor(&self, this: &ItemPtr) -> ItemPtr {

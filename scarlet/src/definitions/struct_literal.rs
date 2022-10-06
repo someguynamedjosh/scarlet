@@ -105,16 +105,11 @@ impl ItemDefinition for DStructLiteral {
         }
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| (name.clone(), value.reduce(args, env)))
+            .map(|(name, value)| (name.clone(), value.reduce(args)))
             .collect();
         if fields == self.fields {
             this.ptr_clone()

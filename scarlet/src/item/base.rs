@@ -86,12 +86,7 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr;
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
     #[allow(unused_variables)]
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
         Ok(())
@@ -371,12 +366,8 @@ impl ItemPtr {
         self.0.borrow().definition.collect_constraints(self)
     }
 
-    pub(crate) fn reduce(
-        &self,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
-        self.0.borrow().definition.reduce(self, args, env)
+    pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        self.0.borrow().definition.reduce(self, args)
     }
 
     pub(crate) fn resolve(&self) -> Result<(), Diagnostic> {
@@ -394,9 +385,9 @@ impl ItemPtr {
     }
 
     pub fn is_type_parameter(&self) -> bool {
-        self.downcast_definition::<DParameter>().map(|param| {
-            param.get_type().is_exactly_type()
-        }) == Some(true)
+        self.downcast_definition::<DParameter>()
+            .map(|param| param.get_type().is_exactly_type())
+            == Some(true)
     }
 
     /// True if this item is any type. E.G. True, Type, Int OR Null, Int WHERE

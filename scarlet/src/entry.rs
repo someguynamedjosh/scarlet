@@ -1,8 +1,8 @@
 
-use std::time::Instant;
+use std::{time::Instant, borrow::BorrowMut, thread::LocalKey};
 
 use crate::{
-    environment::Environment,
+    environment::{Environment, ENV},
     item::query::QueryContext,
     parser::{create_root, ParseContext, self}, file_tree,
 };
@@ -36,7 +36,7 @@ pub(crate) fn entry() {
     println!("Parsed in {:#?}", time.elapsed());
 
     let time = Instant::now();
-    let mut env = Environment::new(OnlyConstructedByEntry(()));
+    let mut env = Environment::new();
     let root = create_root(&root, &parse_context, &mut env);
     let root = match root {
         Ok(root) => root,
@@ -47,6 +47,7 @@ pub(crate) fn entry() {
     };
     println!("Created in {:#?}", time.elapsed());
 
+    ENV.with(|e| e.replace(env.clone()));
     let errors = env.set_root(root);
     if errors.len() > 0 {
         for error in errors {

@@ -53,14 +53,9 @@ impl ItemDefinition for DIdentifier {
         no_type_check_errors()
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         if let Some(item) = &self.item {
-            item.reduce(args, env)
+            item.reduce(args)
         } else {
             this.ptr_clone()
         }

@@ -100,8 +100,12 @@ impl ItemDefinition for DSubstitution {
         todo!()
     }
 
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        todo!()
+    fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
+        let mut new_args = HashMap::new();
+        for (target, value) in self.substitutions.as_ref().unwrap() {
+            new_args.insert(target.clone(), value.reduce(&HashMap::new()));
+        }
+        Some(self.base.query_type(ctx)?.reduce(&new_args))
     }
 
     fn recompute_type_check(
@@ -111,19 +115,15 @@ impl ItemDefinition for DSubstitution {
         no_type_check_errors()
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let mut carried_args = args.clone();
         let mut new_args = HashMap::new();
         for (target, value) in self.substitutions.as_ref().unwrap() {
-            new_args.insert(target.clone(), value.reduce(args, env));
+            new_args.insert(target.clone(), value.reduce(args));
             carried_args.remove(target);
         }
-        self.base.reduce(&new_args, env)
+        new_args.extend(carried_args.into_iter());
+        self.base.reduce(&new_args)
     }
 
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
@@ -131,7 +131,7 @@ impl ItemDefinition for DSubstitution {
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
                 match target {
-                    UnresolvedTarget::Positional => todo!(),
+                    UnresolvedTarget::Positional => todo!("Positional arguments"),
                     UnresolvedTarget::Named(name) => {
                         let gen_error = || {
                             Diagnostic::new().with_text_error(format!(

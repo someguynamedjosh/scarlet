@@ -7,3 +7,4 @@ pub mod hole;
 pub mod member_access;
 pub mod substitution;
 pub mod new_value;
+pub mod compound_type;

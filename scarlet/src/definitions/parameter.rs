@@ -86,16 +86,11 @@ impl ItemDefinition for DParameter {
         todo!()
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         if let Some(value) = args.get(&self.parameter) {
             value.ptr_clone()
         } else {
-            let r#type = self.reduced_type.reduce(args, env);
+            let r#type = self.reduced_type.reduce(args);
             if r#type.is_same_instance_as(&self.reduced_type) {
                 this.ptr_clone()
             } else {

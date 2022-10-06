@@ -4,12 +4,15 @@ use std::{
 };
 
 use itertools::Itertools;
+use maplit::hashset;
 
-use super::{new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr};
+use super::{
+    compound_type::DCompoundType, new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr,
+};
 use crate::{
     definitions::parameter::DParameter,
     diagnostic::Diagnostic,
-    environment::Environment,
+    environment::{r#true, Environment, ENV},
     item::{
         query::{
             no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
@@ -104,37 +107,35 @@ impl ItemDefinition for DBuiltin {
         no_type_check_errors()
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-        env: &Environment,
-    ) -> ItemPtr {
-        let rargs = self
-            .args
-            .iter()
-            .map(|arg| arg.reduce(args, env))
-            .collect_vec();
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        let rargs = self.args.iter().map(|arg| arg.reduce(args)).collect_vec();
         match self.builtin {
             Builtin::IsExactly => {
                 if rargs[0].is_same_instance_as(&rargs[1]) {
-                    return env.r#true();
+                    return r#true();
                 }
             }
             Builtin::IsSubtypeOf => {
                 let subtype = &rargs[0];
                 let supertype = &rargs[1];
                 if supertype.is_same_instance_as(subtype) {
-                    return env.r#true();
+                    return r#true();
                 } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
-                    return env.r#true();
+                    return r#true();
                 } else if let Some(supertype) = supertype.downcast_definition::<DNewType>() {
                     // todo!()
                 }
             }
-            Builtin::IfThenElse => todo!(),
-            Builtin::Union => todo!(),
-            _ => (),
+            Builtin::IfThenElse => (),
+            Builtin::Type => return DCompoundType::new(this.ptr_clone(), 0).into_ptr(),
+            Builtin::Union => {
+                if let (Some(subtype_0), Some(subtype_1)) = (
+                    rargs[0].downcast_definition::<DCompoundType>(),
+                    rargs[1].downcast_definition::<DCompoundType>(),
+                ) {
+                    return subtype_0.union(&subtype_1).into_ptr();
+                }
+            }
         }
         if rargs == self.args {
             this.ptr_clone()
@@ -155,6 +156,7 @@ impl DBuiltin {
             .iter()
             .map(|name| env.get_language_item(name).map(ItemPtr::ptr_clone))
             .collect::<Result<_, _>>()?;
+        let r#true = Some(env.r#true());
         Ok(Self { builtin, args })
     }
 

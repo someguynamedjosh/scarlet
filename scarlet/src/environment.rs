@@ -1,4 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    cell::{Cell, RefCell},
+    collections::{HashMap, HashSet},
+    sync::{Arc, Mutex},
+};
+
+use lazy_static::lazy_static;
 
 use crate::{
     definitions::{builtin::DBuiltin, new_value::DNewValue, struct_literal::DStructLiteral},
@@ -10,10 +16,19 @@ use crate::{
     },
 };
 
+thread_local! {
+    pub static ENV: RefCell<Environment> = RefCell::new(Environment::new());
+}
+
+pub fn r#true() -> ItemPtr {
+    ENV.with(|env| env.borrow().r#true())
+}
+
 /// This struct guarantees certain parts of the code remain internal to the
 /// library without having to put them in the same module.
 pub(crate) struct OnlyConstructedByEnvironment(());
 
+#[derive(Clone)]
 pub struct Environment {
     language_items: HashMap<String, ItemPtr>,
     root: ItemPtr,
@@ -21,7 +36,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub(crate) fn new(_: OnlyConstructedByEntry) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             language_items: HashMap::new(),
             root: DStructLiteral::new_module(vec![]).into_ptr(),
@@ -84,7 +99,7 @@ impl Environment {
         let total = constraints.len();
         for (subject, constraint) in constraints {
             let original = constraint;
-            let constraint = original.reduce(&HashMap::new(), self);
+            let constraint = original.reduce(&HashMap::new());
             let success = constraint.is_literal_instance_of(&true_type);
             if !success {
                 errors.push(
