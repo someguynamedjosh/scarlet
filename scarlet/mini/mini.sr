@@ -10,5 +10,7 @@ Bool IS Union(Subtype0 IS True Subtype1 IS False)
 
 bool1 IS ANY Bool
 bool2 IS ANY Bool
+true IS True.new
+false IS False.new
 
-bool2(bool2 IS bool1)
+main IS true

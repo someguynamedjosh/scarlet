@@ -92,6 +92,10 @@ impl DNewValue {
         ))
     }
 
+    pub fn fields(&self) -> &Vec<ItemPtr> {
+        &self.fields
+    }
+
     pub fn get_type(&self) -> &ItemPtr {
         &self.r#type
     }

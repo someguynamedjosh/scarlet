@@ -1,12 +1,11 @@
-
-use std::{time::Instant, borrow::BorrowMut, thread::LocalKey};
+use std::{borrow::BorrowMut, collections::HashMap, thread::LocalKey, time::Instant};
 
 use crate::{
     environment::{Environment, ENV},
+    file_tree,
     item::query::QueryContext,
-    parser::{create_root, ParseContext, self}, file_tree,
+    parser::{self, create_root, ParseContext},
 };
-
 
 /// This struct guarantees certain parts of the code remain internal to the
 /// library without having to put them in the same module.
@@ -48,7 +47,7 @@ pub(crate) fn entry() {
     println!("Created in {:#?}", time.elapsed());
 
     ENV.with(|e| e.replace(env.clone()));
-    let errors = env.set_root(root);
+    let errors = env.set_root(root.ptr_clone());
     if errors.len() > 0 {
         for error in errors {
             println!("{}", error.format_colorful(&file_tree));
@@ -56,4 +55,13 @@ pub(crate) fn entry() {
         return;
     }
     println!("Processed in {:#?}", time.elapsed());
+
+    println!(
+        "{:#?}",
+        root.lookup_identifier(&path)
+            .unwrap()
+            .lookup_identifier("main")
+            .unwrap()
+            .reduce(&HashMap::new())
+    );
 }
