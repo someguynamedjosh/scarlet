@@ -13,9 +13,13 @@ bool2 IS ANY Bool
 true IS True.new
 false IS False.new
 
-Result IS ANY Type
-result IS ANY Result
+Result IS ANY Type AS_LANGUAGE_ITEM(Result)
+condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
+true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
+false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
+if_then_else IS BUILTIN(if_then_else)
 
-main IS result(Result IS Bool)(result IS true)
+main IS result(Result IS Type, condition IS true, true_resut)
+# main IS result(Result IS Bool)(result IS true)
 # main IS bool1(bool1 IS true)
 # main IS true
