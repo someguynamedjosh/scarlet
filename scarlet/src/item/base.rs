@@ -26,6 +26,7 @@ use crate::{
         parameter::{DParameter, ParameterPtr},
     },
     diagnostic::{Diagnostic, Position},
+    environment::{r#true, ENV},
     util::PtrExtension,
 };
 
@@ -265,12 +266,41 @@ impl ItemPtr {
             .flatten()
     }
 
-    pub fn is_literal_instance_of(&self, ty: &ItemPtr) -> bool {
+    pub fn is_literal_instance_of(&self, of_type: &ItemPtr) -> bool {
         if let Some(value) = self.downcast_definition::<DNewValue>() {
-            value.get_type().is_same_instance_as(ty)
+            // println!("{:#?}", value);
+            let value_type = value.get_type().downcast_definition::<DCompoundType>();
+            let of_type = of_type.downcast_definition::<DCompoundType>();
+            if let (Some(value_type), Some(of_type)) = (value_type, of_type) {
+                value_type.is_subtype_of(&*of_type)
+            } else {
+                false
+            }
         } else {
             false
         }
+    }
+
+    pub fn is_true(&self) -> bool {
+        ENV.with(|env| {
+            self.is_literal_instance_of(
+                &env.borrow()
+                    .get_language_item("True")
+                    .unwrap()
+                    .reduce(&HashMap::new()),
+            )
+        })
+    }
+
+    pub fn is_false(&self) -> bool {
+        ENV.with(|env| {
+            self.is_literal_instance_of(
+                &env.borrow()
+                    .get_language_item("False")
+                    .unwrap()
+                    .reduce(&HashMap::new()),
+            )
+        })
     }
 
     pub fn lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {

@@ -12,10 +12,11 @@ use crate::{
     diagnostic::Diagnostic,
     environment::{r#true, Environment},
     item::{
+        parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr, parameters::Parameters,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -43,7 +44,7 @@ impl Builtin {
         match self {
             Builtin::IsExactly => &["comparee", "comparand"][..],
             Builtin::IsSubtypeOf => &["Subtype", "Supertype"][..],
-            Builtin::IfThenElse => &["condition", "result_when_true", "result_when_false"],
+            Builtin::IfThenElse => &["Result", "condition", "true_result", "false_result"],
             Builtin::Type => &[],
             Builtin::Union => &["Subtype0", "Subtype1"],
         }
@@ -103,7 +104,7 @@ impl ItemDefinition for DBuiltin {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for arg in &self.args {
@@ -144,7 +145,13 @@ impl ItemDefinition for DBuiltin {
                     }
                 }
             }
-            Builtin::IfThenElse => (),
+            Builtin::IfThenElse => {
+                if rargs[1].is_true() {
+                    return rargs[2].ptr_clone();
+                } else if rargs[1].is_false() {
+                    return rargs[3].ptr_clone();
+                }
+            }
             Builtin::Type => return DCompoundType::new(this.ptr_clone(), 0).into_ptr(),
             Builtin::Union => {
                 if let Some((subtype_0, subtype_1)) = both_compound_types(&rargs[0], &rargs[1]) {

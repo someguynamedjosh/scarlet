@@ -84,16 +84,12 @@ impl Environment {
         for item in &self.all_items {
             constraints.append(&mut item.collect_constraints());
         }
-        let true_type = match self.get_language_item("True") {
-            Ok(ty) => ty,
-            Err(err) => return vec![err],
-        };
         let mut errors = vec![];
         let total = constraints.len();
         for (subject, constraint) in constraints {
             let original = constraint;
             let constraint = original.reduce(&HashMap::new());
-            let success = constraint.is_literal_instance_of(&true_type);
+            let success = constraint.is_true();
             if !success {
                 errors.push(
                     Diagnostic::new()

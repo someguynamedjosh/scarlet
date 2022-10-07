@@ -3,23 +3,24 @@ False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
 
 Type IS BUILTIN(Type)
 Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
-Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
-Union IS BUILTIN(Union)
+# Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
+# Union IS BUILTIN(Union)
 
-Bool IS Union(Subtype0 IS True Subtype1 IS False)
+# Bool IS Union(Subtype0 IS True Subtype1 IS False)
 
-bool1 IS ANY Bool
-bool2 IS ANY Bool
-true IS True.new
-false IS False.new
+# bool1 IS ANY Bool
+# bool2 IS ANY Bool
+# true IS True.new
+# false IS False.new
 
-Result IS ANY Type AS_LANGUAGE_ITEM(Result)
-condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
-true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
-false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
-if_then_else IS BUILTIN(if_then_else)
+# Result IS ANY Type AS_LANGUAGE_ITEM(Result)
+# condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
+# true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
+# false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
+# if_then_else IS BUILTIN(if_then_else)
 
-main IS result(Result IS Type, condition IS true, true_resut)
+# main IS if_then_else(Result IS Type)(condition IS true, true_result IS Type, false_result IS True)
+# main IS result(Result IS Type, condition IS true, true_resut)
 # main IS result(Result IS Bool)(result IS true)
 # main IS bool1(bool1 IS true)
 # main IS true
