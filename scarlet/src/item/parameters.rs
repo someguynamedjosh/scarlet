@@ -1,6 +1,4 @@
-use std::{collections::HashSet, iter::FromIterator, rc::Rc};
-
-use maplit::hashset;
+use std::iter::FromIterator;
 
 use super::{query::QueryResult, ItemPtr};
 use crate::{
@@ -33,7 +31,8 @@ impl Parameters {
     }
 
     pub fn unmark_excluding(&mut self, no_longer_excluding_from: &ItemPtr) {
-        self.excludes_parameters_from.remove(no_longer_excluding_from);
+        self.excludes_parameters_from
+            .remove(no_longer_excluding_from);
     }
 
     pub fn excludes_any_parameters(&self) -> bool {

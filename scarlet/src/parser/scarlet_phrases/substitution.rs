@@ -1,16 +1,12 @@
 use crate::{
-    definitions::{
-        struct_literal::DStructLiteral,
-        substitution::{DSubstitution, UnresolvedTarget},
-    },
-    item::{IntoItemPtr, ItemPtr},
+    definitions::substitution::{DSubstitution, UnresolvedTarget},
+    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
         Node,
     },
     phrase,
-    scope::Scope,
     shared::OrderedMap,
 };
 

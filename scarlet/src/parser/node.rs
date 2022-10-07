@@ -1,12 +1,8 @@
 use std::fmt::{self, Debug, Formatter};
 
-use super::{
-    phrase::{CreateContext, CreateResult, PhraseTable},
-    ParseContext,
-};
+use super::phrase::{CreateContext, CreateResult, PhraseTable};
 use crate::{
     diagnostic::{Diagnostic, Position},
-    scope::Scope,
     shared::indented,
 };
 

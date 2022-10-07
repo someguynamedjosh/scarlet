@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 
 use super::{Node, ParseContext};
-use crate::{diagnostic::Diagnostic, environment::Environment, item::ItemPtr, scope::Scope};
+use crate::{diagnostic::Diagnostic, environment::Environment, item::ItemPtr};
 
 pub type Precedence = u8;
 pub type Priority = u8;

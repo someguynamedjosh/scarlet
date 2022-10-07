@@ -3,14 +3,11 @@ use std::{collections::HashMap, fmt};
 use super::parameter::ParameterPtr;
 use crate::{
     diagnostic::Diagnostic,
-    environment::Environment,
     item::{
         query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, ItemDefinition, ItemPtr,
     },
 };
 
@@ -21,7 +18,7 @@ pub struct DIdentifier {
 }
 
 impl CycleDetectingDebug for DIdentifier {
-    fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter, _ctx: &mut CddContext) -> fmt::Result {
         write!(f, "IDENTIFIER({})", self.identifier)
     }
 }
@@ -31,13 +28,13 @@ impl ItemDefinition for DIdentifier {
         vec![]
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -48,7 +45,7 @@ impl ItemDefinition for DIdentifier {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }

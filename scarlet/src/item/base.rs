@@ -1,7 +1,7 @@
 #[cfg(not(feature = "trace_borrows"))]
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::{Ref, RefCell};
 use std::{
-    any::{self, Any},
+    any::Any,
     collections::{HashMap, HashSet},
     fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
@@ -13,12 +13,9 @@ use debug_cell::{Ref, RefCell, RefMut};
 use dyn_clone::DynClone;
 use owning_ref::OwningRef;
 
-use super::{
-    query::{
-        AllowsChildQuery, ChildrenQuery, FlattenQuery, ParametersQuery, Query, QueryContext,
-        QueryResultCache, TypeCheckQuery, TypeQuery,
-    },
-    type_hints::TypeHint,
+use super::query::{
+    AllowsChildQuery, FlattenQuery, ParametersQuery, Query, QueryContext, QueryResultCache,
+    TypeCheckQuery, TypeQuery,
 };
 use crate::{
     definitions::{
@@ -26,10 +23,9 @@ use crate::{
         compound_type::DCompoundType,
         new_type::DNewType,
         new_value::DNewValue,
-        parameter::{DParameter, Parameter, ParameterPtr},
+        parameter::{DParameter, ParameterPtr},
     },
     diagnostic::{Diagnostic, Position},
-    environment::Environment,
     util::PtrExtension,
 };
 
@@ -69,12 +65,12 @@ impl<T: Any> NamedAny for T {
 pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
     fn children(&self) -> Vec<ItemPtr>;
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)>;
-    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
+    fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
         None
     }
     fn recompute_flattened(
         &self,
-        ctx: &mut QueryContext<FlattenQuery>,
+        _ctx: &mut QueryContext<FlattenQuery>,
     ) -> <FlattenQuery as Query>::Result {
         None
     }

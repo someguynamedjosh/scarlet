@@ -4,16 +4,11 @@ use std::{
 };
 
 use super::{builtin::DBuiltin, parameter::ParameterPtr};
-use crate::{
-    environment::Environment,
-    item::{
-        query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
-        },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+use crate::item::{
+    query::{
+        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
     },
+    CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -32,7 +27,7 @@ impl ItemDefinition for DHole {
         vec![self.r#type.ptr_clone()]
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![(
             self.r#type.ptr_clone(),
             DBuiltin::is_subtype_of(self.r#type.ptr_clone(), DBuiltin::r#type().into_ptr())
@@ -42,7 +37,7 @@ impl ItemDefinition for DHole {
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -53,16 +48,12 @@ impl ItemDefinition for DHole {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }
 
-    fn reduce(
-        &self,
-        this: &ItemPtr,
-        args: &HashMap<ParameterPtr, ItemPtr>,
-    ) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
 }

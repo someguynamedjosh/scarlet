@@ -1,13 +1,12 @@
 use crate::{
     definitions::builtin::{Builtin, DBuiltin},
     diagnostic::Diagnostic,
-    item::{IntoItemPtr, ItemPtr},
+    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
     },
     phrase,
-    scope::Scope,
 };
 
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {

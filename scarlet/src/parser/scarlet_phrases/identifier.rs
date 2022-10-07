@@ -1,12 +1,11 @@
 use crate::{
     definitions::identifier::DIdentifier,
-    item::{IntoItemPtr, ItemPtr},
+    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
     },
     phrase,
-    scope::Scope,
 };
 
 pub fn create(_ctx: &mut CreateContext, node: &Node) -> CreateResult {

@@ -4,7 +4,6 @@ use crate::{
         Node,
     },
     phrase,
-    scope::Scope,
 };
 
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {

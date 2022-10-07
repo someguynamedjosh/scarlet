@@ -1,18 +1,11 @@
 use crate::{
-    definitions::{
-        member_access::DMemberAccess,
-        struct_literal::DStructLiteral,
-        substitution::{DSubstitution, UnresolvedTarget},
-    },
-    item::{IntoItemPtr, ItemPtr},
+    definitions::member_access::DMemberAccess,
+    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
-        util::collect_comma_list,
         Node,
     },
     phrase,
-    scope::Scope,
-    shared::OrderedMap,
 };
 
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {

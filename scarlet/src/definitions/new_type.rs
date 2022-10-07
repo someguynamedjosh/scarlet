@@ -5,20 +5,16 @@ use std::{
 };
 
 use itertools::Itertools;
-use maplit::hashset;
 
 use super::{
     builtin::DBuiltin, compound_type::DCompoundType, new_value::DNewValue, parameter::ParameterPtr,
 };
 use crate::{
-    environment::Environment,
     item::{
         query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     util::PtrExtension,
 };
@@ -52,13 +48,13 @@ impl ItemDefinition for DNewType {
         self.fields.iter().map(|(_, f)| f.ptr_clone()).collect_vec()
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -69,12 +65,12 @@ impl ItemDefinition for DNewType {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         DCompoundType::new(this.ptr_clone(), TypeId::as_ptr(&self.type_id).to_bits()).into_ptr()
     }
 }

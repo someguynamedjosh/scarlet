@@ -1,15 +1,8 @@
-use std::{
-    cell::{Cell, RefCell},
-    collections::{HashMap, HashSet},
-    sync::{Arc, Mutex},
-};
-
-use lazy_static::lazy_static;
+use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
-    definitions::{builtin::DBuiltin, new_value::DNewValue, struct_literal::DStructLiteral},
+    definitions::{new_value::DNewValue, struct_literal::DStructLiteral},
     diagnostic::Diagnostic,
-    entry::OnlyConstructedByEntry,
     item::{
         query::{Query, QueryContext, RootQuery, TypeCheckQuery, TypeQuery},
         IntoItemPtr, ItemPtr,

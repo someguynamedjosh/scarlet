@@ -1,25 +1,19 @@
 use std::{
     collections::HashMap,
     fmt::{self, Formatter},
-    ops::Index,
 };
 
-use itertools::Itertools;
-
 use super::{
-    builtin::DBuiltin, compound_type::DCompoundType, new_type::DNewType, new_value::DNewValue,
-    parameter::ParameterPtr,
+    compound_type::DCompoundType, new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr,
 };
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
     item::{
         query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
 };
 
@@ -50,13 +44,13 @@ impl ItemDefinition for DMemberAccess {
         vec![self.base.ptr_clone()]
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -67,7 +61,7 @@ impl ItemDefinition for DMemberAccess {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }
@@ -84,7 +78,7 @@ impl ItemDefinition for DMemberAccess {
                 }
             }
         }
-        if let Some(value) = base.downcast_definition::<DNewValue>() {
+        if let Some(_value) = base.downcast_definition::<DNewValue>() {
             todo!()
         }
         if base.is_same_instance_as(&self.base) {

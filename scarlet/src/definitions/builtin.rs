@@ -5,22 +5,16 @@ use std::{
 };
 
 use itertools::Itertools;
-use maplit::hashset;
 use owning_ref::OwningRef;
 
-use super::{
-    compound_type::DCompoundType, new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr,
-};
+use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
-    definitions::parameter::DParameter,
     diagnostic::Diagnostic,
-    environment::{r#true, Environment, ENV},
+    environment::{r#true, Environment},
     item::{
         query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        type_hints::TypeHint,
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
@@ -102,13 +96,13 @@ impl ItemDefinition for DBuiltin {
         vec![]
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -119,7 +113,7 @@ impl ItemDefinition for DBuiltin {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }
@@ -172,7 +166,7 @@ impl DBuiltin {
             .iter()
             .map(|name| env.get_language_item(name).map(ItemPtr::ptr_clone))
             .collect::<Result<_, _>>()?;
-        let r#true = Some(env.r#true());
+        let _true = Some(env.r#true());
         Ok(Self { builtin, args })
     }
 

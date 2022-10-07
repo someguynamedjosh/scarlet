@@ -4,7 +4,10 @@ use super::{
     node::Node,
     phrase::{PhraseTable, Precedence},
 };
-use crate::{diagnostic::Diagnostic, parser::{node::NodeChild, diagnostics::incomplete_phrase_error}};
+use crate::{
+    diagnostic::Diagnostic,
+    parser::{diagnostics::incomplete_phrase_error, node::NodeChild},
+};
 
 #[derive(Debug)]
 pub struct Stack<'a>(pub Vec<Node<'a>>);

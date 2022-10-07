@@ -1,22 +1,17 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     fmt::{self, Formatter},
 };
 
 use itertools::Itertools;
 use maplit::hashmap;
 
-use super::{builtin::DBuiltin, new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr};
-use crate::{
-    environment::Environment,
-    item::{
-        query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
-        },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+use super::{builtin::DBuiltin, new_type::DNewType, parameter::ParameterPtr};
+use crate::item::{
+    query::{
+        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
     },
+    CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
 };
 
 #[derive(Clone)]
@@ -29,7 +24,7 @@ pub struct DCompoundType {
 impl CycleDetectingDebug for DCompoundType {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "UNION(\n")?;
-        for (id, r#type) in &self.component_types {
+        for (_id, r#type) in &self.component_types {
             write!(f, "   {}", r#type.to_indented_string(ctx, 1))?;
             write!(f, ",\n")?;
         }
@@ -45,13 +40,13 @@ impl ItemDefinition for DCompoundType {
             .collect_vec()
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -62,12 +57,12 @@ impl ItemDefinition for DCompoundType {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
 }

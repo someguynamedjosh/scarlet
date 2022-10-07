@@ -1,13 +1,12 @@
 use crate::{
     definitions::struct_literal::DStructLiteral,
-    item::{IntoItemPtr, ItemPtr},
+    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
         Node,
     },
     phrase,
-    scope::Scope,
 };
 
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {

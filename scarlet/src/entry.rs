@@ -1,9 +1,8 @@
-use std::{borrow::BorrowMut, collections::HashMap, thread::LocalKey, time::Instant};
+use std::{collections::HashMap, time::Instant};
 
 use crate::{
     environment::{Environment, ENV},
     file_tree,
-    item::query::QueryContext,
     parser::{self, create_root, ParseContext},
 };
 

@@ -1,17 +1,15 @@
 use std::{
     collections::HashMap,
-    fmt::{self, Formatter},
+    fmt::{self},
     rc::Rc,
 };
 
 use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
-    environment::Environment,
     item::{
-        query::{ChildrenQuery, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        query::{ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
 };
 
@@ -70,7 +68,7 @@ impl ItemDefinition for DParameter {
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -81,7 +79,7 @@ impl ItemDefinition for DParameter {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         todo!()
     }

@@ -3,8 +3,6 @@ use std::{
     fmt::{self, Formatter},
 };
 
-use itertools::Itertools;
-
 use super::{
     builtin::DBuiltin,
     parameter::{DParameter, ParameterPtr},
@@ -14,13 +12,11 @@ use crate::{
     environment::Environment,
     item::{
         query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
-    shared::{OrderedMap, OrderedSet},
+    shared::OrderedMap,
     util::PtrExtension,
 };
 
@@ -77,7 +73,7 @@ impl ItemDefinition for DSubstitution {
         result
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         let subs = self.substitutions.as_ref().unwrap();
         subs.iter()
             .map(|(target, value)| {
@@ -95,7 +91,7 @@ impl ItemDefinition for DSubstitution {
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -110,12 +106,12 @@ impl ItemDefinition for DSubstitution {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, _this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let mut carried_args = args.clone();
         let mut new_args = HashMap::new();
         for (target, value) in self.substitutions.as_ref().unwrap() {
@@ -126,7 +122,7 @@ impl ItemDefinition for DSubstitution {
         self.base.reduce(&new_args)
     }
 
-    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
+    fn resolve(&mut self, _this: &ItemPtr) -> Result<(), Diagnostic> {
         if let Err(unresolved) = &self.substitutions {
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {

@@ -13,16 +13,12 @@ use super::{
 };
 use crate::{
     diagnostic::Position,
-    environment::Environment,
     item::{
         query::{
-            no_type_check_errors, ChildrenQuery, ParametersQuery, Query, QueryContext,
-            TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        type_hints::TypeHint,
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
-    scope::Scope,
 };
 
 #[derive(Clone)]
@@ -54,7 +50,7 @@ impl ItemDefinition for DStructLiteral {
         self.fields.iter().map(|(_, f)| f.ptr_clone()).collect_vec()
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         if self.is_module {
             vec![]
         } else {
@@ -73,7 +69,7 @@ impl ItemDefinition for DStructLiteral {
 
     fn recompute_parameters(
         &self,
-        ctx: &mut QueryContext<ParametersQuery>,
+        _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -96,7 +92,7 @@ impl ItemDefinition for DStructLiteral {
 
     fn recompute_type_check(
         &self,
-        ctx: &mut QueryContext<TypeCheckQuery>,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         if self.is_module {
             no_type_check_errors()
