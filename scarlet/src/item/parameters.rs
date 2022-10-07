@@ -57,6 +57,9 @@ impl Parameters {
         for (param, _) in std::mem::take(&mut other.parameters) {
             self.insert(param);
         }
+        for (excludes, _) in other.excludes_parameters_from.take() {
+            self.excludes_parameters_from.insert(excludes, ());
+        }
     }
 
     pub fn remove(&mut self, param: &Parameter) -> Option<ParameterPtr> {

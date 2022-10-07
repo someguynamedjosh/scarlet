@@ -119,6 +119,7 @@ pub struct UniversalItemInfo {
 }
 
 pub struct ItemQueryResultCaches {
+    parameters: QueryResultCache<ParametersQuery>,
     flattened: QueryResultCache<FlattenQuery>,
     r#type: QueryResultCache<TypeQuery>,
     type_check: QueryResultCache<TypeCheckQuery>,
@@ -127,6 +128,7 @@ pub struct ItemQueryResultCaches {
 impl ItemQueryResultCaches {
     fn new() -> Self {
         Self {
+            parameters: QueryResultCache::new(),
             flattened: QueryResultCache::new(),
             r#type: QueryResultCache::new(),
             type_check: QueryResultCache::new(),
@@ -324,6 +326,17 @@ impl ItemPtr {
             },
             *into
         );
+    }
+
+    pub fn query_parameters(
+        &self,
+        ctx: &mut impl AllowsChildQuery<ParametersQuery>,
+    ) -> <ParametersQuery as Query>::Result {
+        self.query(
+            ctx,
+            |caches| &mut caches.parameters,
+            |ctx, definition| definition.recompute_parameters(ctx),
+        )
     }
 
     pub fn query_flattened(

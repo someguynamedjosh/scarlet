@@ -34,9 +34,9 @@ impl ItemDefinition for DIdentifier {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
+        ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        self.item.as_ref().unwrap().query_parameters(ctx)
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {

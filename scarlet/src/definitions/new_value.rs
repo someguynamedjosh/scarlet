@@ -10,6 +10,7 @@ use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
     item::{
+        parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
@@ -47,9 +48,13 @@ impl ItemDefinition for DNewValue {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
+        ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        let mut result = Parameters::new_empty();
+        for field in &self.fields {
+            result.append(field.query_parameters(ctx));
+        }
+        result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {

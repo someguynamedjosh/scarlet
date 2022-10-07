@@ -14,6 +14,7 @@ use super::{
 use crate::{
     diagnostic::Position,
     item::{
+        parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
@@ -69,9 +70,16 @@ impl ItemDefinition for DStructLiteral {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
+        ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        let mut result = Parameters::new_empty();
+        if self.is_module {
+            return result;
+        }
+        for field in &self.fields {
+            result.append(field.1.query_parameters(ctx));
+        }
+        result
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {

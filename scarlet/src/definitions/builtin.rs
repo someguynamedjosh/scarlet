@@ -15,7 +15,7 @@ use crate::{
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr, parameters::Parameters,
     },
 };
 
@@ -102,9 +102,13 @@ impl ItemDefinition for DBuiltin {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
+        ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        let mut result = Parameters::new_empty();
+        for arg in &self.args {
+            result.append(arg.query_parameters(ctx));
+        }
+        result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {

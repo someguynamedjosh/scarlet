@@ -91,9 +91,10 @@ impl ItemDefinition for DSubstitution {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
+        ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        let mut result = self.base.query_parameters(ctx);
+        result
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
@@ -122,8 +123,12 @@ impl ItemDefinition for DSubstitution {
         self.base.reduce(&new_args)
     }
 
-    fn resolve(&mut self, _this: &ItemPtr) -> Result<(), Diagnostic> {
+    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
+        let mut params = this.query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
+            if params.excludes_any_parameters() {
+                return Err(Diagnostic::new());
+            }
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
                 match target {
@@ -135,11 +140,12 @@ impl ItemDefinition for DSubstitution {
                                 name
                             ))
                         };
-                        let var = self.base.lookup_identifier(name).ok_or_else(gen_error)?;
-                        let var = var
+                        let param = self.base.lookup_identifier(name).ok_or_else(gen_error)?;
+                        let param = param
                             .downcast_definition::<DParameter>()
                             .ok_or_else(gen_error)?;
-                        resolved.insert(var.get_parameter_ptr(), value.ptr_clone())
+                        let param = params.remove(param.get_parameter()).unwrap();
+                        resolved.insert(param, value.ptr_clone())
                     }
                 }
             }

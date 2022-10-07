@@ -8,9 +8,11 @@ use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
     item::{
+        parameters::Parameters,
         query::{ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
+    util::PtrExtension,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
@@ -70,7 +72,9 @@ impl ItemDefinition for DParameter {
         &self,
         _ctx: &mut QueryContext<ParametersQuery>,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        let mut result = Parameters::new_empty();
+        result.insert(self.parameter.ptr_clone());
+        result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
