@@ -38,6 +38,7 @@ impl ItemDefinition for DHole {
     fn recompute_parameters(
         &self,
         _ctx: &mut QueryContext<ParametersQuery>,
+       this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }

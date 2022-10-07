@@ -4,6 +4,7 @@ use super::parameter::ParameterPtr;
 use crate::{
     diagnostic::Diagnostic,
     item::{
+        parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
@@ -35,8 +36,15 @@ impl ItemDefinition for DIdentifier {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        self.item.as_ref().unwrap().query_parameters(ctx)
+        if let Some(item) = self.item.as_ref() {
+            item.query_parameters(ctx)
+        } else {
+            let mut result = Parameters::new_empty();
+            result.mark_excluding(this.ptr_clone());
+            result
+        }
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {

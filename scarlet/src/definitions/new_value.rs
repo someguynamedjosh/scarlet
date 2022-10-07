@@ -49,6 +49,7 @@ impl ItemDefinition for DNewValue {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
+       this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for field in &self.fields {

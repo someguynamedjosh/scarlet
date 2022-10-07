@@ -51,6 +51,7 @@ impl ItemDefinition for DMemberAccess {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
+       this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         self.base.query_parameters(ctx)
     }

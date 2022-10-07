@@ -70,9 +70,10 @@ impl ItemDefinition for DParameter {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
+        ctx: &mut QueryContext<ParametersQuery>,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        let mut result = Parameters::new_empty();
+        let mut result = self.reduced_type.query_parameters(ctx);
         result.insert(self.parameter.ptr_clone());
         result
     }

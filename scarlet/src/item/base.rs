@@ -77,6 +77,7 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result;
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result;
     fn recompute_type_check(
@@ -335,7 +336,7 @@ impl ItemPtr {
         self.query(
             ctx,
             |caches| &mut caches.parameters,
-            |ctx, definition| definition.recompute_parameters(ctx),
+            |ctx, definition| definition.recompute_parameters(ctx, self),
         )
     }
 

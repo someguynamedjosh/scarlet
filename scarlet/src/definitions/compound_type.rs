@@ -47,6 +47,7 @@ impl ItemDefinition for DCompoundType {
     fn recompute_parameters(
         &self,
         _ctx: &mut QueryContext<ParametersQuery>,
+       this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }

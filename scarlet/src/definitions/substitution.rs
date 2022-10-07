@@ -92,6 +92,7 @@ impl ItemDefinition for DSubstitution {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = self.base.query_parameters(ctx);
         result
@@ -144,7 +145,14 @@ impl ItemDefinition for DSubstitution {
                         let param = param
                             .downcast_definition::<DParameter>()
                             .ok_or_else(gen_error)?;
-                        let param = params.remove(param.get_parameter()).unwrap();
+                        let param = params.remove(param.get_parameter()).ok_or(
+                            Diagnostic::new()
+                                .with_text_error(format!(
+                                    "Base does not have parameter \"{}\".",
+                                    name
+                                ))
+                                .with_item_error(&self.base),
+                        )?;
                         resolved.insert(param, value.ptr_clone())
                     }
                 }

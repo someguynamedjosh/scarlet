@@ -55,6 +55,7 @@ impl ItemDefinition for DNewType {
     fn recompute_parameters(
         &self,
         _ctx: &mut QueryContext<ParametersQuery>,
+       this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
