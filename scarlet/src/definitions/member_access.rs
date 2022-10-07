@@ -74,7 +74,6 @@ impl ItemDefinition for DMemberAccess {
         } else if self.member_index == Member::Constructor {
             if let Some(r#type) = base.downcast_definition::<DCompoundType>() {
                 if let Some(constructor) = r#type.constructor(&base) {
-                    println!("{:#?}", constructor);
                     return constructor.reduce(args);
                 }
             }

@@ -74,7 +74,7 @@ impl ItemDefinition for DParameter {
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = self.reduced_type.query_parameters(ctx);
-        result.insert(self.parameter.ptr_clone());
+        result.insert(self.reduced_type.ptr_clone(), self.parameter.ptr_clone());
         result
     }
 

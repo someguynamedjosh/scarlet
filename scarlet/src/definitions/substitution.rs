@@ -27,7 +27,7 @@ pub enum UnresolvedTarget {
 }
 
 pub type UnresolvedSubstitutions = OrderedMap<UnresolvedTarget, ItemPtr>;
-pub type Substitutions = OrderedMap<ParameterPtr, ItemPtr>;
+pub type Substitutions = OrderedMap<(ItemPtr, ParameterPtr), ItemPtr>;
 
 #[derive(Clone)]
 pub struct DSubstitution {
@@ -81,7 +81,7 @@ impl ItemDefinition for DSubstitution {
                     value.ptr_clone(),
                     DBuiltin::is_subtype_of(
                         value.query_type(&mut Environment::root_query()).unwrap(),
-                        target.original_type().ptr_clone(),
+                        target.0.ptr_clone(),
                     )
                     .into_ptr(),
                 )
@@ -95,13 +95,22 @@ impl ItemDefinition for DSubstitution {
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = self.base.query_parameters(ctx);
+        if self.substitutions.is_err() {
+            result.mark_excluding(this.ptr_clone());
+            return result;
+        }
+        let mut new_args = HashMap::new();
+        for (target, value) in self.substitutions.as_ref().unwrap() {
+            new_args.insert(target.1.clone(), value.reduce(&HashMap::new()));
+        }
+        result.reduce_type(&new_args);
         result
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         let mut new_args = HashMap::new();
         for (target, value) in self.substitutions.as_ref().unwrap() {
-            new_args.insert(target.clone(), value.reduce(&HashMap::new()));
+            new_args.insert(target.1.clone(), value.reduce(&HashMap::new()));
         }
         Some(self.base.query_type(ctx)?.reduce(&new_args))
     }
@@ -117,18 +126,20 @@ impl ItemDefinition for DSubstitution {
         let mut carried_args = args.clone();
         let mut new_args = HashMap::new();
         for (target, value) in self.substitutions.as_ref().unwrap() {
-            new_args.insert(target.clone(), value.reduce(args));
-            carried_args.remove(target);
+            new_args.insert(target.1.clone(), value.reduce(args));
+            carried_args.remove(&target.1);
         }
         new_args.extend(carried_args.into_iter());
         self.base.reduce(&new_args)
     }
 
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
-        let mut params = this.query_parameters(&mut Environment::root_query());
+        let mut params = self.base.query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {
-                return Err(Diagnostic::new());
+                return Err(Diagnostic::new()
+                    .with_text_error(format!("Cannot determine parameters of base."))
+                    .with_item_error(&self.base));
             }
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
@@ -145,14 +156,7 @@ impl ItemDefinition for DSubstitution {
                         let param = param
                             .downcast_definition::<DParameter>()
                             .ok_or_else(gen_error)?;
-                        let param = params.remove(param.get_parameter()).ok_or(
-                            Diagnostic::new()
-                                .with_text_error(format!(
-                                    "Base does not have parameter \"{}\".",
-                                    name
-                                ))
-                                .with_item_error(&self.base),
-                        )?;
+                        let param = params.remove(param.get_parameter()).ok_or_else(gen_error)?;
                         resolved.insert(param, value.ptr_clone())
                     }
                 }
