@@ -49,7 +49,7 @@ impl ItemDefinition for DNewValue {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for field in &self.fields {
@@ -84,7 +84,7 @@ impl DNewValue {
 
     pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
         Ok(Self::new(
-            env.get_language_item("True")?.ptr_clone(),
+            env.get_language_item("True")?.reduce(&HashMap::new()),
             vec![],
         ))
     }

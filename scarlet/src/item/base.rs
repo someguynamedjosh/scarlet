@@ -268,7 +268,6 @@ impl ItemPtr {
 
     pub fn is_literal_instance_of(&self, of_type: &ItemPtr) -> bool {
         if let Some(value) = self.downcast_definition::<DNewValue>() {
-            // println!("{:#?}", value);
             let value_type = value.get_type().downcast_definition::<DCompoundType>();
             let of_type = of_type.downcast_definition::<DCompoundType>();
             if let (Some(value_type), Some(of_type)) = (value_type, of_type) {
