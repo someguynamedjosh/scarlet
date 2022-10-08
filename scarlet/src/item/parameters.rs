@@ -1,4 +1,4 @@
-use std::{iter::FromIterator, collections::HashMap};
+use std::{collections::HashMap, iter::FromIterator};
 
 use super::{query::QueryResult, ItemPtr};
 use crate::{
@@ -7,7 +7,7 @@ use crate::{
     util::PtrExtension,
 };
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Parameters {
     parameters: OrderedSet<(ItemPtr, ParameterPtr)>,
     excludes_parameters_from: OrderedSet<ItemPtr>,
@@ -71,6 +71,23 @@ impl Parameters {
     pub fn reduce_type(&mut self, args: &HashMap<ParameterPtr, ItemPtr>) {
         for (param, _) in self.parameters.iter_mut() {
             param.0 = param.0.reduce(args);
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        if self.excludes_any_parameters() {
+            0
+        } else {
+            self.parameters.len()
+        }
+    }
+
+    pub fn pop_first(&mut self) -> Option<(ItemPtr, ParameterPtr)> {
+        if self.excludes_any_parameters() {
+            None
+        } else {
+            let first_key = self.parameters.iter().next().unwrap().0.clone();
+            self.parameters.remove(&first_key).map(|x| x.0)
         }
     }
 }

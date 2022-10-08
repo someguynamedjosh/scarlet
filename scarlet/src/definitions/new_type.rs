@@ -11,6 +11,7 @@ use super::{
 };
 use crate::{
     item::{
+        parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
@@ -54,10 +55,14 @@ impl ItemDefinition for DNewType {
 
     fn recompute_parameters(
         &self,
-        _ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        ctx: &mut QueryContext<ParametersQuery>,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        todo!()
+        let mut result = Parameters::new_empty();
+        for (_, field) in &self.fields {
+            result.append(field.query_type(ctx).unwrap().query_parameters(ctx));
+        }
+        result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {

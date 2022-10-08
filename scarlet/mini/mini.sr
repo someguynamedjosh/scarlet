@@ -6,12 +6,9 @@ Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
 Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
 Union IS BUILTIN(Union)
 
-Bool IS Union(Subtype0 IS True Subtype1 IS False)
-
-bool1 IS ANY Bool
-bool2 IS ANY Bool
 true IS True.new
 false IS False.new
+Bool IS Union(True False)
 
 Result IS ANY Type AS_LANGUAGE_ITEM(Result)
 condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
@@ -19,7 +16,20 @@ true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
 false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
 if_then_else IS BUILTIN(if_then_else)
 
-main IS if_then_else(Result IS Bool)(condition IS false, true_result IS true, false_result IS false)
+operand0 IS ANY Bool
+operand1 IS ANY Bool
+
+and IS if_then_else(Bool operand0 operand1 false)
+or IS if_then_else(Bool operand0 true operand1)
+
+Nibble IS NEW_TYPE(
+    b0 IS ANY Bool 
+    b1 IS ANY Bool 
+    b2 IS ANY Bool 
+    b3 IS ANY Bool
+)
+
+main IS Nibble.new(true)
 # main IS result(Result IS Type, condition IS true, true_resut)
 # main IS result(Result IS Bool)(result IS true)
 # main IS bool1(bool1 IS true)

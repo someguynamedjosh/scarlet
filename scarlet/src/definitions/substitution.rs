@@ -11,6 +11,7 @@ use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
     item::{
+        parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
@@ -26,7 +27,7 @@ pub enum UnresolvedTarget {
     Named(String),
 }
 
-pub type UnresolvedSubstitutions = OrderedMap<UnresolvedTarget, ItemPtr>;
+pub type UnresolvedSubstitutions = Vec<(UnresolvedTarget, ItemPtr)>;
 pub type Substitutions = OrderedMap<(ItemPtr, ParameterPtr), ItemPtr>;
 
 #[derive(Clone)]
@@ -75,18 +76,18 @@ impl ItemDefinition for DSubstitution {
 
     fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         let subs = self.substitutions.as_ref().unwrap();
-        subs.iter()
-            .map(|(target, value)| {
-                (
-                    value.ptr_clone(),
-                    DBuiltin::is_subtype_of(
-                        value.query_type(&mut Environment::root_query()).unwrap(),
-                        target.0.ptr_clone(),
-                    )
-                    .into_ptr(),
-                )
-            })
-            .collect()
+        let mut args = HashMap::new();
+        let mut requirements = Vec::new();
+        for (target, value) in subs.iter() {
+            let value_type = value.query_type(&mut Environment::root_query()).unwrap();
+            let target_type = target.0.ptr_clone().reduce(&args);
+            requirements.push((
+                value.ptr_clone(),
+                DBuiltin::is_subtype_of(value_type, target_type).into_ptr(),
+            ));
+            args.insert(target.1.ptr_clone(), value.ptr_clone());
+        }
+        requirements
     }
 
     fn recompute_parameters(
@@ -100,10 +101,14 @@ impl ItemDefinition for DSubstitution {
             return result;
         }
         let mut new_args = HashMap::new();
+        let mut new_params = Parameters::new_empty();
         for (target, value) in self.substitutions.as_ref().unwrap() {
+            result.remove(&target.1);
+            new_params.append(value.query_parameters(ctx));
             new_args.insert(target.1.clone(), value.reduce(&HashMap::new()));
         }
         result.reduce_type(&new_args);
+        result.append(new_params);
         result
     }
 
@@ -144,13 +149,22 @@ impl ItemDefinition for DSubstitution {
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
                 match target {
-                    UnresolvedTarget::Positional => todo!("Positional arguments"),
+                    UnresolvedTarget::Positional => {
+                        if params.len() == 0 {
+                            return Err(Diagnostic::new()
+                                .with_text_error(format!("No parameters left to substitute."))
+                                .with_item_error(value));
+                        }
+                        resolved.insert(params.pop_first().unwrap(), value.ptr_clone());
+                    }
                     UnresolvedTarget::Named(name) => {
                         let gen_error = || {
-                            Diagnostic::new().with_text_error(format!(
-                                "No parameter named \"{}\" in the scope of the base.",
-                                name
-                            ))
+                            Diagnostic::new()
+                                .with_text_error(format!(
+                                    "No parameter named \"{}\" in the scope of the base.",
+                                    name
+                                ))
+                                .with_item_error(value)
                         };
                         let param = self.base.lookup_identifier(name).ok_or_else(gen_error)?;
                         let param = param

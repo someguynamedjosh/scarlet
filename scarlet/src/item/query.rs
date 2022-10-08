@@ -316,4 +316,5 @@ macro_rules! allow_child_query {
 allow_child_query!(RootQuery => ParametersQuery);
 allow_child_query!(RootQuery => TypeCheckQuery);
 allow_child_query!(RootQuery => TypeQuery);
+allow_child_query!(ParametersQuery => TypeQuery);
 allow_child_query!(TypeCheckQuery => TypeQuery);
