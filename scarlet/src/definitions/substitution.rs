@@ -139,7 +139,10 @@ impl ItemDefinition for DSubstitution {
     }
 
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
-        let mut params = self.base.query_parameters(&mut Environment::root_query());
+        let mut params = self
+            .base
+            .reduce(&HashMap::new())
+            .query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {
                 return Err(Diagnostic::new()
@@ -150,6 +153,7 @@ impl ItemDefinition for DSubstitution {
             for (target, value) in unresolved {
                 match target {
                     UnresolvedTarget::Positional => {
+                        println!("---\n{:#?}", params);
                         if params.len() == 0 {
                             return Err(Diagnostic::new()
                                 .with_text_error(format!("No parameters left to substitute."))

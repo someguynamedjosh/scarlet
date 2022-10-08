@@ -51,7 +51,7 @@ impl ItemDefinition for DMemberAccess {
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         self.base.query_parameters(ctx)
     }
@@ -70,7 +70,6 @@ impl ItemDefinition for DMemberAccess {
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let base = self.base.reduce(args);
         if self.member_index == Member::Unknown {
-            todo!("Should have been resolved earlier.");
         } else if self.member_index == Member::Constructor {
             if let Some(r#type) = base.downcast_definition::<DCompoundType>() {
                 if let Some(constructor) = r#type.constructor(&base) {
