@@ -68,10 +68,19 @@ impl ItemDefinition for DStructLiteral {
         None
     }
 
+    fn local_reverse_lookup_identifier(&self, item: &ItemPtr) -> Option<String> {
+        for (field, value) in &self.fields {
+            if value.is_same_instance_as(item) {
+                return Some(field.clone());
+            }
+        }
+        None
+    }
+
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         if self.is_module {

@@ -23,12 +23,16 @@ pub struct DCompoundType {
 
 impl CycleDetectingDebug for DCompoundType {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
-        write!(f, "UNION(\n")?;
-        for (_id, r#type) in &self.component_types {
-            write!(f, "   {}", r#type.to_indented_string(ctx, 1))?;
-            write!(f, ",\n")?;
+        if self.component_types.len() == 1 {
+            self.component_types.iter().next().unwrap().1.fmt(f, ctx)
+        } else {
+            write!(f, "UNION(\n")?;
+            for (_id, r#type) in &self.component_types {
+                write!(f, "   {}", r#type.to_indented_string(ctx, 1))?;
+                write!(f, ",\n")?;
+            }
+            write!(f, ")")
         }
-        write!(f, ")")
     }
 }
 
@@ -47,7 +51,7 @@ impl ItemDefinition for DCompoundType {
     fn recompute_parameters(
         &self,
         _ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }

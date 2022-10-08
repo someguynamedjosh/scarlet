@@ -69,6 +69,9 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
     fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
         None
     }
+    fn local_reverse_lookup_identifier(&self, _item: &ItemPtr) -> Option<String> {
+        None
+    }
     fn recompute_flattened(
         &self,
         _ctx: &mut QueryContext<FlattenQuery>,
@@ -169,7 +172,9 @@ impl Hash for ItemPtr {
 impl CycleDetectingDebug for ItemPtr {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         let ptr = self.0.as_ptr() as *const _;
-        if ctx.stack.contains(&ptr) {
+        if let Some(ident) = self.reverse_lookup_identifier(self) {
+            write!(f, "{}", ident)
+        } else if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
             write!(f, "@{:?}", ptr)
         } else {
@@ -308,6 +313,17 @@ impl ItemPtr {
             Some(item)
         } else if let Some(parent) = &this.universal_info.parent {
             parent.lookup_identifier(identifier)
+        } else {
+            None
+        }
+    }
+
+    fn reverse_lookup_identifier(&self, item: &ItemPtr) -> Option<String> {
+        let this = self.0.borrow();
+        if let Some(name) = this.definition.local_reverse_lookup_identifier(item) {
+            Some(name)
+        } else if let Some(parent) = &this.universal_info.parent {
+            parent.reverse_lookup_identifier(item)
         } else {
             None
         }

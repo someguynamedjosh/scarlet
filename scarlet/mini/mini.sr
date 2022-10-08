@@ -19,7 +19,7 @@ true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
 false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
 if_then_else IS BUILTIN(if_then_else)
 
-main IS if_then_else(Result IS Type)(condition IS false, true_result IS Type, false_result IS True)
+main IS if_then_else(Result IS Bool)(condition IS false, true_result IS true, false_result IS false)
 # main IS result(Result IS Type, condition IS true, true_resut)
 # main IS result(Result IS Bool)(result IS true)
 # main IS bool1(bool1 IS true)
