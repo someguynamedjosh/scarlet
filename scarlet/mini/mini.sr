@@ -1,37 +1,3 @@
-True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
-False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
-
-Type IS BUILTIN(Type)
-Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
-Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
-Union IS BUILTIN(Union)
-
-true IS True.new
-false IS False.new
-Bool IS Union(Subtype0 IS True Subtype1 IS False)
-
-Result IS ANY Type AS_LANGUAGE_ITEM(Result)
-condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
-true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
-false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
-if_then_else IS BUILTIN(if_then_else)
-
-operand0 IS ANY Bool
-operand1 IS ANY Bool
-
-and IS if_then_else(Bool operand0 true )
-or IS if_then_else(Bool operand0 )
-
-Nibble IS NEW_TYPE(
-    b0 IS ANY Bool 
-    b1 IS ANY Bool 
-    b2 IS ANY Bool 
-    b3 IS ANY Bool
-)
+Nibble IS NEW_TYPE()
 
 main IS Nibble.new()
-# main IS if_then_else(Bool true)
-# main IS result(Result IS Type, condition IS true, true_resut)
-# main IS result(Result IS Bool)(result IS true)
-# main IS bool1(bool1 IS true)
-# main IS true

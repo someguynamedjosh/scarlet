@@ -29,9 +29,7 @@ impl CycleDetectingDebug for DNewValue {
         self.r#type.fmt(f, ctx)?;
         write!(f, ".new(\n")?;
         for field in &self.fields {
-            write!(f, "   ",)?;
-            field.fmt(f, ctx)?;
-            write!(f, ",\n")?;
+            write!(f, "   {},\n", field.to_indented_string(ctx, 1))?;
         }
         write!(f, ")")
     }
@@ -55,7 +53,6 @@ impl ItemDefinition for DNewValue {
         for field in &self.fields {
             result.append(field.query_parameters(ctx));
         }
-        println!("{:#?}", result);
         result
     }
 
@@ -70,8 +67,21 @@ impl ItemDefinition for DNewValue {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        this.ptr_clone()
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        let rfields = self
+            .fields
+            .iter()
+            .map(|field| field.reduce(args))
+            .collect_vec();
+        if rfields == self.fields {
+            this.ptr_clone()
+        } else {
+            Self {
+                fields: rfields,
+                r#type: self.r#type.ptr_clone(),
+            }
+            .into_ptr()
+        }
     }
 }
 

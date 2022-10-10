@@ -105,7 +105,7 @@ impl ItemDefinition for DSubstitution {
         for (target, value) in self.substitutions.as_ref().unwrap() {
             result.remove(&target.1);
             new_params.append(value.query_parameters(ctx));
-            new_args.insert(target.1.clone(), value.reduce(&HashMap::new()));
+            new_args.insert(target.1.clone(), value.reduce_impl(&HashMap::new(), false));
         }
         result.reduce_type(&new_args);
         result.append(new_params);
@@ -141,7 +141,7 @@ impl ItemDefinition for DSubstitution {
     fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
         let mut params = self
             .base
-            .reduce(&HashMap::new())
+            .reduce_impl(&HashMap::new(), false)
             .query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {

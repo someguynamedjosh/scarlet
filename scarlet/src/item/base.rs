@@ -425,19 +425,21 @@ impl ItemPtr {
     }
 
     pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        if args.len() == 0 {
-            let mut this = self.0.borrow_mut();
-            let Item {
-                definition,
-                query_result_caches,
-                ..
-            } = &mut *this;
-            query_result_caches
-                .plain_reduced
-                .get_or_insert_with(|| definition.reduce(self, args))
-                .ptr_clone()
+        self.reduce_impl(args, true)
+    }
+
+    pub(crate) fn reduce_impl(&self, args: &HashMap<ParameterPtr, ItemPtr>, allow_cacheing: bool) -> ItemPtr {
+        let this = self.0.borrow();
+        if args.len() == 0 && allow_cacheing {
+            if let Some(ptr) = this.query_result_caches.plain_reduced.as_ref() {
+                ptr.ptr_clone()
+            } else {
+                let reduced = this.definition.reduce(self, args);
+                drop(this);
+                self.0.borrow_mut().query_result_caches.plain_reduced = Some(reduced.ptr_clone());
+                reduced
+            }
         } else {
-            let this = self.0.borrow();
             this.definition.reduce(self, args)
         }
     }

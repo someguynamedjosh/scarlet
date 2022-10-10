@@ -68,7 +68,7 @@ impl ItemDefinition for DMemberAccess {
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        let base = self.base.reduce(args);
+        let base = self.base.reduce_impl(args, false);
         if self.member_index == Member::Unknown {
         } else if self.member_index == Member::Constructor {
             if let Some(r#type) = base.downcast_definition::<DCompoundType>() {
