@@ -2,7 +2,7 @@
 use std::cell::{Ref, RefCell};
 use std::{
     any::Any,
-    collections::{HashMap, HashSet},
+    collections::{hash_map::DefaultHasher, HashMap, HashSet},
     fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
     rc::Rc,
@@ -11,10 +11,10 @@ use std::{
 #[cfg(feature = "trace_borrows")]
 use debug_cell::{Ref, RefCell, RefMut};
 use dyn_clone::DynClone;
-use owning_ref::OwningRef;
+use owning_ref::{OwningRef, OwningRefMut};
 
 use super::query::{
-    AllowsChildQuery, FlattenQuery, ParametersQuery, Query, QueryContext, QueryResultCache,
+    AllowsChildQuery, ParametersQuery, Query, QueryContext, QueryResultCache, ResolveQuery,
     TypeCheckQuery, TypeQuery,
 };
 use crate::{
@@ -27,6 +27,7 @@ use crate::{
     },
     diagnostic::{Diagnostic, Position},
     environment::{r#true, ENV},
+    item::query::QueryResult,
     util::PtrExtension,
 };
 
@@ -72,12 +73,11 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
     fn local_reverse_lookup_identifier(&self, _item: &ItemPtr) -> Option<String> {
         None
     }
-    fn recompute_flattened(
+    fn recompute_resolved(
         &self,
-        _ctx: &mut QueryContext<FlattenQuery>,
-    ) -> <FlattenQuery as Query>::Result {
-        None
-    }
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result;
     fn recompute_parameters(
         &self,
         ctx: &mut QueryContext<ParametersQuery>,
@@ -89,10 +89,6 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
-    #[allow(unused_variables)]
-    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
-        Ok(())
-    }
 }
 
 impl dyn ItemDefinition {
@@ -126,7 +122,7 @@ pub struct UniversalItemInfo {
 pub struct ItemQueryResultCaches {
     plain_reduced: Option<ItemPtr>,
     parameters: QueryResultCache<ParametersQuery>,
-    flattened: QueryResultCache<FlattenQuery>,
+    resolved: QueryResultCache<ResolveQuery>,
     r#type: QueryResultCache<TypeQuery>,
     type_check: QueryResultCache<TypeCheckQuery>,
 }
@@ -136,7 +132,7 @@ impl ItemQueryResultCaches {
         Self {
             plain_reduced: None,
             parameters: QueryResultCache::new(),
-            flattened: QueryResultCache::new(),
+            resolved: QueryResultCache::new(),
             r#type: QueryResultCache::new(),
             type_check: QueryResultCache::new(),
         }
@@ -334,21 +330,36 @@ impl ItemPtr {
     fn query<Q: Query>(
         &self,
         ctx: &mut impl AllowsChildQuery<Q>,
-        get_cache: impl FnOnce(&mut ItemQueryResultCaches) -> &mut QueryResultCache<Q>,
-        recompute_result: impl FnOnce(&mut QueryContext<Q>, &mut Box<dyn ItemDefinition>) -> Q::Result,
+        get_cache: impl FnOnce(&ItemQueryResultCaches) -> &QueryResultCache<Q>,
+        get_cache_mut: impl FnOnce(&mut ItemQueryResultCaches) -> &mut QueryResultCache<Q>,
+        recompute_result: impl FnOnce(&mut QueryContext<Q>, &Box<dyn ItemDefinition>) -> Q::Result,
     ) -> Q::Result {
-        let mut this = self.0.borrow_mut();
-        let Item {
-            definition,
-            query_result_caches,
-            ..
-        } = &mut *this;
         ctx.with_child_context(|ctx| {
-            ctx.get_query_result(
-                self,
-                |ctx| recompute_result(ctx, definition),
-                get_cache(query_result_caches),
-            )
+            let mut hasher = DefaultHasher::new();
+            self.hash(&mut hasher);
+            let key_hash = hasher.finish();
+            if ctx.cycle_detection_stack.contains(&key_hash) {
+                let result = Q::result_when_cycle_encountered();
+                assert!(
+                    !result.is_final(),
+                    "Results returned when cycles are encountered should be temporary."
+                );
+                result
+            } else {
+                let this = self.0.borrow();
+                if let Some(result) = get_cache(&this.query_result_caches).data.clone() {
+                    result
+                } else {
+                    ctx.cycle_detection_stack.push(key_hash);
+                    let result = recompute_result(ctx, &this.definition);
+                    drop(this);
+                    assert_eq!(ctx.cycle_detection_stack.pop(), Some(key_hash));
+                    let mut this= self.0.borrow_mut();
+                    get_cache_mut(&mut this.query_result_caches).data = Some(result.clone());
+                    drop(this);
+                    result
+                }
+            }
         })
     }
 
@@ -382,19 +393,21 @@ impl ItemPtr {
     ) -> <ParametersQuery as Query>::Result {
         self.query(
             ctx,
+            |caches| &caches.parameters,
             |caches| &mut caches.parameters,
             |ctx, definition| definition.recompute_parameters(ctx, self),
         )
     }
 
-    pub fn query_flattened(
+    pub fn query_resolved(
         &self,
-        ctx: &mut impl AllowsChildQuery<FlattenQuery>,
-    ) -> <FlattenQuery as Query>::Result {
+        ctx: &mut impl AllowsChildQuery<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
         self.query(
             ctx,
-            |caches| &mut caches.flattened,
-            |ctx, definition| definition.recompute_flattened(ctx),
+            |caches| &caches.resolved,
+            |caches| &mut caches.resolved,
+            |ctx, definition| definition.recompute_resolved(self, ctx),
         )
     }
 
@@ -404,6 +417,7 @@ impl ItemPtr {
     ) -> <TypeQuery as Query>::Result {
         self.query(
             ctx,
+            |caches| &caches.r#type,
             |caches| &mut caches.r#type,
             |ctx, definition| definition.recompute_type(ctx),
         )
@@ -415,6 +429,7 @@ impl ItemPtr {
     ) -> <TypeCheckQuery as Query>::Result {
         self.query(
             ctx,
+            |caches| &caches.type_check,
             |caches| &mut caches.type_check,
             |ctx, definition| definition.recompute_type_check(ctx),
         )
@@ -428,7 +443,11 @@ impl ItemPtr {
         self.reduce_impl(args, true)
     }
 
-    pub(crate) fn reduce_impl(&self, args: &HashMap<ParameterPtr, ItemPtr>, allow_cacheing: bool) -> ItemPtr {
+    pub(crate) fn reduce_impl(
+        &self,
+        args: &HashMap<ParameterPtr, ItemPtr>,
+        allow_cacheing: bool,
+    ) -> ItemPtr {
         let this = self.0.borrow();
         if args.len() == 0 && allow_cacheing {
             if let Some(ptr) = this.query_result_caches.plain_reduced.as_ref() {
@@ -442,15 +461,6 @@ impl ItemPtr {
         } else {
             this.definition.reduce(self, args)
         }
-    }
-
-    pub(crate) fn resolve(&self) -> Result<(), Diagnostic> {
-        let borrow = self.0.borrow_mut();
-        let mut def = borrow.definition.dyn_clone();
-        drop(borrow);
-        let result = def.resolve(self);
-        self.0.borrow_mut().definition = def;
-        result
     }
 
     /// True if this item is Type.

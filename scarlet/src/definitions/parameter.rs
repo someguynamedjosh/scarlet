@@ -9,7 +9,7 @@ use crate::{
     diagnostic::Position,
     item::{
         parameters::Parameters,
-        query::{ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery},
+        query::{ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery, TypeQuery},
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     util::PtrExtension,
@@ -103,6 +103,23 @@ impl ItemDefinition for DParameter {
                 }
                 .into_ptr()
             }
+        }
+    }
+
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let r#type = self.reduced_type.query_resolved(ctx)?;
+        if r#type.is_same_instance_as(&self.reduced_type) {
+            Ok(this.ptr_clone())
+        } else {
+            Ok(DParameter {
+                parameter: Rc::clone(&self.parameter),
+                reduced_type: r#type,
+            }
+            .into_ptr())
         }
     }
 }

@@ -6,7 +6,8 @@ use std::{
 use super::{builtin::DBuiltin, parameter::ParameterPtr};
 use crate::item::{
     query::{
-        no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+        no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery,
+        TypeQuery,
     },
     CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
 };
@@ -38,7 +39,7 @@ impl ItemDefinition for DHole {
     fn recompute_parameters(
         &self,
         _ctx: &mut QueryContext<ParametersQuery>,
-       this: &ItemPtr,
+        this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
         todo!()
     }
@@ -52,6 +53,14 @@ impl ItemDefinition for DHole {
         _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
+    }
+
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        Ok(this.ptr_clone())
     }
 
     fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {

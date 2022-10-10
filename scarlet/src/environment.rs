@@ -65,21 +65,10 @@ impl Environment {
         self.all_items.clear();
         root.collect_self_and_children(&mut self.all_items);
         root.set_parent_recursive(None);
-        self.root = root;
-        let mut unresolved = self.all_items.clone();
-        while unresolved.len() > 0 {
-            let last_unresolved_count = unresolved.len();
-            let mut errs = Vec::new();
-            for item in std::mem::take(&mut unresolved) {
-                if let Err(err) = item.resolve() {
-                    errs.push(err);
-                    unresolved.push(item);
-                }
-            }
-            if unresolved.len() == last_unresolved_count {
-                return errs;
-            }
-        }
+        self.root = match root.query_resolved(&mut Self::root_query()) {
+            Ok(root) => root,
+            Err(diagnostic) => return vec![diagnostic],
+        };
         let mut constraints = Vec::new();
         for item in &self.all_items {
             constraints.append(&mut item.collect_constraints());

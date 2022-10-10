@@ -14,7 +14,8 @@ use crate::{
     item::{
         parameters::Parameters,
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
@@ -127,6 +128,23 @@ impl ItemDefinition for DBuiltin {
         _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
+    }
+
+    fn recompute_resolved(
+        &self,
+        _this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let rargs = self
+            .args
+            .iter()
+            .map(|arg| arg.query_resolved(ctx))
+            .try_collect()?;
+        Ok(Self {
+            args: rargs,
+            builtin: self.builtin,
+        }
+        .into_ptr())
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {

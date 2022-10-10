@@ -11,7 +11,8 @@ use crate::{
     environment::Environment,
     item::{
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
@@ -94,13 +95,17 @@ impl ItemDefinition for DMemberAccess {
         }
     }
 
-    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
         let r#type = self.base.query_type(&mut Environment::root_query()).ok_or(
             Diagnostic::new()
                 .with_text_error(format!("Failed to determine type of base."))
                 .with_item_error(this),
         )?;
-        let type_ptr = r#type.reduce(&HashMap::new());
+        let type_ptr = r#type.query_resolved(ctx)?;
         let downcast = type_ptr.downcast_definition::<DCompoundType>();
         if let Some(r#type) = downcast {
             let components = r#type.get_component_types();
@@ -139,9 +144,13 @@ impl ItemDefinition for DMemberAccess {
                 None
             };
             if let Some((index, r#type)) = index {
-                self.member_index = index;
-                self.r#type = Some(r#type);
-                Ok(())
+                Ok(Self {
+                    base: self.base.query_resolved(ctx)?,
+                    member_index: index,
+                    r#type: Some(r#type),
+                    member_name: self.member_name.clone(),
+                }
+                .into_ptr())
             } else {
                 Err(Diagnostic::new())
             }

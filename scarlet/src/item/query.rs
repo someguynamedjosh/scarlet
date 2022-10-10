@@ -2,9 +2,10 @@ use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
     marker::PhantomData,
+    ops::{Deref, DerefMut},
 };
 
-use super::{parameters::Parameters, ItemPtr};
+use super::{parameters::Parameters, ItemPtr, ItemQueryResultCaches};
 use crate::{diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment};
 
 pub trait QueryResult: Clone + Hash + Eq {
@@ -20,11 +21,11 @@ pub trait Query {
 }
 
 pub struct QueryResultCache<Q: Query + ?Sized> {
-    data: Option<Q::Result>,
+    pub data: Option<Q::Result>,
 }
 
 pub struct QueryContext<Q: Query + ?Sized> {
-    cycle_detection_stack: Vec<u64>,
+    pub cycle_detection_stack: Vec<u64>,
     phantom: PhantomData<Q>,
 }
 
@@ -42,16 +43,21 @@ impl<Q: Query + ?Sized> QueryContext<Q> {
         }
     }
 
-    pub fn get_query_result(
+    pub fn get_query_result<
+        K: Hash,
+        D: Deref<Target = QueryResultCache<Q>>,
+        Dm: DerefMut<Target = QueryResultCache<Q>>,
+    >(
         &mut self,
-        key: &impl Hash,
+        key: &K,
         recompute_result: impl FnOnce(&mut Self) -> Q::Result,
-        cache: &mut QueryResultCache<Q>,
+        cache: impl FnOnce(&K) -> D,
+        cache_mut: impl FnOnce(&K) -> Dm,
     ) -> Q::Result {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
-        let key = hasher.finish();
-        if self.cycle_detection_stack.contains(&key) {
+        let key_hash = hasher.finish();
+        if self.cycle_detection_stack.contains(&key_hash) {
             let result = Q::result_when_cycle_encountered();
             assert!(
                 !result.is_final(),
@@ -59,10 +65,19 @@ impl<Q: Query + ?Sized> QueryContext<Q> {
             );
             result
         } else {
-            self.cycle_detection_stack.push(key);
-            let result = cache.get_query_result(|| recompute_result(self));
-            assert_eq!(self.cycle_detection_stack.pop(), Some(key));
-            result
+            let cache = cache(key);
+            if let Some(result) = cache.data.clone() {
+                result
+            } else {
+                drop(cache);
+                self.cycle_detection_stack.push(key_hash);
+                let result = recompute_result(self);
+                assert_eq!(self.cycle_detection_stack.pop(), Some(key_hash));
+                let mut cache_mut = cache_mut(key);
+                cache_mut.data = Some(result.clone());
+                drop(cache_mut);
+                result
+            }
         }
     }
 }
@@ -91,6 +106,12 @@ impl<Q: Query + ?Sized> QueryResultCache<Q> {
 impl<T: Clone + Hash + Eq> QueryResult for Option<T> {
     fn is_final(&self) -> bool {
         self.is_some()
+    }
+}
+
+impl<T: Clone + Hash + Eq, E: Clone + Hash + Eq> QueryResult for Result<T, E> {
+    fn is_final(&self) -> bool {
+        self.is_ok()
     }
 }
 
@@ -275,14 +296,14 @@ pub fn no_type_check_errors() -> <TypeCheckQuery as Query>::Result {
     vec![].into()
 }
 
-pub struct FlattenQuery;
+pub struct ResolveQuery;
 
-impl Query for FlattenQuery {
-    type Result = Option<ItemPtr>;
+impl Query for ResolveQuery {
+    type Result = Result<ItemPtr, Diagnostic>;
     type Target = ItemPtr;
 
     fn result_when_cycle_encountered() -> Self::Result {
-        None
+        todo!()
     }
 }
 
@@ -314,6 +335,7 @@ macro_rules! allow_child_query {
 }
 
 allow_child_query!(RootQuery => ParametersQuery);
+allow_child_query!(RootQuery => ResolveQuery);
 allow_child_query!(RootQuery => TypeCheckQuery);
 allow_child_query!(RootQuery => TypeQuery);
 allow_child_query!(ParametersQuery => TypeQuery);

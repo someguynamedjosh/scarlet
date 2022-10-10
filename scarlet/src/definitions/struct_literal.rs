@@ -16,7 +16,8 @@ use crate::{
     item::{
         parameters::Parameters,
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
@@ -117,6 +118,27 @@ impl ItemDefinition for DStructLiteral {
         } else {
             todo!()
         }
+    }
+
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let fields = self
+            .fields
+            .iter()
+            .map(|(name, value)| value.query_resolved(ctx).map(|value| (name.clone(), value)))
+            .try_collect()?;
+        Ok(if fields == self.fields {
+            this.ptr_clone()
+        } else {
+            Self {
+                fields,
+                is_module: self.is_module,
+            }
+            .into_ptr()
+        })
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {

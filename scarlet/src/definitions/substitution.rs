@@ -13,7 +13,8 @@ use crate::{
     item::{
         parameters::Parameters,
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
@@ -143,11 +144,13 @@ impl ItemDefinition for DSubstitution {
         self.base.reduce(&new_args)
     }
 
-    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
-        let mut params = self
-            .base
-            .reduce_impl(&HashMap::new(), false)
-            .query_parameters(&mut Environment::root_query());
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let rbase = self.base.query_resolved(ctx)?;
+        let mut params = rbase.query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {
                 return Err(Diagnostic::new()
@@ -183,9 +186,14 @@ impl ItemDefinition for DSubstitution {
                     }
                 }
             }
-            self.substitutions = Ok(resolved);
+            Ok(Self {
+                base: rbase,
+                substitutions: Ok(resolved),
+            }
+            .into_ptr())
+        } else {
+            Ok(this.ptr_clone())
         }
-        Ok(())
     }
 }
 

@@ -13,7 +13,8 @@ use crate::{
     item::{
         parameters::Parameters,
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
@@ -76,8 +77,25 @@ impl ItemDefinition for DNewType {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        DCompoundType::new(this.ptr_clone(), TypeId::as_ptr(&self.type_id).to_bits()).into_ptr()
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let this = Self {
+            fields: self
+                .fields
+                .iter()
+                .map(|(name, value)| value.query_resolved(ctx).map(|value| (name.clone(), value)))
+                .try_collect()?,
+            type_id: self.type_id.ptr_clone(),
+        }
+        .into_ptr();
+        Ok(DCompoundType::new(this, TypeId::as_ptr(&self.type_id).to_bits()).into_ptr())
+    }
+
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        this.ptr_clone()
     }
 }
 

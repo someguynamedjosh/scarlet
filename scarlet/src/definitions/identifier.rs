@@ -15,7 +15,6 @@ use crate::{
 #[derive(Clone)]
 pub struct DIdentifier {
     identifier: String,
-    item: Option<ItemPtr>,
 }
 
 impl CycleDetectingDebug for DIdentifier {
@@ -38,17 +37,13 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        if let Some(item) = self.item.as_ref() {
-            item.query_parameters(ctx)
-        } else {
-            let mut result = Parameters::new_empty();
-            result.mark_excluding(this.ptr_clone());
-            result
-        }
+        let mut result = Parameters::new_empty();
+        result.mark_excluding(this.ptr_clone());
+        result
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        self.item.as_ref()?.query_type(ctx)
+        None
     }
 
     fn recompute_type_check(
@@ -59,17 +54,16 @@ impl ItemDefinition for DIdentifier {
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        if let Some(item) = &self.item {
-            item.reduce(args)
-        } else {
-            this.ptr_clone()
-        }
+        unreachable!()
     }
 
-    fn resolve(&mut self, this: &ItemPtr) -> Result<(), Diagnostic> {
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
+    ) -> <crate::item::query::ResolveQuery as Query>::Result {
         if let Some(item) = this.lookup_identifier(&self.identifier) {
-            self.item = Some(item);
-            Ok(())
+            Ok(item)
         } else {
             Err(Diagnostic::new()
                 .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))
@@ -80,9 +74,6 @@ impl ItemDefinition for DIdentifier {
 
 impl DIdentifier {
     pub fn new(identifier: String) -> Self {
-        Self {
-            identifier,
-            item: None,
-        }
+        Self { identifier }
     }
 }

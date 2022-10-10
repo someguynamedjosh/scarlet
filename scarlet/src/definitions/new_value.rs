@@ -12,7 +12,8 @@ use crate::{
     item::{
         parameters::Parameters,
         query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
@@ -65,6 +66,27 @@ impl ItemDefinition for DNewValue {
         _ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result {
         no_type_check_errors()
+    }
+
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let rfields = self
+            .fields
+            .iter()
+            .map(|field| field.query_resolved(ctx))
+            .try_collect()?;
+        if rfields == self.fields {
+            Ok(this.ptr_clone())
+        } else {
+            Ok(Self {
+                fields: rfields,
+                r#type: self.r#type.ptr_clone(),
+            }
+            .into_ptr())
+        }
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
