@@ -153,7 +153,6 @@ impl ItemDefinition for DSubstitution {
             for (target, value) in unresolved {
                 match target {
                     UnresolvedTarget::Positional => {
-                        println!("---\n{:#?}", params);
                         if params.len() == 0 {
                             return Err(Diagnostic::new()
                                 .with_text_error(format!("No parameters left to substitute."))

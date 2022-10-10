@@ -55,6 +55,7 @@ impl ItemDefinition for DNewValue {
         for field in &self.fields {
             result.append(field.query_parameters(ctx));
         }
+        println!("{:#?}", result);
         result
     }
 

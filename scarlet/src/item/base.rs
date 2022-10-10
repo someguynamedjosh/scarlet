@@ -124,6 +124,7 @@ pub struct UniversalItemInfo {
 }
 
 pub struct ItemQueryResultCaches {
+    plain_reduced: Option<ItemPtr>,
     parameters: QueryResultCache<ParametersQuery>,
     flattened: QueryResultCache<FlattenQuery>,
     r#type: QueryResultCache<TypeQuery>,
@@ -133,6 +134,7 @@ pub struct ItemQueryResultCaches {
 impl ItemQueryResultCaches {
     fn new() -> Self {
         Self {
+            plain_reduced: None,
             parameters: QueryResultCache::new(),
             flattened: QueryResultCache::new(),
             r#type: QueryResultCache::new(),
@@ -423,7 +425,21 @@ impl ItemPtr {
     }
 
     pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        self.0.borrow().definition.reduce(self, args)
+        if args.len() == 0 {
+            let mut this = self.0.borrow_mut();
+            let Item {
+                definition,
+                query_result_caches,
+                ..
+            } = &mut *this;
+            query_result_caches
+                .plain_reduced
+                .get_or_insert_with(|| definition.reduce(self, args))
+                .ptr_clone()
+        } else {
+            let this = self.0.borrow();
+            this.definition.reduce(self, args)
+        }
     }
 
     pub(crate) fn resolve(&self) -> Result<(), Diagnostic> {
