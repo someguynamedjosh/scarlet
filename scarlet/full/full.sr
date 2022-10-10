@@ -52,8 +52,6 @@ BitSum.new(
     )
 )
 
-main IS full_bit_sum(true false true).carry
-
 Nibble IS 
 NEW_TYPE(
     b3 IS ANY Bool 
@@ -64,3 +62,22 @@ NEW_TYPE(
 
 addend0 IS ANY Nibble
 addend1 IS ANY Nibble
+
+sum0 IS half_bit_sum(addend0.b0 addend1.b0)
+sum1 IS full_bit_sum(addend0.b1 addend1.b1 sum0.carry)
+sum2 IS full_bit_sum(addend0.b2 addend1.b2 sum1.carry)
+sum3 IS full_bit_sum(addend0.b3 addend1.b3 sum2.carry)
+
+sum IS 
+Nibble.new(
+    sum3.sum
+    sum2.sum
+    sum1.sum
+    sum0.sum
+)
+
+main IS
+sum(
+    Nibble.new(false false false true)
+    Nibble.new(false false false true)
+)
