@@ -114,7 +114,7 @@ impl ItemDefinition for DSubstitution {
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         let mut new_args = HashMap::new();
-        for (target, value) in self.substitutions.as_ref().unwrap() {
+        for (target, value) in self.substitutions.as_ref().ok()? {
             new_args.insert(target.1.clone(), value.reduce(&HashMap::new()));
         }
         Some(self.base.query_type(ctx)?.reduce(&new_args))
@@ -127,10 +127,15 @@ impl ItemDefinition for DSubstitution {
         no_type_check_errors()
     }
 
-    fn reduce(&self, _this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let mut carried_args = args.clone();
         let mut new_args = HashMap::new();
-        for (target, value) in self.substitutions.as_ref().unwrap() {
+        let subs = if let Ok(subs) = &self.substitutions {
+            subs
+        } else {
+            return this.ptr_clone();
+        };
+        for (target, value) in subs {
             new_args.insert(target.1.clone(), value.reduce(args));
             carried_args.remove(&target.1);
         }

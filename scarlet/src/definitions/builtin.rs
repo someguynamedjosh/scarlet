@@ -114,7 +114,12 @@ impl ItemDefinition for DBuiltin {
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(Self::r#type().into_ptr())
+        Some(match self.builtin {
+            Builtin::IsExactly => todo!(),
+            Builtin::IsSubtypeOf => todo!(),
+            Builtin::IfThenElse => self.args[0].ptr_clone(),
+            Builtin::Type | Builtin::Union => Self::r#type().into_ptr(),
+        })
     }
 
     fn recompute_type_check(

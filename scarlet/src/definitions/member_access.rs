@@ -76,9 +76,10 @@ impl ItemDefinition for DMemberAccess {
                     return constructor.reduce(args);
                 }
             }
-        }
-        if let Some(_value) = base.downcast_definition::<DNewValue>() {
-            todo!()
+        } else if let Member::IndexIntoUserType(index) = self.member_index {
+            if let Some(value) = base.downcast_definition::<DNewValue>() {
+                return value.fields()[index].reduce(args);
+            }
         }
         if base.is_same_instance_as(&self.base) {
             this.ptr_clone()
@@ -106,7 +107,9 @@ impl ItemDefinition for DMemberAccess {
             if components.len() > 1 {
                 return Err(Diagnostic::new()
                     .with_text_error(format!("Member access on compound value:"))
-                    .with_item_error(this));
+                    .with_item_error(this)
+                    .with_text_error(format!("The compound type is:"))
+                    .with_item_error(&type_ptr));
             } else if components.len() == 0 {
                 return Err(Diagnostic::new()
                     .with_text_error(format!("Member access on never value:"))

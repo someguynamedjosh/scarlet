@@ -19,19 +19,48 @@ if_then_else IS BUILTIN(if_then_else)
 operand0 IS ANY Bool
 operand1 IS ANY Bool
 
-and IS if_then_else(Bool operand0 true )
-or IS if_then_else(Bool operand0 )
+and IS if_then_else(Bool operand0 operand1 false)
+or IS if_then_else(Bool operand0 true operand1)
+not IS if_then_else(Bool operand0 false true)
+xor IS if_then_else(Bool operand0 not(operand1) operand1)
 
-Nibble IS NEW_TYPE(
-    b0 IS ANY Bool 
-    b1 IS ANY Bool 
-    b2 IS ANY Bool 
-    b3 IS ANY Bool
+BitSum IS 
+NEW_TYPE(
+    sum IS ANY Bool 
+    carry IS ANY Bool
 )
 
-main IS Nibble.new(true)
-# main IS if_then_else(Bool true)
-# main IS result(Result IS Type, condition IS true, true_resut)
-# main IS result(Result IS Bool)(result IS true)
-# main IS bool1(bool1 IS true)
-# main IS true
+bit0 IS ANY Bool
+bit1 IS ANY Bool
+bit2 IS ANY Bool
+
+half_bit_sum IS
+BitSum.new(
+    xor(bit0 bit1)
+    and(bit0 bit1)
+)
+
+third_bit_partial_sum IS 
+half_bit_sum(half_bit_sum.sum bit2)
+
+full_bit_sum IS
+BitSum.new(
+    third_bit_partial_sum.sum
+    or(
+        half_bit_sum.carry 
+        third_bit_partial_sum.carry
+    )
+)
+
+main IS full_bit_sum(true false true).carry
+
+Nibble IS 
+NEW_TYPE(
+    b3 IS ANY Bool 
+    b2 IS ANY Bool 
+    b1 IS ANY Bool 
+    b0 IS ANY Bool
+)
+
+addend0 IS ANY Nibble
+addend1 IS ANY Nibble
