@@ -63,12 +63,12 @@ impl Environment {
     #[must_use]
     pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
         self.all_items.clear();
-        root.collect_self_and_children(&mut self.all_items);
         root.set_parent_recursive(None);
         self.root = match root.query_resolved(&mut Self::root_query()) {
             Ok(root) => root,
             Err(diagnostic) => return vec![diagnostic],
         };
+        self.root.collect_self_and_children(&mut self.all_items);
         let mut constraints = Vec::new();
         for item in &self.all_items {
             constraints.append(&mut item.collect_constraints());

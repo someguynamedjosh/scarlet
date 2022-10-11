@@ -114,11 +114,13 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
 }
 
 /// Data that is stored for all items, regardless of definition.
+#[derive(Debug)]
 pub struct UniversalItemInfo {
     parent: Option<ItemPtr>,
     position: Option<Position>,
 }
 
+#[derive(Debug)]
 pub struct ItemQueryResultCaches {
     plain_reduced: Option<ItemPtr>,
     parameters: QueryResultCache<ParametersQuery>,
@@ -139,6 +141,7 @@ impl ItemQueryResultCaches {
     }
 }
 
+#[derive(Debug)]
 pub struct Item {
     definition: Box<dyn ItemDefinition>,
     universal_info: UniversalItemInfo,

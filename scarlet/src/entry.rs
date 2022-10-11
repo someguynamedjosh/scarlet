@@ -61,6 +61,8 @@ pub(crate) fn entry() {
             .unwrap()
             .lookup_identifier("main")
             .unwrap()
+            .query_resolved(&mut Environment::root_query())
+            .unwrap()
             .reduce(&HashMap::new())
     );
 }

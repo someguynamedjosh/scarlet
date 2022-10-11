@@ -132,19 +132,23 @@ impl ItemDefinition for DBuiltin {
 
     fn recompute_resolved(
         &self,
-        _this: &ItemPtr,
+        this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rargs = self
-            .args
-            .iter()
-            .map(|arg| arg.query_resolved(ctx))
-            .try_collect()?;
-        Ok(Self {
-            args: rargs,
-            builtin: self.builtin,
+        if let Builtin::Type = self.builtin {
+            Ok(DCompoundType::new(this.ptr_clone(), 0).into_ptr())
+        } else {
+            let rargs = self
+                .args
+                .iter()
+                .map(|arg| arg.query_resolved(ctx))
+                .try_collect()?;
+            Ok(Self {
+                args: rargs,
+                builtin: self.builtin,
+            }
+            .into_ptr())
         }
-        .into_ptr())
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
@@ -175,7 +179,7 @@ impl ItemDefinition for DBuiltin {
                     return rargs[3].ptr_clone();
                 }
             }
-            Builtin::Type => return DCompoundType::new(this.ptr_clone(), 0).into_ptr(),
+            Builtin::Type => unreachable!(),
             Builtin::Union => {
                 if let Some((subtype_0, subtype_1)) = both_compound_types(&rargs[0], &rargs[1]) {
                     return subtype_0.union(&subtype_1).into_ptr();

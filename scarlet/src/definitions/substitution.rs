@@ -19,7 +19,7 @@ use crate::{
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
-    util::PtrExtension,
+    util::PtrExtension, definitions::identifier::DIdentifier,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

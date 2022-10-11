@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DIdentifier {
     identifier: String,
 }

@@ -100,7 +100,8 @@ impl ItemDefinition for DMemberAccess {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let r#type = self.base.query_type(&mut Environment::root_query()).ok_or(
+        let rbase = self.base.query_resolved(ctx)?;
+        let r#type = rbase.query_type(&mut Environment::root_query()).ok_or(
             Diagnostic::new()
                 .with_text_error(format!("Failed to determine type of base."))
                 .with_item_error(this),
@@ -145,17 +146,20 @@ impl ItemDefinition for DMemberAccess {
             };
             if let Some((index, r#type)) = index {
                 Ok(Self {
-                    base: self.base.query_resolved(ctx)?,
+                    base: rbase,
                     member_index: index,
                     r#type: Some(r#type),
                     member_name: self.member_name.clone(),
                 }
                 .into_ptr())
             } else {
-                Err(Diagnostic::new())
+                Err(Diagnostic::new().with_text_error(format!(
+                    "Failed to determine which member is being referred to."
+                )))
             }
         } else {
-            Err(Diagnostic::new())
+            println!("{:#?}", type_ptr);
+            Err(Diagnostic::new().with_text_error(format!("Internal error: type is not a type.")))
         }
     }
 }

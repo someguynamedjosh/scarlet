@@ -1,5 +1,6 @@
 use std::{
     collections::hash_map::DefaultHasher,
+    fmt::{self, Debug, Formatter},
     hash::{Hash, Hasher},
     marker::PhantomData,
     ops::{Deref, DerefMut},
@@ -22,6 +23,17 @@ pub trait Query {
 
 pub struct QueryResultCache<Q: Query + ?Sized> {
     pub data: Option<Q::Result>,
+}
+
+impl<Q: Query + ?Sized> Debug for QueryResultCache<Q>
+where
+    Q::Result: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("QueryResultCache")
+            .field("data", &self.data)
+            .finish()
+    }
 }
 
 pub struct QueryContext<Q: Query + ?Sized> {
@@ -115,7 +127,7 @@ impl<T: Clone + Hash + Eq, E: Clone + Hash + Eq> QueryResult for Result<T, E> {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct InfallibleQueryResult<T>(pub T);
 
 impl<T: Clone + Hash + Eq> InfallibleQueryResult<T> {
