@@ -26,7 +26,7 @@ use crate::{
         parameter::{DParameter, ParameterPtr},
     },
     diagnostic::{Diagnostic, Position},
-    environment::{r#true, ENV},
+    environment::{r#true, Environment, ENV},
     item::query::QueryResult,
     util::PtrExtension,
 };
@@ -105,11 +105,21 @@ impl Debug for dyn ItemDefinition {
 
 pub trait IntoItemPtr: ItemDefinition {
     fn into_ptr(self) -> ItemPtr;
+    fn into_ptr_mimicking(self, other: &ItemPtr) -> ItemPtr;
 }
 
 impl<T: ItemDefinition + 'static> IntoItemPtr for T {
     fn into_ptr(self) -> ItemPtr {
         ItemPtr::from_definition(self)
+    }
+
+    fn into_ptr_mimicking(self, other: &ItemPtr) -> ItemPtr {
+        let result = ItemPtr::from_definition(self);
+        if let Some(parent) = other.get_parent() {
+            result.set_parent(parent);
+        }
+        result.set_position(other.get_position());
+        result
     }
 }
 
@@ -292,7 +302,8 @@ impl ItemPtr {
                 &env.borrow()
                     .get_language_item("True")
                     .unwrap()
-                    .reduce(&HashMap::new()),
+                    .query_resolved(&mut Environment::root_query())
+                    .unwrap(),
             )
         })
     }
@@ -303,7 +314,8 @@ impl ItemPtr {
                 &env.borrow()
                     .get_language_item("False")
                     .unwrap()
-                    .reduce(&HashMap::new()),
+                    .query_resolved(&mut Environment::root_query())
+                    .unwrap(),
             )
         })
     }
@@ -357,7 +369,7 @@ impl ItemPtr {
                     let result = recompute_result(ctx, &this.definition);
                     drop(this);
                     assert_eq!(ctx.cycle_detection_stack.pop(), Some(key_hash));
-                    let mut this= self.0.borrow_mut();
+                    let mut this = self.0.borrow_mut();
                     get_cache_mut(&mut this.query_result_caches).data = Some(result.clone());
                     drop(this);
                     result

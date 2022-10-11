@@ -82,7 +82,7 @@ impl ItemDefinition for DNewType {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let this = Self {
+        let this_type = Self {
             fields: self
                 .fields
                 .iter()
@@ -90,8 +90,11 @@ impl ItemDefinition for DNewType {
                 .try_collect()?,
             type_id: self.type_id.ptr_clone(),
         }
-        .into_ptr();
-        Ok(DCompoundType::new(this, TypeId::as_ptr(&self.type_id).to_bits()).into_ptr())
+        .into_ptr_mimicking(this);
+        Ok(
+            DCompoundType::new(this_type, TypeId::as_ptr(&self.type_id).to_bits())
+                .into_ptr_mimicking(this),
+        )
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
@@ -119,11 +122,11 @@ impl DNewType {
         TypeId::clone(&self.type_id)
     }
 
-    pub fn constructor(&self, this: &ItemPtr) -> ItemPtr {
+    pub fn constructor(&self, this: &ItemPtr, mimicking: &ItemPtr) -> ItemPtr {
         DNewValue::new(
             this.ptr_clone(),
             self.fields.iter().map(|f| f.1.ptr_clone()).collect(),
         )
-        .into_ptr()
+        .into_ptr_mimicking(mimicking)
     }
 }

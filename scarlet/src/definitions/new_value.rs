@@ -5,7 +5,9 @@ use std::{
 
 use itertools::Itertools;
 
-use super::{builtin::DBuiltin, new_type::DNewType, parameter::ParameterPtr};
+use super::{
+    builtin::DBuiltin, compound_type::DCompoundType, new_type::DNewType, parameter::ParameterPtr,
+};
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
@@ -85,7 +87,7 @@ impl ItemDefinition for DNewValue {
                 fields: rfields,
                 r#type: self.r#type.ptr_clone(),
             }
-            .into_ptr())
+            .into_ptr_mimicking(this))
         }
     }
 
@@ -102,7 +104,7 @@ impl ItemDefinition for DNewValue {
                 fields: rfields,
                 r#type: self.r#type.ptr_clone(),
             }
-            .into_ptr()
+            .into_ptr_mimicking(this)
         }
     }
 }
@@ -117,7 +119,9 @@ impl DNewValue {
 
     pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
         Ok(Self::new(
-            env.get_language_item("True")?.reduce(&HashMap::new()),
+            env.get_language_item("True")?
+                .query_resolved(&mut Environment::root_query())
+                .unwrap(),
             vec![],
         ))
     }

@@ -3,11 +3,14 @@ use std::{
     fmt::{self, Formatter},
 };
 
+use itertools::Itertools;
+
 use super::{
     builtin::DBuiltin,
     parameter::{DParameter, ParameterPtr},
 };
 use crate::{
+    definitions::identifier::DIdentifier,
     diagnostic::Diagnostic,
     environment::Environment,
     item::{
@@ -19,7 +22,7 @@ use crate::{
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
-    util::PtrExtension, definitions::identifier::DIdentifier,
+    util::PtrExtension,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -106,7 +109,7 @@ impl ItemDefinition for DSubstitution {
         for (target, value) in self.substitutions.as_ref().unwrap() {
             result.remove(&target.1);
             new_params.append(value.query_parameters(ctx));
-            new_args.insert(target.1.clone(), value.reduce_impl(&HashMap::new(), false));
+            new_args.insert(target.1.clone(), value.ptr_clone());
         }
         result.reduce_type(&new_args);
         result.append(new_params);
@@ -114,11 +117,13 @@ impl ItemDefinition for DSubstitution {
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        let mut new_args = HashMap::new();
-        for (target, value) in self.substitutions.as_ref().ok()? {
-            new_args.insert(target.1.clone(), value.reduce(&HashMap::new()));
-        }
-        Some(self.base.query_type(ctx)?.reduce(&new_args))
+        Some(
+            Self {
+                base: self.base.query_type(ctx)?,
+                substitutions: self.substitutions.clone(),
+            }
+            .into_ptr(),
+        )
     }
 
     fn recompute_type_check(
@@ -159,14 +164,15 @@ impl ItemDefinition for DSubstitution {
             }
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
+                let value = value.query_resolved(ctx)?;
                 match target {
                     UnresolvedTarget::Positional => {
                         if params.len() == 0 {
                             return Err(Diagnostic::new()
                                 .with_text_error(format!("No parameters left to substitute."))
-                                .with_item_error(value));
+                                .with_item_error(&value));
                         }
-                        resolved.insert(params.pop_first().unwrap(), value.ptr_clone());
+                        resolved.insert(params.pop_first().unwrap(), value);
                     }
                     UnresolvedTarget::Named(name) => {
                         let gen_error = || {
@@ -175,14 +181,14 @@ impl ItemDefinition for DSubstitution {
                                     "No parameter named \"{}\" in the scope of the base.",
                                     name
                                 ))
-                                .with_item_error(value)
+                                .with_item_error(&value)
                         };
                         let param = self.base.lookup_identifier(name).ok_or_else(gen_error)?;
                         let param = param
                             .downcast_definition::<DParameter>()
                             .ok_or_else(gen_error)?;
                         let param = params.remove(param.get_parameter()).ok_or_else(gen_error)?;
-                        resolved.insert(param, value.ptr_clone())
+                        resolved.insert(param, value)
                     }
                 }
             }
@@ -190,9 +196,23 @@ impl ItemDefinition for DSubstitution {
                 base: rbase,
                 substitutions: Ok(resolved),
             }
-            .into_ptr())
+            .into_ptr_mimicking(this))
+        } else if let Ok(subs) = &self.substitutions {
+            let rsubs = subs
+                .iter()
+                .map(|(target, value)| {
+                    value
+                        .query_resolved(ctx)
+                        .map(|value| (target.clone(), value))
+                })
+                .try_collect()?;
+            Ok(Self {
+                base: rbase,
+                substitutions: Ok(rsubs),
+            }
+            .into_ptr_mimicking(this))
         } else {
-            Ok(this.ptr_clone())
+            unreachable!()
         }
     }
 }

@@ -62,12 +62,12 @@ impl Environment {
 
     #[must_use]
     pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
-        self.all_items.clear();
         root.set_parent_recursive(None);
         self.root = match root.query_resolved(&mut Self::root_query()) {
             Ok(root) => root,
             Err(diagnostic) => return vec![diagnostic],
         };
+        self.all_items.clear();
         self.root.collect_self_and_children(&mut self.all_items);
         let mut constraints = Vec::new();
         for item in &self.all_items {
@@ -77,7 +77,10 @@ impl Environment {
         let total = constraints.len();
         for (subject, constraint) in constraints {
             let original = constraint;
-            let constraint = original.reduce(&HashMap::new());
+            let constraint = original
+                .query_resolved(&mut Self::root_query())
+                .unwrap()
+                .reduce(&HashMap::new());
             let success = constraint.is_true();
             if !success {
                 errors.push(

@@ -101,7 +101,7 @@ impl DCompoundType {
             let r#type = self.component_types.iter().next().unwrap().1.ptr_clone();
             // "Type" can also be a component type which doesn't have a constructor.
             let def = r#type.downcast_definition::<DNewType>()?;
-            Some(def.constructor(this))
+            Some(def.constructor(&r#type, this))
         } else {
             None
         }

@@ -21,7 +21,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Builtin {
     IsExactly,
     IsSubtypeOf,
@@ -52,7 +52,7 @@ impl Builtin {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DBuiltin {
     builtin: Builtin,
     args: Vec<ItemPtr>,
@@ -136,7 +136,7 @@ impl ItemDefinition for DBuiltin {
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
         if let Builtin::Type = self.builtin {
-            Ok(DCompoundType::new(this.ptr_clone(), 0).into_ptr())
+            Ok(DCompoundType::new(this.ptr_clone(), 0).into_ptr_mimicking(this))
         } else {
             let rargs = self
                 .args
@@ -147,7 +147,7 @@ impl ItemDefinition for DBuiltin {
                 args: rargs,
                 builtin: self.builtin,
             }
-            .into_ptr())
+            .into_ptr_mimicking(this))
         }
     }
 
@@ -182,7 +182,7 @@ impl ItemDefinition for DBuiltin {
             Builtin::Type => unreachable!(),
             Builtin::Union => {
                 if let Some((subtype_0, subtype_1)) = both_compound_types(&rargs[0], &rargs[1]) {
-                    return subtype_0.union(&subtype_1).into_ptr();
+                    return subtype_0.union(&subtype_1).into_ptr_mimicking(this);
                 }
             }
         }
@@ -193,7 +193,7 @@ impl ItemDefinition for DBuiltin {
                 args: rargs,
                 builtin: self.builtin,
             }
-            .into_ptr()
+            .into_ptr_mimicking(this)
         }
     }
 }

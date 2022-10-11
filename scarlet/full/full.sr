@@ -8,7 +8,7 @@ Union IS BUILTIN(Union)
 
 true IS True.new
 false IS False.new
-Bool IS Union(Subtype0 IS True Subtype1 IS False)
+Bool IS Union(True False)
 
 Result IS ANY Type AS_LANGUAGE_ITEM(Result)
 condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
@@ -36,48 +36,50 @@ bit2 IS ANY Bool
 
 half_bit_sum IS
 BitSum.new(
-    xor(bit0 bit1)
-    and(bit0 bit1)
+    # xor(bit0 bit1)
+    # and(bit0 bit1)
 )
 
-third_bit_partial_sum IS 
-half_bit_sum(half_bit_sum.sum bit2)
+main IS BitSum.new(true)
 
-full_bit_sum IS
-BitSum.new(
-    third_bit_partial_sum.sum
-    or(
-        half_bit_sum.carry 
-        third_bit_partial_sum.carry
-    )
-)
+# third_bit_partial_sum IS 
+# half_bit_sum(half_bit_sum.sum bit2)
 
-Nibble IS 
-NEW_TYPE(
-    b3 IS ANY Bool 
-    b2 IS ANY Bool 
-    b1 IS ANY Bool 
-    b0 IS ANY Bool
-)
+# full_bit_sum IS
+# BitSum.new(
+#     third_bit_partial_sum.sum
+#     or(
+#         half_bit_sum.carry 
+#         third_bit_partial_sum.carry
+#     )
+# )
 
-addend0 IS ANY Nibble
-addend1 IS ANY Nibble
+# Nibble IS 
+# NEW_TYPE(
+#     b3 IS ANY Bool 
+#     b2 IS ANY Bool 
+#     b1 IS ANY Bool 
+#     b0 IS ANY Bool
+# )
 
-sum0 IS half_bit_sum(addend0.b0 addend1.b0)
-sum1 IS full_bit_sum(addend0.b1 addend1.b1 sum0.carry)
-sum2 IS full_bit_sum(addend0.b2 addend1.b2 sum1.carry)
-sum3 IS full_bit_sum(addend0.b3 addend1.b3 sum2.carry)
+# addend0 IS ANY Nibble
+# addend1 IS ANY Nibble
 
-sum IS 
-Nibble.new(
-    sum3.sum
-    sum2.sum
-    sum1.sum
-    sum0.sum
-)
+# sum0 IS half_bit_sum(addend0.b0 addend1.b0)
+# sum1 IS full_bit_sum(addend0.b1 addend1.b1 sum0.carry)
+# sum2 IS full_bit_sum(addend0.b2 addend1.b2 sum1.carry)
+# sum3 IS full_bit_sum(addend0.b3 addend1.b3 sum2.carry)
 
-main IS
-sum(
-    Nibble.new(false false false true)
-    Nibble.new(false false false true)
-)
+# sum IS 
+# Nibble.new(
+#     sum3.sum
+#     sum2.sum
+#     sum1.sum
+#     sum0.sum
+# )
+
+# main IS
+# sum(
+#     Nibble.new(false false false true)
+#     Nibble.new(false false false true)
+# )

@@ -63,7 +63,7 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
         if let Some(item) = this.lookup_identifier(&self.identifier) {
-            Ok(item)
+            item.query_resolved(ctx)
         } else {
             Err(Diagnostic::new()
                 .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))

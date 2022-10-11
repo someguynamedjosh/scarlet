@@ -137,7 +137,7 @@ impl ItemDefinition for DStructLiteral {
                 fields,
                 is_module: self.is_module,
             }
-            .into_ptr()
+            .into_ptr_mimicking(this)
         })
     }
 
@@ -154,7 +154,7 @@ impl ItemDefinition for DStructLiteral {
                 fields,
                 is_module: self.is_module,
             }
-            .into_ptr()
+            .into_ptr_mimicking(this)
         }
     }
 }

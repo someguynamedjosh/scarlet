@@ -91,7 +91,7 @@ impl ItemDefinition for DMemberAccess {
                 member_index: self.member_index,
                 r#type: self.r#type.as_ref().map(|t| t.reduce(args)),
             }
-            .into_ptr()
+            .into_ptr_mimicking(this)
         }
     }
 
@@ -151,7 +151,7 @@ impl ItemDefinition for DMemberAccess {
                     r#type: Some(r#type),
                     member_name: self.member_name.clone(),
                 }
-                .into_ptr())
+                .into_ptr_mimicking(this))
             } else {
                 Err(Diagnostic::new().with_text_error(format!(
                     "Failed to determine which member is being referred to."

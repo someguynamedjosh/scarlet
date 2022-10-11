@@ -97,11 +97,11 @@ impl ItemDefinition for DParameter {
             if r#type.is_same_instance_as(&self.reduced_type) {
                 this.ptr_clone()
             } else {
-                DParameter {
+                Self {
                     parameter: Rc::clone(&self.parameter),
                     reduced_type: r#type,
                 }
-                .into_ptr()
+                .into_ptr_mimicking(this)
             }
         }
     }
@@ -115,11 +115,11 @@ impl ItemDefinition for DParameter {
         if r#type.is_same_instance_as(&self.reduced_type) {
             Ok(this.ptr_clone())
         } else {
-            Ok(DParameter {
+            Ok(Self {
                 parameter: Rc::clone(&self.parameter),
                 reduced_type: r#type,
             }
-            .into_ptr())
+            .into_ptr_mimicking(this))
         }
     }
 }
