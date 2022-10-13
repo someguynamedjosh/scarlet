@@ -155,6 +155,8 @@ impl ItemQueryResultCaches {
 
 #[derive(Debug)]
 pub struct Item {
+    // TODO: This is ugly.
+    instance_id: Rc<()>,
     definition: Box<dyn ItemDefinition>,
     universal_info: UniversalItemInfo,
     query_result_caches: ItemQueryResultCaches,
@@ -211,7 +213,12 @@ impl CycleDetectingDebug for ItemPtr {
                 },
             )?;
             if ctx.recursed_on.remove(&ptr) {
-                writeln!(f, "\n@{:?}-{}", ptr, (*self.0.borrow().definition).type_name())?;
+                writeln!(
+                    f,
+                    "\n@{:?}-{}",
+                    ptr,
+                    (*self.0.borrow().definition).type_name()
+                )?;
             }
             Ok(())
         }
@@ -234,6 +241,7 @@ impl Debug for ItemPtr {
 impl ItemPtr {
     pub fn from_definition(def: impl ItemDefinition + 'static) -> Self {
         Self(Rc::new(RefCell::new(Item {
+            instance_id: Rc::new(()),
             definition: Box::new(def),
             universal_info: UniversalItemInfo {
                 parent: None,
@@ -259,6 +267,7 @@ impl ItemPtr {
     pub fn as_reference(&self, position: Position) -> Self {
         let this = self.0.borrow();
         Self(Rc::new(RefCell::new(Item {
+            instance_id: Rc::clone(&this.instance_id),
             definition: this.definition.dyn_clone(),
             query_result_caches: this.query_result_caches.clone(),
             universal_info: UniversalItemInfo {
@@ -282,7 +291,10 @@ impl ItemPtr {
     }
 
     pub fn is_same_instance_as(&self, other: &ItemPtr) -> bool {
-        self.0.is_same_instance_as(&other.0)
+        self.0
+            .borrow()
+            .instance_id
+            .is_same_instance_as(&other.0.borrow().instance_id)
     }
 
     pub fn clone_definition(&self) -> Box<dyn ItemDefinition> {
