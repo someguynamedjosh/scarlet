@@ -129,6 +129,7 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
 pub struct UniversalItemInfo {
     parent: Option<ItemPtr>,
     position: Option<Position>,
+    is_reference: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -237,6 +238,7 @@ impl ItemPtr {
             universal_info: UniversalItemInfo {
                 parent: None,
                 position: None,
+                is_reference: false,
             },
             query_result_caches: ItemQueryResultCaches::new(),
         })))
@@ -254,7 +256,7 @@ impl ItemPtr {
             .unwrap_or(Position::placeholder())
     }
 
-    pub fn with_position(&self, position: Position) -> Self {
+    pub fn as_reference(&self, position: Position) -> Self {
         let this = self.0.borrow();
         Self(Rc::new(RefCell::new(Item {
             definition: this.definition.dyn_clone(),
@@ -262,6 +264,7 @@ impl ItemPtr {
             universal_info: UniversalItemInfo {
                 parent: this.universal_info.parent.clone(),
                 position: Some(position),
+                is_reference: true,
             },
         })))
     }
@@ -401,6 +404,9 @@ impl ItemPtr {
     }
 
     pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
+        if self.0.borrow().universal_info.is_reference {
+            return;
+        }
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
         for child in &self.0.borrow().definition.children() {
