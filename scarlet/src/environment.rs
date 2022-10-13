@@ -60,6 +60,10 @@ impl Environment {
         })
     }
 
+    pub fn get_root(&self) -> &ItemPtr {
+        &self.root
+    }
+
     #[must_use]
     pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
         root.set_parent_recursive(None);
@@ -67,8 +71,8 @@ impl Environment {
             Ok(root) => root,
             Err(diagnostic) => return vec![diagnostic],
         };
-        println!("{:#?}", self.root);
         self.all_items.clear();
+        self.root.set_parent_recursive(None);
         self.root.collect_self_and_children(&mut self.all_items);
         let mut constraints = Vec::new();
         for item in &self.all_items {

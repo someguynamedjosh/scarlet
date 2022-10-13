@@ -211,7 +211,7 @@ impl CycleDetectingDebug for ItemPtr {
                 },
             )?;
             if ctx.recursed_on.remove(&ptr) {
-                writeln!(f, "\n@{:?}", ptr)?;
+                writeln!(f, "\n@{:?}-{}", ptr, (*self.0.borrow().definition).type_name())?;
             }
             Ok(())
         }

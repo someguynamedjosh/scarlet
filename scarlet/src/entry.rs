@@ -57,12 +57,12 @@ pub(crate) fn entry() {
 
     println!(
         "{:#?}",
-        root.lookup_identifier(&path)
+        env.get_root()
+            .lookup_identifier(&path)
             .unwrap()
             .lookup_identifier("main")
             .unwrap()
-            .query_resolved(&mut Environment::root_query())
-            .unwrap()
-            .reduce(&HashMap::new())
+            .get_parent()
+            // .reduce(&HashMap::new())
     );
 }
