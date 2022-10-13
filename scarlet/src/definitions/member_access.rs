@@ -18,14 +18,14 @@ use crate::{
     },
 };
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Member {
     Unknown,
     IndexIntoUserType(usize),
     Constructor,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DMemberAccess {
     base: ItemPtr,
     member_name: String,
@@ -145,6 +145,15 @@ impl ItemDefinition for DMemberAccess {
                 None
             };
             if let Some((index, r#type)) = index {
+                if index == Member::Constructor {
+                    if let Some(r#type) = rbase.downcast_definition::<DCompoundType>() {
+                        if let Some(constructor) = r#type.constructor(&rbase) {
+                            return Ok(constructor
+                                .query_resolved(ctx)?
+                                .with_position(this.get_position()));
+                        }
+                    }
+                }
                 Ok(Self {
                     base: rbase,
                     member_index: index,

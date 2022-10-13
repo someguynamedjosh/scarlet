@@ -130,7 +130,7 @@ pub struct UniversalItemInfo {
     position: Option<Position>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ItemQueryResultCaches {
     plain_reduced: Option<ItemPtr>,
     parameters: QueryResultCache<ParametersQuery>,
@@ -242,6 +242,18 @@ impl ItemPtr {
             .universal_info
             .position
             .unwrap_or(Position::placeholder())
+    }
+
+    pub fn with_position(&self, position: Position) -> Self {
+        let this = self.0.borrow();
+        Self(Rc::new(RefCell::new(Item {
+            definition: this.definition.dyn_clone(),
+            query_result_caches: this.query_result_caches.clone(),
+            universal_info: UniversalItemInfo {
+                parent: this.universal_info.parent.clone(),
+                position: Some(position),
+            },
+        })))
     }
 
     pub fn set_parent(&self, parent: ItemPtr) {

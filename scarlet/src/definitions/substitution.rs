@@ -10,7 +10,7 @@ use super::{
     parameter::{DParameter, ParameterPtr},
 };
 use crate::{
-    definitions::identifier::DIdentifier,
+    definitions::{identifier::DIdentifier, member_access::DMemberAccess},
     diagnostic::Diagnostic,
     environment::Environment,
     item::{

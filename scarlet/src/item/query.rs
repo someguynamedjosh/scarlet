@@ -25,6 +25,17 @@ pub struct QueryResultCache<Q: Query + ?Sized> {
     pub data: Option<Q::Result>,
 }
 
+impl<Q: Query + ?Sized> Clone for QueryResultCache<Q>
+where
+    Q::Result: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            data: self.data.clone(),
+        }
+    }
+}
+
 impl<Q: Query + ?Sized> Debug for QueryResultCache<Q>
 where
     Q::Result: Debug,
