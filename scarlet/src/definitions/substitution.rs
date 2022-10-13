@@ -55,12 +55,11 @@ impl CycleDetectingDebug for DSubstitution {
                 value.fmt(f, ctx)?;
             }
         } else if let Ok(resolved) = &self.substitutions {
-            for (target, value) in resolved {
+            for (_target, value) in resolved {
                 if !first {
                     write!(f, ", ")?;
                 }
                 first = false;
-                write!(f, "{:?} IS ", target)?;
                 value.fmt(f, ctx)?;
             }
         }

@@ -62,7 +62,6 @@ pub(crate) fn entry() {
             .unwrap()
             .lookup_identifier("main")
             .unwrap()
-            .get_parent()
-            // .reduce(&HashMap::new())
+            .reduce(&HashMap::new())
     );
 }

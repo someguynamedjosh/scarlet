@@ -183,14 +183,8 @@ impl Hash for ItemPtr {
 impl CycleDetectingDebug for ItemPtr {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         let ptr = self.0.as_ptr() as *const _;
-        let mut allow_identifier = true;
         if let Some(ident) = self.reverse_lookup_identifier(self) {
-            if allow_identifier
-                && !self
-                    .lookup_identifier(&ident)
-                    .unwrap()
-                    .is_same_instance_as(self)
-            {
+            if self.lookup_identifier(&ident).unwrap().get_position() != self.get_position() {
                 return write!(f, "{}", ident);
             }
         }
