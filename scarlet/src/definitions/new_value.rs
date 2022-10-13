@@ -60,7 +60,7 @@ impl ItemDefinition for DNewValue {
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(DBuiltin::r#type().into_ptr())
+        Some(self.r#type.ptr_clone())
     }
 
     fn recompute_type_check(

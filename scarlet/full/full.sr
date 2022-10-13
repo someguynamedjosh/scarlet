@@ -30,17 +30,17 @@ NEW_TYPE(
     carry IS ANY Bool
 )
 
-bit0 IS ANY Bool
-bit1 IS ANY Bool
-bit2 IS ANY Bool
+# bit0 IS ANY Bool
+# bit1 IS ANY Bool
+# bit2 IS ANY Bool
 
-# half_bit_sum IS
-# BitSum.new(
-#     # xor(bit0 bit1)
-#     # and(bit0 bit1)
-# )
+# # half_bit_sum IS
+# # BitSum.new(
+# #     # xor(bit0 bit1)
+# #     # and(bit0 bit1)
+# # )
 
-main IS BitSum.new(true)
+main IS BitSum.new(true false)
 
 # third_bit_partial_sum IS 
 # half_bit_sum(half_bit_sum.sum bit2)
