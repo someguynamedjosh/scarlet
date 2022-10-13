@@ -150,7 +150,7 @@ impl ItemDefinition for DMemberAccess {
                         if let Some(constructor) = r#type.constructor(&rbase) {
                             return Ok(constructor
                                 .query_resolved(ctx)?
-                                .as_reference(this.get_position()));
+                                .with_position(this.get_position()));
                         }
                     }
                 }

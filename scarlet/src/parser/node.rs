@@ -112,8 +112,7 @@ impl<'x> Node<'x> {
             .create_and_uncreate
             .expect(&format!("{} is not a construct", self.phrase))
             .0(ctx, self)?;
-        item.set_position(self.position);
-        Ok(item)
+        Ok(item.with_position(self.position))
     }
 
     pub fn as_is(&self) -> Option<Result<(&str, &Node), Diagnostic>> {

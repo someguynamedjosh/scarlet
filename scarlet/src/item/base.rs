@@ -115,7 +115,7 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
     }
 
     fn into_ptr_mimicking(self, other: &ItemPtr) -> ItemPtr {
-        let result = ItemPtr::from_definition(self);
+        let mut result = ItemPtr::from_definition(self);
         if let Some(parent) = other.get_parent() {
             result.set_parent(parent);
         }
@@ -128,8 +128,6 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
 #[derive(Debug)]
 pub struct UniversalItemInfo {
     parent: Option<ItemPtr>,
-    position: Option<Position>,
-    is_reference: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -155,14 +153,12 @@ impl ItemQueryResultCaches {
 
 #[derive(Debug)]
 pub struct Item {
-    // TODO: This is ugly.
-    instance_id: Rc<()>,
     definition: Box<dyn ItemDefinition>,
     universal_info: UniversalItemInfo,
     query_result_caches: ItemQueryResultCaches,
 }
 
-pub struct ItemPtr(Rc<RefCell<Item>>);
+pub struct ItemPtr(Rc<RefCell<Item>>, Option<Position>);
 
 impl Clone for ItemPtr {
     fn clone(&self) -> Self {
@@ -213,12 +209,7 @@ impl CycleDetectingDebug for ItemPtr {
                 },
             )?;
             if ctx.recursed_on.remove(&ptr) {
-                writeln!(
-                    f,
-                    "\n@{:?}-{}",
-                    ptr,
-                    (*self.0.borrow().definition).type_name()
-                )?;
+                writeln!(f, "\n@{:?}", ptr)?;
             }
             Ok(())
         }
@@ -240,42 +231,26 @@ impl Debug for ItemPtr {
 
 impl ItemPtr {
     pub fn from_definition(def: impl ItemDefinition + 'static) -> Self {
-        Self(Rc::new(RefCell::new(Item {
-            instance_id: Rc::new(()),
-            definition: Box::new(def),
-            universal_info: UniversalItemInfo {
-                parent: None,
-                position: None,
-                is_reference: false,
-            },
-            query_result_caches: ItemQueryResultCaches::new(),
-        })))
+        Self(
+            Rc::new(RefCell::new(Item {
+                definition: Box::new(def),
+                universal_info: UniversalItemInfo { parent: None },
+                query_result_caches: ItemQueryResultCaches::new(),
+            })),
+            None,
+        )
     }
 
-    pub fn set_position(&self, position: Position) {
-        self.0.borrow_mut().universal_info.position = Some(position);
+    pub fn set_position(&mut self, position: Position) {
+        self.1 = Some(position);
     }
 
     pub fn get_position(&self) -> Position {
-        self.0
-            .borrow()
-            .universal_info
-            .position
-            .unwrap_or(Position::placeholder())
+        self.1.unwrap_or(Position::placeholder())
     }
 
-    pub fn as_reference(&self, position: Position) -> Self {
-        let this = self.0.borrow();
-        Self(Rc::new(RefCell::new(Item {
-            instance_id: Rc::clone(&this.instance_id),
-            definition: this.definition.dyn_clone(),
-            query_result_caches: this.query_result_caches.clone(),
-            universal_info: UniversalItemInfo {
-                parent: this.universal_info.parent.clone(),
-                position: Some(position),
-                is_reference: true,
-            },
-        })))
+    pub fn with_position(&self, position: Position) -> Self {
+        Self(self.0.ptr_clone(), Some(position))
     }
 
     pub fn set_parent(&self, parent: ItemPtr) {
@@ -287,14 +262,11 @@ impl ItemPtr {
     }
 
     pub fn ptr_clone(&self) -> ItemPtr {
-        Self(self.0.ptr_clone())
+        Self(self.0.ptr_clone(), self.1)
     }
 
     pub fn is_same_instance_as(&self, other: &ItemPtr) -> bool {
-        self.0
-            .borrow()
-            .instance_id
-            .is_same_instance_as(&other.0.borrow().instance_id)
+        self.0.is_same_instance_as(&other.0)
     }
 
     pub fn clone_definition(&self) -> Box<dyn ItemDefinition> {
@@ -416,9 +388,6 @@ impl ItemPtr {
     }
 
     pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
-        if self.0.borrow().universal_info.is_reference {
-            return;
-        }
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
         for child in &self.0.borrow().definition.children() {
