@@ -173,4 +173,8 @@ impl DStructLiteral {
             is_module: false,
         }
     }
+
+    pub fn is_module(&self) -> bool {
+        self.is_module
+    }
 }

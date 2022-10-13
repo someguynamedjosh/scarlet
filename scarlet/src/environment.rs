@@ -67,7 +67,7 @@ impl Environment {
             Ok(root) => root,
             Err(diagnostic) => return vec![diagnostic],
         };
-        self.root.set_parent_recursive(None);
+        println!("{:#?}", self.root);
         self.all_items.clear();
         self.root.collect_self_and_children(&mut self.all_items);
         let mut constraints = Vec::new();

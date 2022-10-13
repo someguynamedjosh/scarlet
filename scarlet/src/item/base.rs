@@ -24,6 +24,7 @@ use crate::{
         new_type::DNewType,
         new_value::DNewValue,
         parameter::{DParameter, ParameterPtr},
+        struct_literal::DStructLiteral,
     },
     diagnostic::{Diagnostic, Position},
     environment::{r#true, Environment, ENV},
@@ -183,9 +184,18 @@ impl Hash for ItemPtr {
 impl CycleDetectingDebug for ItemPtr {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         let ptr = self.0.as_ptr() as *const _;
+        let mut allow_identifier = true;
         if let Some(ident) = self.reverse_lookup_identifier(self) {
-            write!(f, "{}", ident)
-        } else if ctx.stack.contains(&ptr) {
+            if allow_identifier
+                && !self
+                    .lookup_identifier(&ident)
+                    .unwrap()
+                    .is_same_instance_as(self)
+            {
+                return write!(f, "{}", ident);
+            }
+        }
+        if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
             write!(f, "@{:?}", ptr)
         } else {

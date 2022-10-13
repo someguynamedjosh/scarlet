@@ -1,3 +1,7 @@
-Nibble IS NEW_TYPE()
+True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
+False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
 
-main IS Nibble.new()
+Asdf IS NEW_TYPE()
+Nibble IS NEW_TYPE(field IS ANY Asdf)
+
+main IS Nibble.new(Asdf.new)
