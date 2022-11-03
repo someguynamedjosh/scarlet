@@ -16,7 +16,7 @@ use crate::item::{
     CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DCompoundType {
     // These are ORed together. ANDing them would result in an empty type any
     // time you have at least 2 non-identical components.

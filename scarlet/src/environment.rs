@@ -74,6 +74,7 @@ impl Environment {
         self.all_items.clear();
         self.root.set_parent_recursive(None);
         self.root.collect_self_and_children(&mut self.all_items);
+        self.all_items.dedup();
         let mut constraints = Vec::new();
         for item in &self.all_items {
             constraints.append(&mut item.collect_constraints());

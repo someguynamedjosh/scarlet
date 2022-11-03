@@ -287,27 +287,33 @@ impl ItemPtr {
 
     pub fn is_literal_instance_of(&self, of_type: &ItemPtr) -> bool {
         if let Some(value) = self.downcast_definition::<DNewValue>() {
-            let value_type = value.get_type().downcast_definition::<DCompoundType>();
+            let value_type_ptr = value
+                .get_type()
+                .query_resolved(&mut Environment::root_query())
+                .unwrap();
+            let value_type_def = value_type_ptr.downcast_definition::<DCompoundType>();
             let of_type = of_type.downcast_definition::<DCompoundType>();
-            if let (Some(value_type), Some(of_type)) = (value_type, of_type) {
+            let result = if let (Some(value_type), Some(of_type)) = (value_type_def, of_type) {
                 value_type.is_subtype_of(&*of_type)
             } else {
                 false
-            }
+            };
+            result
         } else {
+            println!("No");
             false
         }
     }
 
     pub fn is_true(&self) -> bool {
         ENV.with(|env| {
-            self.is_literal_instance_of(
-                &env.borrow()
-                    .get_language_item("True")
-                    .unwrap()
-                    .query_resolved(&mut Environment::root_query())
-                    .unwrap(),
-            )
+            let of_type = &env
+                .borrow()
+                .get_language_item("True")
+                .unwrap()
+                .query_resolved(&mut Environment::root_query())
+                .unwrap();
+            self.is_literal_instance_of(of_type)
         })
     }
 
@@ -395,14 +401,14 @@ impl ItemPtr {
         for child in &children {
             child.collect_self_and_children(into);
         }
-        debug_assert_eq!(
-            {
-                let mut dd = into.clone();
-                dd.dedup();
-                dd
-            },
-            *into
-        );
+        // debug_assert_eq!(
+        //     {
+        //         let mut dd = into.clone();
+        //         dd.dedup();
+        //         dd
+        //     },
+        //     *into
+        // );
     }
 
     pub fn query_parameters(

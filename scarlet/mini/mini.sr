@@ -1,7 +1,17 @@
 True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
 False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
+Result IS ANY Type AS_LANGUAGE_ITEM(Result)
 
-Asdf IS NEW_TYPE()
-Nibble IS NEW_TYPE(field IS ANY Asdf)
+Type IS BUILTIN(Type)
+Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
+Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
+Union IS BUILTIN(Union)
 
-main IS Nibble.new(Asdf.new)
+Bool IS Union(True False)
+condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
+true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
+false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
+
+if_then_else IS BUILTIN(if_then_else)
+
+main IS if_then_else(Bool True.new True.new False.new)
