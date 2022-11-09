@@ -300,7 +300,6 @@ impl ItemPtr {
             };
             result
         } else {
-            println!("No");
             false
         }
     }

@@ -106,7 +106,7 @@ impl ItemDefinition for DMemberAccess {
                 .with_text_error(format!("Failed to determine type of base."))
                 .with_item_error(this),
         )?;
-        let type_ptr = r#type.query_resolved(ctx)?;
+        let type_ptr = r#type.query_resolved(ctx)?.reduce(&Default::default());
         let downcast = type_ptr.downcast_definition::<DCompoundType>();
         if let Some(r#type) = downcast {
             let components = r#type.get_component_types();
@@ -167,8 +167,10 @@ impl ItemDefinition for DMemberAccess {
                 )))
             }
         } else {
-            println!("{:#?}", type_ptr);
-            Err(Diagnostic::new().with_text_error(format!("Internal error: type is not a type.")))
+            println!("type: {:#?}", type_ptr);
+            Err(Diagnostic::new().with_text_error(format!(
+                "Internal error: Something that's supposed to be a type is not actually a type."
+            )))
         }
     }
 }

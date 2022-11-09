@@ -40,46 +40,44 @@ BitSum.new(
     and(bit0 bit1)
 )
 
-main IS half_bit_sum(true true)
+third_bit_partial_sum IS 
+half_bit_sum(half_bit_sum.sum bit2)
 
-# third_bit_partial_sum IS 
-# half_bit_sum(half_bit_sum.sum bit2)
+full_bit_sum IS
+BitSum.new(
+    third_bit_partial_sum.sum
+    or(
+        half_bit_sum.carry 
+        third_bit_partial_sum.carry
+    )
+)
 
-# full_bit_sum IS
-# BitSum.new(
-#     third_bit_partial_sum.sum
-#     or(
-#         half_bit_sum.carry 
-#         third_bit_partial_sum.carry
-#     )
-# )
+Nibble IS 
+NEW_TYPE(
+    b3 IS ANY Bool 
+    b2 IS ANY Bool 
+    b1 IS ANY Bool 
+    b0 IS ANY Bool
+)
 
-# Nibble IS 
-# NEW_TYPE(
-#     b3 IS ANY Bool 
-#     b2 IS ANY Bool 
-#     b1 IS ANY Bool 
-#     b0 IS ANY Bool
-# )
+addend0 IS ANY Nibble
+addend1 IS ANY Nibble
 
-# addend0 IS ANY Nibble
-# addend1 IS ANY Nibble
+sum0 IS half_bit_sum(addend0.b0 addend1.b0)
+sum1 IS full_bit_sum(addend0.b1 addend1.b1 sum0.carry)
+sum2 IS full_bit_sum(addend0.b2 addend1.b2 sum1.carry)
+sum3 IS full_bit_sum(addend0.b3 addend1.b3 sum2.carry)
 
-# sum0 IS half_bit_sum(addend0.b0 addend1.b0)
-# sum1 IS full_bit_sum(addend0.b1 addend1.b1 sum0.carry)
-# sum2 IS full_bit_sum(addend0.b2 addend1.b2 sum1.carry)
-# sum3 IS full_bit_sum(addend0.b3 addend1.b3 sum2.carry)
+sum IS 
+Nibble.new(
+    sum3.sum
+    sum2.sum
+    sum1.sum
+    sum0.sum
+)
 
-# sum IS 
-# Nibble.new(
-#     sum3.sum
-#     sum2.sum
-#     sum1.sum
-#     sum0.sum
-# )
-
-# main IS
-# sum(
-#     Nibble.new(false false false true)
-#     Nibble.new(false false false true)
-# )
+main IS
+sum(
+    Nibble.new(false false false true)
+    Nibble.new(false false false true)
+)
