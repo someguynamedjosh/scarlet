@@ -350,7 +350,7 @@ impl ItemPtr {
         }
     }
 
-    fn query<Q: Query>(
+    fn query<Q: Query<Target = Self>>(
         &self,
         ctx: &mut impl AllowsChildQuery<Q>,
         get_cache: impl FnOnce(&ItemQueryResultCaches) -> &QueryResultCache<Q>,
@@ -362,7 +362,7 @@ impl ItemPtr {
             self.hash(&mut hasher);
             let key_hash = hasher.finish();
             if ctx.cycle_detection_stack.contains(&key_hash) {
-                let result = Q::result_when_cycle_encountered();
+                let result = Q::result_when_cycle_encountered(self);
                 assert!(
                     !result.is_final(),
                     "Results returned when cycles are encountered should be temporary."

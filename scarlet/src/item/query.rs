@@ -18,7 +18,7 @@ pub trait Query {
     type Result: QueryResult;
     type Target: Hash;
 
-    fn result_when_cycle_encountered() -> Self::Result;
+    fn result_when_cycle_encountered(target: &Self::Target) -> Self::Result;
 }
 
 pub struct QueryResultCache<Q: Query + ?Sized> {
@@ -67,21 +67,20 @@ impl<Q: Query + ?Sized> QueryContext<Q> {
     }
 
     pub fn get_query_result<
-        K: Hash,
         D: Deref<Target = QueryResultCache<Q>>,
         Dm: DerefMut<Target = QueryResultCache<Q>>,
     >(
         &mut self,
-        key: &K,
+        key: &Q::Target,
         recompute_result: impl FnOnce(&mut Self) -> Q::Result,
-        cache: impl FnOnce(&K) -> D,
-        cache_mut: impl FnOnce(&K) -> Dm,
+        cache: impl FnOnce(&Q::Target) -> D,
+        cache_mut: impl FnOnce(&Q::Target) -> Dm,
     ) -> Q::Result {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let key_hash = hasher.finish();
         if self.cycle_detection_stack.contains(&key_hash) {
-            let result = Q::result_when_cycle_encountered();
+            let result = Q::result_when_cycle_encountered(key);
             assert!(
                 !result.is_final(),
                 "Results returned when cycles are encountered should be temporary."
@@ -262,7 +261,7 @@ impl Query for ChildrenQuery {
     type Result = InfallibleQueryResult<Vec<ItemPtr>>;
     type Target = ItemPtr;
 
-    fn result_when_cycle_encountered() -> Self::Result {
+    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
         panic!("Child query should not cause cycles!")
     }
 }
@@ -273,7 +272,7 @@ impl Query for ParametersQuery {
     type Result = Parameters;
     type Target = ItemPtr;
 
-    fn result_when_cycle_encountered() -> Self::Result {
+    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
         todo!()
     }
 }
@@ -285,7 +284,7 @@ impl Query for RootQuery {
     type Result = !;
     type Target = !;
 
-    fn result_when_cycle_encountered() -> Self::Result {
+    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
         panic!("Root query should never be dispatched.")
     }
 }
@@ -296,7 +295,7 @@ impl Query for TypeQuery {
     type Result = Option<ItemPtr>;
     type Target = ItemPtr;
 
-    fn result_when_cycle_encountered() -> Self::Result {
+    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
         None
     }
 }
@@ -310,7 +309,7 @@ impl Query for TypeCheckQuery {
     type Result = InfallibleQueryResult<Vec<Diagnostic>>;
     type Target = ItemPtr;
 
-    fn result_when_cycle_encountered() -> Self::Result {
+    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
         vec![].into()
     }
 }
@@ -325,8 +324,8 @@ impl Query for ResolveQuery {
     type Result = Result<ItemPtr, Diagnostic>;
     type Target = ItemPtr;
 
-    fn result_when_cycle_encountered() -> Self::Result {
-        todo!()
+    fn result_when_cycle_encountered(target: &Self::Target) -> Self::Result {
+        Ok(target.ptr_clone())
     }
 }
 
