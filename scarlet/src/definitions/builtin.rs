@@ -138,11 +138,15 @@ impl ItemDefinition for DBuiltin {
         if let Builtin::Type = self.builtin {
             Ok(DCompoundType::new(this.ptr_clone(), 0).into_ptr_mimicking(this))
         } else {
-            let rargs = self
+            let rargs: Vec<_> = self
                 .args
                 .iter()
                 .map(|arg| arg.query_resolved(ctx))
                 .try_collect()?;
+            let rargs = rargs
+                .into_iter()
+                .map(|x| x.without_placeholders())
+                .collect_vec();
             Ok(Self {
                 args: rargs,
                 builtin: self.builtin,
@@ -195,6 +199,18 @@ impl ItemDefinition for DBuiltin {
             }
             .into_ptr_mimicking(this)
         }
+    }
+
+    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
+        Self {
+            args: self
+                .args
+                .iter()
+                .map(ItemPtr::without_placeholders)
+                .collect(),
+            builtin: self.builtin,
+        }
+        .into_ptr_mimicking(this)
     }
 }
 

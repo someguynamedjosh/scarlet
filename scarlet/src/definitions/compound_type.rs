@@ -84,6 +84,17 @@ impl ItemDefinition for DCompoundType {
     fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
+
+    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
+        Self {
+            component_types: self
+                .component_types
+                .iter()
+                .map(|(i, x)| (*i, x.without_placeholders()))
+                .collect(),
+        }
+        .into_ptr_mimicking(this)
+    }
 }
 
 impl DCompoundType {

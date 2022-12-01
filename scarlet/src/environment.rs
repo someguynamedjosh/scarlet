@@ -68,7 +68,7 @@ impl Environment {
     pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
         root.set_parent_recursive(None);
         self.root = match root.query_resolved(&mut Self::root_query()) {
-            Ok(root) => root,
+            Ok(root) => root.without_placeholders(),
             Err(diagnostic) => return vec![diagnostic],
         };
         self.all_items.clear();
@@ -86,6 +86,7 @@ impl Environment {
             let constraint = original
                 .query_resolved(&mut Self::root_query())
                 .unwrap()
+                .without_placeholders()
                 .reduce(&HashMap::new());
             let success = constraint.is_true();
             if !success {

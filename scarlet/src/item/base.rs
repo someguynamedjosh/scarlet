@@ -90,6 +90,7 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
+    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr;
 }
 
 impl dyn ItemDefinition {
@@ -290,7 +291,8 @@ impl ItemPtr {
             let value_type_ptr = value
                 .get_type()
                 .query_resolved(&mut Environment::root_query())
-                .unwrap();
+                .unwrap()
+                .without_placeholders();
             let value_type_def = value_type_ptr.downcast_definition::<DCompoundType>();
             let of_type = of_type.downcast_definition::<DCompoundType>();
             let result = if let (Some(value_type), Some(of_type)) = (value_type_def, of_type) {
@@ -311,7 +313,8 @@ impl ItemPtr {
                 .get_language_item("True")
                 .unwrap()
                 .query_resolved(&mut Environment::root_query())
-                .unwrap();
+                .unwrap()
+                .without_placeholders();
             self.is_literal_instance_of(of_type)
         })
     }
@@ -323,7 +326,8 @@ impl ItemPtr {
                     .get_language_item("False")
                     .unwrap()
                     .query_resolved(&mut Environment::root_query())
-                    .unwrap(),
+                    .unwrap()
+                    .without_placeholders(),
             )
         })
     }
@@ -484,6 +488,11 @@ impl ItemPtr {
         } else {
             this.definition.reduce(self, args)
         }
+    }
+
+    pub fn without_placeholders(&self) -> Self {
+        let this = self.0.borrow();
+        this.definition.without_placeholders(self)
     }
 
     /// True if this item is Type.

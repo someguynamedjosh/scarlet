@@ -75,11 +75,15 @@ impl ItemDefinition for DNewValue {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rfields = self
+        let rfields: Vec<_> = self
             .fields
             .iter()
             .map(|field| field.query_resolved(ctx))
             .try_collect()?;
+        let rfields = rfields
+            .into_iter()
+            .map(|x| x.without_placeholders())
+            .collect_vec();
         if rfields == self.fields {
             Ok(this.ptr_clone())
         } else {
@@ -107,6 +111,18 @@ impl ItemDefinition for DNewValue {
             .into_ptr_mimicking(this)
         }
     }
+
+    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
+        Self {
+            fields: self
+                .fields
+                .iter()
+                .map(ItemPtr::without_placeholders)
+                .collect(),
+            r#type: self.r#type.without_placeholders(),
+        }
+        .into_ptr_mimicking(this)
+    }
 }
 
 impl DNewValue {
@@ -121,7 +137,8 @@ impl DNewValue {
         Ok(Self::new(
             env.get_language_item("True")?
                 .query_resolved(&mut Environment::root_query())
-                .unwrap(),
+                .unwrap()
+                .without_placeholders(),
             vec![],
         ))
     }

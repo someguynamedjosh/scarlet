@@ -128,7 +128,11 @@ impl ItemDefinition for DStructLiteral {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| value.query_resolved(ctx).map(|value| (name.clone(), value)))
+            .map(|(name, value)| {
+                value
+                    .query_resolved(ctx)
+                    .map(|value| (name.clone(), value.without_placeholders()))
+            })
             .try_collect()?;
         Ok(if fields == self.fields {
             this.ptr_clone()
@@ -156,6 +160,18 @@ impl ItemDefinition for DStructLiteral {
             }
             .into_ptr_mimicking(this)
         }
+    }
+
+    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
+        Self {
+            fields: self
+                .fields
+                .iter()
+                .map(|(i, x)| (i.clone(), x.without_placeholders()))
+                .collect(),
+            is_module: self.is_module,
+        }
+        .into_ptr_mimicking(this)
     }
 }
 

@@ -153,7 +153,7 @@ impl ItemDefinition for DSubstitution {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rbase = self.base.query_resolved(ctx)?;
+        let rbase = self.base.query_resolved(ctx)?.without_placeholders();
         let mut params = rbase.query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {
@@ -163,7 +163,7 @@ impl ItemDefinition for DSubstitution {
             }
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
-                let value = value.query_resolved(ctx)?;
+                let value = value.query_resolved(ctx)?.without_placeholders();
                 match target {
                     UnresolvedTarget::Positional => {
                         if params.len() == 0 {
@@ -202,7 +202,7 @@ impl ItemDefinition for DSubstitution {
                 .map(|(target, value)| {
                     value
                         .query_resolved(ctx)
-                        .map(|value| (target.clone(), value))
+                        .map(|value| (target.clone(), value.without_placeholders()))
                 })
                 .try_collect()?;
             Ok(Self {
@@ -213,6 +213,25 @@ impl ItemDefinition for DSubstitution {
         } else {
             unreachable!()
         }
+    }
+
+    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
+        Self {
+            base: self.base.without_placeholders(),
+            substitutions: Ok(self
+                .substitutions
+                .as_ref()
+                .unwrap()
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        (k.0.without_placeholders(), k.1.ptr_clone()),
+                        v.without_placeholders(),
+                    )
+                })
+                .collect()),
+        }
+        .into_ptr_mimicking(this)
     }
 }
 

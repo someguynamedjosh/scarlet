@@ -6,8 +6,11 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use super::{parameters::Parameters, ItemPtr, ItemQueryResultCaches};
-use crate::{diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment};
+use super::{parameters::Parameters, IntoItemPtr, ItemPtr, ItemQueryResultCaches};
+use crate::{
+    definitions::placeholder::DPlaceholder, diagnostic::Diagnostic,
+    environment::OnlyConstructedByEnvironment,
+};
 
 pub trait QueryResult: Clone + Hash + Eq {
     /// Returns true when the query result will not change on future calls.
@@ -131,9 +134,13 @@ impl<T: Clone + Hash + Eq> QueryResult for Option<T> {
     }
 }
 
-impl<T: Clone + Hash + Eq, E: Clone + Hash + Eq> QueryResult for Result<T, E> {
+impl<E: Clone + Hash + Eq> QueryResult for Result<ItemPtr, E> {
     fn is_final(&self) -> bool {
-        self.is_ok()
+        if let Ok(ptr) = self {
+            ptr.downcast_definition::<DPlaceholder>().is_none()
+        } else {
+            false
+        }
     }
 }
 
@@ -325,7 +332,7 @@ impl Query for ResolveQuery {
     type Target = ItemPtr;
 
     fn result_when_cycle_encountered(target: &Self::Target) -> Self::Result {
-        Ok(target.ptr_clone())
+        Ok(DPlaceholder::Resolved(target.ptr_clone()).into_ptr_mimicking(target))
     }
 }
 
