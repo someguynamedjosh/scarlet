@@ -67,7 +67,7 @@ impl Environment {
     #[must_use]
     pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
         root.set_parent_recursive(None);
-        self.root = match root.query_resolved(&mut Self::root_query()) {
+        self.root = match root.resolved().evaluate() {
             Ok(root) => root,
             Err(diagnostic) => return vec![diagnostic],
         };
@@ -84,9 +84,12 @@ impl Environment {
         for (subject, constraint) in constraints {
             let original = constraint;
             let constraint = original
-                .query_resolved(&mut Self::root_query())
+                .resolved()
+                .evaluate()
                 .unwrap()
-                .reduce(&HashMap::new());
+                .reduced(HashMap::new())
+                .evaluate()
+                .unwrap();
             let success = constraint.is_true();
             if !success {
                 errors.push(
@@ -96,7 +99,7 @@ impl Environment {
                         .with_text_info(format!("Constraint reduced to:"))
                         .with_item_info(&constraint)
                         .with_text_info(format!("Required by the following expression:"))
-                        .with_item_info(&subject),
+                        .with_item_info(&subject.evaluate().unwrap()),
                 )
             }
         }

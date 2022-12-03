@@ -8,7 +8,7 @@ use crate::{
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, ItemDefinition, ItemPtr, LazyItemPtr,
     },
 };
 
@@ -24,11 +24,11 @@ impl CycleDetectingDebug for DIdentifier {
 }
 
 impl ItemDefinition for DIdentifier {
-    fn children(&self) -> Vec<ItemPtr> {
+    fn children(&self) -> Vec<LazyItemPtr> {
         vec![]
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -53,7 +53,7 @@ impl ItemDefinition for DIdentifier {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
         unreachable!()
     }
 
@@ -63,7 +63,10 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
         if let Some(item) = this.lookup_identifier(&self.identifier) {
-            Ok(item.query_resolved(ctx)?.with_position(this.get_position()))
+            Ok(item
+                .resolved()
+                .evaluate()?
+                .with_position(this.get_position()))
         } else {
             Err(Diagnostic::new()
                 .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))

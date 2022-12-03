@@ -66,8 +66,8 @@ impl<T: Any> NamedAny for T {
 }
 
 pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
-    fn children(&self) -> Vec<ItemPtr>;
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)>;
+    fn children(&self) -> Vec<LazyItemPtr>;
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)>;
     fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
         None
     }
@@ -89,7 +89,7 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr;
 }
 
 impl dyn ItemDefinition {
@@ -148,6 +148,66 @@ impl ItemQueryResultCaches {
             r#type: QueryResultCache::new(),
             type_check: QueryResultCache::new(),
         }
+    }
+}
+
+#[derive(Clone)]
+enum LazyTransformation {
+    None,
+    Resolved,
+    Reduced(HashMap<ParameterPtr, LazyItemPtr>),
+}
+
+#[derive(Clone)]
+pub struct LazyItemPtr {
+    base: ItemPtr,
+    transformation: LazyTransformation,
+}
+
+impl PartialEq for LazyItemPtr {
+    fn eq(&self, other: &Self) -> bool {
+        self.base.is_same_instance_as(&other.base)
+    }
+}
+
+impl Eq for LazyItemPtr {}
+
+impl Hash for LazyItemPtr {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.base.hash(state);
+    }
+}
+
+impl CycleDetectingDebug for LazyItemPtr {
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        CycleDetectingDebug::fmt(&self.base, f, ctx)
+    }
+}
+
+impl Debug for LazyItemPtr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        CycleDetectingDebug::fmt(
+            self,
+            f,
+            &mut CddContext {
+                stack: &[],
+                recursed_on: &mut HashSet::new(),
+            },
+        )
+    }
+}
+
+impl LazyItemPtr {
+    pub fn evaluate(&self) -> Result<ItemPtr, Diagnostic> {
+        match &self.transformation {
+            LazyTransformation::None => Ok(self.base.ptr_clone()),
+            LazyTransformation::Resolved => self.base.resolve_now(&mut Environment::root_query()),
+            LazyTransformation::Reduced(args) => Ok(self.base.reduce_now(args, true)),
+        }
+    }
+
+    pub fn ptr_clone(&self) -> LazyItemPtr {
+        self.clone()
     }
 }
 
@@ -273,7 +333,7 @@ impl ItemPtr {
             .ok()
     }
 
-    pub fn get_args_if_builtin(&self, builtin: Builtin) -> Option<Vec<ItemPtr>> {
+    pub fn get_args_if_builtin(&self, builtin: Builtin) -> Option<Vec<LazyItemPtr>> {
         self.downcast_definition::<DBuiltin>()
             .map(|x| {
                 if x.get_builtin() == builtin {
@@ -289,7 +349,10 @@ impl ItemPtr {
         if let Some(value) = self.downcast_definition::<DNewValue>() {
             let value_type_ptr = value
                 .get_type()
-                .query_resolved(&mut Environment::root_query())
+                .evaluate()
+                .unwrap()
+                .resolved()
+                .evaluate()
                 .unwrap();
             let value_type_def = value_type_ptr.downcast_definition::<DCompoundType>();
             let of_type = of_type.downcast_definition::<DCompoundType>();
@@ -310,7 +373,8 @@ impl ItemPtr {
                 .borrow()
                 .get_language_item("True")
                 .unwrap()
-                .query_resolved(&mut Environment::root_query())
+                .resolved()
+                .evaluate()
                 .unwrap();
             self.is_literal_instance_of(of_type)
         })
@@ -322,7 +386,8 @@ impl ItemPtr {
                 &env.borrow()
                     .get_language_item("False")
                     .unwrap()
-                    .query_resolved(&mut Environment::root_query())
+                    .resolved()
+                    .evaluate()
                     .unwrap(),
             )
         })
@@ -390,7 +455,10 @@ impl ItemPtr {
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
         for child in &self.0.borrow().definition.children() {
-            child.set_parent_recursive(parent.clone());
+            child
+                .evaluate()
+                .unwrap()
+                .set_parent_recursive(parent.clone());
         }
     }
 
@@ -398,7 +466,7 @@ impl ItemPtr {
         into.push(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         for child in &children {
-            child.collect_self_and_children(into);
+            child.evaluate().unwrap().collect_self_and_children(into);
         }
         // debug_assert_eq!(
         //     {
@@ -422,7 +490,14 @@ impl ItemPtr {
         )
     }
 
-    pub fn query_resolved(
+    pub fn resolved(&self) -> LazyItemPtr {
+        LazyItemPtr {
+            base: self.ptr_clone(),
+            transformation: LazyTransformation::Resolved,
+        }
+    }
+
+    fn resolve_now(
         &self,
         ctx: &mut impl AllowsChildQuery<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
@@ -458,17 +533,20 @@ impl ItemPtr {
         )
     }
 
-    pub fn collect_constraints(&self) -> Vec<(ItemPtr, ItemPtr)> {
+    pub fn collect_constraints(&self) -> Vec<(LazyItemPtr, ItemPtr)> {
         self.0.borrow().definition.collect_constraints(self)
     }
 
-    pub(crate) fn reduce(&self, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        self.reduce_impl(args, true)
+    pub fn reduced(&self, args: HashMap<ParameterPtr, LazyItemPtr>) -> LazyItemPtr {
+        LazyItemPtr {
+            base: self.ptr_clone(),
+            transformation: LazyTransformation::Reduced(args),
+        }
     }
 
-    pub(crate) fn reduce_impl(
+    pub fn reduce_now(
         &self,
-        args: &HashMap<ParameterPtr, ItemPtr>,
+        args: &HashMap<ParameterPtr, LazyItemPtr>,
         allow_cacheing: bool,
     ) -> ItemPtr {
         let this = self.0.borrow();
@@ -497,7 +575,7 @@ impl ItemPtr {
 
     pub fn is_type_parameter(&self) -> bool {
         self.downcast_definition::<DParameter>()
-            .map(|param| param.get_type().is_exactly_type())
+            .map(|param| param.get_type().evaluate().unwrap().is_exactly_type())
             == Some(true)
     }
 
@@ -507,5 +585,12 @@ impl ItemPtr {
         self.downcast_definition::<DNewType>().is_some()
             || self.is_exactly_type()
             || self.is_type_parameter()
+    }
+
+    pub(crate) fn into_lazy(self) -> LazyItemPtr {
+        LazyItemPtr {
+            base: self,
+            transformation: LazyTransformation::None,
+        }
     }
 }

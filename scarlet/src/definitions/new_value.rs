@@ -17,14 +17,14 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
     },
 };
 
 #[derive(Clone)]
 pub struct DNewValue {
-    r#type: ItemPtr,
-    fields: Vec<ItemPtr>,
+    r#type: LazyItemPtr,
+    fields: Vec<LazyItemPtr>,
 }
 
 impl CycleDetectingDebug for DNewValue {
@@ -39,11 +39,11 @@ impl CycleDetectingDebug for DNewValue {
 }
 
 impl ItemDefinition for DNewValue {
-    fn children(&self) -> Vec<ItemPtr> {
+    fn children(&self) -> Vec<LazyItemPtr> {
         self.fields.iter().map(|f| f.ptr_clone()).collect_vec()
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -54,6 +54,7 @@ impl ItemDefinition for DNewValue {
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for field in &self.fields {
+            let field = field.evaluate().unwrap();
             result.append(field.query_parameters(ctx));
         }
         result
@@ -78,8 +79,8 @@ impl ItemDefinition for DNewValue {
         let rfields = self
             .fields
             .iter()
-            .map(|field| field.query_resolved(ctx))
-            .try_collect()?;
+            .map(|field| field.evaluate().unwrap().resolved())
+            .collect();
         if rfields == self.fields {
             Ok(this.ptr_clone())
         } else {
@@ -91,11 +92,11 @@ impl ItemDefinition for DNewValue {
         }
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
         let rfields = self
             .fields
             .iter()
-            .map(|field| field.reduce(args))
+            .map(|field| field.evaluate().unwrap().reduced(args.clone()))
             .collect_vec();
         if rfields == self.fields {
             this.ptr_clone()
@@ -110,34 +111,29 @@ impl ItemDefinition for DNewValue {
 }
 
 impl DNewValue {
-    pub fn new(r#type: ItemPtr, fields: Vec<ItemPtr>) -> Self {
-        if let Some(new_type) = r#type.downcast_definition::<DNewType>() {
+    pub fn new(r#type: LazyItemPtr, fields: Vec<LazyItemPtr>) -> Self {
+        if let Some(new_type) = r#type.evaluate().unwrap().downcast_definition::<DNewType>() {
             assert_eq!(new_type.get_fields().len(), fields.len())
         }
         Self { r#type, fields }
     }
 
     pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
-        Ok(Self::new(
-            env.get_language_item("True")?
-                .query_resolved(&mut Environment::root_query())
-                .unwrap(),
-            vec![],
-        ))
+        Ok(Self::new(env.get_language_item("True")?.resolved(), vec![]))
     }
 
     pub fn r#false(env: &Environment) -> Result<Self, Diagnostic> {
         Ok(Self::new(
-            env.get_language_item("False")?.ptr_clone(),
+            env.get_language_item("False")?.resolved(),
             vec![],
         ))
     }
 
-    pub fn fields(&self) -> &Vec<ItemPtr> {
+    pub fn fields(&self) -> &Vec<LazyItemPtr> {
         &self.fields
     }
 
-    pub fn get_type(&self) -> &ItemPtr {
+    pub fn get_type(&self) -> &LazyItemPtr {
         &self.r#type
     }
 }

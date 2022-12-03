@@ -15,9 +15,9 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     for child in collect_comma_list(&node.children[2]) {
         if let Some(is) = child.as_is() {
             let (label, value) = is?;
-            fields.push((label.to_owned(), value.as_item(ctx)?));
+            fields.push((label.to_owned(), value.as_item(ctx)?.into_lazy()));
         } else {
-            fields.push((String::new(), child.as_item(ctx)?));
+            fields.push((String::new(), child.as_item(ctx)?.into_lazy()));
         }
     }
     Ok(DNewType::new(fields).into_ptr())

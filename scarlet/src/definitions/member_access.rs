@@ -14,7 +14,7 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
     },
 };
 
@@ -27,10 +27,10 @@ enum Member {
 
 #[derive(Clone, Debug)]
 pub struct DMemberAccess {
-    base: ItemPtr,
+    base: LazyItemPtr,
     member_name: String,
     member_index: Member,
-    r#type: Option<ItemPtr>,
+    r#type: Option<LazyItemPtr>,
 }
 
 impl CycleDetectingDebug for DMemberAccess {
@@ -41,11 +41,11 @@ impl CycleDetectingDebug for DMemberAccess {
 }
 
 impl ItemDefinition for DMemberAccess {
-    fn children(&self) -> Vec<ItemPtr> {
+    fn children(&self) -> Vec<LazyItemPtr> {
         vec![self.base.ptr_clone()]
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -54,7 +54,7 @@ impl ItemDefinition for DMemberAccess {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        self.base.query_parameters(ctx)
+        self.base.evaluate().unwrap().query_parameters(ctx)
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
@@ -68,28 +68,37 @@ impl ItemDefinition for DMemberAccess {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        let base = self.base.reduce_impl(args, false);
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+        let self_base = self.base.evaluate().unwrap();
+        let base = self_base.reduce_now(args, false);
         if self.member_index == Member::Unknown {
         } else if self.member_index == Member::Constructor {
             if let Some(r#type) = base.downcast_definition::<DCompoundType>() {
                 if let Some(constructor) = r#type.constructor(&base) {
-                    return constructor.reduce(args);
+                    return constructor.reduced(args.clone()).evaluate().unwrap();
                 }
             }
         } else if let Member::IndexIntoUserType(index) = self.member_index {
             if let Some(value) = base.downcast_definition::<DNewValue>() {
-                return value.fields()[index].reduce(args);
+                return value.fields()[index]
+                    .evaluate()
+                    .unwrap()
+                    .reduced(args.clone())
+                    .evaluate()
+                    .unwrap();
             }
         }
-        if base.is_same_instance_as(&self.base) {
+        if base.is_same_instance_as(&self_base) {
             this.ptr_clone()
         } else {
             Self {
-                base,
+                base: base.into_lazy(),
                 member_name: self.member_name.clone(),
                 member_index: self.member_index,
-                r#type: self.r#type.as_ref().map(|t| t.reduce(args)),
+                r#type: self
+                    .r#type
+                    .as_ref()
+                    .map(|t| t.evaluate().unwrap().reduced(args.clone())),
             }
             .into_ptr_mimicking(this)
         }
@@ -100,13 +109,21 @@ impl ItemDefinition for DMemberAccess {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rbase = self.base.query_resolved(ctx)?;
+        let self_base = self.base.evaluate().unwrap();
+        let rbase = self_base.resolved().evaluate().unwrap();
         let r#type = rbase.query_type(&mut Environment::root_query()).ok_or(
             Diagnostic::new()
                 .with_text_error(format!("Failed to determine type of base."))
                 .with_item_error(this),
         )?;
-        let type_ptr = r#type.query_resolved(ctx)?.reduce(&Default::default());
+        let type_ptr = r#type
+            .evaluate()
+            .unwrap()
+            .resolved()
+            .evaluate()?
+            .reduced(Default::default())
+            .evaluate()
+            .unwrap();
         let downcast = type_ptr.downcast_definition::<DCompoundType>();
         if let Some(r#type) = downcast {
             let components = r#type.get_component_types();
@@ -122,6 +139,7 @@ impl ItemDefinition for DMemberAccess {
                     .with_item_error(this));
             }
             let component = components.iter().next().unwrap().1;
+            let component = component.evaluate().unwrap();
             let index = if component.is_exactly_type() {
                 match &self.member_name[..] {
                     "new" => Some((Member::Constructor, self.base.ptr_clone())),
@@ -137,6 +155,8 @@ impl ItemDefinition for DMemberAccess {
                             Member::IndexIntoUserType(index),
                             base_type.get_fields()[index]
                                 .1
+                                .evaluate()
+                                .unwrap()
                                 .query_type(&mut Environment::root_query())
                                 .unwrap(),
                         )
@@ -149,13 +169,14 @@ impl ItemDefinition for DMemberAccess {
                     if let Some(r#type) = rbase.downcast_definition::<DCompoundType>() {
                         if let Some(constructor) = r#type.constructor(&rbase) {
                             return Ok(constructor
-                                .query_resolved(ctx)?
+                                .resolved()
+                                .evaluate()?
                                 .with_position(this.get_position()));
                         }
                     }
                 }
                 Ok(Self {
-                    base: rbase,
+                    base: rbase.into_lazy(),
                     member_index: index,
                     r#type: Some(r#type),
                     member_name: self.member_name.clone(),
@@ -176,7 +197,7 @@ impl ItemDefinition for DMemberAccess {
 }
 
 impl DMemberAccess {
-    pub fn new(base: ItemPtr, member_name: String) -> Self {
+    pub fn new(base: LazyItemPtr, member_name: String) -> Self {
         Self {
             base,
             member_name,
