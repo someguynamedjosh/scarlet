@@ -111,7 +111,7 @@ impl ItemDefinition for DParameter {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let r#type = self.reduced_type.query_resolved(ctx)?.without_placeholders();
+        let r#type = self.reduced_type.query_resolved(ctx)?;
         if r#type.is_same_instance_as(&self.reduced_type) {
             Ok(this.ptr_clone())
         } else {
@@ -121,14 +121,6 @@ impl ItemDefinition for DParameter {
             }
             .into_ptr_mimicking(this))
         }
-    }
-
-    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
-        Self {
-            parameter: self.parameter.ptr_clone(),
-            reduced_type: self.reduced_type.without_placeholders(),
-        }
-        .into_ptr_mimicking(this)
     }
 }
 

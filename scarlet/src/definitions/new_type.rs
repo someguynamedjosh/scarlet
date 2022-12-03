@@ -86,11 +86,7 @@ impl ItemDefinition for DNewType {
             fields: self
                 .fields
                 .iter()
-                .map(|(name, value)| {
-                    value
-                        .query_resolved(ctx)
-                        .map(|value| (name.clone(), value.without_placeholders()))
-                })
+                .map(|(name, value)| value.query_resolved(ctx).map(|value| (name.clone(), value)))
                 .try_collect()?,
             type_id: self.type_id.ptr_clone(),
         }
@@ -103,18 +99,6 @@ impl ItemDefinition for DNewType {
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
-    }
-
-    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
-        Self {
-            fields: self
-                .fields
-                .iter()
-                .map(|(i, x)| (i.clone(), x.without_placeholders()))
-                .collect(),
-            type_id: self.type_id.ptr_clone(),
-        }
-        .into_ptr_mimicking(this)
     }
 }
 

@@ -66,13 +66,6 @@ impl ItemDefinition for DHole {
     fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
-
-    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
-        Self {
-            r#type: self.r#type.without_placeholders(),
-        }
-        .into_ptr_mimicking(this)
-    }
 }
 
 impl DHole {

@@ -63,19 +63,12 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
         if let Some(item) = this.lookup_identifier(&self.identifier) {
-            Ok(item
-                .query_resolved(ctx)?
-                .without_placeholders()
-                .with_position(this.get_position()))
+            Ok(item.query_resolved(ctx)?.with_position(this.get_position()))
         } else {
             Err(Diagnostic::new()
                 .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))
                 .with_item_error(this))
         }
-    }
-
-    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
-        this.ptr_clone()
     }
 }
 

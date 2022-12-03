@@ -100,16 +100,13 @@ impl ItemDefinition for DMemberAccess {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rbase = self.base.query_resolved(ctx)?.without_placeholders();
+        let rbase = self.base.query_resolved(ctx)?;
         let r#type = rbase.query_type(&mut Environment::root_query()).ok_or(
             Diagnostic::new()
                 .with_text_error(format!("Failed to determine type of base."))
                 .with_item_error(this),
         )?;
-        let type_ptr = r#type
-            .query_resolved(ctx)?
-            .without_placeholders()
-            .reduce(&Default::default());
+        let type_ptr = r#type.query_resolved(ctx)?.reduce(&Default::default());
         let downcast = type_ptr.downcast_definition::<DCompoundType>();
         if let Some(r#type) = downcast {
             let components = r#type.get_component_types();
@@ -153,7 +150,6 @@ impl ItemDefinition for DMemberAccess {
                         if let Some(constructor) = r#type.constructor(&rbase) {
                             return Ok(constructor
                                 .query_resolved(ctx)?
-                                .without_placeholders()
                                 .with_position(this.get_position()));
                         }
                     }
@@ -176,16 +172,6 @@ impl ItemDefinition for DMemberAccess {
                 "Internal error: Something that's supposed to be a type is not actually a type."
             )))
         }
-    }
-
-    fn without_placeholders(&self, this: &ItemPtr) -> ItemPtr {
-        Self {
-            base: self.base.without_placeholders(),
-            member_index: self.member_index,
-            member_name: self.member_name.clone(),
-            r#type: self.r#type.as_ref().map(|x| x.without_placeholders()),
-        }
-        .into_ptr_mimicking(this)
     }
 }
 
