@@ -454,7 +454,10 @@ impl ItemPtr {
     pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
-        for child in &self.0.borrow().definition.children() {
+        let children = self.0.borrow().definition.children();
+        assert!(self.0.try_borrow_mut().is_ok());
+        assert!(self.0.try_borrow_mut().is_ok());
+        for child in &children {
             child
                 .evaluate()
                 .unwrap()

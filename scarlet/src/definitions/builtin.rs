@@ -1,9 +1,12 @@
+#[cfg(not(feature = "trace_borrows"))]
+use std::cell::{Ref, RefCell};
 use std::{
-    cell::Ref,
     collections::HashMap,
     fmt::{self, Formatter},
 };
 
+#[cfg(feature = "trace_borrows")]
+use debug_cell::{Ref, RefCell, RefMut};
 use itertools::Itertools;
 use owning_ref::OwningRef;
 
