@@ -56,11 +56,11 @@ pub trait CycleDetectingDebug {
 }
 
 pub trait NamedAny: Any {
-    fn type_name(&self) -> &'static str;
+    fn type_name<'a>(&'a self) -> &'static str;
 }
 
 impl<T: Any> NamedAny for T {
-    fn type_name(&self) -> &'static str {
+    fn type_name<'a>(&'a self) -> &'static str {
         std::any::type_name::<T>()
     }
 }
@@ -218,7 +218,7 @@ pub struct Item {
     query_result_caches: ItemQueryResultCaches,
 }
 
-pub struct ItemPtr(Rc<RefCell<Item>>, Option<Position>);
+pub struct ItemPtr(Rc<RefCell<Item>>, Option<Position>, bool);
 
 impl Clone for ItemPtr {
     fn clone(&self) -> Self {
@@ -292,6 +292,7 @@ impl ItemPtr {
                 query_result_caches: ItemQueryResultCaches::new(),
             })),
             None,
+            true,
         )
     }
 
@@ -304,7 +305,11 @@ impl ItemPtr {
     }
 
     pub fn with_position(&self, position: Position) -> Self {
-        Self(self.0.ptr_clone(), Some(position))
+        Self(self.0.ptr_clone(), Some(position), true)
+    }
+
+    pub fn marked_as_non_parent(&self) -> Self {
+        Self(self.0.ptr_clone(), self.1, false)
     }
 
     pub fn set_parent(&self, parent: ItemPtr) {
@@ -316,7 +321,7 @@ impl ItemPtr {
     }
 
     pub fn ptr_clone(&self) -> ItemPtr {
-        Self(self.0.ptr_clone(), self.1)
+        Self(self.0.ptr_clone(), self.1, true)
     }
 
     pub fn is_same_instance_as(&self, other: &ItemPtr) -> bool {
@@ -452,16 +457,21 @@ impl ItemPtr {
     }
 
     pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
+        {
+            let sb = self.0.borrow();
+            println!("{:#?}", (*sb.definition).type_name());
+
+        }
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         assert!(self.0.try_borrow_mut().is_ok());
         assert!(self.0.try_borrow_mut().is_ok());
         for child in &children {
-            child
-                .evaluate()
-                .unwrap()
-                .set_parent_recursive(parent.clone());
+            let child = child.evaluate().unwrap();
+            if child.2 {
+                child.set_parent_recursive(parent.clone());
+            }
         }
     }
 
@@ -469,7 +479,10 @@ impl ItemPtr {
         into.push(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         for child in &children {
-            child.evaluate().unwrap().collect_self_and_children(into);
+            let child = child.evaluate().unwrap();
+            if child.2 {
+                child.collect_self_and_children(into);
+            }
         }
         // debug_assert_eq!(
         //     {

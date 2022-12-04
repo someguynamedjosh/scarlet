@@ -73,6 +73,8 @@ impl Environment {
         };
         self.all_items.clear();
         self.root.set_parent_recursive(None);
+        println!("SDFLKJ");
+        self.root.set_parent_recursive(None);
         self.root.collect_self_and_children(&mut self.all_items);
         self.all_items.dedup();
         let mut constraints = Vec::new();

@@ -66,7 +66,8 @@ impl ItemDefinition for DIdentifier {
             Ok(item
                 .resolved()
                 .evaluate()?
-                .with_position(this.get_position()))
+                .with_position(this.get_position())
+                .marked_as_non_parent())
         } else {
             Err(Diagnostic::new()
                 .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))
