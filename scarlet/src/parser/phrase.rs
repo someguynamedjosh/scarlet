@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 
 use super::{Node, ParseContext};
-use crate::{diagnostic::Diagnostic, environment::Environment, item::{ItemPtr, ResolvableItemDefinition, ResolvableItemEnum}};
+use crate::{diagnostic::Diagnostic, environment::Environment, item::ItemPtr};
 
 pub type Precedence = u8;
 pub type Priority = u8;
@@ -56,7 +56,7 @@ pub struct CreateContext<'p, 'e> {
     pub env: &'e mut Environment,
 }
 
-pub type CreateResult = Result<ItemPtr<ResolvableItemEnum>, Diagnostic>;
+pub type CreateResult = Result<ItemPtr, Diagnostic>;
 pub type CreateFn = fn(&mut CreateContext, &Node) -> CreateResult;
 
 pub struct Phrase {

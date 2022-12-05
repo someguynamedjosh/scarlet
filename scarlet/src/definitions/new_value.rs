@@ -1,0 +1,139 @@
+use std::{
+    collections::HashMap,
+    fmt::{self, Formatter},
+};
+
+use itertools::Itertools;
+
+use super::{
+    builtin::DBuiltin, compound_type::DCompoundType, new_type::DNewType, parameter::ParameterPtr,
+};
+use crate::{
+    diagnostic::Diagnostic,
+    environment::Environment,
+    item::{
+        parameters::Parameters,
+        query::{
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
+        },
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+    },
+};
+
+#[derive(Clone)]
+pub struct DNewValue {
+    r#type: LazyItemPtr,
+    fields: Vec<LazyItemPtr>,
+}
+
+impl CycleDetectingDebug for DNewValue {
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        self.r#type.fmt(f, ctx)?;
+        write!(f, ".new(\n")?;
+        for field in &self.fields {
+            write!(f, "   {},\n", field.to_indented_string(ctx, 1))?;
+        }
+        write!(f, ")")
+    }
+}
+
+impl ItemDefinition for DNewValue {
+    fn children(&self) -> Vec<LazyItemPtr> {
+        self.fields.iter().map(|f| f.ptr_clone()).collect_vec()
+    }
+
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+        vec![]
+    }
+
+    fn recompute_parameters(
+        &self,
+        ctx: &mut QueryContext<ParametersQuery>,
+        this: &ItemPtr,
+    ) -> <ParametersQuery as Query>::Result {
+        let mut result = Parameters::new_empty();
+        for field in &self.fields {
+            let field = field.evaluate().unwrap();
+            result.append(field.query_parameters(ctx));
+        }
+        result
+    }
+
+    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
+        Some(self.r#type.ptr_clone())
+    }
+
+    fn recompute_type_check(
+        &self,
+        _ctx: &mut QueryContext<TypeCheckQuery>,
+    ) -> <TypeCheckQuery as Query>::Result {
+        no_type_check_errors()
+    }
+
+    fn recompute_resolved(
+        &self,
+        this: &ItemPtr,
+        ctx: &mut QueryContext<ResolveQuery>,
+    ) -> <ResolveQuery as Query>::Result {
+        let rfields = self
+            .fields
+            .iter()
+            .map(|field| field.evaluate().unwrap().resolved())
+            .collect();
+        if rfields == self.fields {
+            Ok(this.ptr_clone())
+        } else {
+            Ok(Self {
+                fields: rfields,
+                r#type: self.r#type.ptr_clone(),
+            }
+            .into_ptr_mimicking(this))
+        }
+    }
+
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+        let rfields = self
+            .fields
+            .iter()
+            .map(|field| field.evaluate().unwrap().reduced(args.clone()))
+            .collect_vec();
+        if rfields == self.fields {
+            this.ptr_clone()
+        } else {
+            Self {
+                fields: rfields,
+                r#type: self.r#type.ptr_clone(),
+            }
+            .into_ptr_mimicking(this)
+        }
+    }
+}
+
+impl DNewValue {
+    pub fn new(r#type: LazyItemPtr, fields: Vec<LazyItemPtr>) -> Self {
+        if let Some(new_type) = r#type.evaluate().unwrap().downcast_definition::<DNewType>() {
+            assert_eq!(new_type.get_fields().len(), fields.len())
+        }
+        Self { r#type, fields }
+    }
+
+    pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
+        Ok(Self::new(env.get_language_item("True")?.resolved(), vec![]))
+    }
+
+    pub fn r#false(env: &Environment) -> Result<Self, Diagnostic> {
+        Ok(Self::new(
+            env.get_language_item("False")?.resolved(),
+            vec![],
+        ))
+    }
+
+    pub fn fields(&self) -> &Vec<LazyItemPtr> {
+        &self.fields
+    }
+
+    pub fn get_type(&self) -> &LazyItemPtr {
+        &self.r#type
+    }
+}
