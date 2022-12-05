@@ -1,6 +1,5 @@
 use crate::{
     definitions::new_type::DNewType,
-    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,

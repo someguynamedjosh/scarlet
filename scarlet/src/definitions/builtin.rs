@@ -13,14 +13,10 @@ use owning_ref::OwningRef;
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
-    environment::{r#true, Environment},
+    environment::Environment,
     item::{
-        parameters::Parameters,
-        query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
-            TypeCheckQuery, TypeQuery,
-        },
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr, LazyItemPtr,
+        parameters::Parameters, CddContext, CycleDetectingDebug, Item, ItemEnum, ItemPtr,
+        LazyItemPtr,
     },
 };
 
@@ -56,12 +52,12 @@ impl Builtin {
 }
 
 #[derive(Clone, Debug)]
-pub struct DBuiltin {
+pub struct DBuiltin<I: ItemEnum> {
     builtin: Builtin,
-    args: Vec<LazyItemPtr>,
+    args: Vec<LazyItemPtr<I>>,
 }
 
-impl CycleDetectingDebug for DBuiltin {
+impl<I: ItemEnum> CycleDetectingDebug for DBuiltin<I> {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "BUILTIN({})", self.builtin.name())?;
         if self.args.len() == 0 {
@@ -81,12 +77,12 @@ impl CycleDetectingDebug for DBuiltin {
     }
 }
 
-fn both_compound_types<'a>(
-    a: &'a ItemPtr,
-    b: &'a ItemPtr,
+fn both_compound_types<'a, I: ItemEnum>(
+    a: &'a ItemPtr<I>,
+    b: &'a ItemPtr<I>,
 ) -> Option<(
-    OwningRef<Ref<'a, Item>, DCompoundType>,
-    OwningRef<Ref<'a, Item>, DCompoundType>,
+    OwningRef<Ref<'a, Item<I>>, DCompoundType>,
+    OwningRef<Ref<'a, Item<I>>, DCompoundType>,
 )> {
     a.downcast_definition::<DCompoundType>()
         .map(|def_a| {
@@ -96,124 +92,7 @@ fn both_compound_types<'a>(
         .flatten()
 }
 
-impl ItemDefinition for DBuiltin {
-    fn children(&self) -> Vec<LazyItemPtr> {
-        vec![]
-    }
-
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
-        vec![]
-    }
-
-    fn recompute_resolved(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut QueryContext<ResolveQuery>,
-    ) -> <ResolveQuery as Query>::Result {
-        if let Builtin::Type = self.builtin {
-            Ok(DCompoundType::new(this.ptr_clone().into_lazy(), 0).into_ptr_mimicking(this))
-        } else {
-            let rargs = self
-                .args
-                .iter()
-                .map(|arg| arg.evaluate().map(|x| x.resolved()))
-                .try_collect()?;
-            Ok(Self {
-                args: rargs,
-                builtin: self.builtin,
-            }
-            .into_ptr_mimicking(this))
-        }
-    }
-
-    fn recompute_parameters(
-        &self,
-        ctx: &mut QueryContext<ParametersQuery>,
-        this: &ItemPtr,
-    ) -> <ParametersQuery as Query>::Result {
-        let mut result = Parameters::new_empty();
-        for arg in &self.args {
-            result.append(arg.evaluate().unwrap().query_parameters(ctx));
-        }
-        result
-    }
-
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(match self.builtin {
-            Builtin::IsExactly => todo!(),
-            Builtin::IsSubtypeOf => todo!(),
-            Builtin::IfThenElse => self.args[0].ptr_clone(),
-            Builtin::Type | Builtin::Union => Self::r#type().into_ptr().into_lazy(),
-        })
-    }
-
-    fn recompute_type_check(
-        &self,
-        _ctx: &mut QueryContext<TypeCheckQuery>,
-    ) -> <TypeCheckQuery as Query>::Result {
-        no_type_check_errors()
-    }
-
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
-        let rargs = self
-            .args
-            .iter()
-            .map(|arg| arg.evaluate().unwrap().reduced(args.clone()))
-            .collect_vec();
-        match self.builtin {
-            Builtin::IsExactly => {
-                if rargs[0]
-                    .evaluate()
-                    .unwrap()
-                    .is_same_instance_as(&rargs[1].evaluate().unwrap())
-                {
-                    return r#true();
-                }
-            }
-            Builtin::IsSubtypeOf => {
-                let subtype = rargs[0].evaluate().unwrap();
-                let supertype = rargs[1].evaluate().unwrap();
-                if supertype.is_same_instance_as(&subtype) {
-                    return r#true();
-                } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
-                    return r#true();
-                } else if let Some((supertype, subtype)) = both_compound_types(&supertype, &subtype)
-                {
-                    if subtype.is_subtype_of(&*supertype) {
-                        return r#true();
-                    }
-                }
-            }
-            Builtin::IfThenElse => {
-                if rargs[1].evaluate().unwrap().is_true() {
-                    return rargs[2].evaluate().unwrap().ptr_clone();
-                } else if rargs[1].evaluate().unwrap().is_false() {
-                    return rargs[3].evaluate().unwrap().ptr_clone();
-                }
-            }
-            Builtin::Type => unreachable!(),
-            Builtin::Union => {
-                if let Some((subtype_0, subtype_1)) = both_compound_types(
-                    &rargs[0].evaluate().unwrap(),
-                    &rargs[1].evaluate().unwrap(),
-                ) {
-                    return subtype_0.union(&subtype_1).into_ptr_mimicking(this);
-                }
-            }
-        }
-        if rargs == self.args {
-            this.ptr_clone()
-        } else {
-            Self {
-                args: rargs,
-                builtin: self.builtin,
-            }
-            .into_ptr_mimicking(this)
-        }
-    }
-}
-
-impl DBuiltin {
+impl<I: ItemEnum> DBuiltin<I> {
     pub fn new_user_facing(builtin: Builtin, env: &Environment) -> Result<Self, Diagnostic> {
         let args = builtin
             .default_arg_names()
@@ -224,7 +103,6 @@ impl DBuiltin {
                     .map(ItemPtr::into_lazy)
             })
             .collect::<Result<_, _>>()?;
-        let _true = Some(env.r#true());
         Ok(Self { builtin, args })
     }
 
@@ -235,7 +113,7 @@ impl DBuiltin {
         }
     }
 
-    pub fn is_type(candidate: ItemPtr) -> Self {
+    pub fn is_type(candidate: ItemPtr<I>) -> Self {
         Self::is_subtype_of(
             candidate
                 .query_type(&mut Environment::root_query())
@@ -244,14 +122,14 @@ impl DBuiltin {
         )
     }
 
-    pub fn is_subtype_of(subtype: LazyItemPtr, supertype: LazyItemPtr) -> Self {
+    pub fn is_subtype_of(subtype: LazyItemPtr<I>, supertype: LazyItemPtr<I>) -> Self {
         Self {
             builtin: Builtin::IsSubtypeOf,
             args: vec![subtype, supertype],
         }
     }
 
-    pub fn union(subtype_0: LazyItemPtr, subtype_1: LazyItemPtr) -> Self {
+    pub fn union(subtype_0: LazyItemPtr<I>, subtype_1: LazyItemPtr<I>) -> Self {
         Self {
             builtin: Builtin::Union,
             args: vec![subtype_0, subtype_1],
@@ -262,7 +140,7 @@ impl DBuiltin {
         self.builtin
     }
 
-    pub fn get_args(&self) -> &Vec<LazyItemPtr> {
+    pub fn get_args(&self) -> &Vec<LazyItemPtr<I>> {
         &self.args
     }
 }

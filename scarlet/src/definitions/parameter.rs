@@ -8,9 +8,7 @@ use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
     item::{
-        parameters::Parameters,
-        query::{ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery, TypeQuery},
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        parameters::Parameters, CddContext, CycleDetectingDebug, ItemEnum, ItemPtr, LazyItemPtr,
     },
     util::PtrExtension,
 };
@@ -26,99 +24,38 @@ pub struct Order {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Parameter {
+pub struct Parameter<I: ItemEnum> {
     order: Order,
-    original_type: LazyItemPtr,
+    original_type: LazyItemPtr<I>,
 }
 
-impl Parameter {
+impl<I: ItemEnum> Parameter<I> {
     pub fn order(&self) -> &Order {
         &self.order
     }
 
-    pub fn original_type(&self) -> &LazyItemPtr {
+    pub fn original_type(&self) -> &LazyItemPtr<I> {
         &self.original_type
     }
 }
 
-pub type ParameterPtr = Rc<Parameter>;
+pub type ParameterPtr<I: ItemEnum> = Rc<Parameter<I>>;
 
 #[derive(Clone)]
-pub struct DParameter {
-    parameter: ParameterPtr,
-    reduced_type: LazyItemPtr,
+pub struct DParameter<I: ItemEnum> {
+    parameter: ParameterPtr<I>,
+    reduced_type: LazyItemPtr<I>,
 }
 
-impl CycleDetectingDebug for DParameter {
+impl<I: ItemEnum> CycleDetectingDebug for DParameter<I> {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "ANY ")?;
         self.reduced_type.fmt(f, ctx)
     }
 }
 
-impl ItemDefinition for DParameter {
-    fn children(&self) -> Vec<LazyItemPtr> {
-        vec![self.reduced_type.ptr_clone()]
-    }
-
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
-        vec![(
-            this.ptr_clone().into_lazy(),
-            DBuiltin::is_type(self.reduced_type.evaluate().unwrap()).into_ptr(),
-        )]
-    }
-
-    fn recompute_parameters(
-        &self,
-        ctx: &mut QueryContext<ParametersQuery>,
-        this: &ItemPtr,
-    ) -> <ParametersQuery as Query>::Result {
-        let rt = self.reduced_type.evaluate().unwrap();
-        let mut result = rt.query_parameters(ctx);
-        result.insert(rt, self.parameter.ptr_clone());
-        result
-    }
-
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(self.reduced_type.ptr_clone())
-    }
-
-    fn recompute_type_check(
-        &self,
-        _ctx: &mut QueryContext<TypeCheckQuery>,
-    ) -> <TypeCheckQuery as Query>::Result {
-        todo!()
-    }
-
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
-        if let Some(value) = args.get(&self.parameter) {
-            value.ptr_clone().evaluate().unwrap()
-        } else {
-            let r#type = self.reduced_type.evaluate().unwrap().reduced(args.clone());
-            Self {
-                parameter: Rc::clone(&self.parameter),
-                reduced_type: r#type,
-            }
-            .into_ptr_mimicking(this)
-        }
-    }
-
-    fn recompute_resolved(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut QueryContext<ResolveQuery>,
-    ) -> <ResolveQuery as Query>::Result {
-        let r#type = self.reduced_type.evaluate().unwrap().resolved();
-        Ok(Self {
-            parameter: Rc::clone(&self.parameter),
-            reduced_type: r#type,
-        }
-        .into_ptr_mimicking(this))
-    }
-}
-
-impl DParameter {
-    pub fn new(major_order: u8, position: Position, r#type: LazyItemPtr) -> Self {
+impl<I: ItemEnum> DParameter<I> {
+    pub fn new(major_order: u8, position: Position, r#type: LazyItemPtr<I>) -> Self {
         let order = Order {
             major_order,
             file_order: position.file_index() as _,
@@ -134,15 +71,15 @@ impl DParameter {
         }
     }
 
-    pub fn get_parameter_ptr(&self) -> ParameterPtr {
+    pub fn get_parameter_ptr(&self) -> ParameterPtr<I> {
         Rc::clone(&self.parameter)
     }
 
-    pub fn get_parameter(&self) -> &Parameter {
+    pub fn get_parameter(&self) -> &Parameter<I> {
         &*self.parameter
     }
 
-    pub fn get_type(&self) -> &LazyItemPtr {
+    pub fn get_type(&self) -> &LazyItemPtr<I> {
         &self.reduced_type
     }
 }

@@ -2,10 +2,10 @@ use std::fmt::Debug;
 
 use dyn_clone::DynClone;
 
-use crate::item::ItemPtr;
+use crate::item::{ItemPtr, ResolvableItemEnum};
 
 pub trait Scope: Debug + DynClone {
-    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr>;
+    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr<ResolvableItemEnum>>;
 }
 
 impl dyn Scope {
@@ -18,7 +18,7 @@ impl dyn Scope {
 pub struct SPlain;
 
 impl Scope for SPlain {
-    fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
+    fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr<ResolvableItemEnum>> {
         None
     }
 }

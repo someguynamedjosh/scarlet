@@ -1,7 +1,6 @@
 use crate::{
     definitions::builtin::{Builtin, DBuiltin},
     diagnostic::Diagnostic,
-    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
