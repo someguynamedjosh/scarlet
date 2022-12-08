@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::{RefCell, Cell}, collections::HashMap};
 
 use crate::{
     definitions::{new_value::DNewValue, struct_literal::DStructLiteral},
@@ -11,6 +11,7 @@ use crate::{
 
 thread_local! {
     pub static ENV: RefCell<Environment> = RefCell::new(Environment::new());
+    pub static FLAG: Cell<bool> = Cell::new(false);
 }
 
 pub fn r#true() -> ItemPtr {
@@ -72,6 +73,8 @@ impl Environment {
             Err(diagnostic) => return vec![diagnostic],
         };
         self.all_items.clear();
+        println!("{:#?}", self.root);
+        println!("{:#?}", self.root);
         self.root.set_parent_recursive(None);
         println!("SDFLKJ");
         self.root.set_parent_recursive(None);

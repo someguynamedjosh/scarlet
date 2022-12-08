@@ -22,5 +22,7 @@
 
 # main IS Zero.new
 
-At IS NEW_TYPE(b IS ANY Bt)
-Bt IS NEW_TYPE(a IS ANY At)
+# At IS NEW_TYPE(b IS ANY Bt)
+# Bt IS NEW_TYPE(a IS ANY At)
+
+a IS NEW_TYPE(ANY a)

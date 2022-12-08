@@ -27,7 +27,7 @@ use crate::{
         struct_literal::DStructLiteral,
     },
     diagnostic::{Diagnostic, Position},
-    environment::{r#true, Environment, ENV},
+    environment::{r#true, Environment, ENV, FLAG},
     item::query::QueryResult,
     util::PtrExtension,
 };
@@ -117,9 +117,10 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
     fn into_ptr_mimicking(self, other: &ItemPtr) -> ItemPtr {
         let mut result = ItemPtr::from_definition(self);
         if let Some(parent) = other.get_parent() {
-            result.set_parent(parent);
+            // result.set_parent(parent);
         }
         result.set_position(other.get_position());
+        result.2 = other.2;
         result
     }
 }
@@ -180,7 +181,7 @@ impl Hash for LazyItemPtr {
 
 impl CycleDetectingDebug for LazyItemPtr {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
-        CycleDetectingDebug::fmt(&self.base, f, ctx)
+        CycleDetectingDebug::fmt(&self.evaluate().unwrap(), f, ctx)
     }
 }
 
@@ -208,6 +209,10 @@ impl LazyItemPtr {
 
     pub fn ptr_clone(&self) -> LazyItemPtr {
         self.clone()
+    }
+
+    pub fn address(&self) -> *const () {
+        self.base.address()
     }
 }
 
@@ -247,6 +252,9 @@ impl CycleDetectingDebug for ItemPtr {
             if self.lookup_identifier(&ident).unwrap().get_position() != self.get_position() {
                 return write!(f, "{}", ident);
             }
+        }
+        if !self.2 {
+            return write!(f, "alskdf");
         }
         if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
@@ -420,6 +428,10 @@ impl ItemPtr {
         }
     }
 
+    pub fn address(&self) -> *const () {
+        self.0.as_ptr().to_bits() as *const ()
+    }
+
     fn query<Q: Query<Target = Self>>(
         &self,
         ctx: &mut impl AllowsChildQuery<Q>,
@@ -459,14 +471,11 @@ impl ItemPtr {
     pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
         {
             let sb = self.0.borrow();
-            println!("{:#?}", (*sb.definition).type_name());
-
+            // println!("{:#?}", (*sb.definition).type_name());
         }
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
         let children = self.0.borrow().definition.children();
-        assert!(self.0.try_borrow_mut().is_ok());
-        assert!(self.0.try_borrow_mut().is_ok());
         for child in &children {
             let child = child.evaluate().unwrap();
             if child.2 {
@@ -517,12 +526,16 @@ impl ItemPtr {
         &self,
         ctx: &mut impl AllowsChildQuery<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        self.query(
+        let result = self.query(
             ctx,
             |caches| &caches.resolved,
             |caches| &mut caches.resolved,
             |ctx, definition| definition.recompute_resolved(self, ctx),
-        )
+        )?;
+        if !result.2 {
+            // panic!();
+        }
+        Ok(result)
     }
 
     pub fn query_type(
