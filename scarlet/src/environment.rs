@@ -73,10 +73,7 @@ impl Environment {
             Err(diagnostic) => return vec![diagnostic],
         };
         self.all_items.clear();
-        println!("{:#?}", self.root);
-        println!("{:#?}", self.root);
         self.root.set_parent_recursive(None);
-        println!("SDFLKJ");
         self.root.set_parent_recursive(None);
         self.root.collect_self_and_children(&mut self.all_items);
         self.all_items.dedup();

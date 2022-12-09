@@ -26,3 +26,5 @@
 # Bt IS NEW_TYPE(a IS ANY At)
 
 a IS NEW_TYPE(ANY a)
+
+main IS a

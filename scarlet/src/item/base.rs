@@ -68,7 +68,7 @@ impl<T: Any> NamedAny for T {
 pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
     fn children(&self) -> Vec<LazyItemPtr>;
     fn collect_constraints(&self, this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)>;
-    fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
+    fn local_lookup_identifier(&self, _identifier: &str) -> Option<LazyItemPtr> {
         None
     }
     fn local_reverse_lookup_identifier(&self, _item: &ItemPtr) -> Option<String> {
@@ -120,7 +120,6 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
             // result.set_parent(parent);
         }
         result.set_position(other.get_position());
-        result.2 = other.2;
         result
     }
 }
@@ -214,6 +213,10 @@ impl LazyItemPtr {
     pub fn address(&self) -> *const () {
         self.base.address()
     }
+
+    fn get_position(&self) -> Position {
+        self.base.get_position()
+    }
 }
 
 #[derive(Debug)]
@@ -223,7 +226,7 @@ pub struct Item {
     query_result_caches: ItemQueryResultCaches,
 }
 
-pub struct ItemPtr(Rc<RefCell<Item>>, Option<Position>, bool);
+pub struct ItemPtr(Rc<RefCell<Item>>, Option<Position>);
 
 impl Clone for ItemPtr {
     fn clone(&self) -> Self {
@@ -253,12 +256,9 @@ impl CycleDetectingDebug for ItemPtr {
                 return write!(f, "{}", ident);
             }
         }
-        if !self.2 {
-            return write!(f, "alskdf");
-        }
         if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
-            write!(f, "@{:?}", ptr)
+            write!(f, "REFERENCE({:?})", ptr)
         } else {
             let mut new_stack = Vec::from(ctx.stack);
             new_stack.push(ptr);
@@ -300,7 +300,6 @@ impl ItemPtr {
                 query_result_caches: ItemQueryResultCaches::new(),
             })),
             None,
-            true,
         )
     }
 
@@ -313,11 +312,7 @@ impl ItemPtr {
     }
 
     pub fn with_position(&self, position: Position) -> Self {
-        Self(self.0.ptr_clone(), Some(position), true)
-    }
-
-    pub fn marked_as_non_parent(&self) -> Self {
-        Self(self.0.ptr_clone(), self.1, false)
+        Self(self.0.ptr_clone(), Some(position))
     }
 
     pub fn set_parent(&self, parent: ItemPtr) {
@@ -329,7 +324,7 @@ impl ItemPtr {
     }
 
     pub fn ptr_clone(&self) -> ItemPtr {
-        Self(self.0.ptr_clone(), self.1, true)
+        Self(self.0.ptr_clone(), self.1)
     }
 
     pub fn is_same_instance_as(&self, other: &ItemPtr) -> bool {
@@ -406,7 +401,7 @@ impl ItemPtr {
         })
     }
 
-    pub fn lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
+    pub fn lookup_identifier(&self, identifier: &str) -> Option<LazyItemPtr> {
         let this = self.0.borrow();
         if let Some(item) = this.definition.local_lookup_identifier(identifier) {
             Some(item)
@@ -478,9 +473,7 @@ impl ItemPtr {
         let children = self.0.borrow().definition.children();
         for child in &children {
             let child = child.evaluate().unwrap();
-            if child.2 {
-                child.set_parent_recursive(parent.clone());
-            }
+            child.set_parent_recursive(parent.clone());
         }
     }
 
@@ -489,9 +482,6 @@ impl ItemPtr {
         let children = self.0.borrow().definition.children();
         for child in &children {
             let child = child.evaluate().unwrap();
-            if child.2 {
-                child.collect_self_and_children(into);
-            }
         }
         // debug_assert_eq!(
         //     {
@@ -532,9 +522,6 @@ impl ItemPtr {
             |caches| &mut caches.resolved,
             |ctx, definition| definition.recompute_resolved(self, ctx),
         )?;
-        if !result.2 {
-            // panic!();
-        }
         Ok(result)
     }
 

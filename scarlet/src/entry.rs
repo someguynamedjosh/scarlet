@@ -60,9 +60,14 @@ pub(crate) fn entry() {
         env.get_root()
             .lookup_identifier(&path)
             .unwrap()
+            .evaluate()
+            .unwrap()
             .lookup_identifier("main")
+            .unwrap()
+            .evaluate()
             .unwrap()
             .reduced(HashMap::new())
             .evaluate()
+            .unwrap()
     );
 }

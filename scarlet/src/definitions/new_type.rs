@@ -35,9 +35,8 @@ impl CycleDetectingDebug for DNewType {
         for field in &self.fields {
             write!(
                 f,
-                "   {} IS {:?} {}",
+                "   {} IS {}",
                 field.0,
-                field.1.address(),
                 field.1.to_indented_string(ctx, 2)
             )?;
             write!(f, ",\n")?;

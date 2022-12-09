@@ -60,10 +60,10 @@ impl ItemDefinition for DStructLiteral {
         }
     }
 
-    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
+    fn local_lookup_identifier(&self, identifier: &str) -> Option<LazyItemPtr> {
         for (field, value) in &self.fields {
             if field == identifier {
-                return Some(value.evaluate().unwrap());
+                return Some(value.ptr_clone());
             }
         }
         None

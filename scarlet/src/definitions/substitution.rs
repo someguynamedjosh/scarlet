@@ -194,6 +194,7 @@ impl ItemDefinition for DSubstitution {
                                 .with_item_error(&value.evaluate().unwrap())
                         };
                         let param = base.lookup_identifier(name).ok_or_else(gen_error)?;
+                        let param = param.evaluate().unwrap();
                         let param = param
                             .downcast_definition::<DParameter>()
                             .ok_or_else(gen_error)?;
