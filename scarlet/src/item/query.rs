@@ -272,8 +272,10 @@ impl Query for ParametersQuery {
     type Result = Parameters;
     type Target = ItemPtr;
 
-    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
-        todo!()
+    fn result_when_cycle_encountered(target: &Self::Target) -> Self::Result {
+        let mut p = Parameters::new_empty();
+        p.mark_excluding(target.ptr_clone());
+        p
     }
 }
 

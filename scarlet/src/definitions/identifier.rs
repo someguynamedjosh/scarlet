@@ -37,9 +37,7 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        let mut result = Parameters::new_empty();
-        result.mark_excluding(this.ptr_clone());
-        result
+        Parameters::new_empty()
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
@@ -68,7 +66,6 @@ impl ItemDefinition for DIdentifier {
                 .into_ptr_mimicking(this)
                 .with_position(this.get_position()))
         } else {
-            panic!();
             Err(Diagnostic::new()
                 .with_text_error(format!("No identifier \"{}\" in scope.", self.identifier))
                 .with_item_error(this))

@@ -501,7 +501,11 @@ impl ItemPtr {
             ctx,
             |caches| &caches.parameters,
             |caches| &mut caches.parameters,
-            |ctx, definition| definition.recompute_parameters(ctx, self),
+            |ctx, definition| {
+                let mut result =  definition.recompute_parameters(ctx, self);
+                result.unmark_excluding(self);
+                result
+            },
         )
     }
 
