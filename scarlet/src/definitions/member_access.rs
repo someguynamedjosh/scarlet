@@ -125,7 +125,7 @@ impl ItemDefinition for DMemberAccess {
             .evaluate()
             .unwrap();
         let downcast = type_ptr.downcast_definition::<DCompoundType>();
-        if let Some(r#type) = downcast {
+        if let Some(r#type) = &downcast {
             let components = r#type.get_component_types();
             if components.len() > 1 {
                 return Err(Diagnostic::new()
@@ -166,13 +166,19 @@ impl ItemDefinition for DMemberAccess {
             };
             if let Some((index, r#type)) = index {
                 if index == Member::Constructor {
-                    if let Some(r#type) = rbase.downcast_definition::<DCompoundType>() {
+                    println!("{:#?}", rbase.clone_definition());
+                    if let Some(r#type) = rbase.dereference().downcast_definition::<DCompoundType>()
+                    {
                         if let Some(constructor) = r#type.constructor(&rbase) {
                             return Ok(constructor
                                 .resolved()
                                 .evaluate()?
                                 .with_position(this.get_position()));
+                        } else {
+                            panic!("Attempt to get constructor of Type.");
                         }
+                    } else {
+                        panic!("Attempted to get constructor of type only known at runtime!");
                     }
                 }
                 Ok(Self {

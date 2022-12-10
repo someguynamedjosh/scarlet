@@ -73,4 +73,8 @@ impl DReference {
     pub fn new(target: LazyItemPtr) -> Self {
         Self { target }
     }
+
+    pub fn target(&self) -> &LazyItemPtr {
+        &self.target
+    }
 }

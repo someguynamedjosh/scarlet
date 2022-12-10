@@ -20,4 +20,4 @@ Zero IS NEW_TYPE()
 Successor IS NEW_TYPE(of IS ANY PeanoNumber)
 PeanoNumber IS Union(Zero Successor)
 
-main IS Successor.new()
+main IS Successor.new(Zero.new)

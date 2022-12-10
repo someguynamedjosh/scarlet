@@ -24,6 +24,7 @@ use crate::{
         new_type::DNewType,
         new_value::DNewValue,
         parameter::{DParameter, ParameterPtr},
+        reference::DReference,
         struct_literal::DStructLiteral,
     },
     diagnostic::{Diagnostic, Position},
@@ -201,7 +202,9 @@ impl LazyItemPtr {
     pub fn evaluate(&self) -> Result<ItemPtr, Diagnostic> {
         match &self.transformation {
             LazyTransformation::None => Ok(self.base.ptr_clone()),
-            LazyTransformation::Resolved => self.base.resolve_now(&mut Environment::root_query()),
+            LazyTransformation::Resolved => {
+                Ok(self.base.resolve_now(&mut Environment::root_query())?)
+            }
             LazyTransformation::Reduced(args) => Ok(self.base.reduce_now(args, true)),
         }
     }
@@ -251,11 +254,11 @@ impl Hash for ItemPtr {
 impl CycleDetectingDebug for ItemPtr {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         let ptr = self.0.as_ptr() as *const _;
-        if let Some(ident) = self.reverse_lookup_identifier(self) {
-            if self.lookup_identifier(&ident).unwrap().get_position() != self.get_position() {
-                return write!(f, "{}", ident);
-            }
-        }
+        // if let Some(ident) = self.reverse_lookup_identifier(self) {
+        //     if self.lookup_identifier(&ident).unwrap().get_position() !=
+        // self.get_position() {         return write!(f, "{}", ident);
+        //     }
+        // }
         if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
             write!(f, "REFERENCE({:?})", ptr)
@@ -502,7 +505,7 @@ impl ItemPtr {
             |caches| &caches.parameters,
             |caches| &mut caches.parameters,
             |ctx, definition| {
-                let mut result =  definition.recompute_parameters(ctx, self);
+                let mut result = definition.recompute_parameters(ctx, self);
                 result.unmark_excluding(self);
                 result
             },
@@ -611,6 +614,14 @@ impl ItemPtr {
         LazyItemPtr {
             base: self,
             transformation: LazyTransformation::None,
+        }
+    }
+
+    pub fn dereference(&self) -> ItemPtr {
+        if let Some(r#ref) = self.downcast_definition::<DReference>() {
+            r#ref.target().evaluate().unwrap().dereference()
+        } else {
+            self.ptr_clone()
         }
     }
 }
