@@ -20,7 +20,7 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
     },
 };
 
@@ -55,7 +55,7 @@ impl Builtin {
 #[derive(Clone, Debug)]
 pub struct DBuiltin {
     builtin: Builtin,
-    args: Vec<LazyItemPtr>,
+    args: Vec<ItemPtr>,
 }
 
 impl CycleDetectingDebug for DBuiltin {
@@ -94,11 +94,11 @@ fn both_compound_types<'a>(
 }
 
 impl ItemDefinition for DBuiltin {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         vec![]
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -110,7 +110,7 @@ impl ItemDefinition for DBuiltin {
         let rargs = self
             .args
             .iter()
-            .map(|arg| arg.evaluate().map(|x| x.resolved()))
+            .map(|arg| Ok(arg.dereference()?.resolved()))
             .try_collect()?;
         Ok(Self {
             args: rargs,
@@ -126,7 +126,7 @@ impl ItemDefinition for DBuiltin {
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for arg in &self.args {
-            result.append(arg.evaluate().unwrap().query_parameters(ctx));
+            result.append(arg.query_parameters(ctx));
         }
         result
     }
@@ -136,7 +136,7 @@ impl ItemDefinition for DBuiltin {
             Builtin::IsExactly => todo!(),
             Builtin::IsSubtypeOf => todo!(),
             Builtin::IfThenElse => self.args[0].ptr_clone(),
-            Builtin::Union => DCompoundType::r#type().into_ptr().into_lazy(),
+            Builtin::Union => DCompoundType::r#type().into_ptr(),
         })
     }
 
@@ -147,25 +147,25 @@ impl ItemDefinition for DBuiltin {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let rargs = self
             .args
             .iter()
-            .map(|arg| arg.evaluate().unwrap().reduced(args.clone()))
+            .map(|arg| arg.reduced(args, true))
             .collect_vec();
         match self.builtin {
             Builtin::IsExactly => {
                 if rargs[0]
-                    .evaluate()
+                    .dereference()
                     .unwrap()
-                    .is_same_instance_as(&rargs[1].evaluate().unwrap())
+                    .is_same_instance_as(&rargs[1].dereference().unwrap())
                 {
                     return r#true();
                 }
             }
             Builtin::IsSubtypeOf => {
-                let subtype = rargs[0].evaluate().unwrap();
-                let supertype = rargs[1].evaluate().unwrap();
+                let subtype = rargs[0].dereference().unwrap();
+                let supertype = rargs[1].dereference().unwrap();
                 if supertype.is_same_instance_as(&subtype) {
                     return r#true();
                 } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
@@ -178,16 +178,16 @@ impl ItemDefinition for DBuiltin {
                 }
             }
             Builtin::IfThenElse => {
-                if rargs[1].evaluate().unwrap().is_true() {
-                    return rargs[2].evaluate().unwrap().ptr_clone();
-                } else if rargs[1].evaluate().unwrap().is_false() {
-                    return rargs[3].evaluate().unwrap().ptr_clone();
+                if rargs[1].dereference().unwrap().is_true() {
+                    return rargs[2].dereference().unwrap().ptr_clone();
+                } else if rargs[1].dereference().unwrap().is_false() {
+                    return rargs[3].dereference().unwrap().ptr_clone();
                 }
             }
             Builtin::Union => {
                 if let Some((subtype_0, subtype_1)) = both_compound_types(
-                    &rargs[0].evaluate().unwrap(),
-                    &rargs[1].evaluate().unwrap(),
+                    &rargs[0].dereference().unwrap(),
+                    &rargs[1].dereference().unwrap(),
                 ) {
                     return subtype_0.union(&subtype_1).into_ptr_mimicking(this);
                 }
@@ -210,11 +210,7 @@ impl DBuiltin {
         let args = builtin
             .default_arg_names()
             .iter()
-            .map(|name| {
-                env.get_language_item(name)
-                    .map(ItemPtr::ptr_clone)
-                    .map(ItemPtr::into_lazy)
-            })
+            .map(|name| env.get_language_item(name).map(ItemPtr::ptr_clone))
             .collect::<Result<_, _>>()?;
         let _true = Some(env.r#true());
         Ok(Self { builtin, args })
@@ -225,18 +221,18 @@ impl DBuiltin {
             candidate
                 .query_type(&mut Environment::root_query())
                 .unwrap(),
-            DCompoundType::r#type().into_ptr().into_lazy(),
+            DCompoundType::r#type().into_ptr(),
         )
     }
 
-    pub fn is_subtype_of(subtype: LazyItemPtr, supertype: LazyItemPtr) -> Self {
+    pub fn is_subtype_of(subtype: ItemPtr, supertype: ItemPtr) -> Self {
         Self {
             builtin: Builtin::IsSubtypeOf,
             args: vec![subtype, supertype],
         }
     }
 
-    pub fn union(subtype_0: LazyItemPtr, subtype_1: LazyItemPtr) -> Self {
+    pub fn union(subtype_0: ItemPtr, subtype_1: ItemPtr) -> Self {
         Self {
             builtin: Builtin::Union,
             args: vec![subtype_0, subtype_1],
@@ -247,7 +243,7 @@ impl DBuiltin {
         self.builtin
     }
 
-    pub fn get_args(&self) -> &Vec<LazyItemPtr> {
+    pub fn get_args(&self) -> &Vec<ItemPtr> {
         &self.args
     }
 }

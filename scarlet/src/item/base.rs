@@ -66,9 +66,9 @@ impl<T: Any> NamedAny for T {
 }
 
 pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
-    fn children(&self) -> Vec<LazyItemPtr>;
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)>;
-    fn local_lookup_identifier(&self, _identifier: &str) -> Option<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr>;
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)>;
+    fn local_lookup_identifier(&self, _identifier: &str) -> Option<ItemPtr> {
         None
     }
     fn local_reverse_lookup_identifier(&self, _item: &ItemPtr) -> Option<String> {
@@ -89,7 +89,7 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
         &self,
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr;
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
 }
 
 impl dyn ItemDefinition {
@@ -148,76 +148,6 @@ impl ItemQueryResultCaches {
             r#type: QueryResultCache::new(),
             type_check: QueryResultCache::new(),
         }
-    }
-}
-
-#[derive(Clone)]
-enum LazyTransformation {
-    None,
-    Resolved,
-    Reduced(HashMap<ParameterPtr, LazyItemPtr>),
-}
-
-#[derive(Clone)]
-pub struct LazyItemPtr {
-    base: ItemPtr,
-    transformation: LazyTransformation,
-}
-
-impl PartialEq for LazyItemPtr {
-    fn eq(&self, other: &Self) -> bool {
-        self.base.is_same_instance_as(&other.base)
-    }
-}
-
-impl Eq for LazyItemPtr {}
-
-impl Hash for LazyItemPtr {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.base.hash(state);
-    }
-}
-
-impl CycleDetectingDebug for LazyItemPtr {
-    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
-        CycleDetectingDebug::fmt(&self.evaluate().unwrap(), f, ctx)
-    }
-}
-
-impl Debug for LazyItemPtr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        CycleDetectingDebug::fmt(
-            self,
-            f,
-            &mut CddContext {
-                stack: &[],
-                recursed_on: &mut HashSet::new(),
-            },
-        )
-    }
-}
-
-impl LazyItemPtr {
-    pub fn evaluate(&self) -> Result<ItemPtr, Diagnostic> {
-        match &self.transformation {
-            LazyTransformation::None => Ok(self.base.ptr_clone()),
-            LazyTransformation::Resolved => {
-                Ok(self.base.resolve_now(&mut Environment::root_query())?)
-            }
-            LazyTransformation::Reduced(args) => Ok(self.base.reduce_now(args, true)),
-        }
-    }
-
-    pub fn ptr_clone(&self) -> LazyItemPtr {
-        self.clone()
-    }
-
-    pub fn address(&self) -> *const () {
-        self.base.address()
-    }
-
-    fn get_position(&self) -> Position {
-        self.base.get_position()
     }
 }
 
@@ -343,7 +273,7 @@ impl ItemPtr {
             .ok()
     }
 
-    pub fn get_args_if_builtin(&self, builtin: Builtin) -> Option<Vec<LazyItemPtr>> {
+    pub fn get_args_if_builtin(&self, builtin: Builtin) -> Option<Vec<ItemPtr>> {
         self.downcast_definition::<DBuiltin>()
             .map(|x| {
                 if x.get_builtin() == builtin {
@@ -377,7 +307,7 @@ impl ItemPtr {
                 .get_language_item("True")
                 .unwrap()
                 .resolved()
-                .evaluate()
+                .dereference()
                 .unwrap();
             self.is_literal_instance_of(of_type)
         })
@@ -390,13 +320,13 @@ impl ItemPtr {
                     .get_language_item("False")
                     .unwrap()
                     .resolved()
-                    .evaluate()
+                    .dereference()
                     .unwrap(),
             )
         })
     }
 
-    pub fn lookup_identifier(&self, identifier: &str) -> Option<LazyItemPtr> {
+    pub fn lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
         let this = self.0.borrow();
         if let Some(item) = this.definition.local_lookup_identifier(identifier) {
             Some(item)
@@ -467,7 +397,7 @@ impl ItemPtr {
         let parent = Some(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         for child in &children {
-            let child = child.evaluate().unwrap();
+            let child = child.dereference().unwrap();
             child.set_parent_recursive(parent.clone());
         }
     }
@@ -476,7 +406,7 @@ impl ItemPtr {
         into.push(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         for child in &children {
-            let child = child.evaluate().unwrap();
+            let child = child.dereference().unwrap();
         }
         // debug_assert_eq!(
         //     {
@@ -504,14 +434,11 @@ impl ItemPtr {
         )
     }
 
-    pub fn resolved(&self) -> LazyItemPtr {
-        LazyItemPtr {
-            base: self.ptr_clone(),
-            transformation: LazyTransformation::Resolved,
-        }
+    pub fn resolved(&self) -> ItemPtr {
+        DReference::new_resolve(self.ptr_clone()).into_ptr_mimicking(self)
     }
 
-    fn resolve_now(
+    pub fn resolve_now(
         &self,
         ctx: &mut impl AllowsChildQuery<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
@@ -548,22 +475,11 @@ impl ItemPtr {
         )
     }
 
-    pub fn collect_constraints(&self) -> Vec<(LazyItemPtr, ItemPtr)> {
+    pub fn collect_constraints(&self) -> Vec<(ItemPtr, ItemPtr)> {
         self.0.borrow().definition.collect_constraints(self)
     }
 
-    pub fn reduced(&self, args: HashMap<ParameterPtr, LazyItemPtr>) -> LazyItemPtr {
-        LazyItemPtr {
-            base: self.ptr_clone(),
-            transformation: LazyTransformation::Reduced(args),
-        }
-    }
-
-    pub fn reduce_now(
-        &self,
-        args: &HashMap<ParameterPtr, LazyItemPtr>,
-        allow_cacheing: bool,
-    ) -> ItemPtr {
+    pub fn reduced(&self, args: &HashMap<ParameterPtr, ItemPtr>, allow_cacheing: bool) -> ItemPtr {
         let this = self.0.borrow();
         if args.len() == 0 && allow_cacheing {
             if let Some(ptr) = this.query_result_caches.plain_reduced.as_ref() {
@@ -581,15 +497,14 @@ impl ItemPtr {
 
     /// True if this item is Type.
     pub fn is_exactly_type(&self) -> bool {
-            self
-                .downcast_definition::<DCompoundType>()
-                .map(|ct| ct.is_exactly_type())
-                == Some(true)
+        self.downcast_definition::<DCompoundType>()
+            .map(|ct| ct.is_exactly_type())
+            == Some(true)
     }
 
     pub fn is_type_parameter(&self) -> bool {
         self.downcast_definition::<DParameter>()
-            .map(|param| param.get_type().evaluate().unwrap().is_exactly_type())
+            .map(|param| param.get_type().dereference().unwrap().is_exactly_type())
             == Some(true)
     }
 
@@ -601,18 +516,11 @@ impl ItemPtr {
             || self.is_type_parameter()
     }
 
-    pub(crate) fn into_lazy(self) -> LazyItemPtr {
-        LazyItemPtr {
-            base: self,
-            transformation: LazyTransformation::None,
-        }
-    }
-
-    pub fn dereference(&self) -> ItemPtr {
+    pub fn dereference(&self) -> Result<ItemPtr, Diagnostic> {
         if let Some(r#ref) = self.downcast_definition::<DReference>() {
-            r#ref.target().evaluate().unwrap().dereference()
+            r#ref.target()
         } else {
-            self.ptr_clone()
+            Ok(self.ptr_clone())
         }
     }
 }

@@ -3,32 +3,43 @@ use std::{collections::HashMap, fmt};
 use super::parameter::ParameterPtr;
 use crate::{
     diagnostic::Diagnostic,
+    environment::Environment,
     item::{
         parameters::Parameters,
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, ItemDefinition, ItemPtr,
     },
 };
 
 #[derive(Clone, Debug)]
+enum Transformation {
+    None,
+    Resolve,
+}
+
+#[derive(Clone, Debug)]
 pub struct DReference {
-    target: LazyItemPtr,
+    base: ItemPtr,
+    transformation: Transformation,
 }
 
 impl CycleDetectingDebug for DReference {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
-        self.target.fmt(f, ctx)
+        match self.target() {
+            Ok(i) => i.fmt(f, ctx),
+            Err(_) => write!(f, "ERROR"),
+        }
     }
 }
 
 impl ItemDefinition for DReference {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         vec![]
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -37,11 +48,11 @@ impl ItemDefinition for DReference {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        self.target.evaluate().unwrap().query_parameters(ctx)
+        self.base.dereference().unwrap().query_parameters(ctx)
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        self.target.evaluate().unwrap().query_type(ctx)
+        self.base.dereference().unwrap().query_type(ctx)
     }
 
     fn recompute_type_check(
@@ -51,13 +62,8 @@ impl ItemDefinition for DReference {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
-        self.target
-            .evaluate()
-            .unwrap()
-            .reduced(args.clone())
-            .evaluate()
-            .unwrap()
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
+        self.base.reduced(args, true)
     }
 
     fn recompute_resolved(
@@ -70,11 +76,24 @@ impl ItemDefinition for DReference {
 }
 
 impl DReference {
-    pub fn new(target: LazyItemPtr) -> Self {
-        Self { target }
+    pub fn new(target: ItemPtr) -> Self {
+        Self {
+            base: target,
+            transformation: Transformation::None,
+        }
     }
 
-    pub fn target(&self) -> &LazyItemPtr {
-        &self.target
+    pub fn new_resolve(base: ItemPtr) -> Self {
+        Self {
+            base,
+            transformation: Transformation::Resolve,
+        }
+    }
+
+    pub fn target(&self) -> Result<ItemPtr, Diagnostic> {
+        match self.transformation {
+            Transformation::None => Ok(self.base.ptr_clone()),
+            Transformation::Resolve => self.base.resolve_now(&mut Environment::root_query()),
+        }
     }
 }

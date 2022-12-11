@@ -6,7 +6,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use super::{parameters::Parameters, ItemPtr, ItemQueryResultCaches, LazyItemPtr};
+use super::{parameters::Parameters, ItemPtr, ItemQueryResultCaches};
 use crate::{diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment};
 
 pub trait QueryResult: Clone + Hash + Eq {
@@ -294,7 +294,7 @@ impl Query for RootQuery {
 pub struct TypeQuery;
 
 impl Query for TypeQuery {
-    type Result = Option<LazyItemPtr>;
+    type Result = Option<ItemPtr>;
     type Target = ItemPtr;
 
     fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {

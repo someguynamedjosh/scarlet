@@ -11,7 +11,7 @@ use crate::{
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 2);
     let r#type = node.children[1].as_item(ctx)?;
-    Ok(DParameter::new(128, node.position, r#type.into_lazy()).into_ptr())
+    Ok(DParameter::new(128, node.position, r#type).into_ptr())
 }
 
 pub fn phrase() -> Phrase {

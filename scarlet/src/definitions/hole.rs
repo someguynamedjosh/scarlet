@@ -9,12 +9,12 @@ use crate::item::{
         no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery,
         TypeQuery,
     },
-    CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+    CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, 
 };
 
 #[derive(Clone)]
 pub struct DHole {
-    r#type: LazyItemPtr,
+    r#type: ItemPtr,
 }
 
 impl CycleDetectingDebug for DHole {
@@ -24,16 +24,16 @@ impl CycleDetectingDebug for DHole {
 }
 
 impl ItemDefinition for DHole {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         vec![self.r#type.ptr_clone()]
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![(
             self.r#type.ptr_clone(),
             DBuiltin::is_subtype_of(
                 self.r#type.ptr_clone(),
-                DCompoundType::r#type().into_ptr().into_lazy(),
+                DCompoundType::r#type().into_ptr(),
             )
             .into_ptr(),
         )]
@@ -66,13 +66,13 @@ impl ItemDefinition for DHole {
         Ok(this.ptr_clone())
     }
 
-    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
 }
 
 impl DHole {
-    pub fn new(r#type: LazyItemPtr) -> Self {
+    pub fn new(r#type: ItemPtr) -> Self {
         Self { r#type }
     }
 }

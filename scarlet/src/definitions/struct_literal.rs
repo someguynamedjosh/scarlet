@@ -20,13 +20,13 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
 };
 
 #[derive(Clone)]
 pub struct DStructLiteral {
-    fields: Vec<(String, LazyItemPtr)>,
+    fields: Vec<(String, ItemPtr)>,
     /// If true, a type is automatically generated based on the contents. If
     /// false, the type should be inferred.
     is_module: bool,
@@ -49,11 +49,11 @@ impl CycleDetectingDebug for DStructLiteral {
 }
 
 impl ItemDefinition for DStructLiteral {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         self.fields.iter().map(|(_, f)| f.ptr_clone()).collect_vec()
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         if self.is_module {
             vec![]
         } else {
@@ -61,7 +61,7 @@ impl ItemDefinition for DStructLiteral {
         }
     }
 
-    fn local_lookup_identifier(&self, identifier: &str) -> Option<LazyItemPtr> {
+    fn local_lookup_identifier(&self, identifier: &str) -> Option<ItemPtr> {
         for (field, value) in &self.fields {
             if field == identifier {
                 return Some(value.ptr_clone());
@@ -72,7 +72,7 @@ impl ItemDefinition for DStructLiteral {
 
     fn local_reverse_lookup_identifier(&self, item: &ItemPtr) -> Option<String> {
         for (field, value) in &self.fields {
-            if value.evaluate().unwrap().is_same_instance_as(item) {
+            if value.dereference().unwrap().is_same_instance_as(item) {
                 return Some(field.clone());
             }
         }
@@ -89,7 +89,7 @@ impl ItemDefinition for DStructLiteral {
             return result;
         }
         for field in &self.fields {
-            let field = field.1.evaluate().unwrap();
+            let field = field.1.dereference().unwrap();
             result.append(field.query_parameters(ctx));
         }
         result
@@ -99,13 +99,11 @@ impl ItemDefinition for DStructLiteral {
         if self.is_module {
             let mut fields = Vec::new();
             for (name, value) in &self.fields {
-                let value = value.evaluate().unwrap();
+                let value = value.dereference().unwrap();
                 let r#type = value.query_type(ctx)?;
                 fields.push((
                     name.clone(),
-                    DParameter::new(128, Position::placeholder(), r#type)
-                        .into_ptr()
-                        .into_lazy(),
+                    DParameter::new(128, Position::placeholder(), r#type).into_ptr(),
                 ));
             }
             Some(
@@ -113,15 +111,10 @@ impl ItemDefinition for DStructLiteral {
                     type_id: Rc::new(()),
                     fields,
                 }))
-                .into_ptr()
-                .into_lazy(),
+                .into_ptr(),
             )
         } else {
-            Some(
-                DHole::new(DCompoundType::r#type().into_ptr().into_lazy())
-                    .into_ptr()
-                    .into_lazy(),
-            )
+            Some(DHole::new(DCompoundType::r#type().into_ptr()).into_ptr())
         }
     }
 
@@ -144,7 +137,7 @@ impl ItemDefinition for DStructLiteral {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| (name.clone(), value.evaluate().unwrap().resolved()))
+            .map(|(name, value)| (name.clone(), value.dereference().unwrap().resolved()))
             .collect();
         Ok(Self {
             fields,
@@ -153,14 +146,14 @@ impl ItemDefinition for DStructLiteral {
         .into_ptr_mimicking(this))
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let fields = self
             .fields
             .iter()
             .map(|(name, value)| {
                 (
                     name.clone(),
-                    value.evaluate().unwrap().reduced(args.clone()),
+                    value.dereference().unwrap().reduced(args, true),
                 )
             })
             .collect();
@@ -177,14 +170,14 @@ impl ItemDefinition for DStructLiteral {
 }
 
 impl DStructLiteral {
-    pub fn new_module(fields: Vec<(String, LazyItemPtr)>) -> Self {
+    pub fn new_module(fields: Vec<(String, ItemPtr)>) -> Self {
         Self {
             fields,
             is_module: true,
         }
     }
 
-    pub fn new_struct(fields: Vec<(String, LazyItemPtr)>) -> Self {
+    pub fn new_struct(fields: Vec<(String, ItemPtr)>) -> Self {
         Self {
             fields,
             is_module: false,

@@ -8,7 +8,7 @@ use crate::{
         query::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
 };
 
@@ -24,11 +24,11 @@ impl CycleDetectingDebug for DIdentifier {
 }
 
 impl ItemDefinition for DIdentifier {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         vec![]
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -51,7 +51,7 @@ impl ItemDefinition for DIdentifier {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         unreachable!()
     }
 
@@ -61,7 +61,7 @@ impl ItemDefinition for DIdentifier {
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
         if let Some(item) = this.lookup_identifier(&self.identifier) {
-            let item = item.evaluate().unwrap().resolved();
+            let item = item.resolved();
             Ok(DReference::new(item)
                 .into_ptr_mimicking(this)
                 .with_position(this.get_position()))

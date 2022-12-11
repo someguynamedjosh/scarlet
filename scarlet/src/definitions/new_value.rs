@@ -19,7 +19,7 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     util::PtrExtension,
 };
@@ -27,7 +27,7 @@ use crate::{
 #[derive(Clone)]
 pub struct DNewValue {
     r#type: Rc<Type>,
-    fields: Vec<LazyItemPtr>,
+    fields: Vec<ItemPtr>,
 }
 
 impl CycleDetectingDebug for DNewValue {
@@ -42,11 +42,11 @@ impl CycleDetectingDebug for DNewValue {
 }
 
 impl ItemDefinition for DNewValue {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         self.fields.iter().map(|f| f.ptr_clone()).collect_vec()
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -57,18 +57,14 @@ impl ItemDefinition for DNewValue {
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for field in &self.fields {
-            let field = field.evaluate().unwrap();
+            let field = field.dereference().unwrap();
             result.append(field.query_parameters(ctx));
         }
         result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(
-            DCompoundType::new_single(self.r#type.ptr_clone())
-                .into_ptr()
-                .into_lazy(),
-        )
+        Some(DCompoundType::new_single(self.r#type.ptr_clone()).into_ptr())
     }
 
     fn recompute_type_check(
@@ -86,7 +82,7 @@ impl ItemDefinition for DNewValue {
         let rfields = self
             .fields
             .iter()
-            .map(|field| field.evaluate().unwrap().resolved())
+            .map(|field| field.dereference().unwrap().resolved())
             .collect();
         if rfields == self.fields {
             Ok(this.ptr_clone())
@@ -99,26 +95,22 @@ impl ItemDefinition for DNewValue {
         }
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let rfields = self
             .fields
             .iter()
-            .map(|field| field.evaluate().unwrap().reduced(args.clone()))
+            .map(|field| field.reduced(args, true))
             .collect_vec();
-        if rfields == self.fields {
-            this.ptr_clone()
-        } else {
-            Self {
-                fields: rfields,
-                r#type: self.r#type.ptr_clone(),
-            }
-            .into_ptr_mimicking(this)
+        Self {
+            fields: rfields,
+            r#type: self.r#type.ptr_clone(),
         }
+        .into_ptr_mimicking(this)
     }
 }
 
 impl DNewValue {
-    pub fn new(r#type: Rc<Type>, fields: Vec<LazyItemPtr>) -> Self {
+    pub fn new(r#type: Rc<Type>, fields: Vec<ItemPtr>) -> Self {
         assert!(!r#type.is_god_type());
         assert_eq!(r#type.get_fields().len(), fields.len());
         Self { r#type, fields }
@@ -128,7 +120,7 @@ impl DNewValue {
         Ok(env
             .get_language_item(name)?
             .resolved()
-            .evaluate()
+            .dereference()
             .unwrap()
             .downcast_definition::<DCompoundType>()
             .unwrap()
@@ -149,7 +141,7 @@ impl DNewValue {
         Ok(Self::new(Self::get_builtin_type(env, "False")?, vec![]))
     }
 
-    pub fn fields(&self) -> &Vec<LazyItemPtr> {
+    pub fn fields(&self) -> &Vec<ItemPtr> {
         &self.fields
     }
 

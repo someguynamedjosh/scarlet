@@ -19,7 +19,7 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     shared::OrderedMap,
     util::PtrExtension,
@@ -31,12 +31,12 @@ pub enum UnresolvedTarget {
     Named(String),
 }
 
-pub type UnresolvedSubstitutions = Vec<(UnresolvedTarget, LazyItemPtr)>;
-pub type Substitutions = OrderedMap<(ItemPtr, ParameterPtr), LazyItemPtr>;
+pub type UnresolvedSubstitutions = Vec<(UnresolvedTarget, ItemPtr)>;
+pub type Substitutions = OrderedMap<(ItemPtr, ParameterPtr), ItemPtr>;
 
 #[derive(Clone)]
 pub struct DSubstitution {
-    base: LazyItemPtr,
+    base: ItemPtr,
     substitutions: Result<Substitutions, UnresolvedSubstitutions>,
 }
 
@@ -68,7 +68,7 @@ impl CycleDetectingDebug for DSubstitution {
 }
 
 impl ItemDefinition for DSubstitution {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         let mut result = vec![self.base.ptr_clone()];
         match &self.substitutions {
             Ok(resolved) => result.extend(resolved.iter().map(|(_, v)| v.ptr_clone())),
@@ -77,19 +77,19 @@ impl ItemDefinition for DSubstitution {
         result
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         let subs = self.substitutions.as_ref().unwrap();
         let mut args = HashMap::new();
         let mut requirements = Vec::new();
         for (target, value) in subs.iter() {
-            let value = value.evaluate().unwrap();
+            let value = value.dereference().unwrap();
             let value_type = value.query_type(&mut Environment::root_query()).unwrap();
-            let target_type = target.0.reduced(args.clone());
+            let target_type = target.0.reduced(&args, true);
             requirements.push((
-                value.ptr_clone().into_lazy(),
+                value.ptr_clone(),
                 DBuiltin::is_subtype_of(value_type, target_type).into_ptr(),
             ));
-            args.insert(target.1.ptr_clone(), value.ptr_clone().into_lazy());
+            args.insert(target.1.ptr_clone(), value.ptr_clone());
         }
         requirements
     }
@@ -99,7 +99,7 @@ impl ItemDefinition for DSubstitution {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        let mut result = self.base.evaluate().unwrap().query_parameters(ctx);
+        let mut result = self.base.dereference().unwrap().query_parameters(ctx);
         if self.substitutions.is_err() {
             result.mark_excluding(this.ptr_clone());
             return result;
@@ -108,7 +108,7 @@ impl ItemDefinition for DSubstitution {
         let mut new_params = Parameters::new_empty();
         for (target, value) in self.substitutions.as_ref().unwrap() {
             result.remove(&target.1);
-            new_params.append(value.evaluate().unwrap().query_parameters(ctx));
+            new_params.append(value.dereference().unwrap().query_parameters(ctx));
             new_args.insert(target.1.clone(), value.ptr_clone());
         }
         result.reduce_type(&new_args);
@@ -119,11 +119,10 @@ impl ItemDefinition for DSubstitution {
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         Some(
             Self {
-                base: self.base.evaluate().unwrap().query_type(ctx)?,
+                base: self.base.dereference().unwrap().query_type(ctx)?,
                 substitutions: self.substitutions.clone(),
             }
-            .into_ptr()
-            .into_lazy(),
+            .into_ptr(),
         )
     }
 
@@ -134,7 +133,7 @@ impl ItemDefinition for DSubstitution {
         no_type_check_errors()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         let mut carried_args = args.clone();
         let mut new_args = HashMap::new();
         let subs = if let Ok(subs) = &self.substitutions {
@@ -143,19 +142,11 @@ impl ItemDefinition for DSubstitution {
             return this.ptr_clone();
         };
         for (target, value) in subs {
-            new_args.insert(
-                target.1.clone(),
-                value.evaluate().unwrap().reduced(args.clone()),
-            );
+            new_args.insert(target.1.clone(), value.reduced(args, true));
             carried_args.remove(&target.1);
         }
         new_args.extend(carried_args.into_iter());
-        self.base
-            .evaluate()
-            .unwrap()
-            .reduced(new_args)
-            .evaluate()
-            .unwrap()
+        self.base.reduced(&new_args, true)
     }
 
     fn recompute_resolved(
@@ -163,8 +154,8 @@ impl ItemDefinition for DSubstitution {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let base = self.base.evaluate().unwrap();
-        let rbase = base.resolved().evaluate().unwrap();
+        let base = self.base.dereference().unwrap();
+        let rbase = base.resolved().dereference().unwrap();
         let mut params = rbase.query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {
@@ -174,13 +165,13 @@ impl ItemDefinition for DSubstitution {
             }
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
-                let value = value.evaluate().unwrap().resolved();
+                let value = value.dereference().unwrap().resolved();
                 match target {
                     UnresolvedTarget::Positional => {
                         if params.len() == 0 {
                             return Err(Diagnostic::new()
                                 .with_text_error(format!("No parameters left to substitute."))
-                                .with_item_error(&value.evaluate().unwrap()));
+                                .with_item_error(&value.dereference().unwrap()));
                         }
                         resolved.insert(params.pop_first().unwrap(), value);
                     }
@@ -191,10 +182,10 @@ impl ItemDefinition for DSubstitution {
                                     "No parameter named \"{}\" in the scope of the base.",
                                     name
                                 ))
-                                .with_item_error(&value.evaluate().unwrap())
+                                .with_item_error(&value.dereference().unwrap())
                         };
                         let param = base.lookup_identifier(name).ok_or_else(gen_error)?;
-                        let param = param.evaluate().unwrap();
+                        let param = param.dereference().unwrap();
                         let param = param
                             .downcast_definition::<DParameter>()
                             .ok_or_else(gen_error)?;
@@ -204,7 +195,7 @@ impl ItemDefinition for DSubstitution {
                 }
             }
             Ok(Self {
-                base: rbase.into_lazy(),
+                base: rbase,
                 substitutions: Ok(resolved),
             }
             .into_ptr_mimicking(this))
@@ -214,12 +205,12 @@ impl ItemDefinition for DSubstitution {
                 .map(|(target, value)| {
                     (
                         (target.0.ptr_clone(), target.1.ptr_clone()),
-                        value.evaluate().unwrap().resolved(),
+                        value.dereference().unwrap().resolved(),
                     )
                 })
                 .collect();
             Ok(Self {
-                base: rbase.into_lazy(),
+                base: rbase,
                 substitutions: Ok(rsubs),
             }
             .into_ptr_mimicking(this))
@@ -230,14 +221,14 @@ impl ItemDefinition for DSubstitution {
 }
 
 impl DSubstitution {
-    pub fn new_unresolved(base: LazyItemPtr, substitutions: UnresolvedSubstitutions) -> Self {
+    pub fn new_unresolved(base: ItemPtr, substitutions: UnresolvedSubstitutions) -> Self {
         Self {
             base,
             substitutions: Err(substitutions),
         }
     }
 
-    pub fn new_resolved(base: LazyItemPtr, substitutions: Substitutions) -> Self {
+    pub fn new_resolved(base: ItemPtr, substitutions: Substitutions) -> Self {
         Self {
             base,
             substitutions: Ok(substitutions),

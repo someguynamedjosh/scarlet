@@ -15,7 +15,7 @@ use crate::{
             no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
             TypeCheckQuery, TypeQuery,
         },
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     util::PtrExtension,
 };
@@ -27,7 +27,7 @@ pub enum Type {
     GodType,
     UserType {
         type_id: Rc<()>,
-        fields: Vec<(String, LazyItemPtr)>,
+        fields: Vec<(String, ItemPtr)>,
     },
 }
 
@@ -66,7 +66,7 @@ impl Type {
         matches!(self, Self::GodType)
     }
 
-    pub fn get_fields(&self) -> &[(String, LazyItemPtr)] {
+    pub fn get_fields(&self) -> &[(String, ItemPtr)] {
         match self {
             Self::GodType => &[],
             Self::UserType { fields, .. } => fields,
@@ -100,7 +100,7 @@ impl Type {
                 type_id: type_id.ptr_clone(),
                 fields: fields
                     .iter()
-                    .map(|(k, v)| (k.clone(), v.evaluate().unwrap().resolved()))
+                    .map(|(k, v)| (k.clone(), v.dereference().unwrap().resolved()))
                     .collect(),
             },
         }
@@ -130,7 +130,7 @@ impl CycleDetectingDebug for DCompoundType {
 }
 
 impl ItemDefinition for DCompoundType {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         self.component_types
             .iter()
             .flat_map(|t| t.1.get_fields().iter())
@@ -138,7 +138,7 @@ impl ItemDefinition for DCompoundType {
             .collect_vec()
     }
 
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![]
     }
 
@@ -150,14 +150,14 @@ impl ItemDefinition for DCompoundType {
         let mut result = Parameters::new_empty();
         for typ in &self.component_types {
             for field in typ.1.get_fields() {
-                result.append(field.1.evaluate().unwrap().query_parameters(ctx));
+                result.append(field.1.dereference().unwrap().query_parameters(ctx));
             }
         }
         result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(Self::r#type().into_ptr().into_lazy())
+        Some(Self::r#type().into_ptr())
     }
 
     fn recompute_type_check(
@@ -182,7 +182,7 @@ impl ItemDefinition for DCompoundType {
         .into_ptr_mimicking(this))
     }
 
-    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
     }
 }

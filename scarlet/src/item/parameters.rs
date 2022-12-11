@@ -1,6 +1,6 @@
 use std::{collections::HashMap, iter::FromIterator};
 
-use super::{query::QueryResult, ItemPtr, LazyItemPtr};
+use super::{query::QueryResult, ItemPtr};
 use crate::{
     definitions::parameter::{Parameter, ParameterPtr},
     shared::OrderedSet,
@@ -68,9 +68,9 @@ impl Parameters {
         self.parameters.remove(&key.0.clone()).map(|x| x.0)
     }
 
-    pub fn reduce_type(&mut self, args: &HashMap<ParameterPtr, LazyItemPtr>) {
+    pub fn reduce_type(&mut self, args: &HashMap<ParameterPtr, ItemPtr>) {
         for (param, _) in self.parameters.iter_mut() {
-            param.0 = param.0.reduced(args.clone()).evaluate().unwrap();
+            param.0 = param.0.reduced(args, true).dereference().unwrap();
         }
     }
 

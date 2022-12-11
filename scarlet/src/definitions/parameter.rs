@@ -10,7 +10,7 @@ use crate::{
     item::{
         parameters::Parameters,
         query::{ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery, TypeQuery},
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
     util::PtrExtension,
 };
@@ -28,7 +28,7 @@ pub struct Order {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Parameter {
     order: Order,
-    original_type: LazyItemPtr,
+    original_type: ItemPtr,
 }
 
 impl Parameter {
@@ -36,7 +36,7 @@ impl Parameter {
         &self.order
     }
 
-    pub fn original_type(&self) -> &LazyItemPtr {
+    pub fn original_type(&self) -> &ItemPtr {
         &self.original_type
     }
 }
@@ -46,7 +46,7 @@ pub type ParameterPtr = Rc<Parameter>;
 #[derive(Clone)]
 pub struct DParameter {
     parameter: ParameterPtr,
-    reduced_type: LazyItemPtr,
+    reduced_type: ItemPtr,
 }
 
 impl CycleDetectingDebug for DParameter {
@@ -57,14 +57,14 @@ impl CycleDetectingDebug for DParameter {
 }
 
 impl ItemDefinition for DParameter {
-    fn children(&self) -> Vec<LazyItemPtr> {
+    fn children(&self) -> Vec<ItemPtr> {
         vec![self.reduced_type.ptr_clone()]
     }
 
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(LazyItemPtr, ItemPtr)> {
+    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
         vec![(
-            this.ptr_clone().into_lazy(),
-            DBuiltin::is_type(self.reduced_type.evaluate().unwrap()).into_ptr(),
+            this.ptr_clone(),
+            DBuiltin::is_type(self.reduced_type.dereference().unwrap()).into_ptr(),
         )]
     }
 
@@ -73,7 +73,7 @@ impl ItemDefinition for DParameter {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        let rt = self.reduced_type.evaluate().unwrap();
+        let rt = self.reduced_type.dereference().unwrap();
         let mut result = rt.query_parameters(ctx);
         result.insert(rt, self.parameter.ptr_clone());
         result
@@ -90,11 +90,11 @@ impl ItemDefinition for DParameter {
         todo!()
     }
 
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
+    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         if let Some(value) = args.get(&self.parameter) {
-            value.ptr_clone().evaluate().unwrap()
+            value.ptr_clone()
         } else {
-            let r#type = self.reduced_type.evaluate().unwrap().reduced(args.clone());
+            let r#type = self.reduced_type.reduced(args, true);
             Self {
                 parameter: Rc::clone(&self.parameter),
                 reduced_type: r#type,
@@ -108,7 +108,7 @@ impl ItemDefinition for DParameter {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let r#type = self.reduced_type.evaluate().unwrap().resolved();
+        let r#type = self.reduced_type.resolved();
         Ok(Self {
             parameter: Rc::clone(&self.parameter),
             reduced_type: r#type,
@@ -118,7 +118,7 @@ impl ItemDefinition for DParameter {
 }
 
 impl DParameter {
-    pub fn new(major_order: u8, position: Position, r#type: LazyItemPtr) -> Self {
+    pub fn new(major_order: u8, position: Position, r#type: ItemPtr) -> Self {
         let order = Order {
             major_order,
             file_order: position.file_index() as _,
@@ -142,7 +142,7 @@ impl DParameter {
         &*self.parameter
     }
 
-    pub fn get_type(&self) -> &LazyItemPtr {
+    pub fn get_type(&self) -> &ItemPtr {
         &self.reduced_type
     }
 }

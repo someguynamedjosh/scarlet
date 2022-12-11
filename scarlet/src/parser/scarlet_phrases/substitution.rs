@@ -19,16 +19,16 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             let (label, value) = is?;
             subs.push((
                 UnresolvedTarget::Named(label.to_owned()),
-                value.as_item(ctx)?.into_lazy(),
+                value.as_item(ctx)?,
             ));
         } else {
             subs.push((
                 UnresolvedTarget::Positional,
-                child.as_item(ctx)?.into_lazy(),
+                child.as_item(ctx)?,
             ));
         }
     }
-    Ok(DSubstitution::new_unresolved(base.into_lazy(), subs).into_ptr())
+    Ok(DSubstitution::new_unresolved(base, subs).into_ptr())
 }
 
 pub fn phrase() -> Phrase {
