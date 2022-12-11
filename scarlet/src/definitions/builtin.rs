@@ -29,7 +29,6 @@ pub enum Builtin {
     IsExactly,
     IsSubtypeOf,
     IfThenElse,
-    Type,
     Union,
 }
 
@@ -39,7 +38,6 @@ impl Builtin {
             Self::IsExactly => "is_exactly",
             Self::IsSubtypeOf => "is_subtype_of",
             Self::IfThenElse => "if_then_else",
-            Self::Type => "Type",
             Self::Union => "Union",
         }
     }
@@ -49,7 +47,6 @@ impl Builtin {
             Builtin::IsExactly => &["comparee", "comparand"][..],
             Builtin::IsSubtypeOf => &["Subtype", "Supertype"][..],
             Builtin::IfThenElse => &["Result", "condition", "true_result", "false_result"],
-            Builtin::Type => &[],
             Builtin::Union => &["Subtype0", "Subtype1"],
         }
     }
@@ -110,20 +107,16 @@ impl ItemDefinition for DBuiltin {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        if let Builtin::Type = self.builtin {
-            Ok(DCompoundType::new(this.ptr_clone().into_lazy(), 0).into_ptr_mimicking(this))
-        } else {
-            let rargs = self
-                .args
-                .iter()
-                .map(|arg| arg.evaluate().map(|x| x.resolved()))
-                .try_collect()?;
-            Ok(Self {
-                args: rargs,
-                builtin: self.builtin,
-            }
-            .into_ptr_mimicking(this))
+        let rargs = self
+            .args
+            .iter()
+            .map(|arg| arg.evaluate().map(|x| x.resolved()))
+            .try_collect()?;
+        Ok(Self {
+            args: rargs,
+            builtin: self.builtin,
         }
+        .into_ptr_mimicking(this))
     }
 
     fn recompute_parameters(
@@ -143,7 +136,7 @@ impl ItemDefinition for DBuiltin {
             Builtin::IsExactly => todo!(),
             Builtin::IsSubtypeOf => todo!(),
             Builtin::IfThenElse => self.args[0].ptr_clone(),
-            Builtin::Type | Builtin::Union => Self::r#type().into_ptr().into_lazy(),
+            Builtin::Union => DCompoundType::r#type().into_ptr().into_lazy(),
         })
     }
 
@@ -191,7 +184,6 @@ impl ItemDefinition for DBuiltin {
                     return rargs[3].evaluate().unwrap().ptr_clone();
                 }
             }
-            Builtin::Type => unreachable!(),
             Builtin::Union => {
                 if let Some((subtype_0, subtype_1)) = both_compound_types(
                     &rargs[0].evaluate().unwrap(),
@@ -228,19 +220,12 @@ impl DBuiltin {
         Ok(Self { builtin, args })
     }
 
-    pub fn r#type() -> Self {
-        Self {
-            builtin: Builtin::Type,
-            args: vec![],
-        }
-    }
-
     pub fn is_type(candidate: ItemPtr) -> Self {
         Self::is_subtype_of(
             candidate
                 .query_type(&mut Environment::root_query())
                 .unwrap(),
-            Self::r#type().into_ptr().into_lazy(),
+            DCompoundType::r#type().into_ptr().into_lazy(),
         )
     }
 

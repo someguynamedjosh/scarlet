@@ -1,12 +1,14 @@
 use std::{
     collections::HashMap,
     fmt::{self, Formatter},
+    rc::Rc,
 };
 
 use itertools::Itertools;
 
 use super::{
-    builtin::DBuiltin, compound_type::DCompoundType, new_type::DNewType, parameter::ParameterPtr,
+    compound_type::{DCompoundType, Type},
+    parameter::ParameterPtr,
 };
 use crate::{
     diagnostic::Diagnostic,
@@ -19,11 +21,12 @@ use crate::{
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
     },
+    util::PtrExtension,
 };
 
 #[derive(Clone)]
 pub struct DNewValue {
-    r#type: LazyItemPtr,
+    r#type: Rc<Type>,
     fields: Vec<LazyItemPtr>,
 }
 
@@ -61,7 +64,11 @@ impl ItemDefinition for DNewValue {
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(self.r#type.ptr_clone())
+        Some(
+            DCompoundType::new_single(self.r#type.ptr_clone())
+                .into_ptr()
+                .into_lazy(),
+        )
     }
 
     fn recompute_type_check(
@@ -111,29 +118,42 @@ impl ItemDefinition for DNewValue {
 }
 
 impl DNewValue {
-    pub fn new(r#type: LazyItemPtr, fields: Vec<LazyItemPtr>) -> Self {
-        if let Some(new_type) = r#type.evaluate().unwrap().downcast_definition::<DNewType>() {
-            assert_eq!(new_type.get_fields().len(), fields.len())
-        }
+    pub fn new(r#type: Rc<Type>, fields: Vec<LazyItemPtr>) -> Self {
+        assert!(!r#type.is_god_type());
+        assert_eq!(r#type.get_fields().len(), fields.len());
         Self { r#type, fields }
     }
 
+    fn get_builtin_type(env: &Environment, name: &str) -> Result<Rc<Type>, Diagnostic> {
+        Ok(env
+            .get_language_item(name)?
+            .resolved()
+            .evaluate()
+            .unwrap()
+            .downcast_definition::<DCompoundType>()
+            .unwrap()
+            .as_ref()
+            .get_component_types()
+            .iter()
+            .next()
+            .unwrap()
+            .1
+            .ptr_clone())
+    }
+
     pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
-        Ok(Self::new(env.get_language_item("True")?.resolved(), vec![]))
+        Ok(Self::new(Self::get_builtin_type(env, "True")?, vec![]))
     }
 
     pub fn r#false(env: &Environment) -> Result<Self, Diagnostic> {
-        Ok(Self::new(
-            env.get_language_item("False")?.resolved(),
-            vec![],
-        ))
+        Ok(Self::new(Self::get_builtin_type(env, "False")?, vec![]))
     }
 
     pub fn fields(&self) -> &Vec<LazyItemPtr> {
         &self.fields
     }
 
-    pub fn get_type(&self) -> &LazyItemPtr {
+    pub fn get_type(&self) -> &Rc<Type> {
         &self.r#type
     }
 }

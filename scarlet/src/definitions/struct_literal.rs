@@ -1,14 +1,15 @@
 use std::{
     collections::HashMap,
     fmt::{self, Formatter},
+    rc::Rc,
 };
 
 use itertools::Itertools;
 
 use super::{
     builtin::DBuiltin,
+    compound_type::{DCompoundType, Type},
     hole::DHole,
-    new_type::DNewType,
     parameter::{DParameter, ParameterPtr},
 };
 use crate::{
@@ -107,10 +108,17 @@ impl ItemDefinition for DStructLiteral {
                         .into_lazy(),
                 ));
             }
-            Some(DNewType::new(fields).into_ptr().into_lazy())
+            Some(
+                DCompoundType::new_single(Rc::new(Type::UserType {
+                    type_id: Rc::new(()),
+                    fields,
+                }))
+                .into_ptr()
+                .into_lazy(),
+            )
         } else {
             Some(
-                DHole::new(DBuiltin::r#type().into_ptr().into_lazy())
+                DHole::new(DCompoundType::r#type().into_ptr().into_lazy())
                     .into_ptr()
                     .into_lazy(),
             )

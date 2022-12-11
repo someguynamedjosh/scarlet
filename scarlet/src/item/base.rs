@@ -21,7 +21,6 @@ use crate::{
     definitions::{
         builtin::{Builtin, DBuiltin},
         compound_type::DCompoundType,
-        new_type::DNewType,
         new_value::DNewValue,
         parameter::{DParameter, ParameterPtr},
         reference::DReference,
@@ -358,16 +357,9 @@ impl ItemPtr {
 
     pub fn is_literal_instance_of(&self, of_type: &ItemPtr) -> bool {
         if let Some(value) = self.downcast_definition::<DNewValue>() {
-            let value_type_ptr = value
-                .get_type()
-                .evaluate()
-                .unwrap()
-                .resolved()
-                .evaluate()
-                .unwrap();
-            let value_type_def = value_type_ptr.downcast_definition::<DCompoundType>();
+            let value_type = value.get_type();
             let of_type = of_type.downcast_definition::<DCompoundType>();
-            let result = if let (Some(value_type), Some(of_type)) = (value_type_def, of_type) {
+            let result = if let Some(of_type) = of_type {
                 value_type.is_subtype_of(&*of_type)
             } else {
                 false
@@ -589,8 +581,7 @@ impl ItemPtr {
 
     /// True if this item is Type.
     pub fn is_exactly_type(&self) -> bool {
-        self.get_args_if_builtin(Builtin::Type).is_some()
-            || self
+            self
                 .downcast_definition::<DCompoundType>()
                 .map(|ct| ct.is_exactly_type())
                 == Some(true)
@@ -605,7 +596,7 @@ impl ItemPtr {
     /// True if this item is any type. E.G. True, Type, Int OR Null, Int WHERE
     /// IT.is_greater_than(10)
     pub fn is_a_type(&self) -> bool {
-        self.downcast_definition::<DNewType>().is_some()
+        self.downcast_definition::<DCompoundType>().is_some()
             || self.is_exactly_type()
             || self.is_type_parameter()
     }

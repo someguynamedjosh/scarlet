@@ -3,9 +3,7 @@ use std::{
     fmt::{self, Formatter},
 };
 
-use super::{
-    compound_type::DCompoundType, new_type::DNewType, new_value::DNewValue, parameter::ParameterPtr,
-};
+use super::{compound_type::DCompoundType, new_value::DNewValue, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
@@ -139,21 +137,20 @@ impl ItemDefinition for DMemberAccess {
                     .with_item_error(this));
             }
             let component = components.iter().next().unwrap().1;
-            let component = component.evaluate().unwrap();
-            let index = if component.is_exactly_type() {
+            let index = if component.is_god_type() {
                 match &self.member_name[..] {
                     "new" => Some((Member::Constructor, self.base.ptr_clone())),
                     _ => None,
                 }
-            } else if let Some(base_type) = component.downcast_definition::<DNewType>() {
-                base_type
+            } else {
+                component
                     .get_fields()
                     .iter()
                     .position(|x| x.0 == self.member_name)
                     .map(|index| {
                         (
                             Member::IndexIntoUserType(index),
-                            base_type.get_fields()[index]
+                            component.get_fields()[index]
                                 .1
                                 .evaluate()
                                 .unwrap()
@@ -161,8 +158,6 @@ impl ItemDefinition for DMemberAccess {
                                 .unwrap(),
                         )
                     })
-            } else {
-                None
             };
             if let Some((index, r#type)) = index {
                 if index == Member::Constructor {

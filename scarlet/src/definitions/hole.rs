@@ -3,7 +3,7 @@ use std::{
     fmt::{self, Formatter},
 };
 
-use super::{builtin::DBuiltin, parameter::ParameterPtr};
+use super::{builtin::DBuiltin, parameter::ParameterPtr, compound_type::DCompoundType};
 use crate::item::{
     query::{
         no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery,
@@ -33,7 +33,7 @@ impl ItemDefinition for DHole {
             self.r#type.ptr_clone(),
             DBuiltin::is_subtype_of(
                 self.r#type.ptr_clone(),
-                DBuiltin::r#type().into_ptr().into_lazy(),
+                DCompoundType::r#type().into_ptr().into_lazy(),
             )
             .into_ptr(),
         )]

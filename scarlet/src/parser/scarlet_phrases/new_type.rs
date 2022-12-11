@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use crate::{
-    definitions::new_type::DNewType,
+    definitions::compound_type::{DCompoundType, Type},
     item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
@@ -20,7 +22,11 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             fields.push((String::new(), child.as_item(ctx)?.into_lazy()));
         }
     }
-    Ok(DNewType::new(fields).into_ptr())
+    Ok(DCompoundType::new_single(Rc::new(Type::UserType {
+        type_id: Rc::new(()),
+        fields,
+    }))
+    .into_ptr())
 }
 
 pub fn phrase() -> Phrase {

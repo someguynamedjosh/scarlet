@@ -1,5 +1,8 @@
 use crate::{
-    definitions::builtin::{Builtin, DBuiltin},
+    definitions::{
+        builtin::{Builtin, DBuiltin},
+        compound_type::DCompoundType,
+    },
     diagnostic::Diagnostic,
     item::IntoItemPtr,
     parser::{
@@ -15,7 +18,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     let builtin = match name {
         "is_exactly" => Builtin::IsExactly,
         "if_then_else" => Builtin::IfThenElse,
-        "Type" => Builtin::Type,
+        "Type" => return Ok(DCompoundType::r#type().into_ptr()),
         "Union" => Builtin::Union,
         _ => {
             return Err(Diagnostic::new()

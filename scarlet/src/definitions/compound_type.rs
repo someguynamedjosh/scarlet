@@ -1,26 +1,104 @@
 use std::{
     collections::HashMap,
     fmt::{self, Formatter},
+    rc::Rc,
 };
 
 use itertools::Itertools;
 use maplit::hashmap;
 
-use super::{builtin::DBuiltin, new_type::DNewType, parameter::ParameterPtr};
-use crate::item::{
-    parameters::Parameters,
-    query::{
-        no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery,
-        TypeQuery,
+use super::{builtin::DBuiltin, new_value::DNewValue, parameter::ParameterPtr};
+use crate::{
+    item::{
+        parameters::Parameters,
+        query::{
+            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
+            TypeCheckQuery, TypeQuery,
+        },
+        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
     },
-    CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr, LazyItemPtr,
+    util::PtrExtension,
 };
+
+pub type TypeId = Option<Rc<()>>;
+
+#[derive(Clone, Debug)]
+pub enum Type {
+    GodType,
+    UserType {
+        type_id: Rc<()>,
+        fields: Vec<(String, LazyItemPtr)>,
+    },
+}
+
+impl CycleDetectingDebug for Type {
+    fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
+        match self {
+            Type::GodType => write!(f, "BUILTIN(Type)"),
+            Type::UserType { type_id, fields } => {
+                writeln!(f, "NEW_TYPE(")?;
+                for (name, param) in fields {
+                    writeln!(f, "    {} IS {}", name, param.to_indented_string(ctx, 2))?;
+                }
+                write!(f, ")")
+            },
+        }
+    }
+}
+
+impl Type {
+    pub fn is_same_type_as(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::GodType, Self::GodType) => true,
+
+            (
+                Self::UserType { type_id, .. },
+                Self::UserType {
+                    type_id: other_type_id,
+                    ..
+                },
+            ) => type_id.is_same_instance_as(&other_type_id),
+            _ => false,
+        }
+    }
+
+    pub fn is_god_type(&self) -> bool {
+        matches!(self, Self::GodType)
+    }
+
+    pub fn get_fields(&self) -> &[(String, LazyItemPtr)] {
+        match self {
+            Self::GodType => &[],
+            Self::UserType { fields, .. } => fields,
+        }
+    }
+
+    pub fn get_type_id(&self) -> TypeId {
+        match self {
+            Self::GodType => None,
+            Self::UserType { type_id, .. } => Some(type_id.ptr_clone()),
+        }
+    }
+
+    pub fn constructor(this: Rc<Self>, mimicking: &ItemPtr) -> ItemPtr {
+        DNewValue::new(
+            this.ptr_clone(),
+            this.get_fields().iter().map(|f| f.1.ptr_clone()).collect(),
+        )
+        .into_ptr_mimicking(mimicking)
+    }
+
+    /// False is non-definitive here.
+    pub fn is_subtype_of(&self, other: &DCompoundType) -> bool {
+        other.component_types.contains_key(&self.get_type_id())
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct DCompoundType {
     // These are ORed together. ANDing them would result in an empty type any
     // time you have at least 2 non-identical components.
-    component_types: HashMap<usize, LazyItemPtr>,
+    component_types: HashMap<TypeId, Rc<Type>>,
 }
 
 impl CycleDetectingDebug for DCompoundType {
@@ -42,7 +120,8 @@ impl ItemDefinition for DCompoundType {
     fn children(&self) -> Vec<LazyItemPtr> {
         self.component_types
             .iter()
-            .map(|t| t.1.ptr_clone())
+            .flat_map(|t| t.1.get_fields().iter())
+            .map(|field| field.1.ptr_clone())
             .collect_vec()
     }
 
@@ -57,13 +136,15 @@ impl ItemDefinition for DCompoundType {
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for typ in &self.component_types {
-            result.append(typ.1.evaluate().unwrap().query_parameters(ctx));
+            for field in typ.1.get_fields() {
+                result.append(field.1.evaluate().unwrap().query_parameters(ctx));
+            }
         }
         result
     }
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(DBuiltin::r#type().into_ptr().into_lazy())
+        Some(Self::r#type().into_ptr().into_lazy())
     }
 
     fn recompute_type_check(
@@ -87,29 +168,20 @@ impl ItemDefinition for DCompoundType {
 }
 
 impl DCompoundType {
-    pub fn new(base_type: LazyItemPtr, base_type_id: usize) -> Self {
-        let component_types = hashmap![base_type_id => base_type];
-        Self { component_types }
+    pub fn new_single(r#type: Rc<Type>) -> Self {
+        Self {
+            component_types: hashmap![r#type.get_type_id() => r#type],
+        }
     }
 
-    pub fn get_component_types(&self) -> &HashMap<usize, LazyItemPtr> {
+    pub fn get_component_types(&self) -> &HashMap<TypeId, Rc<Type>> {
         &self.component_types
     }
 
     pub fn constructor(&self, this: &ItemPtr) -> Option<ItemPtr> {
         if self.component_types.len() == 1 {
-            let r#type = self
-                .component_types
-                .iter()
-                .next()
-                .unwrap()
-                .1
-                .ptr_clone()
-                .evaluate()
-                .unwrap();
-            // "Type" can also be a component type which doesn't have a constructor.
-            let def = r#type.downcast_definition::<DNewType>()?;
-            Some(def.constructor(&r#type, this))
+            let r#type = self.component_types.iter().next().unwrap().1.ptr_clone();
+            Some(Type::constructor(r#type, this))
         } else {
             None
         }
@@ -121,13 +193,13 @@ impl DCompoundType {
             other
                 .component_types
                 .iter()
-                .map(|(id, ty)| (*id, ty.ptr_clone())),
+                .map(|(id, ty)| (id.clone(), ty.ptr_clone())),
         );
         Self { component_types }
     }
 
     pub fn is_exactly_type(&self) -> bool {
-        self.component_types.len() == 1 && self.component_types.contains_key(&0)
+        self.component_types.len() == 1 && self.component_types.contains_key(&None)
     }
 
     /// False is non-definitive here.
@@ -138,5 +210,9 @@ impl DCompoundType {
             }
         }
         true
+    }
+
+    pub(crate) fn r#type() -> Self {
+        Self::new_single(Rc::new(Type::GodType))
     }
 }
