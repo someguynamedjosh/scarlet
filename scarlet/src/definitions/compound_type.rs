@@ -41,7 +41,7 @@ impl CycleDetectingDebug for Type {
                     writeln!(f, "    {} IS {}", name, param.to_indented_string(ctx, 2))?;
                 }
                 write!(f, ")")
-            },
+            }
         }
     }
 }
@@ -91,6 +91,19 @@ impl Type {
     /// False is non-definitive here.
     pub fn is_subtype_of(&self, other: &DCompoundType) -> bool {
         other.component_types.contains_key(&self.get_type_id())
+    }
+
+    pub fn resolved(&self) -> Self {
+        match self {
+            Type::GodType => Type::GodType,
+            Type::UserType { type_id, fields } => Type::UserType {
+                type_id: type_id.ptr_clone(),
+                fields: fields
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.evaluate().unwrap().resolved()))
+                    .collect(),
+            },
+        }
     }
 }
 
@@ -159,7 +172,14 @@ impl ItemDefinition for DCompoundType {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        Ok(this.ptr_clone())
+        Ok(Self {
+            component_types: self
+                .component_types
+                .iter()
+                .map(|(k, v)| (k.clone(), Rc::new(v.resolved())))
+                .collect(),
+        }
+        .into_ptr_mimicking(this))
     }
 
     fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, LazyItemPtr>) -> ItemPtr {
