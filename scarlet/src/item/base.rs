@@ -190,7 +190,7 @@ impl CycleDetectingDebug for ItemPtr {
         // }
         if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
-            write!(f, "REFERENCE({:?})", ptr)
+            write!(f, "{:?}", ptr)
         } else {
             let mut new_stack = Vec::from(ctx.stack);
             new_stack.push(ptr);

@@ -28,7 +28,7 @@ pub struct DReference {
 
 impl CycleDetectingDebug for DReference {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
-        write!(f, "REFERENCE(")?;
+        write!(f, "R(")?;
         match self.target() {
             Ok(i) => i.fmt(f, ctx)?,
             Err(_) => write!(f, "ERROR")?,
@@ -42,7 +42,7 @@ impl ItemDefinition for DReference {
         if self.indirect {
             vec![]
         } else {
-            vec![self.base.ptr_clone()]
+            vec![self.target().unwrap()]
         }
     }
 
@@ -50,7 +50,7 @@ impl ItemDefinition for DReference {
         if self.indirect {
             vec![]
         } else {
-            self.base.collect_constraints()
+            self.target().unwrap().collect_constraints()
         }
     }
 
@@ -59,11 +59,11 @@ impl ItemDefinition for DReference {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        self.base.query_parameters(ctx)
+        self.target().unwrap().query_parameters(ctx)
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        self.base.query_type(ctx)
+        self.target().unwrap().query_type(ctx)
     }
 
     fn recompute_type_check(
@@ -74,7 +74,7 @@ impl ItemDefinition for DReference {
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        self.base.reduced(args, true)
+        self.target().unwrap().reduced(args, true)
     }
 
     fn recompute_resolved(
@@ -82,7 +82,7 @@ impl ItemDefinition for DReference {
         this: &ItemPtr,
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
-        self.base.resolve_now(ctx)
+        self.target().unwrap().resolve_now(ctx)
     }
 }
 
