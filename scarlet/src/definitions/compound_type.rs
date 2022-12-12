@@ -100,7 +100,7 @@ impl Type {
                 type_id: type_id.ptr_clone(),
                 fields: fields
                     .iter()
-                    .map(|(k, v)| (k.clone(), v.dereference().unwrap().resolved()))
+                    .map(|(k, v)| (k.clone(), v.resolved()))
                     .collect(),
             },
         }

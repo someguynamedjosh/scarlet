@@ -67,8 +67,7 @@ impl ItemDefinition for DMemberAccess {
     }
 
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        let self_base = self.base.dereference().unwrap();
-        let base = self_base.reduced(args, false);
+        let base = self.base.reduced(args, false).dereference().unwrap();
         if self.member_index == Member::Unknown {
         } else if self.member_index == Member::Constructor {
             if let Some(r#type) = base.downcast_definition::<DCompoundType>() {
@@ -86,20 +85,13 @@ impl ItemDefinition for DMemberAccess {
                     .unwrap();
             }
         }
-        if base.is_same_instance_as(&self_base) {
-            this.ptr_clone()
-        } else {
-            Self {
-                base,
-                member_name: self.member_name.clone(),
-                member_index: self.member_index,
-                r#type: self
-                    .r#type
-                    .as_ref()
-                    .map(|t| t.dereference().unwrap().reduced(args, true)),
-            }
-            .into_ptr_mimicking(this)
+        Self {
+            base,
+            member_name: self.member_name.clone(),
+            member_index: self.member_index,
+            r#type: self.r#type.as_ref().map(|t| t.reduced(args, true)),
         }
+        .into_ptr_mimicking(this)
     }
 
     fn recompute_resolved(
@@ -149,8 +141,6 @@ impl ItemDefinition for DMemberAccess {
                             Member::IndexIntoUserType(index),
                             component.get_fields()[index]
                                 .1
-                                .dereference()
-                                .unwrap()
                                 .query_type(&mut Environment::root_query())
                                 .unwrap(),
                         )
@@ -158,17 +148,13 @@ impl ItemDefinition for DMemberAccess {
             };
             if let Some((index, r#type)) = index {
                 if index == Member::Constructor {
-                    println!("{:#?}", rbase.clone_definition());
                     if let Some(r#type) = rbase
                         .dereference()
                         .unwrap()
                         .downcast_definition::<DCompoundType>()
                     {
                         if let Some(constructor) = r#type.constructor(&rbase) {
-                            return Ok(constructor
-                                .resolved()
-                                .dereference()?
-                                .with_position(this.get_position()));
+                            return Ok(constructor.resolved().with_position(this.get_position()));
                         } else {
                             panic!("Attempt to get constructor of Type.");
                         }

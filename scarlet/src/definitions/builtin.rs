@@ -110,8 +110,8 @@ impl ItemDefinition for DBuiltin {
         let rargs = self
             .args
             .iter()
-            .map(|arg| Ok(arg.dereference()?.resolved()))
-            .try_collect()?;
+            .map(|arg| arg.resolved())
+            .collect();
         Ok(Self {
             args: rargs,
             builtin: self.builtin,
@@ -179,9 +179,9 @@ impl ItemDefinition for DBuiltin {
             }
             Builtin::IfThenElse => {
                 if rargs[1].dereference().unwrap().is_true() {
-                    return rargs[2].dereference().unwrap().ptr_clone();
+                    return rargs[2].ptr_clone();
                 } else if rargs[1].dereference().unwrap().is_false() {
-                    return rargs[3].dereference().unwrap().ptr_clone();
+                    return rargs[3].ptr_clone();
                 }
             }
             Builtin::Union => {

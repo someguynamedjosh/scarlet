@@ -23,24 +23,35 @@ enum Transformation {
 pub struct DReference {
     base: ItemPtr,
     transformation: Transformation,
+    indirect: bool,
 }
 
 impl CycleDetectingDebug for DReference {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
+        write!(f, "REFERENCE(")?;
         match self.target() {
-            Ok(i) => i.fmt(f, ctx),
-            Err(_) => write!(f, "ERROR"),
+            Ok(i) => i.fmt(f, ctx)?,
+            Err(_) => write!(f, "ERROR")?,
         }
+        write!(f, ")")
     }
 }
 
 impl ItemDefinition for DReference {
     fn children(&self) -> Vec<ItemPtr> {
-        vec![]
+        if self.indirect {
+            vec![]
+        } else {
+            vec![self.base.ptr_clone()]
+        }
     }
 
     fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
-        vec![]
+        if self.indirect {
+            vec![]
+        } else {
+            self.base.collect_constraints()
+        }
     }
 
     fn recompute_parameters(
@@ -48,11 +59,11 @@ impl ItemDefinition for DReference {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        self.base.dereference().unwrap().query_parameters(ctx)
+        self.base.query_parameters(ctx)
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        self.base.dereference().unwrap().query_type(ctx)
+        self.base.query_type(ctx)
     }
 
     fn recompute_type_check(
@@ -71,7 +82,7 @@ impl ItemDefinition for DReference {
         this: &ItemPtr,
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
-        Ok(this.ptr_clone())
+        self.base.resolve_now(ctx)
     }
 }
 
@@ -80,6 +91,15 @@ impl DReference {
         Self {
             base: target,
             transformation: Transformation::None,
+            indirect: false,
+        }
+    }
+
+    pub fn new_indirect(target: ItemPtr) -> Self {
+        Self {
+            base: target,
+            transformation: Transformation::None,
+            indirect: true,
         }
     }
 
@@ -87,6 +107,15 @@ impl DReference {
         Self {
             base,
             transformation: Transformation::Resolve,
+            indirect: false,
+        }
+    }
+
+    pub fn new_indirect_resolve(base: ItemPtr) -> Self {
+        Self {
+            base,
+            transformation: Transformation::Resolve,
+            indirect: true,
         }
     }
 

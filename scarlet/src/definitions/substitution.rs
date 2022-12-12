@@ -82,7 +82,6 @@ impl ItemDefinition for DSubstitution {
         let mut args = HashMap::new();
         let mut requirements = Vec::new();
         for (target, value) in subs.iter() {
-            let value = value.dereference().unwrap();
             let value_type = value.query_type(&mut Environment::root_query()).unwrap();
             let target_type = target.0.reduced(&args, true);
             requirements.push((
@@ -99,7 +98,7 @@ impl ItemDefinition for DSubstitution {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        let mut result = self.base.dereference().unwrap().query_parameters(ctx);
+        let mut result = self.base.query_parameters(ctx);
         if self.substitutions.is_err() {
             result.mark_excluding(this.ptr_clone());
             return result;
@@ -108,7 +107,7 @@ impl ItemDefinition for DSubstitution {
         let mut new_params = Parameters::new_empty();
         for (target, value) in self.substitutions.as_ref().unwrap() {
             result.remove(&target.1);
-            new_params.append(value.dereference().unwrap().query_parameters(ctx));
+            new_params.append(value.query_parameters(ctx));
             new_args.insert(target.1.clone(), value.ptr_clone());
         }
         result.reduce_type(&new_args);
@@ -119,7 +118,7 @@ impl ItemDefinition for DSubstitution {
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         Some(
             Self {
-                base: self.base.dereference().unwrap().query_type(ctx)?,
+                base: self.base.query_type(ctx)?,
                 substitutions: self.substitutions.clone(),
             }
             .into_ptr(),
@@ -154,24 +153,23 @@ impl ItemDefinition for DSubstitution {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let base = self.base.dereference().unwrap();
-        let rbase = base.resolved().dereference().unwrap();
+        let rbase = self.base.resolved();
         let mut params = rbase.query_parameters(&mut Environment::root_query());
         if let Err(unresolved) = &self.substitutions {
             if params.excludes_any_parameters() {
                 return Err(Diagnostic::new()
                     .with_text_error(format!("Cannot determine parameters of base."))
-                    .with_item_error(&base));
+                    .with_item_error(&self.base));
             }
             let mut resolved = OrderedMap::new();
             for (target, value) in unresolved {
-                let value = value.dereference().unwrap().resolved();
+                let value = value.resolved();
                 match target {
                     UnresolvedTarget::Positional => {
                         if params.len() == 0 {
                             return Err(Diagnostic::new()
                                 .with_text_error(format!("No parameters left to substitute."))
-                                .with_item_error(&value.dereference().unwrap()));
+                                .with_item_error(&value));
                         }
                         resolved.insert(params.pop_first().unwrap(), value);
                     }
@@ -182,9 +180,9 @@ impl ItemDefinition for DSubstitution {
                                     "No parameter named \"{}\" in the scope of the base.",
                                     name
                                 ))
-                                .with_item_error(&value.dereference().unwrap())
+                                .with_item_error(&value)
                         };
-                        let param = base.lookup_identifier(name).ok_or_else(gen_error)?;
+                        let param = self.base.lookup_identifier(name).ok_or_else(gen_error)?;
                         let param = param.dereference().unwrap();
                         let param = param
                             .downcast_definition::<DParameter>()
@@ -205,7 +203,7 @@ impl ItemDefinition for DSubstitution {
                 .map(|(target, value)| {
                     (
                         (target.0.ptr_clone(), target.1.ptr_clone()),
-                        value.dereference().unwrap().resolved(),
+                        value.resolved(),
                     )
                 })
                 .collect();

@@ -89,8 +89,7 @@ impl ItemDefinition for DStructLiteral {
             return result;
         }
         for field in &self.fields {
-            let field = field.1.dereference().unwrap();
-            result.append(field.query_parameters(ctx));
+            result.append(field.1.query_parameters(ctx));
         }
         result
     }
@@ -99,7 +98,6 @@ impl ItemDefinition for DStructLiteral {
         if self.is_module {
             let mut fields = Vec::new();
             for (name, value) in &self.fields {
-                let value = value.dereference().unwrap();
                 let r#type = value.query_type(ctx)?;
                 fields.push((
                     name.clone(),
@@ -137,7 +135,7 @@ impl ItemDefinition for DStructLiteral {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| (name.clone(), value.dereference().unwrap().resolved()))
+            .map(|(name, value)| (name.clone(), value.resolved()))
             .collect();
         Ok(Self {
             fields,
@@ -150,22 +148,13 @@ impl ItemDefinition for DStructLiteral {
         let fields = self
             .fields
             .iter()
-            .map(|(name, value)| {
-                (
-                    name.clone(),
-                    value.dereference().unwrap().reduced(args, true),
-                )
-            })
+            .map(|(name, value)| (name.clone(), value.reduced(args, true)))
             .collect();
-        if fields == self.fields {
-            this.ptr_clone()
-        } else {
-            Self {
-                fields,
-                is_module: self.is_module,
-            }
-            .into_ptr_mimicking(this)
+        Self {
+            fields,
+            is_module: self.is_module,
         }
+        .into_ptr_mimicking(this)
     }
 }
 
@@ -186,5 +175,14 @@ impl DStructLiteral {
 
     pub fn is_module(&self) -> bool {
         self.is_module
+    }
+
+    pub fn get_field(&self, name: &str) -> Option<ItemPtr> {
+        for (candidate_name, candidate_value) in &self.fields {
+            if candidate_name == name {
+                return Some(candidate_value.ptr_clone());
+            }
+        }
+        None
     }
 }

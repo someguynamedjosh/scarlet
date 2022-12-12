@@ -1,6 +1,7 @@
 use std::{collections::HashMap, time::Instant};
 
 use crate::{
+    definitions::struct_literal::DStructLiteral,
     environment::{Environment, ENV},
     file_tree,
     parser::{self, create_root, ParseContext},
@@ -60,7 +61,12 @@ pub(crate) fn entry() {
         env.get_root()
             .lookup_identifier(&path)
             .unwrap()
-            .lookup_identifier("main")
+            .dereference()
+            .unwrap()
+            .downcast_definition::<DStructLiteral>()
+            .unwrap()
+            .as_ref()
+            .get_field("main")
             .unwrap()
             .reduced(&HashMap::new(), true)
             .dereference()

@@ -57,7 +57,6 @@ impl ItemDefinition for DNewValue {
     ) -> <ParametersQuery as Query>::Result {
         let mut result = Parameters::new_empty();
         for field in &self.fields {
-            let field = field.dereference().unwrap();
             result.append(field.query_parameters(ctx));
         }
         result
@@ -79,11 +78,7 @@ impl ItemDefinition for DNewValue {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rfields = self
-            .fields
-            .iter()
-            .map(|field| field.dereference().unwrap().resolved())
-            .collect();
+        let rfields = self.fields.iter().map(|field| field.resolved()).collect();
         if rfields == self.fields {
             Ok(this.ptr_clone())
         } else {

@@ -391,22 +391,25 @@ impl ItemPtr {
     pub fn set_parent_recursive(&self, parent: Option<ItemPtr>) {
         {
             let sb = self.0.borrow();
-            // println!("{:#?}", (*sb.definition).type_name());
+            // println!("{:#?}", sb.definition);
         }
         self.0.borrow_mut().universal_info.parent = parent;
         let parent = Some(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         for child in &children {
-            let child = child.dereference().unwrap();
             child.set_parent_recursive(parent.clone());
         }
     }
 
     pub fn collect_self_and_children(&self, into: &mut Vec<ItemPtr>) {
+        {
+            let sb = self.0.borrow();
+            // println!("{:#?}", sb.definition);
+        }
         into.push(self.ptr_clone());
         let children = self.0.borrow().definition.children();
         for child in &children {
-            let child = child.dereference().unwrap();
+            child.collect_self_and_children(into);
         }
         // debug_assert_eq!(
         //     {
@@ -518,7 +521,7 @@ impl ItemPtr {
 
     pub fn dereference(&self) -> Result<ItemPtr, Diagnostic> {
         if let Some(r#ref) = self.downcast_definition::<DReference>() {
-            r#ref.target()
+            r#ref.target()?.dereference()
         } else {
             Ok(self.ptr_clone())
         }

@@ -62,7 +62,7 @@ impl ItemDefinition for DIdentifier {
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
         if let Some(item) = this.lookup_identifier(&self.identifier) {
             let item = item.resolved();
-            Ok(DReference::new(item)
+            Ok(DReference::new_indirect_resolve(item)
                 .into_ptr_mimicking(this)
                 .with_position(this.get_position()))
         } else {
