@@ -1,49 +1,26 @@
 use crate::{
-    diagnostic::Diagnostic,
-    environment::{vomit::VomitContext, Environment},
-    item::ItemPtr,
     parser::{
-        phrase::{Phrase, UncreateResult},
-        Node, NodeChild, ParseContext,
+        phrase::{CreateContext, CreateResult, Phrase},
+        Node,
     },
     phrase,
-    scope::Scope,
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> Result<ItemPtr, Diagnostic> {
+pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 5);
-    assert_eq!(node.children[1], NodeChild::Text("AS_LANGUAGE_ITEM"));
-    assert_eq!(node.children[2], NodeChild::Text("("));
-    assert_eq!(node.children[4], NodeChild::Text(")"));
-    let base = node.children[0].as_construct_dyn_scope(pc, env, scope)?;
-    let name = node.children[3].as_node().as_ident()?;
-    env.define_language_item(name, base.ptr_clone());
-    Ok(base)
-}
-
-fn uncreate<'a>(
-    _env: &mut Environment,
-    _ctx: &mut VomitContext<'a, '_>,
-    _uncreate: ItemPtr,
-) -> UncreateResult<'a> {
-    Ok(None)
-}
-
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+    let definition = node.children[0].as_item(ctx)?;
+    let name = node.children[3].as_ident()?;
+    ctx.env
+        .define_language_item(name, definition.ptr_clone())
+        .map_err(|err| err.with_source_code_block_error(node.position))?;
+    Ok(definition)
 }
 
 pub fn phrase() -> Phrase {
     phrase!(
         "as language item",
-        128, 128,
-        Some((create, uncreate)),
-        vomit,
-        4 => 4, r"AS_LANGUAGE_ITEM", r"\(", 255, r"\)"
+        128,
+        Some((create,)),
+        236 => 236, r"AS_LANGUAGE_ITEM", r"\(", 255, r"\)"
     )
 }

@@ -1,57 +1,25 @@
 use crate::{
-    diagnostic::Diagnostic,
-    environment::{vomit::VomitContext, Environment},
-    item::{
-        resolvable::{DResolvable, RNamedMember},
-        Item, ItemDefinition, ItemPtr,
-    },
+    definitions::member_access::DMemberAccess,
+    item::IntoItemPtr,
     parser::{
-        phrase::{Phrase, UncreateResult},
-        Node, ParseContext,
+        phrase::{CreateContext, CreateResult, Phrase},
+        Node,
     },
     phrase,
-    scope::Scope,
 };
 
-fn create(
-    pc: &ParseContext,
-    env: &mut Environment,
-    scope: Box<dyn Scope>,
-    node: &Node,
-) -> Result<ItemPtr, Diagnostic> {
-    let base = node.children[0].as_construct_dyn_scope(pc, env, scope.dyn_clone())?;
-    let member_name = node.children[2].as_node();
-    let position = member_name.position;
-    let member_name = member_name.as_ident()?.to_owned();
-    Ok(Item::new_boxed(
-        DResolvable::new(RNamedMember {
-            base,
-            member_name,
-            position,
-        })
-        .clone_into_box(),
-        scope,
-    ))
-}
-
-fn uncreate<'a>(
-    _env: &mut Environment,
-    _ctx: &mut VomitContext<'a, '_>,
-    _uncreate: ItemPtr,
-) -> UncreateResult<'a> {
-    Ok(None)
-}
-
-fn vomit(_pc: &ParseContext, src: &Node) -> String {
-    format!("{:#?}", src)
+pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
+    assert_eq!(node.children.len(), 3);
+    let base = node.children[0].as_item(ctx)?;
+    let member_name = node.children[2].as_ident()?;
+    Ok(DMemberAccess::new(base, member_name.to_owned()).into_ptr())
 }
 
 pub fn phrase() -> Phrase {
     phrase!(
         "member access",
-        148, 128,
-        Some((create, uncreate)),
-        vomit,
+        128,
+        Some((create,)),
         4 => 4, r"\.", 4
     )
 }

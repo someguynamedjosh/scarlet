@@ -1,20 +1,13 @@
-mod any_proof;
-mod as_auto_theorem;
+mod any;
 mod as_language_item;
-mod axiom;
-mod builtin_function;
-mod equal;
-mod from;
+mod builtin;
 mod identifier;
 mod is;
 mod member_access;
 mod multiple_items;
-mod shown;
-mod structt;
+mod new_type;
+mod structure;
 mod substitution;
-mod unique;
-mod variable;
-mod proof_target;
 
 use super::phrase::Phrase;
 
@@ -23,41 +16,30 @@ macro_rules! phrase {
     (
         $name:expr,
         $priority:expr,
-        $vomit_priority: expr,
         $create_and_uncreate:expr,
-        $vomit:expr,
         $prec:expr => $($component:expr),*
     ) => {
         Phrase {
             name: $name,
             components: vec![$($component.into()),*],
-            create_and_uncreate: $create_and_uncreate,
-            vomit: $vomit,
             precedence: $prec,
             priority: $priority,
-            vomit_priority: $vomit_priority
+            create_and_uncreate: $create_and_uncreate,
         }
     }
 }
 
 pub fn phrases() -> Vec<Phrase> {
     vec![
-        unique::phrase(),
-        axiom::phrase(),
-        builtin_function::phrase(),
-        variable::phrase(),
-        any_proof::phrase(),
-        equal::phrase(),
-        from::phrase(),
-        member_access::phrase(),
-        shown::phrase(),
+        any::phrase(),
         as_language_item::phrase(),
-        as_auto_theorem::phrase(),
-        substitution::phrase(),
-        structt::phrase(),
-        proof_target::phrase(),
-        is::phrase(),
-        multiple_items::phrase(),
+        builtin::phrase(),
         identifier::phrase(),
+        is::phrase(),
+        member_access::phrase(),
+        multiple_items::phrase(),
+        new_type::phrase(),
+        structure::phrase(),
+        substitution::phrase(),
     ]
 }

@@ -2,14 +2,9 @@ use std::ops::Range;
 
 use colored::{ColoredString, Colorize};
 
-use crate::{
-    environment::{vomit::VomitContext, Environment},
-    file_tree::FileNode,
-    item::ItemPtr,
-    parser::ParseContext,
-};
+use crate::{file_tree::FileNode, item::ItemPtr};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Level {
     Error,
     Warning,
@@ -64,7 +59,7 @@ impl Position {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub enum Element {
     Text(String),
     GeneratedCodeBlock(String),
@@ -162,7 +157,7 @@ impl Element {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Diagnostic {
     elements: Vec<(Level, Element)>,
 }
@@ -234,32 +229,25 @@ impl Diagnostic {
         self.with_source_code_block(Level::Error, source_code_block)
     }
 
-    pub fn with_item(
-        self,
-        level: Level,
-        item: &ItemPtr,
-        ctx: &ItemPtr,
-        env: &mut Environment,
-    ) -> Self {
-        let item_borrow = item.borrow();
-        if let Some(pos) = item_borrow.position {
-            self.with_source_code_block(level, pos)
+    pub fn with_item(self, level: Level, item: &ItemPtr) -> Self {
+        let pos = item.get_position();
+        if pos == Position::placeholder() {
+            self.with_generated_code_block(level, format!("{:#?}", item))
         } else {
-            drop(item_borrow);
-            self.with_generated_code_block(level, env.format(item.ptr_clone(), ctx.ptr_clone()))
+            self.with_source_code_block(level, pos)
         }
     }
 
-    pub fn with_item_error(self, item: &ItemPtr, ctx: &ItemPtr, env: &mut Environment) -> Self {
-        self.with_item(Level::Error, item, ctx, env)
+    pub fn with_item_info(self, item: &ItemPtr) -> Self {
+        Self::with_item(self, Level::Info, item)
     }
 
-    pub fn with_item_warning(self, item: &ItemPtr, ctx: &ItemPtr, env: &mut Environment) -> Self {
-        self.with_item(Level::Warning, item, ctx, env)
+    pub fn with_item_warning(self, item: &ItemPtr) -> Self {
+        Self::with_item(self, Level::Warning, item)
     }
 
-    pub fn with_item_info(self, item: &ItemPtr, ctx: &ItemPtr, env: &mut Environment) -> Self {
-        self.with_item(Level::Info, item, ctx, env)
+    pub fn with_item_error(self, item: &ItemPtr) -> Self {
+        Self::with_item(self, Level::Error, item)
     }
 }
 

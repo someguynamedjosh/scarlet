@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use crate::{
-    definitions::substitution::{DSubstitution, UnresolvedTarget},
+    definitions::compound_type::{DCompoundType, Type},
     item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
@@ -7,35 +9,31 @@ use crate::{
         Node,
     },
     phrase,
-    shared::OrderedMap,
 };
 
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 4);
-    let base = node.children[0].as_item(ctx)?;
-    let mut subs = Vec::new();
+    let mut fields = Vec::new();
     for child in collect_comma_list(&node.children[2]) {
         if let Some(is) = child.as_is() {
             let (label, value) = is?;
-            subs.push((
-                UnresolvedTarget::Named(label.to_owned()),
-                value.as_item(ctx)?,
-            ));
+            fields.push((label.to_owned(), value.as_item(ctx)?));
         } else {
-            subs.push((
-                UnresolvedTarget::Positional,
-                child.as_item(ctx)?,
-            ));
+            fields.push((String::new(), child.as_item(ctx)?));
         }
     }
-    Ok(DSubstitution::new_unresolved(base, subs).into_ptr())
+    Ok(DCompoundType::new_single(Rc::new(Type::UserType {
+        type_id: Rc::new(()),
+        fields,
+    }))
+    .into_ptr())
 }
 
 pub fn phrase() -> Phrase {
     phrase!(
-        "substitution",
+        "new type",
         128,
         Some((create,)),
-        4 => 4, r"\(", 255, r"\)"
+        4 => "NEW_TYPE", r"\(", 255, r"\)"
     )
 }

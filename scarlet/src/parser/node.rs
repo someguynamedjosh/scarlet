@@ -1,11 +1,8 @@
 use std::fmt::{self, Debug, Formatter};
 
-use super::{phrase::PhraseTable, ParseContext};
+use super::phrase::{CreateContext, CreateResult, PhraseTable};
 use crate::{
     diagnostic::{Diagnostic, Position},
-    environment::Environment,
-    item::ItemPtr,
-    scope::Scope,
     shared::indented,
 };
 
@@ -33,30 +30,12 @@ impl<'a> NodeChild<'a> {
         }
     }
 
-    pub(crate) fn as_construct(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: impl Scope + 'static,
-    ) -> Result<ItemPtr, Diagnostic> {
-        self.as_node().as_item(pc, env, scope)
+    pub fn as_item(&self, ctx: &mut CreateContext) -> CreateResult {
+        self.as_node().as_item(ctx)
     }
 
-    pub(crate) fn as_construct_dyn_scope(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: Box<dyn Scope>,
-    ) -> Result<ItemPtr, Diagnostic> {
-        self.as_node().as_item_dyn_scope(pc, env, scope)
-    }
-
-    pub fn vomit(&self, pc: &ParseContext) -> String {
-        match self {
-            NodeChild::Node(node) => node.vomit(pc),
-            &NodeChild::Text(text) => text.to_owned(),
-            NodeChild::Missing => "".into(),
-        }
+    pub fn as_ident(&self) -> Result<&str, Diagnostic> {
+        self.as_node().as_ident()
     }
 }
 
@@ -88,13 +67,6 @@ impl<'x> Debug for Node<'x> {
 }
 
 impl<'x> Node<'x> {
-    pub fn vomit(&self, pc: &ParseContext) -> String {
-        (pc.phrases_sorted_by_vomit_priority
-            .get(self.phrase)
-            .unwrap()
-            .vomit)(pc, self)
-    }
-
     pub fn will_wait_for_text(&self, pt: &PhraseTable) -> bool {
         let phrase = pt.get(self.phrase).unwrap();
         for component in &phrase.components[self.children.len()..] {
@@ -115,32 +87,6 @@ impl<'x> Node<'x> {
         pt.get(self.phrase).unwrap().components.len() == self.children.len()
     }
 
-    pub fn as_item(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: impl Scope + 'static,
-    ) -> Result<ItemPtr, Diagnostic> {
-        self.as_item_dyn_scope(pc, env, Box::new(scope))
-    }
-
-    pub fn as_item_dyn_scope(
-        &self,
-        pc: &ParseContext,
-        env: &mut Environment,
-        scope: Box<dyn Scope>,
-    ) -> Result<ItemPtr, Diagnostic> {
-        let item = pc
-            .phrases_sorted_by_priority
-            .get(self.phrase)
-            .unwrap()
-            .create_and_uncreate
-            .expect(&format!("{} is not a construct", self.phrase))
-            .0(pc, env, scope, self)?;
-        item.set_position(self.position);
-        Ok(item)
-    }
-
     pub fn as_ident(&self) -> Result<&'x str, Diagnostic> {
         if self.phrase == "identifier" {
             if self.children.len() != 1 {
@@ -154,6 +100,31 @@ impl<'x> Node<'x> {
                     self.phrase
                 ))
                 .with_source_code_block_error(self.position))
+        }
+    }
+
+    pub fn as_item(&self, ctx: &mut CreateContext) -> CreateResult {
+        let item = ctx
+            .pc
+            .phrases_sorted_by_priority
+            .get(self.phrase)
+            .unwrap()
+            .create_and_uncreate
+            .expect(&format!("{} is not a construct", self.phrase))
+            .0(ctx, self)?;
+        Ok(item.with_position(self.position))
+    }
+
+    pub fn as_is(&self) -> Option<Result<(&str, &Node), Diagnostic>> {
+        if self.phrase == "is" {
+            assert_eq!(self.children.len(), 3);
+            Some(
+                self.children[0]
+                    .as_ident()
+                    .map(|id| (id, self.children[2].as_node())),
+            )
+        } else {
+            None
         }
     }
 }

@@ -1,13 +1,5 @@
-use std::fmt::Debug;
-
-use super::{
-    node::Node,
-    phrase::{PhraseTable, Precedence},
-};
-use crate::{
-    diagnostic::{Diagnostic, Position},
-    parser::node::NodeChild,
-};
+use super::node::Node;
+use crate::diagnostic::{Diagnostic, Position};
 
 pub fn incomplete_phrase_error(node: &Node) -> Diagnostic {
     Diagnostic::new()

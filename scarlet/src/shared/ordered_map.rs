@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     fmt::{self, Debug},
     iter::FromIterator,
 };
@@ -44,23 +45,33 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         self.insert_impl(key, value, true)
     }
 
+    pub fn insert(&mut self, key: K, value: V) {
+        self.insert_or_replace(key, value)
+    }
+
     #[track_caller]
     pub fn insert_no_replace(&mut self, key: K, value: V) {
         self.insert_impl(key, value, false)
     }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
+    pub fn get<R: Eq>(&self, key: &R) -> Option<&V>
+    where
+        K: Borrow<R>,
+    {
         for (candidate, value) in self {
-            if candidate == key {
+            if candidate.borrow() == key {
                 return Some(value);
             }
         }
         None
     }
 
-    pub fn contains_key(&self, key: &K) -> bool {
+    pub fn contains_key<R: Eq>(&self, key: &R) -> bool
+    where
+        K: Borrow<R>,
+    {
         for (candidate, _) in self {
-            if candidate == key {
+            if candidate.borrow() == key {
                 return true;
             }
         }
@@ -87,9 +98,12 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         std::mem::take(self)
     }
 
-    pub fn remove(&mut self, key_to_remove: &K) -> Option<(K, V)> {
+    pub fn remove<R: Eq>(&mut self, key_to_remove: &R) -> Option<(K, V)>
+    where
+        K: Borrow<R>,
+    {
         for idx in (0..self.entries.len()).rev() {
-            if &self.entries[idx].0 == key_to_remove {
+            if self.entries[idx].0.borrow() == key_to_remove {
                 return Some(self.entries.remove(idx));
             }
         }

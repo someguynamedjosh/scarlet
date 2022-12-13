@@ -1,81 +1,139 @@
-pub mod vomit;
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+};
 
-use std::collections::HashMap;
+use crate::{
+    definitions::{new_value::DNewValue, struct_literal::DStructLiteral},
+    diagnostic::Diagnostic,
+    item::{
+        query::{Query, QueryContext, RootQuery, TypeCheckQuery, TypeQuery},
+        IntoItemPtr, ItemPtr,
+    },
+};
 
-use crate::item::{definitions::other::DOther, Item, ItemDefinition, ItemPtr};
+thread_local! {
+    pub static ENV: RefCell<Environment> = RefCell::new(Environment::new());
+    pub static FLAG: Cell<bool> = Cell::new(false);
+}
 
-#[cfg(not(feature = "no_axioms"))]
-pub const LANGUAGE_ITEM_NAMES: &[&str] = &[
-    "true",
-    "false",
-    "void",
-    "x",
-    "y",
-    "when_equal",
-    "when_not_equal",
-    "and",
-    "trivial_t_statement",
-    "invariant_truth_t_statement",
-    "invariant_truth_rev_t_statement",
-    "eq_ext_rev_t_statement",
-    "inv_eq_t_statement",
-    "refl_t_statement",
-    "cases_t_statement",
-    "decision_eq_t_statement",
-    "decision_neq_t_statement",
-    "decision_identity_t_statement",
-];
+pub fn r#true() -> DNewValue {
+    ENV.with(|env| env.borrow().r#true())
+}
 
-#[cfg(feature = "no_axioms")]
-pub const LANGUAGE_ITEM_NAMES: &[&str] = &["true", "false", "void", "x", "and"];
+pub fn r#false() -> DNewValue {
+    ENV.with(|env| env.borrow().r#false())
+}
 
-#[derive(Debug)]
+/// This struct guarantees certain parts of the code remain internal to the
+/// library without having to put them in the same module.
+pub(crate) struct OnlyConstructedByEnvironment(());
+
+#[derive(Clone)]
 pub struct Environment {
-    language_items: HashMap<&'static str, ItemPtr>,
-    pub(super) auto_theorems: Vec<ItemPtr>,
+    language_items: HashMap<String, ItemPtr>,
+    root: ItemPtr,
+    all_items: Vec<ItemPtr>,
 }
 
 impl Environment {
-    pub fn new() -> Self {
-        let mut this = Self {
+    pub(crate) fn new() -> Self {
+        Self {
             language_items: HashMap::new(),
-            auto_theorems: Vec::new(),
-        };
-        for &name in LANGUAGE_ITEM_NAMES {
-            let id = Item::placeholder(format!("language item {}", name));
-            this.language_items.insert(name, id);
+            root: DStructLiteral::new_module(vec![]).into_ptr(),
+            all_items: vec![],
         }
-        this
     }
 
-    pub fn define_language_item(&mut self, name: &str, definition: ItemPtr) -> Option<()> {
-        let id = self.get_language_item(name)?;
-        id.redefine(DOther::new(definition).clone_into_box());
-        Some(())
+    pub fn define_language_item(
+        &mut self,
+        name: &str,
+        definition: ItemPtr,
+    ) -> Result<(), Diagnostic> {
+        if self.language_items.contains_key(name) {
+            Err(Diagnostic::new().with_text_error(format!(
+                "Language item \"{}\" defined multiple times.",
+                name
+            )))
+        } else {
+            self.language_items.insert(name.to_owned(), definition);
+            Ok(())
+        }
     }
 
-    #[track_caller]
-    pub fn get_language_item(&self, name: &str) -> Option<&ItemPtr> {
-        self.language_items.get(name)
+    pub fn get_language_item(&self, name: &str) -> Result<&ItemPtr, Diagnostic> {
+        self.language_items.get(name).ok_or_else(|| {
+            Diagnostic::new()
+                .with_text_error(format!("The language item \"{}\" is not defined.", name))
+        })
     }
 
-    pub fn get_true(&self) -> &ItemPtr {
-        self.get_language_item("true").unwrap()
+    pub fn get_root(&self) -> &ItemPtr {
+        &self.root
     }
 
-    pub fn get_false(&self) -> &ItemPtr {
-        self.get_language_item("false").unwrap()
+    #[must_use]
+    pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
+        root.set_parent_recursive(None);
+        self.root = match root.resolved().dereference() {
+            Ok(root) => root,
+            Err(diagnostic) => return vec![diagnostic],
+        };
+        self.all_items.clear();
+        self.root.set_parent_recursive(None);
+        self.root.collect_self_and_children(&mut self.all_items);
+        self.all_items.dedup();
+        let mut constraints = Vec::new();
+        for item in &self.all_items {
+            constraints.append(&mut item.collect_constraints());
+        }
+        let mut errors = vec![];
+        let total = constraints.len();
+        for (subject, constraint) in constraints {
+            let original = constraint;
+            let constraint = original
+                .resolved()
+                .reduced(&HashMap::new(), true)
+                .dereference()
+                .unwrap();
+            let success = constraint.is_true();
+            if !success {
+                errors.push(
+                    Diagnostic::new()
+                        .with_text_error(format!("Unsatisfied constraint:"))
+                        .with_item_error(&original)
+                        .with_text_info(format!("Constraint reduced to:"))
+                        .with_item_info(&constraint)
+                        .with_text_info(format!("Required by the following expression:"))
+                        .with_item_info(&subject.dereference().unwrap()),
+                )
+            }
+        }
+        println!(
+            "{} successes, {} errors",
+            total - errors.len(),
+            errors.len()
+        );
+        errors
     }
 
-    pub fn get_void(&self) -> &ItemPtr {
-        self.get_language_item("void").unwrap()
+    pub fn root_query() -> QueryContext<RootQuery> {
+        QueryContext::root(OnlyConstructedByEnvironment(()))
     }
 
-    pub(crate) fn language_item_names(&self) -> impl Iterator<Item = &'static str> {
-        LANGUAGE_ITEM_NAMES.iter().copied()
+    pub fn query_root_type(&self) -> <TypeQuery as Query>::Result {
+        self.root.query_type(&mut Self::root_query())
     }
 
-    pub(crate) fn add_auto_theorem(&mut self, auto_theorem: ItemPtr) {
-        self.auto_theorems.push(auto_theorem)
+    pub fn query_root_type_check(&self) -> <TypeCheckQuery as Query>::Result {
+        self.root.query_type_check(&mut Self::root_query())
+    }
+
+    pub fn r#true(&self) -> DNewValue {
+        DNewValue::r#true(self).unwrap()
+    }
+
+    pub fn r#false(&self) -> DNewValue {
+        DNewValue::r#false(self).unwrap()
     }
 }
