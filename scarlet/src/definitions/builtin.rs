@@ -13,7 +13,7 @@ use owning_ref::OwningRef;
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
-    environment::{r#false, r#true, Environment},
+    environment::{r#false, r#true, Environment, ENV},
     item::{
         parameters::Parameters,
         query::{
@@ -130,7 +130,9 @@ impl ItemDefinition for DBuiltin {
 
     fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
         Some(match self.builtin {
-            Builtin::IsExactly => todo!(),
+            Builtin::IsExactly => {
+                ENV.with(|env| env.borrow().get_language_item("Bool").unwrap().ptr_clone())
+            }
             Builtin::IsSubtypeOf => todo!(),
             Builtin::IfThenElse => self.args[0].ptr_clone(),
             Builtin::Union => DCompoundType::r#type().into_ptr(),

@@ -59,7 +59,7 @@ impl ItemDefinition for DReference {
         ctx: &mut QueryContext<ParametersQuery>,
         this: &ItemPtr,
     ) -> <ParametersQuery as Query>::Result {
-        self.target().unwrap().query_parameters(ctx)
+        self.base.query_parameters(ctx)
     }
 
     fn recompute_type(&self, ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
