@@ -44,7 +44,7 @@ impl Builtin {
 
     pub fn default_arg_names(&self) -> &'static [&'static str] {
         match self {
-            Builtin::IsExactly => &["comparee", "comparand"][..],
+            Builtin::IsExactly => &["Comparee", "Comparand", "comparee", "comparand"][..],
             Builtin::IsSubtypeOf => &["Subtype", "Supertype"][..],
             Builtin::IfThenElse => &["Result", "condition", "true_result", "false_result"],
             Builtin::Union => &["Subtype0", "Subtype1"],
@@ -155,10 +155,10 @@ impl ItemDefinition for DBuiltin {
             .collect_vec();
         match self.builtin {
             Builtin::IsExactly => {
-                if rargs[0]
+                if rargs[2]
                     .dereference()
                     .unwrap()
-                    .is_same_instance_as(&rargs[1].dereference().unwrap())
+                    .is_same_instance_as(&rargs[3].dereference().unwrap())
                 {
                     return r#true();
                 }

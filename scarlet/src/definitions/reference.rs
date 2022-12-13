@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum Transformation {
     None,
     Resolve,
@@ -82,7 +82,12 @@ impl ItemDefinition for DReference {
         this: &ItemPtr,
         ctx: &mut QueryContext<crate::item::query::ResolveQuery>,
     ) -> <crate::item::query::ResolveQuery as Query>::Result {
-        self.target().unwrap().resolve_now(ctx)
+        let base = self.target()?;
+        if self.transformation == Transformation::Resolve {
+            Ok(base)
+        } else {
+            base.resolve_now(ctx)
+        }
     }
 }
 

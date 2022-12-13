@@ -59,7 +59,12 @@ pub(crate) fn entry() {
     println!(
         "{:#?}",
         env.get_root()
-            .lookup_identifier(&path)
+            .dereference()
+            .unwrap()
+            .downcast_definition::<DStructLiteral>()
+            .unwrap()
+            .as_ref()
+            .get_field(&path)
             .unwrap()
             .dereference()
             .unwrap()

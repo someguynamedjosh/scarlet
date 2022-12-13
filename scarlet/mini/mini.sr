@@ -1,10 +1,10 @@
 True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
 # False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
 
-# Type IS BUILTIN(Type)
-# Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
-# Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
-# Union IS BUILTIN(Union)
+Type IS BUILTIN(Type)
+Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
+Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
+Union IS BUILTIN(Union)
 
 # Result IS ANY Type AS_LANGUAGE_ITEM(Result)
 # Bool IS Union(True False)
@@ -16,10 +16,8 @@ True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
 
 # main IS if_then_else(Bool True.new True.new False.new)
 
-# Zero IS NEW_TYPE()
-# Successor IS NEW_TYPE(of IS ANY PeanoNumber)
-# PeanoNumber IS Union(Zero Successor)
+Zero IS NEW_TYPE()
+Successor IS NEW_TYPE(of IS ANY PeanoNumber)
+PeanoNumber IS Union(Zero Successor)
 
-# main IS Successor.new(Zero.new)
-
-Container IS NEW_TYPE(contains IS ANY Container)
+main IS Successor.new(Zero.new)

@@ -194,8 +194,9 @@ impl CycleDetectingDebug for ItemPtr {
         } else {
             let mut new_stack = Vec::from(ctx.stack);
             new_stack.push(ptr);
+            let def = self.clone_definition();
             CycleDetectingDebug::fmt(
-                &*self.0.borrow().definition,
+                &*def,
                 f,
                 &mut CddContext {
                     stack: &mut new_stack,
