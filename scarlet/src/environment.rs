@@ -17,11 +17,11 @@ thread_local! {
     pub static FLAG: Cell<bool> = Cell::new(false);
 }
 
-pub fn r#true() -> ItemPtr {
+pub fn r#true() -> DNewValue {
     ENV.with(|env| env.borrow().r#true())
 }
 
-pub fn r#false() -> ItemPtr {
+pub fn r#false() -> DNewValue {
     ENV.with(|env| env.borrow().r#false())
 }
 
@@ -80,7 +80,7 @@ impl Environment {
             Err(diagnostic) => return vec![diagnostic],
         };
         self.all_items.clear();
-        println!("{:#?}", self.root);
+        self.root.set_parent_recursive(None);
         self.root.collect_self_and_children(&mut self.all_items);
         self.all_items.dedup();
         let mut constraints = Vec::new();
@@ -129,11 +129,11 @@ impl Environment {
         self.root.query_type_check(&mut Self::root_query())
     }
 
-    pub fn r#true(&self) -> ItemPtr {
-        DNewValue::r#true(self).unwrap().into_ptr()
+    pub fn r#true(&self) -> DNewValue {
+        DNewValue::r#true(self).unwrap()
     }
 
-    pub fn r#false(&self) -> ItemPtr {
-        DNewValue::r#false(self).unwrap().into_ptr()
+    pub fn r#false(&self) -> DNewValue {
+        DNewValue::r#false(self).unwrap()
     }
 }

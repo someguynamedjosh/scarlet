@@ -13,7 +13,7 @@ use owning_ref::OwningRef;
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
-    environment::{r#true, Environment, r#false},
+    environment::{r#false, r#true, Environment},
     item::{
         parameters::Parameters,
         query::{
@@ -21,7 +21,8 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
-    }, shared::TripleBool,
+    },
+    shared::TripleBool,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -107,11 +108,7 @@ impl ItemDefinition for DBuiltin {
         this: &ItemPtr,
         ctx: &mut QueryContext<ResolveQuery>,
     ) -> <ResolveQuery as Query>::Result {
-        let rargs = self
-            .args
-            .iter()
-            .map(|arg| arg.resolved())
-            .collect();
+        let rargs = self.args.iter().map(|arg| arg.resolved()).collect();
         Ok(Self {
             args: rargs,
             builtin: self.builtin,
@@ -160,8 +157,8 @@ impl ItemDefinition for DBuiltin {
                     .unwrap()
                     .is_equal_to(&rargs[3].dereference().unwrap())
                 {
-                    TripleBool::True => return r#true(),
-                    TripleBool::False => return r#false(),
+                    TripleBool::True => return r#true().into_ptr_mimicking(this),
+                    TripleBool::False => return r#false().into_ptr_mimicking(this),
                     TripleBool::Unknown => (),
                 }
             }
@@ -169,13 +166,13 @@ impl ItemDefinition for DBuiltin {
                 let subtype = rargs[0].dereference().unwrap();
                 let supertype = rargs[1].dereference().unwrap();
                 if supertype.is_same_instance_as(&subtype) {
-                    return r#true();
+                    return r#true().into_ptr_mimicking(this);
                 } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
-                    return r#true();
+                    return r#true().into_ptr_mimicking(this);
                 } else if let Some((supertype, subtype)) = both_compound_types(&supertype, &subtype)
                 {
                     if subtype.is_subtype_of(&*supertype) {
-                        return r#true();
+                        return r#true().into_ptr_mimicking(this);
                     }
                 }
             }

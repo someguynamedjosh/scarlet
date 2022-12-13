@@ -73,7 +73,8 @@ impl ItemDefinition for DStructLiteral {
 
     fn local_reverse_lookup_identifier(&self, item: &ItemPtr) -> Option<String> {
         for (field, value) in &self.fields {
-            if value.dereference().unwrap().is_same_instance_as(item) {
+            let value = value.dereference().unwrap();
+            if value.is_same_instance_as(item) || value.is_equal_to(item) == TripleBool::True {
                 return Some(field.clone());
             }
         }

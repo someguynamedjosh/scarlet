@@ -17,7 +17,8 @@ use crate::{
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
-    util::PtrExtension, shared::TripleBool,
+    shared::TripleBool,
+    util::PtrExtension,
 };
 
 pub type TypeId = Option<Rc<()>>;
@@ -80,9 +81,10 @@ impl Type {
         }
     }
 
-    pub fn constructor(this: Rc<Self>, mimicking: &ItemPtr) -> ItemPtr {
+    pub fn constructor(this: Rc<Self>, this_expr: ItemPtr, mimicking: &ItemPtr) -> ItemPtr {
         DNewValue::new(
             this.ptr_clone(),
+            this_expr,
             this.get_fields().iter().map(|f| f.1.ptr_clone()).collect(),
         )
         .into_ptr_mimicking(mimicking)
@@ -225,7 +227,7 @@ impl DCompoundType {
     pub fn constructor(&self, this: &ItemPtr) -> Option<ItemPtr> {
         if self.component_types.len() == 1 {
             let r#type = self.component_types.iter().next().unwrap().1.ptr_clone();
-            Some(Type::constructor(r#type, this))
+            Some(Type::constructor(r#type, this.ptr_clone(), this))
         } else {
             None
         }

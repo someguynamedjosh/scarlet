@@ -28,12 +28,13 @@ use crate::{
 #[derive(Clone)]
 pub struct DNewValue {
     r#type: Rc<Type>,
+    type_expr: ItemPtr,
     fields: Vec<ItemPtr>,
 }
 
 impl CycleDetectingDebug for DNewValue {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
-        self.r#type.fmt(f, ctx)?;
+        self.type_expr.fmt(f, ctx)?;
         write!(f, ".new(\n")?;
         for field in &self.fields {
             write!(f, "   {},\n", field.to_indented_string(ctx, 1))?;
@@ -86,6 +87,7 @@ impl ItemDefinition for DNewValue {
             Ok(Self {
                 fields: rfields,
                 r#type: self.r#type.ptr_clone(),
+                type_expr: self.type_expr.ptr_clone(),
             }
             .into_ptr_mimicking(this))
         }
@@ -100,6 +102,7 @@ impl ItemDefinition for DNewValue {
         Self {
             fields: rfields,
             r#type: self.r#type.ptr_clone(),
+            type_expr: self.type_expr.ptr_clone(),
         }
         .into_ptr_mimicking(this)
     }
@@ -123,18 +126,24 @@ impl ItemDefinition for DNewValue {
 }
 
 impl DNewValue {
-    pub fn new(r#type: Rc<Type>, fields: Vec<ItemPtr>) -> Self {
+    pub fn new(r#type: Rc<Type>, type_expr: ItemPtr, fields: Vec<ItemPtr>) -> Self {
         assert!(!r#type.is_god_type());
         assert_eq!(r#type.get_fields().len(), fields.len());
-        Self { r#type, fields }
+        Self {
+            r#type,
+            type_expr,
+            fields,
+        }
     }
 
-    fn get_builtin_type(env: &Environment, name: &str) -> Result<Rc<Type>, Diagnostic> {
-        Ok(env
+    fn get_builtin_type(env: &Environment, name: &str) -> Result<(Rc<Type>, ItemPtr), Diagnostic> {
+        let expr = env
             .get_language_item(name)?
             .resolved()
             .dereference()
-            .unwrap()
+            .unwrap();
+
+        let r#type = expr
             .downcast_definition::<DCompoundType>()
             .unwrap()
             .as_ref()
@@ -143,15 +152,19 @@ impl DNewValue {
             .next()
             .unwrap()
             .1
-            .ptr_clone())
+            .ptr_clone();
+
+        Ok((r#type, expr))
     }
 
     pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
-        Ok(Self::new(Self::get_builtin_type(env, "True")?, vec![]))
+        let (r#type, expr) = Self::get_builtin_type(env, "True")?;
+        Ok(Self::new(r#type, expr, vec![]))
     }
 
     pub fn r#false(env: &Environment) -> Result<Self, Diagnostic> {
-        Ok(Self::new(Self::get_builtin_type(env, "False")?, vec![]))
+        let (r#type, expr) = Self::get_builtin_type(env, "False")?;
+        Ok(Self::new(r#type, expr, vec![]))
     }
 
     pub fn fields(&self) -> &Vec<ItemPtr> {

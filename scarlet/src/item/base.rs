@@ -29,7 +29,8 @@ use crate::{
     diagnostic::{Diagnostic, Position},
     environment::{r#true, Environment, ENV, FLAG},
     item::query::QueryResult,
-    util::PtrExtension, shared::TripleBool,
+    shared::TripleBool,
+    util::PtrExtension,
 };
 
 pub struct CddContext<'a, 'b> {
@@ -120,7 +121,7 @@ impl<T: ItemDefinition + 'static> IntoItemPtr for T {
     fn into_ptr_mimicking(self, other: &ItemPtr) -> ItemPtr {
         let mut result = ItemPtr::from_definition(self);
         if let Some(parent) = other.get_parent() {
-            // result.set_parent(parent);
+            result.set_parent(parent);
         }
         result.set_position(other.get_position());
         result
@@ -186,11 +187,11 @@ impl Hash for ItemPtr {
 impl CycleDetectingDebug for ItemPtr {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         let ptr = self.0.as_ptr() as *const _;
-        // if let Some(ident) = self.reverse_lookup_identifier(self) {
-        //     if self.lookup_identifier(&ident).unwrap().get_position() !=
-        // self.get_position() {         return write!(f, "{}", ident);
-        //     }
-        // }
+        if let Some(ident) = self.reverse_lookup_identifier(self) {
+            if self.lookup_identifier(&ident).unwrap().get_position() != self.get_position() {
+                return write!(f, "{}", ident);
+            }
+        }
         if ctx.stack.contains(&ptr) {
             ctx.recursed_on.insert(ptr);
             write!(f, "{:?}", ptr)
@@ -249,6 +250,10 @@ impl ItemPtr {
 
     pub fn with_position(&self, position: Position) -> Self {
         Self(self.0.ptr_clone(), Some(position))
+    }
+
+    pub fn set_or_clear_parent(&self, parent: Option<ItemPtr>) {
+        self.0.borrow_mut().universal_info.parent = parent;
     }
 
     pub fn set_parent(&self, parent: ItemPtr) {
@@ -341,7 +346,7 @@ impl ItemPtr {
         }
     }
 
-    fn reverse_lookup_identifier(&self, item: &ItemPtr) -> Option<String> {
+    pub fn reverse_lookup_identifier(&self, item: &ItemPtr) -> Option<String> {
         let this = self.0.borrow();
         if let Some(name) = this.definition.local_reverse_lookup_identifier(item) {
             Some(name)

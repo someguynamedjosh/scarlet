@@ -1,10 +1,10 @@
 use std::{collections::HashMap, time::Instant};
 
 use crate::{
-    definitions::struct_literal::DStructLiteral,
-    environment::{Environment, ENV},
+    definitions::{struct_literal::DStructLiteral, new_value::DNewValue},
+    environment::{Environment, ENV, r#true},
     file_tree,
-    parser::{self, create_root, ParseContext},
+    parser::{self, create_root, ParseContext}, item::IntoItemPtr,
 };
 
 /// This struct guarantees certain parts of the code remain internal to the
@@ -56,25 +56,24 @@ pub(crate) fn entry() {
     }
     println!("Processed in {:#?}", time.elapsed());
 
-    println!(
-        "{:#?}",
-        env.get_root()
-            .dereference()
-            .unwrap()
-            .downcast_definition::<DStructLiteral>()
-            .unwrap()
-            .as_ref()
-            .get_field(&path)
-            .unwrap()
-            .dereference()
-            .unwrap()
-            .downcast_definition::<DStructLiteral>()
-            .unwrap()
-            .as_ref()
-            .get_field("main")
-            .unwrap()
-            .reduced(&HashMap::new(), true)
-            .dereference()
-            .unwrap()
-    );
+    let root = env
+        .get_root()
+        .dereference()
+        .unwrap()
+        .downcast_definition::<DStructLiteral>()
+        .unwrap()
+        .as_ref()
+        .get_field(&path)
+        .unwrap()
+        .dereference()
+        .unwrap()
+        .downcast_definition::<DStructLiteral>()
+        .unwrap()
+        .as_ref()
+        .get_field("main")
+        .unwrap()
+        .reduced(&HashMap::new(), true)
+        .dereference()
+        .unwrap();
+    println!("{:#?}", root);
 }
