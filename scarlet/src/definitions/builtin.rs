@@ -13,7 +13,7 @@ use owning_ref::OwningRef;
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
-    environment::{r#true, Environment},
+    environment::{r#true, Environment, r#false},
     item::{
         parameters::Parameters,
         query::{
@@ -21,7 +21,7 @@ use crate::{
             TypeCheckQuery, TypeQuery,
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
-    },
+    }, shared::TripleBool,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -155,12 +155,14 @@ impl ItemDefinition for DBuiltin {
             .collect_vec();
         match self.builtin {
             Builtin::IsExactly => {
-                if rargs[2]
+                match rargs[2]
                     .dereference()
                     .unwrap()
-                    .is_same_instance_as(&rargs[3].dereference().unwrap())
+                    .is_equal_to(&rargs[3].dereference().unwrap())
                 {
-                    return r#true();
+                    TripleBool::True => return r#true(),
+                    TripleBool::False => return r#false(),
+                    TripleBool::Unknown => (),
                 }
             }
             Builtin::IsSubtypeOf => {

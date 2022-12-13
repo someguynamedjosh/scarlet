@@ -11,8 +11,13 @@ Union IS BUILTIN(Union)
 # condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
 # true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
 # false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
-
 # if_then_else IS BUILTIN(if_then_else)
+
+Comparee IS ANY Type AS_LANGUAGE_ITEM(Comparee)
+Comparand IS ANY Type AS_LANGUAGE_ITEM(Comparand)
+comparee IS ANY Comparee AS_LANGUAGE_ITEM(comparee)
+comparand IS ANY Comparand AS_LANGUAGE_ITEM(comparand)
+is_exactly IS BUILTIN(is_exactly)
 
 # main IS if_then_else(Bool True.new True.new False.new)
 
@@ -20,4 +25,5 @@ Zero IS NEW_TYPE()
 Successor IS NEW_TYPE(of IS ANY PeanoNumber)
 PeanoNumber IS Union(Zero Successor)
 
-main IS Successor.new(Zero.new)
+one IS Successor.new(Zero.new)
+main IS is_exactly(PeanoNumber PeanoNumber one one)

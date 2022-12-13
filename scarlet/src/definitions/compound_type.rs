@@ -17,7 +17,7 @@ use crate::{
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
-    util::PtrExtension,
+    util::PtrExtension, shared::TripleBool,
 };
 
 pub type TypeId = Option<Rc<()>>;
@@ -184,6 +184,30 @@ impl ItemDefinition for DCompoundType {
 
     fn reduce(&self, this: &ItemPtr, _args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
         this.ptr_clone()
+    }
+
+    fn is_equal_to(&self, other: &ItemPtr) -> TripleBool {
+        if let Some(other) = other.dereference().unwrap().downcast_definition::<Self>() {
+            'next_ltype: for ltype in self.component_types.values() {
+                for rtype in other.component_types.values() {
+                    if ltype.is_same_type_as(rtype) {
+                        continue 'next_ltype;
+                    }
+                }
+                return TripleBool::False;
+            }
+            'next_rtype: for rtype in other.component_types.values() {
+                for ltype in self.component_types.values() {
+                    if ltype.is_same_type_as(rtype) {
+                        continue 'next_rtype;
+                    }
+                }
+                return TripleBool::False;
+            }
+            TripleBool::True
+        } else {
+            TripleBool::Unknown
+        }
     }
 }
 

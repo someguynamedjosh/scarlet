@@ -1,4 +1,7 @@
-use std::{cell::{RefCell, Cell}, collections::HashMap};
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+};
 
 use crate::{
     definitions::{new_value::DNewValue, struct_literal::DStructLiteral},
@@ -16,6 +19,10 @@ thread_local! {
 
 pub fn r#true() -> ItemPtr {
     ENV.with(|env| env.borrow().r#true())
+}
+
+pub fn r#false() -> ItemPtr {
+    ENV.with(|env| env.borrow().r#false())
 }
 
 /// This struct guarantees certain parts of the code remain internal to the
@@ -124,5 +131,9 @@ impl Environment {
 
     pub fn r#true(&self) -> ItemPtr {
         DNewValue::r#true(self).unwrap().into_ptr()
+    }
+
+    pub fn r#false(&self) -> ItemPtr {
+        DNewValue::r#false(self).unwrap().into_ptr()
     }
 }

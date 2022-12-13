@@ -21,6 +21,7 @@ use crate::{
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
+    shared::TripleBool,
     util::PtrExtension,
 };
 
@@ -101,6 +102,23 @@ impl ItemDefinition for DNewValue {
             r#type: self.r#type.ptr_clone(),
         }
         .into_ptr_mimicking(this)
+    }
+
+    fn is_equal_to(&self, other: &ItemPtr) -> TripleBool {
+        if let Some(other) = other.dereference().unwrap().downcast_definition::<Self>() {
+            if !self.r#type.is_same_type_as(&other.r#type) {
+                return TripleBool::False;
+            }
+            for (lfield, rfield) in self.fields.iter().zip(other.fields.iter()) {
+                let fields_equal = lfield.is_equal_to(&rfield);
+                if fields_equal != TripleBool::True {
+                    return fields_equal;
+                }
+            }
+            TripleBool::True
+        } else {
+            TripleBool::Unknown
+        }
     }
 }
 

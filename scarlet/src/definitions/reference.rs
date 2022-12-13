@@ -89,6 +89,10 @@ impl ItemDefinition for DReference {
             base.resolve_now(ctx)
         }
     }
+
+    fn is_equal_to(&self, other: &ItemPtr) -> crate::shared::TripleBool {
+        self.target().unwrap().is_equal_to(other)
+    }
 }
 
 impl DReference {

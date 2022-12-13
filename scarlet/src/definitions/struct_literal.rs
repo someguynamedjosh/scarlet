@@ -22,6 +22,7 @@ use crate::{
         },
         CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
     },
+    shared::TripleBool,
 };
 
 #[derive(Clone)]
@@ -155,6 +156,26 @@ impl ItemDefinition for DStructLiteral {
             is_module: self.is_module,
         }
         .into_ptr_mimicking(this)
+    }
+
+    fn is_equal_to(&self, other: &ItemPtr) -> crate::shared::TripleBool {
+        if let Some(other) = other.dereference().unwrap().downcast_definition::<Self>() {
+            if self.fields.len() != other.fields.len() {
+                return TripleBool::False;
+            }
+            for (lfield, rfield) in self.fields.iter().zip(other.fields.iter()) {
+                if lfield.0 != rfield.0 {
+                    return TripleBool::False;
+                }
+                let fields_equal = lfield.1.is_equal_to(&rfield.1);
+                if fields_equal != TripleBool::True {
+                    return fields_equal;
+                }
+            }
+            TripleBool::True
+        } else {
+            TripleBool::Unknown
+        }
     }
 }
 

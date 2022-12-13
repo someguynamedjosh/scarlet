@@ -29,7 +29,7 @@ use crate::{
     diagnostic::{Diagnostic, Position},
     environment::{r#true, Environment, ENV, FLAG},
     item::query::QueryResult,
-    util::PtrExtension,
+    util::PtrExtension, shared::TripleBool,
 };
 
 pub struct CddContext<'a, 'b> {
@@ -90,6 +90,9 @@ pub trait ItemDefinition: Any + NamedAny + CycleDetectingDebug + DynClone {
         ctx: &mut QueryContext<TypeCheckQuery>,
     ) -> <TypeCheckQuery as Query>::Result;
     fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr;
+    fn is_equal_to(&self, other: &ItemPtr) -> TripleBool {
+        TripleBool::Unknown
+    }
 }
 
 impl dyn ItemDefinition {
@@ -526,5 +529,9 @@ impl ItemPtr {
         } else {
             Ok(self.ptr_clone())
         }
+    }
+
+    pub fn is_equal_to(&self, other: &ItemPtr) -> TripleBool {
+        self.clone_definition().is_equal_to(other)
     }
 }
