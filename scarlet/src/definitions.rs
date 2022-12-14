@@ -6,4 +6,5 @@ pub mod member_access;
 pub mod new_value;
 pub mod parameter;
 pub mod struct_literal;
+pub mod unresolved_substitution;
 pub mod substitution;

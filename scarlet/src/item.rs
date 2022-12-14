@@ -2,7 +2,8 @@ use std::{
     any::Any,
     collections::HashSet,
     fmt::{self, Debug, Formatter},
-    rc::Rc, hash::Hash,
+    hash::Hash,
+    rc::Rc,
 };
 
 use debug_cell::RefCell;
@@ -11,7 +12,7 @@ use crate::{
     definitions::{
         builtin::DBuiltin, compound_type::DCompoundType, hole::DHole, identifier::DIdentifier,
         member_access::DMemberAccess, new_value::DNewValue, parameter::DParameter,
-        struct_literal::DStructLiteral, substitution::DSubstitution,
+        struct_literal::DStructLiteral, unresolved_substitution::DUnresolvedSubstitution,
     },
     diagnostic::Position,
     util::PtrExtension,
@@ -157,7 +158,7 @@ macro_rules! definition_enum {
 }
 
 definition_enum!(DeUnresolved, (), {
-    DBuiltin, DCompoundType, DHole, DIdentifier, DMemberAccess, DNewValue, DParameter, DStructLiteral, DSubstitution
+    DBuiltin, DCompoundType, DIdentifier, DMemberAccess, DParameter, DStructLiteral, DUnresolvedSubstitution
 });
 
 impl ItemDefinition<DeUnresolved, ()> for DeUnresolved {

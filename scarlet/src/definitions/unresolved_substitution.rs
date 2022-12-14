@@ -18,32 +18,34 @@ use crate::{
     util::PtrExtension,
 };
 
-pub type Substitutions<Definition, Analysis> = OrderedMap<
-    (
-        ItemRef<Definition, Analysis>,
-        ParameterPtr<Definition, Analysis>,
-    ),
-    ItemRef<Definition, Analysis>,
->;
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum UnresolvedTarget {
+    Positional,
+    Named(String),
+}
+
+pub type Substitutions<Definition, Analysis> =
+    Vec<(UnresolvedTarget, ItemRef<Definition, Analysis>)>;
 
 #[derive(Clone)]
-pub struct DSubstitution<Definition, Analysis> {
+pub struct DUnresolvedSubstitution<Definition, Analysis> {
     base: ItemRef<Definition, Analysis>,
     substitutions: Substitutions<Definition, Analysis>,
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
-    for DSubstitution<Definition, Analysis>
+    for DUnresolvedSubstitution<Definition, Analysis>
 {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         self.base.fmt(f, ctx)?;
         write!(f, "(")?;
         let mut first = true;
-        for (_target, value) in &self.substitutions {
+        for (target, value) in &self.substitutions {
             if !first {
                 write!(f, ", ")?;
             }
             first = false;
+            write!(f, "{:?} IS ", target)?;
             value.fmt(f, ctx)?;
         }
         write!(f, ")")
@@ -51,15 +53,15 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
 }
 
 impl<Defn: ItemDefinition<Defn, Analysis>, Analysis> ItemDefinition<Defn, Analysis>
-    for DSubstitution<Defn, Analysis>
+    for DUnresolvedSubstitution<Defn, Analysis>
 {
     fn children(&self) -> Vec<ItemRef<Defn, Analysis>> {
         todo!()
     }
 }
 
-impl<Definition, Analysis> DSubstitution<Definition, Analysis> {
-    pub fn new(
+impl<Definition, Analysis> DUnresolvedSubstitution<Definition, Analysis> {
+    pub fn new_unresolved(
         base: ItemRef<Definition, Analysis>,
         substitutions: Substitutions<Definition, Analysis>,
     ) -> Self {

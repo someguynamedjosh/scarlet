@@ -1,5 +1,5 @@
 use crate::{
-    definitions::substitution::{DSubstitution, UnresolvedTarget},
+    definitions::unresolved_substitution::{DUnresolvedSubstitution, UnresolvedTarget},
     item::IntoRef,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
@@ -24,7 +24,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             subs.push((UnresolvedTarget::Positional, child.as_item(ctx)?));
         }
     }
-    Ok(DSubstitution::new_unresolved(base, subs).into_ref(node.position))
+    Ok(DUnresolvedSubstitution::new_unresolved(base, subs).into_ref(node.position))
 }
 
 pub fn phrase() -> Phrase {
