@@ -26,10 +26,18 @@ pub type Substitutions<Definition, Analysis> = OrderedMap<
     ItemRef<Definition, Analysis>,
 >;
 
-#[derive(Clone)]
 pub struct DSubstitution<Definition, Analysis> {
     base: ItemRef<Definition, Analysis>,
     substitutions: Substitutions<Definition, Analysis>,
+}
+
+impl<Definition, Analysis> Clone for DSubstitution<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            base: self.base.ptr_clone(),
+            substitutions: self.substitutions.clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
@@ -50,10 +58,10 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
     }
 }
 
-impl<Defn: ItemDefinition<Defn, Analysis>, Analysis> ItemDefinition<Defn, Analysis>
-    for DSubstitution<Defn, Analysis>
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
+    ItemDefinition<Definition, Analysis> for DSubstitution<Definition, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Defn, Analysis>> {
+    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
         todo!()
     }
 }

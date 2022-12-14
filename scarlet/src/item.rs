@@ -97,7 +97,7 @@ impl<T: Any> NamedAny for T {
 }
 
 pub trait ItemDefinition<Definition: ItemDefinition<Definition, Analysis>, Analysis>:
-    CycleDetectingDebug
+    CycleDetectingDebug + Clone
 {
     fn children(&self) -> Vec<ItemRef<Definition, Analysis>>;
 }
@@ -106,7 +106,32 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
     for ItemRef<Definition, Analysis>
 {
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
-        todo!()
+        let ptr = self.item.as_ptr() as *const _;
+        // if let Some(ident) = self.reverse_lookup_identifier(self) {
+        //     if self.lookup_identifier(&ident).unwrap().get_position() !=
+        // self.get_position() {         return write!(f, "{}", ident);
+        //     }
+        // }
+        if ctx.stack.contains(&ptr) {
+            ctx.recursed_on.insert(ptr);
+            write!(f, "{:?}", ptr)
+        } else {
+            let mut new_stack = Vec::from(ctx.stack);
+            new_stack.push(ptr);
+            let def = self.item.borrow().definition.clone();
+            CycleDetectingDebug::fmt(
+                &def,
+                f,
+                &mut CddContext {
+                    stack: &mut new_stack,
+                    recursed_on: ctx.recursed_on,
+                },
+            )?;
+            if ctx.recursed_on.remove(&ptr) {
+                writeln!(f, "\n@{:?}", ptr)?;
+            }
+            Ok(())
+        }
     }
 }
 
@@ -137,6 +162,7 @@ impl<Definition> ItemRef<Definition, ()> {
 
 macro_rules! definition_enum {
     ($Name:ident, $Analysis:ty, { $($Subtype:ident),* }) => {
+        #[derive(Clone)]
         pub enum $Name {
             $($Subtype($Subtype<$Name, $Analysis>)),*
         }
@@ -150,22 +176,22 @@ macro_rules! definition_enum {
         }
 
         $(impl From<$Subtype<$Name, $Analysis>> for $Name {
-            fn from(_: $Subtype<$Name, $Analysis>) -> Self {
-                todo!()
+            fn from(base: $Subtype<$Name, $Analysis>) -> Self {
+                Self::$Subtype(base)
             }
         })*
+
+        impl ItemDefinition<$Name, ()> for $Name{
+            fn children(&self) -> Vec<ItemRef<$Name, $Analysis>> {
+                todo!()
+            }
+        }
     }
 }
 
 definition_enum!(DeUnresolved, (), {
     DBuiltin, DCompoundType, DIdentifier, DMemberAccess, DParameter, DStructLiteral, DUnresolvedSubstitution
 });
-
-impl ItemDefinition<DeUnresolved, ()> for DeUnresolved {
-    fn children(&self) -> Vec<ItemRef<DeUnresolved, ()>> {
-        todo!()
-    }
-}
 
 pub trait IntoRef<Definition> {
     fn into_ref(self, position: Position) -> ItemRef<Definition, ()>;

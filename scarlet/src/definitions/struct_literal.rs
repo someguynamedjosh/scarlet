@@ -4,12 +4,20 @@ use itertools::Itertools;
 
 use crate::item::{CddContext, CycleDetectingDebug, ItemDefinition, ItemRef};
 
-#[derive(Clone)]
 pub struct DStructLiteral<Definition, Analysis> {
     fields: Vec<(String, ItemRef<Definition, Analysis>)>,
     /// If true, a type is automatically generated based on the contents. If
     /// false, the type should be inferred.
     is_module: bool,
+}
+
+impl<Definition, Analysis> Clone for DStructLiteral<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            fields: self.fields.clone(),
+            is_module: self.is_module.clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug

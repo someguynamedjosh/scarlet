@@ -109,11 +109,18 @@ impl<Definition, Analysis> Type<Definition, Analysis> {
     }
 }
 
-#[derive(Clone)]
 pub struct DCompoundType<Definition, Analysis> {
     // These are ORed together. ANDing them would result in an empty type any
     // time you have at least 2 non-identical components.
     component_types: HashMap<TypeId, Rc<Type<Definition, Analysis>>>,
+}
+
+impl<Definition, Analysis> Clone for DCompoundType<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            component_types: self.component_types.clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug

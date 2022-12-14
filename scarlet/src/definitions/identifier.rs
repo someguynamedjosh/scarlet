@@ -6,10 +6,18 @@ use crate::{
     item::{CddContext, CycleDetectingDebug, ItemDefinition, ItemRef},
 };
 
-#[derive(Clone, Debug)]
 pub struct DIdentifier<Definition, Analysis> {
     identifier: String,
     _pd: PhantomData<(Definition, Analysis)>,
+}
+
+impl<Definition, Analysis> Clone for DIdentifier<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            identifier: self.identifier.clone(),
+            _pd: self._pd.clone(),
+        }
+    }
 }
 
 impl<Definition, Analysis> CycleDetectingDebug for DIdentifier<Definition, Analysis> {

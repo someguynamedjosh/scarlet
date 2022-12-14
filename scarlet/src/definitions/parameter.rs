@@ -74,10 +74,18 @@ impl<Definition, Analysis> Parameter<Definition, Analysis> {
 
 pub type ParameterPtr<Definition, Analysis> = Rc<Parameter<Definition, Analysis>>;
 
-#[derive(Clone)]
 pub struct DParameter<Definition, Analysis> {
     parameter: ParameterPtr<Definition, Analysis>,
     reduced_type: ItemRef<Definition, Analysis>,
+}
+
+impl<Definition, Analysis> Clone for DParameter<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            parameter: self.parameter.ptr_clone(),
+            reduced_type: self.reduced_type.ptr_clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug

@@ -27,10 +27,18 @@ pub enum UnresolvedTarget {
 pub type Substitutions<Definition, Analysis> =
     Vec<(UnresolvedTarget, ItemRef<Definition, Analysis>)>;
 
-#[derive(Clone)]
 pub struct DUnresolvedSubstitution<Definition, Analysis> {
     base: ItemRef<Definition, Analysis>,
     substitutions: Substitutions<Definition, Analysis>,
+}
+
+impl<Definition, Analysis> Clone for DUnresolvedSubstitution<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            base: self.base.ptr_clone(),
+            substitutions: self.substitutions.clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug

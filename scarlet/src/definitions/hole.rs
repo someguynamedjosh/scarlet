@@ -6,9 +6,16 @@ use std::{
 use super::{builtin::DBuiltin, compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::item::{CddContext, CycleDetectingDebug, ItemDefinition, ItemRef};
 
-#[derive(Clone)]
 pub struct DHole<Definition, Analysis> {
     r#type: ItemRef<Definition, Analysis>,
+}
+
+impl<Definition, Analysis> Clone for DHole<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            r#type: self.r#type.ptr_clone(),
+        }
+    }
 }
 
 impl<Definition, Analysis> CycleDetectingDebug for DHole<Definition, Analysis> {

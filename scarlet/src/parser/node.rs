@@ -112,7 +112,6 @@ impl<'x> Node<'x> {
             .create_and_uncreate
             .expect(&format!("{} is not a construct", self.phrase))
             .0(ctx, self)?;
-        assert_eq!(item.position, self.position);
         Ok(item)
     }
 

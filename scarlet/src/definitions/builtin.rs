@@ -46,10 +46,15 @@ impl Builtin {
     }
 }
 
-#[derive(Clone)]
 pub struct DBuiltin<Definition, Analysis> {
     builtin: Builtin,
     args: Vec<ItemRef<Definition, Analysis>>,
+}
+
+impl<Definition, Analysis> Clone for DBuiltin<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self { builtin: self.builtin.clone(), args: self.args.clone() }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
@@ -82,12 +87,17 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     }
 }
 
-impl<Definition, Analysis> DBuiltin<Definition, Analysis> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> DBuiltin<Definition, Analysis> {
     pub fn new_user_facing(
         builtin: Builtin,
         env: &Environment<Definition, Analysis>,
     ) -> Result<Self, Diagnostic> {
-        todo!()
+        let args = builtin
+            .default_arg_names()
+            .iter()
+            .map(|name| env.get_language_item(name))
+            .collect::<Result<_, _>>()?;
+        Ok(Self { builtin, args })
     }
 
     pub fn is_type(candidate: ItemRef<Definition, Analysis>) -> Self {

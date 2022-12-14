@@ -18,11 +18,20 @@ use crate::{
     util::PtrExtension,
 };
 
-#[derive(Clone)]
 pub struct DNewValue<Definition, Analysis> {
     r#type: Rc<Type<Definition, Analysis>>,
     type_expr: ItemRef<Definition, Analysis>,
     fields: Vec<ItemRef<Definition, Analysis>>,
+}
+
+impl<Definition, Analysis> Clone for DNewValue<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            r#type: self.r#type.ptr_clone(),
+            type_expr: self.type_expr.ptr_clone(),
+            fields: self.fields.clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug

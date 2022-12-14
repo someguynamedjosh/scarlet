@@ -17,12 +17,22 @@ enum Member {
     Constructor,
 }
 
-#[derive(Clone)]
 pub struct DMemberAccess<Definition, Analysis> {
     base: ItemRef<Definition, Analysis>,
     member_name: String,
     member_index: Member,
     r#type: Option<ItemRef<Definition, Analysis>>,
+}
+
+impl<Definition, Analysis> Clone for DMemberAccess<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            base: self.base.ptr_clone(),
+            member_name: self.member_name.clone(),
+            member_index: self.member_index.clone(),
+            r#type: self.r#type.clone(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
