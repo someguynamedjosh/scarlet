@@ -16,13 +16,28 @@ use crate::{
 
 pub type TypeId = Option<Rc<()>>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Type<Definition, Analysis> {
     GodType,
     UserType {
         type_id: Rc<()>,
         fields: Vec<(String, ItemRef<Definition, Analysis>)>,
     },
+}
+
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> std::fmt::Debug
+    for Type<Definition, Analysis>
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::GodType => write!(f, "GodType"),
+            Self::UserType { type_id, fields } => f
+                .debug_struct("UserType")
+                .field("type_id", &Rc::as_ptr(type_id))
+                .field("fields", fields)
+                .finish(),
+        }
+    }
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
@@ -81,12 +96,7 @@ impl<Definition, Analysis> Type<Definition, Analysis> {
         this_expr: ItemRef<Definition, Analysis>,
         mimicking: &ItemRef<Definition, Analysis>,
     ) -> ItemRef<Definition, Analysis> {
-        DNewValue::new(
-            this.ptr_clone(),
-            this_expr,
-            this.get_fields().iter().map(|f| f.1.ptr_clone()).collect(),
-        )
-        .into_ptr_mimicking(mimicking)
+        todo!()
     }
 
     /// False is non-definitive here.
@@ -95,27 +105,20 @@ impl<Definition, Analysis> Type<Definition, Analysis> {
     }
 
     pub fn resolved(&self) -> Self {
-        match self {
-            Type::GodType => Type::GodType,
-            Type::UserType { type_id, fields } => Type::UserType {
-                type_id: type_id.ptr_clone(),
-                fields: fields
-                    .iter()
-                    .map(|(k, v)| (k.clone(), v.resolved()))
-                    .collect(),
-            },
-        }
+        todo!()
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct DCompoundType<Definition, Analysis> {
     // These are ORed together. ANDing them would result in an empty type any
     // time you have at least 2 non-identical components.
     component_types: HashMap<TypeId, Rc<Type<Definition, Analysis>>>,
 }
 
-impl<Definition, Analysis> CycleDetectingDebug for DCompoundType<Definition, Analysis> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
+    for DCompoundType<Definition, Analysis>
+{
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         if self.component_types.len() == 1 {
             self.component_types.iter().next().unwrap().1.fmt(f, ctx)

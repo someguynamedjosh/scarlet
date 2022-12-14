@@ -78,26 +78,6 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         false
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &(K, V)> {
-        self.into_iter()
-    }
-
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut (K, V)> {
-        self.into_iter()
-    }
-
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn take(&mut self) -> Self {
-        std::mem::take(self)
-    }
-
     pub fn remove<R: Eq>(&mut self, key_to_remove: &R) -> Option<(K, V)>
     where
         K: Borrow<R>,
@@ -136,6 +116,28 @@ impl<K: PartialEq + Eq + Debug, V: Debug> OrderedMap<K, V> {
         }
         reordered.append(&mut self.entries);
         Self { entries: reordered }
+    }
+}
+
+impl<K, V> OrderedMap<K, V> {
+    pub fn iter(&self) -> impl Iterator<Item = &(K, V)> {
+        self.into_iter()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut (K, V)> {
+        self.into_iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn take(&mut self) -> Self {
+        std::mem::take(self)
     }
 }
 

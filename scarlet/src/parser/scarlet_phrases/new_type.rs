@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{
     definitions::compound_type::{DCompoundType, Type},
-    item::IntoItemPtr,
+    item::IntoRef,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
@@ -26,7 +26,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
         type_id: Rc::new(()),
         fields,
     }))
-    .into_ptr())
+    .into_ref(node.position))
 }
 
 pub fn phrase() -> Phrase {

@@ -12,7 +12,9 @@ pub struct DStructLiteral<Definition, Analysis> {
     is_module: bool,
 }
 
-impl<Definition, Analysis> CycleDetectingDebug for DStructLiteral<Definition, Analysis> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
+    for DStructLiteral<Definition, Analysis>
+{
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "[\n")?;
         for field in &self.fields {

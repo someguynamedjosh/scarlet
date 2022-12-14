@@ -25,7 +25,9 @@ pub struct DNewValue<Definition, Analysis> {
     fields: Vec<ItemRef<Definition, Analysis>>,
 }
 
-impl<Definition, Analysis> CycleDetectingDebug for DNewValue<Definition, Analysis> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
+    for DNewValue<Definition, Analysis>
+{
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         self.type_expr.fmt(f, ctx)?;
         write!(f, ".new(\n")?;
@@ -60,7 +62,7 @@ impl<Definition, Analysis> DNewValue<Definition, Analysis> {
     }
 
     fn get_builtin_type(
-        env: &Environment,
+        env: &Environment<Definition, Analysis>,
         name: &str,
     ) -> Result<
         (
@@ -69,32 +71,15 @@ impl<Definition, Analysis> DNewValue<Definition, Analysis> {
         ),
         Diagnostic,
     > {
-        let expr = env
-            .get_language_item(name)?
-            .resolved()
-            .dereference()
-            .unwrap();
-
-        let r#type = expr
-            .downcast_definition::<DCompoundType>()
-            .unwrap()
-            .as_ref()
-            .get_component_types()
-            .iter()
-            .next()
-            .unwrap()
-            .1
-            .ptr_clone();
-
-        Ok((r#type, expr))
+        todo!()
     }
 
-    pub fn r#true(env: &Environment) -> Result<Self, Diagnostic> {
+    pub fn r#true(env: &Environment<Definition, Analysis>) -> Result<Self, Diagnostic> {
         let (r#type, expr) = Self::get_builtin_type(env, "True")?;
         Ok(Self::new(r#type, expr, vec![]))
     }
 
-    pub fn r#false(env: &Environment) -> Result<Self, Diagnostic> {
+    pub fn r#false(env: &Environment<Definition, Analysis>) -> Result<Self, Diagnostic> {
         let (r#type, expr) = Self::get_builtin_type(env, "False")?;
         Ok(Self::new(r#type, expr, vec![]))
     }

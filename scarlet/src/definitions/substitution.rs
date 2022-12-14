@@ -70,10 +70,11 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
     }
 }
 
-impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
-    ItemDefinition<Definition, Analysis> for DSubstitution<Definition, Analysis>
+impl<Defn: ItemDefinition<Defn, Analysis>, Analysis>
+    ItemDefinition<Defn, Analysis> for DSubstitution<Defn, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
+    fn children(&self) -> Vec<ItemRef<Defn, Analysis>> {
+        <(ItemRef<Defn, Analysis>, ParameterPtr<Defn, Analysis>) as PartialEq>::eq(todo!(), todo!());
         let mut result = vec![self.base.ptr_clone()];
         match &self.substitutions {
             Ok(resolved) => result.extend(resolved.iter().map(|(_, v)| v.ptr_clone())),

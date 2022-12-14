@@ -1,13 +1,12 @@
 use crate::{
     definitions::substitution::{DSubstitution, UnresolvedTarget},
-    item::IntoItemPtr,
+    item::IntoRef,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
         Node,
     },
     phrase,
-    shared::OrderedMap,
 };
 
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
@@ -22,13 +21,10 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
                 value.as_item(ctx)?,
             ));
         } else {
-            subs.push((
-                UnresolvedTarget::Positional,
-                child.as_item(ctx)?,
-            ));
+            subs.push((UnresolvedTarget::Positional, child.as_item(ctx)?));
         }
     }
-    Ok(DSubstitution::new_unresolved(base, subs).into_ptr())
+    Ok(DSubstitution::new_unresolved(base, subs).into_ref(node.position))
 }
 
 pub fn phrase() -> Phrase {

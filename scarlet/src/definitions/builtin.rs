@@ -13,7 +13,7 @@ use owning_ref::OwningRef;
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
-    environment::{r#false, r#true, Environment, ENV},
+    environment::Environment,
     item::{CddContext, CycleDetectingDebug, Item, ItemDefinition, ItemRef},
     shared::TripleBool,
 };
@@ -46,7 +46,7 @@ impl Builtin {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct DBuiltin<Definition, Analysis> {
     builtin: Builtin,
     args: Vec<ItemRef<Definition, Analysis>>,
@@ -74,21 +74,6 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
     }
 }
 
-fn both_compound_types<'a, Definition, Analysis>(
-    a: &'a ItemRef<Definition, Analysis>,
-    b: &'a ItemRef<Definition, Analysis>,
-) -> Option<(
-    OwningRef<Ref<'a, Item<Definition, Analysis>>, DCompoundType<Definition, Analysis>>,
-    OwningRef<Ref<'a, Item<Definition, Analysis>>, DCompoundType<Definition, Analysis>>,
-)> {
-    a.downcast_definition::<DCompoundType>()
-        .map(|def_a| {
-            b.downcast_definition::<DCompoundType>()
-                .map(|def_b| (def_a, def_b))
-        })
-        .flatten()
-}
-
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     ItemDefinition<Definition, Analysis> for DBuiltin<Definition, Analysis>
 {
@@ -98,23 +83,15 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
 }
 
 impl<Definition, Analysis> DBuiltin<Definition, Analysis> {
-    pub fn new_user_facing(builtin: Builtin, env: &Environment) -> Result<Self, Diagnostic> {
-        let args = builtin
-            .default_arg_names()
-            .iter()
-            .map(|name| env.get_language_item(name).map(ItemRef::ptr_clone))
-            .collect::<Result<_, _>>()?;
-        let _true = Some(env.r#true());
-        Ok(Self { builtin, args })
+    pub fn new_user_facing(
+        builtin: Builtin,
+        env: &Environment<Definition, Analysis>,
+    ) -> Result<Self, Diagnostic> {
+        todo!()
     }
 
     pub fn is_type(candidate: ItemRef<Definition, Analysis>) -> Self {
-        Self::is_subtype_of(
-            candidate
-                .query_type(&mut Environment::root_query())
-                .unwrap(),
-            DCompoundType::r#type().into_ptr(),
-        )
+        todo!()
     }
 
     pub fn is_subtype_of(

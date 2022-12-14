@@ -4,7 +4,7 @@ use crate::{
         compound_type::DCompoundType,
     },
     diagnostic::Diagnostic,
-    item::IntoItemPtr,
+    item::IntoRef,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
@@ -18,7 +18,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     let builtin = match name {
         "is_exactly" => Builtin::IsExactly,
         "if_then_else" => Builtin::IfThenElse,
-        "Type" => return Ok(DCompoundType::r#type().into_ptr()),
+        "Type" => return Ok(DCompoundType::r#type().into_ref(node.position)),
         "Union" => Builtin::Union,
         _ => {
             return Err(Diagnostic::new()
@@ -27,7 +27,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
         }
     };
     let definition = DBuiltin::new_user_facing(builtin, ctx.env)?;
-    Ok(definition.into_ptr())
+    Ok(definition.into_ref(node.position))
 }
 
 pub fn phrase() -> Phrase {

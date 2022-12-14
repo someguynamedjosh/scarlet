@@ -19,7 +19,6 @@ pub mod environment;
 mod file_tree;
 pub mod item;
 pub mod parser;
-pub mod scope;
 mod shared;
 mod util;
 

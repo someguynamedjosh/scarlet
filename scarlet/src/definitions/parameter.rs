@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     fmt::{self},
+    hash::Hash,
     rc::Rc,
 };
 
@@ -11,7 +12,7 @@ use crate::{
     util::PtrExtension,
 };
 
-#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 pub struct Order {
     /// Explicitly defined order, 0-255.
     major_order: u8,
@@ -21,10 +22,44 @@ pub struct Order {
     minor_order: u32,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Parameter<Definition, Analysis> {
     order: Order,
     original_type: ItemRef<Definition, Analysis>,
+}
+
+impl<Definition, Analysis> Clone for Parameter<Definition, Analysis> {
+    fn clone(&self) -> Self {
+        Self {
+            order: self.order,
+            original_type: self.original_type.ptr_clone(),
+        }
+    }
+}
+
+impl<Definition, Analysis> PartialEq for Parameter<Definition, Analysis> {
+    fn eq(&self, other: &Self) -> bool {
+        self.order == other.order && self.original_type == other.original_type
+    }
+}
+
+impl<Definition, Analysis> Eq for Parameter<Definition, Analysis> {}
+
+impl<Definition, Analysis> Hash for Parameter<Definition, Analysis> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.order.hash(state);
+        self.original_type.hash(state);
+    }
+}
+
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> std::fmt::Debug
+    for Parameter<Definition, Analysis>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Parameter")
+            .field("order", &self.order)
+            .field("original_type", &self.original_type)
+            .finish()
+    }
 }
 
 impl<Definition, Analysis> Parameter<Definition, Analysis> {
@@ -45,7 +80,9 @@ pub struct DParameter<Definition, Analysis> {
     reduced_type: ItemRef<Definition, Analysis>,
 }
 
-impl<Definition, Analysis> CycleDetectingDebug for DParameter<Definition, Analysis> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
+    for DParameter<Definition, Analysis>
+{
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "ANY ")?;
         self.reduced_type.fmt(f, ctx)

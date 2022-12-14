@@ -17,7 +17,7 @@ enum Member {
     Constructor,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct DMemberAccess<Definition, Analysis> {
     base: ItemRef<Definition, Analysis>,
     member_name: String,
@@ -25,7 +25,9 @@ pub struct DMemberAccess<Definition, Analysis> {
     r#type: Option<ItemRef<Definition, Analysis>>,
 }
 
-impl<Definition, Analysis> CycleDetectingDebug for DMemberAccess<Definition, Analysis> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
+    for DMemberAccess<Definition, Analysis>
+{
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         self.base.fmt(f, ctx)?;
         write!(f, ".{}", self.member_name)
