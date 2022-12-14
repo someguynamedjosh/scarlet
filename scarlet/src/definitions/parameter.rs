@@ -7,11 +7,7 @@ use std::{
 use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
-    item::{
-        parameters::Parameters,
-        query::{ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery, TypeQuery},
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
-    },
+    item::{CddContext, CycleDetectingDebug, ItemDefinition, ItemRef},
     util::PtrExtension,
 };
 
@@ -26,99 +22,46 @@ pub struct Order {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Parameter {
+pub struct Parameter<Definition, Analysis> {
     order: Order,
-    original_type: ItemPtr,
+    original_type: ItemRef<Definition, Analysis>,
 }
 
-impl Parameter {
+impl<Definition, Analysis> Parameter<Definition, Analysis> {
     pub fn order(&self) -> &Order {
         &self.order
     }
 
-    pub fn original_type(&self) -> &ItemPtr {
+    pub fn original_type(&self) -> &ItemRef<Definition, Analysis> {
         &self.original_type
     }
 }
 
-pub type ParameterPtr = Rc<Parameter>;
+pub type ParameterPtr<Definition, Analysis> = Rc<Parameter<Definition, Analysis>>;
 
 #[derive(Clone)]
-pub struct DParameter {
-    parameter: ParameterPtr,
-    reduced_type: ItemPtr,
+pub struct DParameter<Definition, Analysis> {
+    parameter: ParameterPtr<Definition, Analysis>,
+    reduced_type: ItemRef<Definition, Analysis>,
 }
 
-impl CycleDetectingDebug for DParameter {
+impl<Definition, Analysis> CycleDetectingDebug for DParameter<Definition, Analysis> {
     fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "ANY ")?;
         self.reduced_type.fmt(f, ctx)
     }
 }
 
-impl ItemDefinition for DParameter {
-    fn children(&self) -> Vec<ItemPtr> {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
+    ItemDefinition<Definition, Analysis> for DParameter<Definition, Analysis>
+{
+    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
         vec![self.reduced_type.ptr_clone()]
-    }
-
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
-        vec![(
-            this.ptr_clone(),
-            DBuiltin::is_type(self.reduced_type.ptr_clone()).into_ptr(),
-        )]
-    }
-
-    fn recompute_parameters(
-        &self,
-        ctx: &mut QueryContext<ParametersQuery>,
-        this: &ItemPtr,
-    ) -> <ParametersQuery as Query>::Result {
-        let rt = self.reduced_type.dereference().unwrap();
-        let mut result = rt.query_parameters(ctx);
-        result.insert(rt, self.parameter.ptr_clone());
-        result
-    }
-
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(self.reduced_type.ptr_clone())
-    }
-
-    fn recompute_type_check(
-        &self,
-        _ctx: &mut QueryContext<TypeCheckQuery>,
-    ) -> <TypeCheckQuery as Query>::Result {
-        todo!()
-    }
-
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        if let Some(value) = args.get(&self.parameter) {
-            value.ptr_clone()
-        } else {
-            let r#type = self.reduced_type.reduced(args, true);
-            Self {
-                parameter: Rc::clone(&self.parameter),
-                reduced_type: r#type,
-            }
-            .into_ptr_mimicking(this)
-        }
-    }
-
-    fn recompute_resolved(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut QueryContext<ResolveQuery>,
-    ) -> <ResolveQuery as Query>::Result {
-        let r#type = self.reduced_type.resolved();
-        Ok(Self {
-            parameter: Rc::clone(&self.parameter),
-            reduced_type: r#type,
-        }
-        .into_ptr_mimicking(this))
     }
 }
 
-impl DParameter {
-    pub fn new(major_order: u8, position: Position, r#type: ItemPtr) -> Self {
+impl<Definition, Analysis> DParameter<Definition, Analysis> {
+    pub fn new(major_order: u8, position: Position, r#type: ItemRef<Definition, Analysis>) -> Self {
         let order = Order {
             major_order,
             file_order: position.file_index() as _,
@@ -134,15 +77,15 @@ impl DParameter {
         }
     }
 
-    pub fn get_parameter_ptr(&self) -> ParameterPtr {
+    pub fn get_parameter_ptr(&self) -> ParameterPtr<Definition, Analysis> {
         Rc::clone(&self.parameter)
     }
 
-    pub fn get_parameter(&self) -> &Parameter {
+    pub fn get_parameter(&self) -> &Parameter<Definition, Analysis> {
         &*self.parameter
     }
 
-    pub fn get_type(&self) -> &ItemPtr {
+    pub fn get_type(&self) -> &ItemRef<Definition, Analysis> {
         &self.reduced_type
     }
 }

@@ -14,14 +14,7 @@ use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
     environment::{r#false, r#true, Environment, ENV},
-    item::{
-        parameters::Parameters,
-        query::{
-            no_type_check_errors, ParametersQuery, Query, QueryContext, ResolveQuery,
-            TypeCheckQuery, TypeQuery,
-        },
-        CddContext, CycleDetectingDebug, IntoItemPtr, Item, ItemDefinition, ItemPtr,
-    },
+    item::{CddContext, CycleDetectingDebug, Item, ItemDefinition, ItemRef},
     shared::TripleBool,
 };
 
@@ -54,12 +47,14 @@ impl Builtin {
 }
 
 #[derive(Clone, Debug)]
-pub struct DBuiltin {
+pub struct DBuiltin<Definition, Analysis> {
     builtin: Builtin,
-    args: Vec<ItemPtr>,
+    args: Vec<ItemRef<Definition, Analysis>>,
 }
 
-impl CycleDetectingDebug for DBuiltin {
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
+    for DBuiltin<Definition, Analysis>
+{
     fn fmt(&self, f: &mut Formatter, ctx: &mut CddContext) -> fmt::Result {
         write!(f, "BUILTIN({})", self.builtin.name())?;
         if self.args.len() == 0 {
@@ -79,12 +74,12 @@ impl CycleDetectingDebug for DBuiltin {
     }
 }
 
-fn both_compound_types<'a>(
-    a: &'a ItemPtr,
-    b: &'a ItemPtr,
+fn both_compound_types<'a, Definition, Analysis>(
+    a: &'a ItemRef<Definition, Analysis>,
+    b: &'a ItemRef<Definition, Analysis>,
 ) -> Option<(
-    OwningRef<Ref<'a, Item>, DCompoundType>,
-    OwningRef<Ref<'a, Item>, DCompoundType>,
+    OwningRef<Ref<'a, Item<Definition, Analysis>>, DCompoundType<Definition, Analysis>>,
+    OwningRef<Ref<'a, Item<Definition, Analysis>>, DCompoundType<Definition, Analysis>>,
 )> {
     a.downcast_definition::<DCompoundType>()
         .map(|def_a| {
@@ -94,130 +89,26 @@ fn both_compound_types<'a>(
         .flatten()
 }
 
-impl ItemDefinition for DBuiltin {
-    fn children(&self) -> Vec<ItemPtr> {
-        vec![]
-    }
-
-    fn collect_constraints(&self, _this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
-        vec![]
-    }
-
-    fn recompute_resolved(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut QueryContext<ResolveQuery>,
-    ) -> <ResolveQuery as Query>::Result {
-        let rargs = self.args.iter().map(|arg| arg.resolved()).collect();
-        Ok(Self {
-            args: rargs,
-            builtin: self.builtin,
-        }
-        .into_ptr_mimicking(this))
-    }
-
-    fn recompute_parameters(
-        &self,
-        ctx: &mut QueryContext<ParametersQuery>,
-        this: &ItemPtr,
-    ) -> <ParametersQuery as Query>::Result {
-        let mut result = Parameters::new_empty();
-        for arg in &self.args {
-            result.append(arg.query_parameters(ctx));
-        }
-        result
-    }
-
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(match self.builtin {
-            Builtin::IsExactly => {
-                ENV.with(|env| env.borrow().get_language_item("Bool").unwrap().ptr_clone())
-            }
-            Builtin::IsSubtypeOf => todo!(),
-            Builtin::IfThenElse => self.args[0].ptr_clone(),
-            Builtin::Union => DCompoundType::r#type().into_ptr(),
-        })
-    }
-
-    fn recompute_type_check(
-        &self,
-        _ctx: &mut QueryContext<TypeCheckQuery>,
-    ) -> <TypeCheckQuery as Query>::Result {
-        no_type_check_errors()
-    }
-
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        let rargs = self
-            .args
-            .iter()
-            .map(|arg| arg.reduced(args, true))
-            .collect_vec();
-        match self.builtin {
-            Builtin::IsExactly => {
-                match rargs[2]
-                    .dereference()
-                    .unwrap()
-                    .is_equal_to(&rargs[3].dereference().unwrap())
-                {
-                    TripleBool::True => return r#true().into_ptr_mimicking(this),
-                    TripleBool::False => return r#false().into_ptr_mimicking(this),
-                    TripleBool::Unknown => (),
-                }
-            }
-            Builtin::IsSubtypeOf => {
-                let subtype = rargs[0].dereference().unwrap();
-                let supertype = rargs[1].dereference().unwrap();
-                if supertype.is_same_instance_as(&subtype) {
-                    return r#true().into_ptr_mimicking(this);
-                } else if supertype.is_exactly_type() && subtype.is_exactly_type() {
-                    return r#true().into_ptr_mimicking(this);
-                } else if let Some((supertype, subtype)) = both_compound_types(&supertype, &subtype)
-                {
-                    if subtype.is_subtype_of(&*supertype) {
-                        return r#true().into_ptr_mimicking(this);
-                    }
-                }
-            }
-            Builtin::IfThenElse => {
-                if rargs[1].dereference().unwrap().is_true() {
-                    return rargs[2].ptr_clone();
-                } else if rargs[1].dereference().unwrap().is_false() {
-                    return rargs[3].ptr_clone();
-                }
-            }
-            Builtin::Union => {
-                if let Some((subtype_0, subtype_1)) = both_compound_types(
-                    &rargs[0].dereference().unwrap(),
-                    &rargs[1].dereference().unwrap(),
-                ) {
-                    return subtype_0.union(&subtype_1).into_ptr_mimicking(this);
-                }
-            }
-        }
-        if rargs == self.args {
-            this.ptr_clone()
-        } else {
-            Self {
-                args: rargs,
-                builtin: self.builtin,
-            }
-            .into_ptr_mimicking(this)
-        }
+impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
+    ItemDefinition<Definition, Analysis> for DBuiltin<Definition, Analysis>
+{
+    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
+        self.args.iter().map(ItemRef::ptr_clone).collect()
     }
 }
 
-impl DBuiltin {
+impl<Definition, Analysis> DBuiltin<Definition, Analysis> {
     pub fn new_user_facing(builtin: Builtin, env: &Environment) -> Result<Self, Diagnostic> {
         let args = builtin
             .default_arg_names()
             .iter()
-            .map(|name| env.get_language_item(name).map(ItemPtr::ptr_clone))
+            .map(|name| env.get_language_item(name).map(ItemRef::ptr_clone))
             .collect::<Result<_, _>>()?;
         let _true = Some(env.r#true());
         Ok(Self { builtin, args })
     }
 
-    pub fn is_type(candidate: ItemPtr) -> Self {
+    pub fn is_type(candidate: ItemRef<Definition, Analysis>) -> Self {
         Self::is_subtype_of(
             candidate
                 .query_type(&mut Environment::root_query())
@@ -226,14 +117,20 @@ impl DBuiltin {
         )
     }
 
-    pub fn is_subtype_of(subtype: ItemPtr, supertype: ItemPtr) -> Self {
+    pub fn is_subtype_of(
+        subtype: ItemRef<Definition, Analysis>,
+        supertype: ItemRef<Definition, Analysis>,
+    ) -> Self {
         Self {
             builtin: Builtin::IsSubtypeOf,
             args: vec![subtype, supertype],
         }
     }
 
-    pub fn union(subtype_0: ItemPtr, subtype_1: ItemPtr) -> Self {
+    pub fn union(
+        subtype_0: ItemRef<Definition, Analysis>,
+        subtype_1: ItemRef<Definition, Analysis>,
+    ) -> Self {
         Self {
             builtin: Builtin::Union,
             args: vec![subtype_0, subtype_1],
@@ -244,7 +141,7 @@ impl DBuiltin {
         self.builtin
     }
 
-    pub fn get_args(&self) -> &Vec<ItemPtr> {
+    pub fn get_args(&self) -> &Vec<ItemRef<Definition, Analysis>> {
         &self.args
     }
 }
