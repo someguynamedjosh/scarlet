@@ -14,14 +14,14 @@ use self::phrase::CreateContext;
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
-    item::{DeUnresolved, ItemRef},
+    item::{De0, ItemRef},
 };
 
 pub fn create_root(
     node: &Node,
     pc: &ParseContext,
-    env: &mut Environment<DeUnresolved, ()>,
-) -> Result<ItemRef<DeUnresolved, ()>, Diagnostic> {
+    env: &mut Environment<De0, ()>,
+) -> Result<ItemRef<De0, ()>, Diagnostic> {
     let mut ctx = CreateContext { pc, env };
     node.as_item(&mut ctx)
 }

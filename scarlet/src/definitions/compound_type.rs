@@ -143,7 +143,7 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     ItemDefinition<Definition, Analysis> for DCompoundType<Definition, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
+    fn map_children(&self) -> Vec<ItemRef<Definition, Analysis>> {
         self.component_types
             .iter()
             .flat_map(|t| t.1.get_fields().iter())

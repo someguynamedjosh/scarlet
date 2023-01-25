@@ -50,7 +50,7 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     ItemDefinition<Definition, Analysis> for DNewValue<Definition, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
+    fn map_children(&self) -> Vec<ItemRef<Definition, Analysis>> {
         self.fields.iter().map(|f| f.ptr_clone()).collect_vec()
     }
 }

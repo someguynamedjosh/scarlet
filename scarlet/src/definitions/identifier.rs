@@ -29,7 +29,7 @@ impl<Definition, Analysis> CycleDetectingDebug for DIdentifier<Definition, Analy
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     ItemDefinition<Definition, Analysis> for DIdentifier<Definition, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
+    fn map_children(&self) -> Vec<ItemRef<Definition, Analysis>> {
         vec![]
     }
 }
@@ -40,5 +40,9 @@ impl<Definition, Analysis> DIdentifier<Definition, Analysis> {
             identifier,
             _pd: PhantomData,
         }
+    }
+
+    pub(crate) fn identifier(&self) -> &str {
+        &self.identifier
     }
 }

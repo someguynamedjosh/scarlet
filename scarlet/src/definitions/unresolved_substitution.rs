@@ -63,7 +63,7 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
 impl<Defn: ItemDefinition<Defn, Analysis>, Analysis> ItemDefinition<Defn, Analysis>
     for DUnresolvedSubstitution<Defn, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Defn, Analysis>> {
+    fn map_children(&self) -> Vec<ItemRef<Defn, Analysis>> {
         todo!()
     }
 }

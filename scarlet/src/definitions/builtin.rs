@@ -82,9 +82,17 @@ impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingD
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     ItemDefinition<Definition, Analysis> for DBuiltin<Definition, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
-        self.args.iter().map(ItemRef::ptr_clone).collect()
+    type WithOtherParameters<D2: ItemDefinition<D2, A2>, A2> = DBuiltin<D2, A2>;
+
+    fn map_children<D2: ItemDefinition<D2, A2>, A2>(
+        &self,
+        map: impl FnMut(&ItemRef<Definition, Analysis>) -> ItemRef<D2, A2>,
+    ) -> Self::WithOtherParameters<D2, A2> {
+        DBuiltin {
+             args: self.args.iter().map(map).collect()
+        }
     }
+
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> DBuiltin<Definition, Analysis> {

@@ -5,7 +5,7 @@ use super::{Node, ParseContext};
 use crate::{
     diagnostic::Diagnostic,
     environment::Environment,
-    item::{DeUnresolved, ItemRef},
+    item::{De0, ItemRef},
 };
 
 pub type Precedence = u8;
@@ -57,10 +57,10 @@ impl PhraseComponent {
 
 pub struct CreateContext<'p, 'e> {
     pub pc: &'p ParseContext,
-    pub env: &'e mut Environment<DeUnresolved, ()>,
+    pub env: &'e mut Environment<De0, ()>,
 }
 
-pub type CreateResult = Result<ItemRef<DeUnresolved, ()>, Diagnostic>;
+pub type CreateResult = Result<ItemRef<De0, ()>, Diagnostic>;
 pub type CreateFn = fn(&mut CreateContext, &Node) -> CreateResult;
 
 pub struct Phrase {

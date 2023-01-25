@@ -27,7 +27,7 @@ impl<Definition, Analysis> CycleDetectingDebug for DHole<Definition, Analysis> {
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis>
     ItemDefinition<Definition, Analysis> for DHole<Definition, Analysis>
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>> {
+    fn map_children(&self) -> Vec<ItemRef<Definition, Analysis>> {
         vec![self.r#type.ptr_clone()]
     }
 }

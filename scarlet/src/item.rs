@@ -99,7 +99,19 @@ impl<T: Any> NamedAny for T {
 pub trait ItemDefinition<Definition: ItemDefinition<Definition, Analysis>, Analysis>:
     CycleDetectingDebug + Clone
 {
-    fn children(&self) -> Vec<ItemRef<Definition, Analysis>>;
+}
+
+pub trait MappableItemDefinition<Definition, Analysis, D2, A2>
+where
+    Definition: ItemDefinition<Definition, Analysis>,
+    D2: ItemDefinition<D2, A2>,
+{
+    type Result;
+
+    fn map_children(
+        &self,
+        map: impl FnMut(&ItemRef<Definition, Analysis>) -> ItemRef<D2, A2>,
+    ) -> Self::Result;
 }
 
 impl<Definition: ItemDefinition<Definition, Analysis>, Analysis> CycleDetectingDebug
@@ -181,16 +193,17 @@ macro_rules! definition_enum {
             }
         })*
 
-        impl ItemDefinition<$Name, ()> for $Name{
-            fn children(&self) -> Vec<ItemRef<$Name, $Analysis>> {
-                todo!()
-            }
+        impl ItemDefinition<$Name, $Analysis> for $Name {
         }
     }
 }
 
-definition_enum!(DeUnresolved, (), {
+definition_enum!(De0, (), {
     DBuiltin, DCompoundType, DIdentifier, DMemberAccess, DParameter, DStructLiteral, DUnresolvedSubstitution
+});
+
+definition_enum!(De1, (), {
+    DBuiltin, DCompoundType, DMemberAccess, DParameter, DStructLiteral, DUnresolvedSubstitution
 });
 
 pub trait IntoRef<Definition> {
@@ -200,5 +213,19 @@ pub trait IntoRef<Definition> {
 impl<Definition, Source: Into<Definition>> IntoRef<Definition> for Source {
     fn into_ref(self, position: Position) -> ItemRef<Definition, ()> {
         ItemRef::new(self.into(), position)
+    }
+}
+
+pub fn resolve_identifiers(of: &ItemRef<De0, ()>, parent_stack: &mut Vec<ItemRef<De0, ()>>) -> ItemRef<De1, ()> {
+    if let De0::DIdentifier(ident) = &of.item.borrow().definition {
+        for parent in parent_stack.iter().rev() {
+            if let De0::DStructLiteral(module) = &parent.item.borrow().definition {
+                if let Some(value) = module.get_field(ident.identifier()) {
+                    return value;
+                }
+            }
+        }
+    } else {
+        
     }
 }
