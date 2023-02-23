@@ -1,6 +1,6 @@
 use crate::{
     definitions::member_access::DMemberAccess,
-    item::IntoItemPtr,
+    item::IntoItemId,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,

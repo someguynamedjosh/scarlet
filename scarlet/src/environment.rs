@@ -1,28 +1,18 @@
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
+    ops::Index,
 };
 
 use crate::{
-    definitions::{new_value::DNewValue, struct_literal::DStructLiteral},
+    definitions::{compound_type::DCompoundType, struct_literal::DStructLiteral},
     diagnostic::Diagnostic,
-    item::{
-        query::{Query, QueryContext, RootQuery, TypeCheckQuery, TypeQuery},
-        IntoItemPtr, ItemPtr,
-    },
+    item::query::{Query, QueryContext, RootQuery},
 };
 
 thread_local! {
-    pub static ENV: RefCell<Environment> = RefCell::new(Environment::new());
+    pub static ENV: RefCell<Environment<Def0>> = RefCell::new(Environment::new());
     pub static FLAG: Cell<bool> = Cell::new(false);
-}
-
-pub fn r#true() -> DNewValue {
-    ENV.with(|env| env.borrow().r#true())
-}
-
-pub fn r#false() -> DNewValue {
-    ENV.with(|env| env.borrow().r#false())
 }
 
 /// This struct guarantees certain parts of the code remain internal to the
@@ -30,25 +20,77 @@ pub fn r#false() -> DNewValue {
 pub(crate) struct OnlyConstructedByEnvironment(());
 
 #[derive(Clone)]
-pub struct Environment {
-    language_items: HashMap<String, ItemPtr>,
-    root: ItemPtr,
-    all_items: Vec<ItemPtr>,
+pub enum Def0 {
+    CompoundType(DCompoundType),
+    StructLiteral(DStructLiteral),
 }
 
-impl Environment {
-    pub(crate) fn new() -> Self {
-        Self {
-            language_items: HashMap::new(),
-            root: DStructLiteral::new_module(vec![]).into_ptr(),
-            all_items: vec![],
+impl From<DStructLiteral> for Def0 {
+    fn from(v: DStructLiteral) -> Self {
+        Self::StructLiteral(v)
+    }
+}
+
+impl From<DCompoundType> for Def0 {
+    fn from(v: DCompoundType) -> Self {
+        Self::CompoundType(v)
+    }
+}
+
+pub type Env0 = Environment<Def0>;
+
+#[derive(Clone, Copy, Debug)]
+pub struct ItemId(usize);
+
+#[derive(Clone)]
+pub struct Environment<Def> {
+    language_items: HashMap<String, ItemId>,
+    root: ItemId,
+    all_items: Vec<Option<Def>>,
+}
+
+impl<Def> Index<ItemId> for Environment<Def> {
+    type Output = Def;
+
+    fn index(&self, index: ItemId) -> &Self::Output {
+        if let Some(item) = &self.all_items[index.0] {
+            item
+        } else {
+            panic!("Item associated with {:?} is undefined.", index)
         }
+    }
+}
+
+impl<Def: From<DStructLiteral>> Environment<Def> {
+    pub(crate) fn new() -> Self {
+        let root = ItemId(0);
+        let mut this = Self {
+            language_items: HashMap::new(),
+            root,
+            all_items: vec![None],
+        };
+        this.define_item(root, DStructLiteral::new_module(vec![]));
+        this
+    }
+}
+
+impl<Def> Environment<Def> {
+    pub fn new_item(&mut self) -> ItemId {
+        let id = self.all_items.len();
+        self.all_items.push(None);
+        ItemId(id)
+    }
+
+    pub fn define_item(&mut self, item: ItemId, definition: impl Into<Def>) {
+        let item = &mut self.all_items[item.0];
+        assert!(item.is_none());
+        *item = Some(definition.into())
     }
 
     pub fn define_language_item(
         &mut self,
         name: &str,
-        definition: ItemPtr,
+        definition: ItemId,
     ) -> Result<(), Diagnostic> {
         if self.language_items.contains_key(name) {
             Err(Diagnostic::new().with_text_error(format!(
@@ -61,79 +103,18 @@ impl Environment {
         }
     }
 
-    pub fn get_language_item(&self, name: &str) -> Result<&ItemPtr, Diagnostic> {
+    pub fn get_language_item(&self, name: &str) -> Result<&ItemId, Diagnostic> {
         self.language_items.get(name).ok_or_else(|| {
             Diagnostic::new()
                 .with_text_error(format!("The language item \"{}\" is not defined.", name))
         })
     }
 
-    pub fn get_root(&self) -> &ItemPtr {
+    pub fn get_root(&self) -> &ItemId {
         &self.root
-    }
-
-    #[must_use]
-    pub(crate) fn set_root(&mut self, root: ItemPtr) -> Vec<Diagnostic> {
-        root.set_parent_recursive(None);
-        self.root = match root.resolved().dereference() {
-            Ok(root) => root,
-            Err(diagnostic) => return vec![diagnostic],
-        };
-        self.all_items.clear();
-        self.root.set_parent_recursive(None);
-        self.root.collect_self_and_children(&mut self.all_items);
-        self.all_items.dedup();
-        let mut constraints = Vec::new();
-        for item in &self.all_items {
-            constraints.append(&mut item.collect_constraints());
-        }
-        let mut errors = vec![];
-        let total = constraints.len();
-        for (subject, constraint) in constraints {
-            let original = constraint;
-            let constraint = original
-                .resolved()
-                .reduced(&HashMap::new(), true)
-                .dereference()
-                .unwrap();
-            let success = constraint.is_true();
-            if !success {
-                errors.push(
-                    Diagnostic::new()
-                        .with_text_error(format!("Unsatisfied constraint:"))
-                        .with_item_error(&original)
-                        .with_text_info(format!("Constraint reduced to:"))
-                        .with_item_info(&constraint)
-                        .with_text_info(format!("Required by the following expression:"))
-                        .with_item_info(&subject.dereference().unwrap()),
-                )
-            }
-        }
-        println!(
-            "{} successes, {} errors",
-            total - errors.len(),
-            errors.len()
-        );
-        errors
     }
 
     pub fn root_query() -> QueryContext<RootQuery> {
         QueryContext::root(OnlyConstructedByEnvironment(()))
-    }
-
-    pub fn query_root_type(&self) -> <TypeQuery as Query>::Result {
-        self.root.query_type(&mut Self::root_query())
-    }
-
-    pub fn query_root_type_check(&self) -> <TypeCheckQuery as Query>::Result {
-        self.root.query_type_check(&mut Self::root_query())
-    }
-
-    pub fn r#true(&self) -> DNewValue {
-        DNewValue::r#true(self).unwrap()
-    }
-
-    pub fn r#false(&self) -> DNewValue {
-        DNewValue::r#false(self).unwrap()
     }
 }

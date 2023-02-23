@@ -1,6 +1,6 @@
 use crate::{
     definitions::substitution::{DSubstitution, UnresolvedTarget},
-    item::IntoItemPtr,
+    item::IntoItemId,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,

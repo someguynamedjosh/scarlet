@@ -4,7 +4,7 @@ use crate::{
         compound_type::DCompoundType,
     },
     diagnostic::Diagnostic,
-    item::IntoItemPtr,
+    item::IntoItemId,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,

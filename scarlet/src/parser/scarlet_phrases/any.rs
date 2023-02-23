@@ -1,6 +1,6 @@
 use crate::{
     definitions::parameter::DParameter,
-    item::IntoItemPtr,
+    item::IntoItemId,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,

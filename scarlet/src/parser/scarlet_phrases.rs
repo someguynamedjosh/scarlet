@@ -1,13 +1,13 @@
-mod any;
+// mod any;
 mod as_language_item;
-mod builtin;
+// mod builtin;
 mod identifier;
 mod is;
-mod member_access;
+// mod member_access;
 mod multiple_items;
 mod new_type;
 mod structure;
-mod substitution;
+// mod substitution;
 
 use super::phrase::Phrase;
 
@@ -31,15 +31,15 @@ macro_rules! phrase {
 
 pub fn phrases() -> Vec<Phrase> {
     vec![
-        any::phrase(),
+        // any::phrase(),
         as_language_item::phrase(),
-        builtin::phrase(),
+        // builtin::phrase(),
         identifier::phrase(),
         is::phrase(),
-        member_access::phrase(),
+        // member_access::phrase(),
         multiple_items::phrase(),
         new_type::phrase(),
         structure::phrase(),
-        substitution::phrase(),
+        // substitution::phrase(),
     ]
 }
