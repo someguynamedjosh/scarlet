@@ -19,7 +19,7 @@ thread_local! {
 /// library without having to put them in the same module.
 pub(crate) struct OnlyConstructedByEnvironment(());
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Def0 {
     CompoundType(DCompoundType),
     StructLiteral(DStructLiteral),
@@ -42,7 +42,7 @@ pub type Env0 = Environment<Def0>;
 #[derive(Clone, Copy, Debug)]
 pub struct ItemId(usize);
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Environment<Def> {
     language_items: HashMap<String, ItemId>,
     root: ItemId,

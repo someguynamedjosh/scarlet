@@ -9,7 +9,7 @@ use itertools::Itertools;
 use super::compound_type::{DCompoundType, Type};
 use crate::{diagnostic::Position, environment::ItemId, shared::TripleBool};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DStructLiteral {
     fields: Vec<(String, ItemId)>,
     /// If true, a type is automatically generated based on the contents. If

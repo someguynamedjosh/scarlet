@@ -46,5 +46,6 @@ pub(crate) fn entry() {
     };
     println!("Created in {:#?}", time.elapsed());
 
-    println!("{:#?}", root);
+    println!("{:?}", root);
+    println!("{:#?}", env);
 }
