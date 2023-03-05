@@ -8,7 +8,7 @@ use std::{
 use crate::{
     definitions::{
         builtin::DBuiltin, compound_type::DCompoundType, identifier::DIdentifier,
-        parameter::DParameter, struct_literal::DStructLiteral,
+        member_access::DMemberAccess, parameter::DParameter, struct_literal::DStructLiteral,
     },
     diagnostic::Diagnostic,
     item::query::{Query, QueryContext, RootQuery},
@@ -44,6 +44,7 @@ def_enum!(Def0 {
     DBuiltin,
     DCompoundType,
     DIdentifier,
+    DMemberAccess,
     DParameter,
     DStructLiteral
 });
