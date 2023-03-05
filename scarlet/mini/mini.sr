@@ -2,6 +2,6 @@ True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
 False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
 
 Type IS BUILTIN(Type)
-# Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
+Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
 # Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
 # Union IS BUILTIN(Union)

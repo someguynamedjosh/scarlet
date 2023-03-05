@@ -6,7 +6,9 @@ use std::{
 
 use crate::{
     definitions::{
-        builtin::DBuiltin, compound_type::DCompoundType, struct_literal::DStructLiteral,
+        builtin::DBuiltin, compound_type::DCompoundType, parameter::DParameter,
+        struct_literal::DStructLiteral,
+        identifier::DIdentifier,
     },
     diagnostic::Diagnostic,
     item::query::{Query, QueryContext, RootQuery},
@@ -41,12 +43,14 @@ macro_rules! def_enum {
 def_enum!(Def0 {
     DBuiltin,
     DCompoundType,
+    DIdentifier,
+    DParameter,
     DStructLiteral
 });
 
 pub type Env0 = Environment<Def0>;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct ItemId(usize);
 
 #[derive(Clone, Debug)]

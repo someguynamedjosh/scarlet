@@ -1,4 +1,4 @@
-// mod any;
+mod any;
 mod as_language_item;
 mod builtin;
 mod identifier;
@@ -31,7 +31,7 @@ macro_rules! phrase {
 
 pub fn phrases() -> Vec<Phrase> {
     vec![
-        // any::phrase(),
+        any::phrase(),
         as_language_item::phrase(),
         builtin::phrase(),
         identifier::phrase(),
