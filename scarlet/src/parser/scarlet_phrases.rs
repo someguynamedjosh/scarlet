@@ -1,6 +1,6 @@
 // mod any;
 mod as_language_item;
-// mod builtin;
+mod builtin;
 mod identifier;
 mod is;
 // mod member_access;
@@ -33,7 +33,7 @@ pub fn phrases() -> Vec<Phrase> {
     vec![
         // any::phrase(),
         as_language_item::phrase(),
-        // builtin::phrase(),
+        builtin::phrase(),
         identifier::phrase(),
         is::phrase(),
         // member_access::phrase(),

@@ -5,7 +5,9 @@ use std::{
 };
 
 use crate::{
-    definitions::{compound_type::DCompoundType, struct_literal::DStructLiteral},
+    definitions::{
+        builtin::DBuiltin, compound_type::DCompoundType, struct_literal::DStructLiteral,
+    },
     diagnostic::Diagnostic,
     item::query::{Query, QueryContext, RootQuery},
 };
@@ -19,23 +21,28 @@ thread_local! {
 /// library without having to put them in the same module.
 pub(crate) struct OnlyConstructedByEnvironment(());
 
-#[derive(Clone, Debug)]
-pub enum Def0 {
-    CompoundType(DCompoundType),
-    StructLiteral(DStructLiteral),
+macro_rules! def_enum {
+    ($Name:ident { $($Variant:ident),* }) => {
+        #[derive(Clone, Debug)]
+        pub enum $Name {
+            $($Variant($Variant)),*
+        }
+
+        $(
+            impl From<$Variant> for $Name {
+                fn from(v: $Variant) -> Self {
+                    Self::$Variant(v)
+                }
+            }
+        )*
+    };
 }
 
-impl From<DStructLiteral> for Def0 {
-    fn from(v: DStructLiteral) -> Self {
-        Self::StructLiteral(v)
-    }
-}
-
-impl From<DCompoundType> for Def0 {
-    fn from(v: DCompoundType) -> Self {
-        Self::CompoundType(v)
-    }
-}
+def_enum!(Def0 {
+    DBuiltin,
+    DCompoundType,
+    DStructLiteral
+});
 
 pub type Env0 = Environment<Def0>;
 
@@ -79,6 +86,12 @@ impl<Def> Environment<Def> {
         let id = self.all_items.len();
         self.all_items.push(None);
         ItemId(id)
+    }
+
+    pub fn new_defined_item(&mut self, definition: impl Into<Def>) -> ItemId {
+        let id = self.new_item();
+        self.define_item(id, definition);
+        id
     }
 
     pub fn define_item(&mut self, item: ItemId, definition: impl Into<Def>) {
