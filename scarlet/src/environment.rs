@@ -1,14 +1,14 @@
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
+    fmt::Debug,
     ops::Index,
 };
 
 use crate::{
     definitions::{
-        builtin::DBuiltin, compound_type::DCompoundType, parameter::DParameter,
-        struct_literal::DStructLiteral,
-        identifier::DIdentifier,
+        builtin::DBuiltin, compound_type::DCompoundType, identifier::DIdentifier,
+        parameter::DParameter, struct_literal::DStructLiteral,
     },
     diagnostic::Diagnostic,
     item::query::{Query, QueryContext, RootQuery},
@@ -50,14 +50,42 @@ def_enum!(Def0 {
 
 pub type Env0 = Environment<Def0>;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemId(usize);
 
-#[derive(Clone, Debug)]
+impl Debug for ItemId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "I#{}", self.0)
+    }
+}
+
+#[derive(Clone)]
 pub struct Environment<Def> {
     language_items: HashMap<String, ItemId>,
     root: ItemId,
     all_items: Vec<Option<Def>>,
+}
+
+impl<Def: Debug> Debug for Environment<Def> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Environment")?;
+        writeln!(f)?;
+        writeln!(f, "Language Items:")?;
+        for (key, value) in &self.language_items {
+            writeln!(f, "{:?} => {:#?}", key, value)?;
+        }
+        writeln!(f)?;
+        writeln!(f, "Items:")?;
+        for (key, value) in self.all_items.iter().enumerate() {
+            write!(f, "{} => ", key)?;
+            if let Some(item) = value {
+                writeln!(f, "{:#?}", item)?;
+            } else {
+                writeln!(f, "Undefined")?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl<Def> Index<ItemId> for Environment<Def> {
