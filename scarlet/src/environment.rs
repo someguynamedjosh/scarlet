@@ -9,6 +9,7 @@ use crate::{
     definitions::{
         builtin::DBuiltin, compound_type::DCompoundType, identifier::DIdentifier,
         member_access::DMemberAccess, parameter::DParameter, struct_literal::DStructLiteral,
+        substitution::DSubstitution,
     },
     diagnostic::Diagnostic,
     item::query::{Query, QueryContext, RootQuery},
@@ -46,7 +47,8 @@ def_enum!(Def0 {
     DIdentifier,
     DMemberAccess,
     DParameter,
-    DStructLiteral
+    DStructLiteral,
+    DSubstitution
 });
 
 pub type Env0 = Environment<Def0>;
