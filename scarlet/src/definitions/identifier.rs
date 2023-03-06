@@ -12,4 +12,8 @@ impl DIdentifier {
     pub fn new(identifier: String) -> Self {
         Self { identifier }
     }
+
+    pub(crate) fn identifier(&self) -> &str {
+        &self.identifier
+    }
 }

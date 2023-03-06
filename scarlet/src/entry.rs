@@ -48,7 +48,8 @@ pub(crate) fn entry() {
 
     env.compute_parents();
     println!("Computed parents.");
+    let env = env.processed();
+    println!("Completed process 1.");
 
-    println!("{:?}", root);
     println!("{:#?}", env);
 }

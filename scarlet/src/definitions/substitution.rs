@@ -51,12 +51,12 @@ impl DUnresolvedSubstitution {
 pub type Substitutions = OrderedMap<(ItemId, ParameterPtr), ItemId>;
 
 #[derive(Clone, Debug)]
-pub struct DResolvedSubstitution {
+pub struct DSubstitution {
     base: ItemId,
     substitutions: Substitutions,
 }
 
-impl DResolvedSubstitution {
+impl DSubstitution {
     pub fn new(base: ItemId, substitutions: Substitutions) -> Self {
         Self {
             base,

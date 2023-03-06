@@ -8,15 +8,15 @@ Union IS BUILTIN(Union)
 
 true IS True.new
 false IS False.new
-Bool IS Union(True False)
+# Bool IS Union(True False)
 
 Result IS ANY Type AS_LANGUAGE_ITEM(Result)
-condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
+# condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
 true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
 false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
-if_then_else IS BUILTIN(if_then_else)
+# if_then_else IS BUILTIN(if_then_else)
 
-operand0 IS ANY Bool
-operand1 IS ANY Bool
+# operand0 IS ANY Bool
+# operand1 IS ANY Bool
 
-and IS if_then_else(Bool operand0 operand1 false)
+# and IS if_then_else(Bool operand0 operand1 false)

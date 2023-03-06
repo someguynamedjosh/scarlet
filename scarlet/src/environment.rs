@@ -5,11 +5,18 @@ use std::{
     ops::Index,
 };
 
+use itertools::Itertools;
+
 use crate::{
     definitions::{
-        builtin::DBuiltin, compound_type::DCompoundType, identifier::DIdentifier,
-        member_access::DMemberAccess, parameter::DParameter, struct_literal::DStructLiteral,
-        substitution::DUnresolvedSubstitution,
+        builtin::DBuiltin,
+        compound_type::DCompoundType,
+        identifier::DIdentifier,
+        member_access::DMemberAccess,
+        other::DOther,
+        parameter::DParameter,
+        struct_literal::DStructLiteral,
+        substitution::{DSubstitution, DUnresolvedSubstitution},
     },
     diagnostic::{Diagnostic, Position},
     item::query::{Query, QueryContext, RootQuery},
@@ -51,7 +58,18 @@ def_enum!(Def0 {
     DUnresolvedSubstitution
 });
 
+def_enum!(Def1 {
+    DBuiltin,
+    DCompoundType,
+    DMemberAccess,
+    DOther,
+    DParameter,
+    DStructLiteral,
+    DSubstitution
+});
+
 pub type Env0 = Environment<Def0>;
+pub type Env1 = Environment<Def1>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemId(usize);
@@ -136,6 +154,18 @@ impl<Def: From<DStructLiteral>> Environment<Def> {
         this.define_item(root, DStructLiteral::new_module(vec![]));
         this
     }
+
+    fn new_for_process_result<PreviousDef>(source: &Environment<PreviousDef>) -> Self {
+        Self {
+            language_items: source.language_items.clone(),
+            root: source.root,
+            all_items: source
+                .all_items
+                .iter()
+                .map(|(_, meta)| (None, meta.clone()))
+                .collect(),
+        }
+    }
 }
 
 impl<Def> Environment<Def> {
@@ -214,8 +244,8 @@ impl<Def> Environment<Def> {
         self.root
     }
 
-    pub fn root_query() -> QueryContext<RootQuery> {
-        QueryContext::root(OnlyConstructedByEnvironment(()))
+    pub fn is_defined(&self, item: ItemId) -> bool {
+        self.all_items[item.0].0.is_some()
     }
 }
 
@@ -263,6 +293,68 @@ impl Environment<Def0> {
         }
         for child in children {
             self.set_parent_and_propogate(child, parent);
+        }
+    }
+
+    pub fn processed(&self) -> Env1 {
+        let mut target = Environment::new_for_process_result(&self);
+        Process0 {
+            source: self,
+            target: &mut target,
+        }
+        .process();
+        target
+    }
+}
+
+struct Process0<'a, 'b> {
+    source: &'a Env0,
+    target: &'b mut Env1,
+}
+
+impl<'a, 'b> Process0<'a, 'b> {
+    fn process(&mut self) {
+        for index in 0..self.source.all_items.len() {
+            let id = ItemId(index);
+            self.process_item(id).unwrap();
+        }
+        self.target.assert_all_defined();
+    }
+
+    fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
+        if self.target.is_defined(item) {
+            return Ok(());
+        }
+        // TODO: Error on recursion.
+        match &self.source[item] {
+            Def0::DBuiltin(d) => self.target.define_item(item, d.clone()),
+            Def0::DCompoundType(d) => self.target.define_item(item, d.clone()),
+            Def0::DIdentifier(ident) => self.process_identifier(item, ident),
+            Def0::DMemberAccess(d) => self.target.define_item(item, d.clone()),
+            Def0::DParameter(d) => self.target.define_item(item, d.clone()),
+            Def0::DStructLiteral(d) => self.target.define_item(item, d.clone()),
+            Def0::DUnresolvedSubstitution(d) => todo!(),
+        }
+        Ok(())
+    }
+
+    fn process_identifier(&mut self, this: ItemId, ident: &DIdentifier) {
+        let parent = self.source.parent(this).unwrap();
+        let target = self.lookup_identifier(parent, ident.identifier());
+        println!("{:#?}", ident);
+        self.target.define_item(this, DOther(target.unwrap()));
+    }
+
+    fn lookup_identifier(&self, context: ItemId, ident: &str) -> Option<ItemId> {
+        if let Def0::DStructLiteral(lit) = &self.source[context] {
+            if let Some(field) = lit.get_field(ident) {
+                return Some(field);
+            }
+        }
+        if let Some(parent) = self.source.parent(context) {
+            self.lookup_identifier(parent, ident)
+        } else {
+            None
         }
     }
 }
