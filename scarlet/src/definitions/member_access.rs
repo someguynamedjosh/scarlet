@@ -4,7 +4,10 @@ use std::{
 };
 
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
-use crate::{diagnostic::Diagnostic, environment::{Environment, ItemId}};
+use crate::{
+    diagnostic::Diagnostic,
+    environment::{Environment, ItemId},
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Member {
@@ -29,5 +32,9 @@ impl DMemberAccess {
             member_index: Member::Unknown,
             r#type: None,
         }
+    }
+
+    pub fn base(&self) -> ItemId {
+        self.base
     }
 }

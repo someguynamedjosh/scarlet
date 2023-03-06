@@ -24,26 +24,47 @@ pub enum UnresolvedTarget {
 }
 
 pub type UnresolvedSubstitutions = Vec<(UnresolvedTarget, ItemId)>;
-pub type Substitutions = OrderedMap<(ItemId, ParameterPtr), ItemId>;
 
 #[derive(Clone, Debug)]
-pub struct DSubstitution {
+pub struct DUnresolvedSubstitution {
     base: ItemId,
-    substitutions: Result<Substitutions, UnresolvedSubstitutions>,
+    substitutions: UnresolvedSubstitutions,
 }
 
-impl DSubstitution {
-    pub fn new_unresolved(base: ItemId, substitutions: UnresolvedSubstitutions) -> Self {
+impl DUnresolvedSubstitution {
+    pub fn new(base: ItemId, substitutions: UnresolvedSubstitutions) -> Self {
         Self {
             base,
-            substitutions: Err(substitutions),
+            substitutions,
         }
     }
 
-    pub fn new_resolved(base: ItemId, substitutions: Substitutions) -> Self {
+    pub fn substitutions(&self) -> &UnresolvedSubstitutions {
+        &self.substitutions
+    }
+
+    pub fn base(&self) -> ItemId {
+        self.base
+    }
+}
+
+pub type Substitutions = OrderedMap<(ItemId, ParameterPtr), ItemId>;
+
+#[derive(Clone, Debug)]
+pub struct DResolvedSubstitution {
+    base: ItemId,
+    substitutions: Substitutions,
+}
+
+impl DResolvedSubstitution {
+    pub fn new(base: ItemId, substitutions: Substitutions) -> Self {
         Self {
             base,
-            substitutions: Ok(substitutions),
+            substitutions,
         }
+    }
+
+    pub fn substitutions(&self) -> &Substitutions {
+        &self.substitutions
     }
 }

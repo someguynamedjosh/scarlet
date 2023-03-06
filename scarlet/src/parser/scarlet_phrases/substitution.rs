@@ -1,5 +1,5 @@
 use crate::{
-    definitions::substitution::{DSubstitution, UnresolvedTarget},
+    definitions::substitution::{DUnresolvedSubstitution, UnresolvedTarget},
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
@@ -24,7 +24,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             subs.push((UnresolvedTarget::Positional, child.as_item(ctx)?));
         }
     }
-    let definition = DSubstitution::new_unresolved(base, subs);
+    let definition = DUnresolvedSubstitution::new(base, subs);
     Ok(ctx.env.new_defined_item(definition))
 }
 

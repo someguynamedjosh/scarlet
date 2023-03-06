@@ -36,6 +36,10 @@ impl DStructLiteral {
         self.is_module
     }
 
+    pub fn fields(&self) -> &[(String, ItemId)] {
+        &self.fields
+    }
+
     pub fn get_field(&self, name: &str) -> Option<ItemId> {
         for (candidate_name, candidate_value) in &self.fields {
             if candidate_name == name {

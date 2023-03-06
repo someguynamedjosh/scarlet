@@ -9,7 +9,7 @@ use crate::{
     definitions::{
         builtin::DBuiltin, compound_type::DCompoundType, identifier::DIdentifier,
         member_access::DMemberAccess, parameter::DParameter, struct_literal::DStructLiteral,
-        substitution::DSubstitution,
+        substitution::DUnresolvedSubstitution,
     },
     diagnostic::{Diagnostic, Position},
     item::query::{Query, QueryContext, RootQuery},
@@ -48,7 +48,7 @@ def_enum!(Def0 {
     DMemberAccess,
     DParameter,
     DStructLiteral,
-    DSubstitution
+    DUnresolvedSubstitution
 });
 
 pub type Env0 = Environment<Def0>;
@@ -86,7 +86,7 @@ pub struct Environment<Def> {
 
 impl<Def: Debug> Debug for Environment<Def> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Environment")?;
+        writeln!(f, "Environment (Root {:?})", self.root)?;
         writeln!(f)?;
         writeln!(f, "Language Items:")?;
         for (key, value) in &self.language_items {
@@ -173,6 +173,16 @@ impl<Def> Environment<Def> {
         self.all_items[item.0].1.parent
     }
 
+    pub fn assert_all_defined(&self) {
+        for (index, (def, _)) in self.all_items.iter().enumerate() {
+            assert!(
+                def.is_some(),
+                "Item {} should be defined, but isn't.",
+                index
+            );
+        }
+    }
+
     pub fn define_language_item(
         &mut self,
         name: &str,
@@ -196,11 +206,63 @@ impl<Def> Environment<Def> {
         })
     }
 
-    pub fn get_root(&self) -> &ItemId {
-        &self.root
+    pub fn set_root(&mut self, root: ItemId) {
+        self.root = root
+    }
+
+    pub fn root(&self) -> ItemId {
+        self.root
     }
 
     pub fn root_query() -> QueryContext<RootQuery> {
         QueryContext::root(OnlyConstructedByEnvironment(()))
+    }
+}
+
+impl Environment<Def0> {
+    pub fn compute_parents(&mut self) {
+        self.propogate_parent(self.root)
+    }
+
+    fn set_parent_and_propogate(&mut self, child: ItemId, parent: ItemId) {
+        self.set_parent(child, parent);
+        self.propogate_parent(child);
+    }
+
+    fn propogate_parent(&mut self, parent: ItemId) {
+        let mut children = Vec::new();
+        let msg = "All items should be defined at this point.";
+        match self.all_items[parent.0].0.as_ref().expect(msg) {
+            Def0::DBuiltin(builtin) => {
+                builtin
+                    .get_args()
+                    .iter()
+                    .for_each(|&arg| children.push(arg));
+            }
+            Def0::DCompoundType(r#type) => {
+                for (_, com) in r#type.get_component_types() {
+                    for (_, field) in com.get_fields() {
+                        children.push(*field);
+                    }
+                }
+            }
+            Def0::DIdentifier(_) => (),
+            Def0::DMemberAccess(member) => children.push(member.base()),
+            Def0::DParameter(param) => children.push(*param.get_type()),
+            Def0::DStructLiteral(r#struct) => {
+                for (_, field) in r#struct.fields() {
+                    children.push(*field);
+                }
+            }
+            Def0::DUnresolvedSubstitution(sub) => {
+                children.push(sub.base());
+                for (_, value) in sub.substitutions() {
+                    children.push(*value);
+                }
+            }
+        }
+        for child in children {
+            self.set_parent_and_propogate(child, parent);
+        }
     }
 }

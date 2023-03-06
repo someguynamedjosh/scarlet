@@ -18,5 +18,7 @@ use crate::{
 
 pub fn create_root(node: &Node, pc: &ParseContext, env: &mut Env0) -> Result<ItemId, Diagnostic> {
     let mut ctx = CreateContext { pc, env };
-    node.as_item(&mut ctx)
+    let root = node.as_item(&mut ctx)?;
+    env.set_root(root);
+    Ok(root)
 }

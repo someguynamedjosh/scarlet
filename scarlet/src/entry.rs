@@ -46,6 +46,9 @@ pub(crate) fn entry() {
     };
     println!("Created in {:#?}", time.elapsed());
 
+    env.compute_parents();
+    println!("Computed parents.");
+
     println!("{:?}", root);
     println!("{:#?}", env);
 }
