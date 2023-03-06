@@ -112,6 +112,7 @@ impl<'x> Node<'x> {
             .create_and_uncreate
             .expect(&format!("{} is not a construct", self.phrase))
             .0(ctx, self)?;
+        ctx.env.set_position(item, self.position);
         Ok(item)
     }
 

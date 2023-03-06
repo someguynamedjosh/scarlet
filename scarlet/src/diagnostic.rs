@@ -1,8 +1,11 @@
-use std::ops::Range;
+use std::{
+    fmt::{self, Display, Formatter},
+    ops::Range,
+};
 
 use colored::{ColoredString, Colorize};
 
-use crate::{file_tree::FileNode, environment::ItemId};
+use crate::{environment::ItemId, file_tree::FileNode};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Level {
@@ -26,6 +29,12 @@ pub struct Position {
     file_index: usize,
     start: usize,
     end: usize,
+}
+
+impl Display for Position {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "F#{}[{}:{}]", self.file_index, self.start, self.end)
+    }
 }
 
 impl Position {

@@ -11,7 +11,7 @@ use crate::{
         member_access::DMemberAccess, parameter::DParameter, struct_literal::DStructLiteral,
         substitution::DSubstitution,
     },
-    diagnostic::Diagnostic,
+    diagnostic::{Diagnostic, Position},
     item::query::{Query, QueryContext, RootQuery},
 };
 
@@ -62,11 +62,26 @@ impl Debug for ItemId {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct ItemMetadata {
+    pub parent: Option<ItemId>,
+    pub position: Option<Position>,
+}
+
+impl ItemMetadata {
+    pub fn new() -> Self {
+        Self {
+            parent: None,
+            position: None,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Environment<Def> {
     language_items: HashMap<String, ItemId>,
     root: ItemId,
-    all_items: Vec<Option<Def>>,
+    all_items: Vec<(Option<Def>, ItemMetadata)>,
 }
 
 impl<Def: Debug> Debug for Environment<Def> {
@@ -79,9 +94,16 @@ impl<Def: Debug> Debug for Environment<Def> {
         }
         writeln!(f)?;
         writeln!(f, "Items:")?;
-        for (key, value) in self.all_items.iter().enumerate() {
-            write!(f, "{} => ", key)?;
-            if let Some(item) = value {
+        for (key, (item, meta)) in self.all_items.iter().enumerate() {
+            write!(f, "I#{}", key)?;
+            if let Some(parent) = meta.parent {
+                write!(f, " (Child of {:?})", parent)?;
+            }
+            if let Some(position) = meta.position {
+                write!(f, " ({})", position)?;
+            }
+            writeln!(f)?;
+            if let Some(item) = item {
                 writeln!(f, "{:#?}", item)?;
             } else {
                 writeln!(f, "Undefined")?;
@@ -95,7 +117,7 @@ impl<Def> Index<ItemId> for Environment<Def> {
     type Output = Def;
 
     fn index(&self, index: ItemId) -> &Self::Output {
-        if let Some(item) = &self.all_items[index.0] {
+        if let Some(item) = &self.all_items[index.0].0 {
             item
         } else {
             panic!("Item associated with {:?} is undefined.", index)
@@ -109,7 +131,7 @@ impl<Def: From<DStructLiteral>> Environment<Def> {
         let mut this = Self {
             language_items: HashMap::new(),
             root,
-            all_items: vec![None],
+            all_items: vec![(None, ItemMetadata::new())],
         };
         this.define_item(root, DStructLiteral::new_module(vec![]));
         this
@@ -119,7 +141,7 @@ impl<Def: From<DStructLiteral>> Environment<Def> {
 impl<Def> Environment<Def> {
     pub fn new_item(&mut self) -> ItemId {
         let id = self.all_items.len();
-        self.all_items.push(None);
+        self.all_items.push((None, ItemMetadata::new()));
         ItemId(id)
     }
 
@@ -130,9 +152,25 @@ impl<Def> Environment<Def> {
     }
 
     pub fn define_item(&mut self, item: ItemId, definition: impl Into<Def>) {
-        let item = &mut self.all_items[item.0];
+        let item = &mut self.all_items[item.0].0;
         assert!(item.is_none());
         *item = Some(definition.into())
+    }
+
+    pub fn set_position(&mut self, item: ItemId, position: Position) {
+        self.all_items[item.0].1.position = Some(position);
+    }
+
+    pub fn position(&self, item: ItemId) -> Option<Position> {
+        self.all_items[item.0].1.position
+    }
+
+    fn set_parent(&mut self, item: ItemId, parent: ItemId) {
+        self.all_items[item.0].1.parent = Some(parent);
+    }
+
+    pub fn parent(&self, item: ItemId) -> Option<ItemId> {
+        self.all_items[item.0].1.parent
     }
 
     pub fn define_language_item(
