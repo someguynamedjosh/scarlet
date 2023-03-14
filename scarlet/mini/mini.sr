@@ -8,7 +8,7 @@ Union IS BUILTIN(Union)
 
 true IS True.new
 false IS False.new
-# Bool IS Union(True False)
+Bool IS Union(True False)
 
 Result IS ANY Type AS_LANGUAGE_ITEM(Result)
 # condition IS ANY Bool AS_LANGUAGE_ITEM(condition)

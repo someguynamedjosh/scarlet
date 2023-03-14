@@ -1,6 +1,6 @@
 use std::{
     cell::{Cell, RefCell},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::Debug,
     ops::Index,
 };
@@ -14,9 +14,9 @@ use crate::{
         identifier::DIdentifier,
         member_access::DMemberAccess,
         other::DOther,
-        parameter::DParameter,
+        parameter::{DParameter, ParameterPtr},
         struct_literal::DStructLiteral,
-        substitution::{DSubstitution, DUnresolvedSubstitution},
+        substitution::{DSubstitution, DUnresolvedSubstitution, UnresolvedTarget},
     },
     diagnostic::{Diagnostic, Position},
     item::query::{Query, QueryContext, RootQuery},
@@ -65,7 +65,7 @@ def_enum!(Def1 {
     DOther,
     DParameter,
     DStructLiteral,
-    DSubstitution
+    DUnresolvedSubstitution
 });
 
 pub type Env0 = Environment<Def0>;
@@ -84,6 +84,7 @@ impl Debug for ItemId {
 pub struct ItemMetadata {
     pub parent: Option<ItemId>,
     pub position: Option<Position>,
+    pub dependencies: HashSet<ParameterPtr>,
 }
 
 impl ItemMetadata {
@@ -91,6 +92,7 @@ impl ItemMetadata {
         Self {
             parent: None,
             position: None,
+            dependencies: HashSet::new(),
         }
     }
 }
@@ -117,6 +119,7 @@ impl<Def: Debug> Debug for Environment<Def> {
             if let Some(parent) = meta.parent {
                 write!(f, " (Child of {:?})", parent)?;
             }
+            write!(f, " ({} deps)", meta.dependencies.len())?;
             if let Some(position) = meta.position {
                 write!(f, " ({})", position)?;
             }
@@ -165,6 +168,10 @@ impl<Def: From<DStructLiteral>> Environment<Def> {
                 .map(|(_, meta)| (None, meta.clone()))
                 .collect(),
         }
+    }
+
+    pub fn get_deps(&self, item: ItemId) -> &HashSet<ParameterPtr> {
+        &self.all_items[item.0].1.dependencies
     }
 }
 
@@ -319,6 +326,78 @@ impl<'a, 'b> Process0<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
+        loop {
+            let mut anything_changed = false;
+            for index in 0..self.source.all_items.len() {
+                let id = ItemId(index);
+                anything_changed |= self.compute_deps(id);
+            }
+            if !anything_changed {
+                break;
+            }
+        }
+    }
+
+    fn compute_deps(&mut self, item: ItemId) -> bool {
+        let mut deps = HashSet::new();
+        match &self.target[item] {
+            Def1::DBuiltin(d) => {
+                for &arg in d.get_args() {
+                    deps.extend(self.target.get_deps(arg).iter().cloned());
+                }
+            }
+            Def1::DCompoundType(..) => (),
+            Def1::DMemberAccess(d) => {
+                deps.extend(self.target.get_deps(d.base()).iter().cloned());
+            }
+            Def1::DOther(d) => {
+                deps.extend(self.target.get_deps(d.0).iter().cloned());
+            }
+            Def1::DParameter(d) => {
+                deps.insert(d.get_parameter_ptr());
+            }
+            Def1::DStructLiteral(d) => {
+                if !d.is_module() {
+                    deps.extend(
+                        d.fields()
+                            .iter()
+                            .flat_map(|&(_, field)| self.target.get_deps(field).iter().cloned()),
+                    );
+                }
+            }
+            Def1::DUnresolvedSubstitution(d) => {
+                let base = self.target.get_deps(d.base()).iter().cloned().collect_vec();
+                let mut base = base;
+                base.sort_by_key(|p| p.order());
+                for (target, value) in d.substitutions() {
+                    deps.extend(self.target.get_deps(*value).iter().cloned());
+                    match target {
+                        UnresolvedTarget::Positional => {
+                            if base.len() > 0 {
+                                base.remove(0);
+                            }
+                        }
+                        UnresolvedTarget::Named(name) => {
+                            let target = self.lookup_identifier(item, name);
+                            let target = target.expect("TODO Nice error");
+                            let Def1::DParameter(p) = &self.target[target] else { todo!("Nice error") };
+                            let target = p.get_parameter_ptr();
+                            if let Some(index) = base.iter().position(|x| x == &target) {
+                                base.remove(index);
+                            }
+                        }
+                    }
+                }
+                deps.extend(base);
+            }
+        };
+        let original = &mut self.target.all_items[item.0].1.dependencies;
+        if original.intersection(&deps).count() != deps.len() {
+            *original = deps;
+            true
+        } else {
+            false
+        }
     }
 
     fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
@@ -333,7 +412,7 @@ impl<'a, 'b> Process0<'a, 'b> {
             Def0::DMemberAccess(d) => self.target.define_item(item, d.clone()),
             Def0::DParameter(d) => self.target.define_item(item, d.clone()),
             Def0::DStructLiteral(d) => self.target.define_item(item, d.clone()),
-            Def0::DUnresolvedSubstitution(d) => todo!(),
+            Def0::DUnresolvedSubstitution(d) => self.target.define_item(item, d.clone()),
         }
         Ok(())
     }

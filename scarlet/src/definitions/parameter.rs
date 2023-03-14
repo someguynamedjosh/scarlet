@@ -7,7 +7,7 @@ use std::{
 use super::builtin::DBuiltin;
 use crate::{diagnostic::Position, environment::ItemId, util::PtrExtension};
 
-#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 pub struct Order {
     /// Explicitly defined order, 0-255.
     major_order: u8,
@@ -24,12 +24,12 @@ pub struct Parameter {
 }
 
 impl Parameter {
-    pub fn order(&self) -> &Order {
-        &self.order
+    pub fn order(&self) -> Order {
+        self.order
     }
 
-    pub fn original_type(&self) -> &ItemId {
-        &self.original_type
+    pub fn original_type(&self) -> ItemId {
+        self.original_type
     }
 }
 
