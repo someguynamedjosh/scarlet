@@ -16,10 +16,14 @@ use crate::{
         other::DOther,
         parameter::{DParameter, ParameterPtr},
         struct_literal::DStructLiteral,
-        substitution::{DSubstitution, DUnresolvedSubstitution, UnresolvedTarget},
+        substitution::{
+            DPartiallyResolvedSubstitution, DSubstitution, DUnresolvedSubstitution,
+            PartiallyResolvedTarget, Substitutions, UnresolvedTarget,
+        },
     },
     diagnostic::{Diagnostic, Position},
     item::query::{Query, QueryContext, RootQuery},
+    util::PtrExtension,
 };
 
 thread_local! {
@@ -65,11 +69,22 @@ def_enum!(Def1 {
     DOther,
     DParameter,
     DStructLiteral,
-    DUnresolvedSubstitution
+    DPartiallyResolvedSubstitution
+});
+
+def_enum!(Def2 {
+    DBuiltin,
+    DCompoundType,
+    DMemberAccess,
+    DOther,
+    DParameter,
+    DStructLiteral,
+    DSubstitution
 });
 
 pub type Env0 = Environment<Def0>;
 pub type Env1 = Environment<Def1>;
+pub type Env2 = Environment<Def2>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemId(usize);
@@ -314,6 +329,18 @@ impl Environment<Def0> {
     }
 }
 
+impl Env1 {
+    pub fn processed(&self) -> Env2 {
+        let mut target = Environment::new_for_process_result(&self);
+        Process1 {
+            source: self,
+            target: &mut target,
+        }
+        .process();
+        target
+    }
+}
+
 struct Process0<'a, 'b> {
     source: &'a Env0,
     target: &'b mut Env1,
@@ -365,21 +392,19 @@ impl<'a, 'b> Process0<'a, 'b> {
                     );
                 }
             }
-            Def1::DUnresolvedSubstitution(d) => {
+            Def1::DPartiallyResolvedSubstitution(d) => {
                 let base = self.target.get_deps(d.base()).iter().cloned().collect_vec();
                 let mut base = base;
                 base.sort_by_key(|p| p.order());
                 for (target, value) in d.substitutions() {
                     deps.extend(self.target.get_deps(*value).iter().cloned());
                     match target {
-                        UnresolvedTarget::Positional => {
+                        PartiallyResolvedTarget::Positional => {
                             if base.len() > 0 {
                                 base.remove(0);
                             }
                         }
-                        UnresolvedTarget::Named(name) => {
-                            let target = self.lookup_identifier(item, name);
-                            let target = target.expect("TODO Nice error");
+                        &PartiallyResolvedTarget::Item(target) => {
                             let Def1::DParameter(p) = &self.target[target] else { todo!("Nice error") };
                             let target = p.get_parameter_ptr();
                             if let Some(index) = base.iter().position(|x| x == &target) {
@@ -412,7 +437,7 @@ impl<'a, 'b> Process0<'a, 'b> {
             Def0::DMemberAccess(d) => self.target.define_item(item, d.clone()),
             Def0::DParameter(d) => self.target.define_item(item, d.clone()),
             Def0::DStructLiteral(d) => self.target.define_item(item, d.clone()),
-            Def0::DUnresolvedSubstitution(d) => self.target.define_item(item, d.clone()),
+            Def0::DUnresolvedSubstitution(d) => self.process_unresolved_substitution(item, d),
         }
         Ok(())
     }
@@ -422,6 +447,25 @@ impl<'a, 'b> Process0<'a, 'b> {
         let target = self.lookup_identifier(parent, ident.identifier());
         println!("{:#?}", ident);
         self.target.define_item(this, DOther(target.unwrap()));
+    }
+
+    fn process_unresolved_substitution(&mut self, this: ItemId, sub: &DUnresolvedSubstitution) {
+        let base = sub.base();
+        let subs = sub
+            .substitutions()
+            .iter()
+            .map(|(target, value)| {
+                let target = match target {
+                    UnresolvedTarget::Positional => PartiallyResolvedTarget::Positional,
+                    UnresolvedTarget::Named(name) => PartiallyResolvedTarget::Item(
+                        self.lookup_identifier(this, name).expect("TODO Nice error"),
+                    ),
+                };
+                (target, *value)
+            })
+            .collect();
+        self.target
+            .define_item(this, DPartiallyResolvedSubstitution::new(base, subs));
     }
 
     fn lookup_identifier(&self, context: ItemId, ident: &str) -> Option<ItemId> {
@@ -435,5 +479,64 @@ impl<'a, 'b> Process0<'a, 'b> {
         } else {
             None
         }
+    }
+}
+
+struct Process1<'a, 'b> {
+    source: &'a Env1,
+    target: &'b mut Env2,
+}
+
+impl<'a, 'b> Process1<'a, 'b> {
+    fn process(&mut self) {
+        for index in 0..self.source.all_items.len() {
+            let id = ItemId(index);
+            self.process_item(id).unwrap();
+        }
+        self.target.assert_all_defined();
+    }
+
+    fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
+        if self.target.is_defined(item) {
+            return Ok(());
+        }
+        match &self.source[item] {
+            Def1::DBuiltin(d) => self.target.define_item(item, d.clone()),
+            Def1::DCompoundType(d) => self.target.define_item(item, d.clone()),
+            Def1::DOther(d) => self.target.define_item(item, d.clone()),
+            Def1::DMemberAccess(d) => self.target.define_item(item, d.clone()),
+            Def1::DParameter(d) => self.target.define_item(item, d.clone()),
+            Def1::DStructLiteral(d) => self.target.define_item(item, d.clone()),
+            Def1::DPartiallyResolvedSubstitution(d) => {
+                self.process_partially_resolved_substitution(item, d)
+            }
+        }
+        Ok(())
+    }
+
+    fn process_partially_resolved_substitution(
+        &mut self,
+        this: ItemId,
+        sub: &DPartiallyResolvedSubstitution,
+    ) {
+        let base = sub.base();
+        let mut substitutions = Substitutions::new();
+        let mut deps = self.source.get_deps(sub.base()).clone();
+        for (target, value) in sub.substitutions() {
+            let target = match target {
+                PartiallyResolvedTarget::Positional => {
+                    let min_dep = deps.iter().min_by_key(|dep| dep.order());
+                    min_dep.unwrap().ptr_clone()
+                }
+                &PartiallyResolvedTarget::Item(target) => {
+                    let Def1::DParameter(p) = &self.source[target] else { todo!("Nice error") };
+                    p.get_parameter_ptr()
+                }
+            };
+            deps.remove(&target);
+            substitutions.insert(target, *value);
+        }
+        self.target
+            .define_item(this, DSubstitution::new(base, substitutions));
     }
 }

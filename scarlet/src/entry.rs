@@ -50,6 +50,8 @@ pub(crate) fn entry() {
     println!("Computed parents.");
     let env = env.processed();
     println!("Completed process 1.");
+    let env = env.processed();
+    println!("Completed process 2.");
 
     println!("{:#?}", env);
 }

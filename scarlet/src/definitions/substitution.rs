@@ -48,7 +48,38 @@ impl DUnresolvedSubstitution {
     }
 }
 
-pub type Substitutions = OrderedMap<(ItemId, ParameterPtr), ItemId>;
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum PartiallyResolvedTarget {
+    Positional,
+    Item(ItemId),
+}
+
+pub type PartiallyResolvedSubstitutions = OrderedMap<PartiallyResolvedTarget, ItemId>;
+
+#[derive(Clone, Debug)]
+pub struct DPartiallyResolvedSubstitution {
+    base: ItemId,
+    substitutions: PartiallyResolvedSubstitutions,
+}
+
+impl DPartiallyResolvedSubstitution {
+    pub fn new(base: ItemId, substitutions: PartiallyResolvedSubstitutions) -> Self {
+        Self {
+            base,
+            substitutions,
+        }
+    }
+
+    pub fn substitutions(&self) -> &PartiallyResolvedSubstitutions {
+        &self.substitutions
+    }
+
+    pub fn base(&self) -> ItemId {
+        self.base
+    }
+}
+
+pub type Substitutions = OrderedMap<ParameterPtr, ItemId>;
 
 #[derive(Clone, Debug)]
 pub struct DSubstitution {
