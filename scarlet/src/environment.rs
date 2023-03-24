@@ -11,6 +11,7 @@ use crate::{
     definitions::{
         builtin::DBuiltin,
         compound_type::DCompoundType,
+        constructor::DConstructor,
         identifier::DIdentifier,
         member_access::DMemberAccess,
         other::DOther,
@@ -75,6 +76,18 @@ def_enum!(Def1 {
 def_enum!(Def2 {
     DBuiltin,
     DCompoundType,
+    DConstructor,
+    DMemberAccess,
+    DOther,
+    DParameter,
+    DStructLiteral,
+    DPartiallyResolvedSubstitution
+});
+
+def_enum!(Def3 {
+    DBuiltin,
+    DCompoundType,
+    DConstructor,
     DMemberAccess,
     DOther,
     DParameter,
@@ -85,6 +98,7 @@ def_enum!(Def2 {
 pub type Env0 = Environment<Def0>;
 pub type Env1 = Environment<Def1>;
 pub type Env2 = Environment<Def2>;
+pub type Env3 = Environment<Def3>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemId(usize);
@@ -330,9 +344,29 @@ impl Environment<Def0> {
 }
 
 impl Env1 {
+    pub fn dereference(&self, id: ItemId) -> ItemId {
+        if let Def1::DOther(DOther(id)) = self[id] {
+            self.dereference(id)
+        } else {
+            id
+        }
+    }
+
     pub fn processed(&self) -> Env2 {
         let mut target = Environment::new_for_process_result(&self);
         Process1 {
+            source: self,
+            target: &mut target,
+        }
+        .process();
+        target
+    }
+}
+
+impl Env2 {
+    pub fn processed(&self) -> Env3 {
+        let mut target = Environment::new_for_process_result(&self);
+        Process2 {
             source: self,
             target: &mut target,
         }
@@ -353,76 +387,6 @@ impl<'a, 'b> Process0<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
-        loop {
-            let mut anything_changed = false;
-            for index in 0..self.source.all_items.len() {
-                let id = ItemId(index);
-                anything_changed |= self.compute_deps(id);
-            }
-            if !anything_changed {
-                break;
-            }
-        }
-    }
-
-    fn compute_deps(&mut self, item: ItemId) -> bool {
-        let mut deps = HashSet::new();
-        match &self.target[item] {
-            Def1::DBuiltin(d) => {
-                for &arg in d.get_args() {
-                    deps.extend(self.target.get_deps(arg).iter().cloned());
-                }
-            }
-            Def1::DCompoundType(..) => (),
-            Def1::DMemberAccess(d) => {
-                deps.extend(self.target.get_deps(d.base()).iter().cloned());
-            }
-            Def1::DOther(d) => {
-                deps.extend(self.target.get_deps(d.0).iter().cloned());
-            }
-            Def1::DParameter(d) => {
-                deps.insert(d.get_parameter_ptr());
-            }
-            Def1::DStructLiteral(d) => {
-                if !d.is_module() {
-                    deps.extend(
-                        d.fields()
-                            .iter()
-                            .flat_map(|&(_, field)| self.target.get_deps(field).iter().cloned()),
-                    );
-                }
-            }
-            Def1::DPartiallyResolvedSubstitution(d) => {
-                let base = self.target.get_deps(d.base()).iter().cloned().collect_vec();
-                let mut base = base;
-                base.sort_by_key(|p| p.order());
-                for (target, value) in d.substitutions() {
-                    deps.extend(self.target.get_deps(*value).iter().cloned());
-                    match target {
-                        PartiallyResolvedTarget::Positional => {
-                            if base.len() > 0 {
-                                base.remove(0);
-                            }
-                        }
-                        &PartiallyResolvedTarget::Item(target) => {
-                            let Def1::DParameter(p) = &self.target[target] else { todo!("Nice error") };
-                            let target = p.get_parameter_ptr();
-                            if let Some(index) = base.iter().position(|x| x == &target) {
-                                base.remove(index);
-                            }
-                        }
-                    }
-                }
-                deps.extend(base);
-            }
-        };
-        let original = &mut self.target.all_items[item.0].1.dependencies;
-        if original.intersection(&deps).count() != deps.len() {
-            *original = deps;
-            true
-        } else {
-            false
-        }
     }
 
     fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
@@ -445,7 +409,6 @@ impl<'a, 'b> Process0<'a, 'b> {
     fn process_identifier(&mut self, this: ItemId, ident: &DIdentifier) {
         let parent = self.source.parent(this).unwrap();
         let target = self.lookup_identifier(parent, ident.identifier());
-        println!("{:#?}", ident);
         self.target.define_item(this, DOther(target.unwrap()));
     }
 
@@ -494,6 +457,84 @@ impl<'a, 'b> Process1<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
+        loop {
+            let mut anything_changed = false;
+            for index in 0..self.source.all_items.len() {
+                let id = ItemId(index);
+                anything_changed |= self.compute_deps(id);
+            }
+            if !anything_changed {
+                break;
+            }
+        }
+    }
+
+    fn compute_deps(&mut self, item: ItemId) -> bool {
+        let mut deps = HashSet::new();
+        match &self.target[item] {
+            Def2::DBuiltin(d) => {
+                for &arg in d.get_args() {
+                    deps.extend(self.target.get_deps(arg).iter().cloned());
+                }
+            }
+            Def2::DCompoundType(..) => (),
+            Def2::DConstructor(con) => {
+                let Def2::DCompoundType(r#type) = &self.target[con.r#type()] else { unreachable!() };
+                for (_, r#type) in r#type.get_component_types().clone() {
+                    for &(_, parameter) in r#type.get_fields() {
+                        deps.extend(self.target.get_deps(parameter).iter().cloned());
+                    }
+                }
+            }
+            Def2::DMemberAccess(d) => {
+                deps.extend(self.target.get_deps(d.base()).iter().cloned());
+            }
+            Def2::DOther(d) => {
+                deps.extend(self.target.get_deps(d.0).iter().cloned());
+            }
+            Def2::DParameter(d) => {
+                deps.insert(d.get_parameter_ptr());
+            }
+            Def2::DStructLiteral(d) => {
+                if !d.is_module() {
+                    deps.extend(
+                        d.fields()
+                            .iter()
+                            .flat_map(|&(_, field)| self.target.get_deps(field).iter().cloned()),
+                    );
+                }
+            }
+            Def2::DPartiallyResolvedSubstitution(d) => {
+                let base = self.target.get_deps(d.base()).iter().cloned().collect_vec();
+                let mut base = base;
+                base.sort_by_key(|p| p.order());
+                for (target, value) in d.substitutions() {
+                    deps.extend(self.target.get_deps(*value).iter().cloned());
+                    match target {
+                        PartiallyResolvedTarget::Positional => {
+                            if base.len() > 0 {
+                                base.remove(0);
+                            }
+                        }
+                        &PartiallyResolvedTarget::Item(target) => {
+                            let Def2::DParameter(p) = &self.target[target] else { todo!("Nice error") };
+                            let target = p.get_parameter_ptr();
+                            if let Some(index) = base.iter().position(|x| x == &target) {
+                                base.remove(index);
+                            }
+                        }
+                    }
+                }
+                deps.extend(base);
+            }
+        };
+        let original = &mut self.target.all_items[item.0].1.dependencies;
+        if original.intersection(&deps).count() != deps.len() {
+            *original = deps;
+            true
+        } else {
+            false
+        }
     }
 
     fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
@@ -504,10 +545,53 @@ impl<'a, 'b> Process1<'a, 'b> {
             Def1::DBuiltin(d) => self.target.define_item(item, d.clone()),
             Def1::DCompoundType(d) => self.target.define_item(item, d.clone()),
             Def1::DOther(d) => self.target.define_item(item, d.clone()),
-            Def1::DMemberAccess(d) => self.target.define_item(item, d.clone()),
+            Def1::DMemberAccess(d) => self.process_member_access(item, d),
             Def1::DParameter(d) => self.target.define_item(item, d.clone()),
             Def1::DStructLiteral(d) => self.target.define_item(item, d.clone()),
-            Def1::DPartiallyResolvedSubstitution(d) => {
+            Def1::DPartiallyResolvedSubstitution(d) => self.target.define_item(item, d.clone()),
+        }
+        Ok(())
+    }
+
+    fn process_member_access(&mut self, this: ItemId, access: &DMemberAccess) {
+        if access.member_name() == "new" {
+            let base = self.source.dereference(access.base());
+            if let Def1::DCompoundType(_) = &self.source[base] {
+                self.target.define_item(this, DConstructor::new(base));
+                return;
+            }
+        }
+        self.target.define_item(this, access.clone());
+    }
+}
+
+struct Process2<'a, 'b> {
+    source: &'a Env2,
+    target: &'b mut Env3,
+}
+
+impl<'a, 'b> Process2<'a, 'b> {
+    fn process(&mut self) {
+        for index in 0..self.source.all_items.len() {
+            let id = ItemId(index);
+            self.process_item(id).unwrap();
+        }
+        self.target.assert_all_defined();
+    }
+
+    fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
+        if self.target.is_defined(item) {
+            return Ok(());
+        }
+        match &self.source[item] {
+            Def2::DBuiltin(d) => self.target.define_item(item, d.clone()),
+            Def2::DCompoundType(d) => self.target.define_item(item, d.clone()),
+            Def2::DConstructor(d) => self.target.define_item(item, d.clone()),
+            Def2::DOther(d) => self.target.define_item(item, d.clone()),
+            Def2::DMemberAccess(d) => self.target.define_item(item, d.clone()),
+            Def2::DParameter(d) => self.target.define_item(item, d.clone()),
+            Def2::DStructLiteral(d) => self.target.define_item(item, d.clone()),
+            Def2::DPartiallyResolvedSubstitution(d) => {
                 self.process_partially_resolved_substitution(item, d)
             }
         }
@@ -529,7 +613,7 @@ impl<'a, 'b> Process1<'a, 'b> {
                     min_dep.unwrap().ptr_clone()
                 }
                 &PartiallyResolvedTarget::Item(target) => {
-                    let Def1::DParameter(p) = &self.source[target] else { todo!("Nice error") };
+                    let Def2::DParameter(p) = &self.source[target] else { todo!("Nice error") };
                     p.get_parameter_ptr()
                 }
             };

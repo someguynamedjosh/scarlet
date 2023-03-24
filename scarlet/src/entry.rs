@@ -52,6 +52,8 @@ pub(crate) fn entry() {
     println!("Completed process 1.");
     let env = env.processed();
     println!("Completed process 2.");
+    let env = env.processed();
+    println!("Completed process 3.");
 
     println!("{:#?}", env);
 }

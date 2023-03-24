@@ -37,4 +37,8 @@ impl DMemberAccess {
     pub fn base(&self) -> ItemId {
         self.base
     }
+
+    pub fn member_name(&self) -> &str {
+        self.member_name.as_ref()
+    }
 }
