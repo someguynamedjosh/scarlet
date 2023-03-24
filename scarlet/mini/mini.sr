@@ -1,31 +1,57 @@
-# True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
-# False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
+True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
+False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
 
 Type IS BUILTIN(Type)
 Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
 Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
 Union IS BUILTIN(Union)
 
-# true IS True.new
-# false IS False.new
-# Bool IS Union(True False)
+true IS True.new
+false IS False.new
+Bool IS Union(True False)
 
-# Result IS ANY Type AS_LANGUAGE_ITEM(Result)
-# condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
-# true_result IS ANY Result AS_LANGUAGE_ITEM(true_result)
-# false_result IS ANY Result AS_LANGUAGE_ITEM(false_result)
-# if_then_else IS BUILTIN(if_then_else)
+Result IS ANY Type 
+    AS_LANGUAGE_ITEM(Result)
+condition IS ANY Bool 
+    AS_LANGUAGE_ITEM(condition)
+true_result IS ANY Result 
+    AS_LANGUAGE_ITEM(true_result)
+false_result IS ANY Result 
+    AS_LANGUAGE_ITEM(false_result)
+if_then_else IS BUILTIN(if_then_else)
 
-# operand0 IS ANY Bool
-# operand1 IS ANY Bool
+Byte IS NEW_TYPE(b0 IS ANY Bool b1 IS ANY Bool)
 
-# and IS if_then_else(Bool operand0 operand1 false)
+bit_a IS ANY Bool
+bit_b IS ANY Bool
+bit_c IS ANY Bool
 
-PeanoZero IS NEW_TYPE()
-PeanoSuccessor IS NEW_TYPE(of IS ANY PeanoNumber)
-PeanoNumber IS Union(PeanoZero PeanoSuccessor)
+and IS if_then_else(Bool bit_a bit_b false)
+or IS if_then_else(Bool bit_a true bit_b)
+not IS if_then_else(Bool bit_a false true)
+xor IS if_then_else(Bool bit_a not(bit_b) bit_b)
 
-z IS PeanoZero.new
-s IS PeanoSuccessor.new
+half_sum IS xor(bit_a bit_b)
+half_carry IS and(bit_a bit_b)
 
-main IS s(s(z))
+full_sum IS half_sum(half_sum bit_c)
+full_carry IS or(
+    half_carry half_carry(half_sum bit_c)
+)
+
+byte_a IS ANY Byte
+byte_b IS ANY Byte
+
+b0_sum IS half_sum(byte_a.b0 byte_b.b0)
+b0_carry IS half_carry(byte_a.b0 byte_b.b0)
+b1_sum IS full_sum(byte_a.b1 byte_b.b1 b0_carry)
+b1_carry IS full_carry(
+    byte_a.b1 byte_b.b1 b0_carry
+)
+
+byte_sum IS Byte.new(b0_sum b1_sum)
+byte_carry IS b1_carry
+
+I32 IS NEW_TYPE(b0 IS ANY Byte)
+
+main IS byte_sum(Byte.new(true false) Byte.new(false true))

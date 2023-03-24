@@ -98,4 +98,8 @@ impl DSubstitution {
     pub fn substitutions(&self) -> &Substitutions {
         &self.substitutions
     }
+
+    pub fn base(&self) -> ItemId {
+        self.base
+    }
 }

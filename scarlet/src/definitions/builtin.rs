@@ -56,7 +56,7 @@ impl DBuiltin {
         let args = builtin
             .default_arg_names()
             .iter()
-            .map(|name| env.get_language_item(name).copied())
+            .map(|name| env.get_language_item(name))
             .collect::<Result<_, _>>()?;
         Ok(Self { builtin, args })
     }

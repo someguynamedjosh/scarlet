@@ -2,14 +2,14 @@ use std::{
     cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
     fmt::Debug,
-    ops::Index,
+    ops::{Index, IndexMut},
 };
 
 use itertools::Itertools;
 
 use crate::{
     definitions::{
-        builtin::DBuiltin,
+        builtin::{Builtin, DBuiltin},
         compound_type::DCompoundType,
         constructor::DConstructor,
         identifier::DIdentifier,
@@ -24,6 +24,7 @@ use crate::{
     },
     diagnostic::{Diagnostic, Position},
     item::query::{Query, QueryContext, RootQuery},
+    shared::OrderedMap,
     util::PtrExtension,
 };
 
@@ -175,6 +176,16 @@ impl<Def> Index<ItemId> for Environment<Def> {
     }
 }
 
+impl<Def> IndexMut<ItemId> for Environment<Def> {
+    fn index_mut(&mut self, index: ItemId) -> &mut Self::Output {
+        if let Some(item) = &mut self.all_items[index.0].0 {
+            item
+        } else {
+            panic!("Item associated with {:?} is undefined.", index)
+        }
+    }
+}
+
 impl<Def: From<DStructLiteral>> Environment<Def> {
     pub(crate) fn new() -> Self {
         let root = ItemId(0);
@@ -265,8 +276,8 @@ impl<Def> Environment<Def> {
         }
     }
 
-    pub fn get_language_item(&self, name: &str) -> Result<&ItemId, Diagnostic> {
-        self.language_items.get(name).ok_or_else(|| {
+    pub fn get_language_item(&self, name: &str) -> Result<ItemId, Diagnostic> {
+        self.language_items.get(name).copied().ok_or_else(|| {
             Diagnostic::new()
                 .with_text_error(format!("The language item \"{}\" is not defined.", name))
         })
@@ -364,6 +375,14 @@ impl Env1 {
 }
 
 impl Env2 {
+    pub fn dereference(&self, id: ItemId) -> ItemId {
+        if let Def2::DOther(DOther(id)) = self[id] {
+            self.dereference(id)
+        } else {
+            id
+        }
+    }
+
     pub fn processed(&self) -> Env3 {
         let mut target = Environment::new_for_process_result(&self);
         Process2 {
@@ -372,6 +391,16 @@ impl Env2 {
         }
         .process();
         target
+    }
+}
+
+impl Env3 {
+    pub fn dereference(&self, id: ItemId) -> ItemId {
+        if let Def3::DOther(DOther(id)) = self[id] {
+            self.dereference(id)
+        } else {
+            id
+        }
     }
 }
 
@@ -554,12 +583,15 @@ impl<'a, 'b> Process1<'a, 'b> {
     }
 
     fn process_member_access(&mut self, this: ItemId, access: &DMemberAccess) {
+        let base = self.source.dereference(access.base());
         if access.member_name() == "new" {
-            let base = self.source.dereference(access.base());
             if let Def1::DCompoundType(_) = &self.source[base] {
                 self.target.define_item(this, DConstructor::new(base));
                 return;
             }
+        } else if let Def1::DStructLiteral(module) = &self.source[base] {
+            let item = module.get_field(access.member_name()).unwrap();
+            self.target.define_item(this, DOther(item));
         }
         self.target.define_item(this, access.clone());
     }
@@ -570,6 +602,23 @@ struct Process2<'a, 'b> {
     target: &'b mut Env3,
 }
 
+#[derive(Clone, Debug)]
+enum ConstFoldResult {
+    Type(DCompoundType),
+    Constructor(ItemId),
+    SubbedConstructor(DSubstitution),
+}
+
+impl ConstFoldResult {
+    pub fn into_def(self) -> Def3 {
+        match self {
+            ConstFoldResult::Type(d) => Def3::DCompoundType(d),
+            ConstFoldResult::Constructor(r#type) => Def3::DConstructor(DConstructor::new(r#type)),
+            ConstFoldResult::SubbedConstructor(d) => Def3::DSubstitution(d),
+        }
+    }
+}
+
 impl<'a, 'b> Process2<'a, 'b> {
     fn process(&mut self) {
         for index in 0..self.source.all_items.len() {
@@ -577,6 +626,105 @@ impl<'a, 'b> Process2<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
+        loop {
+            let mut anything_changed = false;
+            for index in 0..self.source.all_items.len() {
+                let id = ItemId(index);
+                anything_changed |= self.const_fold_in_place(id);
+            }
+            if !anything_changed {
+                break;
+            }
+        }
+    }
+
+    fn const_fold_in_place(&mut self, item: ItemId) -> bool {
+        if let Some(value) = self.const_fold(item, HashMap::new()) {
+            self.target[item] = value.into_def();
+            true
+        } else {
+            false
+        }
+    }
+
+    fn const_fold(
+        &mut self,
+        item: ItemId,
+        params: HashMap<ParameterPtr, ConstFoldResult>,
+    ) -> Option<ConstFoldResult> {
+        match &self.target[item] {
+            Def3::DBuiltin(d) => match d.get_builtin() {
+                Builtin::IsExactly => todo!(),
+                Builtin::IsSubtypeOf => todo!(),
+                Builtin::IfThenElse => {
+                    let condition = self.target.dereference(d.get_args()[0]);
+                    let true_result = d.get_args()[1];
+                    let false_result = d.get_args()[2];
+                    if condition == self.target.get_language_item("true").unwrap() {
+                        self.const_fold(true_result, params)
+                    } else if condition == self.target.get_language_item("false").unwrap() {
+                        self.const_fold(false_result, params)
+                    } else {
+                        None
+                    }
+                }
+                Builtin::Union => {
+                    let a = self.target.dereference(d.get_args()[0]);
+                    let b = self.target.dereference(d.get_args()[1]);
+                    if let (Some(ConstFoldResult::Type(a)), Some(ConstFoldResult::Type(b))) = (
+                        self.const_fold(a, params.clone()),
+                        self.const_fold(b, params),
+                    ) {
+                        Some(ConstFoldResult::Type(a.union(&b)))
+                    } else {
+                        None
+                    }
+                }
+            },
+            Def3::DCompoundType(d) => Some(ConstFoldResult::Type(d.clone())),
+            Def3::DConstructor(d) => {
+                let deps = &self.target.all_items[item.0].1.dependencies;
+                let subs: OrderedMap<_, _> = params
+                    .into_iter()
+                    .filter(|x| deps.contains(&x.0))
+                    .map(|(a, b)| (a.clone(), b.clone()))
+                    .collect();
+                Some(if subs.len() == 0 {
+                    ConstFoldResult::Constructor(d.r#type())
+                } else {
+                    ConstFoldResult::SubbedConstructor(DSubstitution::new(item, subs))
+                })
+            }
+            Def3::DMemberAccess(d) => {
+                let member_name = d.member_name().to_owned();
+                if let Some(ConstFoldResult::SubbedConstructor(value)) =
+                    self.const_fold(d.base(), params.clone())
+                {
+                    let Def3::DConstructor(con) = &self.target[self.target.dereference(value.base())] else { unreachable!() } ;
+                    let Def3::DCompoundType(r#type) = &self.target[con.r#type()] else { unreachable!( )};
+                    assert_eq!(r#type.get_component_types().len(), 1);
+                    let (_, r#type) = r#type.get_component_types().iter().next().unwrap();
+                    let field = r#type
+                        .get_fields()
+                        .iter()
+                        .find(|f| f.0 == member_name)
+                        .unwrap();
+                    self.const_fold(field.1, value.substitutions().clone().into_iter().collect())
+                } else {
+                    None
+                }
+            }
+            Def3::DOther(d) => self.const_fold(d.0, params),
+            Def3::DParameter(d) => {
+                if let Some(value) = params.get(d.get_parameter()) {
+
+                } else {
+                    None
+                }
+            },
+            Def3::DStructLiteral(_) => todo!(),
+            Def3::DSubstitution(_) => todo!(),
+        }
     }
 
     fn process_item(&mut self, item: ItemId) -> Result<(), ()> {
