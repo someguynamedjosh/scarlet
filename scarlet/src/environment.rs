@@ -115,6 +115,7 @@ pub struct ItemMetadata {
     pub parent: Option<ItemId>,
     pub position: Option<Position>,
     pub dependencies: HashSet<ParameterPtr>,
+    pub value: Option<ConstValue>,
 }
 
 impl ItemMetadata {
@@ -123,6 +124,7 @@ impl ItemMetadata {
             parent: None,
             position: None,
             dependencies: HashSet::new(),
+            value: None,
         }
     }
 }
@@ -154,7 +156,9 @@ impl<Def: Debug> Debug for Environment<Def> {
                 write!(f, " ({})", position)?;
             }
             writeln!(f)?;
-            if let Some(item) = item {
+            if let Some(value) = &meta.value {
+                writeln!(f, "{:#?}", value)?;
+            } else if let Some(item) = item {
                 writeln!(f, "{:#?}", item)?;
             } else {
                 writeln!(f, "Undefined")?;
@@ -603,18 +607,28 @@ struct Process2<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-enum ConstFoldResult {
+pub enum ConstValue {
     Type(DCompoundType),
     Constructor(ItemId),
-    SubbedConstructor(DSubstitution),
+    SubbedConstructor(ItemId, HashMap<ParameterPtr, ConstValue>),
 }
 
-impl ConstFoldResult {
-    pub fn into_def(self) -> Def3 {
+impl ConstValue {
+    pub fn into_item(self, env: &mut Env3) -> ItemId {
+        let def = self.into_def(env);
+        env.new_defined_item(def)
+    }
+
+    pub fn into_def(self, env: &mut Env3) -> Def3 {
         match self {
-            ConstFoldResult::Type(d) => Def3::DCompoundType(d),
-            ConstFoldResult::Constructor(r#type) => Def3::DConstructor(DConstructor::new(r#type)),
-            ConstFoldResult::SubbedConstructor(d) => Def3::DSubstitution(d),
+            ConstValue::Type(d) => Def3::DCompoundType(d),
+            ConstValue::Constructor(r#type) => Def3::DConstructor(DConstructor::new(r#type)),
+            ConstValue::SubbedConstructor(base, subs) => Def3::DSubstitution(DSubstitution::new(
+                base,
+                subs.into_iter()
+                    .map(|(param, arg)| (param.ptr_clone(), arg.into_item(env)))
+                    .collect(),
+            )),
         }
     }
 }
@@ -626,32 +640,33 @@ impl<'a, 'b> Process2<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
-        loop {
-            let mut anything_changed = false;
-            for index in 0..self.source.all_items.len() {
-                let id = ItemId(index);
-                anything_changed |= self.const_fold_in_place(id);
-            }
-            if !anything_changed {
-                break;
-            }
-        }
-    }
-
-    fn const_fold_in_place(&mut self, item: ItemId) -> bool {
-        if let Some(value) = self.const_fold(item, HashMap::new()) {
-            self.target[item] = value.into_def();
-            true
-        } else {
-            false
+        let len = self.source.all_items.len();
+        for index in 0..len {
+            let id = ItemId(index);
+            self.const_fold(id, HashMap::new());
         }
     }
 
     fn const_fold(
         &mut self,
         item: ItemId,
-        params: HashMap<ParameterPtr, ConstFoldResult>,
-    ) -> Option<ConstFoldResult> {
+        args: HashMap<ParameterPtr, ConstValue>,
+    ) -> Option<ConstValue> {
+        let no_args = args.is_empty();
+        let value = self.const_fold_inner(item, args);
+        if no_args {
+            if let Some(value) = &value {
+                self.target.all_items[item.0].1.value = Some(value.clone());
+            }
+        }
+        value
+    }
+
+    fn const_fold_inner(
+        &mut self,
+        item: ItemId,
+        args: HashMap<ParameterPtr, ConstValue>,
+    ) -> Option<ConstValue> {
         match &self.target[item] {
             Def3::DBuiltin(d) => match d.get_builtin() {
                 Builtin::IsExactly => todo!(),
@@ -661,9 +676,9 @@ impl<'a, 'b> Process2<'a, 'b> {
                     let true_result = d.get_args()[1];
                     let false_result = d.get_args()[2];
                     if condition == self.target.get_language_item("true").unwrap() {
-                        self.const_fold(true_result, params)
+                        self.const_fold(true_result, args)
                     } else if condition == self.target.get_language_item("false").unwrap() {
-                        self.const_fold(false_result, params)
+                        self.const_fold(false_result, args)
                     } else {
                         None
                     }
@@ -671,36 +686,35 @@ impl<'a, 'b> Process2<'a, 'b> {
                 Builtin::Union => {
                     let a = self.target.dereference(d.get_args()[0]);
                     let b = self.target.dereference(d.get_args()[1]);
-                    if let (Some(ConstFoldResult::Type(a)), Some(ConstFoldResult::Type(b))) = (
-                        self.const_fold(a, params.clone()),
-                        self.const_fold(b, params),
-                    ) {
-                        Some(ConstFoldResult::Type(a.union(&b)))
+                    if let (Some(ConstValue::Type(a)), Some(ConstValue::Type(b))) =
+                        (self.const_fold(a, args.clone()), self.const_fold(b, args))
+                    {
+                        Some(ConstValue::Type(a.union(&b)))
                     } else {
                         None
                     }
                 }
             },
-            Def3::DCompoundType(d) => Some(ConstFoldResult::Type(d.clone())),
+            Def3::DCompoundType(d) => Some(ConstValue::Type(d.clone())),
             Def3::DConstructor(d) => {
                 let deps = &self.target.all_items[item.0].1.dependencies;
-                let subs: OrderedMap<_, _> = params
+                let subs: HashMap<_, _> = args
                     .into_iter()
                     .filter(|x| deps.contains(&x.0))
                     .map(|(a, b)| (a.clone(), b.clone()))
                     .collect();
                 Some(if subs.len() == 0 {
-                    ConstFoldResult::Constructor(d.r#type())
+                    ConstValue::Constructor(d.r#type())
                 } else {
-                    ConstFoldResult::SubbedConstructor(DSubstitution::new(item, subs))
+                    ConstValue::SubbedConstructor(item, subs)
                 })
             }
             Def3::DMemberAccess(d) => {
                 let member_name = d.member_name().to_owned();
-                if let Some(ConstFoldResult::SubbedConstructor(value)) =
-                    self.const_fold(d.base(), params.clone())
+                if let Some(ConstValue::SubbedConstructor(base, values)) =
+                    self.const_fold(d.base(), args.clone())
                 {
-                    let Def3::DConstructor(con) = &self.target[self.target.dereference(value.base())] else { unreachable!() } ;
+                    let Def3::DConstructor(con) = &self.target[self.target.dereference(base)] else { unreachable!() } ;
                     let Def3::DCompoundType(r#type) = &self.target[con.r#type()] else { unreachable!( )};
                     assert_eq!(r#type.get_component_types().len(), 1);
                     let (_, r#type) = r#type.get_component_types().iter().next().unwrap();
@@ -709,21 +723,35 @@ impl<'a, 'b> Process2<'a, 'b> {
                         .iter()
                         .find(|f| f.0 == member_name)
                         .unwrap();
-                    self.const_fold(field.1, value.substitutions().clone().into_iter().collect())
+                    self.const_fold(field.1, values.clone())
                 } else {
                     None
                 }
             }
-            Def3::DOther(d) => self.const_fold(d.0, params),
+            Def3::DOther(d) => self.const_fold(d.0, args),
             Def3::DParameter(d) => {
-                if let Some(value) = params.get(d.get_parameter()) {
-
+                if let Some(value) = args.get(d.get_parameter()) {
+                    Some(value.clone())
                 } else {
                     None
                 }
-            },
-            Def3::DStructLiteral(_) => todo!(),
-            Def3::DSubstitution(_) => todo!(),
+            }
+            Def3::DStructLiteral(d) => {
+                if d.is_module() {
+                    None
+                } else {
+                    todo!()
+                }
+            }
+            Def3::DSubstitution(d) => {
+                let d = d.clone();
+                let mut new_args = args.clone();
+                for (param, arg) in d.substitutions() {
+                    let arg = self.const_fold(*arg, args.clone())?;
+                    new_args.insert(param.ptr_clone(), arg);
+                }
+                self.const_fold(d.base(), new_args)
+            }
         }
     }
 
