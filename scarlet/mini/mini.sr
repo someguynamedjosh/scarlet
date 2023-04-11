@@ -23,4 +23,6 @@ if_then_else IS BUILTIN(if_then_else)
 Wrapper IS NEW_TYPE(inner IS ANY Bool)
 a IS Wrapper.new(true)
 
-main IS a
+value IS ANY Bool
+
+main IS if_then_else(Bool true true false)

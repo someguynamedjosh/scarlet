@@ -613,7 +613,7 @@ struct Process2<'a, 'b> {
     god_type_item: ItemId,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ConstValue {
     Type(DCompoundType),
     Constructor(ItemId),
@@ -681,7 +681,7 @@ impl<'a, 'b> Process2<'a, 'b> {
             Def3::DMemberAccess(d) => {
                 let d = d.clone();
                 let base = self.get_type(d.base());
-                let Def3::DCompoundType(ty) = &self.target[base] else { panic!() };
+                let Some(ConstValue::Type(ty)) = &self.target.all_items[base.0].1.value else { panic!() };
                 let Some(ty) = ty.get_single_type() else { panic!() };
                 let fields = ty.get_fields();
                 let field = fields.iter().find(|f| f.0 == d.member_name()).unwrap();
@@ -749,12 +749,14 @@ impl<'a, 'b> Process2<'a, 'b> {
                 Builtin::IsExactly => todo!(),
                 Builtin::IsSubtypeOf => todo!(),
                 Builtin::IfThenElse => {
-                    let condition = self.target.dereference(d.get_args()[0]);
-                    let true_result = d.get_args()[1];
-                    let false_result = d.get_args()[2];
-                    if condition == self.target.get_language_item("true").unwrap() {
+                    let true_type = self.target.get_language_item("True").unwrap();
+                    let false_type = self.target.get_language_item("False").unwrap();
+                    let true_result = d.get_args()[2];
+                    let false_result = d.get_args()[3];
+                    let condition = self.const_fold(d.get_args()[1], args.clone());
+                    if condition == Some(ConstValue::Constructor(true_type)) {
                         self.const_fold(true_result, args)
-                    } else if condition == self.target.get_language_item("false").unwrap() {
+                    } else if condition == Some(ConstValue::Constructor(false_type)) {
                         self.const_fold(false_result, args)
                     } else {
                         None

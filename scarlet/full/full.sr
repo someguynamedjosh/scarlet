@@ -6,8 +6,8 @@ Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
 Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
 Union IS BUILTIN(Union)
 
-true IS True.new
-false IS False.new
+true IS True.new AS_LANGUAGE_ITEM(true)
+false IS False.new AS_LANGUAGE_ITEM(false)
 Bool IS Union(True False)
 
 Result IS ANY Type AS_LANGUAGE_ITEM(Result)

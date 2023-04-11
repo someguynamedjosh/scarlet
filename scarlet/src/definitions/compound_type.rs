@@ -1,7 +1,7 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::{self, Formatter},
-    rc::Rc,
+    rc::Rc, hash::Hash,
 };
 
 use itertools::Itertools;
@@ -18,6 +18,15 @@ pub enum Type {
         type_id: Rc<()>,
         fields: Vec<(String, ItemId)>,
     },
+}
+
+impl Hash for Type {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+        if let Self::UserType { type_id, .. }= &self {
+            Rc::as_ptr(type_id).hash(state);
+        }
+    }
 }
 
 impl Type {
@@ -65,6 +74,21 @@ pub struct DCompoundType {
     // These are ORed together. ANDing them would result in an empty type any
     // time you have at least 2 non-identical components.
     component_types: HashMap<TypeId, Rc<Type>>,
+}
+
+impl PartialEq for DCompoundType {
+    fn eq(&self, other: &Self) -> bool {
+        if self.component_types.len() != other.component_types.len() {
+            false
+        } else {
+            for component in self.component_types.keys() {
+                if !other.component_types.contains_key(component) {
+                    return false;
+                }
+            }
+            true
+        }
+    }
 }
 
 impl DCompoundType {
