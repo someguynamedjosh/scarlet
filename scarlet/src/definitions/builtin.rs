@@ -23,6 +23,7 @@ pub enum Builtin {
     IsSubtypeOf,
     IfThenElse,
     Union,
+    GodType,
 }
 
 impl Builtin {
@@ -32,6 +33,7 @@ impl Builtin {
             Self::IsSubtypeOf => "is_subtype_of",
             Self::IfThenElse => "if_then_else",
             Self::Union => "Union",
+            Self::GodType => "Type",
         }
     }
 
@@ -41,6 +43,7 @@ impl Builtin {
             Builtin::IsSubtypeOf => &["Subtype", "Supertype"][..],
             Builtin::IfThenElse => &["Result", "condition", "true_result", "false_result"],
             Builtin::Union => &["Subtype0", "Subtype1"],
+            Builtin::GodType => &[],
         }
     }
 }

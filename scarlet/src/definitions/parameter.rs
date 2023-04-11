@@ -66,7 +66,7 @@ impl DParameter {
         &*self.parameter
     }
 
-    pub fn get_type(&self) -> &ItemId {
-        &self.reduced_type
+    pub fn get_type(&self) -> ItemId {
+        self.reduced_type
     }
 }

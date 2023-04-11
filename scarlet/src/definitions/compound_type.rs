@@ -103,7 +103,15 @@ impl DCompoundType {
         true
     }
 
-    pub(crate) fn r#type() -> Self {
+    pub(crate) fn god_type() -> Self {
         Self::new_single(Rc::new(Type::GodType))
+    }
+
+    pub fn get_single_type(&self) -> Option<&Rc<Type>> {
+        if self.component_types.len() == 1 {
+            Some(&self.component_types.values().next().unwrap())
+        } else {
+            None
+        }
     }
 }

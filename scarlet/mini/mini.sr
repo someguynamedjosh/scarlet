@@ -1,29 +1,26 @@
 True IS NEW_TYPE() AS_LANGUAGE_ITEM(True)
 False IS NEW_TYPE() AS_LANGUAGE_ITEM(False)
 
-# Type IS BUILTIN(Type)
-# Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
-# Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
-# Union IS BUILTIN(Union)
+Type IS BUILTIN(Type)
+Subtype0 IS ANY Type AS_LANGUAGE_ITEM(Subtype0)
+Subtype1 IS ANY Type AS_LANGUAGE_ITEM(Subtype1)
+Union IS BUILTIN(Union)
 
 true IS True.new AS_LANGUAGE_ITEM(true)
 false IS False.new AS_LANGUAGE_ITEM(false)
-# Bool IS Union(True False)
+Bool IS Union(True False)
 
-# Result IS ANY Type 
-#     AS_LANGUAGE_ITEM(Result)
-# condition IS ANY Bool 
-#     AS_LANGUAGE_ITEM(condition)
-# true_result IS ANY Result 
-#     AS_LANGUAGE_ITEM(true_result)
-# false_result IS ANY Result 
-#     AS_LANGUAGE_ITEM(false_result)
-# if_then_else IS BUILTIN(if_then_else)
+Result IS ANY Type 
+    AS_LANGUAGE_ITEM(Result)
+condition IS ANY Bool 
+    AS_LANGUAGE_ITEM(condition)
+true_result IS ANY Result 
+    AS_LANGUAGE_ITEM(true_result)
+false_result IS ANY Result 
+    AS_LANGUAGE_ITEM(false_result)
+if_then_else IS BUILTIN(if_then_else)
 
-# Wrapper IS NEW_TYPE(inner IS ANY Bool)
-# a IS Wrapper.new(true)
-Wrapper IS NEW_TYPE(inner IS ANY True)
-a IS Wrapper.new
-b IS Wrapper.new(true)
+Wrapper IS NEW_TYPE(inner IS ANY Bool)
+a IS Wrapper.new(true)
 
-# main IS a
+main IS a

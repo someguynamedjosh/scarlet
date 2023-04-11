@@ -3,6 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
     ops::{Index, IndexMut},
+    rc::Rc,
 };
 
 use itertools::Itertools;
@@ -10,7 +11,7 @@ use itertools::Itertools;
 use crate::{
     definitions::{
         builtin::{Builtin, DBuiltin},
-        compound_type::DCompoundType,
+        compound_type::{DCompoundType, Type},
         constructor::DConstructor,
         identifier::DIdentifier,
         member_access::DMemberAccess,
@@ -115,6 +116,7 @@ pub struct ItemMetadata {
     pub parent: Option<ItemId>,
     pub position: Option<Position>,
     pub dependencies: HashSet<ParameterPtr>,
+    pub r#type: Option<ItemId>,
     pub value: Option<ConstValue>,
 }
 
@@ -124,6 +126,7 @@ impl ItemMetadata {
             parent: None,
             position: None,
             dependencies: HashSet::new(),
+            r#type: None,
             value: None,
         }
     }
@@ -329,7 +332,7 @@ impl Environment<Def0> {
             }
             Def0::DIdentifier(_) => (),
             Def0::DMemberAccess(member) => children.push(member.base()),
-            Def0::DParameter(param) => children.push(*param.get_type()),
+            Def0::DParameter(param) => children.push(param.get_type()),
             Def0::DStructLiteral(r#struct) => {
                 for (_, field) in r#struct.fields() {
                     children.push(*field);
@@ -389,9 +392,12 @@ impl Env2 {
 
     pub fn processed(&self) -> Env3 {
         let mut target = Environment::new_for_process_result(&self);
+        let god_type_def = DBuiltin::new_user_facing(Builtin::GodType, &target).unwrap();
+        let god_type_item = target.new_defined_item(god_type_def);
         Process2 {
             source: self,
             target: &mut target,
+            god_type_item,
         }
         .process();
         target
@@ -604,6 +610,7 @@ impl<'a, 'b> Process1<'a, 'b> {
 struct Process2<'a, 'b> {
     source: &'a Env2,
     target: &'b mut Env3,
+    god_type_item: ItemId,
 }
 
 #[derive(Clone, Debug)]
@@ -640,10 +647,80 @@ impl<'a, 'b> Process2<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
-        let len = self.source.all_items.len();
-        for index in 0..len {
+        let mut index = 0;
+        while index < self.target.all_items.len() {
             let id = ItemId(index);
+            self.get_type(id);
             self.const_fold(id, HashMap::new());
+            index += 1;
+        }
+        self.target.assert_all_defined();
+    }
+
+    fn get_type(&mut self, item: ItemId) -> ItemId {
+        if let Some(r#type) = &self.target.all_items[item.0].1.r#type {
+            *r#type
+        } else {
+            let r#type = self.type_of(item);
+            self.target.all_items[item.0].1.r#type = Some(r#type);
+            r#type
+        }
+    }
+
+    fn type_of(&mut self, item: ItemId) -> ItemId {
+        match &self.target[item] {
+            Def3::DBuiltin(d) => match d.get_builtin() {
+                Builtin::IsExactly | Builtin::IsSubtypeOf => {
+                    self.target.get_language_item("Bool").unwrap()
+                }
+                Builtin::IfThenElse => d.get_args()[0],
+                Builtin::Union | Builtin::GodType => self.god_type_item,
+            },
+            Def3::DCompoundType(_) => self.god_type_item,
+            Def3::DConstructor(d) => d.r#type(),
+            Def3::DMemberAccess(d) => {
+                let d = d.clone();
+                let base = self.get_type(d.base());
+                let Def3::DCompoundType(ty) = &self.target[base] else { panic!() };
+                let Some(ty) = ty.get_single_type() else { panic!() };
+                let fields = ty.get_fields();
+                let field = fields.iter().find(|f| f.0 == d.member_name()).unwrap();
+                self.get_type(field.1)
+            }
+            Def3::DOther(d) => self.get_type(d.0),
+            Def3::DParameter(d) => d.get_type(),
+            Def3::DStructLiteral(d) => {
+                if d.is_module() {
+                    let d = d.clone();
+                    let mut fields = Vec::new();
+                    for field in d.fields() {
+                        fields.push((field.0.clone(), self.get_type(field.1)));
+                    }
+                    let r#type = Type::UserType {
+                        type_id: Rc::new(()),
+                        fields,
+                    };
+                    let r#type = DCompoundType::new_single(Rc::new(r#type));
+                    self.target.new_defined_item(r#type)
+                } else {
+                    todo!()
+                }
+            }
+            Def3::DSubstitution(d) => {
+                let subs = d.substitutions().clone();
+                let base = self.get_type(d.base());
+                let deps = self.target.get_deps(base);
+                let subs: OrderedMap<_, _> = subs
+                    .into_iter()
+                    .filter(|sub| deps.contains(&sub.0))
+                    .collect();
+                if subs.len() > 0 {
+                    let sub = DSubstitution::new(base, subs);
+                    self.target.new_defined_item(sub)
+                } else {
+                    base
+                }
+            }
         }
     }
 
@@ -694,6 +771,7 @@ impl<'a, 'b> Process2<'a, 'b> {
                         None
                     }
                 }
+                Builtin::GodType => Some(ConstValue::Type(DCompoundType::god_type())),
             },
             Def3::DCompoundType(d) => Some(ConstValue::Type(d.clone())),
             Def3::DConstructor(d) => {
