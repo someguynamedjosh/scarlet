@@ -7,6 +7,7 @@ use std::{
 };
 
 use itertools::Itertools;
+use maplit::hashmap;
 
 use crate::{
     definitions::{
@@ -616,8 +617,10 @@ struct Process2<'a, 'b> {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConstValue {
     Type(DCompoundType),
-    Constructor(ItemId),
-    SubbedConstructor(ItemId, HashMap<ParameterPtr, ConstValue>),
+    Value {
+        r#type: ItemId,
+        subs: HashMap<ParameterPtr, ConstValue>,
+    },
 }
 
 impl ConstValue {
@@ -629,13 +632,20 @@ impl ConstValue {
     pub fn into_def(self, env: &mut Env3) -> Def3 {
         match self {
             ConstValue::Type(d) => Def3::DCompoundType(d),
-            ConstValue::Constructor(r#type) => Def3::DConstructor(DConstructor::new(r#type)),
-            ConstValue::SubbedConstructor(base, subs) => Def3::DSubstitution(DSubstitution::new(
-                base,
-                subs.into_iter()
-                    .map(|(param, arg)| (param.ptr_clone(), arg.into_item(env)))
-                    .collect(),
-            )),
+            ConstValue::Value { r#type, subs } => {
+                if subs.len() == 0 {
+                    Def3::DConstructor(DConstructor::new(r#type))
+                } else {
+                    let constructor =
+                        env.new_defined_item(Def3::DConstructor(DConstructor::new(r#type)));
+                    Def3::DSubstitution(DSubstitution::new(
+                        constructor,
+                        subs.into_iter()
+                            .map(|(param, arg)| (param.ptr_clone(), arg.into_item(env)))
+                            .collect(),
+                    ))
+                }
+            }
         }
     }
 }
@@ -746,7 +756,26 @@ impl<'a, 'b> Process2<'a, 'b> {
     ) -> Option<ConstValue> {
         match &self.target[item] {
             Def3::DBuiltin(d) => match d.get_builtin() {
-                Builtin::IsExactly => todo!(),
+                Builtin::IsExactly => {
+                    let a = self.target.dereference(d.get_args()[2]);
+                    let b = self.target.dereference(d.get_args()[3]);
+                    if let (Some(a), Some(b)) = (
+                        self.const_fold(a, args.clone()),
+                        self.const_fold(b, args.clone()),
+                    ) {
+                        let return_type = if a == b {
+                            self.target.get_language_item("True").unwrap()
+                        } else {
+                            self.target.get_language_item("False").unwrap()
+                        };
+                        Some(ConstValue::Value {
+                            r#type: return_type,
+                            subs: hashmap![],
+                        })
+                    } else {
+                        None
+                    }
+                }
                 Builtin::IsSubtypeOf => todo!(),
                 Builtin::IfThenElse => {
                     let true_type = self.target.get_language_item("True").unwrap();
@@ -754,9 +783,19 @@ impl<'a, 'b> Process2<'a, 'b> {
                     let true_result = d.get_args()[2];
                     let false_result = d.get_args()[3];
                     let condition = self.const_fold(d.get_args()[1], args.clone());
-                    if condition == Some(ConstValue::Constructor(true_type)) {
+                    if condition
+                        == Some(ConstValue::Value {
+                            r#type: true_type,
+                            subs: hashmap![],
+                        })
+                    {
                         self.const_fold(true_result, args)
-                    } else if condition == Some(ConstValue::Constructor(false_type)) {
+                    } else if condition
+                        == Some(ConstValue::Value {
+                            r#type: false_type,
+                            subs: hashmap![],
+                        })
+                    {
                         self.const_fold(false_result, args)
                     } else {
                         None
@@ -783,19 +822,23 @@ impl<'a, 'b> Process2<'a, 'b> {
                     .filter(|x| deps.contains(&x.0))
                     .map(|(a, b)| (a.clone(), b.clone()))
                     .collect();
-                Some(if subs.len() == 0 {
-                    ConstValue::Constructor(d.r#type())
+                if subs.len() < deps.len() {
+                    None
                 } else {
-                    ConstValue::SubbedConstructor(item, subs)
-                })
+                    Some(ConstValue::Value {
+                        r#type: d.r#type(),
+                        subs,
+                    })
+                }
             }
             Def3::DMemberAccess(d) => {
                 let member_name = d.member_name().to_owned();
-                if let Some(ConstValue::SubbedConstructor(base, values)) =
-                    self.const_fold(d.base(), args.clone())
+                if let Some(ConstValue::Value {
+                    r#type,
+                    subs: values,
+                }) = self.const_fold(d.base(), args.clone())
                 {
-                    let Def3::DConstructor(con) = &self.target[self.target.dereference(base)] else { unreachable!() } ;
-                    let Def3::DCompoundType(r#type) = &self.target[con.r#type()] else { unreachable!( )};
+                    let Def3::DCompoundType(r#type) = &self.target[r#type] else { unreachable!() };
                     assert_eq!(r#type.get_component_types().len(), 1);
                     let (_, r#type) = r#type.get_component_types().iter().next().unwrap();
                     let field = r#type
