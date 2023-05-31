@@ -12,7 +12,7 @@ use super::{
 use crate::{
     definitions::{identifier::DIdentifier, member_access::DMemberAccess},
     diagnostic::Diagnostic,
-    environment::{Environment, ItemId},
+    environment::{Env3, Environment, ItemId},
     shared::OrderedMap,
     util::PtrExtension,
 };
@@ -85,6 +85,7 @@ pub type Substitutions = OrderedMap<ParameterPtr, ItemId>;
 pub struct DSubstitution {
     base: ItemId,
     substitutions: Substitutions,
+    do_asserts: bool,
 }
 
 impl DSubstitution {
@@ -92,6 +93,7 @@ impl DSubstitution {
         Self {
             base,
             substitutions,
+            do_asserts: true,
         }
     }
 
@@ -101,5 +103,28 @@ impl DSubstitution {
 
     pub fn base(&self) -> ItemId {
         self.base
+    }
+
+    pub fn add_type_asserts(&self, env: &mut Env3) {
+        if !self.do_asserts {
+            return;
+        }
+        for (target, value) in &self.substitutions {
+            let target_type = target.original_type();
+            let target_type_deps = env.get_deps(target_type);
+            let target_type_subs = self
+                .substitutions
+                .iter()
+                .filter(|(k, _)| target_type_deps.contains(k))
+                .cloned()
+                .collect();
+            let subbed_target_type = env.new_defined_item(Self {
+                base: target_type,
+                substitutions: target_type_subs,
+                do_asserts: false,
+            });
+            println!("Assert {:?} is of type {:?}", *value, target_type);
+            env.assert_of_type(*value, subbed_target_type);
+        }
     }
 }

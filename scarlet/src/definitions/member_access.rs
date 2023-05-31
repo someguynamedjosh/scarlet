@@ -6,7 +6,7 @@ use std::{
 use super::{compound_type::DCompoundType, parameter::ParameterPtr};
 use crate::{
     diagnostic::Diagnostic,
-    environment::{Environment, ItemId},
+    environment::{Environment, ItemId, Env2, Env3},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -40,5 +40,9 @@ impl DMemberAccess {
 
     pub fn member_name(&self) -> &str {
         self.member_name.as_ref()
+    }
+
+    pub fn add_type_asserts(&self, env: &mut Env3) {
+        todo!()
     }
 }

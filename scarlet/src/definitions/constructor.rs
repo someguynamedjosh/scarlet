@@ -1,6 +1,7 @@
+use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Diagnostic,
-    environment::{Environment, ItemId},
+    environment::{Env3, Environment, ItemId},
 };
 
 #[derive(Clone, Debug)]
@@ -15,5 +16,10 @@ impl DConstructor {
 
     pub fn r#type(&self) -> ItemId {
         self.r#type
+    }
+
+    pub fn add_type_asserts(&self, env: &mut Env3) {
+        let god_type = env.god_type();
+        env.assert_of_type(self.r#type, god_type);
     }
 }

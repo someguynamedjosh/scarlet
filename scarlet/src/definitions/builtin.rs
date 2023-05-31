@@ -13,7 +13,7 @@ use owning_ref::OwningRef;
 use super::compound_type::DCompoundType;
 use crate::{
     diagnostic::Diagnostic,
-    environment::{Environment, ItemId, ENV},
+    environment::{Env2, Env3, Environment, ItemId, ENV},
     shared::TripleBool,
 };
 
@@ -64,10 +64,6 @@ impl DBuiltin {
         Ok(Self { builtin, args })
     }
 
-    pub fn is_type(candidate: ItemId) -> Self {
-        todo!()
-    }
-
     pub fn is_subtype_of(subtype: ItemId, supertype: ItemId) -> Self {
         Self {
             builtin: Builtin::IsSubtypeOf,
@@ -82,11 +78,61 @@ impl DBuiltin {
         }
     }
 
+    pub fn god_type() -> Self {
+        Self {
+            builtin: Builtin::GodType,
+            args: vec![],
+        }
+    }
+
     pub fn get_builtin(&self) -> Builtin {
         self.builtin
     }
 
     pub fn get_args(&self) -> &Vec<ItemId> {
         &self.args
+    }
+
+    pub fn add_type_asserts(&self, env: &mut Env3) {
+        match self.builtin {
+            Builtin::IsExactly => {
+                let god_type = env.god_type();
+                let comparee_type = self.args[0];
+                let comparand_type = self.args[1];
+                let comparee = self.args[2];
+                let comparand = self.args[3];
+                env.assert_of_type(comparee_type, god_type);
+                env.assert_of_type(comparand_type, god_type);
+                env.assert_of_type(comparee, comparee_type);
+                env.assert_of_type(comparand, comparand_type);
+            }
+            Builtin::IsSubtypeOf => {
+                let god_type = env.god_type();
+                let subtype = self.args[0];
+                let supertype = self.args[1];
+                env.assert_of_type(subtype, god_type);
+                env.assert_of_type(supertype, god_type);
+            }
+            Builtin::IfThenElse => {
+                let god_type = env.god_type();
+                let bool_type = env.get_language_item("Bool").unwrap();
+                let result_type = self.args[0];
+                let condition = self.args[1];
+                let true_result = self.args[2];
+                let false_result = self.args[3];
+                env.assert_of_type(result_type, god_type);
+                env.assert_of_type(condition, bool_type);
+                env.assert_of_type(true_result, result_type);
+                env.assert_of_type(false_result, result_type);
+            }
+            Builtin::Union => {
+                let god_type = env.god_type();
+                let subtype_0 = self.args[0];
+                let subtype_1 = self.args[1];
+                env.assert_of_type(subtype_0, god_type);
+                env.assert_of_type(subtype_1, god_type);
+            }
+            Builtin::GodType => {}
+        }
     }
 }

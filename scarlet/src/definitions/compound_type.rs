@@ -1,7 +1,8 @@
 use std::{
     collections::{HashMap, HashSet},
     fmt::{self, Formatter},
-    rc::Rc, hash::Hash,
+    hash::Hash,
+    rc::Rc,
 };
 
 use itertools::Itertools;
@@ -9,42 +10,45 @@ use maplit::hashmap;
 
 use crate::{environment::ItemId, util::PtrExtension};
 
-pub type TypeId = Option<Rc<()>>;
-
 #[derive(Clone, Debug)]
-pub enum Type {
+pub enum TypeId {
     GodType,
-    UserType {
-        type_id: Rc<()>,
-        fields: Vec<(String, ItemId)>,
-    },
+    UserType(Rc<()>),
 }
 
-impl Hash for Type {
+impl PartialEq for TypeId {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::GodType, Self::GodType) => true,
+            (Self::UserType(type_id), Self::UserType(other_type_id)) => {
+                Rc::ptr_eq(type_id, other_type_id)
+            }
+            _ => false,
+        }
+    }
+}
+
+impl Eq for TypeId {}
+
+impl Hash for TypeId {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         core::mem::discriminant(self).hash(state);
-        if let Self::UserType { type_id, .. }= &self {
+        if let Self::UserType(type_id) = &self {
             Rc::as_ptr(type_id).hash(state);
         }
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Hash)]
+pub enum Type {
+    GodType,
+    UserType {
+        type_id: TypeId,
+        fields: Vec<(String, ItemId)>,
+    },
+}
+
 impl Type {
-    pub fn is_same_type_as(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::GodType, Self::GodType) => true,
-
-            (
-                Self::UserType { type_id, .. },
-                Self::UserType {
-                    type_id: other_type_id,
-                    ..
-                },
-            ) => type_id.is_same_instance_as(&other_type_id),
-            _ => false,
-        }
-    }
-
     pub fn is_god_type(&self) -> bool {
         matches!(self, Self::GodType)
     }
@@ -58,8 +62,8 @@ impl Type {
 
     pub fn get_type_id(&self) -> TypeId {
         match self {
-            Self::GodType => None,
-            Self::UserType { type_id, .. } => Some(type_id.ptr_clone()),
+            Self::GodType => TypeId::GodType,
+            Self::UserType { type_id, .. } => type_id.clone(),
         }
     }
 
@@ -113,8 +117,8 @@ impl DCompoundType {
         Self { component_types }
     }
 
-    pub fn is_exactly_type(&self) -> bool {
-        self.component_types.len() == 1 && self.component_types.contains_key(&None)
+    pub fn is_exactly_god_type(&self) -> bool {
+        self.component_types.len() == 1 && self.component_types.contains_key(&TypeId::GodType)
     }
 
     /// False is non-definitive here.

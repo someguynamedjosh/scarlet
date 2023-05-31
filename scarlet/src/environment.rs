@@ -12,7 +12,7 @@ use maplit::hashmap;
 use crate::{
     definitions::{
         builtin::{Builtin, DBuiltin},
-        compound_type::{DCompoundType, Type},
+        compound_type::{DCompoundType, Type, TypeId},
         constructor::DConstructor,
         identifier::DIdentifier,
         member_access::DMemberAccess,
@@ -137,7 +137,9 @@ impl ItemMetadata {
 pub struct Environment<Def> {
     language_items: HashMap<String, ItemId>,
     root: ItemId,
+    god_type: ItemId,
     all_items: Vec<(Option<Def>, ItemMetadata)>,
+    asserts: Vec<ItemId>,
 }
 
 impl<Def: Debug> Debug for Environment<Def> {
@@ -195,31 +197,26 @@ impl<Def> IndexMut<ItemId> for Environment<Def> {
 }
 
 impl<Def: From<DStructLiteral>> Environment<Def> {
-    pub(crate) fn new() -> Self {
-        let root = ItemId(0);
-        let mut this = Self {
-            language_items: HashMap::new(),
-            root,
-            all_items: vec![(None, ItemMetadata::new())],
-        };
-        this.define_item(root, DStructLiteral::new_module(vec![]));
-        this
-    }
-
     fn new_for_process_result<PreviousDef>(source: &Environment<PreviousDef>) -> Self {
         Self {
             language_items: source.language_items.clone(),
             root: source.root,
+            god_type: source.god_type,
             all_items: source
                 .all_items
                 .iter()
                 .map(|(_, meta)| (None, meta.clone()))
                 .collect(),
+            asserts: source.asserts.clone(),
         }
     }
 
     pub fn get_deps(&self, item: ItemId) -> &HashSet<ParameterPtr> {
         &self.all_items[item.0].1.dependencies
+    }
+
+    pub fn type_of(&self, value: ItemId) -> ItemId {
+        self.all_items[value.0].1.r#type.unwrap()
     }
 }
 
@@ -299,12 +296,31 @@ impl<Def> Environment<Def> {
         self.root
     }
 
+    pub fn god_type(&self) -> ItemId {
+        self.god_type
+    }
+
     pub fn is_defined(&self, item: ItemId) -> bool {
         self.all_items[item.0].0.is_some()
     }
 }
 
 impl Environment<Def0> {
+    pub(crate) fn new() -> Self {
+        let root = ItemId(0);
+        let god_type = ItemId(1);
+        let mut this = Self {
+            language_items: HashMap::new(),
+            root,
+            god_type,
+            all_items: vec![(None, ItemMetadata::new()), (None, ItemMetadata::new())],
+            asserts: vec![],
+        };
+        this.define_item(root, DStructLiteral::new_module(vec![]));
+        this.define_item(god_type, DBuiltin::god_type());
+        this
+    }
+
     pub fn compute_parents(&mut self) {
         self.propogate_parent(self.root)
     }
@@ -393,15 +409,27 @@ impl Env2 {
 
     pub fn processed(&self) -> Env3 {
         let mut target = Environment::new_for_process_result(&self);
-        let god_type_def = DBuiltin::new_user_facing(Builtin::GodType, &target).unwrap();
-        let god_type_item = target.new_defined_item(god_type_def);
         Process2 {
             source: self,
             target: &mut target,
-            god_type_item,
         }
         .process();
         target
+    }
+}
+
+impl Def3 {
+    fn add_type_asserts(&self, env: &mut Env3) {
+        match self {
+            Def3::DBuiltin(d) => d.add_type_asserts(env),
+            Def3::DCompoundType(..) => {}
+            Def3::DConstructor(d) => d.add_type_asserts(env),
+            Def3::DMemberAccess(d) => d.add_type_asserts(env),
+            Def3::DParameter(d) => d.add_type_asserts(env),
+            Def3::DSubstitution(d) => d.add_type_asserts(env),
+            Def3::DStructLiteral(..) => {}
+            Def3::DOther(_) => (),
+        }
     }
 }
 
@@ -412,6 +440,24 @@ impl Env3 {
         } else {
             id
         }
+    }
+
+    pub fn assert_of_type(&mut self, item: ItemId, supertype: ItemId) {
+        let item = self.dereference(item);
+        let type_of_item = self.all_items[item.0].1.r#type.unwrap();
+        self.assert_subtype(type_of_item, supertype);
+    }
+
+    pub fn assert_subtype(&mut self, subtype: ItemId, supertype: ItemId) {
+        let subtype = self.dereference(subtype);
+        let supertype = self.dereference(supertype);
+        if subtype == supertype {
+            // This avoids an infinite loop of asserting that type is a type.
+            return;
+        }
+        let def = DBuiltin::is_subtype_of(subtype, supertype);
+        let assert = self.new_defined_item(def);
+        self.asserts.push(assert);
     }
 }
 
@@ -611,7 +657,6 @@ impl<'a, 'b> Process1<'a, 'b> {
 struct Process2<'a, 'b> {
     source: &'a Env2,
     target: &'b mut Env3,
-    god_type_item: ItemId,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -657,10 +702,27 @@ impl<'a, 'b> Process2<'a, 'b> {
             self.process_item(id).unwrap();
         }
         self.target.assert_all_defined();
+        let mut type_index = 0;
+        while type_index < self.target.all_items.len() {
+            let id = ItemId(type_index);
+            self.get_type(id);
+            type_index += 1;
+        }
         let mut index = 0;
         while index < self.target.all_items.len() {
             let id = ItemId(index);
-            self.get_type(id);
+            let item = self.target[id].clone();
+            item.add_type_asserts(&mut self.target);
+            index += 1;
+            while type_index < self.target.all_items.len() {
+                let id = ItemId(type_index);
+                self.get_type(id);
+                type_index += 1;
+            }
+        }
+        let mut index = 0;
+        while index < self.target.all_items.len() {
+            let id = ItemId(index);
             self.const_fold(id, HashMap::new());
             index += 1;
         }
@@ -684,9 +746,9 @@ impl<'a, 'b> Process2<'a, 'b> {
                     self.target.get_language_item("Bool").unwrap()
                 }
                 Builtin::IfThenElse => d.get_args()[0],
-                Builtin::Union | Builtin::GodType => self.god_type_item,
+                Builtin::Union | Builtin::GodType => self.target.god_type(),
             },
-            Def3::DCompoundType(_) => self.god_type_item,
+            Def3::DCompoundType(_) => self.target.god_type(),
             Def3::DConstructor(d) => d.r#type(),
             Def3::DMemberAccess(d) => {
                 let d = d.clone();
@@ -707,7 +769,7 @@ impl<'a, 'b> Process2<'a, 'b> {
                         fields.push((field.0.clone(), self.get_type(field.1)));
                     }
                     let r#type = Type::UserType {
-                        type_id: Rc::new(()),
+                        type_id: TypeId::UserType(Rc::new(())),
                         fields,
                     };
                     let r#type = DCompoundType::new_single(Rc::new(r#type));
@@ -776,7 +838,29 @@ impl<'a, 'b> Process2<'a, 'b> {
                         None
                     }
                 }
-                Builtin::IsSubtypeOf => todo!(),
+                Builtin::IsSubtypeOf => {
+                    let a = self.target.dereference(d.get_args()[0]);
+                    let b = self.target.dereference(d.get_args()[1]);
+                    if let (Some(ConstValue::Type(a)), Some(ConstValue::Type(b))) = (
+                        self.const_fold(a, args.clone()),
+                        self.const_fold(b, args.clone()),
+                    ) {
+                        let return_type =
+                            if a.get_component_types().keys().all(|required_id| {
+                                b.get_component_types().contains_key(required_id)
+                            }) {
+                                self.target.get_language_item("True").unwrap()
+                            } else {
+                                self.target.get_language_item("False").unwrap()
+                            };
+                        Some(ConstValue::Value {
+                            r#type: return_type,
+                            subs: hashmap![],
+                        })
+                    } else {
+                        None
+                    }
+                }
                 Builtin::IfThenElse => {
                     let true_type = self.target.get_language_item("True").unwrap();
                     let false_type = self.target.get_language_item("False").unwrap();

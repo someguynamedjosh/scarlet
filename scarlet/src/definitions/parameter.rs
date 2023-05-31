@@ -5,7 +5,11 @@ use std::{
 };
 
 use super::builtin::DBuiltin;
-use crate::{diagnostic::Position, environment::ItemId, util::PtrExtension};
+use crate::{
+    diagnostic::Position,
+    environment::{Env2, Env3, ItemId},
+    util::PtrExtension,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 pub struct Order {
@@ -68,5 +72,10 @@ impl DParameter {
 
     pub fn get_type(&self) -> ItemId {
         self.reduced_type
+    }
+
+    pub(crate) fn add_type_asserts(&self, env: &mut Env3) {
+        let god_type = env.god_type();
+        env.assert_of_type(self.reduced_type, god_type);
     }
 }

@@ -8,7 +8,7 @@ Union IS BUILTIN(Union)
 
 true IS True.new AS_LANGUAGE_ITEM(true)
 false IS False.new AS_LANGUAGE_ITEM(false)
-Bool IS Union(True False)
+Bool IS Union(True False) AS_LANGUAGE_ITEM(Bool)
 
 Result IS ANY Type 
     AS_LANGUAGE_ITEM(Result)
@@ -25,4 +25,6 @@ a IS Wrapper.new(true)
 
 value IS ANY Bool
 
-main IS if_then_else(Bool true true false)
+NotBool IS NEW_TYPE()
+
+main IS if_then_else(Bool NotBool.new true false)
