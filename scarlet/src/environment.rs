@@ -407,14 +407,18 @@ impl Env2 {
         }
     }
 
-    pub fn processed(&self) -> Env3 {
+    pub fn processed(&self) -> Result<Env3, Vec<Diagnostic>> {
         let mut target = Environment::new_for_process_result(&self);
-        Process2 {
+        let diagnostics = Process2 {
             source: self,
             target: &mut target,
         }
         .process();
-        target
+        if diagnostics.len() > 0 {
+            Err(diagnostics)
+        } else {
+            Ok(target)
+        }
     }
 }
 
@@ -696,7 +700,8 @@ impl ConstValue {
 }
 
 impl<'a, 'b> Process2<'a, 'b> {
-    fn process(&mut self) {
+    #[must_use]
+    fn process(&mut self) -> Vec<Diagnostic> {
         for index in 0..self.source.all_items.len() {
             let id = ItemId(index);
             self.process_item(id).unwrap();
@@ -727,6 +732,47 @@ impl<'a, 'b> Process2<'a, 'b> {
             index += 1;
         }
         self.target.assert_all_defined();
+        let mut errors = Vec::new();
+        for &assert in &self.target.asserts {
+            if let Def3::DConstructor(d) = &self.target[assert] {
+                if d.r#type() == self.target.get_language_item("False") {
+                    errors.push(self.push_error(asert, true));
+                }
+            } else {
+                errors.push(self.push_error(assert, false));
+            }
+        }
+        errors
+    }
+
+    fn make_error(&self, assert: ItemId, known_to_be_false: bool) -> Diagnostic {
+        match &self.target[assert] {
+            Def3::DBuiltin(d) => {
+                self.make_error_for_builtin_assert(d, known_to_be_false)
+            },
+            _ => unreachable!()
+        }
+    }
+
+    fn make_error_for_builtin_assert(&self, assert: &DBuiltin, known_to_be_false: bool) -> Diagnostic {
+        match assert.get_builtin() {
+            Builtin::IsExactly => todo!(),
+            Builtin::IsSubtypeOf => {
+                let subtype = assert.get_args()[0];
+                let supertype = assert.get_args()[1];
+                let mut id = 0;
+                for item in &self.target.all_items {
+                    if item.1.r#type == Some(subtype) {
+                        return self.make_type_of_error(&self, ItemId(id), supertype, known_to_be_false);
+                    }
+                    id += 1;
+                }
+                return self.make_subtype_error()
+            },
+            Builtin::IfThenElse => todo!(),
+            Builtin::Union => todo!(),
+            Builtin::GodType => todo!(),
+        }
     }
 
     fn get_type(&mut self, item: ItemId) -> ItemId {
