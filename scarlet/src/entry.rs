@@ -36,13 +36,13 @@ pub(crate) fn entry() {
 
     let time = Instant::now();
     let mut env = Environment::new();
-    match create_root(&root, &parse_context, &mut env) {
-        Ok(..) => (),
+    let root = match create_root(&root, &parse_context, &mut env) {
+        Ok(root) => root,
         Err(diagnostic) => {
             println!("{}", diagnostic.format_colorful(&file_tree));
             return;
         }
-    }
+    };
     println!("Created in {:#?}", time.elapsed());
 
     env.compute_parents();
@@ -67,4 +67,5 @@ pub(crate) fn entry() {
     };
 
     println!("{:#?}", env);
+    println!("{:#?}", env[root]);
 }

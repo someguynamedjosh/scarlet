@@ -20,11 +20,6 @@ false_result IS ANY Result
     AS_LANGUAGE_ITEM(false_result)
 if_then_else IS BUILTIN(if_then_else)
 
-Wrapper IS NEW_TYPE(inner IS ANY Bool)
-a IS Wrapper.new(true)
+TemplateType IS NEW_TYPE(field IS ANY Result)
 
-value IS ANY Bool
-
-NotBool IS NEW_TYPE()
-
-main IS if_then_else(Bool false NotBool.new false)
+main IS TemplateType(Bool)

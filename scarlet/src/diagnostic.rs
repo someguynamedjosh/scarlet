@@ -241,21 +241,9 @@ impl Diagnostic {
         self.with_source_code_block(Level::Error, source_code_block)
     }
 
-    pub fn with_item(self, level: Level, item: ItemId, env: &Env3) -> Self {
+    pub fn with_item<D>(self, level: Level, item: ItemId, env: &Environment<D>) -> Self {
         if let Some(position) = env.get_position(item) {
             self.with_source_code_block(level, position)
-        } else if let Def3::DBuiltin(d) = &env[item] {
-            if d.get_builtin() == Builtin::GodType {
-                self.with_generated_code_block(level, "Type".to_owned())
-            } else {
-                todo!()
-            }
-        } else if let Def3::DCompoundType(d) = &env[item] {
-            if d.is_exactly_god_type() {
-                self.with_generated_code_block(level, "Type".to_owned())
-            } else {
-                todo!()
-            }
         } else {
             // todo!("{:#?} {:?}", env, item)
             self.with_generated_code_block(level, "TODO".to_owned())
@@ -270,7 +258,7 @@ impl Diagnostic {
         Self::with_item(self, Level::Warning, item, env)
     }
 
-    pub fn with_item_error(self, item: ItemId, env: &Env3) -> Self {
+    pub fn with_item_error<D>(self, item: ItemId, env: &Environment<D>) -> Self {
         Self::with_item(self, Level::Error, item, env)
     }
 }

@@ -8,7 +8,7 @@ Union IS BUILTIN(Union)
 
 true IS True.new AS_LANGUAGE_ITEM(true)
 false IS False.new AS_LANGUAGE_ITEM(false)
-Bool IS Union(True False)
+Bool IS Union(True False) AS_LANGUAGE_ITEM(Bool)
 
 Result IS ANY Type AS_LANGUAGE_ITEM(Result)
 condition IS ANY Bool AS_LANGUAGE_ITEM(condition)
@@ -94,8 +94,18 @@ t IS true
 
 NotBool IS NEW_TYPE()
 
-main IS
+some_number IS
 sum(
-    Byte.new(NotBool.new f f f f f f t)
+    Byte.new(t f f f f f f t)
     Byte.new(f f f f f f f t)
 )
+
+Element IS ANY Type
+EmptyList IS NEW_TYPE()
+NonEmptyList IS NEW_TYPE(
+    body IS ANY List
+    tail IS ANY Element
+)
+List IS Union(EmptyList NonEmptyList)
+
+main IS NonEmptyList(Bool).new(EmptyList.new false)
