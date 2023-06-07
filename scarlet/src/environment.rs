@@ -133,13 +133,27 @@ impl ItemMetadata {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum AssertMessage {
+    ItemTypeMustBeSubtype {
+        type_of: ItemId,
+        must_be_subtype_of: ItemId,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Assert {
+    condition_which_must_be_true: ItemId,
+    error_when_not: AssertMessage,
+}
+
 #[derive(Clone)]
 pub struct Environment<Def> {
     language_items: HashMap<String, ItemId>,
     root: ItemId,
     god_type: ItemId,
     all_items: Vec<(Option<Def>, ItemMetadata)>,
-    asserts: Vec<ItemId>,
+    asserts: Vec<Assert>,
 }
 
 impl<Def: Debug> Debug for Environment<Def> {
@@ -217,6 +231,10 @@ impl<Def: From<DStructLiteral>> Environment<Def> {
 
     pub fn type_of(&self, value: ItemId) -> ItemId {
         self.all_items[value.0].1.r#type.unwrap()
+    }
+
+    pub fn get_position(&self, item: ItemId) -> Option<Position> {
+        self.all_items[item.0].1.position
     }
 }
 
@@ -447,12 +465,20 @@ impl Env3 {
     }
 
     pub fn assert_of_type(&mut self, item: ItemId, supertype: ItemId) {
+        let original_item = item;
         let item = self.dereference(item);
         let type_of_item = self.all_items[item.0].1.r#type.unwrap();
-        self.assert_subtype(type_of_item, supertype);
+        self.assert_subtype(
+            type_of_item,
+            supertype,
+            AssertMessage::ItemTypeMustBeSubtype {
+                type_of: original_item,
+                must_be_subtype_of: supertype,
+            },
+        );
     }
 
-    pub fn assert_subtype(&mut self, subtype: ItemId, supertype: ItemId) {
+    pub fn assert_subtype(&mut self, subtype: ItemId, supertype: ItemId, message: AssertMessage) {
         let subtype = self.dereference(subtype);
         let supertype = self.dereference(supertype);
         if subtype == supertype {
@@ -461,7 +487,10 @@ impl Env3 {
         }
         let def = DBuiltin::is_subtype_of(subtype, supertype);
         let assert = self.new_defined_item(def);
-        self.asserts.push(assert);
+        self.asserts.push(Assert {
+            condition_which_must_be_true: assert,
+            error_when_not: message,
+        });
     }
 }
 
@@ -733,45 +762,29 @@ impl<'a, 'b> Process2<'a, 'b> {
         }
         self.target.assert_all_defined();
         let mut errors = Vec::new();
-        for &assert in &self.target.asserts {
-            if let Def3::DConstructor(d) = &self.target[assert] {
-                if d.r#type() == self.target.get_language_item("False") {
-                    errors.push(self.push_error(asert, true));
+        for assert in &self.target.asserts {
+            let condition = &self.target.all_items[assert.condition_which_must_be_true.0];
+            if let &Some(ConstValue::Value { r#type, .. }) = &condition.1.value {
+                if r#type == self.target.get_language_item("False").unwrap() {
+                    errors.push(self.make_error(assert));
                 }
             } else {
-                errors.push(self.push_error(assert, false));
+                errors.push(self.make_error(assert));
             }
         }
         errors
     }
 
-    fn make_error(&self, assert: ItemId, known_to_be_false: bool) -> Diagnostic {
-        match &self.target[assert] {
-            Def3::DBuiltin(d) => {
-                self.make_error_for_builtin_assert(d, known_to_be_false)
-            },
-            _ => unreachable!()
-        }
-    }
-
-    fn make_error_for_builtin_assert(&self, assert: &DBuiltin, known_to_be_false: bool) -> Diagnostic {
-        match assert.get_builtin() {
-            Builtin::IsExactly => todo!(),
-            Builtin::IsSubtypeOf => {
-                let subtype = assert.get_args()[0];
-                let supertype = assert.get_args()[1];
-                let mut id = 0;
-                for item in &self.target.all_items {
-                    if item.1.r#type == Some(subtype) {
-                        return self.make_type_of_error(&self, ItemId(id), supertype, known_to_be_false);
-                    }
-                    id += 1;
-                }
-                return self.make_subtype_error()
-            },
-            Builtin::IfThenElse => todo!(),
-            Builtin::Union => todo!(),
-            Builtin::GodType => todo!(),
+    fn make_error(&self, assert: &Assert) -> Diagnostic {
+        match &assert.error_when_not {
+            &AssertMessage::ItemTypeMustBeSubtype {
+                type_of,
+                must_be_subtype_of,
+            } => Diagnostic::new()
+                .with_text_error("The following expression:".to_owned())
+                .with_item_error(type_of, &self.target)
+                .with_text_error("Must be of the following type:".to_owned())
+                .with_item_error(must_be_subtype_of, &self.target),
         }
     }
 

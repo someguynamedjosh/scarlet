@@ -27,4 +27,4 @@ value IS ANY Bool
 
 NotBool IS NEW_TYPE()
 
-main IS if_then_else(Bool NotBool.new true false)
+main IS if_then_else(Bool false NotBool.new false)

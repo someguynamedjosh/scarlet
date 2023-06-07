@@ -112,19 +112,22 @@ impl DSubstitution {
         for (target, value) in &self.substitutions {
             let target_type = target.original_type();
             let target_type_deps = env.get_deps(target_type);
-            let target_type_subs = self
+            let target_type_subs: Substitutions = self
                 .substitutions
                 .iter()
                 .filter(|(k, _)| target_type_deps.contains(k))
                 .cloned()
                 .collect();
-            let subbed_target_type = env.new_defined_item(Self {
-                base: target_type,
-                substitutions: target_type_subs,
-                do_asserts: false,
-            });
-            println!("Assert {:?} is of type {:?}", *value, target_type);
-            env.assert_of_type(*value, subbed_target_type);
+            if target_type_subs.is_empty() {
+                env.assert_of_type(*value, target_type);
+            } else {
+                let subbed_target_type = env.new_defined_item(Self {
+                    base: target_type,
+                    substitutions: target_type_subs,
+                    do_asserts: false,
+                });
+                env.assert_of_type(*value, subbed_target_type);
+            }
         }
     }
 }

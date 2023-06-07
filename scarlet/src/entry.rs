@@ -36,14 +36,13 @@ pub(crate) fn entry() {
 
     let time = Instant::now();
     let mut env = Environment::new();
-    let root = create_root(&root, &parse_context, &mut env);
-    let root = match root {
-        Ok(root) => root,
+    match create_root(&root, &parse_context, &mut env) {
+        Ok(..) => (),
         Err(diagnostic) => {
             println!("{}", diagnostic.format_colorful(&file_tree));
             return;
         }
-    };
+    }
     println!("Created in {:#?}", time.elapsed());
 
     env.compute_parents();
@@ -52,8 +51,20 @@ pub(crate) fn entry() {
     println!("Completed process 1.");
     let env = env.processed();
     println!("Completed process 2.");
-    let env = env.processed();
+    let result = env.processed();
     println!("Completed process 3.");
+    let env = match result {
+        Ok(env) => env,
+        Err(errors) => {
+            let num_errors = errors.len();
+            for err in errors {
+                let error = err.format_colorful(&file_tree);
+                println!("{}", error);
+            }
+            println!("Compilation failed due to {} errors.", num_errors);
+            return;
+        }
+    };
 
     println!("{:#?}", env);
 }

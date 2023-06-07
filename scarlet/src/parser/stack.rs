@@ -23,6 +23,7 @@ impl<'a> Stack<'a> {
             let next = self.0.len() - 1;
             let next = &mut self.0[next];
             assert!(next.is_waiting_for_node(pt));
+            next.position.extend(top.position);
             next.children.push(NodeChild::Node(top));
             Ok(())
         } else {

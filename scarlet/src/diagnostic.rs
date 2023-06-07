@@ -5,7 +5,10 @@ use std::{
 
 use colored::{ColoredString, Colorize};
 
-use crate::{environment::ItemId, file_tree::FileNode};
+use crate::{
+    environment::{Env3, Environment, ItemId, Def3},
+    file_tree::FileNode, definitions::builtin::{DBuiltin, Builtin},
+};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Level {
@@ -238,20 +241,37 @@ impl Diagnostic {
         self.with_source_code_block(Level::Error, source_code_block)
     }
 
-    pub fn with_item(self, level: Level, item: &ItemId) -> Self {
-        todo!()
+    pub fn with_item(self, level: Level, item: ItemId, env: &Env3) -> Self {
+        if let Some(position) = env.get_position(item) {
+            self.with_source_code_block(level, position)
+        } else if let Def3::DBuiltin(d) = &env[item] {
+            if d.get_builtin() == Builtin::GodType {
+                self.with_generated_code_block(level, "Type".to_owned())
+            } else {
+                todo!()
+            }
+        } else if let Def3::DCompoundType(d) = &env[item] {
+            if d.is_exactly_god_type() {
+                self.with_generated_code_block(level, "Type".to_owned())
+            } else {
+                todo!()
+            }
+        } else {
+            // todo!("{:#?} {:?}", env, item)
+            self.with_generated_code_block(level, "TODO".to_owned())
+        }
     }
 
-    pub fn with_item_info(self, item: &ItemId) -> Self {
-        Self::with_item(self, Level::Info, item)
+    pub fn with_item_info(self, item: ItemId, env: &Env3) -> Self {
+        Self::with_item(self, Level::Info, item, env)
     }
 
-    pub fn with_item_warning(self, item: &ItemId) -> Self {
-        Self::with_item(self, Level::Warning, item)
+    pub fn with_item_warning(self, item: ItemId, env: &Env3) -> Self {
+        Self::with_item(self, Level::Warning, item, env)
     }
 
-    pub fn with_item_error(self, item: &ItemId) -> Self {
-        Self::with_item(self, Level::Error, item)
+    pub fn with_item_error(self, item: ItemId, env: &Env3) -> Self {
+        Self::with_item(self, Level::Error, item, env)
     }
 }
 
