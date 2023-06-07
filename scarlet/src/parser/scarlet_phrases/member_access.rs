@@ -12,7 +12,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     let base = node.children[0].as_item(ctx)?;
     let member_name = node.children[2].as_ident()?;
     let definition = DUnresolvedMemberAccess::new(base, member_name.to_owned());
-    Ok(ctx.env.new_defined_item(definition))
+    Ok(ctx.env.define0(definition))
 }
 
 pub fn phrase() -> Phrase {

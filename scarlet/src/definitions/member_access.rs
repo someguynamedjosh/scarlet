@@ -9,7 +9,7 @@ use super::{
 };
 use crate::{
     diagnostic::Diagnostic,
-    environment::{Env2, Env3, Environment, ItemId},
+    environment::{Env, ItemId},
 };
 
 #[derive(Clone, Debug)]
@@ -40,7 +40,9 @@ pub struct DMemberAccess {
 
 impl DMemberAccess {
     pub fn new(base: ItemId, base_type: &Type, member_name: &str) -> Result<Self, ()> {
-        for (index, (field_name, field_type)) in base_type.get_constructor_parameters().iter().enumerate() {
+        for (index, (field_name, field_type)) in
+            base_type.get_constructor_parameters().iter().enumerate()
+        {
             if field_name == member_name {
                 return Ok(Self {
                     base,
@@ -59,7 +61,7 @@ impl DMemberAccess {
         self.member_index
     }
 
-    pub fn add_type_asserts(&self, env: &mut Env3) {
+    pub fn add_type_asserts(&self, env: &mut Env) {
         // Nothing because we use the type of base to find member_index, so base
         // can never be the wrong type.
     }

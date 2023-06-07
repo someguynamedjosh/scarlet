@@ -13,10 +13,10 @@ pub use parse::{parse_tree, ParseContext};
 use self::phrase::CreateContext;
 use crate::{
     diagnostic::Diagnostic,
-    environment::{Def0, Env0, Environment, ItemId},
+    environment::{Def0, Env, ItemId},
 };
 
-pub fn create_root(node: &Node, pc: &ParseContext, env: &mut Env0) -> Result<ItemId, Diagnostic> {
+pub fn create_root(node: &Node, pc: &ParseContext, env: &mut Env) -> Result<ItemId, Diagnostic> {
     let mut ctx = CreateContext { pc, env };
     let root = node.as_item(&mut ctx)?;
     env.set_root(root);

@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Instant};
 
 use crate::{
     definitions::struct_literal::DStructLiteral,
-    environment::{Environment, ENV},
+    environment::Env,
     file_tree,
     parser::{self, create_root, ParseContext},
 };
@@ -35,7 +35,7 @@ pub(crate) fn entry() {
     println!("Parsed in {:#?}", time.elapsed());
 
     let time = Instant::now();
-    let mut env = Environment::new();
+    let mut env = Env::new();
     let root = match create_root(&root, &parse_context, &mut env) {
         Ok(root) => root,
         Err(diagnostic) => {
@@ -47,24 +47,6 @@ pub(crate) fn entry() {
 
     env.compute_parents();
     println!("Computed parents.");
-    let env = env.processed();
-    println!("Completed process 1.");
-    let env = env.processed();
-    println!("Completed process 2.");
-    let result = env.processed();
-    println!("Completed process 3.");
-    let env = match result {
-        Ok(env) => env,
-        Err(errors) => {
-            let num_errors = errors.len();
-            for err in errors {
-                let error = err.format_colorful(&file_tree);
-                println!("{}", error);
-            }
-            println!("Compilation failed due to {} errors.", num_errors);
-            return;
-        }
-    };
 
     println!("{:#?}", env);
     println!("{:#?}", env[root]);

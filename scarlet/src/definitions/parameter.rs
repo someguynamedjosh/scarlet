@@ -7,7 +7,7 @@ use std::{
 use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
-    environment::{Env2, Env3, ItemId},
+    environment::{Env, ItemId},
     util::PtrExtension,
 };
 
@@ -74,7 +74,7 @@ impl DParameter {
         self.reduced_type
     }
 
-    pub(crate) fn add_type_asserts(&self, env: &mut Env3) {
+    pub(crate) fn add_type_asserts(&self, env: &mut Env) {
         let god_type = env.god_type();
         env.assert_of_type(self.reduced_type, god_type);
     }

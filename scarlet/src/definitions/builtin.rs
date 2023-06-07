@@ -13,7 +13,7 @@ use owning_ref::OwningRef;
 use super::compound_type::DCompoundType;
 use crate::{
     diagnostic::Diagnostic,
-    environment::{Env2, Env3, Environment, ItemId, ENV},
+    environment::{Env, ItemId},
     shared::TripleBool,
 };
 
@@ -55,7 +55,7 @@ pub struct DBuiltin {
 }
 
 impl DBuiltin {
-    pub fn new_user_facing<I>(builtin: Builtin, env: &Environment<I>) -> Result<Self, Diagnostic> {
+    pub fn new_user_facing(builtin: Builtin, env: &Env) -> Result<Self, Diagnostic> {
         let args = builtin
             .default_arg_names()
             .iter()
@@ -93,7 +93,7 @@ impl DBuiltin {
         &self.args
     }
 
-    pub fn add_type_asserts(&self, env: &mut Env3) {
+    pub fn add_type_asserts(&self, env: &mut Env) {
         match self.builtin {
             Builtin::IsExactly => {
                 let god_type = env.god_type();

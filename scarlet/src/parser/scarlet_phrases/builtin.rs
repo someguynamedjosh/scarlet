@@ -17,7 +17,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     let builtin = match name {
         "is_exactly" => Builtin::IsExactly,
         "if_then_else" => Builtin::IfThenElse,
-        "Type" => return Ok(ctx.env.new_defined_item(DCompoundType::god_type())),
+        "Type" => return Ok(ctx.env.define0(DCompoundType::god_type())),
         "Union" => Builtin::Union,
         _ => {
             return Err(Diagnostic::new()
@@ -26,7 +26,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
         }
     };
     let definition = DBuiltin::new_user_facing(builtin, ctx.env)?;
-    Ok(ctx.env.new_defined_item(definition))
+    Ok(ctx.env.define0(definition))
 }
 
 pub fn phrase() -> Phrase {

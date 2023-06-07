@@ -12,7 +12,7 @@ use super::{
 use crate::{
     definitions::{identifier::DIdentifier, member_access::DUnresolvedMemberAccess},
     diagnostic::Diagnostic,
-    environment::{Env3, Environment, ItemId},
+    environment::{Env, ItemId},
     shared::OrderedMap,
     util::PtrExtension,
 };
@@ -105,7 +105,7 @@ impl DSubstitution {
         self.base
     }
 
-    pub fn add_type_asserts(&self, env: &mut Env3) {
+    pub fn add_type_asserts(&self, env: &mut Env) {
         if !self.do_asserts {
             return;
         }
@@ -121,7 +121,7 @@ impl DSubstitution {
             if target_type_subs.is_empty() {
                 env.assert_of_type(*value, target_type);
             } else {
-                let subbed_target_type = env.new_defined_item(Self {
+                let subbed_target_type = env.define3(Self {
                     base: target_type,
                     substitutions: target_type_subs,
                     do_asserts: false,

@@ -6,8 +6,9 @@ use std::{
 use colored::{ColoredString, Colorize};
 
 use crate::{
-    environment::{Env3, Environment, ItemId, Def3},
-    file_tree::FileNode, definitions::builtin::{DBuiltin, Builtin},
+    definitions::builtin::{Builtin, DBuiltin},
+    environment::{Def3, Env, ItemId},
+    file_tree::FileNode,
 };
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -241,7 +242,7 @@ impl Diagnostic {
         self.with_source_code_block(Level::Error, source_code_block)
     }
 
-    pub fn with_item<D>(self, level: Level, item: ItemId, env: &Environment<D>) -> Self {
+    pub fn with_item(self, level: Level, item: ItemId, env: &Env) -> Self {
         if let Some(position) = env.get_position(item) {
             self.with_source_code_block(level, position)
         } else {
@@ -250,15 +251,15 @@ impl Diagnostic {
         }
     }
 
-    pub fn with_item_info(self, item: ItemId, env: &Env3) -> Self {
+    pub fn with_item_info(self, item: ItemId, env: &Env) -> Self {
         Self::with_item(self, Level::Info, item, env)
     }
 
-    pub fn with_item_warning(self, item: ItemId, env: &Env3) -> Self {
+    pub fn with_item_warning(self, item: ItemId, env: &Env) -> Self {
         Self::with_item(self, Level::Warning, item, env)
     }
 
-    pub fn with_item_error<D>(self, item: ItemId, env: &Environment<D>) -> Self {
+    pub fn with_item_error<D>(self, item: ItemId, env: &Env) -> Self {
         Self::with_item(self, Level::Error, item, env)
     }
 }

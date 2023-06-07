@@ -17,7 +17,7 @@ use super::query::{Query, QueryContext, QueryResultCache};
 use crate::{
     definitions::{compound_type::DCompoundType, struct_literal::DStructLiteral},
     diagnostic::{Diagnostic, Position},
-    environment::{Environment, ENV, FLAG},
+    environment::Env,
     item::query::QueryResult,
     shared::TripleBool,
     util::PtrExtension,

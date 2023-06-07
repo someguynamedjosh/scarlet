@@ -25,7 +25,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
         }
     }
     let definition = DUnresolvedSubstitution::new(base, subs);
-    Ok(ctx.env.new_defined_item(definition))
+    Ok(ctx.env.define0(definition))
 }
 
 pub fn phrase() -> Phrase {

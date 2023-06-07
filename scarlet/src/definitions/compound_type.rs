@@ -10,7 +10,7 @@ use maplit::hashmap;
 
 use super::parameter::ParameterPtr;
 use crate::{
-    environment::{Def2, Env2, Environment, ItemId},
+    environment::{Def2, Env, ItemId},
     util::PtrExtension,
 };
 
@@ -88,11 +88,11 @@ impl Type {
         other.component_types.contains_key(&self.get_type_id())
     }
 
-    pub fn parameters(&self, env: &Env2) -> Vec<ParameterPtr> {
+    pub fn parameters(&self, env: &mut Env) -> Vec<ParameterPtr> {
         let mut parameters = Vec::new();
         if self.is_constructable_type() {
             for field in self.get_constructor_parameters() {
-                let Def2::DParameter(param) = &env[field.1] else { panic!() };
+                let Def2::DParameter(param) = &env.get_def2(field.1) else { panic!() };
                 let ty = param.get_type();
                 parameters.extend(env.get_deps(ty).clone().into_iter());
             }
@@ -160,7 +160,7 @@ impl DCompoundType {
         true
     }
 
-    pub fn parameters(&self, env: &Env2) -> Vec<ParameterPtr> {
+    pub fn parameters(&self, env: &mut Env) -> Vec<ParameterPtr> {
         let mut parameters = Vec::new();
         for ty in self.component_types.values() {
             parameters.extend(ty.parameters(env));

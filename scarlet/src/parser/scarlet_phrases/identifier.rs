@@ -10,7 +10,7 @@ use crate::{
 pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 1);
     let definition = DIdentifier::new(node.children[0].as_text().to_owned());
-    Ok(ctx.env.new_defined_item(definition))
+    Ok(ctx.env.define0(definition))
 }
 
 pub fn phrase() -> Phrase {

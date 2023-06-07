@@ -21,13 +21,11 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             fields.push((String::new(), child.as_item(ctx)?));
         }
     }
-    let id = ctx.env.new_item();
     let def = DCompoundType::new_single(Rc::new(Type::UserType {
         type_id: TypeId::UserType(Rc::new(())),
         fields,
     }));
-    ctx.env.define_item(id, def);
-    Ok(id)
+    Ok(ctx.env.define0(def))
 }
 
 pub fn phrase() -> Phrase {
