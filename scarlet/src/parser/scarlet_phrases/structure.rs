@@ -1,6 +1,5 @@
 use crate::{
     definitions::struct_literal::DStructLiteral,
-    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
@@ -20,7 +19,10 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             fields.push((String::new(), child.as_item(ctx)?));
         }
     }
-    Ok(DStructLiteral::new_module(fields).into_ptr())
+    let id = ctx.env.new_item();
+    let def = DStructLiteral::new_module(fields);
+    ctx.env.define_item(id, def);
+    Ok(id)
 }
 
 pub fn phrase() -> Phrase {

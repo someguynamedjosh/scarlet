@@ -6,7 +6,6 @@
 #![feature(associated_type_defaults)]
 #![feature(hash_raw_entry)]
 #![feature(assert_matches)]
-#![feature(map_first_last)]
 #![feature(ptr_to_from_bits)]
 #![feature(core_intrinsics)]
 #![feature(fmt_internals)]

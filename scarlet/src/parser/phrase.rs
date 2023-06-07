@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 
 use super::{Node, ParseContext};
-use crate::{diagnostic::Diagnostic, environment::Environment, item::ItemPtr};
+use crate::{diagnostic::Diagnostic, environment::{Environment, Env0, ItemId}};
 
 pub type Precedence = u8;
 pub type Priority = u8;
@@ -53,10 +53,10 @@ impl PhraseComponent {
 
 pub struct CreateContext<'p, 'e> {
     pub pc: &'p ParseContext,
-    pub env: &'e mut Environment,
+    pub env: &'e mut Env0,
 }
 
-pub type CreateResult = Result<ItemPtr, Diagnostic>;
+pub type CreateResult = Result<ItemId, Diagnostic>;
 pub type CreateFn = fn(&mut CreateContext, &Node) -> CreateResult;
 
 pub struct Phrase {

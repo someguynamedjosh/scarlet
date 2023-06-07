@@ -1,10 +1,9 @@
-pub mod builtin;
 pub mod compound_type;
-pub mod hole;
+pub mod struct_literal;
+pub mod builtin;
+pub mod parameter;
 pub mod identifier;
 pub mod member_access;
-pub mod new_value;
-pub mod parameter;
-pub mod struct_literal;
 pub mod substitution;
-pub mod reference;
+pub mod other;
+pub mod constructor;

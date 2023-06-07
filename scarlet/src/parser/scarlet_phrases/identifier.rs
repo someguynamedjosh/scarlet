@@ -1,6 +1,5 @@
 use crate::{
     definitions::identifier::DIdentifier,
-    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
@@ -8,9 +7,10 @@ use crate::{
     phrase,
 };
 
-pub fn create(_ctx: &mut CreateContext, node: &Node) -> CreateResult {
+pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     assert_eq!(node.children.len(), 1);
-    Ok(DIdentifier::new(node.children[0].as_text().to_owned()).into_ptr())
+    let definition = DIdentifier::new(node.children[0].as_text().to_owned());
+    Ok(ctx.env.new_defined_item(definition))
 }
 
 pub fn phrase() -> Phrase {

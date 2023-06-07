@@ -4,7 +4,6 @@ use crate::{
         compound_type::DCompoundType,
     },
     diagnostic::Diagnostic,
-    item::IntoItemPtr,
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         Node,
@@ -18,16 +17,16 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     let builtin = match name {
         "is_exactly" => Builtin::IsExactly,
         "if_then_else" => Builtin::IfThenElse,
-        "Type" => return Ok(DCompoundType::r#type().into_ptr()),
+        "Type" => return Ok(ctx.env.new_defined_item(DCompoundType::god_type())),
         "Union" => Builtin::Union,
         _ => {
             return Err(Diagnostic::new()
-                .with_text_error(format!("{} is not the name of any builtin function.", name))
+                .with_text_error(format!("{} is not the name of any builtin item.", name))
                 .with_source_code_block_error(node.position))
         }
     };
     let definition = DBuiltin::new_user_facing(builtin, ctx.env)?;
-    Ok(definition.into_ptr())
+    Ok(ctx.env.new_defined_item(definition))
 }
 
 pub fn phrase() -> Phrase {

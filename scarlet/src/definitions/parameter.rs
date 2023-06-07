@@ -7,15 +7,11 @@ use std::{
 use super::builtin::DBuiltin;
 use crate::{
     diagnostic::Position,
-    item::{
-        parameters::Parameters,
-        query::{ParametersQuery, Query, QueryContext, ResolveQuery, TypeCheckQuery, TypeQuery},
-        CddContext, CycleDetectingDebug, IntoItemPtr, ItemDefinition, ItemPtr,
-    },
+    environment::{Env2, Env3, ItemId},
     util::PtrExtension,
 };
 
-#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 pub struct Order {
     /// Explicitly defined order, 0-255.
     major_order: u8,
@@ -28,97 +24,29 @@ pub struct Order {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Parameter {
     order: Order,
-    original_type: ItemPtr,
+    original_type: ItemId,
 }
 
 impl Parameter {
-    pub fn order(&self) -> &Order {
-        &self.order
+    pub fn order(&self) -> Order {
+        self.order
     }
 
-    pub fn original_type(&self) -> &ItemPtr {
-        &self.original_type
+    pub fn original_type(&self) -> ItemId {
+        self.original_type
     }
 }
 
 pub type ParameterPtr = Rc<Parameter>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DParameter {
     parameter: ParameterPtr,
-    reduced_type: ItemPtr,
-}
-
-impl CycleDetectingDebug for DParameter {
-    fn fmt(&self, f: &mut fmt::Formatter, ctx: &mut CddContext) -> fmt::Result {
-        write!(f, "ANY ")?;
-        self.reduced_type.fmt(f, ctx)
-    }
-}
-
-impl ItemDefinition for DParameter {
-    fn children(&self) -> Vec<ItemPtr> {
-        vec![self.reduced_type.ptr_clone()]
-    }
-
-    fn collect_constraints(&self, this: &ItemPtr) -> Vec<(ItemPtr, ItemPtr)> {
-        vec![(
-            this.ptr_clone(),
-            DBuiltin::is_type(self.reduced_type.ptr_clone()).into_ptr(),
-        )]
-    }
-
-    fn recompute_parameters(
-        &self,
-        ctx: &mut QueryContext<ParametersQuery>,
-        this: &ItemPtr,
-    ) -> <ParametersQuery as Query>::Result {
-        let rt = self.reduced_type.dereference().unwrap();
-        let mut result = rt.query_parameters(ctx);
-        result.insert(rt, self.parameter.ptr_clone());
-        result
-    }
-
-    fn recompute_type(&self, _ctx: &mut QueryContext<TypeQuery>) -> <TypeQuery as Query>::Result {
-        Some(self.reduced_type.ptr_clone())
-    }
-
-    fn recompute_type_check(
-        &self,
-        _ctx: &mut QueryContext<TypeCheckQuery>,
-    ) -> <TypeCheckQuery as Query>::Result {
-        todo!()
-    }
-
-    fn reduce(&self, this: &ItemPtr, args: &HashMap<ParameterPtr, ItemPtr>) -> ItemPtr {
-        if let Some(value) = args.get(&self.parameter) {
-            value.ptr_clone()
-        } else {
-            let r#type = self.reduced_type.reduced(args, true);
-            Self {
-                parameter: Rc::clone(&self.parameter),
-                reduced_type: r#type,
-            }
-            .into_ptr_mimicking(this)
-        }
-    }
-
-    fn recompute_resolved(
-        &self,
-        this: &ItemPtr,
-        ctx: &mut QueryContext<ResolveQuery>,
-    ) -> <ResolveQuery as Query>::Result {
-        let r#type = self.reduced_type.resolved();
-        Ok(Self {
-            parameter: Rc::clone(&self.parameter),
-            reduced_type: r#type,
-        }
-        .into_ptr_mimicking(this))
-    }
+    reduced_type: ItemId,
 }
 
 impl DParameter {
-    pub fn new(major_order: u8, position: Position, r#type: ItemPtr) -> Self {
+    pub fn new(major_order: u8, position: Position, r#type: ItemId) -> Self {
         let order = Order {
             major_order,
             file_order: position.file_index() as _,
@@ -126,7 +54,7 @@ impl DParameter {
         };
         let parameter = Rc::new(Parameter {
             order,
-            original_type: r#type.ptr_clone(),
+            original_type: r#type,
         });
         Self {
             parameter,
@@ -142,7 +70,12 @@ impl DParameter {
         &*self.parameter
     }
 
-    pub fn get_type(&self) -> &ItemPtr {
-        &self.reduced_type
+    pub fn get_type(&self) -> ItemId {
+        self.reduced_type
+    }
+
+    pub(crate) fn add_type_asserts(&self, env: &mut Env3) {
+        let god_type = env.god_type();
+        env.assert_of_type(self.reduced_type, god_type);
     }
 }

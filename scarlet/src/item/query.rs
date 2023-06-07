@@ -6,7 +6,6 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use super::{parameters::Parameters, ItemPtr, ItemQueryResultCaches};
 use crate::{diagnostic::Diagnostic, environment::OnlyConstructedByEnvironment};
 
 pub trait QueryResult: Clone + Hash + Eq {
@@ -255,30 +254,6 @@ impl<T: Clone + PartialEq + Eq + Hash> QueryResult for MaybeTemporary<T> {
     }
 }
 
-pub struct ChildrenQuery;
-
-impl Query for ChildrenQuery {
-    type Result = InfallibleQueryResult<Vec<ItemPtr>>;
-    type Target = ItemPtr;
-
-    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
-        panic!("Child query should not cause cycles!")
-    }
-}
-
-pub struct ParametersQuery;
-
-impl Query for ParametersQuery {
-    type Result = Parameters;
-    type Target = ItemPtr;
-
-    fn result_when_cycle_encountered(target: &Self::Target) -> Self::Result {
-        let mut p = Parameters::new_empty();
-        p.mark_excluding(target.ptr_clone());
-        p
-    }
-}
-
 /// This only exists to describe what queries can be dispatched by Environment.
 pub struct RootQuery;
 
@@ -291,76 +266,3 @@ impl Query for RootQuery {
     }
 }
 
-pub struct TypeQuery;
-
-impl Query for TypeQuery {
-    type Result = Option<ItemPtr>;
-    type Target = ItemPtr;
-
-    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
-        None
-    }
-}
-
-/// Checks that all children of an item have expected types. It is okay to call
-/// query_type() from a type check query but it is not okay to call
-/// query_type_check() from a type query.
-pub struct TypeCheckQuery;
-
-impl Query for TypeCheckQuery {
-    type Result = InfallibleQueryResult<Vec<Diagnostic>>;
-    type Target = ItemPtr;
-
-    fn result_when_cycle_encountered(_target: &Self::Target) -> Self::Result {
-        vec![].into()
-    }
-}
-
-pub fn no_type_check_errors() -> <TypeCheckQuery as Query>::Result {
-    vec![].into()
-}
-
-pub struct ResolveQuery;
-
-impl Query for ResolveQuery {
-    type Result = Result<ItemPtr, Diagnostic>;
-    type Target = ItemPtr;
-
-    fn result_when_cycle_encountered(target: &Self::Target) -> Self::Result {
-        Ok(target.ptr_clone())
-    }
-}
-
-pub trait AllowsChildQuery<ChildQuery: Query> {
-    fn with_child_context<T>(
-        &mut self,
-        operation: impl FnOnce(&mut QueryContext<ChildQuery>) -> T,
-    ) -> T;
-}
-
-impl<Q: Query> AllowsChildQuery<Q> for QueryContext<Q> {
-    fn with_child_context<T>(&mut self, operation: impl FnOnce(&mut QueryContext<Q>) -> T) -> T {
-        operation(self)
-    }
-}
-
-macro_rules! allow_child_query {
-    ($Parent:ty => $Child:ty) => {
-        impl AllowsChildQuery<$Child> for QueryContext<$Parent> {
-            fn with_child_context<T>(
-                &mut self,
-                operation: impl FnOnce(&mut QueryContext<$Child>) -> T,
-            ) -> T {
-                let mut ctx = QueryContext::new();
-                operation(&mut ctx)
-            }
-        }
-    };
-}
-
-allow_child_query!(RootQuery => ParametersQuery);
-allow_child_query!(RootQuery => ResolveQuery);
-allow_child_query!(RootQuery => TypeCheckQuery);
-allow_child_query!(RootQuery => TypeQuery);
-allow_child_query!(ParametersQuery => TypeQuery);
-allow_child_query!(TypeCheckQuery => TypeQuery);

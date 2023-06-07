@@ -9,7 +9,7 @@ use crate::{
             variable::VariablePtr,
         },
         parameters::Parameters,
-        ItemPtr,
+        ItemId,
     },
     util::PtrExtension,
 };
@@ -33,9 +33,9 @@ impl EqualityTestSide {
 
 #[derive(Debug)]
 pub struct EqualityContext {
-    lhs: ItemPtr,
+    lhs: ItemId,
     lhs_subs: Vec<Substitutions>,
-    rhs: ItemPtr,
+    rhs: ItemId,
     rhs_subs: Vec<Substitutions>,
     self_side: EqualityTestSide,
 }
@@ -46,7 +46,7 @@ pub struct EqualityContext {
 pub struct OnlyCalledByEqualityContext(pub(super) ());
 
 impl EqualityContext {
-    fn new(lhs: ItemPtr, rhs: ItemPtr) -> Self {
+    fn new(lhs: ItemId, rhs: ItemId) -> Self {
         Self {
             lhs: lhs.dereference(),
             lhs_subs: Vec::new(),
@@ -56,14 +56,14 @@ impl EqualityContext {
         }
     }
 
-    pub fn primary(&self) -> &ItemPtr {
+    pub fn primary(&self) -> &ItemId {
         match self.self_side {
             EqualityTestSide::Left => self.lhs(),
             EqualityTestSide::Right => self.rhs(),
         }
     }
 
-    pub fn other(&self) -> &ItemPtr {
+    pub fn other(&self) -> &ItemId {
         match self.self_side {
             EqualityTestSide::Left => self.rhs(),
             EqualityTestSide::Right => self.lhs(),
@@ -78,11 +78,11 @@ impl EqualityContext {
         self.self_side == EqualityTestSide::Right
     }
 
-    pub fn lhs(&self) -> &ItemPtr {
+    pub fn lhs(&self) -> &ItemId {
         &self.lhs
     }
 
-    pub fn rhs(&self) -> &ItemPtr {
+    pub fn rhs(&self) -> &ItemId {
         &self.rhs
     }
 
@@ -165,11 +165,11 @@ impl EqualityContext {
         self.try_select_value_substituted_for_var(target_to_look_for, self.self_side.opposite())
     }
 
-    pub fn with_primary(&self, new_primary: ItemPtr) -> Self {
+    pub fn with_primary(&self, new_primary: ItemId) -> Self {
         self.with_primary_and_other(new_primary, self.other().ptr_clone())
     }
 
-    pub fn with_primary_and_other(&self, new_primary: ItemPtr, new_other: ItemPtr) -> Self {
+    pub fn with_primary_and_other(&self, new_primary: ItemId, new_other: ItemId) -> Self {
         let (lhs, rhs) = match self.self_side {
             EqualityTestSide::Left => (new_primary, new_other),
             EqualityTestSide::Right => (new_other, new_primary),
@@ -226,7 +226,7 @@ impl EqualityContext {
         rhs.get_equality_using_context(self, OnlyCalledByEqualityContext(()))?
     }
 
-    pub fn other_with_subs(&self) -> ItemPtr {
+    pub fn other_with_subs(&self) -> ItemId {
         let mut other = self.other().ptr_clone();
         let sub_list = match self.self_side {
             EqualityTestSide::Left => &self.rhs_subs,
@@ -261,7 +261,7 @@ impl EqualityContext {
     }
 }
 
-impl ItemPtr {
+impl ItemId {
     pub fn get_equality_left(&self, other: &Self) -> Equal {
         EqualityContext::new(self.ptr_clone(), other.ptr_clone()).get_equality_left()
     }

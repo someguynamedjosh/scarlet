@@ -1,8 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    definitions::compound_type::{DCompoundType, Type},
-    item::IntoItemPtr,
+    definitions::compound_type::{DCompoundType, Type, TypeId},
     parser::{
         phrase::{CreateContext, CreateResult, Phrase},
         util::collect_comma_list,
@@ -22,11 +21,13 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
             fields.push((String::new(), child.as_item(ctx)?));
         }
     }
-    Ok(DCompoundType::new_single(Rc::new(Type::UserType {
-        type_id: Rc::new(()),
+    let id = ctx.env.new_item();
+    let def = DCompoundType::new_single(Rc::new(Type::UserType {
+        type_id: TypeId::UserType(Rc::new(())),
         fields,
-    }))
-    .into_ptr())
+    }));
+    ctx.env.define_item(id, def);
+    Ok(id)
 }
 
 pub fn phrase() -> Phrase {

@@ -1,5 +1,5 @@
 use super::equal::Equal;
-use crate::{item::ItemPtr, util::PtrExtension};
+use crate::{item::ItemId, util::PtrExtension};
 
 // x -> x
 // fx -> gy(y IS x)(x IS x)
@@ -89,7 +89,7 @@ fn remove_identity_substitutions(substitutions: &mut Substitutions) {
 }
 
 #[must_use]
-fn trim_item(item: &ItemPtr) -> ItemPtr {
+fn trim_item(item: &ItemId) -> ItemId {
     let item = item.dereference();
     if let Some(mut sub_item) = item.downcast_definition_mut::<DSubstitution>() {
         let mut new_base = sub_item.base().ptr_clone();

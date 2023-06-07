@@ -1,8 +1,14 @@
-use std::ops::Range;
+use std::{
+    fmt::{self, Display, Formatter},
+    ops::Range,
+};
 
 use colored::{ColoredString, Colorize};
 
-use crate::{file_tree::FileNode, item::ItemPtr};
+use crate::{
+    environment::{Env3, Environment, ItemId, Def3},
+    file_tree::FileNode, definitions::builtin::{DBuiltin, Builtin},
+};
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 pub enum Level {
@@ -26,6 +32,12 @@ pub struct Position {
     file_index: usize,
     start: usize,
     end: usize,
+}
+
+impl Display for Position {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "F#{}[{}:{}]", self.file_index, self.start, self.end)
+    }
 }
 
 impl Position {
@@ -229,25 +241,25 @@ impl Diagnostic {
         self.with_source_code_block(Level::Error, source_code_block)
     }
 
-    pub fn with_item(self, level: Level, item: &ItemPtr) -> Self {
-        let pos = item.get_position();
-        if pos == Position::placeholder() {
-            self.with_generated_code_block(level, format!("{:#?}", item))
+    pub fn with_item<D>(self, level: Level, item: ItemId, env: &Environment<D>) -> Self {
+        if let Some(position) = env.get_position(item) {
+            self.with_source_code_block(level, position)
         } else {
-            self.with_source_code_block(level, pos)
+            // todo!("{:#?} {:?}", env, item)
+            self.with_generated_code_block(level, "TODO".to_owned())
         }
     }
 
-    pub fn with_item_info(self, item: &ItemPtr) -> Self {
-        Self::with_item(self, Level::Info, item)
+    pub fn with_item_info(self, item: ItemId, env: &Env3) -> Self {
+        Self::with_item(self, Level::Info, item, env)
     }
 
-    pub fn with_item_warning(self, item: &ItemPtr) -> Self {
-        Self::with_item(self, Level::Warning, item)
+    pub fn with_item_warning(self, item: ItemId, env: &Env3) -> Self {
+        Self::with_item(self, Level::Warning, item, env)
     }
 
-    pub fn with_item_error(self, item: &ItemPtr) -> Self {
-        Self::with_item(self, Level::Error, item)
+    pub fn with_item_error<D>(self, item: ItemId, env: &Environment<D>) -> Self {
+        Self::with_item(self, Level::Error, item, env)
     }
 }
 

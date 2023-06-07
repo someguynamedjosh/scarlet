@@ -11,7 +11,7 @@ pub fn create(ctx: &mut CreateContext, node: &Node) -> CreateResult {
     let definition = node.children[0].as_item(ctx)?;
     let name = node.children[3].as_ident()?;
     ctx.env
-        .define_language_item(name, definition.ptr_clone())
+        .define_language_item(name, definition)
         .map_err(|err| err.with_source_code_block_error(node.position))?;
     Ok(definition)
 }

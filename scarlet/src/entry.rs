@@ -1,10 +1,10 @@
 use std::{collections::HashMap, time::Instant};
 
 use crate::{
-    definitions::{struct_literal::DStructLiteral, new_value::DNewValue},
-    environment::{Environment, ENV, r#true},
+    definitions::struct_literal::DStructLiteral,
+    environment::{Environment, ENV},
     file_tree,
-    parser::{self, create_root, ParseContext}, item::IntoItemPtr,
+    parser::{self, create_root, ParseContext},
 };
 
 /// This struct guarantees certain parts of the code remain internal to the
@@ -36,8 +36,7 @@ pub(crate) fn entry() {
 
     let time = Instant::now();
     let mut env = Environment::new();
-    let root = create_root(&root, &parse_context, &mut env);
-    let root = match root {
+    let root = match create_root(&root, &parse_context, &mut env) {
         Ok(root) => root,
         Err(diagnostic) => {
             println!("{}", diagnostic.format_colorful(&file_tree));
@@ -46,34 +45,27 @@ pub(crate) fn entry() {
     };
     println!("Created in {:#?}", time.elapsed());
 
-    ENV.with(|e| e.replace(env.clone()));
-    let errors = env.set_root(root.ptr_clone());
-    if errors.len() > 0 {
-        for error in errors {
-            println!("{}", error.format_colorful(&file_tree));
+    env.compute_parents();
+    println!("Computed parents.");
+    let env = env.processed();
+    println!("Completed process 1.");
+    let env = env.processed();
+    println!("Completed process 2.");
+    let result = env.processed();
+    println!("Completed process 3.");
+    let env = match result {
+        Ok(env) => env,
+        Err(errors) => {
+            let num_errors = errors.len();
+            for err in errors {
+                let error = err.format_colorful(&file_tree);
+                println!("{}", error);
+            }
+            println!("Compilation failed due to {} errors.", num_errors);
+            return;
         }
-        return;
-    }
-    println!("Processed in {:#?}", time.elapsed());
+    };
 
-    let root = env
-        .get_root()
-        .dereference()
-        .unwrap()
-        .downcast_definition::<DStructLiteral>()
-        .unwrap()
-        .as_ref()
-        .get_field(&path)
-        .unwrap()
-        .dereference()
-        .unwrap()
-        .downcast_definition::<DStructLiteral>()
-        .unwrap()
-        .as_ref()
-        .get_field("main")
-        .unwrap()
-        .reduced(&HashMap::new(), true)
-        .dereference()
-        .unwrap();
-    println!("{:#?}", root);
+    println!("{:#?}", env);
+    println!("{:#?}", env[root]);
 }
