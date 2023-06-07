@@ -259,7 +259,7 @@ impl Diagnostic {
         Self::with_item(self, Level::Warning, item, env)
     }
 
-    pub fn with_item_error<D>(self, item: ItemId, env: &Env) -> Self {
+    pub fn with_item_error(self, item: ItemId, env: &Env) -> Self {
         Self::with_item(self, Level::Error, item, env)
     }
 }

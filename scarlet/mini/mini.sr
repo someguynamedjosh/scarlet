@@ -22,4 +22,4 @@ if_then_else IS BUILTIN(if_then_else)
 
 TemplateType IS NEW_TYPE(field IS ANY Result)
 
-main IS TemplateType(Bool).new
+main IS TemplateType(Bool).new(true)

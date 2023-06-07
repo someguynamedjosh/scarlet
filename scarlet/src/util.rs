@@ -89,7 +89,7 @@ pub trait PtrExtension {
 
 impl<T> PtrExtension for Rc<T> {
     fn is_same_instance_as(&self, other: &Self) -> bool {
-        Rc::as_ptr(self).to_bits() == Rc::as_ptr(other).to_bits()
+        Rc::ptr_eq(self, other)
     }
 
     fn ptr_clone(&self) -> Self {

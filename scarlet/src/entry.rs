@@ -48,6 +48,9 @@ pub(crate) fn entry() {
     env.compute_parents();
     println!("Computed parents.");
 
+    let module = env.get_member(root, &file_tree.children[0].0).unwrap();
+    let main = env.get_member(module, "main").unwrap();
+    env.get_value(main);
     println!("{:#?}", env);
-    println!("{:#?}", env[root]);
+    println!("{:#?}", env[main]);
 }
