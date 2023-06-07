@@ -40,7 +40,7 @@ pub struct DMemberAccess {
 
 impl DMemberAccess {
     pub fn new(base: ItemId, base_type: &Type, member_name: &str) -> Result<Self, ()> {
-        for (index, (field_name, field_type)) in base_type.get_fields().iter().enumerate() {
+        for (index, (field_name, field_type)) in base_type.get_constructor_parameters().iter().enumerate() {
             if field_name == member_name {
                 return Ok(Self {
                     base,

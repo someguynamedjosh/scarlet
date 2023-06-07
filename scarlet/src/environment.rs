@@ -371,8 +371,10 @@ impl Environment<Def0> {
             }
             Def0::DCompoundType(r#type) => {
                 for (_, com) in r#type.get_component_types() {
-                    for (_, field) in com.get_fields() {
-                        children.push(*field);
+                    if com.is_constructable_type() {
+                        for (_, field) in com.get_constructor_parameters() {
+                            children.push(*field);
+                        }
                     }
                 }
             }
@@ -607,11 +609,17 @@ impl<'a, 'b> Process1<'a, 'b> {
                     deps.extend(self.target.get_deps(arg).iter().cloned());
                 }
             }
-            Def2::DCompoundType(..) => (),
+            Def2::DCompoundType(d) => {
+                for (_, subtype) in d.get_component_types() {
+                    if subtype.is_constructable_type() {
+                        deps.extend(subtype.parameters(&self.target).into_iter());
+                    }
+                }
+            }
             Def2::DConstructor(con) => {
                 let Def2::DCompoundType(r#type) = &self.target[con.r#type()] else { unreachable!() };
                 for (_, r#type) in r#type.get_component_types().clone() {
-                    for &(_, parameter) in r#type.get_fields() {
+                    for &(_, parameter) in r#type.get_constructor_parameters() {
                         deps.extend(self.target.get_deps(parameter).iter().cloned());
                     }
                 }
@@ -685,16 +693,12 @@ impl<'a, 'b> Process1<'a, 'b> {
 
     fn process_member_access(&mut self, this: ItemId, access: &DUnresolvedMemberAccess) {
         let base = self.source.dereference(access.base());
-        if access.member_name() == "new" {
-            if let Def1::DCompoundType(_) = &self.source[base] {
-                self.target.define_item(this, DConstructor::new(base));
-                return;
-            }
-        } else if let Def1::DStructLiteral(module) = &self.source[base] {
+        if let Def1::DStructLiteral(module) = &self.source[base] {
             let item = module.get_field(access.member_name()).unwrap();
             self.target.define_item(this, DOther(item));
+        } else {
+            self.target.define_item(this, access.clone());
         }
-        self.target.define_item(this, access.clone());
     }
 }
 
@@ -705,7 +709,10 @@ struct Process2<'a, 'b> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConstValue {
-    Type(DCompoundType),
+    Type {
+        r#type: DCompoundType,
+        arguments: HashMap<ParameterPtr, ConstValue>,
+    },
     Value {
         r#type: ItemId,
         subs: HashMap<ParameterPtr, ConstValue>,
@@ -720,7 +727,21 @@ impl ConstValue {
 
     pub fn into_def(self, env: &mut Env3) -> Def3 {
         match self {
-            ConstValue::Type(d) => Def3::DCompoundType(d),
+            ConstValue::Type { r#type, arguments } => {
+                let base = r#type;
+                if arguments.len() == 0 {
+                    base.into()
+                } else {
+                    let base = env.new_defined_item(base);
+                    Def3::DSubstitution(DSubstitution::new(
+                        base,
+                        arguments
+                            .into_iter()
+                            .map(|(param, arg)| (param.ptr_clone(), arg.into_item(env)))
+                            .collect(),
+                    ))
+                }
+            }
             ConstValue::Value { r#type, subs } => {
                 if subs.len() == 0 {
                     Def3::DConstructor(DConstructor::new(r#type))
@@ -830,27 +851,46 @@ impl<'a, 'b> Process2<'a, 'b> {
             Def3::DUnresolvedMemberAccess(d) => {
                 let d = d.clone();
                 let base_type = self.get_type(d.base());
-                let Some(ConstValue::Type(ty)) = &self.target.all_items[base_type.0].1.value else { panic!() };
-                let Some(ty) = ty.get_single_type() else { panic!() };
-                let fields = ty.get_fields();
+                let Some(ConstValue::Type { r#type, arguments }) = self.const_fold(base_type, HashMap::new()) else { panic!() };
+                let Some(r#type) = r#type.get_single_type() else { panic!() };
+                let fields = r#type.get_constructor_parameters();
                 let field = fields
                     .iter()
                     .find(|(name, _)| name == &d.member_name())
                     .unwrap();
-                self.get_type(field.1)
+                let base = self.get_type(field.1);
+                let base_deps = self.target.get_deps(base);
+                let filtered_arguments: Vec<_> = arguments
+                    .into_iter()
+                    .filter(|(param, _)| base_deps.contains(param))
+                    .collect();
+                if filtered_arguments.len() == 0 {
+                    base
+                } else {
+                    let mut realized_arguments = OrderedMap::new();
+                    for (param, arg) in filtered_arguments.into_iter() {
+                        realized_arguments
+                            .insert(param.ptr_clone(), arg.into_item(&mut self.target));
+                    }
+                    self.target
+                        .new_defined_item(Def3::DSubstitution(DSubstitution::new(
+                            base,
+                            realized_arguments,
+                        )))
+                }
             }
             Def3::DOther(d) => self.get_type(d.0),
             Def3::DParameter(d) => d.get_type(),
             Def3::DStructLiteral(d) => {
                 if d.is_module() {
                     let d = d.clone();
-                    let mut fields = Vec::new();
+                    let mut declarations = Vec::new();
                     for field in d.fields() {
-                        fields.push((field.0.clone(), self.get_type(field.1)));
+                        declarations.push(field.0.clone());
                     }
-                    let r#type = Type::UserType {
+                    let r#type = Type::ModuleType {
                         type_id: TypeId::UserType(Rc::new(())),
-                        fields,
+                        declarations,
                     };
                     let r#type = DCompoundType::new_single(Rc::new(r#type));
                     self.target.new_defined_item(r#type)
@@ -921,18 +961,33 @@ impl<'a, 'b> Process2<'a, 'b> {
                 Builtin::IsSubtypeOf => {
                     let a = self.target.dereference(d.get_args()[0]);
                     let b = self.target.dereference(d.get_args()[1]);
-                    if let (Some(ConstValue::Type(a)), Some(ConstValue::Type(b))) = (
+                    if let (
+                        Some(ConstValue::Type {
+                            r#type: a,
+                            arguments: a_args,
+                        }),
+                        Some(ConstValue::Type {
+                            r#type: b,
+                            arguments: b_args,
+                        }),
+                    ) = (
                         self.const_fold(a, args.clone()),
                         self.const_fold(b, args.clone()),
                     ) {
-                        let return_type =
-                            if a.get_component_types().keys().all(|required_id| {
-                                b.get_component_types().contains_key(required_id)
-                            }) {
-                                self.target.get_language_item("True").unwrap()
-                            } else {
-                                self.target.get_language_item("False").unwrap()
-                            };
+                        let component_types_check_out = a
+                            .get_component_types()
+                            .keys()
+                            .all(|required_id| b.get_component_types().contains_key(required_id));
+                        // If a really is a subtype of b, it will not have any additional parameters
+                        // not in b.
+                        let arguments_check_out = a_args
+                            .iter()
+                            .all(|(param, value)| b_args.get(param) == Some(value));
+                        let return_type = if component_types_check_out && arguments_check_out {
+                            self.target.get_language_item("True").unwrap()
+                        } else {
+                            self.target.get_language_item("False").unwrap()
+                        };
                         Some(ConstValue::Value {
                             r#type: return_type,
                             subs: hashmap![],
@@ -968,17 +1023,47 @@ impl<'a, 'b> Process2<'a, 'b> {
                 Builtin::Union => {
                     let a = self.target.dereference(d.get_args()[0]);
                     let b = self.target.dereference(d.get_args()[1]);
-                    if let (Some(ConstValue::Type(a)), Some(ConstValue::Type(b))) =
-                        (self.const_fold(a, args.clone()), self.const_fold(b, args))
+                    if let (
+                        Some(ConstValue::Type {
+                            r#type: a,
+                            arguments: a_args,
+                        }),
+                        Some(ConstValue::Type {
+                            r#type: b,
+                            arguments: b_args,
+                        }),
+                    ) = (self.const_fold(a, args.clone()), self.const_fold(b, args))
                     {
-                        Some(ConstValue::Type(a.union(&b)))
+                        let mut args = a_args;
+                        args.extend(b_args.into_iter());
+                        Some(ConstValue::Type {
+                            r#type: a.union(&b),
+                            arguments: args,
+                        })
                     } else {
                         None
                     }
                 }
-                Builtin::GodType => Some(ConstValue::Type(DCompoundType::god_type())),
+                Builtin::GodType => Some(ConstValue::Type {
+                    r#type: DCompoundType::god_type(),
+                    arguments: hashmap![],
+                }),
             },
-            Def3::DCompoundType(d) => Some(ConstValue::Type(d.clone())),
+            Def3::DCompoundType(d) => {
+                let params = d.parameters(&self.source);
+                let mut const_args = HashMap::new();
+                for param in params {
+                    if let Some(value) = args.get(&param) {
+                        const_args.insert(param, value.clone());
+                    } else {
+                        return None;
+                    }
+                }
+                Some(ConstValue::Type {
+                    r#type: d.clone(),
+                    arguments: const_args,
+                })
+            }
             Def3::DConstructor(d) => {
                 let deps = &self.target.all_items[item.0].1.dependencies;
                 let subs: HashMap<_, _> = args
@@ -1006,7 +1091,7 @@ impl<'a, 'b> Process2<'a, 'b> {
                     assert_eq!(r#type.get_component_types().len(), 1);
                     let (_, r#type) = r#type.get_component_types().iter().next().unwrap();
                     let field = r#type
-                        .get_fields()
+                        .get_constructor_parameters()
                         .iter()
                         .find(|x| x.0 == member_name)
                         .unwrap();

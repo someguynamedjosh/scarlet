@@ -8,7 +8,11 @@ use std::{
 use itertools::Itertools;
 use maplit::hashmap;
 
-use crate::{environment::ItemId, util::PtrExtension};
+use super::parameter::ParameterPtr;
+use crate::{
+    environment::{Def2, Env2, Environment, ItemId},
+    util::PtrExtension,
+};
 
 #[derive(Clone, Debug)]
 pub enum TypeId {
@@ -42,8 +46,14 @@ impl Hash for TypeId {
 #[derive(Clone, Debug, PartialEq, Hash)]
 pub enum Type {
     GodType,
+    ModuleType {
+        type_id: TypeId,
+        declarations: Vec<String>,
+    },
     UserType {
         type_id: TypeId,
+        /// Names paired with parameters that accept values to be assigned to
+        /// that field.
         fields: Vec<(String, ItemId)>,
     },
 }
@@ -53,23 +63,41 @@ impl Type {
         matches!(self, Self::GodType)
     }
 
-    pub fn get_fields(&self) -> &[(String, ItemId)] {
+    pub fn is_constructable_type(&self) -> bool {
+        matches!(self, Self::UserType { .. })
+    }
+
+    pub fn get_constructor_parameters(&self) -> &[(String, ItemId)] {
         match self {
-            Self::GodType => &[],
             Self::UserType { fields, .. } => fields,
+            _ => panic!("Not a constructable type."),
         }
     }
 
     pub fn get_type_id(&self) -> TypeId {
         match self {
             Self::GodType => TypeId::GodType,
+            Self::ModuleType { type_id, .. } => type_id.clone(),
             Self::UserType { type_id, .. } => type_id.clone(),
         }
     }
 
-    /// False is non-definitive here.
+    /// If you get "false", it means we don't know if it's a subtype, not
+    /// necessarily that it's guaranteed to not be a subtype.
     pub fn is_subtype_of(&self, other: &DCompoundType) -> bool {
         other.component_types.contains_key(&self.get_type_id())
+    }
+
+    pub fn parameters(&self, env: &Env2) -> Vec<ParameterPtr> {
+        let mut parameters = Vec::new();
+        if self.is_constructable_type() {
+            for field in self.get_constructor_parameters() {
+                let Def2::DParameter(param) = &env[field.1] else { panic!() };
+                let ty = param.get_type();
+                parameters.extend(env.get_deps(ty).clone().into_iter());
+            }
+        }
+        parameters
     }
 }
 
@@ -121,7 +149,8 @@ impl DCompoundType {
         self.component_types.len() == 1 && self.component_types.contains_key(&TypeId::GodType)
     }
 
-    /// False is non-definitive here.
+    /// If you get "false", it means we don't know if it's a subtype, not
+    /// necessarily that it's guaranteed to not be a subtype.
     pub fn is_subtype_of(&self, other: &Self) -> bool {
         for (key, _) in &self.component_types {
             if !other.component_types.contains_key(key) {
@@ -129,6 +158,14 @@ impl DCompoundType {
             }
         }
         true
+    }
+
+    pub fn parameters(&self, env: &Env2) -> Vec<ParameterPtr> {
+        let mut parameters = Vec::new();
+        for ty in self.component_types.values() {
+            parameters.extend(ty.parameters(env));
+        }
+        parameters
     }
 
     pub(crate) fn god_type() -> Self {
